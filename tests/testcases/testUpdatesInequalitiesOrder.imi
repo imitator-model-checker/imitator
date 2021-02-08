@@ -1,0 +1,82 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Test printing of model
+ *
+ * Description     : Test the printing order of updates and non-linear / linear inequalities is the same as the initial model
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Benjamin L.
+ * Modeling        : Benjamin L.
+ * Input by        : Benjamin L.
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2021/02/08
+ * Last modified   : 2021/02/08
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+var
+
+(* Clocks *)
+	x, y,
+	: clock;
+
+(* Discrete *)
+	a, b, c
+		: discrete;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton autom
+(************************************************************)
+synclabs: a;
+
+urgent loc idle: invariant True
+	when True sync a do {a := 1 * 2, b := 3 + 3, c := 0} goto idle;
+	when a > 0 & b > 0 & c > 0 sync a do {a := 0, b:= 0, c := 0} goto idle;
+
+end (* pta *)
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[autom] = idle
+
+
+	(*------------------------------------------------------------*)
+	(* Initial clock assignment *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial parameter constraint *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& a = 1
+	& b = 1
+	& c = 1
+
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

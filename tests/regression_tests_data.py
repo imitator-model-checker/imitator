@@ -1500,6 +1500,26 @@ DESCRIPTION OF THE TRANSITIONS
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test updates and inequalities printing order (printing)',
+		'input_files': ['testUpdatesInequalitiesOrder.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'testUpdatesInequalitiesOrder-regenerated.imi' , 'content' : """
+	when  a > 0
+& b > 0
+& c > 0 do {a := 0, b := 0, c := 0}  sync a goto idle;
+	when True do {a := 2, b := 3 + 3, c := 0}  sync a goto idle;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test updates (state space)',
 		'input_files': ['testUpdates.imi'],
 		'options'    : '-mode statespace -depth-limit 4 -states-description',
