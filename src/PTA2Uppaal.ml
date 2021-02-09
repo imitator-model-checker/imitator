@@ -14,6 +14,7 @@
  *
  ************************************************************)
 
+open Constants
 open OCamlUtilities
 open ImitatorUtilities
 open LinearConstraint
@@ -26,7 +27,7 @@ open Result
 (** Customized values for constraint conversion *)
 (************************************************************)
 
-let uppaal_strings : Constants.customized_string = {
+let uppaal_strings : customized_string = {
 	true_string   = "true";
 	false_string  = "false";
 	and_operator  = " &amp;&amp; ";

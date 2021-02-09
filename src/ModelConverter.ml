@@ -1233,7 +1233,7 @@ let nonlinear_constraint_of_nonlinear_convex_predicate index_of_variables consta
         ) [] convex_predicate
     in
     match nonlinear_inequalities with
-    | [] -> True_nonlinear_constraint
+    | [] -> NonlinearConstraint.True_nonlinear_constraint
     | _ -> NonlinearConstraint.Nonlinear_constraint nonlinear_inequalities
     (* Stop if any false constraint is found *)
   ) with False_exception -> NonlinearConstraint.False_nonlinear_constraint
