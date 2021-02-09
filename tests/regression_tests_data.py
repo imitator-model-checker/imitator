@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/02/08
+# Last modified     : 2021/02/09
 #************************************************************
 
 
@@ -225,6 +225,48 @@ L/U subclass                            : L/U-PTA
 
 	,
 
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Last modified            : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (L-PTA with negative coefficients)',
+		'input_files': ['testLneg.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'testLneg.res' , 'content' : """
+L/U subclass                            : L-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Last modified            : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (L-PTA with p > d)',
+		'input_files': ['testLdiscrete.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'testLdiscrete.res' , 'content' : """
+L/U subclass                            : L-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#------------------------------------------------------------
 	{
