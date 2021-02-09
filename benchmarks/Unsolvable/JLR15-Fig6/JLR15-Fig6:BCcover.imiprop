@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
  * Example from [Figure 6, JLR15]
  *
@@ -16,7 +16,7 @@
  *
  * IMITATOR version: 3.0
  ************************************************************)
- 
+
 property := #synth BCcover(
 	& a = 0..10
 	& b = 0..10
