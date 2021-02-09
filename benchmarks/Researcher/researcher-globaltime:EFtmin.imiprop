@@ -1,0 +1,8 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Description      : Ask for the valuations for which it is possible to finish an article while drinking at least 2 coffees
+ * Author           : Étienne André
+ ******************************************************************************)
+
+property := #synth EFtmin(loc[researcher] = finished & nb >= 2);

@@ -1,0 +1,8 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Description      : Ask for the valuations for which it is possible to drink at least one coffee while working on some article
+ * Author           : Étienne André
+ ******************************************************************************)
+
+property := #synth EF(loc[researcher] = coffeeing & nb >= 1);

@@ -1,0 +1,9 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Description      :
+ * Author           : Étienne André
+ * Computation      : Unsolvable
+ ******************************************************************************)
+
+property := #synth DeadlockFree;

@@ -1,0 +1,8 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Description      : Ask for the valuations such that, every time the researcher restarts a new article, (s)he completes it within 5 time units.
+ * Author           : Étienne André
+ ******************************************************************************)
+
+property := #synth pattern(everytime restart then eventually done within 5);

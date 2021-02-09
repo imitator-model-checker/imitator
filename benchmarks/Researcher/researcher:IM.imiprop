@@ -1,0 +1,8 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Description      : 
+ * Author           : Étienne André
+ ******************************************************************************)
+
+property := #synth TracePreservation(pTotal = 10, pNeed = 5, pCoffee = 3, MAXBREAK = 3);

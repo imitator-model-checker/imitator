@@ -1,0 +1,8 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Description      : Ask for the valuations for which the researcher infinitely often writes papers
+ * Author           : Étienne André
+ ******************************************************************************)
+
+property := #synth CycleThrough(loc[researcher] = finished);
