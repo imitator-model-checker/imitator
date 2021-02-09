@@ -16,6 +16,7 @@
 
 
 open AbstractModel
+open DiscreteExpressions
 
 (****************************************************************)
 (** Local printings *)

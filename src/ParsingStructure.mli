@@ -80,10 +80,11 @@ type parsed_discrete_boolean_expression =
 	| Parsed_expression of parsed_discrete_arithmetic_expression * parsed_relop * parsed_discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
-	(* TODO benjamin : add Parsed_boolean_expression of parsed_boolean_expression*)
+	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
+	| Parsed_boolean_expression of parsed_boolean_expression
 
 
-type parsed_boolean_expression =
+and parsed_boolean_expression =
 	| Parsed_True (** True *)
 	| Parsed_False (** False *)
 	| Parsed_Not of parsed_boolean_expression (** Negation *)
@@ -119,7 +120,6 @@ type nonlinear_constraint =
     | Parsed_true_nonlinear_constraint (* True *)
     | Parsed_false_nonlinear_constraint (* False *)
     | Parsed_nonlinear_constraint of parsed_discrete_boolean_expression
-    (* TODO benjamin : Parsed_not_nonlinear_constraint of nonlinear_constraint*)
 
 type convex_predicate = nonlinear_constraint list
 

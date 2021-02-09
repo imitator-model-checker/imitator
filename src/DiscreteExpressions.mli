@@ -69,11 +69,22 @@ val eval_discrete_arithmetic_expression : discrete_valuation -> discrete_arithme
 (************************************************************)
 (************************************************************)
 
-type discrete_boolean_expression =
+(** Boolean expression *)
+type boolean_expression =
+	| True_bool (** True *)
+	| False_bool (** False *)
+	| Not_bool of boolean_expression (** Negation *)
+	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
+	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
+	| Discrete_boolean_expression of discrete_boolean_expression
+
+and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
+	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
+	| Boolean_expression of boolean_expression
 
 
 (************************************************************)

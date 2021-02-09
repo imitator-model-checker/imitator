@@ -112,14 +112,7 @@ type guard =
 (** Invariant: guard *)
 type invariant = guard
 
-(** Boolean expression *)
-type boolean_expression =
-	| True_bool (** True *)
-	| False_bool (** False *)
-	| Not_bool of boolean_expression (** Negation *)
-	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
-	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
-	| Discrete_boolean_expression of DiscreteExpressions.discrete_boolean_expression
+
 
 (** Updates *)
 type updates = {
@@ -128,7 +121,7 @@ type updates = {
   conditional: conditional_update list; (** List of conditional updates *)
 }
 (** Conditional updates *)
-and conditional_update = boolean_expression * updates * updates
+and conditional_update = DiscreteExpressions.boolean_expression * updates * updates
 
 (** Transition: guard, action, list of updates, destination location *)
 type transition = {

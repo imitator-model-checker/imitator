@@ -1537,7 +1537,7 @@ let compute_discrete_comparisons (relop : DiscreteExpressions.relop) =
 	| OP_G		-> NumConst.g
 
 (** Check if a boolean expression is satisfied *)
-let is_boolean_expression_satisfied location (boolean_expr : AbstractModel.boolean_expression) : bool =
+let is_boolean_expression_satisfied location (boolean_expr : DiscreteExpressions.boolean_expression) : bool =
   let rec is_boolean_expression_satisfied_rec = function
     | True_bool -> true
     | False_bool -> false
