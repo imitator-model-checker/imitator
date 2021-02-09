@@ -1,21 +1,25 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * An ATM modeled using a PTA
- *
- * Description     : An ATM modeled using a PTA
- * Correctness     : N/A
- * Source          : Fig.1, "Parameter Synthesis Problems for one parametric clock Timed Automata" (https://arxiv.org/abs/1809.07177)
- * Author          : Liyun Dai, Taolue Chen, Zhiming Liu, Bican Xia, Naijun Zhan, Kim G. Larsen
- * Modeling        : Liyun Dai, Taolue Chen, Zhiming Liu, Bican Xia, Naijun Zhan, Kim G. Larsen
- * Input by        : Jawher Jerray, Étienne André
- * License         : unclear ("Non-exclusive license to distribute" on arxiv: https://arxiv.org/licenses/nonexclusive-distrib/1.0/license.html)
- *
- * Created         : 2018/09/23
- * Last modified   : 2020/08/13
- *
- * IMITATOR version: 3
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : fig1-DCLXZL18
+ * Description      : An ATM modeled using a PTA
+ * Correctness      : N/A
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : 
+ * Source           : Fig.1, "Parameter Synthesis Problems for one parametric clock Timed Automata" (https://arxiv.org/abs/1809.07177)
+ * bibkey           : 
+ * Author           : Liyun Dai, Taolue Chen, Zhiming Liu, Bican Xia, Naijun Zhan, Kim G. Larsen
+ * Modeling         : Liyun Dai, Taolue Chen, Zhiming Liu, Bican Xia, Naijun Zhan, Kim G. Larsen
+ * Input by         : Jawher Jerray, Étienne André
+ * License          : unclear ("Non-exclusive license to distribute" on arxiv: https://arxiv.org/licenses/nonexclusive-distrib/1.0/license.html)
+ * 
+ * Created          : 2018/09/23
+ * Last modified    : 2020/08/13
+ * Model version    : 
+ * 
+ * IMITATOR version : 
+ ******************************************************************************)
 
 var
 
