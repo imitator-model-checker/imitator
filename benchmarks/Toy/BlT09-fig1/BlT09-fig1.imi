@@ -1,11 +1,11 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * Fig.1 in [BlT09]
+ * 
  *
  * Description     : TODO
  * Correctness     : infinite run visiting infinitely often location 3
- * Source          : Laura Bozzelli, Salvatore La Torre: Decision problems for lower/upper bound parametric timed automata. Formal Methods in System Design 35(2): 121-151 (2009)
+ * Source          : Laura Bozzelli, Salvatore La Torre: Decision problems for lower/upper bound parametric timed automata. Formal Methods in System Design 35(2): 121-151 (2009), Fig1
  * Author          : Laura Bozzelli, Salvatore La Torre
  * Modeling        : Laura Bozzelli, Salvatore La Torre
  * Input by        : Étienne André
