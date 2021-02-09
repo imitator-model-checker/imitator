@@ -621,7 +621,7 @@ pos_float:
 boolean_expression:
 	| CT_TRUE { Parsed_True }
 	| CT_FALSE { Parsed_False }
-	| OP_NEQ LPAREN boolean_expression RPAREN { Parsed_Not $3 }
+	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
 	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
