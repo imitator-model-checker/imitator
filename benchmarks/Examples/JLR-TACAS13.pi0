@@ -1,18 +1,18 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * Example from Figure 1 in "Integer Parameter Synthesis for Timed Automata"
+ * Example from [Figure 6, JLR15]
  *
- * Description     : Example from Figure 1
- * Correctness     : TODO
- * Source          : "Integer Parameter Synthesis for Timed Automata" (TACAS, 2013)
- * Author          : Jovanovic, Lime, Roux
- * Modeling        : Jovanovic, Lime, Roux
+ * Description     : Example from Figure 6
+ * Correctness     : l2 is reachable
+ * Source          : "Integer Parameter Synthesis for Real-time Systems" (used to be Figure 1 in "Integer Parameter Synthesis for Timed Automata" in [TACAS, 2013])
+ * Author          : Aleksandra Jovanović, Didier Lime, Olivier H. Roux
+ * Modeling        : Aleksandra Jovanović, Didier Lime, Olivier H. Roux
  * Input by        : Étienne André
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created         : 2013/11/13
- * Last modified   : 2020/07/17
+ * Created         : 2020/08/14
+ * Last modified   : 2021/02/09
  *
  * IMITATOR version: 3.0
  ************************************************************)
