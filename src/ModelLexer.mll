@@ -63,6 +63,7 @@ rule token = parse
 	| "clock"          { CT_CLOCK }
 	| "constant"       { CT_CONSTANT }
 	| "discrete"       { CT_DISCRETE }
+	| "bool"           { CT_BOOL }
 	| "do"             { CT_DO }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }

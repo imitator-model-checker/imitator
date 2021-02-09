@@ -68,7 +68,7 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_DO
+	CT_DISCRETE CT_BOOL CT_DO
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -189,6 +189,7 @@ var_type:
 	| CT_CONSTANT { Var_type_constant }
 	| CT_DISCRETE { Var_type_discrete }
 	| CT_PARAMETER { Var_type_parameter }
+	| CT_BOOL { Var_type_bool }
 ;
 
 /************************************************************

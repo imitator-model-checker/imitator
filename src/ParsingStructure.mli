@@ -41,6 +41,7 @@ type var_type =
 	| Var_type_constant
 	| Var_type_discrete
 	| Var_type_parameter
+	| Var_type_bool
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
 type var_value = NumConst.t
