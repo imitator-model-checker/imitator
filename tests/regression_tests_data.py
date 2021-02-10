@@ -1972,6 +1972,67 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test arithmetic expression unary minus in guard (computing)',
+		'input_files': ['arithmetic-expressions/unary-minus-guard.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unary-minus-guard.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test arithmetic expression unary minus in guard (printing)',
+		'input_files': ['arithmetic-expressions/unary-minus-guard.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'unary-minus-guard-regenerated.imi' , 'content' : """
+when  -(i * 2) = -2 * i
+& -(i * -2) = 2 * i
+& -(i / 2) = (-i) / 2
+& -(i / -2) = i / 2
+& -(i + i) = -2 * i
+& -(i - i) = 0
+& -(2 * i - i) = -i
+& -(-(i)) = i
+& -(-(-(i))) = i do {}  sync a goto lend;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test arithmetic expression unary minus in update (printing)',
+		'input_files': ['arithmetic-expressions/unary-minus-update.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'unary-minus-update-regenerated.imi' , 'content' : """
+when  i = 0 do {i := -(i * 2), i := -2 * i, i := -(i * -2), i := -(i / 2), i := (-i) / 2, i := -(i / -2), i := -(i + i), i := -(i - i), i := -(2 * i - i), i := -(-(i)), i := -(-(-(i))), i := -1 + 1, i := -1 - 1}  sync a goto lend;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test updates (state space)',
 		'input_files': ['testUpdates.imi'],
 		'options'    : '-mode statespace -depth-limit 4 -states-description',
