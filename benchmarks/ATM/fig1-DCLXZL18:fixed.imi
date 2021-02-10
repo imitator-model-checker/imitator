@@ -1,7 +1,7 @@
 (*******************************************************************************
  *                                IMITATOR MODEL                               
  * 
- * Title            : fig1-DCLXZL18-fixed
+ * Title            : fig1-DCLXZL18:fixed
  * Description      : An ATM modeled using a PTA. Version fixed by changing incompatible constraints.
  * Correctness      : N/A
  * Scalable         : 
@@ -18,7 +18,7 @@
  * Last modified    : 2021/02/09
  * Model version    : 
  * 
- * IMITATOR version : 
+ * IMITATOR version : 3
  ******************************************************************************)
 
 var
