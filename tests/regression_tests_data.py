@@ -2033,6 +2033,58 @@ when  i = 0 do {i := -(i * 2), i := -2 * i, i := -(i * -2), i := -(i / 2), i := 
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test arithmetic expression with parenthesis (printing)',
+		'input_files': ['arithmetic-expressions/arithmetic-expr-printing-1.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'arithmetic-expr-printing-1-regenerated.imi' , 'content' : """
+when  z * x / y > x do {}  sync a1 goto lend;
+        when  z / (x * y) > x do {}  sync a1 goto lend;
+        when  z / (x - y) > x do {}  sync a1 goto lend;
+        when  z / (x + y) > x do {}  sync a1 goto lend;
+        when  z * (x - y) > x do {}  sync a1 goto lend;
+        when  z * (x + y) > x do {}  sync a1 goto lend;
+        when  (x - y) / z > x do {}  sync a1 goto lend;
+        when  (x + y) / z > x do {}  sync a1 goto lend;
+        when  (x - y) * z > x do {}  sync a1 goto lend;
+        when  (x + y) * z > x do {}  sync a1 goto lend;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test arithmetic expression without parenthesis (printing)',
+		'input_files': ['arithmetic-expressions/arithmetic-expr-printing-2.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'arithmetic-expr-printing-2-regenerated.imi' , 'content' : """
+when  z * x / y > x do {}  sync a1 goto lend;
+        when  z / x * y > x do {}  sync a1 goto lend;
+        when  z / x - y > x do {}  sync a1 goto lend;
+        when  z / x + y > x do {}  sync a1 goto lend;
+        when  z * x - y > x do {}  sync a1 goto lend;
+        when  z * x + y > x do {}  sync a1 goto lend;
+        when  x - y / z > x do {}  sync a1 goto lend;
+        when  x + y / z > x do {}  sync a1 goto lend;
+        when  x - y * z > x do {}  sync a1 goto lend;
+        when  x + y * z > x do {}  sync a1 goto lend;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test updates (state space)',
 		'input_files': ['testUpdates.imi'],
 		'options'    : '-mode statespace -depth-limit 4 -states-description',
