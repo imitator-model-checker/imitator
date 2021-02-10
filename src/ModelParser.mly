@@ -189,7 +189,7 @@ var_type:
 	| CT_CONSTANT { Var_type_constant }
 	| CT_DISCRETE { Var_type_discrete }
 	| CT_PARAMETER { Var_type_parameter }
-	| CT_BOOL { Var_type_bool }
+	/*| CT_BOOL { Var_type_bool }*/
 ;
 
 /************************************************************

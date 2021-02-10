@@ -84,7 +84,7 @@ and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
-	| Boolean_expression of boolean_expression
+(*	| Boolean_expression of boolean_expression*)
 
 
 (************************************************************)
