@@ -1972,6 +1972,43 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test linear expression unary minus in guard (computing)',
+		'input_files': ['linear_expressions/unary-minus-linear-expression.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unary-minus-linear-expression.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test linear expression unary minus in guard (printing)',
+		'input_files': ['linear_expressions/unary-minus-linear-expression.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'unary-minus-linear-expression-regenerated.imi' , 'content' : """
+when  y + 7 > 2*x
+& x + y = 5 + i
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test arithmetic expression unary minus in guard (computing)',
 		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
