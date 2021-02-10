@@ -1,0 +1,72 @@
+(************************************************************
+ *                      IMITATOR MODEL
+ *
+ * Simple model to test
+ *
+ * Description      : Simple model to test 
+ * Correctness     : lend location should be reached
+ * Source               : Own work
+ * Author               : Benjamin L.
+ * Modeling           : Benjamin L.
+ * Input by             : Benjamin L.
+ * License              : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2021/01/20
+ * Last modified   : 2021/01/20
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Parameters *)
+    p1,
+        : parameter;
+(* Discretes *)
+    x, i, j,
+        : discrete;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a1, a2;
+
+loc l1: invariant True
+    (* linear arithmetic on PD *)
+    when p1 - x > i & p1 - x < j sync a1 goto l2;
+    
+loc l2: invariant True
+    (* nonlinear arithmetic on D *)
+    when i * i / 2 < j * j / 2 sync a2 goto lend;
+
+accepting loc lend: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+	(*------------------------------------------------------------*)
+	(* Discrete variables *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& p1 >= 0
+	& i = 0
+	& j = 10
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
