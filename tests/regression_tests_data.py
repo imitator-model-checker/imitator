@@ -1562,11 +1562,11 @@ DESCRIPTION OF THE TRANSITIONS
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in guards (linear D reachable)',
-		'input_files': ['guards/linear-d-reachable.imi', 'guards/property.imiprop'],
+		'purpose'    : 'Test expression consistency in guards (linear D reachable)',
+		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'linear-d-reachable.res' , 'content' : """
+			{'file': 'linear-invariant-d-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
 True
 END CONSTRAINT
@@ -1581,11 +1581,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in guards (linear PD reachable)',
-		'input_files': ['guards/linear-pd-reachable.imi', 'guards/property.imiprop'],
+		'purpose'    : 'Test expression consistency in guards (linear PD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'linear-pd-reachable.res' , 'content' : """
+			{'file': 'linear-invariant-pd-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
  10 > p1
 & p1 > 0
@@ -1601,11 +1601,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in guards (linear XD reachable)',
-		'input_files': ['guards/linear-xd-reachable.imi', 'guards/property.imiprop'],
+		'purpose'    : 'Test expression consistency in guards (linear XD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'linear-xd-reachable.res' , 'content' : """
+			{'file': 'linear-invariant-xd-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
 True
 END CONSTRAINT
@@ -1620,11 +1620,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in guards (linear PXD reachable)',
-		'input_files': ['guards/linear-pxd-reachable.imi', 'guards/property.imiprop'],
+		'purpose'    : 'Test expression consistency in guards (linear PXD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'linear-pxd-reachable.res' , 'content' : """
+			{'file': 'linear-invariant-pxd-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
  p1 > 0
 END CONSTRAINT
@@ -1639,11 +1639,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in guards (non-linear D reachable)',
-		'input_files': ['guards/nonlinear-d-reachable.imi', 'guards/property.imiprop'],
+		'purpose'    : 'Test expression consistency in invariants (linear D reachable)',
+		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'nonlinear-d-reachable.res' , 'content' : """
+			{'file': 'linear-invariant-d-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
 True
 END CONSTRAINT
@@ -1658,11 +1658,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in guards (non-linear PD reachable)',
-		'input_files': ['guards/nonlinear-pd-reachable.imi', 'guards/property.imiprop'],
+		'purpose'    : 'Test expression consistency in invariants (linear PD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'nonlinear-pd-reachable.res' , 'content' : """
+			{'file': 'linear-invariant-pd-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
  10 > p1
 & p1 > 0
@@ -1678,11 +1678,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in guards (non-linear XD reachable)',
-		'input_files': ['guards/nonlinear-xd-reachable.imi', 'guards/property.imiprop'],
+		'purpose'    : 'Test expression consistency in invariants (linear XD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'nonlinear-xd-reachable.res' , 'content' : """
+			{'file': 'linear-invariant-xd-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
 True
 END CONSTRAINT
@@ -1697,11 +1697,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in guards (non-linear PXD reachable)',
-		'input_files': ['guards/nonlinear-pxd-reachable.imi', 'guards/property.imiprop'],
+		'purpose'    : 'Test expression consistency in invariants (linear PXD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'nonlinear-pxd-reachable.res' , 'content' : """
+			{'file': 'linear-invariant-pxd-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
  p1 > 0
 END CONSTRAINT
@@ -1716,62 +1716,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in guards (non-linear PD semantic error)',
-		'input_files': ['guards/nonlinear-pd-semantic-error.imi', 'guards/property.imiprop'],
+		'purpose'    : 'Test expression consistency in guards (non-linear D reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'nonlinear-pd-semantic-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test linear / non-linear expression consistency in guards (non-linear XD semantic error)',
-		'input_files': ['guards/nonlinear-xd-semantic-error.imi', 'guards/property.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'nonlinear-xd-semantic-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test linear / non-linear expression consistency in guards (non-linear PXD semantic error)',
-		'input_files': ['guards/nonlinear-pxd-semantic-error.imi', 'guards/property.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'nonlinear-pxd-semantic-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test linear / non-linear expression consistency in invariants (linear D reachable)',
-		'input_files': ['invariants/linear-d-reachable.imi', 'invariants/property.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'linear-d-reachable.res' , 'content' : """
+			{'file': 'nonlinear-guard-d-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
 True
 END CONSTRAINT
@@ -1786,11 +1735,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in invariants (linear PD reachable)',
-		'input_files': ['invariants/linear-pd-reachable.imi', 'invariants/property.imiprop'],
+		'purpose'    : 'Test expression consistency in guards (non-linear PD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'linear-pd-reachable.res' , 'content' : """
+			{'file': 'nonlinear-guard-pd-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
  10 > p1
 & p1 > 0
@@ -1806,11 +1755,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in invariants (linear XD reachable)',
-		'input_files': ['invariants/linear-xd-reachable.imi', 'invariants/property.imiprop'],
+		'purpose'    : 'Test expression consistency in guards (non-linear XD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'linear-xd-reachable.res' , 'content' : """
+			{'file': 'nonlinear-guard-xd-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
 True
 END CONSTRAINT
@@ -1825,11 +1774,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in invariants (linear PXD reachable)',
-		'input_files': ['invariants/linear-pxd-reachable.imi', 'invariants/property.imiprop'],
+		'purpose'    : 'Test expression consistency in guards (non-linear PXD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'linear-pxd-reachable.res' , 'content' : """
+			{'file': 'nonlinear-guard-pxd-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
  p1 > 0
 END CONSTRAINT
@@ -1844,11 +1793,62 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in invariants (non-linear D reachable)',
-		'input_files': ['invariants/nonlinear-d-reachable.imi', 'invariants/property.imiprop'],
+		'purpose'    : 'Test expression consistency in guards (non-linear PD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'nonlinear-d-reachable.res' , 'content' : """
+			{'file': 'nonlinear-guard-pd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (non-linear XD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-xd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (non-linear PXD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-pxd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in invariants (non-linear D reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-d-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
 True
 END CONSTRAINT
@@ -1863,11 +1863,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in invariants (non-linear PD reachable)',
-		'input_files': ['invariants/nonlinear-pd-reachable.imi', 'invariants/property.imiprop'],
+		'purpose'    : 'Test expression consistency in invariants (non-linear PD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'nonlinear-pd-reachable.res' , 'content' : """
+			{'file': 'nonlinear-invariant-pd-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
  10 > p1
 & p1 > 0
@@ -1883,11 +1883,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in invariants (non-linear XD reachable)',
-		'input_files': ['invariants/nonlinear-xd-reachable.imi', 'invariants/property.imiprop'],
+		'purpose'    : 'Test expression consistency in invariants (non-linear XD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'nonlinear-xd-reachable.res' , 'content' : """
+			{'file': 'nonlinear-invariant-xd-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
 True
 END CONSTRAINT
@@ -1902,11 +1902,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in invariants (non-linear PXD reachable)',
-		'input_files': ['invariants/nonlinear-pxd-reachable.imi', 'invariants/property.imiprop'],
+		'purpose'    : 'Test expression consistency in invariants (non-linear PXD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'nonlinear-pxd-reachable.res' , 'content' : """
+			{'file': 'nonlinear-invariant-pxd-reachable.res' , 'content' : """
 BEGIN CONSTRAINT
  p1 > 0
 END CONSTRAINT
@@ -1921,11 +1921,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in invariants (non-linear PD semantic error)',
-		'input_files': ['invariants/nonlinear-pd-semantic-error.imi', 'invariants/property.imiprop'],
+		'purpose'    : 'Test expression consistency in invariants (non-linear PD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'nonlinear-pd-semantic-error.res' , 'content' : """
+			{'file': 'nonlinear-invariant-pd-semantic-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file
@@ -1938,11 +1938,11 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in invariants (non-linear XD semantic error)',
-		'input_files': ['invariants/nonlinear-xd-semantic-error.imi', 'invariants/property.imiprop'],
+		'purpose'    : 'Test expression consistency in invariants (non-linear XD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'nonlinear-xd-semantic-error.res' , 'content' : """
+			{'file': 'nonlinear-invariant-xd-semantic-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file
@@ -1955,11 +1955,11 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test linear / non-linear expression consistency in invariants (non-linear PXD semantic error)',
-		'input_files': ['invariants/nonlinear-pxd-semantic-error.imi', 'invariants/property.imiprop'],
+		'purpose'    : 'Test expression consistency in invariants (non-linear PXD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'nonlinear-pxd-semantic-error.res' , 'content' : """
+			{'file': 'nonlinear-invariant-pxd-semantic-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file

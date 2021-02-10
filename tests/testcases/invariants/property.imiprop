@@ -1,2 +1,0 @@
-(* property := #witness EF (accepting); *)
-property := #synth EF (accepting);

@@ -3,11 +3,11 @@
  *
  * Simple model to test
  *
- * Description      : Simple model to test no regression on invariant (only discrete variables and clocks, linear and non-linear expressions are used). 
- * Correctness     : This test should fail because the use of a clock in non-linear expression.
+ * Description          : Simple model to test no regression on invariant (only discrete variables and clocks, linear and non-linear expressions are used).
+ * Correctness          : This test should fail because the use of a clock in non-linear expression.
  * Source               : Own work
  * Author               : Benjamin L.
- * Modeling           : Benjamin L.
+ * Modeling             : Benjamin L.
  * Input by             : Benjamin L.
  * License              : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
