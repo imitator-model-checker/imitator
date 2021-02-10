@@ -1973,7 +1973,7 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test arithmetic expression unary minus in guard (computing)',
-		'input_files': ['arithmetic-expressions/unary-minus-guard.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'unary-minus-guard.res' , 'content' : """
@@ -1992,7 +1992,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test arithmetic expression unary minus in guard (printing)',
-		'input_files': ['arithmetic-expressions/unary-minus-guard.imi'],
+		'input_files': ['arithmetic_expressions/unary-minus-guard.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
 			{'file': 'unary-minus-guard-regenerated.imi' , 'content' : """
@@ -2017,7 +2017,7 @@ when  -(i * 2) = -2 * i
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test arithmetic expression unary minus in update (printing)',
-		'input_files': ['arithmetic-expressions/unary-minus-update.imi'],
+		'input_files': ['arithmetic_expressions/unary-minus-update.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
 			{'file': 'unary-minus-update-regenerated.imi' , 'content' : """
@@ -2034,7 +2034,7 @@ when  i = 0 do {i := -(i * 2), i := -2 * i, i := -(i * -2), i := -(i / 2), i := 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test arithmetic expression with parenthesis (printing)',
-		'input_files': ['arithmetic-expressions/arithmetic-expr-printing-1.imi'],
+		'input_files': ['arithmetic_expressions/arithmetic-expr-printing-1.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
 			{'file': 'arithmetic-expr-printing-1-regenerated.imi' , 'content' : """
@@ -2060,7 +2060,7 @@ when  z * x / y > x do {}  sync a1 goto lend;
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test arithmetic expression without parenthesis (printing)',
-		'input_files': ['arithmetic-expressions/arithmetic-expr-printing-2.imi'],
+		'input_files': ['arithmetic_expressions/arithmetic-expr-printing-2.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
 			{'file': 'arithmetic-expr-printing-2-regenerated.imi' , 'content' : """
