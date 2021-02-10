@@ -68,7 +68,7 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_DO
+	CT_DISCRETE CT_BOOL CT_DO
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -189,6 +189,7 @@ var_type:
 	| CT_CONSTANT { Var_type_constant }
 	| CT_DISCRETE { Var_type_discrete }
 	| CT_PARAMETER { Var_type_parameter }
+	/*| CT_BOOL { Var_type_bool }*/
 ;
 
 /************************************************************
@@ -282,7 +283,7 @@ while_or_invariant_or_nothing:
 ;
 
 location:
-	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing convex_predicate stopwatches_and_flow_opt wait_opt transitions {
+	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing nonlinear_convex_predicate stopwatches_and_flow_opt wait_opt transitions {
 		let urgency, accepting = $1 in
 		let name, cost = $2 in
 		let stopwatches, flow = $6 in
@@ -388,7 +389,7 @@ transitions:
 /************************************************************/
 
 transition:
-	| CT_WHEN convex_predicate update_synchronization CT_GOTO NAME SEMICOLON
+	| CT_WHEN nonlinear_convex_predicate update_synchronization CT_GOTO NAME SEMICOLON
 	{
 		let update_list, sync = $3 in
 			$2, update_list, sync, $5
@@ -499,7 +500,8 @@ arithmetic_term:
 	| rational NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant $1), Parsed_DF_variable $2) }
 	| arithmetic_term OP_MUL arithmetic_factor { Parsed_DT_mul ($1, $3) }
 	| arithmetic_term OP_DIV arithmetic_factor { Parsed_DT_div ($1, $3) }
-	| OP_MINUS arithmetic_term { Parsed_DT_mul($2, Parsed_DF_constant NumConst.minus_one) }
+	/*| OP_MINUS arithmetic_term { Parsed_DT_mul($2, Parsed_DF_constant NumConst.minus_one) }*/
+	| OP_MINUS arithmetic_factor { Parsed_DT_factor(Parsed_DF_unary_min $2) }
 ;
 
 arithmetic_factor:
@@ -523,10 +525,26 @@ convex_predicate_fol:
 	| linear_constraint { [$1] }
 ;
 
+/* We allow an optional "&" at the beginning of a convex predicate (sometimes useful) */
+nonlinear_convex_predicate:
+	| ampersand_opt nonlinear_convex_predicate_fol { $2 }
+;
+
+nonlinear_convex_predicate_fol:
+	| nonlinear_constraint AMPERSAND nonlinear_convex_predicate { $1 :: $3 }
+	| nonlinear_constraint { [$1] }
+;
+
 linear_constraint:
 	| linear_expression relop linear_expression { Parsed_linear_constraint ($1, $2, $3) }
 	| CT_TRUE { Parsed_true_constraint }
 	| CT_FALSE { Parsed_false_constraint }
+;
+
+nonlinear_constraint:
+	| discrete_boolean_expression { Parsed_nonlinear_constraint $1 }
+    | CT_TRUE { Parsed_true_nonlinear_constraint }
+    | CT_FALSE { Parsed_false_nonlinear_constraint }
 ;
 
 relop:
@@ -603,7 +621,7 @@ pos_float:
 boolean_expression:
 	| CT_TRUE { Parsed_True }
 	| CT_FALSE { Parsed_False }
-	| OP_NEQ LPAREN boolean_expression RPAREN { Parsed_Not $3 }
+	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
 	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }

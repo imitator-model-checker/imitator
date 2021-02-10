@@ -14,6 +14,7 @@
  *
  ************************************************************)
 
+open Constants
 open OCamlUtilities
 open ImitatorUtilities
 open LinearConstraint
@@ -26,7 +27,7 @@ open Result
 (** Customized values for constraint conversion *)
 (************************************************************)
 
-let uppaal_strings : LinearConstraint.customized_string = {
+let uppaal_strings : customized_string = {
 	true_string   = "true";
 	false_string  = "false";
 	and_operator  = " &amp;&amp; ";
@@ -245,45 +246,68 @@ let string_of_declarations model actions_and_nb_automata =
 
 
 (************************************************************)
-(** Guard *)
+(** Guard / Invariant *)
 (************************************************************)
+
+(** General function to get string of label XML tag for UPPAAL **)
+let get_uppaal_label_tag_string kind x_coord_str y_coord_str content =
+    "<label kind=\"" ^ kind ^ "\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ content ^ "</label>"
 
 (*** NOTE: special handling as we have a discrete and a continuous guard that must be handled homogeneously ***)
 
-(** Convert a guard into a string *)
-let string_of_guard actions_and_nb_automata variable_names x_coord_str y_coord_str = function
+(** Convert a guard or an invariant (according to kind) into a string *)
+let string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_coord_str y_coord_str = function
 	(* True guard = no guard *)
 	| True_guard -> ""
 
 	(* False *)
 	| False_guard ->
-		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">false</label>"
-
+	    "false"
 
 	(*** TODO: use the proper Uppaal syntax here ***)
 
 	| Discrete_guard discrete_guard ->
 
-		(*** NOTE/BUG: remove the true discrete guard! (not accepted by Uppaal) ***)
-
-		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (LinearConstraint.customized_string_of_d_linear_constraint uppaal_strings variable_names discrete_guard) ^ "</label>"
+        let str_discrete_guard = (NonlinearConstraint.customized_string_of_nonlinear_constraint uppaal_strings variable_names discrete_guard) in
+        let str_discrete_guard_without_true = if kind = "invariant" && str_discrete_guard = "true" then "" else str_discrete_guard in
+        str_discrete_guard_without_true
 
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
-
 		if LinearConstraint.pxd_is_true continuous_guard then "" else
-		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names continuous_guard) ^ "</label>"
+		(LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names continuous_guard)
 
 	| Discrete_continuous_guard discrete_continuous_guard ->
-		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (
-			(LinearConstraint.customized_string_of_d_linear_constraint uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
-			^
-			(
-				(* Remove true guard *)
-				if LinearConstraint.pxd_is_true discrete_continuous_guard.continuous_guard then ""
-				else uppaal_strings.and_operator ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names discrete_continuous_guard.continuous_guard)
-			)
-		) ^ "</label>"
+	    let content = (
+            (NonlinearConstraint.customized_string_of_nonlinear_constraint uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
+            ^
+            (
+                (* Remove true guard *)
+                if LinearConstraint.pxd_is_true discrete_continuous_guard.continuous_guard then ""
+                else uppaal_strings.and_operator ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names discrete_continuous_guard.continuous_guard)
+            )
+        ) in
+        content
+
+(** Convert a guard into a string *)
+let string_of_guard =
+    string_of_guard_or_invariant "guard"
+
+(** Convert an invariant into a string *)
+let string_of_invariant =
+    string_of_guard_or_invariant "invariant"
+
+(** Convert a guard or an invariant into a XML string for Uppaal, ex : <label kind=\""guard\"">content</label> *)
+let uppaal_string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_coord_str y_coord_str guard =
+    get_uppaal_label_tag_string kind x_coord_str y_coord_str (string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_coord_str y_coord_str guard)
+
+(** Convert a guard into a XML string for Uppaal, ex : <label kind=\""guard\"">content</label> *)
+let uppaal_string_of_guard =
+    uppaal_string_of_guard_or_invariant "guard"
+
+(** Convert a guard into a XML string for Uppaal, ex : <label kind=\""invariant\"">content</label> *)
+let uppaal_string_of_invariant =
+    uppaal_string_of_guard_or_invariant "invariant"
 
 
 
@@ -311,24 +335,24 @@ let string_of_invariant model actions_and_nb_automata automaton_index location_i
 		) actions_and_nb_automata))
 	in
 
+    (* Compute coordinates *)
+    (*** NOTE: arbitrary positioning (location_id * scaling_factor, +20%) ***)
+    let x_coord_str, y_coord_str =
+        string_of_int (location_index * scaling_factor),
+        string_of_int (scaling_factor / 5)
+    in
 	(*** TODO: check well formed with constraints x <= … as requested by Uppaal, and issue a warning otherwise ***)
 
-	let invariant = LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings model.variable_names (model.invariants automaton_index location_index) in
+    let invariant = string_of_invariant actions_and_nb_automata model.variable_names x_coord_str y_coord_str (model.invariants automaton_index location_index) in
 
 	(* Avoid "true and …" *)
 	let invariant_and_strong_broadcast_invariant =
-		if invariant = uppaal_strings.true_string then strong_broadcast_invariant
+		if invariant = "" then strong_broadcast_invariant
 		else if actions_and_nb_automata = [] then invariant
 		else invariant ^ uppaal_strings.and_operator ^ strong_broadcast_invariant
 	in
-
 	(* Invariant *)
-	(*** NOTE: arbitrary positioning (location_id * scaling_factor, +20%) ***)
-	"\n\t<label kind=\"invariant\" x=\"" ^ (string_of_int (location_index * scaling_factor)) ^ "\" y=\"" ^ (string_of_int (scaling_factor / 5)) ^ "\">"
-	^ invariant_and_strong_broadcast_invariant
-
-	(* The end *)
-	^ "</label>"
+	"\n\t" ^ get_uppaal_label_tag_string "invariant" x_coord_str y_coord_str invariant_and_strong_broadcast_invariant
 
 
 
@@ -348,65 +372,6 @@ let string_of_clock_updates model = function
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
 		) list_of_clocks_lt)
 
-(* Convert an arithmetic expression into a string *)
-(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
-let string_of_arithmetic_expression variable_names =
-	let rec string_of_arithmetic_expression = function
-		(* Shortcut: Remove the "+0" / -"0" cases *)
-		| DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
-		| DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
-			string_of_arithmetic_expression discrete_arithmetic_expression
-
-		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
-			(string_of_arithmetic_expression discrete_arithmetic_expression)
-			^ " + "
-			^ (string_of_term discrete_term)
-
-		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
-			(string_of_arithmetic_expression discrete_arithmetic_expression)
-			^ " - "
-			^ (string_of_term discrete_term)
-
-		| DAE_term discrete_term -> string_of_term discrete_term
-
-	and string_of_term = function
-		(* Eliminate the '1' coefficient *)
-		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
-			string_of_factor discrete_factor
-		(* No parentheses for constant * variable *)
-		| DT_mul (DT_factor (DF_constant c), DF_variable v) ->
-			(string_of_factor (DF_constant c))
-			^ " * "
-			^ (string_of_factor (DF_variable v))
-		(*** TODO: No parentheses on the left for constant or variable * something ***)
-		(* Otherwise: parentheses on the left *)
-		| DT_mul (discrete_term, discrete_factor) ->
-			"(" ^ (string_of_term discrete_term) ^ ")"
-			^ " * "
-			^ (string_of_factor discrete_factor)
-
-		(*** TODO: No parentheses on the left for constant or variable / something ***)
-		(*** TODO: No parentheses on the left for something / constant or variable ***)
-		(* Otherwise: parentheses on the left *)
-		| DT_div (discrete_term, discrete_factor) ->
-			"(" ^ (string_of_term discrete_term) ^ ")"
-			^ " / "
-			^ (string_of_factor discrete_factor)
-
-		| DT_factor discrete_factor -> string_of_factor discrete_factor
-
-	and string_of_factor = function
-		| DF_variable discrete_index -> variable_names discrete_index
-		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
-		| DF_unary_min discrete_factor -> "-(" ^ (string_of_factor discrete_factor) ^ ")"
-		| DF_expression discrete_arithmetic_expression ->
-			(*** TODO: simplify a bit? ***)
-			"(" ^ (string_of_arithmetic_expression discrete_arithmetic_expression) ^ ")"
-	(* Call top-level *)
-	in string_of_arithmetic_expression
-
-
-
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
 	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_index, arithmetic_expression) ->
@@ -414,7 +379,7 @@ let string_of_discrete_updates model updates =
 		(model.variable_names variable_index)
 		^ uppaal_assignment
 		(* Convert the arithmetic_expression *)
-		^ (string_of_arithmetic_expression model.variable_names arithmetic_expression)
+		^ (DiscreteExpressions.string_of_arithmetic_expression model.variable_names arithmetic_expression)
 	) updates)
 
 
@@ -545,7 +510,7 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 	^ (
 		(* Quite arbitrary positioning *)
 		let y_coord_str = (string_of_int (scaling_factor / 5)) in
-		"\n\t\t" ^ (string_of_guard actions_and_nb_automata model.variable_names x_coord_str y_coord_str transition.guard)
+		"\n\t\t" ^ (uppaal_string_of_guard actions_and_nb_automata model.variable_names x_coord_str y_coord_str transition.guard)
 	)
 
 	(* Updates *)

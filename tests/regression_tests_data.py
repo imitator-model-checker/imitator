@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/01/22
+# Last modified     : 2021/02/09
 #************************************************************
 
 
@@ -72,9 +72,34 @@ Error                                   : property file not found
 	
 	# TODO: same + `-mode checksyntax`
 
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TESTS TO CHECK THE SYNTAX
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/02
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test syntax rejection: non-linear clock',
+		'input_files': ['testSyntaxNonLinearClock.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'testSyntaxNonLinearClock.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-	# SYNTACTIC TESTS
+	# SYNTACTIC TESTS (statistics on models)
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 	#------------------------------------------------------------
@@ -200,6 +225,48 @@ L/U subclass                            : L/U-PTA
 
 	,
 
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Last modified            : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (L-PTA with negative coefficients)',
+		'input_files': ['testLneg.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'testLneg.res' , 'content' : """
+L/U subclass                            : L-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Last modified            : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (L-PTA with p > d)',
+		'input_files': ['testLdiscrete.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'testLdiscrete.res' , 'content' : """
+L/U subclass                            : L-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#------------------------------------------------------------
 	{
@@ -347,6 +414,119 @@ Is strongly deterministic?              : false
 
 	,
 
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TESTS ON UNSATISFIABLE INITIAL STATE
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test unsatisfiable initial state (clock constraint)',
+		'input_files': ['unsatisfiableInitStateClocks.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateClocks.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test unsatisfiable initial state (clock constraint + invariant)',
+		'input_files': ['unsatisfiableInitStateClocksInv.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateClocksInv.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test unsatisfiable initial state (discrete+clock constraint)',
+		'input_files': ['unsatisfiableInitStateDiscrete.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateDiscrete.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test unsatisfiable initial state (incompatible discrete invariant)',
+		'input_files': ['unsatisfiableInitStateDiscreteInv.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateDiscreteInv.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TESTS ON DISCRETE VARIABLES
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test division by 0',
+		'input_files': ['divisionby0.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'divisionby0.res' , 'content' : """
+Error                                   : division by 0
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	##------------------------------------------------------------
 	{
@@ -1350,9 +1530,589 @@ DESCRIPTION OF THE TRANSITIONS
 		'expectations' : [
 			{'file': 'testUpdates-regenerated.imi' , 'content' : """
   urgent loc idle: invariant True
-	when True do {x := 1/2*p + x + -7*i + -1, y := y + 1, i := ((3 * i - 1)) / ((5 * i) * i)}  sync a goto idle;
+	when True do {x := 1/2*p + x + -7*i + -1, y := y + 1, i := (3 * i - 1) / (5 * i * i)}  sync a goto idle;
 		"""
 			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test updates and inequalities printing order (printing)',
+		'input_files': ['testUpdatesInequalitiesOrder.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'testUpdatesInequalitiesOrder-regenerated.imi' , 'content' : """
+	when  a > 0
+& b > 0
+& c > 0 do {a := 0, b := 0, c := 0}  sync a goto idle;
+	when True do {a := 2, b := 3 + 3, c := 0}  sync a goto idle;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (linear D reachable)',
+		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-d-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (linear PD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-pd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 > p1
+& p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (linear XD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-xd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (linear PXD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-pxd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in invariants (linear D reachable)',
+		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-d-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in invariants (linear PD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-pd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 > p1
+& p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in invariants (linear XD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-xd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in invariants (linear PXD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-pxd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (non-linear D reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-d-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (non-linear PD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-pd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 > p1
+& p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (non-linear XD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-xd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (non-linear PXD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-pxd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (non-linear PD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-pd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (non-linear XD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-xd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in guards (non-linear PXD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-pxd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in invariants (non-linear D reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-d-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in invariants (non-linear PD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-pd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 > p1
+& p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in invariants (non-linear XD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-xd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in invariants (non-linear PXD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-pxd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in invariants (non-linear PD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-pd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in invariants (non-linear XD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-xd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test expression consistency in invariants (non-linear PXD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-pxd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test linear expression unary minus in guard (computing)',
+		'input_files': ['linear_expressions/unary-minus-linear-expression.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unary-minus-linear-expression.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test linear expression unary minus in guard (printing)',
+		'input_files': ['linear_expressions/unary-minus-linear-expression.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'unary-minus-linear-expression-regenerated.imi' , 'content' : """
+when  y + 7 > 2*x
+& x + y = 5 + i
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test arithmetic expression unary minus in guard (computing)',
+		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unary-minus-guard.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test arithmetic expression unary minus in guard (printing)',
+		'input_files': ['arithmetic_expressions/unary-minus-guard.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'unary-minus-guard-regenerated.imi' , 'content' : """
+when  -(i * 2) = -2 * i
+& -(i * -2) = 2 * i
+& -(i / 2) = (-i) / 2
+& -(i / -2) = i / 2
+& -(i + i) = -2 * i
+& -(i - i) = 0
+& -(2 * i - i) = -i
+& -(-(i)) = i
+& -(-(-(i))) = i do {}  sync a goto lend;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test arithmetic expression unary minus in update (printing)',
+		'input_files': ['arithmetic_expressions/unary-minus-update.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'unary-minus-update-regenerated.imi' , 'content' : """
+when  i = 0 do {i := -(i * 2), i := -2 * i, i := -(i * -2), i := -(i / 2), i := (-i) / 2, i := -(i / -2), i := -(i + i), i := -(i - i), i := -(2 * i - i), i := -(-(i)), i := -(-(-(i))), i := -1 + 1, i := -1 - 1}  sync a goto lend;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test arithmetic expression with parenthesis (printing)',
+		'input_files': ['arithmetic_expressions/arithmetic-expr-printing-1.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'arithmetic-expr-printing-1-regenerated.imi' , 'content' : """
+when  z * x / y > x do {}  sync a1 goto lend;
+        when  z / (x * y) > x do {}  sync a1 goto lend;
+        when  z / (x - y) > x do {}  sync a1 goto lend;
+        when  z / (x + y) > x do {}  sync a1 goto lend;
+        when  z * (x - y) > x do {}  sync a1 goto lend;
+        when  z * (x + y) > x do {}  sync a1 goto lend;
+        when  (x - y) / z > x do {}  sync a1 goto lend;
+        when  (x + y) / z > x do {}  sync a1 goto lend;
+        when  (x - y) * z > x do {}  sync a1 goto lend;
+        when  (x + y) * z > x do {}  sync a1 goto lend;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test arithmetic expression without parenthesis (printing)',
+		'input_files': ['arithmetic_expressions/arithmetic-expr-printing-2.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'arithmetic-expr-printing-2-regenerated.imi' , 'content' : """
+when  z * x / y > x do {}  sync a1 goto lend;
+        when  z / x * y > x do {}  sync a1 goto lend;
+        when  z / x - y > x do {}  sync a1 goto lend;
+        when  z / x + y > x do {}  sync a1 goto lend;
+        when  z * x - y > x do {}  sync a1 goto lend;
+        when  z * x + y > x do {}  sync a1 goto lend;
+        when  x - y / z > x do {}  sync a1 goto lend;
+        when  x + y / z > x do {}  sync a1 goto lend;
+        when  x - y * z > x do {}  sync a1 goto lend;
+        when  x + y * z > x do {}  sync a1 goto lend;
+		"""
+			 } # end result file
 			,
 		] # end expectations
 	} # end test case
@@ -4450,7 +5210,7 @@ x = 0 & global_time = 4
 
  | 
  | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := (d2) / 2}  sync a Target l4] 
+ | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := d2 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/2, d2 = 25 ==> 
 x = 1 & global_time = 5
@@ -4497,7 +5257,7 @@ x = 0 & global_time = 4
 
  | 
  | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := (d2) / 2}  sync a Target l4] 
+ | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := d2 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/2, d2 = 25 ==> 
 x = 1 & global_time = 5
@@ -4565,7 +5325,7 @@ p = 1/2 & x = 0 & global_time = 4
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ 1 > p
-& x = 1} updates{d1 := (d1) / 2}  sync a Target l4] 
+& x = 1} updates{d1 := d1 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/4 ==> 
 p = 1/2 & x = 1 & global_time = 5
@@ -4660,7 +5420,7 @@ p = 1/2 & x = 0 & global_time = 4
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ 1 > p
-& x = 1} updates{d1 := (d1) / 2}  sync a Target l4] 
+& x = 1} updates{d1 := d1 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/4 ==> 
 p = 1/2 & x = 1 & global_time = 5
@@ -4675,6 +5435,31 @@ END RESULT
 """
 			} # end result file
 			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: BlT09-fig1',
+		'input_files': ['BlT09-fig1.imi', 'BlT09-fig1.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'BlT09-fig1.res' , 'content' : """
+BEGIN CONSTRAINT
+ u + 2 > l
+& l >= 0
+& u > 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+"""
+			} #end result file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------

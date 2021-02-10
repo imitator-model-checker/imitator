@@ -8,10 +8,11 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/10
- * Last modified     : 2020/01/07
+ * Last modified     : 2021/02/05
  *
  ************************************************************)
 
+open Constants
 
 
 (****************************************************************)
@@ -52,14 +53,22 @@ and discrete_factor =
 (** Boolean expressions for discrete variables *)
 (****************************************************************)
 
-type discrete_boolean_expression =
+(** Boolean expression *)
+type boolean_expression =
+	| True_bool (** True *)
+	| False_bool (** False *)
+	| Not_bool of boolean_expression (** Negation *)
+	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
+	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
+	| Discrete_boolean_expression of discrete_boolean_expression
+
+and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
-
-
-
+	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
+(*	| Boolean_expression of boolean_expression*)
 
 (************************************************************)
 (** Evaluate arithmetic expressions with a valuation *)
@@ -85,10 +94,18 @@ and eval_discrete_term discrete_valuation = function
 		(eval_discrete_factor discrete_valuation discrete_factor)
 		
 	| DT_div (discrete_term, discrete_factor) ->
-			(*** TODO: division by zero ***)
+		let numerator	= (eval_discrete_term discrete_valuation discrete_term) in
+		let denominator	= (eval_discrete_factor discrete_valuation discrete_factor) in
+		
+		(* Check for 0-denominator *)
+		if NumConst.equal denominator NumConst.zero then(
+			raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (NumConst.string_of_numconst numerator) ^ " / " ^ (NumConst.string_of_numconst denominator) ^ ""))
+		);
+
+		(* Divide *)
 		NumConst.div
-		(eval_discrete_term discrete_valuation discrete_term)
-		(eval_discrete_factor discrete_valuation discrete_factor)
+		numerator
+		denominator
 		
 	| DT_factor discrete_factor ->
 		eval_discrete_factor discrete_valuation discrete_factor
@@ -142,3 +159,143 @@ let check_discrete_boolean_expression discrete_valuation = function
 			expr1_evaluated
 			<= 
 			(eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_3)
+
+
+
+
+
+(* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
+let is_discrete_factor_has_parenthesis = function
+    | DF_unary_min _
+    | DF_expression(DAE_plus _)
+    | DF_expression(DAE_minus _) -> true
+    | _ -> false
+
+(* Check if discrete factor is a multiplication *)
+let is_discrete_factor_is_mul = function
+    | DF_expression(DAE_term(DT_mul _)) -> true
+    | _ -> false
+
+(* Check if a left expression should have parenthesis *)
+(* is (x + y) * z *)
+(* or (x - y) * z *)
+(* or (x + y) / z *)
+(* or (x - y) / z *)
+let is_left_expr_has_parenthesis = function
+    | DT_factor factor -> is_discrete_factor_has_parenthesis factor
+    | _ -> false
+
+(* Check if a right expression should have parenthesis *)
+(* is x * (y + z) *)
+(* or x * (y - z) *)
+(* or x / (y + z) *)
+(* or x / (y - z) *)
+(* or x / (y * z) *)
+let is_right_expr_has_parenthesis = function
+    (* check x / (y * z) *)
+    | DT_div (discrete_term, discrete_factor) when is_discrete_factor_is_mul discrete_factor -> true
+    (* check x / (y + z) or x / (y - z) *)
+    | DT_div (discrete_term, discrete_factor)
+    (* check x * (y + z) or x * (y - z) *)
+    | DT_mul (discrete_term, discrete_factor) -> is_discrete_factor_has_parenthesis discrete_factor
+    | _ -> false
+
+let add_left_parenthesis expr str =
+    if is_left_expr_has_parenthesis expr then "(" ^ str ^ ")" else str
+
+let add_right_parenthesis str expr =
+    if is_right_expr_has_parenthesis expr then "(" ^ str ^ ")" else str
+
+let add_parenthesis_to_unary_minus str = function
+    | DF_expression _ -> "(" ^ str ^ ")"
+    | _ -> str
+
+(* Convert an arithmetic expression into a string *)
+(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
+let customized_string_of_arithmetic_expression customized_string variable_names =
+    let rec string_of_arithmetic_expression customized_string = function
+        (* Shortcut: Remove the "+0" / -"0" cases *)
+        | DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
+        | DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
+            string_of_arithmetic_expression customized_string discrete_arithmetic_expression
+
+		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
+            (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
+            ^ Constants.default_operator_string.plus_string
+            ^ (string_of_term customized_string discrete_term)
+		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
+            (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
+            ^ Constants.default_operator_string.minus_string
+            ^ (string_of_term customized_string discrete_term)
+        | DAE_term discrete_term -> string_of_term customized_string discrete_term
+
+	and string_of_term customized_string = function
+		(* Eliminate the '1' coefficient *)
+		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
+			string_of_factor customized_string discrete_factor
+		| DT_mul (discrete_term, discrete_factor) as expr ->
+		add_left_parenthesis discrete_term (
+			(string_of_term customized_string discrete_term)
+		)
+        ^ Constants.default_operator_string.mul_string
+        ^
+        (add_right_parenthesis (
+            string_of_factor customized_string discrete_factor
+        ) expr)
+
+		| DT_div (discrete_term, discrete_factor) as expr ->
+		add_left_parenthesis discrete_term (
+			(string_of_term customized_string discrete_term)
+        )
+        ^ Constants.default_operator_string.div_string
+        ^
+        (add_right_parenthesis (
+            string_of_factor customized_string discrete_factor
+        ) expr)
+
+		| DT_factor discrete_factor -> string_of_factor customized_string discrete_factor
+
+	and string_of_factor customized_string = function
+		| DF_variable discrete_index -> variable_names discrete_index
+		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
+		| DF_unary_min discrete_factor ->
+		    Constants.default_operator_string.unary_min_string ^
+		    add_parenthesis_to_unary_minus (
+		         (string_of_factor customized_string discrete_factor)
+		    ) discrete_factor
+		| DF_expression discrete_arithmetic_expression ->
+			(*** TODO: simplify a bit? ***)
+			(string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
+	(* Call top-level *)
+	in string_of_arithmetic_expression customized_string
+
+let string_of_arithmetic_expression = customized_string_of_arithmetic_expression Constants.default_string
+
+(* TODO benjamin ref in ModelPrinter *)
+let string_of_boolean_operations customized_string = function
+	| OP_L		-> customized_string.l_operator
+	| OP_LEQ	-> customized_string.le_operator
+	| OP_EQ		-> customized_string.eq_operator
+	| OP_NEQ	-> customized_string.l_operator ^ customized_string.g_operator (* TODO benjamin remove whitespace *)
+	| OP_GEQ	-> customized_string.ge_operator
+	| OP_G		-> customized_string.g_operator
+
+(* TODO benjamin ref in ModelPrinter *)
+(** Convert a discrete_boolean_expression into a string *)
+let customized_string_of_discrete_boolean_expression customized_string variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
+		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
+		^ (string_of_boolean_operations customized_string relop)
+		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
+		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
+		^ " in ["
+		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)
+		^ " , "
+		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression3)
+		^ "]"
+
+(* TODO benjamin ref in ModelPrinter *)
+let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.default_string

@@ -532,24 +532,11 @@ val string_of_px_linear_constraint : (variable -> string) -> px_linear_constrain
 val string_of_d_linear_constraint : (variable -> string) -> d_linear_constraint -> string
 val string_of_pxd_linear_constraint : (variable -> string) -> pxd_linear_constraint -> string
 
-(** Data structure allowing for customizing string conversions *)
-type customized_string = {
-	true_string  : string;
-	false_string : string;
-	and_operator : string;
-	or_operator  : string;
-	l_operator   : string;
-	le_operator  : string;
-	eq_operator  : string;
-	ge_operator  : string;
-	g_operator   : string;
-}
-
 (** Convert a linear constraint into a string using personalized values *)
-val customized_string_of_p_linear_constraint : customized_string -> (variable -> string) -> p_linear_constraint -> string
-val customized_string_of_px_linear_constraint : customized_string -> (variable -> string) -> px_linear_constraint -> string
-val customized_string_of_d_linear_constraint : customized_string -> (variable -> string) -> d_linear_constraint -> string
-val customized_string_of_pxd_linear_constraint : customized_string -> (variable -> string) -> pxd_linear_constraint -> string
+val customized_string_of_p_linear_constraint : Constants.customized_string -> (variable -> string) -> p_linear_constraint -> string
+val customized_string_of_px_linear_constraint : Constants.customized_string -> (variable -> string) -> px_linear_constraint -> string
+val customized_string_of_d_linear_constraint : Constants.customized_string -> (variable -> string) -> d_linear_constraint -> string
+val customized_string_of_pxd_linear_constraint : Constants.customized_string -> (variable -> string) -> pxd_linear_constraint -> string
 
 (** String for the false constraint *)
 val string_of_false : string

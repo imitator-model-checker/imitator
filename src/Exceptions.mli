@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2019/10/09
+ * Last modified     : 2021/02/05
  *
  ************************************************************)
 
@@ -53,3 +53,4 @@ exception TerminateAnalysis
 
 exception UnexpectedToken of char
 
+exception UnsatisfiableInitialState

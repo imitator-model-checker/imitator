@@ -150,6 +150,13 @@ let string_of_declarations model =
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
+
+(* Get string of an arithmetic expression *)
+let string_of_arithmetic_expression = DiscreteExpressions.string_of_arithmetic_expression
+(* Get string of non-linear constraint inequalities *)
+let string_of_nonlinear_constraint = NonlinearConstraint.string_of_nonlinear_constraint
+
+
 (************************************************************)
 (** Guard *)
 (************************************************************)
@@ -160,10 +167,10 @@ let string_of_declarations model =
 let string_of_guard variable_names = function
 	| True_guard -> LinearConstraint.string_of_true
 	| False_guard -> LinearConstraint.string_of_false
-	| Discrete_guard discrete_guard -> LinearConstraint.string_of_d_linear_constraint variable_names discrete_guard
+	| Discrete_guard discrete_guard -> string_of_nonlinear_constraint variable_names discrete_guard
 	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard ->
-		(LinearConstraint.string_of_d_linear_constraint variable_names discrete_continuous_guard.discrete_guard)
+		(string_of_nonlinear_constraint variable_names discrete_continuous_guard.discrete_guard)
 		^ LinearConstraint.string_of_and ^
 		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
 
@@ -202,7 +209,7 @@ let string_of_invariant model automaton_index location_index =
 	
 	(* Invariant *)
 	"invariant "
-	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
+	^ (string_of_guard model.variable_names (model.invariants automaton_index location_index))
 
 	(* Handle stopwatches *)
 	^
@@ -253,68 +260,13 @@ let string_of_clock_updates model clock_updates =
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) in
 	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
 
-(* Convert an arithmetic expression into a string *)
-(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
-let string_of_arithmetic_expression variable_names =
-	let rec string_of_arithmetic_expression = function
-		(* Shortcut: Remove the "+0" / -"0" cases *)
-		| DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
-		| DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
-			string_of_arithmetic_expression discrete_arithmetic_expression
 
-		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
-			(string_of_arithmetic_expression discrete_arithmetic_expression)
-			^ " + "
-			^ (string_of_term discrete_term)
-
-		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
-			(string_of_arithmetic_expression discrete_arithmetic_expression)
-			^ " - "
-			^ (string_of_term discrete_term)
-
-		| DAE_term discrete_term -> string_of_term discrete_term
-
-	and string_of_term = function
-		(* Eliminate the '1' coefficient *)
-		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
-			string_of_factor discrete_factor
-		(* No parentheses for constant * variable *)
-		| DT_mul (DT_factor (DF_constant c), DF_variable v) ->
-			(string_of_factor (DF_constant c))
-			^ " * "
-			^ (string_of_factor (DF_variable v))
-		(*** TODO: No parentheses on the left for constant or variable * something ***)
-		(* Otherwise: parentheses on the left *)
-		| DT_mul (discrete_term, discrete_factor) ->
-			"(" ^ (string_of_term discrete_term) ^ ")"
-			^ " * "
-			^ (string_of_factor discrete_factor)
-
-		(*** TODO: No parentheses on the left for constant or variable / something ***)
-		(*** TODO: No parentheses on the left for something / constant or variable ***)
-		(* Otherwise: parentheses on the left *)
-		| DT_div (discrete_term, discrete_factor) ->
-			"(" ^ (string_of_term discrete_term) ^ ")"
-			^ " / "
-			^ (string_of_factor discrete_factor)
-
-		| DT_factor discrete_factor -> string_of_factor discrete_factor
-
-	and string_of_factor = function
-		| DF_variable discrete_index -> variable_names discrete_index
-		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
-		| DF_unary_min discrete_factor -> "-" ^ (string_of_factor discrete_factor)
-		| DF_expression discrete_arithmetic_expression ->
-			(*** TODO: simplify a bit? ***)
-			"(" ^ (string_of_arithmetic_expression discrete_arithmetic_expression) ^ ")"
-	(* Call top-level *)
-	in string_of_arithmetic_expression
 
 
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.map (fun (variable_index, arithmetic_expression) ->
+	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_index, arithmetic_expression) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ " := "
@@ -1024,3 +976,5 @@ let debug_string_of_impossible_concrete_run model (impossible_concrete_run : Sta
 	(* Iterate on following impossible steps *)
 	^ (string_of_impossible_concrete_steps model impossible_concrete_run.impossible_steps)
 	
+
+

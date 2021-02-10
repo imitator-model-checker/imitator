@@ -1,0 +1,72 @@
+(************************************************************
+ *                      IMITATOR MODEL
+ *
+ * Simple model to test
+ *
+ * Description      : Simple model to test no regression on invariant (discrete variables, clocks and parameters, linear expressions are used).
+ * Correctness     : lend location should be reached
+ * Source               : Own work
+ * Author               : Benjamin L.
+ * Modeling           : Benjamin L.
+ * Input by             : Benjamin L.
+ * License              : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2021/02/01
+ * Last modified   : 2021/02/01
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Parameters *)
+    p1,
+        : parameter;
+(* Clocks *)
+    x,
+        : clock;
+(* Discretes *)
+    i, j,
+        : discrete;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a1;
+
+loc l1: invariant True
+    
+    when True sync a1 goto lend;
+
+(* linear arithmetic invariant on PXD *)
+accepting loc lend: invariant p1 - x > i & p1 - x < j
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+	(*------------------------------------------------------------*)
+	(* Discrete variables *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& p1 >= 0
+	& i = 0
+	& j = 10
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

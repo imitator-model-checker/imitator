@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2021/01/22
+ * Last modified     : 2021/02/05
  *
  ************************************************************)
 
@@ -343,6 +343,7 @@ let export_to_file_errorresult error_type file_name =
 	
 	(* Error message *)
 	let error_message = match error_type with
+		| Division_by_zero msg			-> "division by 0 (" ^ msg ^ ")"
 		| ModelFileNotFound_error		-> "model file not found"
 		| PropertyFileNotFound_error	-> "property file not found"
 		| InvalidModel_error			-> "invalid model"
@@ -350,6 +351,7 @@ let export_to_file_errorresult error_type file_name =
 		| Lexing_error msg				-> "lexing error (" ^ msg ^ ")"
 		| ModelParsing_error msg		-> "model parsing error (" ^ msg ^ ")"
 		| PropertyParsing_error msg		-> "property parsing error (" ^ msg ^ ")"
+		| Unsatisfiable_initial_state	-> "unsatisfiable initial state"
 	in
 	
 	(* Prepare the string to write *)

@@ -1,0 +1,78 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Arithmetic expression without parenthesis (printing)
+ * Description      : Test arithmetic expression without parenthesis printing
+ * Correctness      : Reachable
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Computing, Printing
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/02/10
+ * Last modified    : 2021/02/10
+ * Model version    : 0.1
+ *
+ * IMITATOR version : > 3.0.0
+ ************************************************************)
+
+var
+
+(* Discretes *)
+    x, y, z
+        : discrete;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a1;
+
+loc l1: invariant True
+    when x + y * z > x sync a1 goto lend;
+    when x - y * z > x sync a1 goto lend;
+    when x + y / z > x sync a1 goto lend;
+    when x - y / z > x sync a1 goto lend;
+    when z * x + y > x sync a1 goto lend;
+    when z * x - y > x sync a1 goto lend;
+    when z / x + y > x sync a1 goto lend;
+    when z / x - y > x sync a1 goto lend;
+    when z / x * y > x sync a1 goto lend;
+    when z * x / y > x sync a1 goto lend;
+    when True sync a1 goto lend;
+    
+
+accepting loc lend: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+	(*------------------------------------------------------------*)
+	(* Discrete variables *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+	& z = 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

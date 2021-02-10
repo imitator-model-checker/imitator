@@ -202,7 +202,7 @@ let string_of_location model automaton_index location_index =
 	(* Label: name *)
 	^ (model.location_names automaton_index location_index)
 	(* Label: invariant *)
-	^ "|{" ^ (escape_string_for_dot (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index)))
+	^ "|{" ^ (escape_string_for_dot (ModelPrinter.string_of_guard model.variable_names (model.invariants automaton_index location_index)))
 	(* Label: stopwatches *)
 	^ (if model.has_non_1rate_clocks then (
 		let stopwatches = model.stopwatches automaton_index location_index in

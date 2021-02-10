@@ -1,0 +1,74 @@
+(************************************************************
+ *                      IMITATOR MODEL
+ *
+ * Simple model to test
+ *
+ * Description          : Simple model to test no regression on invariant (only discrete variables and clocks, linear and non-linear expressions are used).
+ * Correctness          : This test should fail because the use of a clock in non-linear expression.
+ * Source               : Own work
+ * Author               : Benjamin L.
+ * Modeling             : Benjamin L.
+ * Input by             : Benjamin L.
+ * License              : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2021/02/01
+ * Last modified   : 2021/02/01
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+    x,
+        : clock;
+(* Discretes *)
+    p1, i, j,
+        : discrete;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a1, a2;
+
+loc l1: invariant True
+    
+    when True sync a1 goto l2;
+    
+(* nonlinear arithmetic on XD invariant, should lead to semantic error *)
+loc l2: invariant p1 - x > i * i & p1 - x < j
+    
+    when True sync a2 goto lend;
+
+(* nonlinear arithmetic invariant D *)
+accepting loc lend: invariant i * i / 2 < j * j / 2 
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+	(*------------------------------------------------------------*)
+	(* Discrete variables *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& p1 = 5
+	& i = 0
+	& j = 10
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

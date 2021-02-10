@@ -32,7 +32,7 @@ open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
 open Statistics
-
+open Constants
 
 (************************************************************)
 (************************************************************)
@@ -226,37 +226,6 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 (* Other counters *)
 	let tcounter_pi0_compatibility = create_hybrid_counter_and_register "pi0-compatibility" States_counter Verbose_low
 
-
-(************************************************************)
-(* String constants *)
-(************************************************************)
-
-(** Data structure allowing for customizing string conversions *)
-type customized_string = {
-	true_string  : string;
-	false_string : string;
-	and_operator : string;
-	or_operator  : string;
-	l_operator   : string;
-	le_operator  : string;
-	eq_operator  : string;
-	ge_operator  : string;
-	g_operator   : string;
-}
-
-
-(** Default values *)
-let default_string = {
-	true_string   = "True";
-	false_string  = "False";
-	and_operator  = "\n& ";
-	or_operator   = " or ";
-	l_operator    = " < ";
-	le_operator   = " <= ";
-	eq_operator   = " = ";
-	ge_operator   = " >= ";
-	g_operator    = " > ";
-}
 
 (************************************************************)
 (* TYPES *)
@@ -1923,6 +1892,8 @@ let string_of_x_linear_constraint = string_of_linear_constraint default_string
 let string_of_px_linear_constraint = string_of_linear_constraint default_string
 let string_of_d_linear_constraint = string_of_linear_constraint default_string
 let string_of_pxd_linear_constraint = string_of_linear_constraint default_string
+
+
 
 let customized_string_of_p_linear_constraint = string_of_linear_constraint
 let customized_string_of_px_linear_constraint = string_of_linear_constraint

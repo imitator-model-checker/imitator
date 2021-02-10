@@ -90,9 +90,11 @@ type clock_updates =
 
 type discrete_update = discrete_index * DiscreteExpressions.discrete_arithmetic_expression
 
-(** Guard: a linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
 
-type discrete_guard = LinearConstraint.d_linear_constraint
+
+(** Guard: a non-linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
+
+type discrete_guard = NonlinearConstraint.nonlinear_constraint
 type continuous_guard = LinearConstraint.pxd_linear_constraint
 
 type discrete_continuous_guard = {
@@ -107,17 +109,10 @@ type guard =
 	| Discrete_continuous_guard of discrete_continuous_guard
 
 
-(** Invariant: linear constraint *)
-type invariant = LinearConstraint.pxd_linear_constraint
+(** Invariant: guard *)
+type invariant = guard
 
-(** Boolean expression *)
-type boolean_expression =
-	| True_bool (** True *)
-	| False_bool (** False *)
-	| Not_bool of boolean_expression (** Negation *)
-	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
-	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
-	| Discrete_boolean_expression of DiscreteExpressions.discrete_boolean_expression
+
 
 (** Updates *)
 type updates = {
@@ -126,7 +121,7 @@ type updates = {
   conditional: conditional_update list; (** List of conditional updates *)
 }
 (** Conditional updates *)
-and conditional_update = boolean_expression * updates * updates
+and conditional_update = DiscreteExpressions.boolean_expression * updates * updates
 
 (** Transition: guard, action, list of updates, destination location *)
 type transition = {

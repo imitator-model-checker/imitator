@@ -65,6 +65,9 @@ val counter_explore_using_strategy : Statistics.hybridCounter
 (**************************************************************)
 (* Class-independent functions *)
 (**************************************************************)
+(*------------------------------------------------------------*)
+(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialState *)
+(*------------------------------------------------------------*)
 val compute_initial_state_or_abort : unit -> State.state
 
 
@@ -113,7 +116,7 @@ val get_updates_in_combined_transition : Location.global_location -> StateSpace.
 (*------------------------------------------------------------------*)
 (* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
 (*------------------------------------------------------------------*)
-val compute_new_location_guards_updates : Location.global_location -> StateSpace.combined_transition -> (Location.global_location * LinearConstraint.d_linear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list)
+val compute_new_location_guards_updates : Location.global_location -> StateSpace.combined_transition -> (Location.global_location * NonlinearConstraint.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list)
 
 
 (*------------------------------------------------------------*)

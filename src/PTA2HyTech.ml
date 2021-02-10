@@ -161,7 +161,9 @@ let string_of_initially model automaton_index =
 let string_of_invariant model automaton_index location_index stopwatches clocks =
 	(* Invariant *)
 	"while "
-	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
+	(* TODO benjamin check with Etienne, is HyTech support arithmetic expression in invariant *)
+	(* or should we use only the continuous part ? *)
+	^ (ModelPrinter.string_of_guard model.variable_names (model.invariants automaton_index location_index))
 
 	(* Handle stopwatches *)
 	^
