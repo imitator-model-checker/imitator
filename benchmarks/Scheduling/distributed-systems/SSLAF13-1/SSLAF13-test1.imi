@@ -1,7 +1,7 @@
 (*******************************************************************************
  *                                IMITATOR MODEL                               
  * 
- * Title            : test-palencia
+ * Title            : SSLAF13-test1
  * Description      : Test Case 1 from [SSLAF13]. Note: might not be the final model of the paper (?)
  * Correctness      : system is schedulable
  * Scalable         : yes

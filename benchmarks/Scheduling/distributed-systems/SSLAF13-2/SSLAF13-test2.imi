@@ -1,7 +1,7 @@
 (*******************************************************************************
  *                                IMITATOR MODEL                               
  * 
- * Title            : Test-Thiele
+ * Title            : SSLAF13-test2
  * Description      : Test Case 2 from [SSLAF13]. Note: might not be the final model of the paper (?)
  * Correctness      : system is schedulable
  * Scalable         : yes
