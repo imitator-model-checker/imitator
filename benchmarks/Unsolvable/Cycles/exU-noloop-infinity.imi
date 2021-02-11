@@ -1,20 +1,25 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * U-PTA for which there exists a loop in the trace set of p=infinity, but not for any actual parameter valuation.
- *
- * Description     : U-PTA for which there exists a loop in the trace set of p=infinity, but not for any actual parameter valuation. Version with p=infinity.
- * Correctness     : 
- * Source          : Didier Lime
- * Author          : Didier Lime
- * Modeling        : Étienne André
- * Input by        : Étienne André
- *
- * Created         : 2015/09/30
- * Last modified   : 2020/08/14
- *
- * IMITATOR version: 3
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : exU-noloop-infinity
+ * Description      : U-PTA for which there exists a loop in the trace set of p=infinity, but not for any actual parameter valuation. Version with p=infinity.
+ * Correctness      : 
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : 
+ * Source           : Didier Lime
+ * bibkey           : 
+ * Author           : Didier Lime
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2015/09/30
+ * Last modified    : 2020/08/14
+ * Model version    : 
+ * 
+ * IMITATOR version : 
+ ******************************************************************************)
 
 var
 
