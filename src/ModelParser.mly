@@ -635,6 +635,8 @@ discrete_boolean_expression:
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	/* allowed for convenience */
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
+	/**/
+	| LPAREN boolean_expression RPAREN { Parsed_boolean_expression $2 }
 ;
 
 /************************************************************/
