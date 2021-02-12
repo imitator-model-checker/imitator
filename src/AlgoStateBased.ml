@@ -1413,17 +1413,18 @@ let compute_discrete_comparisons (relop : DiscreteExpressions.relop) =
 	| OP_GEQ	-> NumConst.ge
 	| OP_G		-> NumConst.g
 
-(** Check if a boolean expression is satisfied *)
-let is_boolean_expression_satisfied location (boolean_expr : DiscreteExpressions.boolean_expression) : bool =
-  let rec is_boolean_expression_satisfied_rec = function
-    | True_bool -> true
-    | False_bool -> false
-    | Not_bool b -> not (is_boolean_expression_satisfied_rec b) (* negation *)
-    | And_bool (b1, b2) -> (is_boolean_expression_satisfied_rec b1) && (is_boolean_expression_satisfied_rec b2) (* conjunction *)
-    | Or_bool (b1, b2) -> (is_boolean_expression_satisfied_rec b1) || (is_boolean_expression_satisfied_rec b2) (* disjunction *)
-    | Discrete_boolean_expression dbe -> DiscreteExpressions.check_discrete_boolean_expression (Location.get_discrete_value location) dbe
-  in
-  is_boolean_expression_satisfied_rec boolean_expr
+(* TODO benjamin : remove comments *)
+(*(** Check if a boolean expression is satisfied *)*)
+(*let is_boolean_expression_satisfied location (boolean_expr : DiscreteExpressions.boolean_expression) : bool =*)
+(*  let rec is_boolean_expression_satisfied_rec = function*)
+(*    | True_bool -> true*)
+(*    | False_bool -> false*)
+(*    | Not_bool b -> not (is_boolean_expression_satisfied_rec b) (* negation *)*)
+(*    | And_bool (b1, b2) -> (is_boolean_expression_satisfied_rec b1) && (is_boolean_expression_satisfied_rec b2) (* conjunction *)*)
+(*    | Or_bool (b1, b2) -> (is_boolean_expression_satisfied_rec b1) || (is_boolean_expression_satisfied_rec b2) (* disjunction *)*)
+(*    | Discrete_boolean_expression dbe -> DiscreteExpressions.check_discrete_boolean_expression (Location.get_discrete_value location) dbe*)
+(*  in*)
+(*  is_boolean_expression_satisfied_rec boolean_expr*)
 
 (** Merge two clock_updates - NOTE: conflict resolution done by apply_updates_assign *)
 let merge_clock_updates first_update second_update : clock_updates =
@@ -1450,7 +1451,7 @@ let get_updates (source_location : Location.global_location) (updates : Abstract
 	List.fold_left (
 	fun (acc_clock, acc_discrete) (conditional_update : AbstractModel.conditional_update) ->
 		let boolean_expr, if_updates, else_updates = conditional_update in
-		let filter_updates = if (is_boolean_expression_satisfied source_location boolean_expr) then if_updates else else_updates in
+		let filter_updates = if (DiscreteExpressions.is_boolean_expression_satisfied (Location.get_discrete_value source_location) boolean_expr) then if_updates else else_updates in
 		(merge_clock_updates acc_clock filter_updates.clock, list_append acc_discrete filter_updates.discrete)
 	) (updates.clock, updates.discrete) updates.conditional
 

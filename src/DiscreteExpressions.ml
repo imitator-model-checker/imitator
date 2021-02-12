@@ -68,7 +68,7 @@ and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
-(*	| Boolean_expression of boolean_expression*)
+	| Boolean_expression of boolean_expression
 
 (************************************************************)
 (** Evaluate arithmetic expressions with a valuation *)
@@ -140,7 +140,17 @@ let eval_discrete_relop relop value_1 value_2 : bool =
 	| OP_GEQ	-> value_1 >= value_2
 	| OP_G		-> value_1 >  value_2
 
-let check_discrete_boolean_expression discrete_valuation = function
+(** Check if a boolean expression is satisfied *)
+let rec is_boolean_expression_satisfied discrete_valuation = function
+    | True_bool -> true
+    | False_bool -> false
+    | Not_bool b -> not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
+    | And_bool (b1, b2) -> (is_boolean_expression_satisfied discrete_valuation b1) && (is_boolean_expression_satisfied discrete_valuation b2) (* conjunction *)
+    | Or_bool (b1, b2) -> (is_boolean_expression_satisfied discrete_valuation b1) || (is_boolean_expression_satisfied discrete_valuation b2) (* disjunction *)
+    | Discrete_boolean_expression dbe -> check_discrete_boolean_expression discrete_valuation dbe
+
+(** Check if a discrete boolean expression is satisfied *)
+and check_discrete_boolean_expression discrete_valuation = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression (discrete_arithmetic_expression_1, relop, discrete_arithmetic_expression_2) ->
 		eval_discrete_relop
@@ -159,6 +169,8 @@ let check_discrete_boolean_expression discrete_valuation = function
 			expr1_evaluated
 			<= 
 			(eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_3)
+    | Boolean_expression boolean_expression ->
+        is_boolean_expression_satisfied discrete_valuation boolean_expression
 
 
 
@@ -281,8 +293,26 @@ let string_of_boolean_operations customized_string = function
 	| OP_G		-> customized_string.g_operator
 
 (* TODO benjamin ref in ModelPrinter *)
+(* TODO replace operator by customized_string *)
+(** Convert a Boolean expression into a string *)
+let rec customized_string_of_boolean_expression customized_string variable_names = function
+	| True_bool -> customized_string.true_string
+	| False_bool -> customized_string.false_string
+	| Not_bool b -> "<> (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
+	| And_bool (b1, b2) ->
+		(customized_string_of_boolean_expression customized_string variable_names b1)
+		^ " && "
+		^ (customized_string_of_boolean_expression customized_string variable_names b2)
+	| Or_bool (b1, b2) ->
+		(customized_string_of_boolean_expression customized_string variable_names b1)
+		^ " || "
+		^ (customized_string_of_boolean_expression customized_string variable_names b2)
+	| Discrete_boolean_expression discrete_boolean_expression ->
+		customized_string_of_discrete_boolean_expression customized_string variable_names discrete_boolean_expression
+
+(* TODO benjamin ref in ModelPrinter *)
 (** Convert a discrete_boolean_expression into a string *)
-let customized_string_of_discrete_boolean_expression customized_string variable_names = function
+and customized_string_of_discrete_boolean_expression customized_string variable_names = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
 		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
@@ -296,8 +326,11 @@ let customized_string_of_discrete_boolean_expression customized_string variable_
 		^ " , "
 		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression3)
 		^ "]"
+    | Boolean_expression boolean_expression ->
+        "(" ^ (customized_string_of_boolean_expression customized_string variable_names boolean_expression) ^ ")"
 
 (* TODO benjamin ref in ModelPrinter *)
+let string_of_boolean_expression = customized_string_of_boolean_expression Constants.default_string
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.default_string
 
 

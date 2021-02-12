@@ -128,6 +128,7 @@ let string_of_var_type = function
 	| Var_type_clock -> "clock"
 	| Var_type_discrete -> "discrete"
 	| Var_type_parameter -> "parameter"
+(*	| Var_type_bool -> "boolean"*)
 
 
 
@@ -283,25 +284,6 @@ let string_of_boolean_operations = function
 	| OP_GEQ	-> ">="
 	| OP_G		-> ">"
 
-
-(** Convert a discrete_boolean_expression into a string *)
-let string_of_discrete_boolean_expression variable_names = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " "
-		^ (string_of_boolean_operations relop)
-		^ " "
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
-		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " in ["
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
-		^ " , "
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
-		^ "]"
-
 (** Convert a Boolean expression into a string *)
 let rec string_of_boolean variable_names = function
 	| True_bool -> string_of_true
@@ -318,6 +300,26 @@ let rec string_of_boolean variable_names = function
 	| Discrete_boolean_expression discrete_boolean_expression ->
 		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
 
+(** Convert a discrete_boolean_expression into a string *)
+and string_of_discrete_boolean_expression variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
+		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		^ " "
+		^ (string_of_boolean_operations relop)
+		^ " "
+		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
+		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		^ " in ["
+		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+		^ " , "
+		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
+		^ "]"
+    (** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
+	| Boolean_expression boolean_expression ->
+	    "(" ^ (string_of_boolean variable_names boolean_expression) ^ ")"
 
 
 (** Return if there is no clock updates *)
