@@ -1289,7 +1289,7 @@ let get_declared_variable_names variable_declarations =
       (List.rev_append new_list clocks, discrete, parameters, List.rev_append new_constants constants, unassigned_constants)
     | ParsingStructure.Var_type_constant ->
       (clocks, discrete, parameters, List.rev_append new_constants constants, List.rev_append new_list unassigned_constants)
-    | ParsingStructure.Var_type_discrete ->
+    | ParsingStructure.Var_type_discrete _ ->
       (clocks, List.rev_append new_list discrete, parameters, List.rev_append new_constants constants, unassigned_constants)
     | ParsingStructure.Var_type_parameter ->
       (clocks, discrete, List.rev_append new_list parameters, List.rev_append new_constants constants, unassigned_constants)
