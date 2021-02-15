@@ -187,9 +187,9 @@ decl_var_list:
 var_type:
 	| CT_CLOCK { Var_type_clock }
 	| CT_CONSTANT { Var_type_constant }
-	| CT_DISCRETE { Var_type_discrete }
+	| CT_DISCRETE { Var_type_discrete Var_type_discrete_rational }
 	| CT_PARAMETER { Var_type_parameter }
-	/*| CT_BOOL { Var_type_bool }*/
+	| CT_BOOL { Var_type_discrete Var_type_discrete_bool }
 ;
 
 /************************************************************
@@ -637,6 +637,8 @@ discrete_boolean_expression:
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	/**/
 	| LPAREN boolean_expression RPAREN { Parsed_boolean_expression $2 }
+	/**/
+	| NAME { Parsed_DB_variable $1 }
 ;
 
 /************************************************************/

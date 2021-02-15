@@ -35,13 +35,17 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 (****************************************************************)
 (** Declarations *)
 (****************************************************************)
+
+type var_type_discrete =
+    | Var_type_discrete_bool
+    | Var_type_discrete_rational
+
 (* Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
 	| Var_type_constant
-	| Var_type_discrete
+	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
-(*	| Var_type_bool*)
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
 type var_value = NumConst.t
@@ -81,7 +85,9 @@ type parsed_discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
-(*	| Parsed_boolean_expression of parsed_boolean_expression*)
+	| Parsed_boolean_expression of parsed_boolean_expression
+	(* Parsed_DB_variable of variable_name *)
+	| Parsed_DB_variable of variable_name
 
 
 and parsed_boolean_expression =
@@ -91,6 +97,8 @@ and parsed_boolean_expression =
 	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
 	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
 	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
+
+
 
 (****************************************************************)
 (** Convex predicates, linear and non-linear expressions *)
