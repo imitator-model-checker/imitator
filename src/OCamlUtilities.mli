@@ -92,6 +92,11 @@ val list_set_nth : int -> 'a -> 'a list -> 'a list
 (** Select the sublist of a list from position i to position j *)
 val sublist : int -> int -> 'a list -> 'a list
 
+(* Partition list by grouping elements by keys in a list of tuples *)
+val group_by : ('a -> 'b) -> 'a list -> ('b * 'a list) list
+
+(* Partition list by grouping elements by keys in a hashtable *)
+val hashtbl_group_by : ('a -> 'b) -> 'a list -> ('b, 'a list) Hashtbl.t
 
 (************************************************************)
 (** Useful functions on arrays *)

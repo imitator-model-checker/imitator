@@ -232,7 +232,23 @@ let sublist minb maxb l =
 			if minb > 0 then tail else h :: tail
 	in sublist_rec minb maxb l
 
+(* Partition list by grouping elements by keys in a list of tuples *)
+let group_by keySelector l =
+    let keys = List.map keySelector l in
+    let uniq_keys = list_only_once keys in
+    let group_by_keys = List.map (fun key -> (key, List.filter (fun x -> keySelector x = key) l)) keys in
+    group_by_keys
 
+(* Partition list by grouping elements by keys in a hashtable *)
+let hashtbl_group_by keySelector l =
+    let group_by_keys = group_by keySelector l in
+    let table = Hashtbl.create (List.length group_by_keys) in
+
+    for i = 0 to (List.length group_by_keys) - 1 do
+        let key, group = List.nth group_by_keys i in
+        Hashtbl.add table key group
+    done;
+    table
 
 (************************************************************)
 (** Useful functions on arrays *)

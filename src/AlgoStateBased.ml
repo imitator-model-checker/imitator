@@ -2533,7 +2533,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let pxd_valuation = fun variable_index ->
 			match model.type_of_variables variable_index with
 			| Var_type_clock | Var_type_parameter -> valuation_n variable_index
-			| Var_type_discrete -> Location.get_discrete_value location_n variable_index
+			| Var_type_discrete _ -> Location.get_discrete_value location_n variable_index (* TODO benjamin : check with étienne, is it computing of linear part ? *)
 		in
 		
 		(* Add the valuation to the list, and replace n+1 with n *)

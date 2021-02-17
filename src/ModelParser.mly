@@ -187,9 +187,9 @@ decl_var_list:
 var_type:
 	| CT_CLOCK { Var_type_clock }
 	| CT_CONSTANT { Var_type_constant }
-	| CT_DISCRETE { Var_type_discrete }
+	| CT_DISCRETE { Var_type_discrete Var_type_discrete_rational }
+    | CT_BOOL { Var_type_discrete Var_type_discrete_bool }
 	| CT_PARAMETER { Var_type_parameter }
-	| CT_BOOL { Var_type_discrete }
 ;
 
 /************************************************************
