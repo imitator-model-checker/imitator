@@ -69,6 +69,8 @@ and discrete_boolean_expression =
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression of boolean_expression
+	(* Parsed_DB_variable of variable_name *)
+	| DB_variable of Automaton.variable_index
 
 (************************************************************)
 (** Evaluate arithmetic expressions with a valuation *)
@@ -171,7 +173,8 @@ and check_discrete_boolean_expression discrete_valuation = function
 			(eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_3)
     | Boolean_expression boolean_expression ->
         is_boolean_expression_satisfied discrete_valuation boolean_expression
-
+(*    | DB_variable variable_index ->*)
+(*        discrete_valuation variable_index*)
 
 
 
