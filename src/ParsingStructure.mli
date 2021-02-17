@@ -37,14 +37,14 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 (****************************************************************)
 
 type var_type_discrete =
-    | Var_type_discrete_bool
     | Var_type_discrete_rational
+    | Var_type_discrete_bool
 
 (* Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
 	| Var_type_constant
-	| Var_type_discrete
+	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
 
 (* We allow for some variables (i.e., parameters and constants) a value *)

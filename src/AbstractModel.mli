@@ -31,10 +31,14 @@ type v0 = HyperRectangle.hyper_rectangle
 (** Types *)
 (************************************************************)
 
+type var_type_discrete =
+    | Var_type_discrete_rational
+    | Var_type_discrete_bool
+
 (** Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
-	| Var_type_discrete
+	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
 
 (** Type of sync actions *)

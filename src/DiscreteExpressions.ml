@@ -79,7 +79,7 @@ and discrete_boolean_expression =
 let rec eval_discrete_factor discrete_valuation = function
 	| DF_variable variable_index ->
 		discrete_valuation variable_index
-		
+
 	| DF_constant variable_value ->
 		variable_value
 		

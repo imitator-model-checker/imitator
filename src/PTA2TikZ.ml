@@ -45,7 +45,7 @@ let variable_names_with_style variable_index =
 	let name = escape_latex (model.variable_names variable_index) in
 	match model.type_of_variables variable_index with
 	| Var_type_clock -> "\\styleclock{" ^ name ^ "}"
-	| Var_type_discrete -> "\\styledisc{" ^ name ^ "}"
+	| Var_type_discrete _ -> "\\styledisc{" ^ name ^ "}"
 	| Var_type_parameter -> "\\styleparam{" ^ name ^ "}"
 
 
