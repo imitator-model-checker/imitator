@@ -44,7 +44,7 @@ type var_type_discrete =
 type var_type =
 	| Var_type_clock
 	| Var_type_constant
-	| Var_type_discrete of var_type_discrete
+	| Var_type_discrete
 	| Var_type_parameter
 
 (* We allow for some variables (i.e., parameters and constants) a value *)

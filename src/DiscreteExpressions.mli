@@ -85,6 +85,8 @@ and discrete_boolean_expression =
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression of boolean_expression
+	(* Parsed_DB_variable of variable_name *)
+	| DB_variable of Automaton.variable_index
 
 
 (************************************************************)

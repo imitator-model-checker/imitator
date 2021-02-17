@@ -167,7 +167,9 @@ and get_variables_in_parsed_discrete_boolean_expression variables_used_ref  = fu
 		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr3
 	| Parsed_boolean_expression parsed_boolean_expression ->
 	    get_variables_in_parsed_boolean_expression variables_used_ref parsed_boolean_expression
-
+	| Parsed_DB_variable variable_name ->
+		(* Add the variable name to the set and update the reference *)
+		variables_used_ref := StringSet.add variable_name !variables_used_ref
 	
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a parsed_update_arithmetic_expression *)
@@ -277,6 +279,8 @@ and check_f_in_parsed_update_discrete_boolean_expression f = function
             (check_f_in_parsed_update_arithmetic_expression f expr3)
     | Parsed_boolean_expression parsed_boolean_expression ->
         check_f_in_parsed_update_boolean_expression f parsed_boolean_expression
+    | Parsed_DB_variable variable_name ->
+        f variable_name
 
 
 (*------------------------------------------------------------*)
@@ -309,19 +313,19 @@ and check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_o
   | Parsed_DAE_term parsed_update_term ->
     check_f_in_parsed_discrete_term f index_of_variables type_of_variables constants parsed_update_term
 
-and check_f_in_parsed_boolean_expression f index_of_variables type_of_variables constants = function
+and check_f_in_parsed_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants = function
     | Parsed_True
     | Parsed_False -> true
-    | Parsed_Not parsed_boolean_expression -> check_f_in_parsed_boolean_expression f index_of_variables type_of_variables constants parsed_boolean_expression
+    | Parsed_Not parsed_boolean_expression -> check_f_in_parsed_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants parsed_boolean_expression
     | Parsed_And (l_expr, r_expr)
     | Parsed_Or (l_expr, r_expr) ->
         evaluate_and
-            (check_f_in_parsed_boolean_expression f index_of_variables type_of_variables constants l_expr)
-            (check_f_in_parsed_boolean_expression f index_of_variables type_of_variables constants r_expr)
+            (check_f_in_parsed_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants l_expr)
+            (check_f_in_parsed_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants r_expr)
     | Parsed_Discrete_boolean_expression parsed_discrete_boolean_expression ->
-        check_f_in_parsed_discrete_boolean_expression f index_of_variables type_of_variables constants parsed_discrete_boolean_expression
+        check_f_in_parsed_discrete_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants parsed_discrete_boolean_expression
 
-and check_f_in_parsed_discrete_boolean_expression f index_of_variables type_of_variables constants = function
+and check_f_in_parsed_discrete_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants = function
     | Parsed_expression (l_expr, _ (* relop*), r_expr) ->
         evaluate_and
             (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants l_expr)
@@ -335,7 +339,9 @@ and check_f_in_parsed_discrete_boolean_expression f index_of_variables type_of_v
             )
             (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr3)
     | Parsed_boolean_expression parsed_boolean_expression ->
-        check_f_in_parsed_boolean_expression f index_of_variables type_of_variables constants parsed_boolean_expression
+        check_f_in_parsed_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants parsed_boolean_expression
+    | Parsed_DB_variable variable_name ->
+        visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants variable_name
 
 (*------------------------------------------------------------*)
 (* Check that all variables are defined in a discrete update *)
@@ -629,6 +635,8 @@ let convert_parsed_discrete_boolean_expression2 index_of_variables constants = f
 		)
 	| Parsed_boolean_expression boolean_expression ->
 	     Boolean_expression (convert_bool_expr index_of_variables constants boolean_expression)
+    | Parsed_DB_variable variable_name ->
+        DB_variable (Hashtbl.find index_of_variables variable_name)
 
 
 (* Convert parsed_discrete_arithmetic_expression *)
@@ -1012,10 +1020,15 @@ let only_discrete_in_nonlinear_term index_of_variables type_of_variables constan
         false
       )
 
+let only_discrete_in_nonlinear_term_discrete_boolean_expr index_of_variables type_of_variables constants variable_name =
+      let variable_index =
+        Hashtbl.find index_of_variables variable_name
+      in
+      type_of_variables variable_index = Var_type_discrete
+
 let only_discrete_in_linear_expression = check_f_in_linear_expression only_discrete_in_linear_term
-(* TODO benjamin remove when all passed to discrete_boolean_expression *)
-(*let only_discrete_in_nonlinear_expression = check_f_in_parsed_discrete_arithmetic_expression only_discrete_in_nonlinear_term*)
-let only_discrete_in_nonlinear_expression = check_f_in_parsed_discrete_boolean_expression only_discrete_in_nonlinear_term
+(* TODO benjamin : not very elegant *)
+let only_discrete_in_nonlinear_expression = check_f_in_parsed_discrete_boolean_expression only_discrete_in_nonlinear_term only_discrete_in_nonlinear_term_discrete_boolean_expr
 
 (*------------------------------------------------------------*)
 (* Check that a linear expression contains no variables (neither discrete nor clock) *)
