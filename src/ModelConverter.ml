@@ -110,6 +110,9 @@ let string_of_discrete_type = function
     | Var_type_discrete_rational -> "discrete"
     | Var_type_discrete_bool -> "bool"
 
+(*let string_of_type = function*)
+(*    | Var_type_discrete x -> string_of_discrete_type x*)
+
 let convert_var_type_discrete = function
     | ParsingStructure.Var_type_discrete_rational -> AbstractModel.Var_type_discrete_rational
     | ParsingStructure.Var_type_discrete_bool -> AbstractModel.Var_type_discrete_bool
@@ -4392,7 +4395,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let single_discrete_names = list_only_once possibly_multiply_defined_discrete_names in
 	let single_parameter_names = list_only_once possibly_multiply_defined_parameter_names in
 	let single_discrete_names_by_type = list_only_once possibly_multiply_defined_discrete_names_by_type in
-	
+
+(*	for i = 0 to (List.length single_discrete_names_by_type) - 1 do*)
+(*	    let t, n = List.nth single_discrete_names_by_type i in*)
+(*	    let ct = convert_var_type t in*)
+(*	    print_string ("Type : " ^ (string_of_type ct) ^ ", Name : " ^ n ^ "\n");*)
+(*	done;*)
+
 	(*------------------------------------------------------------*)
 	(* Remove unused variables *)
 	(*------------------------------------------------------------*)
@@ -4575,7 +4584,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	done;
 	for i = first_discrete_index to nb_variables - 1 do
 	    (* Get specific var_type of discrete variable *)
-        let var_type, _ = List.nth single_discrete_names_by_type i in
+	    (* Remove offset, because array of var_type * variable_name for discrete start from 0 *)
+        let var_type, _ = List.nth single_discrete_names_by_type (i - first_discrete_index) in
+        (* Convert var_type from ParsingStructure to AbstractModel *)
 		type_of_variables.(i) <- convert_var_type var_type;
 	done;
 	(* Functional representation *)
