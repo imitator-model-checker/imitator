@@ -1,7 +1,7 @@
 (*******************************************************************************
  *                                IMITATOR MODEL                               
  * 
- * Title            : JLR13-3tasks-npfp-100:0
+ * Title            : JLR13-3tasks-npfp:100-0
  * Description      : Three periodic tasks run upon a uniprocessor by their fixed priorites, and the execution of a task cannot be preempted.
  * Correctness      : 
  * Scalable         : 

@@ -1,7 +1,7 @@
 (*******************************************************************************
  *                                IMITATOR MODEL                               
  * 
- * Title            : JLR13-3tasks-npfp-100:2
+ * Title            : JLR13-3tasks-npfp:50-0
  * Description      : Three periodic tasks run upon a uniprocessor by their fixed priorites, and the execution of a task cannot be preempted.
  * Correctness      : 
  * Scalable         : 
@@ -14,7 +14,7 @@
  * Input by         : Youcheng Sun, Étienne André
  * License          : 
  * 
- * Created          : xxxx (< 2015/10/29)
+ * Created          : xxxx (< 2015/10/30)
  * Last modified    : 2020/08/18
  * Model version    : 
  * 
@@ -26,10 +26,9 @@
 
 var 
     p1, p2, p3, c1, c2, c3 : clock;
-    b, C3_WORST: parameter;
-    e=10,a=100, c=18, d=28, C3_BEST=20, J2=2: constant;
-    b_min = 10, b_max = 1000, C3_WORST_min = 20, C3_WORST_max = 1000: constant;
-
+    b,C3_WORST: parameter;
+    e=10,a=50, c=18, d=28, C3_BEST=20, J2=0: constant;
+    b_min = 10, b_max = 50, C3_WORST_min = 20, C3_WORST_max = 100: constant;
 
 (************************************************************)
 automaton act1
@@ -173,7 +172,6 @@ init :=
 	& b >= b_min & b <= b_max
 	& C3_WORST >= C3_WORST_min & C3_WORST <= C3_WORST_max
 ;
-
 
 
 (************************************************************)
