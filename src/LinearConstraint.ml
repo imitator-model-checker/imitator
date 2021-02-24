@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2020/12/15
+ * Last modified     : 2021/02/24
  *
  ************************************************************)
 
@@ -254,6 +254,7 @@ type pxd_linear_term = linear_term
 
 
 (*** WARNING: probably useless construction (by Ulrich) ***)
+(*** NOTE (2021): not that useless (encapsulation of PPL concepts) ***)
 type op =
 	| Op_g
 	| Op_ge
@@ -277,6 +278,13 @@ let string_of_op = function
 	| Op_eq -> "="
 	| Op_le -> "<="
 	| Op_l  -> "<"
+
+
+(* The predefined operators in PPL (Less_Than_RS, Less_Or_Equal_RS, Equal_RS, Greater_Or_Equal_RS, Greater_Than_RS *)
+type ppl_op = Ppl.relation_symbol
+
+(* The predefined linear term in PPL *)
+type ppl_linear_term = Ppl.linear_expression
 
 
 type linear_inequality = Ppl.linear_constraint
@@ -863,7 +871,7 @@ let string_of_constant = NumConst.string_of_numconst
 
 
 (** Convert a linear term into a string *)	
-let rec string_of_linear_term names linear_term =
+let rec string_of_linear_term (names : (variable -> string)) (linear_term : linear_term) =
 	match linear_term with
 		| Coef c -> string_of_coef c
 		
@@ -897,36 +905,36 @@ let string_of_p_linear_term = string_of_linear_term
 let string_of_pxd_linear_term = string_of_linear_term 
 
 (** Convert a linear term (PPL) into a string *)
-let rec string_of_linear_term_ppl names linear_term =
+let rec string_of_ppl_linear_term (names : (variable -> string)) (linear_term : ppl_linear_term) =
 	match linear_term with
 		| Coefficient z -> Gmp.Z.string_from z
 		
 		| Variable v -> names v
 		
-		| Unary_Plus t -> string_of_linear_term_ppl names t
+		| Unary_Plus t -> string_of_ppl_linear_term names t
 		
 		| Unary_Minus t -> (
-				let str = string_of_linear_term_ppl names t in
+				let str = string_of_ppl_linear_term names t in
 				"-(" ^ str ^ ")")
 				
 		(* Some simplification *)
 		| Plus (lterm, Coefficient z)
 		| Minus (lterm, Coefficient z)
 			when Gmp.Z.equal z (Gmp.Z.zero) ->
-			  string_of_linear_term_ppl names lterm
+			  string_of_ppl_linear_term names lterm
 
 		| Plus (lterm, rterm) -> (
-			  let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
+			  let lstr = string_of_ppl_linear_term names lterm in
+				let rstr = string_of_ppl_linear_term names rterm in
 				lstr ^ " + " ^ rstr )
 				
 		| Minus (lterm, rterm) -> (
-			  let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
+			  let lstr = string_of_ppl_linear_term names lterm in
+				let rstr = string_of_ppl_linear_term names rterm in
 				lstr ^ " - (" ^ rstr ^ ")" )
 				
 		| Times (z, rterm) -> (
-				let tstr = string_of_linear_term_ppl names rterm in
+				let tstr = string_of_ppl_linear_term names rterm in
 				if (Gmp.Z.equal z (Gmp.Z.one)) then
 					tstr
 				else 
@@ -1041,36 +1049,56 @@ let make_linear_inequality linear_term op =
 	(* Build zero term for comparison with the operator *)
 	let zero_term = Coefficient Gmp.Z.zero in
 	match op with
-		| Op_g -> Greater_Than (linear_expression, zero_term)
-		| Op_ge -> Greater_Or_Equal (linear_expression, zero_term)
-		| Op_eq -> Equal (linear_expression, zero_term)
-		| Op_le -> Less_Or_Equal (linear_expression, zero_term)
-		| Op_l -> Less_Than (linear_expression, zero_term)
+		| Op_g	-> Greater_Than (linear_expression, zero_term)
+		| Op_ge	-> Greater_Or_Equal (linear_expression, zero_term)
+		| Op_eq	-> Equal (linear_expression, zero_term)
+		| Op_le	-> Less_Or_Equal (linear_expression, zero_term)
+		| Op_l	-> Less_Than (linear_expression, zero_term)
 
-let make_p_linear_inequality = make_linear_inequality
-let make_px_linear_inequality = make_linear_inequality
-let make_pxd_linear_inequality = make_linear_inequality
+let make_p_linear_inequality	= make_linear_inequality
+let make_px_linear_inequality	= make_linear_inequality
+let make_pxd_linear_inequality	= make_linear_inequality
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Access} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(** split a linear_inequality into its two terms and the operator *)
+let split_linear_inequality = function
+	| Less_Than (lterm, rterm)			-> lterm, rterm, Less_Than_RS
+	| Less_Or_Equal (lterm, rterm)		-> lterm, rterm, Less_Or_Equal_RS
+	| Equal (lterm, rterm)				-> lterm, rterm, Equal_RS
+	| Greater_Or_Equal (lterm, rterm)	-> lterm, rterm, Greater_Or_Equal_RS
+	| Greater_Than (lterm, rterm)		-> lterm, rterm, Greater_Than_RS
+
+
+(* Get the PPL operator `ppl_op` of a linear inequality *)
+let ppl_op_of_linear_inequality	(linear_inequality : linear_inequality) : ppl_op =
+	let _, _, ppl_op = split_linear_inequality linear_inequality in
+	ppl_op
+
+(* Function translating a PPL operator to an `op` operator *)
+let op_of_ppl_op = function
+	| Less_Than_RS			-> Op_l
+	| Less_Or_Equal_RS		-> Op_le
+	| Equal_RS				-> Op_eq
+	| Greater_Or_Equal_RS	-> Op_ge
+	| Greater_Than_RS		-> Op_g
+
+
+(* Get the `op` operator of a linear inequality *)
+let op_of_linear_inequality	(linear_inequality : linear_inequality) : op =
+	op_of_ppl_op (ppl_op_of_linear_inequality linear_inequality)
+
+let op_of_pxd_linear_inequality = op_of_linear_inequality
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** split a linear inequality into its two terms and the operator *)
-let split_linear_inequality = function
-	| Less_Than (lterm, rterm) -> lterm, rterm, Less_Than_RS
-	| Less_Or_Equal (lterm, rterm) -> lterm, rterm, Less_Or_Equal_RS
-	| Equal (lterm, rterm) -> lterm, rterm, Equal_RS
-	| Greater_Than (lterm, rterm) -> lterm, rterm, Greater_Than_RS
-	| Greater_Or_Equal (lterm, rterm) -> lterm, rterm, Greater_Or_Equal_RS
-	
-(** build a linear inequality from two terms and an operator *)
-let build_linear_inequality lterm rterm op = 
-	match op with
-		| Less_Than_RS -> Less_Than (lterm, rterm)
-		| Less_Or_Equal_RS -> Less_Or_Equal (lterm, rterm)
-		| Equal_RS -> Equal (lterm, rterm)
-		| Greater_Than_RS -> Greater_Than (lterm, rterm)
-		| Greater_Or_Equal_RS -> Greater_Or_Equal (lterm, rterm)
 
 
 (** evaluate a linear inequality for a given valuation *)
@@ -1147,8 +1175,17 @@ let negate_inequality = function
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)				   	
+(** {3 Normalization (for pretty-printing)} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(** build a linear inequality from two terms and an operator *)
+let build_linear_inequality lterm rterm op = 
+	match op with
+		| Less_Than_RS -> Less_Than (lterm, rterm)
+		| Less_Or_Equal_RS -> Less_Or_Equal (lterm, rterm)
+		| Equal_RS -> Equal (lterm, rterm)
+		| Greater_Than_RS -> Greater_Than (lterm, rterm)
+		| Greater_Or_Equal_RS -> Greater_Or_Equal (lterm, rterm)
 
 
 let is_zero_coef = function
@@ -1203,9 +1240,11 @@ let rec sign_split_expression = function
 		)			
 
 
+
+
 (** normalize an inequality for pretty printing; *)
-(** the expressions are rearranged such that only posistive coefficients occur *)
-let normalize_inequality ineq = 
+(** the expressions are rearranged such that only positive coefficients occur *)
+let normalize_inequality (ineq : linear_inequality) = 
 	let lterm, rterm, op = split_linear_inequality ineq in
 	let lpos, lneg = sign_split_expression lterm in
 	let rpos, rneg = sign_split_expression rterm in
@@ -1214,12 +1253,37 @@ let normalize_inequality ineq =
 	build_linear_inequality lnew rnew op
 
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Conversion} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)				   	
+
+
+(* Get the left-hand linear term of a linear inequality *)
+let string_of_left_term_of_linear_inequality (names : (variable -> string)) (linear_inequality : linear_inequality) : string =
+	(* First normalize *)
+	let normalized_linear_inequality = normalize_inequality linear_inequality in
+	let (left : ppl_linear_term), _, _ = split_linear_inequality normalized_linear_inequality in
+	string_of_ppl_linear_term names left
+
+let string_of_left_term_of_pxd_linear_inequality = string_of_left_term_of_linear_inequality
+
+(* Get the right-hand linear term of a linear inequality *)
+let string_of_right_term_of_linear_inequality (names : (variable -> string)) (linear_inequality : linear_inequality) : string =
+	(* First normalize *)
+	let normalized_linear_inequality = normalize_inequality linear_inequality in
+	let _, (right : ppl_linear_term), _ = split_linear_inequality normalized_linear_inequality in
+	string_of_ppl_linear_term names right
+
+let string_of_right_term_of_pxd_linear_inequality = string_of_right_term_of_linear_inequality
+
+
 (** Convert a linear inequality into a string *)
-let string_of_linear_inequality customized_string names linear_inequality =
+let string_of_linear_inequality customized_string names (linear_inequality : linear_inequality) =
 	let normal_ineq = normalize_inequality linear_inequality in
-	let lterm, rterm, op = split_linear_inequality normal_ineq in
-	let lstr = string_of_linear_term_ppl names lterm in
-	let rstr = string_of_linear_term_ppl names rterm in	
+	let lterm, rterm, (op : ppl_op) = split_linear_inequality normal_ineq in
+	let lstr = string_of_ppl_linear_term names lterm in
+	let rstr = string_of_ppl_linear_term names rterm in	
 	let opstr = match op with
 		| Less_Than_RS        -> customized_string.l_operator
 		| Less_Or_Equal_RS    -> customized_string.le_operator
@@ -1258,7 +1322,7 @@ let clock_guard_of_linear_inequality linear_inequality =
 	let linear_term = Minus (lterm, rterm) in
 	
 (*	print_newline();
-	print_string (string_of_linear_term_ppl (fun i -> "v_" ^ (string_of_int i)) linear_term);
+	print_string (string_of_ppl_linear_term (fun i -> "v_" ^ (string_of_int i)) linear_term);
 	print_newline();*)
 
 	

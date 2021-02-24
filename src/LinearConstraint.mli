@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2020/12/15
+ * Last modified     : 2021/02/24
  *
  ************************************************************)
 
@@ -144,6 +144,15 @@ val make_px_linear_inequality : px_linear_term -> op -> px_linear_inequality
 val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Access} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Get the op of a linear_inequality *)
+val op_of_pxd_linear_inequality				: pxd_linear_inequality -> op
+
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -172,6 +181,12 @@ val negate_inequality : p_linear_inequality -> p_linear_inequality
 (*------------------------------------------------------------*)
 val clock_guard_of_linear_inequality : pxd_linear_inequality -> (Automaton.clock_index * op * p_linear_term)
 
+
+(** Convert to string the left-hand term of a linear_inequality *)
+val string_of_left_term_of_pxd_linear_inequality : (variable -> string) -> pxd_linear_inequality -> string
+
+(** Convert to string the right-hand term of a linear_inequality *)
+val string_of_right_term_of_pxd_linear_inequality : (variable -> string) -> pxd_linear_inequality -> string
 
 
 (** Convert a linear inequality into a string *)
