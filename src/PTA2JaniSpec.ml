@@ -30,13 +30,13 @@ open Result
 let jani_strings : customized_string = {
 	true_string   = "true";
 	false_string  = "false";
-	and_operator  = " &and; ";
-	or_operator   = " &or; "; (* useless *)
-	l_operator    = " &lt; ";
-	le_operator   = " &le; ";
-	eq_operator   = " = ";
-	ge_operator   = " &ge; ";
-	g_operator    = " &gt; ";
+	and_operator  = "&and;";
+	or_operator   = "&or;"; (* useless *)
+	l_operator    = "&lt;";
+	le_operator   = "&le;";
+	eq_operator   = "=";
+	ge_operator   = "&ge;";
+	g_operator    = "&gt;";
 }
 
 let jani_separator = ", "
@@ -68,25 +68,27 @@ let string_of_actions model =
   (*Error in display for the two "". TODO check to patch or remove*)
   "\t\"actions\": [\n"
   ^ (string_of_list_of_string_with_sep (jani_separator^"\n")
-       (List.map (fun action_index ->
-          (* Do not declare silent actions *)
-          match model.action_types action_index with
-          | Action_type_nosync -> ""
-          | Action_type_sync ->
-          (* Get name *)
-          let action_name = model.action_names action_index in
+		(List.filter (fun string -> string<>"")
+		   (List.map (fun action_index ->
+			  (* Do not declare silent actions *)
+			  match model.action_types action_index with
+			  | Action_type_nosync -> ""
+			  | Action_type_sync ->
+			  (* Get name *)
+			  let action_name = model.action_names action_index in
 
-          (* Get number of automata *)
-          let nb_automata = List.length (model.automata_per_action action_index) in
+			  (* Get number of automata *)
+			  let nb_automata = List.length (model.automata_per_action action_index) in
 
-          (* Case action unused: drop *)
-          if nb_automata = 0 then ""
+			  (* Case action unused: drop *)
+			  if nb_automata = 0 then ""
 
-          else "\t\t{\"name\":\"" ^ action_name ^ "\"}"
-        ) model.actions
-       )
+			  else "\t\t{\"name\":\"" ^ action_name ^ "\"}"
+			) model.actions
+		   )
+		)
     )
-  ^ "\t]" ^ jani_separator ^ "\n"
+  ^ "\n\t]" ^ jani_separator ^ "\n"
 
 (* Convert the initial clocks declarations into a string *)
 let string_of_clocks model =
@@ -159,6 +161,14 @@ let string_of_variables model =
 (** Automata *)
 (************************************************************)
 
+let rec string_of_multiple_guard_or_invariant string_list =
+	match string_list with
+	| (elem::[]) -> elem
+	| (elem::q) -> 
+				  "\t\t\t\t\t\t\t\"op\": \"" ^ jani_strings.and_operator ^ "\"" ^ jani_separator ^ "\n"
+				^ "\t\t\t\t\t\t\t\"left\": {\n" ^ elem ^ "\n\t\t\t\t\t\t\t}" ^ jani_separator ^ "\n"
+				^ "\t\t\t\t\t\t\t\"right\": {\n" ^ string_of_multiple_guard_or_invariant q ^ "\n\t\t\t\t\t\t\t}"
+
 (** Convert a guard or an invariant into a string *)
 (*TODO HERE FOR INVARIANT/GUARD DISPLAY*)
 let string_of_guard_or_invariant actions_and_nb_automata variable_names = function
@@ -167,8 +177,8 @@ let string_of_guard_or_invariant actions_and_nb_automata variable_names = functi
 
 	(* False *)
 	| False_guard -> "\t\t\t\t\t\t\"exp\": {" ^ jani_strings.false_string ^ "}" ^ "\n"
-(*REMOVE COMMENT
-	| Discrete_guard discrete_guard ->
+
+	| Discrete_guard discrete_guard -> (*TODO*)
 
         let str_discrete_guard = (NonlinearConstraint.customized_string_of_nonlinear_constraint jani_strings variable_names discrete_guard) in
         let str_discrete_guard_without_true = if str_discrete_guard = "true" then "" else str_discrete_guard in
@@ -176,10 +186,30 @@ let string_of_guard_or_invariant actions_and_nb_automata variable_names = functi
 
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
-		if LinearConstraint.pxd_is_true continuous_guard then "" else
-		(LinearConstraint.customized_string_of_pxd_linear_constraint jani_strings variable_names continuous_guard)
+		if LinearConstraint.pxd_is_true continuous_guard then "" else			
+			let list_of_inequalities = LinearConstraint.pxd_get_inequalities continuous_guard in
+			(*(string_of_list_of_string_with_sep "/" (*TODO write multiple inequalities with op: and, ...*)*)
+			(string_of_multiple_guard_or_invariant 
+				(List.map (fun (inequality) ->
+					let op = match (LinearConstraint.op_of_pxd_linear_inequality inequality) with
+						| Op_l		-> jani_strings.l_operator
+						| Op_le		-> jani_strings.le_operator
+						| Op_eq		-> jani_strings.eq_operator
+						| Op_ge 	-> jani_strings.ge_operator
+						| Op_g		-> jani_strings.g_operator
+					in
+					let left = LinearConstraint.string_of_left_term_of_pxd_linear_inequality variable_names inequality in 
+					let right = LinearConstraint.string_of_right_term_of_pxd_linear_inequality variable_names inequality in 
+					  "\t\t\t\t\t\t\t\"op\": \"" ^ op ^ "\"" ^ jani_separator ^ "\n"
+					^ "\t\t\t\t\t\t\t\"left\": \"" ^ left ^ "\"" ^ jani_separator ^ "\n"
+					^ "\t\t\t\t\t\t\t\"right\": \"" ^ right ^ "\""
+				) list_of_inequalities)
+			)
+			(*)*)
+	
+		(* (LinearConstraint.customized_string_of_pxd_linear_constraint jani_strings variable_names continuous_guard) *)
 
-	| Discrete_continuous_guard discrete_continuous_guard ->
+	| Discrete_continuous_guard discrete_continuous_guard -> (*TODO*)
 	    let content = (
             (NonlinearConstraint.customized_string_of_nonlinear_constraint jani_strings variable_names discrete_continuous_guard.discrete_guard)
             ^
@@ -190,24 +220,26 @@ let string_of_guard_or_invariant actions_and_nb_automata variable_names = functi
             )
         ) in
         content
-REMOVE COMMENT*)
-  (*WE DO NOT PRINT INVARIANT FOR NOW*)
-  | _ -> "\t\t\t\t\t\t\"exp\": {\"todo of the form -{ op: '', ...}-\"}" ^ "\n"
+  (*WE DO NOT PRINT INVARIANT FOR NOW
+  | _ -> "\t\t\t\t\t\t\"exp\": {\"todo of the form -{ op: '', ...}-\"}" ^ "\n"*)
 
 
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model actions_and_nb_automata automaton_index location_index =
-
   let invariant = string_of_guard_or_invariant actions_and_nb_automata model.variable_names (model.invariants automaton_index location_index) in
 	(* Invariant *)
 	"\n" ^ invariant
 
 (* Convert the guard of an edge into a string *)
-let string_of_guard actions_and_nb_automata model_variable_names transition_guard =
-	"\n\t\t\t\t\t\t" ^ "\"todo\""
+let string_of_guard model actions_and_nb_automata model_variable_names transition_guard =
+  let guard = string_of_guard_or_invariant actions_and_nb_automata model.variable_names (transition_guard) in
+  (* Guard *)
+  "\n" ^ guard
+  (*"\n\t\t\t\t\"todo\""*)
 
 (* Convert a location of an automaton into a string *)
 let string_of_location model actions_and_nb_automata automaton_index location_index =
+	let invariant = string_of_invariant model actions_and_nb_automata automaton_index location_index in
 	(* Header *)
 	"\t\t\t\t{"
 
@@ -216,9 +248,11 @@ let string_of_location model actions_and_nb_automata automaton_index location_in
 	^ "\n\t\t\t\t\t\"name\": \"" ^ (model.location_names automaton_index location_index) ^ "\"" ^ jani_separator
 
 	(* Invariant *)
-	^ "\n\t\t\t\t\t\"time-progress\": {"
-	^ (string_of_invariant model actions_and_nb_automata automaton_index location_index)
-	^ "\t\t\t\t\t}" ^ jani_separator
+	^ (if invariant = "\n" then "" else (
+		"\n\t\t\t\t\t\"time-progress\": {"
+		^ "\n\t\t\t\t\t\t\"exp\": {" ^ invariant ^ "\n\t\t\t\t\t\t}"
+		^ "\n\t\t\t\t\t}" ^ jani_separator
+	))
 
 	(* Stopwatches *)
 	(*** TODO ***)
@@ -242,13 +276,13 @@ let string_of_clock_updates model = function
 	| No_update -> ""
 	| Resets list_of_clocks ->
 		string_of_list_of_string_with_sep (jani_separator^"\n") (List.map (fun variable_index ->
-			"\n\t\t\t\t\t\t\t{\"ref\": \""
+			"\t\t\t\t\t\t\t{\"ref\": \""
 			^ (model.variable_names variable_index)
 			^ "\"" ^ jani_separator ^ " \"value\" : 0}"
 		) list_of_clocks)
 	| Updates list_of_clocks_lt ->
 		string_of_list_of_string_with_sep (jani_separator^"\n") (List.map (fun (variable_index, linear_term) ->
-			"\n\t\t\t\t\t\t\t{\"ref\": \""
+			"\t\t\t\t\t\t\t{\"ref\": \""
 			^ (model.variable_names variable_index)
 			^ "\"" ^ jani_separator ^ " \"value\" : {"
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
@@ -277,29 +311,35 @@ let string_of_updates model automaton_index action_index clock_updates discrete_
 	if no_clock_updates && no_discrete_updates then ""
 
 	else(
-		  (string_of_clock_updates model clock_updates)
+		"\n"
+		^ (string_of_clock_updates model clock_updates) 
+		^ (if (not no_clock_updates) && (not no_discrete_updates) then jani_separator else "")
 		^ (string_of_discrete_updates model discrete_updates)
+		^ "\n"
 	)
 
 (* Convert a transition of a location into a string *)
 let string_of_transition model actions_and_nb_automata automaton_index source_location transition =
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
+	let guard = (string_of_guard model actions_and_nb_automata model.variable_names transition.guard) in
+	let assignments = (string_of_updates model automaton_index transition.action clock_updates discrete_updates) in
 	(* Header *)
-	"\n\t\t\t\t{"
+	"\t\t\t\t{"
 
 	(* Source *)
 	^ "\n\t\t\t\t\t\"location\": \"" ^ (model.location_names automaton_index source_location) ^ "\"" ^ jani_separator
-	
+
 	(* Guard *)
-	^ (
-		"\n\t\t\t\t\t\"guard\": {" ^ (string_of_guard actions_and_nb_automata model.variable_names transition.guard) ^ "}"
-	) ^ jani_separator
+	^ (if guard = "\n" then "" else 
+		((
+			"\n\t\t\t\t\t\"guard\": {" ^ guard ^ "\n\t\t\t\t\t}"
+		) ^ jani_separator))
 
 	(* Target *)
 	^ "\n\t\t\t\t\t\"destinations\": [{"
 	^ "\n\t\t\t\t\t\t\"location\": \"" ^ (model.location_names automaton_index transition.target) ^ "\"" ^ jani_separator
-	^ "\n\t\t\t\t\t\t\"assignments\": [" ^ (string_of_updates model automaton_index transition.action clock_updates discrete_updates) ^ "]"
+	^  (if assignments = "" then "" else ("\n\t\t\t\t\t\t\"assignments\": [" ^ assignments ^ "\t\t\t\t\t\t]"))
 	^ "\n\t\t\t\t\t}]"
 
 	(* Footer *)
@@ -307,16 +347,16 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 
 (* Convert the transitions of an automaton into a string *)
 let string_of_transitions model actions_and_nb_automata automaton_index =
-	string_of_list_of_string (
+	string_of_list_of_string_with_sep (jani_separator^"\n") (
 	(* For each location *)
 	List.map (fun location_index ->
-		string_of_list_of_string (
+		string_of_list_of_string_with_sep (jani_separator^"\n") (
 		(* For each action *)
 		List.map (fun action_index ->
 			(* Get the list of transitions *)
 			let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
 			(* Convert to string *)
-			string_of_list_of_string (
+			string_of_list_of_string_with_sep (jani_separator^"\n") (
 				(* For each transition *)
 				List.map (string_of_transition model actions_and_nb_automata automaton_index location_index) transitions
 				)
@@ -329,8 +369,8 @@ let string_of_automaton model actions_and_nb_automata automaton_index =
   	"\n\t\t{\n"
     ^ "\t\t\t\"name\": \"" ^ (model.automata_names automaton_index) ^ "\"" ^ jani_separator
   	^ "\n\t\t\t\"locations\": [\n" ^ (string_of_locations model actions_and_nb_automata automaton_index) ^ "\n\t\t\t]" ^ jani_separator
-  	^ "\n\t\t\t\"initial_locations\": [" ^ (string_of_initial_location model automaton_index) ^ "]" ^ jani_separator ^"\n"
-  	^ "\n\t\t\t\"edges\": [" ^ (string_of_transitions model actions_and_nb_automata automaton_index) ^ "]" ^ jani_separator ^"\n"
+  	^ "\n\t\t\t\"initial_locations\": [" ^ (string_of_initial_location model automaton_index) ^ "]" ^ jani_separator
+  	^ "\n\t\t\t\"edges\": [\n" ^ (string_of_transitions model actions_and_nb_automata automaton_index) ^ "\n\t\t\t]"
     ^ "\n\t\t}"
 
 (* Convert the automata into a string *)
@@ -345,7 +385,7 @@ let string_of_automata model actions_and_nb_automata =
         string_of_automaton model actions_and_nb_automata automaton_index
   	) pta_without_obs)
   ^ "\n\t]" ^ jani_separator ^ "\n"
- 
+
 
 (************************************************************)
 (** System *)
