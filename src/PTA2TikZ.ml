@@ -334,7 +334,7 @@ let string_of_automaton model automaton_index =
 	^ "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 
 	^ "\n\t\\begin{subfigure}[b]{\\ratio}"
-	^ "\n\t\\begin{tikzpicture}[scale=2, auto, ->, >=stealth']" (*, thin*)
+	^ "\n\t\\begin{tikzpicture}[pta, scale=2]" (*, thin*)
 
 	(* Handling locations *)
 	^ "\n " ^ (string_of_locations model automaton_index)
