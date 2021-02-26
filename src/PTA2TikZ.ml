@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2021/01/07
+ * Last modified     : 2021/02/25
  *
  ****************************************************************)
 
@@ -338,7 +338,7 @@ let string_of_automaton model automaton_index =
 	^ "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 
 	^ "\n\t\\begin{subfigure}[b]{\\ratio}"
-	^ "\n\t\\begin{tikzpicture}[scale=2, auto, ->, >=stealth']" (*, thin*)
+	^ "\n\t\\begin{tikzpicture}[pta, scale=2]" (*, thin*)
 
 	(* Handling locations *)
 	^ "\n " ^ (string_of_locations model automaton_index)
