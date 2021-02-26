@@ -64,6 +64,7 @@ rule token = parse
 	| "constant"       { CT_CONSTANT }
 	| "discrete"       { CT_DISCRETE }
 	| "rational"       { CT_DISCRETE }
+	| "int"            { CT_INT }
 	| "bool"           { CT_BOOL }
 	| "do"             { CT_DO }
 	| "else"           { CT_ELSE }
@@ -79,6 +80,7 @@ rule token = parse
 	| "in"             { CT_IN }
 	| "is"             { CT_IS }
 	| "init"           { CT_INIT }
+	| "init-discrete"  { CT_INIT_DISCRETE }
 	| "initially"      { CT_INITIALLY }
 	| "invariant"      { CT_INVARIANT }
 	| "loc"            { CT_LOC }

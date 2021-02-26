@@ -33,6 +33,7 @@ type v0 = HyperRectangle.hyper_rectangle
 
 type var_type_discrete =
     | Var_type_discrete_rational
+    | Var_type_discrete_int
     | Var_type_discrete_bool
 
 (** Type of variable in declarations *)
@@ -48,7 +49,7 @@ type action_type =
 	(* Non-observable, silent action label (necessarily non-synchronized) *)
 	| Action_type_nosync
 
-
+(* TODO benjamin to remove *)
 type discrete_value = NumConst.t
 
 

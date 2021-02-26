@@ -36,21 +36,16 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 (** Declarations *)
 (****************************************************************)
 
-type var_type_discrete =
-    | Var_type_discrete_rational
-    | Var_type_discrete_bool
-
 (* Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
 	| Var_type_constant
-	| Var_type_discrete of var_type_discrete
+	| Var_type_discrete of DiscreteValue.var_type_discrete
 	| Var_type_parameter
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
-type var_value = NumConst.t
-
-type variable_declaration = var_type * (variable_name * var_value option) list
+(*type variable_declaration = var_type * (variable_name * DiscreteValue.discrete_value option) list*)
+type variable_declaration = var_type * (variable_name * NumConst.t option) list
 
 type variable_declarations = variable_declaration list
 
@@ -70,7 +65,7 @@ and parsed_discrete_term =
 
 and parsed_discrete_factor =
 	| Parsed_DF_variable of variable_name
-	| Parsed_DF_constant of var_value
+	| Parsed_DF_constant of NumConst.t (* TODO benjamin replace by DiscreteValue.discrete_value *)
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min of parsed_discrete_factor
 
@@ -203,10 +198,17 @@ type parsed_automaton = automaton_name * sync_name list * parsed_location list
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
 	| Parsed_linear_predicate of linear_constraint
+	| Parsed_boolean_predicate of parsed_discrete_boolean_expression * parsed_relop *  parsed_boolean_expression
 
+type parsed_discrete_init_expression =
+    | Parsed_discrete_init_rational_expression of linear_expression
+    | Parsed_discrete_init_boolean_expression of parsed_boolean_expression
+
+type parsed_discrete_init =
+    | Parsed_discrete_init of variable_name * parsed_discrete_init_expression
 
 type init_definition = parsed_init_state_predicate list
-
+type init_discrete_definition = parsed_discrete_init list
 
 (****************************************************************)
 (** Definition of the property *)

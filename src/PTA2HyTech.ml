@@ -66,6 +66,7 @@ let footer = "\n"
 let string_of_var_type_discrete = function
     | Var_type_discrete_rational -> "discrete"
     | Var_type_discrete_bool -> "bool"
+    | Var_type_discrete_int -> "int"
 
 (* TODO benjamin : duplicate somewhere *)
 (* Convert a var_type into a string *)

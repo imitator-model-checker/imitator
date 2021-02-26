@@ -68,12 +68,12 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_BOOL CT_DO
+	CT_DISCRETE CT_INT CT_BOOL CT_DO
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IN CT_INIT CT_INITIALLY CT_INVARIANT CT_IS
+	CT_IF CT_IN CT_INIT CT_INIT_DISCRETE CT_INITIALLY CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
@@ -88,6 +88,9 @@ let unzip l = List.fold_left
 
 
 %token EOF
+
+%right OP_ASSIGN
+%right OP_EQ
 
 %left PIPE CT_OR        /* lowest precedence */
 %left AMPERSAND CT_AND  /* medium precedence */
@@ -104,7 +107,8 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	declarations automata init_definition end_opt EOF
+	declarations automata init_definition init_discrete_definition
+	end_opt EOF
 	{
 		let declarations	= $1 in
 		let automata		= $2 in
@@ -192,8 +196,9 @@ var_type:
 ;
 
 var_type_discrete:
-    | CT_DISCRETE { Var_type_discrete_rational }
-    | CT_BOOL { Var_type_discrete_bool }
+    | CT_DISCRETE { DiscreteValue.Var_type_discrete_rational }
+    | CT_INT { DiscreteValue.Var_type_discrete_int }
+    | CT_BOOL { DiscreteValue.Var_type_discrete_bool }
 ;
 
 /************************************************************
@@ -504,7 +509,6 @@ arithmetic_term:
 	| rational NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant $1), Parsed_DF_variable $2) }
 	| arithmetic_term OP_MUL arithmetic_factor { Parsed_DT_mul ($1, $3) }
 	| arithmetic_term OP_DIV arithmetic_factor { Parsed_DT_div ($1, $3) }
-	/*| OP_MINUS arithmetic_term { Parsed_DT_mul($2, Parsed_DF_constant NumConst.minus_one) }*/
 	| OP_MINUS arithmetic_factor { Parsed_DT_factor(Parsed_DF_unary_min $2) }
 ;
 
@@ -577,6 +581,13 @@ linear_term:
 	| LPAREN linear_term RPAREN { $2 }
 ;
 
+/* Init expression for variable */
+/*
+init_expression:
+    | rational_linear_expression { DiscreteValue.Rational_value $1 }
+;
+*/
+
 /* Linear expression over rationals only */
 rational_linear_expression:
 	| rational_linear_term { $1 }
@@ -639,9 +650,9 @@ discrete_boolean_expression:
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	/* allowed for convenience */
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
-	/**/
+	/* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) */
 	| LPAREN boolean_expression RPAREN { Parsed_boolean_expression $2 }
-	/**/
+	/* Parsed_DB_variable of variable_name */
 	| NAME { Parsed_DB_variable $1 }
 ;
 
@@ -670,7 +681,7 @@ init_expression_fol:
 /* Used in the init definition */
 init_state_predicate:
 	| init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
-	| linear_constraint { Parsed_linear_predicate $1 }
+    | linear_constraint { Parsed_linear_predicate $1 }
 ;
 
 init_loc_predicate:
@@ -679,6 +690,36 @@ init_loc_predicate:
 	/* my_pta IS IN my_loc */
 	| NAME CT_IS CT_IN NAME { ($1, $4) }
 ;
+
+
+
+init_discrete_definition:
+	| CT_INIT_DISCRETE OP_ASSIGN init_discrete_expression SEMICOLON { $3 }
+	| { [ ] }
+;
+
+
+
+init_discrete_expression:
+	| ampersand_opt init_discrete_expression_fol ampersand_opt { $2 }
+	| { [ ] }
+;
+
+init_discrete_expression_fol:
+	| init_discrete_predicate { [ $1 ] }
+	| LPAREN init_discrete_expression_fol RPAREN { $2 }
+	| init_discrete_expression_fol AMPERSAND init_discrete_expression_fol { $1 @ $3 }
+;
+
+init_discrete_predicate:
+    | NAME OP_EQ init_discrete_predicate_expression { Parsed_discrete_init ($1, $3) }
+;
+
+init_discrete_predicate_expression:
+    | linear_expression { Parsed_discrete_init_rational_expression $1 }
+    | boolean_expression { Parsed_discrete_init_boolean_expression $1 }
+;
+
 
 
 /************************************************************/
