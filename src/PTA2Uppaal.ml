@@ -79,6 +79,7 @@ let footer = ""
 (* TODO benjamin : check for Uppaal support of bool *)
 let string_of_var_type_discrete = function
     | Var_type_discrete_rational -> "int"
+    | Var_type_discrete_int -> "int"
     | Var_type_discrete_bool -> "bool"
 
 (* Convert a var_type into a string *)

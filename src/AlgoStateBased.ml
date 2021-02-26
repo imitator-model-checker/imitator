@@ -2485,6 +2485,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			match model.type_of_variables variable_index with
 			| Var_type_clock | Var_type_parameter -> valuation_n variable_index
 			| Var_type_discrete _ -> Location.get_discrete_value location_n variable_index (* TODO benjamin : check with étienne, is it computing of linear part ? *)
+			(* TODO benjamin eventually add Var_type_bool -> Location.get_bool_value *)
 		in
 		
 		(* Add the valuation to the list, and replace n+1 with n *)

@@ -126,6 +126,7 @@ let footer = "\n"
 let string_of_var_type_discrete = function
     | Var_type_discrete_rational -> "discrete"
     | Var_type_discrete_bool -> "bool"
+    | Var_type_discrete_int -> "int"
 
 (* Convert a var_type into a string *)
 let string_of_var_type = function
@@ -323,6 +324,8 @@ and string_of_discrete_boolean_expression variable_names = function
     (** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression boolean_expression ->
 	    "(" ^ (string_of_boolean variable_names boolean_expression) ^ ")"
+    | DB_variable variable_index ->
+        variable_names variable_index
 
 
 (** Return if there is no clock updates *)

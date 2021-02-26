@@ -29,6 +29,7 @@ open AbstractProperty
 (** {2 Types} *)
 (************************************************************)
 
+(* TODO benjamin to remove *)
 type discrete_value = NumConst.t
 
 (** Unique identifier for each different global location *)

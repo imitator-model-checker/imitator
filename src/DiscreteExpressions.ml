@@ -26,7 +26,7 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (****************************************************************)
 (** Valuation *)
 (****************************************************************)
-type discrete_valuation = Automaton.discrete_index -> Automaton.discrete_value
+type discrete_valuation = Automaton.discrete_index -> NumConst.t
 
 
 (****************************************************************)
@@ -331,6 +331,8 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 		^ "]"
     | Boolean_expression boolean_expression ->
         "(" ^ (customized_string_of_boolean_expression customized_string variable_names boolean_expression) ^ ")"
+    | DB_variable variable_index ->
+        variable_names variable_index
 
 (* TODO benjamin ref in ModelPrinter *)
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.default_string
