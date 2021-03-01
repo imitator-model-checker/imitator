@@ -157,6 +157,10 @@ let string_of_variables model =
   ^ (string_of_parameters model) ^ "\n"
   ^ "\t]" ^ jani_separator ^ "\n"
 
+(* Properties *)
+let string_of_properties =
+	"\t\"properties\": []" ^ jani_separator ^ "\n"
+
 (************************************************************)
 (** Automata *)
 (************************************************************)
@@ -430,6 +434,7 @@ let string_of_model model =
   ^ string_of_header model
   ^ string_of_actions model
   ^ string_of_variables model
+  ^ string_of_properties
   ^ string_of_automata model actions_and_nb_automata
   ^ string_of_system model
   ^ "}"
