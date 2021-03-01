@@ -25,6 +25,11 @@ let numconst_value = function
     (* Warning, a bit is lost when converting on 32 bit platform !*)
     | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
 
+let bool_value = function
+    | Rational_value x -> if NumConst.equal x NumConst.one then true else false
+    | Bool_value x -> x
+    | Int_value x -> if Int32.equal x Int32.one then true else false
+
 let float_value = function
     | Rational_value x -> (NumConst.to_float x)
     | Bool_value x -> if x then 0.0 else 0.0
@@ -46,6 +51,11 @@ let equal_to_one = function
     | Rational_value x -> NumConst.equal x NumConst.one
     | Bool_value x -> not x
     | Int_value x -> Int32.equal x Int32.one
+
+let equal x = function
+    | Rational_value b -> match x with | Rational_value a -> NumConst.equal a b | _ -> false
+    | Bool_value b -> match x with | Bool_value a -> a = b | _ -> false
+    | Int_value b -> match x with | Int_value a -> a = b | _ -> false
 
 let string_of_value = function
     | Rational_value x -> NumConst.string_of_numconst x
