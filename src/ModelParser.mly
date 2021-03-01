@@ -180,10 +180,10 @@ decl_var_lists:
 
 decl_var_list:
 	| NAME comma_opt { [($1, None)] }
-	| NAME OP_EQ rational_linear_expression comma_opt { [($1, Some $3)] }
+	| NAME OP_EQ init_value_expression comma_opt { [($1, Some $3)] }
 
 	| NAME COMMA decl_var_list { ($1, None) :: $3 }
-	| NAME OP_EQ rational_linear_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
+	| NAME OP_EQ init_value_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
 
 /************************************************************/
@@ -582,11 +582,40 @@ linear_term:
 ;
 
 /* Init expression for variable */
-/*
-init_expression:
+init_value_expression:
     | rational_linear_expression { DiscreteValue.Rational_value $1 }
+    | init_bool_value_expression { DiscreteValue.Bool_value $1 }
 ;
-*/
+
+
+init_bool_value_expression:
+    | CT_TRUE { true } 
+    | CT_FALSE { false }
+;
+
+/* Linear expression over int only */
+int_linear_expression:
+    | int_linear_term { $1 }
+	| int_linear_expression OP_PLUS int_linear_term { Int32.add $1 $3 }
+	| int_linear_expression OP_MINUS int_linear_term { Int32.sub $1 $3 }
+;
+
+/* Linear term over rationals only */
+int_linear_term:
+	| int { $1 }
+	| OP_MINUS int_linear_term { Int32.neg $2 }
+	| LPAREN int_linear_expression RPAREN { $2 }
+;
+
+int:
+	| int_pos_integer { $1 }
+	| OP_MINUS int_pos_integer { Int32.neg $2 }
+;
+
+int_pos_integer:
+	| INT { Int32.of_int (NumConst.to_int $1) } /* Conversion from numconst to int is a hack here, modify to have directly a Int32 */
+;
+
 
 /* Linear expression over rationals only */
 rational_linear_expression:

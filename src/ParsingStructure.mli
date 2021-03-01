@@ -44,8 +44,7 @@ type var_type =
 	| Var_type_parameter
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
-(*type variable_declaration = var_type * (variable_name * DiscreteValue.discrete_value option) list*)
-type variable_declaration = var_type * (variable_name * NumConst.t option) list
+type variable_declaration = var_type * (variable_name * DiscreteValue.discrete_value option) list
 
 type variable_declarations = variable_declaration list
 

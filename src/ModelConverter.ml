@@ -78,7 +78,9 @@ type useful_parsing_model_information = {
 	array_of_location_names				: location_name array array;
 	automata							: automaton_index list;
 	automata_names						: (automaton_index -> automaton_name);
-	constants							: (Automaton.variable_name , NumConst.t) Hashtbl.t;
+	constants							: (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t;
+	constants_int                       : (Automaton.variable_name, int) Hashtbl.t;
+	constants_bool                       : (Automaton.variable_name, bool) Hashtbl.t;
 	discrete							: variable_index list;
 	discrete_int                        : variable_index list;
 	discrete_bool                       : variable_index list;
@@ -491,7 +493,7 @@ let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_
 			(* Retrieve the value of the global constant *)
 			let value = Hashtbl.find constants variable_name in
 			(* Convert *)
-			DF_constant value
+			DF_constant (DiscreteValue.numconst_value value)
 			) else (
 			raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
 			)
@@ -586,7 +588,8 @@ let rec valuate_parsed_update_arithmetic_expression constants = function
 	| Parsed_DF_variable variable_name ->
 		if Hashtbl.mem constants variable_name then (
 		(* Retrieve the value of the global constant *)
-		Hashtbl.find constants variable_name
+		let value = Hashtbl.find constants variable_name in
+		DiscreteValue.numconst_value value
 		) else (
 		raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'valuate_parsed_update_arithmetic_expression' although it should have been checked before."))
 		)
@@ -671,7 +674,7 @@ and convert_parsed_discrete_factor2 index_of_variables constants = function
 	| Parsed_DF_variable variable_name ->
 		(* First check whether this is a constant *)
 		if Hashtbl.mem constants variable_name then
-			DF_constant (Hashtbl.find constants variable_name)
+			DF_constant (DiscreteValue.numconst_value (Hashtbl.find constants variable_name))
 		(* Otherwise: a variable *)
 		else DF_variable (Hashtbl.find index_of_variables variable_name)
 	| Parsed_DF_constant var_value -> DF_constant var_value
@@ -730,7 +733,7 @@ and convert_parsed_discrete_factor useful_parsing_model_information = function
 	| Parsed_DF_variable variable_name ->
 		(* First check whether this is a constant *)
 		if Hashtbl.mem useful_parsing_model_information.constants variable_name then
-			DF_constant (Hashtbl.find useful_parsing_model_information.constants variable_name)
+			DF_constant (DiscreteValue.numconst_value (Hashtbl.find useful_parsing_model_information.constants variable_name))
 		(* Otherwise: a variable *)
 		else DF_variable (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name)
 	| Parsed_DF_constant var_value -> DF_constant var_value
@@ -1161,8 +1164,9 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
         if Hashtbl.mem constants variable_name then (
           (* Retrieve the value of the global constant *)
           let value = Hashtbl.find constants variable_name in
+          let numconst_value = DiscreteValue.numconst_value value in
           (* Update the NumConst *)
-          constant := NumConst.add !constant (NumConst.mul (NumConst.mul value coef) mul_coef);
+          constant := NumConst.add !constant (NumConst.mul (NumConst.mul numconst_value coef) mul_coef);
         ) else (
           raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
         )
@@ -1986,7 +1990,8 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			| (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
 				(* Get the value of  the variable *)
 				let value = Hashtbl.find constants variable_name in
-				NumConst.mul coef value
+				let numconst_value = DiscreteValue.numconst_value value in
+				NumConst.mul coef numconst_value
 			| _ -> print_error ("The initial value for discrete variable `" ^ discrete_name ^ "` must be given in the form `" ^ discrete_name ^ " = c`, where `c` is an integer, a rational or a constant.");
 				well_formed := false;
 				NumConst.zero
@@ -2188,14 +2193,14 @@ let convert_guard index_of_variables type_of_variables constants guard_convex_pr
 (*------------------------------------------------------------*)
 let make_constants constants =
   (* Create hash table *)
-  let constants_hashtable : (string, NumConst.t) Hashtbl.t = Hashtbl.create (List.length constants) in
+  let constants_hashtable : (string, DiscreteValue.discrete_value) Hashtbl.t = Hashtbl.create (List.length constants) in
   (* Manage Boolean for checking errors *)
   let correct = ref true in
   List.iter (fun (name, value) ->
       if (Hashtbl.mem constants_hashtable name) then (
         let old_value = Hashtbl.find constants_hashtable name in
         (* If same: warning *)
-        if(NumConst.equal old_value value) then(
+        if(DiscreteValue.equal old_value value) then(
           print_warning ("Constant `" ^ name ^ "` is defined twice.");
         )else(
           (* If different: error *)
@@ -2585,8 +2590,9 @@ let linear_term_of_parsed_update_arithmetic_expression index_of_variables consta
 				if Hashtbl.mem constants variable_name then (
 				(* Retrieve the value of the global constant *)
 				let value = Hashtbl.find constants variable_name in
+				let numconst_value = DiscreteValue.numconst_value value in
 				(* Update the constant *)
-				constant := NumConst.add !constant (NumConst.mul mult_factor value)
+				constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
 				) else (
 				raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'linear_term_of_parsed_update_arithmetic_expression' although this should have been checked before."))
 				)
@@ -4398,13 +4404,15 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Make the array of constants *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let (constants : (Automaton.variable_name , NumConst.t) Hashtbl.t), constants_consistent = make_constants constants in
+	let (constants : (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t), constants_consistent = make_constants constants in
+    let constants_int = Hashtbl.create 0 in
+    let constants_bool = Hashtbl.create 0 in
 
 	if verbose_mode_greater Verbose_high then(
 		(* Constants *)
 		print_message Verbose_high ("\n*** Constants:");
 		Hashtbl.iter (fun key value ->
-			print_message Verbose_total (key ^ " = " ^ (NumConst.string_of_numconst value) ^ "")
+			print_message Verbose_total (key ^ " = " ^ (DiscreteValue.string_of_value value) ^ "")
 		) constants;
 	);
 
@@ -4812,6 +4820,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		automata_names				= automata_names;
 		automata					= automata;
 		constants					= constants;
+		constants_int               = constants_int;
+		constants_bool              = constants_bool;
 		discrete					= discrete;
 		discrete_int                = discrete_int;
 		discrete_bool               = discrete_bool;
