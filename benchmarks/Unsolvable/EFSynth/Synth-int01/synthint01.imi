@@ -15,7 +15,7 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : 2021/01/21
- * Last modified    : 2021/02/08
+ * Last modified    : 2021/03/02
  * Model version    : 
  * 
  * IMITATOR version : 3
@@ -38,7 +38,7 @@ var
 (************************************************************)
 synclabs: ;
 
-loc l1: invariant x <= 1
+loc l1: invariant x <= 1 & y <= 1
 	when x <= p do {x := 0} goto l1;
 	when x = 0 & y = 1 do {x := 0, y := 0} goto lGoal;
 
