@@ -29,7 +29,7 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (** Valuation *)
 (************************************************************)
 (************************************************************)
-type discrete_valuation = Automaton.discrete_index -> Automaton.discrete_value
+type discrete_valuation = Automaton.discrete_index -> DiscreteValue.discrete_value
 
 
 (************************************************************)
@@ -49,7 +49,7 @@ and discrete_term =
 
 and discrete_factor =
 	| DF_variable of Automaton.variable_index
-	| DF_constant of Automaton.variable_value
+	| DF_constant of DiscreteValue.discrete_value
 	| DF_expression of discrete_arithmetic_expression
 	| DF_unary_min of discrete_factor
 
@@ -59,7 +59,7 @@ val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discret
 (** Evaluate a discrete arithmetic expression with a valuation *)
 (************************************************************)
 
-val eval_discrete_arithmetic_expression : discrete_valuation -> discrete_arithmetic_expression -> Automaton.discrete_value
+val eval_discrete_arithmetic_expression : discrete_valuation -> discrete_arithmetic_expression -> DiscreteValue.discrete_value
 
 
 (************************************************************)

@@ -49,9 +49,6 @@ type action_type =
 	(* Non-observable, silent action label (necessarily non-synchronized) *)
 	| Action_type_nosync
 
-(* TODO benjamin to remove *)
-type discrete_value = NumConst.t
-
 
 (************************************************************)
 (** Locations *)
@@ -214,7 +211,7 @@ type abstract_model = {
 	(* The function : variable_index -> variable name *)
 	variable_names : variable_index -> variable_name;
 	(* The type of variables *)
-	type_of_variables : variable_index -> var_type;
+	type_of_variables : variable_index -> DiscreteValue.var_type;
 
 	(* The automata *)
 	automata : automaton_index list;

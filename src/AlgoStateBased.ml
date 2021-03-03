@@ -272,7 +272,7 @@ let predecessors_of_location_via_action (automaton_index : Automaton.automaton_i
 (** Check whether a d_linear_constraint is satisfied by the discrete values in a location *)
 let evaluate_d_linear_constraint_in_location location =
 	(* Directly call the build-in function *)
-	LinearConstraint.d_is_pi0_compatible (Location.get_discrete_value location)
+	LinearConstraint.d_is_pi0_compatible (Location.get_discrete_rational_value location)
 
 (** Check whether a discrete non-linear constraint is satisfied by the discrete values in a location **)
 let evaluate_d_nonlinear_constraint_in_location location =
@@ -385,8 +385,14 @@ let discrete_constraint_of_global_location (global_location : Location.global_lo
 
 	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value global_location discrete_index)) model.discrete in
 
+    (* TODO check with étienne, maybe can use all numeric as constraint ??? *)
+    (* Get only rational discrete for constraint encoding *)
+    let only_discrete_rational_values = List.filter (fun (discrete_index, discrete_value) -> DiscreteValue.is_rational_value discrete_value) discrete_values in
+    (* map to num const *)
+    let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, DiscreteValue.numconst_value discrete_value) only_discrete_rational_values in
+
 	(* Constraint of the form D_i = d_i *)
-	LinearConstraint.pxd_constraint_of_point discrete_values
+	LinearConstraint.pxd_constraint_of_point discrete_rational_numconst_values
 
 (*------------------------------------------------------------*)
 (* Get all invariants of model's automatas *)
@@ -564,7 +570,7 @@ let apply_updates_assign_gen (quantify: bool) (linear_constraint : LinearConstra
 					(* Consider cases for clocks *)
 					match model.type_of_variables variable_index with
 					(* Clocks: X = 0 *)
-					| Var_type_clock ->
+					| DiscreteValue.Var_type_clock ->
 						let x_lt = LinearConstraint.make_pxd_linear_term [
 							NumConst.one, variable_index;
 						] NumConst.zero in
@@ -1536,19 +1542,6 @@ let compute_discrete_comparisons (relop : DiscreteExpressions.relop) =
 	| OP_GEQ	-> NumConst.ge
 	| OP_G		-> NumConst.g
 
-(* TODO benjamin : remove comments *)
-(*(** Check if a boolean expression is satisfied *)*)
-(*let is_boolean_expression_satisfied location (boolean_expr : DiscreteExpressions.boolean_expression) : bool =*)
-(*  let rec is_boolean_expression_satisfied_rec = function*)
-(*    | True_bool -> true*)
-(*    | False_bool -> false*)
-(*    | Not_bool b -> not (is_boolean_expression_satisfied_rec b) (* negation *)*)
-(*    | And_bool (b1, b2) -> (is_boolean_expression_satisfied_rec b1) && (is_boolean_expression_satisfied_rec b2) (* conjunction *)*)
-(*    | Or_bool (b1, b2) -> (is_boolean_expression_satisfied_rec b1) || (is_boolean_expression_satisfied_rec b2) (* disjunction *)*)
-(*    | Discrete_boolean_expression dbe -> DiscreteExpressions.check_discrete_boolean_expression (Location.get_discrete_value location) dbe*)
-(*  in*)
-(*  is_boolean_expression_satisfied_rec boolean_expr*)
-
 (** Merge two clock_updates - NOTE: conflict resolution done by apply_updates_assign *)
 let merge_clock_updates first_update second_update : clock_updates =
   match first_update, second_update with
@@ -1651,7 +1644,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 				(* Find its value *)
 				let previous_new_value = Hashtbl.find updated_discrete discrete_index in
 				(* Compare with the new one *)
-				if NumConst.neq previous_new_value new_value then (
+				if DiscreteValue.neq previous_new_value new_value then (
 				(* If different: warning *)
 					let action_index = StateSpace.get_action_from_combined_transition combined_transition in
 					print_warning ("The discrete variable '" ^ (model.variable_names discrete_index) ^ "' is updated several times with different values for the same synchronized action '" ^ (model.action_names action_index) ^ "'. The behavior of the system is now unspecified.");
@@ -2483,9 +2476,9 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(*** NOTE: we need a px AND d valuation, therefore a bit a hack here ***)
 		let pxd_valuation = fun variable_index ->
 			match model.type_of_variables variable_index with
-			| Var_type_clock | Var_type_parameter -> valuation_n variable_index
-			| Var_type_discrete _ -> Location.get_discrete_value location_n variable_index (* TODO benjamin : check with étienne, is it computing of linear part ? *)
-			(* TODO benjamin eventually add Var_type_bool -> Location.get_bool_value *)
+			| DiscreteValue.Var_type_clock
+			| DiscreteValue.Var_type_parameter -> valuation_n variable_index
+			| DiscreteValue.Var_type_discrete _ -> Location.get_discrete_rational_value location_n variable_index (* TODO benjamin : check with étienne, what is it ? is it computing of linear part ? *)
 		in
 		
 		(* Add the valuation to the list, and replace n+1 with n *)

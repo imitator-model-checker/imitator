@@ -196,9 +196,9 @@ var_type:
 ;
 
 var_type_discrete:
-    | CT_DISCRETE { DiscreteValue.Var_type_discrete_rational }
-    | CT_INT { DiscreteValue.Var_type_discrete_int }
-    | CT_BOOL { DiscreteValue.Var_type_discrete_bool }
+    | CT_DISCRETE { Var_type_discrete_rational }
+    | CT_INT { Var_type_discrete_int }
+    | CT_BOOL { Var_type_discrete_bool }
 ;
 
 /************************************************************
@@ -506,14 +506,14 @@ arithmetic_expression:
 arithmetic_term:
 	| arithmetic_factor { Parsed_DT_factor $1 }
 	/* Shortcut for syntax rational NAME without the multiplication operator */
-	| rational NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant $1), Parsed_DF_variable $2) }
+	| rational NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant (DiscreteValue.Rational_value $1)), Parsed_DF_variable $2) }
 	| arithmetic_term OP_MUL arithmetic_factor { Parsed_DT_mul ($1, $3) }
 	| arithmetic_term OP_DIV arithmetic_factor { Parsed_DT_div ($1, $3) }
 	| OP_MINUS arithmetic_factor { Parsed_DT_factor(Parsed_DF_unary_min $2) }
 ;
 
 arithmetic_factor:
-	| rational { Parsed_DF_constant $1 }
+	| rational { Parsed_DF_constant (DiscreteValue.Rational_value $1) }
 	| NAME { Parsed_DF_variable $1 }
 	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
 ;
@@ -583,7 +583,7 @@ linear_term:
 
 /* Init expression for variable */
 init_value_expression:
-    | rational_linear_expression { DiscreteValue.Rational_value $1 }
+    | rational_linear_expression { DiscreteValue.Rational_value $1 } /* TODO benjamin change rational_linear to number_linear ? */
     | init_bool_value_expression { DiscreteValue.Bool_value $1 }
 ;
 
@@ -602,12 +602,12 @@ int_linear_expression:
 
 /* Linear term over rationals only */
 int_linear_term:
-	| int { $1 }
+	| int_integer { $1 }
 	| OP_MINUS int_linear_term { Int32.neg $2 }
 	| LPAREN int_linear_expression RPAREN { $2 }
 ;
 
-int:
+int_integer:
 	| int_pos_integer { $1 }
 	| OP_MINUS int_pos_integer { Int32.neg $2 }
 ;

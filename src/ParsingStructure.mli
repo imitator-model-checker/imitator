@@ -36,11 +36,17 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 (** Declarations *)
 (****************************************************************)
 
+(* Specific type of discrete variables *)
+type var_type_discrete =
+    | Var_type_discrete_rational
+    | Var_type_discrete_bool
+    | Var_type_discrete_int
+
 (* Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
 	| Var_type_constant
-	| Var_type_discrete of DiscreteValue.var_type_discrete
+	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
@@ -64,7 +70,7 @@ and parsed_discrete_term =
 
 and parsed_discrete_factor =
 	| Parsed_DF_variable of variable_name
-	| Parsed_DF_constant of NumConst.t (* TODO benjamin replace by DiscreteValue.discrete_value *)
+	| Parsed_DF_constant of DiscreteValue.discrete_value
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min of parsed_discrete_factor
 

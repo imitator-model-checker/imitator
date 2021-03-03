@@ -1,8 +1,15 @@
+exception ComputingException (* Should never happen, if correctly checked before in ModelConverter *)
 
 type var_type_discrete =
     | Var_type_discrete_rational
     | Var_type_discrete_bool
     | Var_type_discrete_int
+
+(** Type of variable in declarations *)
+type var_type =
+	| Var_type_clock
+	| Var_type_discrete of var_type_discrete
+	| Var_type_parameter
 
 type numeric_value =
     | Rational_value of NumConst.t
@@ -19,11 +26,63 @@ let var_type_of_value = function
     | Bool_value _ -> Var_type_discrete_bool
     | Int_value _ -> Var_type_discrete_int
 
+
+(* String of discrete var type *)
+let string_of_var_type_discrete = function
+    | Var_type_discrete_rational -> "discrete"
+    | Var_type_discrete_bool -> "bool"
+    | Var_type_discrete_int -> "int"
+
+(* Convert a var_type into a string *)
+let string_of_var_type = function
+	| Var_type_clock -> "clock"
+	| Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
+	| Var_type_parameter -> "parameter"
+
+(* Check if a Var_type is a Var_type_discrete of anything *)
+let is_discrete_type = function
+    | Var_type_discrete _ -> true
+    | _ -> false
+
+let is_rational_value = function
+    | Rational_value _ -> true
+    | _ -> false
+
+let is_int32_value = function
+    | Int_value _ -> true
+    | _ -> false
+
+let is_bool_value = function
+    | Bool_value _ -> true
+    | _ -> false
+
+let numconst_default_value = NumConst.zero
+let int32_default_value = Int32.zero
+let bool_default_value = false
+
+let default_discrete_value = function
+    | Var_type_discrete_rational -> Rational_value numconst_default_value
+    | Var_type_discrete_int -> Int_value int32_default_value
+    | Var_type_discrete_bool -> Bool_value bool_default_value
+
+let default_value = function
+    | Var_type_clock -> Rational_value numconst_default_value
+    | Var_type_parameter -> Rational_value numconst_default_value
+    | Var_type_discrete var_type_discrete -> default_discrete_value var_type_discrete
+
+
 let numconst_value = function
     | Rational_value x -> x
     | Bool_value x -> if x then NumConst.one else NumConst.zero
     (* Warning, a bit is lost when converting on 32 bit platform !*)
     | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
+
+let int32_value = function
+    (* Warning !!!! conversion to int should be dependant of the platform ! *)
+    | Rational_value x -> Int32.of_int (NumConst.to_int x)
+    | Bool_value x -> if x then Int32.one else Int32.zero
+    (* Warning, a bit is lost when converting on 32 bit platform !*)
+    | Int_value x -> x
 
 let bool_value = function
     | Rational_value x -> if NumConst.equal x NumConst.one then true else false
@@ -52,15 +111,56 @@ let equal_to_one = function
     | Bool_value x -> not x
     | Int_value x -> Int32.equal x Int32.one
 
-let equal x = function
-    | Rational_value b -> match x with | Rational_value a -> NumConst.equal a b | _ -> false
-    | Bool_value b -> match x with | Bool_value a -> a = b | _ -> false
-    | Int_value b -> match x with | Int_value a -> a = b | _ -> false
+let equal a b =
+    match a, b with
+    | Rational_value a, Rational_value b -> NumConst.equal a b
+    | Bool_value a, Bool_value b -> a = b
+    | Int_value a, Int_value b -> Int32.equal a b
+    | _ -> false
+
+let neq a b =
+    not (equal a b)
 
 let string_of_value = function
     | Rational_value x -> NumConst.string_of_numconst x
     | Bool_value x -> if x then "true" else "false"
     | Int_value x -> Int32.to_string x
 
-(*let bool_of_rational_value x = if x > NumConst.zero then true else false*)
-(*let bool_value_of_rational_value x = Bool_value (bool_of_rational_value x)*)
+let add a b =
+    match a, b with
+        | Rational_value a, Rational_value b -> Rational_value (NumConst.add a b)
+        | Int_value a, Int_value b -> Int_value (Int32.add a b)
+        | _ -> raise ComputingException
+
+let sub a b =
+    match a, b with
+        | Rational_value a, Rational_value b -> Rational_value (NumConst.sub a b)
+        | Int_value a, Int_value b -> Int_value (Int32.sub a b)
+        | _ -> raise ComputingException
+
+let mul a b =
+    match a, b with
+        | Rational_value a, Rational_value b -> Rational_value (NumConst.mul a b)
+        | Int_value a, Int_value b -> Int_value (Int32.mul a b)
+        | _ -> raise ComputingException
+
+let div a b =
+    match a, b with
+        | Rational_value a, Rational_value b -> Rational_value (NumConst.div a b)
+        | Int_value a, Int_value  b -> Int_value  (Int32.div a b)
+        | _ -> raise ComputingException
+
+let neg = function
+    | Rational_value x -> Rational_value (NumConst.neg x)
+    | Int_value x -> Int_value (Int32.neg x)
+    | _ -> raise ComputingException
+
+let zero_of = function
+    | Rational_value _ -> Rational_value NumConst.zero
+    | Int_value _ -> Int_value Int32.zero
+    | _ -> raise ComputingException
+
+let one_of = function
+    | Rational_value _ -> Rational_value NumConst.one
+    | Int_value _ -> Int_value Int32.one
+    | _ -> raise ComputingException

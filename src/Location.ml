@@ -29,9 +29,6 @@ open AbstractProperty
 (** {2 Types} *)
 (************************************************************)
 
-(* TODO benjamin to remove *)
-type discrete_value = NumConst.t
-
 (** Unique identifier for each different global location *)
 type global_location_index = int
 
@@ -39,7 +36,7 @@ type global_location_index = int
 type locations = location_index array
 
 (* Array discrete_index -> NumConst.t *)
-type discrete = NumConst.t array
+type discrete = DiscreteValue.discrete_value array
 
 (* Global location: location for each automaton + value of the discrete *)
 type global_location = locations * discrete
@@ -111,7 +108,7 @@ let hash_code location =
 	let locations, discrete = location in
 	let loc_hash = Array.fold_left (fun h loc -> 2*h + loc) 0 locations in
 	let discr_hash = Array.fold_left (fun h q -> 
-		2*h + (Gmp.Z.to_int (NumConst.get_num q))
+		2*h + (DiscreteValue.hash q)
 	) 0 discrete in
 	loc_hash + 3 * discr_hash
 
@@ -143,7 +140,7 @@ let make_location locations_per_automaton discrete_values =
 	(* Create an array for locations *)
 	let locations = Array.make !nb_automata 0 in
 	(* Create an array for discrete *)
-	let discrete = Array.make !nb_discrete NumConst.zero in
+	let discrete = Array.make !nb_discrete DiscreteValue.rational_zero in
 	(* Iterate on locations *)
 	List.iter (fun (automaton_index, location_index) -> locations.(automaton_index) <- location_index) locations_per_automaton;
 	(* Iterate on discrete *)
@@ -199,7 +196,9 @@ let get_discrete_value location discrete_index =
 	(* Do not forget the offset *)
 	discrete.(discrete_index - !min_discrete_index)
 
-	
+let get_discrete_rational_value location discrete_index =
+    let value = get_discrete_value location discrete_index in
+    DiscreteValue.numconst_value value
 
 (************************************************************)
 (* Check whether the global location is accepting *)
@@ -302,11 +301,12 @@ let string_of_location automata_names location_names discrete_names rational_dis
 	let location_string = string_of_array_of_string_with_sep ", " string_array in
 	(* Convert the discrete *)
 	let string_array = Array.mapi (fun discrete_index value ->
-		(string_of_discrete discrete_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst value) ^ (
+		(string_of_discrete discrete_names discrete_index) ^ " = " ^ (DiscreteValue.string_of_value value) ^ (
 			(* Convert to float? *)
 			match rational_display with
 			| Exact_display -> ""
-			| Float_display -> " (~ " ^ (string_of_float (NumConst.to_float value)) ^ ")"
+			(* TODO benjamin, warning this return bool and int as float *)
+			| Float_display -> " (~ " ^ (string_of_float (DiscreteValue.float_value value)) ^ ")"
 		)
 	) discrete in
 	let discrete_string = string_of_array_of_string_with_sep ", " string_array in
