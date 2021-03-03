@@ -79,11 +79,7 @@ type useful_parsing_model_information = {
 	automata							: automaton_index list;
 	automata_names						: (automaton_index -> automaton_name);
 	constants							: (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t;
-	constants_int                       : (Automaton.variable_name, int) Hashtbl.t;
-	constants_bool                       : (Automaton.variable_name, bool) Hashtbl.t;
 	discrete							: variable_index list;
-	discrete_int                        : variable_index list;
-	discrete_bool                       : variable_index list;
 	index_of_actions					: (Automaton.action_name , Automaton.action_index) Hashtbl.t;
 	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
 	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
@@ -92,7 +88,7 @@ type useful_parsing_model_information = {
 	nb_parameters						: int;
 	parameter_names						: variable_name list;
 	removed_action_names				: action_name list;
-	type_of_variables					: Automaton.variable_index -> AbstractModel.var_type;
+	type_of_variables					: Automaton.variable_index -> DiscreteValue.var_type;
 	variable_names						: variable_name list;
 	variables							: variable_name array;
 	removed_variable_names				: variable_name list;
@@ -110,30 +106,32 @@ type useful_parsing_model_information = {
 (** Getting variables *)
 (************************************************************)
 
-(* Check if a Var_type is a Var_type_discrete of anything *)
-let is_discrete_type = function
-    | Var_type_discrete _ -> true
-    | _ -> false
-
-(* String of discrete var type *)
-let string_of_discrete_type = function
-    | Var_type_discrete_rational -> "discrete"
-    | Var_type_discrete_bool -> "bool"
-    | Var_type_discrete_int -> "int"
-
 (* Convert discrete var type from parsing structure to abstract model *)
 let convert_var_type_discrete = function
-    | DiscreteValue.Var_type_discrete_rational -> AbstractModel.Var_type_discrete_rational
-    | DiscreteValue.Var_type_discrete_int -> AbstractModel.Var_type_discrete_int
-    | DiscreteValue.Var_type_discrete_bool -> AbstractModel.Var_type_discrete_bool
-
+    | ParsingStructure.Var_type_discrete_rational -> DiscreteValue.Var_type_discrete_rational
+    | ParsingStructure.Var_type_discrete_int -> DiscreteValue.Var_type_discrete_int
+    | ParsingStructure.Var_type_discrete_bool -> DiscreteValue.Var_type_discrete_bool
 
 (* Convert var type from parsing structure to abstract model *)
 let convert_var_type = function
-    | ParsingStructure.Var_type_clock -> AbstractModel.Var_type_clock
+    | ParsingStructure.Var_type_clock -> DiscreteValue.Var_type_clock
     | ParsingStructure.Var_type_constant -> raise InvalidModel
-    | ParsingStructure.Var_type_discrete var_type_discrete -> AbstractModel.Var_type_discrete (convert_var_type_discrete var_type_discrete)
-    | ParsingStructure.Var_type_parameter -> AbstractModel.Var_type_parameter
+    | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteValue.Var_type_discrete (convert_var_type_discrete var_type_discrete)
+    | ParsingStructure.Var_type_parameter -> DiscreteValue.Var_type_parameter
+
+let string_of_discrete_type = function
+    | DiscreteValue.Var_type_discrete_bool -> "bool"
+    | DiscreteValue.Var_type_discrete_int -> "int"
+    | DiscreteValue.Var_type_discrete_rational -> "rat"
+
+let string_of_type = function
+    | DiscreteValue.Var_type_clock -> "clock"
+    | DiscreteValue.Var_type_parameter -> "parameter"
+    | DiscreteValue.Var_type_discrete x -> string_of_discrete_type x
+
+let numconst_value_or_fail = function
+    | DiscreteValue.Rational_value x -> x
+    | _ -> raise (InternalError ("Constant and variables should be rational in a linear term"))
 
 (*** TODO: these 'get' functions could be merged with the 'check' functions 'check_automata' ***)
 
@@ -411,7 +409,7 @@ let check_only_discretes_in_parsed_update_arithmetic_expression index_of_variabl
           let variable_index =
             Hashtbl.find index_of_variables variable_name
           in
-          is_discrete_type (type_of_variables variable_index)
+          DiscreteValue.is_discrete_type (type_of_variables variable_index)
         ) with Not_found -> (
             (* Variable not found! *)
             (*** TODO: why is this checked here…? It should have been checked before ***)
@@ -493,7 +491,7 @@ let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_
 			(* Retrieve the value of the global constant *)
 			let value = Hashtbl.find constants variable_name in
 			(* Convert *)
-			DF_constant (DiscreteValue.numconst_value value)
+			DF_constant value
 			) else (
 			raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
 			)
@@ -587,13 +585,13 @@ let rec valuate_parsed_update_arithmetic_expression constants = function
 	and valuate_parsed_update_factor constants = function
 	| Parsed_DF_variable variable_name ->
 		if Hashtbl.mem constants variable_name then (
-		(* Retrieve the value of the global constant *)
-		let value = Hashtbl.find constants variable_name in
-		DiscreteValue.numconst_value value
+            (* Retrieve the value of the global constant *)
+            let value = Hashtbl.find constants variable_name in
+            numconst_value_or_fail value
 		) else (
-		raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'valuate_parsed_update_arithmetic_expression' although it should have been checked before."))
+		    raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'valuate_parsed_update_arithmetic_expression' although it should have been checked before."))
 		)
-	| Parsed_DF_constant var_value -> var_value
+	| Parsed_DF_constant var_value -> numconst_value_or_fail var_value
 	| Parsed_DF_unary_min parsed_discrete_factor -> NumConst.neg (valuate_parsed_update_factor constants parsed_discrete_factor)
 	| Parsed_DF_expression parsed_update_arithmetic_expression -> valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression
 
@@ -674,7 +672,7 @@ and convert_parsed_discrete_factor2 index_of_variables constants = function
 	| Parsed_DF_variable variable_name ->
 		(* First check whether this is a constant *)
 		if Hashtbl.mem constants variable_name then
-			DF_constant (DiscreteValue.numconst_value (Hashtbl.find constants variable_name))
+			DF_constant (Hashtbl.find constants variable_name)
 		(* Otherwise: a variable *)
 		else DF_variable (Hashtbl.find index_of_variables variable_name)
 	| Parsed_DF_constant var_value -> DF_constant var_value
@@ -733,7 +731,7 @@ and convert_parsed_discrete_factor useful_parsing_model_information = function
 	| Parsed_DF_variable variable_name ->
 		(* First check whether this is a constant *)
 		if Hashtbl.mem useful_parsing_model_information.constants variable_name then
-			DF_constant (DiscreteValue.numconst_value (Hashtbl.find useful_parsing_model_information.constants variable_name))
+			DF_constant (Hashtbl.find useful_parsing_model_information.constants variable_name)
 		(* Otherwise: a variable *)
 		else DF_variable (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name)
 	| Parsed_DF_constant var_value -> DF_constant var_value
@@ -1056,7 +1054,7 @@ let only_discrete_in_linear_term index_of_variables type_of_variables constants 
       let variable_index =
         Hashtbl.find index_of_variables variable_name
       in
-      is_discrete_type (type_of_variables variable_index)
+      DiscreteValue.is_discrete_type (type_of_variables variable_index)
     ) with Not_found -> (
         (* Variable not found! *)
         (*** TODO: why is this checked here…? It should have been checked before ***)
@@ -1080,7 +1078,7 @@ let only_discrete_in_nonlinear_term index_of_variables type_of_variables constan
       let variable_index =
         Hashtbl.find index_of_variables variable_name
       in
-      is_discrete_type (type_of_variables variable_index)
+      DiscreteValue.is_discrete_type (type_of_variables variable_index)
     ) with Not_found -> (
         (* Variable not found! *)
         (*** TODO: why is this checked here…? It should have been checked before ***)
@@ -1094,7 +1092,7 @@ let only_discrete_in_nonlinear_term_discrete_boolean_expr index_of_variables typ
       let variable_index =
         Hashtbl.find index_of_variables variable_name
       in
-      is_discrete_type (type_of_variables variable_index)
+      DiscreteValue.is_discrete_type (type_of_variables variable_index)
 
 let only_discrete_in_linear_expression = check_f_in_linear_expression only_discrete_in_linear_term
 (* TODO benjamin : not very elegant because of two function for visit leafs *)
@@ -1106,12 +1104,12 @@ let check_type (* curryied from : index_of_variables type_of_variables constants
         | Parsed_DF_constant _ -> true
         | Parsed_DF_variable variable_name ->
             let variable_index = Hashtbl.find index_of_variables variable_name in
-            type_of_variables.(variable_index) = Var_type_discrete Var_type_discrete_rational
+            type_of_variables.(variable_index) = DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_rational
         | _ -> raise InvalidLeaf
     in
     let check_type_bool_variable index_of_variables type_of_variables constants variable_name =
         let variable_index = Hashtbl.find index_of_variables variable_name in
-        type_of_variables.(variable_index) = Var_type_discrete Var_type_discrete_bool
+        type_of_variables.(variable_index) = DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_bool
     in
     check_f_in_parsed_boolean_expression check_type_rational check_type_bool_variable
 
@@ -1127,7 +1125,7 @@ let no_variables_in_linear_term index_of_variables type_of_variables constants =
     (* Or parameter *)
     ||
     let variable_index = Hashtbl.find index_of_variables variable_name in
-    type_of_variables variable_index = Var_type_parameter
+    type_of_variables variable_index = DiscreteValue.Var_type_parameter
 
 let no_variables_in_linear_expression = check_f_in_linear_expression no_variables_in_linear_term
 
@@ -1382,25 +1380,21 @@ let get_variables_and_constants =
 
 let get_declared_variable_names variable_declarations =
   (* Get all (possibly identical) names of variables in one variable declaration and add it to the computed n-uple *)
-  let get_variables_in_variable_declaration (clocks, discrete_rational, discrete_int, discrete_bool, parameters, constants, unassigned_constants) (var_type, list_of_names) =
+  let get_variables_in_variable_declaration (clocks, discrete_rational, parameters, constants, unassigned_constants) (var_type, list_of_names) =
     let new_list, new_constants = get_variables_and_constants list_of_names in
     match var_type with
     | ParsingStructure.Var_type_clock ->
-      (List.rev_append new_list clocks, discrete_rational, discrete_int, discrete_bool, parameters, List.rev_append new_constants constants, unassigned_constants)
+      (List.rev_append new_list clocks, discrete_rational, parameters, List.rev_append new_constants constants, unassigned_constants)
     | ParsingStructure.Var_type_constant ->
-      (clocks, discrete_rational, discrete_int, discrete_bool, parameters, List.rev_append new_constants constants, List.rev_append new_list unassigned_constants)
-    | ParsingStructure.Var_type_discrete DiscreteValue.Var_type_discrete_rational ->
-      (clocks, List.rev_append new_list discrete_rational, discrete_int, discrete_bool, parameters, List.rev_append new_constants constants, unassigned_constants)
-    | ParsingStructure.Var_type_discrete DiscreteValue.Var_type_discrete_int ->
-      (clocks, discrete_rational, List.rev_append new_list discrete_int, discrete_bool, parameters, List.rev_append new_constants constants, unassigned_constants)
-    | ParsingStructure.Var_type_discrete DiscreteValue.Var_type_discrete_bool ->
-      (clocks, discrete_rational, discrete_int, List.rev_append new_list discrete_bool, parameters, List.rev_append new_constants constants, unassigned_constants)
+      (clocks, discrete_rational, parameters, List.rev_append new_constants constants, List.rev_append new_list unassigned_constants)
+    | ParsingStructure.Var_type_discrete _ ->
+      (clocks, List.rev_append new_list discrete_rational, parameters, List.rev_append new_constants constants, unassigned_constants)
     | ParsingStructure.Var_type_parameter ->
-      (clocks, discrete_rational, discrete_int, discrete_bool, List.rev_append new_list parameters, List.rev_append new_constants constants, unassigned_constants)
+      (clocks, discrete_rational, List.rev_append new_list parameters, List.rev_append new_constants constants, unassigned_constants)
   in
-  let (clocks, discrete_rational, discrete_int, discrete_bool, parameters, constants, unassigned_constants) = List.fold_left get_variables_in_variable_declaration ([], [], [], [], [], [], []) variable_declarations in
+  let (clocks, discrete_rational, parameters, constants, unassigned_constants) = List.fold_left get_variables_in_variable_declaration ([], [], [], [], []) variable_declarations in
   (* Do not reverse lists *)
-  (clocks, discrete_rational, discrete_int, discrete_bool, parameters, constants, unassigned_constants)
+  (clocks, discrete_rational, parameters, constants, unassigned_constants)
 
 (* Only get declared discrete variables with their specific types *)
 let get_declared_discrete_variable variable_declarations =
@@ -1515,7 +1509,7 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 (* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
 (*------------------------------------------------------------*)
 (* TODO refactor because of new types ! *)
-let check_variable_names clock_names discrete_names discrete_int_names discrete_bool_names parameters_names constants =
+let check_variable_names clock_names discrete_names parameters_names constants =
 	(* Warn if a variable is defined twice as the same type *)
 	let warn_for_multiply_defined_variables list_of_variables =
 		(* Compute the multiply defined variables *)
@@ -1525,8 +1519,6 @@ let check_variable_names clock_names discrete_names discrete_int_names discrete_
 	in
 	warn_for_multiply_defined_variables clock_names;
 	warn_for_multiply_defined_variables discrete_names;
-	warn_for_multiply_defined_variables discrete_int_names;
-	warn_for_multiply_defined_variables discrete_bool_names;
 	warn_for_multiply_defined_variables parameters_names;
 	(* Check different from constants *)
 	let different_from_constants l =
@@ -1548,19 +1540,12 @@ let check_variable_names clock_names discrete_names discrete_int_names discrete_
 		| _ -> List.iter (fun variable_name -> print_error ("The variable `" ^ variable_name ^ "` is defined twice as two different types.")) inter; false
 	in
 	let check1 = error_for_multiply_defined_variables clock_names discrete_names in
-	let check2 = error_for_multiply_defined_variables clock_names discrete_int_names in
-	let check3 = error_for_multiply_defined_variables clock_names discrete_bool_names in
-	let check4 = error_for_multiply_defined_variables clock_names parameters_names in
-	let check5 = error_for_multiply_defined_variables discrete_names parameters_names in
-	let check6 = error_for_multiply_defined_variables discrete_int_names parameters_names in
-	let check7 = error_for_multiply_defined_variables discrete_bool_names parameters_names in
-	let check8 = different_from_constants clock_names in
-	let check9 = different_from_constants discrete_names in
-	let check10 = different_from_constants discrete_int_names in
-	let check11 = different_from_constants discrete_bool_names in
-	let check12 = different_from_constants parameters_names in
-	check1 && check2 && check3 && check4 && check5 && check6 &&
-	check7 && check8 && check9 && check10 && check11 && check12
+	let check2 = error_for_multiply_defined_variables clock_names parameters_names in
+	let check3 = error_for_multiply_defined_variables discrete_names parameters_names in
+	let check4 = different_from_constants clock_names in
+	let check5 = different_from_constants discrete_names in
+	let check6 = different_from_constants parameters_names in
+	check1 && check2 && check3 && check4 && check5 && check6
 
 
 (*------------------------------------------------------------*)
@@ -1626,13 +1611,13 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 			print_message Verbose_total ("                Checking the type of the variable `" ^ variable_name ^ "`");
 			match type_of_variable with
 			(* Type clock: allow any linear term in updates: so just check that variables have been declared *)
-			| AbstractModel.Var_type_clock ->
+			| DiscreteValue.Var_type_clock ->
 			print_message Verbose_total ("                A clock!");
 			all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants arithmetic_expression
 
 			(* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
-			| AbstractModel.Var_type_discrete var_type_discrete ->
-			let string_of_var_type = string_of_discrete_type var_type_discrete in
+			| DiscreteValue.Var_type_discrete var_type_discrete ->
+			let string_of_var_type = DiscreteValue.string_of_var_type_discrete var_type_discrete in
 			print_message Verbose_total ("                A " ^ string_of_var_type ^ "!");
 			let result = check_only_discretes_in_parsed_update_arithmetic_expression index_of_variables type_of_variables constants arithmetic_expression in
 			if not result then
@@ -1642,7 +1627,7 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 				true
 			)
 			(* Case of a parameter: forbidden! *)
-			| AbstractModel.Var_type_parameter -> print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
+			| DiscreteValue.Var_type_parameter -> print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
 		)
 		)
 	in
@@ -1703,7 +1688,7 @@ let check_stopwatches index_of_variables type_of_variables location_name stopwat
 		(* Get variable name *)
 		try (
 			let variable_index = Hashtbl.find index_of_variables stopwatch in
-			if type_of_variables variable_index <> Var_type_clock then (
+			if type_of_variables variable_index <> DiscreteValue.Var_type_clock then (
 			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined as a clock.");
 			ok := false;
 			);
@@ -1733,7 +1718,7 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 			let variable_index = Hashtbl.find index_of_variables clock_name in
 			
 			(* Check variable type *)
-			if type_of_variables variable_index <> Var_type_clock then (
+			if type_of_variables variable_index <> DiscreteValue.Var_type_clock then (
 				print_error ("The variable `" ^ clock_name ^ "` used in a flow in location `" ^ location_name ^ "` is not defined as a clock.");
 				ok := false;
 			);
@@ -1957,7 +1942,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			if (Hashtbl.mem index_of_variables variable_name) then (
 				let variable_index =  Hashtbl.find index_of_variables variable_name in
 				(* Keep if this is a discrete *)
-				is_discrete_type (type_of_variables variable_index)
+				DiscreteValue.is_discrete_type (type_of_variables variable_index)
 			) else (
 				(* Case constant *)
 				if (Hashtbl.mem constants variable_name) then false
@@ -1985,16 +1970,16 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			let discrete_value =
 			match (op, expression) with
 			(* Simple constant: OK *)
-			| (PARSED_OP_EQ, Linear_term (Constant c)) -> c
+			| (PARSED_OP_EQ, Linear_term (Constant c)) -> DiscreteValue.Rational_value c
 			(* Constant: OK *)
 			| (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
 				(* Get the value of  the variable *)
 				let value = Hashtbl.find constants variable_name in
 				let numconst_value = DiscreteValue.numconst_value value in
-				NumConst.mul coef numconst_value
+				DiscreteValue.Rational_value (NumConst.mul coef numconst_value)
 			| _ -> print_error ("The initial value for discrete variable `" ^ discrete_name ^ "` must be given in the form `" ^ discrete_name ^ " = c`, where `c` is an integer, a rational or a constant.");
 				well_formed := false;
-				NumConst.zero
+				DiscreteValue.Rational_value NumConst.zero
 			in
 			(* Get the variable index *)
 			let discret_index =  Hashtbl.find index_of_variables discrete_name in
@@ -2013,8 +1998,12 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	(* Check that every discrete variable is given at least one (rational) initial value (if not: warns) *)
 	List.iter (fun discrete_index ->
 		if not (Hashtbl.mem init_values_for_discrete discrete_index) then(
-			print_warning ("The discrete variable '" ^ (List.nth variable_names discrete_index) ^ "' was not given an initial value in the init definition: it will be assigned to 0.");
-			Hashtbl.add init_values_for_discrete discrete_index NumConst.zero
+		    let variable_name = List.nth variable_names discrete_index in
+		    let variable_index =  Hashtbl.find index_of_variables variable_name in
+		    let variable_type = type_of_variables variable_index in
+		    let default_value = DiscreteValue.default_value variable_type in
+			print_warning ("The discrete variable '" ^ variable_name ^ "' was not given an initial value in the init definition: it will be assigned to " ^ DiscreteValue.string_of_value default_value ^ ".");
+			Hashtbl.add init_values_for_discrete discrete_index default_value
 		);
 		) discrete;
 
@@ -2084,12 +2073,20 @@ and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = fun
 (* If it's not possible, we raise an InvalidExpression exception *)
 and try_convert_linear_term_of_parsed_discrete_factor = function
         | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name)
-        | Parsed_DF_constant var_value -> Constant var_value
+        | Parsed_DF_constant var_value -> (
+            match var_value with
+            | DiscreteValue.Rational_value x -> Constant x
+            | _ -> raise (InvalidExpression "A linear expression should only use rational constants / literals")
+        )
         | Parsed_DF_unary_min parsed_discrete_factor ->
             (* Check for unary min, negate variable and constant *)
             (match parsed_discrete_factor with
                 | Parsed_DF_variable variable_name -> Variable(NumConst.minus_one, variable_name)
-                | Parsed_DF_constant var_value -> Constant (NumConst.neg var_value)
+                | Parsed_DF_constant var_value -> (
+                    match var_value with
+                    | DiscreteValue.Rational_value x -> Constant (NumConst.neg x)
+                    | _ -> raise (InvalidExpression "A linear expression should only use rational constants / literals")
+                )
                 | _ -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
             )
         (* Parenthesis used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
@@ -2590,16 +2587,17 @@ let linear_term_of_parsed_update_arithmetic_expression index_of_variables consta
 				if Hashtbl.mem constants variable_name then (
 				(* Retrieve the value of the global constant *)
 				let value = Hashtbl.find constants variable_name in
-				let numconst_value = DiscreteValue.numconst_value value in
+				let numconst_value = numconst_value_or_fail value in
 				(* Update the constant *)
 				constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
 				) else (
-				raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'linear_term_of_parsed_update_arithmetic_expression' although this should have been checked before."))
+				raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'update_coef_array_in_parsed_update_factor' although this should have been checked before."))
 				)
 			)
 		| Parsed_DF_constant var_value ->
-			(* Update the constant *)
-			constant := NumConst.add !constant (NumConst.mul mult_factor var_value)
+            (* Update the constant *)
+            let numconst_value = numconst_value_or_fail var_value in
+            constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
 		| Parsed_DF_unary_min parsed_discrete_factor ->
 			update_coef_array_in_parsed_update_factor mult_factor parsed_discrete_factor
 		| Parsed_DF_expression parsed_update_arithmetic_expression ->
@@ -2674,9 +2672,9 @@ let split_to_clock_discrete_updates index_of_variables only_resets type_of_varia
   (** Check if a normal update is a clock update *)
   let is_clock_update (variable_name, parsed_update_arithmetic_expression) =
     (* Retrieve variable type *)
-    if type_of_variables (Hashtbl.find index_of_variables variable_name) = Var_type_clock then (
+    if type_of_variables (Hashtbl.find index_of_variables variable_name) = DiscreteValue.Var_type_clock then (
       (* Update flag *)
-      if parsed_update_arithmetic_expression <> Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant NumConst.zero)) then (
+      if parsed_update_arithmetic_expression <> Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant DiscreteValue.rational_zero)) then (
         only_resets := false;
       );
       true
@@ -2899,7 +2897,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 				if (Hashtbl.mem index_of_variables variable_name) then (
 				let variable_index =  Hashtbl.find index_of_variables variable_name in
 				(* Keep if this is a discrete *)
-				is_discrete_type (type_of_variables variable_index)
+				DiscreteValue.is_discrete_type (type_of_variables variable_index)
 				) else (
 				(* Case constant *)
 				if (Hashtbl.mem constants variable_name) then false
@@ -2923,8 +2921,14 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		(* Create pairs of (index , value) for discrete variables *)
 		(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in *)
 
+        (* TODO check with étienne *)
+        (* Get only rational discrete for constraint encoding *)
+        let init_discrete_rational_pairs = List.filter (fun (discrete_index, discrete_value) -> DiscreteValue.is_rational_value discrete_value) init_discrete_pairs in
+        (* map to num const *)
+        let init_discrete_rational_numconst_pairs = List.map (fun (discrete_index, discrete_value) -> discrete_index, DiscreteValue.numconst_value discrete_value) init_discrete_rational_pairs in
+
 		(* Create a constraint encoding the value of the discretes *)
-		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_pairs in
+		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_rational_numconst_pairs in
 
 		(* Create initial constraint (through parsing) *)
 		let initial_constraint = (linear_constraint_of_convex_predicate index_of_variables constants convex_predicate) in
@@ -3521,7 +3525,13 @@ and check_parsed_discrete_boolean_expression useful_parsing_model_information = 
     (** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
     | Parsed_boolean_expression parsed_boolean_expression ->
         check_parsed_boolean_expression useful_parsing_model_information parsed_boolean_expression
-
+    | Parsed_DB_variable variable_name ->
+        if not (Hashtbl.mem useful_parsing_model_information.index_of_variables variable_name) && not (Hashtbl.mem useful_parsing_model_information.constants variable_name) then (
+            print_error ("Undefined variable name `" ^ variable_name ^ "` in the property");
+            false
+        )else(
+            true
+        )
 
 		
 (*------------------------------------------------------------*)
@@ -3601,7 +3611,7 @@ let check_parameter_name suffix_explanation_string useful_parsing_model_informat
 		false
 	) else(
 		let parameter_index = Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name in
-		if not(useful_parsing_model_information.type_of_variables parameter_index = Var_type_parameter) then(
+		if not(useful_parsing_model_information.type_of_variables parameter_index = DiscreteValue.Var_type_parameter) then(
 			print_error ("Variable " ^ parameter_name ^ " is not a parameter" ^ suffix_explanation_string);
 			false
 		)else true
@@ -4373,8 +4383,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let
 	possibly_multiply_defined_clock_names,
 	possibly_multiply_defined_discrete_names,
-	possibly_multiply_defined_discrete_int_names,
-	possibly_multiply_defined_discrete_bool_names,
 	possibly_multiply_defined_parameter_names,
 	constants,
 	unassigned_constants
@@ -4405,8 +4413,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Make the array of constants *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let (constants : (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t), constants_consistent = make_constants constants in
-    let constants_int = Hashtbl.create 0 in
-    let constants_bool = Hashtbl.create 0 in
 
 	if verbose_mode_greater Verbose_high then(
 		(* Constants *)
@@ -4422,7 +4428,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Check the variable_declarations *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check that all variable names are different (and print warnings for multiply-defined variables if same type) *)
-	let all_variables_different = check_variable_names possibly_multiply_defined_clock_names possibly_multiply_defined_discrete_names possibly_multiply_defined_discrete_int_names possibly_multiply_defined_discrete_bool_names possibly_multiply_defined_parameter_names constants in
+	let all_variables_different = check_variable_names possibly_multiply_defined_clock_names possibly_multiply_defined_discrete_names possibly_multiply_defined_parameter_names constants in
 	(* Check that all automata names are different *)
 	let all_automata_different = check_declared_automata_names declared_automata_names in
 
@@ -4497,15 +4503,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* First remove multiply defined variable names *)
 	let single_clock_names = list_only_once possibly_multiply_defined_clock_names in
 	let single_discrete_names = list_only_once possibly_multiply_defined_discrete_names in
-	let single_discrete_int_names = list_only_once possibly_multiply_defined_discrete_int_names in
-	let single_discrete_bool_names = list_only_once possibly_multiply_defined_discrete_bool_names in
 	let single_parameter_names = list_only_once possibly_multiply_defined_parameter_names in
 	let single_discrete_names_by_type = list_only_once possibly_multiply_defined_discrete_names_by_type in
 
-(*	for i = 0 to (List.length single_discrete_names_by_type) - 1 do*)
-(*	    let t, n = List.nth single_discrete_names_by_type i in*)
+(*	for i = 0 to (List.length possibly_multiply_defined_discrete_names_by_type) - 1 do*)
+(*	    let t, n = List.nth possibly_multiply_defined_discrete_names_by_type i in*)
 (*	    let ct = convert_var_type t in*)
-(*	    print_string ("Type : " ^ (string_of_type ct) ^ ", Name : " ^ n ^ "\n");*)
+(*	    print_string ("\n Type : " ^ (string_of_type ct) ^ ", Name : " ^ n);*)
 (*	done;*)
 
 	(*------------------------------------------------------------*)
@@ -4513,10 +4517,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 
 	(* Unless a specific option is activated, we first remove all variables declared but unused *)
-	let clock_names, discrete_names, discrete_int_names, discrete_bool_names, parameter_names, removed_variable_names =
+	let clock_names, discrete_names, parameter_names, removed_variable_names =
 	if options#no_variable_autoremove then(
 		(* Nothing to do *)
-		single_clock_names, single_discrete_names, single_discrete_int_names, single_discrete_bool_names, single_parameter_names, []
+		single_clock_names, single_discrete_names, single_parameter_names, []
 	)else (
 		(* Gather all variables used *)
 		let all_variables_used_in_model = get_all_variables_used_in_model parsed_model in
@@ -4543,12 +4547,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Create all three lists *)
 		let single_clock_names, removed_clock_names = remove_unused_variables_gen "clock" single_clock_names in
 		let single_discrete_names, removed_discrete_names = remove_unused_variables_gen "discrete" single_discrete_names in
-		let single_discrete_int_names, removed_discrete_int_names = remove_unused_variables_gen "discrete int" single_discrete_int_names in
-		let single_discrete_bool_names, removed_discrete_bool_names = remove_unused_variables_gen "discrete bool" single_discrete_bool_names in
 		let single_parameter_names, removed_parameter_names = remove_unused_variables_gen "parameter" single_parameter_names in
 		(* Return and append removed variable names *)
-		let removed_variable_names = List.rev_append removed_clock_names (List.rev_append removed_discrete_names (List.rev_append removed_discrete_int_names (List.rev_append removed_discrete_bool_names removed_parameter_names))) in
-		single_clock_names, single_discrete_names, single_discrete_int_names, single_discrete_bool_names, single_parameter_names, removed_variable_names
+		let removed_variable_names = List.rev_append removed_clock_names (List.rev_append removed_discrete_names removed_parameter_names) in
+		single_clock_names, single_discrete_names, single_parameter_names, removed_variable_names
 	)
 	in
 	
@@ -4591,7 +4593,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Make only one list for all variables *)
     (* Keep order (parameters, clocks, discretes) *)
-	let variable_names = discrete_bool_names |> list_append discrete_int_names |> list_append discrete_names |> list_append clock_names |> list_append parameter_names in
+	let variable_names = discrete_names |> list_append clock_names |> list_append parameter_names in
 
 	(* Update automata names with the observer automaton *)
 	let declared_automata_names = match observer_automaton with
@@ -4604,11 +4606,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let nb_actions		    = List.length action_names in
 	let nb_clocks		    = List.length clock_names in
 	let nb_discrete		    = List.length discrete_names in
-	let nb_discrete_int     = List.length discrete_int_names in
-	let nb_discrete_bool    = List.length discrete_bool_names in
 	let nb_parameters	    = List.length parameter_names in
 	let nb_variables	    = List.length variable_names in
-    let nb_discrete_total   = nb_discrete + nb_discrete_int + nb_discrete_bool in
 
 	(* Compute the index for the observer automaton *)
 	let observer_automaton_index_option = match observer_automaton with
@@ -4688,13 +4687,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let first_parameter_index = 0 in
 	let first_clock_index    = first_parameter_index + nb_parameters in
 	let first_discrete_index  = first_clock_index + nb_clocks in
-	let first_discrete_int_index = first_discrete_index + nb_discrete in
-	let first_discrete_bool_index = first_discrete_int_index + nb_discrete_int in
 
 	(* An array 'variable index -> AbstractModel.var_type' *)
-	let type_of_variables = Array.make nb_variables AbstractModel.Var_type_parameter in
+	let type_of_variables = Array.make nb_variables DiscreteValue.Var_type_parameter in
 	for i = first_clock_index to first_discrete_index - 1 do
-		type_of_variables.(i) <- AbstractModel.Var_type_clock;
+		type_of_variables.(i) <- DiscreteValue.Var_type_clock;
 	done;
 	for i = first_discrete_index to nb_variables - 1 do
 	    (* Get specific var_type of discrete variable *)
@@ -4709,14 +4706,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Create the lists of different variables *)
 	let (parameters : parameter_index list)	= list_of_interval first_parameter_index (first_clock_index - 1) in
 	let (clocks : clock_index list)			= list_of_interval first_clock_index (first_discrete_index - 1) in
-	let (discrete : discrete_index list)	= list_of_interval first_discrete_index (first_discrete_int_index - 1) in
-	let (discrete_int : discrete_index list) = list_of_interval first_discrete_index (first_discrete_bool_index - 1) in
-	let (discrete_bool : discrete_index list)= list_of_interval first_discrete_index (nb_variables - 1) in
+	let (discrete : discrete_index list)	= list_of_interval first_discrete_index (nb_variables - 1) in
 
 
 	(* Create the type check functions *)
-	let is_clock = (fun variable_index -> try (type_of_variables variable_index = Var_type_clock) with Invalid_argument _ ->  false) in
-	let is_discrete = (fun variable_index -> try (is_discrete_type (type_of_variables variable_index)) with Invalid_argument _ ->  false) in
+	let is_clock = (fun variable_index -> try (type_of_variables variable_index = DiscreteValue.Var_type_clock) with Invalid_argument _ ->  false) in
+	let is_discrete = (fun variable_index -> try (DiscreteValue.is_discrete_type (type_of_variables variable_index)) with Invalid_argument _ ->  false) in
 
 
 	(* Detect the clock with a special global time name, if any *)
@@ -4820,11 +4815,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		automata_names				= automata_names;
 		automata					= automata;
 		constants					= constants;
-		constants_int               = constants_int;
-		constants_bool              = constants_bool;
 		discrete					= discrete;
-		discrete_int                = discrete_int;
-		discrete_bool               = discrete_bool;
 		index_of_actions			= index_of_actions;
 		index_of_automata			= index_of_automata;
 		index_of_locations			= index_of_locations;
@@ -5382,7 +5373,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Print some information *)
 	print_message Verbose_high ("*** Building initial state…");
-	
+
 	let (initial_location, initial_constraint) =
 		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs parsed_model.init_definition in
 

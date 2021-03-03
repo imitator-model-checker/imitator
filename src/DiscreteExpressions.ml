@@ -26,7 +26,7 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (****************************************************************)
 (** Valuation *)
 (****************************************************************)
-type discrete_valuation = Automaton.discrete_index -> NumConst.t
+type discrete_valuation = Automaton.discrete_index -> DiscreteValue.discrete_value
 
 
 (****************************************************************)
@@ -44,7 +44,7 @@ and discrete_term =
 
 and discrete_factor =
 	| DF_variable of Automaton.variable_index
-	| DF_constant of Automaton.variable_value
+	| DF_constant of DiscreteValue.discrete_value
 	| DF_expression of discrete_arithmetic_expression
 	| DF_unary_min of discrete_factor
 
@@ -87,11 +87,11 @@ let rec eval_discrete_factor discrete_valuation = function
 		eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression
 	
 	| DF_unary_min discrete_factor ->
-		NumConst.neg (eval_discrete_factor discrete_valuation discrete_factor)
+		DiscreteValue.neg (eval_discrete_factor discrete_valuation discrete_factor)
 
 and eval_discrete_term discrete_valuation = function
 	| DT_mul (discrete_term, discrete_factor) ->
-		NumConst.mul
+		DiscreteValue.mul
 		(eval_discrete_term discrete_valuation discrete_term)
 		(eval_discrete_factor discrete_valuation discrete_factor)
 		
@@ -100,12 +100,12 @@ and eval_discrete_term discrete_valuation = function
 		let denominator	= (eval_discrete_factor discrete_valuation discrete_factor) in
 		
 		(* Check for 0-denominator *)
-		if NumConst.equal denominator NumConst.zero then(
-			raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (NumConst.string_of_numconst numerator) ^ " / " ^ (NumConst.string_of_numconst denominator) ^ ""))
+		if DiscreteValue.equal denominator (DiscreteValue.zero_of denominator) then(
+			raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (DiscreteValue.string_of_value numerator) ^ " / " ^ (DiscreteValue.string_of_value denominator) ^ ""))
 		);
 
 		(* Divide *)
-		NumConst.div
+		DiscreteValue.div
 		numerator
 		denominator
 		
@@ -114,12 +114,12 @@ and eval_discrete_term discrete_valuation = function
 
 and eval_discrete_arithmetic_expression discrete_valuation = function
 	| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
-		NumConst.add
+		DiscreteValue.add
 		(eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression)
 		(eval_discrete_term discrete_valuation discrete_term)
 		
 	| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
-		NumConst.sub
+		DiscreteValue.sub
 		(eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression)
 		(eval_discrete_term discrete_valuation discrete_term)
 		
@@ -173,8 +173,9 @@ and check_discrete_boolean_expression discrete_valuation = function
 			(eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_3)
     | Boolean_expression boolean_expression ->
         is_boolean_expression_satisfied discrete_valuation boolean_expression
-(*    | DB_variable variable_index ->*)
-(*        discrete_valuation variable_index*)
+    | DB_variable variable_index ->
+        (* DB_variable should be a bool value, so we can convert directly to bool with no problem *)
+        DiscreteValue.bool_value (discrete_valuation variable_index)
 
 
 
@@ -231,7 +232,7 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
     let rec string_of_arithmetic_expression customized_string = function
         (* Shortcut: Remove the "+0" / -"0" cases *)
         | DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
-        | DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
+        | DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when DiscreteValue.equal c (DiscreteValue.zero_of c) ->
             string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 
 		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
@@ -246,7 +247,7 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
 
 	and string_of_term customized_string = function
 		(* Eliminate the '1' coefficient *)
-		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
+		| DT_mul (DT_factor (DF_constant c), discrete_factor) when DiscreteValue.equal c (DiscreteValue.one_of c) ->
 			string_of_factor customized_string discrete_factor
 		| DT_mul (discrete_term, discrete_factor) as expr ->
 		add_left_parenthesis discrete_term (
@@ -272,7 +273,7 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
 
 	and string_of_factor customized_string = function
 		| DF_variable discrete_index -> variable_names discrete_index
-		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
+		| DF_constant discrete_value -> DiscreteValue.string_of_value discrete_value
 		| DF_unary_min discrete_factor ->
 		    Constants.default_operator_string.unary_min_string ^
 		    add_parenthesis_to_unary_minus (

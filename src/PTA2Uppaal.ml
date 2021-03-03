@@ -138,7 +138,7 @@ let string_of_discrete model =
 				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
 
 				(* Assign *)
-				"\nint " ^ discrete_name ^ " = " ^ (NumConst.string_of_numconst initial_value) ^ ";"
+				"\nint " ^ discrete_name ^ " = " ^ (DiscreteValue.string_of_value initial_value) ^ ";"
 			) model.discrete
 			)
 		)

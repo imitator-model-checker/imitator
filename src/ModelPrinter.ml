@@ -123,16 +123,11 @@ let footer = "\n"
 (** Variable declarations *)
 (************************************************************)
 
-let string_of_var_type_discrete = function
-    | Var_type_discrete_rational -> "discrete"
-    | Var_type_discrete_bool -> "bool"
-    | Var_type_discrete_int -> "int"
+(* Convert a var_type_discrete into a string *)
+let string_of_var_type_discrete = DiscreteValue.string_of_var_type_discrete
 
 (* Convert a var_type into a string *)
-let string_of_var_type = function
-	| Var_type_clock -> "clock"
-	| Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
-	| Var_type_parameter -> "parameter"
+let string_of_var_type = DiscreteValue.string_of_var_type
 
 
 
@@ -582,7 +577,7 @@ let string_of_initial_state model =
 		(* Finding the initial value for this discrete *)
 		let initial_value = Location.get_discrete_value inital_global_location discrete_index in
 		(* '& var = val' *)
-		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst initial_value)
+		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (DiscreteValue.string_of_value initial_value)
 	) model.discrete
 	in string_of_list_of_string initial_discrete
 
