@@ -87,6 +87,7 @@ and discrete_boolean_expression =
 	| Boolean_expression of boolean_expression
 	(* Parsed_DB_variable of variable_name *)
 	| DB_variable of Automaton.variable_index
+	| DB_constant of bool
 
 
 (************************************************************)

@@ -163,6 +163,8 @@ and string_of_discrete_boolean_expression variable_names = function
         "(" ^ string_of_boolean variable_names boolean_expression ^ ")"
     | DB_variable variable_index ->
         variable_names variable_index
+    | DB_constant value ->
+        string_of_bool value
 
 
 

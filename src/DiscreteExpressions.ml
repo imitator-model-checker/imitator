@@ -71,6 +71,7 @@ and discrete_boolean_expression =
 	| Boolean_expression of boolean_expression
 	(* Parsed_DB_variable of variable_name *)
 	| DB_variable of Automaton.variable_index
+	| DB_constant of bool
 
 (************************************************************)
 (** Evaluate arithmetic expressions with a valuation *)
@@ -176,6 +177,8 @@ and check_discrete_boolean_expression discrete_valuation = function
     | DB_variable variable_index ->
         (* DB_variable should be a bool value, so we can convert directly to bool with no problem *)
         DiscreteValue.bool_value (discrete_valuation variable_index)
+    | DB_constant value ->
+        value
 
 
 
@@ -334,6 +337,8 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
         "(" ^ (customized_string_of_boolean_expression customized_string variable_names boolean_expression) ^ ")"
     | DB_variable variable_index ->
         variable_names variable_index
+    | DB_constant value ->
+        string_of_bool value
 
 (* TODO benjamin ref in ModelPrinter *)
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.default_string
