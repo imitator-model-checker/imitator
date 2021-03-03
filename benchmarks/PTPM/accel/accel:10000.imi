@@ -6,7 +6,7 @@
  * Correctness      : N/A
  * Scalable         : yes
  * Generated        : yes
- * Categories       : Automative ; Industrial
+ * Categories       : Automotive ; Industrial ; Monitoring
  * Source           : Benchmarks for Temporal Logic Requirements for Automotive Systems (ARCH@CPSWeek 2014) + Masaki Waga / Étienne André, Ichiro Husuo, Masaki Waga "Offline timed pattern matching under uncertainty" (ICECCS 2018)
  * bibkey           : HAF14 ; AHW18
  * Author           : The same
