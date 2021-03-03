@@ -634,7 +634,13 @@ and convert_discrete_bool_expr index_of_variables constants = function
     | Parsed_boolean_expression parsed_boolean_expression ->
         Boolean_expression (convert_bool_expr index_of_variables constants parsed_boolean_expression)
     | Parsed_DB_variable variable_name ->
-        DB_variable (Hashtbl.find index_of_variables variable_name)
+		(* First check whether this is a constant *)
+		if Hashtbl.mem constants variable_name then
+		    (* Extract bool value because DB_constant can only be of bool type *)
+			DB_constant (DiscreteValue.bool_value (Hashtbl.find constants variable_name))
+		(* Otherwise: a variable *)
+		else
+		    DB_variable (Hashtbl.find index_of_variables variable_name)
 
 
 (*------------------------------------------------------------*)
@@ -701,7 +707,12 @@ let convert_parsed_discrete_boolean_expression2 index_of_variables constants = f
 	| Parsed_boolean_expression boolean_expression ->
 	     Boolean_expression (convert_bool_expr index_of_variables constants boolean_expression)
     | Parsed_DB_variable variable_name ->
-        DB_variable (Hashtbl.find index_of_variables variable_name)
+		(* First check whether this is a constant *)
+		if Hashtbl.mem constants variable_name then
+		    (* Extract bool value because DB_constant can only be of bool type *)
+			DB_constant (DiscreteValue.bool_value (Hashtbl.find constants variable_name))
+		(* Otherwise: a variable *)
+		else DB_variable (Hashtbl.find index_of_variables variable_name)
 
 
 (* Convert parsed_discrete_arithmetic_expression *)
@@ -1089,10 +1100,12 @@ let only_discrete_in_nonlinear_term index_of_variables type_of_variables constan
   | _ -> raise InvalidLeaf
 
 let only_discrete_in_nonlinear_term_discrete_boolean_expr index_of_variables type_of_variables constants variable_name =
+      (* Constants are allowed *)
+      (Hashtbl.mem constants variable_name) || (
       let variable_index =
         Hashtbl.find index_of_variables variable_name
       in
-      DiscreteValue.is_discrete_type (type_of_variables variable_index)
+      DiscreteValue.is_discrete_type (type_of_variables variable_index))
 
 let only_discrete_in_linear_expression = check_f_in_linear_expression only_discrete_in_linear_term
 (* TODO benjamin : not very elegant because of two function for visit leafs *)
@@ -2151,6 +2164,7 @@ let split_convex_predicate_into_discrete_and_continuous_new index_of_variables t
 (*------------------------------------------------------------*)
 let convert_guard index_of_variables type_of_variables constants guard_convex_predicate =
   try(
+
     (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
 (*    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants guard_convex_predicate in*)
     let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous_new index_of_variables type_of_variables constants guard_convex_predicate in
@@ -4946,7 +4960,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*** TODO: integrate inside 'make_automata' (?) ***)
 	let transitions, transitions_description, automaton_of_transition = convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions in
 
-	
+
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add the observer structure to the automata *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
