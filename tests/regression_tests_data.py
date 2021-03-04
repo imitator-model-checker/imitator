@@ -65,7 +65,7 @@ Error                                   : property file not found
 			} # end result file
 			,
 		] # end expectations
-	} # end test case
+	} # end test casearithmetic_expressions
 	#------------------------------------------------------------
 
 	,
@@ -2111,6 +2111,61 @@ when  z * x / y > x do {}  sync a1 goto lend;
         when  x + y / z > x do {}  sync a1 goto lend;
         when  x - y * z > x do {}  sync a1 goto lend;
         when  x + y * z > x do {}  sync a1 goto lend;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test boolean True constant (computing)',
+		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-constant-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test boolean False constant (computing)',
+		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-constant-unreachable.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test that a boolean constant is not assigning by other value than a boolean literal (semantic)',
+		'input_files': ['boolean_expressions/bool-constant-semantic-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-constant-semantic-error.res' , 'content' : """
+Error                                   : invalid model
 		"""
 			 } # end result file
 			,
