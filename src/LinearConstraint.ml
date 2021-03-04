@@ -7,9 +7,9 @@
  * 
  * Module description: Common definitions for linear terms and constraints (interface to PPL)
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/02/24
+ * Last modified     : 2021/03/02
  *
  ************************************************************)
 
@@ -943,8 +943,98 @@ let rec string_of_ppl_linear_term (names : (variable -> string)) (linear_term : 
 						| Coefficient _ -> fstr ^ "*" ^ tstr
 						| Variable    _ -> fstr ^ "*" ^ tstr
 						| _ -> fstr ^ " * (" ^ tstr ^ ")" )
-				
 
+let pxd_linear_term_is_unary (linear_term : linear_term) =
+	match linear_term with
+		| Coef z -> true
+		| Var v -> true
+		| Pl (t,u) -> false
+		| Mi (t,u) -> false
+		| Ti (t,u) -> false
+
+let op_term_of_pxd_linear_term (linear_term : linear_term) =
+	match linear_term with
+		| Coef z -> "" 
+		| Var v ->  "" 
+		| Pl (t,u) -> "+"
+		| Mi (t,u) -> "-"
+		| Ti (t,u) -> "*"
+
+let rec left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : linear_term) = 
+	match linear_term with
+	(*  * linear_term to hack return type *)
+		| Coef z -> "Coefficient", string_of_coef z, linear_term
+		
+		| Var v -> "Variable", (names v), linear_term
+		
+(*		| Unary_Plus t -> "Unary", (string_of_ppl_linear_term names t), linear_term
+		
+		| Unary_Minus t -> "Unary", (
+				let str = string_of_ppl_linear_term names t in
+				"-(" ^ str ^ ")")
+				(*TODO DYLAN check how to write in jani*)
+				, linear_term*)
+				 
+		(* Some simplification *)
+(*		| Pl (lterm, Coef z)
+		| Mi (lterm, Coef z)
+			when Gmp.Z.equal z (Gmp.Z.zero) ->
+			  left_term_of_pxd_linear_term names lterm*)
+
+		| Pl (lterm, rterm) -> "Duary", "", lterm
+				
+		| Mi (lterm, rterm) -> "Duary", "", lterm
+				
+		| Ti (z, rterm) -> "Unary", (string_of_coef z), linear_term
+
+let rec right_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : linear_term) = 
+	match linear_term with
+	(*  * linear_term to hack return type *)
+		| Coef z -> "Coefficient", string_of_coef z, linear_term
+		
+		| Var v -> "Variable", (names v), linear_term
+		
+(*		| Unary_Plus t -> "Unary", (string_of_ppl_linear_term names t), linear_term
+		
+		| Unary_Minus t -> "Unary", (
+				let str = string_of_ppl_linear_term names t in
+				"-(" ^ str ^ ")")
+				(*TODO DYLAN check how to write in jani*)
+				 , linear_term*)
+				
+		(* Some simplification *)
+(*		| Pl (lterm, Coef z)
+		| Mi (lterm, Coef z)
+			when Gmp.Z.equal z (Gmp.Z.zero) ->
+			  right_term_of_pxd_linear_term names lterm*)
+
+		| Pl (lterm, rterm) -> "Duary", "", rterm
+				
+		| Mi (lterm, rterm) -> "Duary", "", rterm
+				
+		| Ti (z, rterm) -> "Duary", "", rterm
+
+let rec string_of_linear_term_for_jani variable_names linear_term = 
+	(*TODO DYLAN Update called funcitons and here with a new type insteed of tuple*)
+	if (pxd_linear_term_is_unary linear_term)
+	then (
+		let type_return, value_return, _ = left_term_of_pxd_linear_term variable_names linear_term in
+		if type_return = "Coefficient" then value_return else "\""^value_return^"\""
+	) else (
+		let op = op_term_of_pxd_linear_term linear_term in
+		let left_type, left_string, left_term = left_term_of_pxd_linear_term variable_names linear_term in 
+		let right_type, right_string, right_term = right_term_of_pxd_linear_term variable_names linear_term in 
+		
+		let left = (if left_type = "Duary" then string_of_linear_term_for_jani variable_names left_term else left_string) in 
+		let right = (if right_type = "Duary" then string_of_linear_term_for_jani variable_names right_term else right_string) in 
+		"\n\t\t\t\t\t\t\t\t{\n"
+		^ "\t\t\t\t\t\t\t\t\"op\": \"" ^ op ^ "\",\n"
+		^ "\t\t\t\t\t\t\t\t \"left\": "^ left ^ ",\n"
+		^ "\t\t\t\t\t\t\t\t \"right\": " ^ right ^ "\n"
+		^ "\t\t\t\t\t\t\t\t}"
+	)
+	
+let string_of_pxd_linear_term_for_jani = string_of_linear_term_for_jani
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to PPL} *)

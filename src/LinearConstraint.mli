@@ -7,9 +7,9 @@
  * 
  * Module description: Common definitions for linear terms and constraints (interface to PPL)
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/02/24
+ * Last modified     : 2021/03/02
  *
  ************************************************************)
 
@@ -28,7 +28,6 @@ exception Not_a_1d_parameter_constraint
 
 (* Raised when trying to get a point in an empty (false) constraint *)
 exception EmptyConstraint
-
 
 (************************************************************)
 (** {2 Variables and coefficients} *)
@@ -107,6 +106,15 @@ val evaluate_pxd_linear_term : pxd_valuation -> pxd_linear_term -> coef
 val string_of_p_linear_term : (variable -> string) -> p_linear_term -> string
 val string_of_pxd_linear_term : (variable -> string) -> pxd_linear_term -> string
 
+(* Export of linear term parts *)
+(*
+val pxd_linear_term_is_unary : p_linear_term -> bool
+val op_term_of_pxd_linear_term : (pxd_linear_term) -> string
+val left_term_of_pxd_linear_term : (variable -> string) -> pxd_linear_term -> (string * string * pxd_linear_term)
+val right_term_of_pxd_linear_term : (variable -> string) -> pxd_linear_term -> (string * string * pxd_linear_term)
+*)
+val string_of_pxd_linear_term_for_jani : (variable -> string) -> pxd_linear_term -> string
+(*val string_of_linear_constraint_for_jani : (variable -> string) -> linear_term -> string*)
 
 (************************************************************)
 (** {2 Linear inequalities} *)

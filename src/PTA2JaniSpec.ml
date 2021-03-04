@@ -10,7 +10,7 @@
  *
  * File contributors : Dylan Marinho
  * Created           : 2021/02/23
- * Last modified     : 2021/02/23
+ * Last modified     : 2021/03/02
  *
  ************************************************************)
 
@@ -276,6 +276,27 @@ let string_of_initial_location model automaton_index =
 	let initial_location = Location.get_location inital_global_location automaton_index in
 	"\"" ^ (model.location_names automaton_index initial_location) ^ "\""
 
+(*let rec string_of_linear_constraint variable_names linear_term = 
+	(*TODO DYLAN Update called funcitons and here with a new type insteed of tuple*)
+	if (pxd_linear_term_is_unary linear_term)
+	then (
+		let type_return, value_return, _ = left_term_of_pxd_linear_term variable_names linear_term in
+		if type_return = "Coefficient" then value_return else "\""^value_return^"\""
+	) else (
+		let op = op_term_of_pxd_linear_term linear_term in
+		let left_type, left_string, left_term = left_term_of_pxd_linear_term variable_names linear_term in 
+		let right_type, right_string, right_term = right_term_of_pxd_linear_term variable_names linear_term in 
+		
+		let left = (if left_type = "Duary" then string_of_linear_constraint variable_names left_term else left_string) in 
+		let right = (if right_type = "Duary" then string_of_linear_constraint variable_names right_term else right_string) in 
+		"\t\t\t\t\t\t\t\t{\n"
+		^ "\t\t\t\t\t\t\t\t{\"op\": "^ op ^ jani_separator ^ "\n"
+		^ "\t\t\t\t\t\t\t\t \"left\": "^ left ^ jani_separator ^ "\n"
+		^ "\t\t\t\t\t\t\t\t \"right\": "^ right ^ "\n"
+		^ "\t\t\t\t\t\t\t\t}"
+	)
+*)
+
 let string_of_clock_updates model = function
 	| No_update -> ""
 	| Resets list_of_clocks ->
@@ -288,10 +309,9 @@ let string_of_clock_updates model = function
 		string_of_list_of_string_with_sep (jani_separator^"\n") (List.map (fun (variable_index, linear_term) ->
 			"\t\t\t\t\t\t\t{\"ref\": \""
 			^ (model.variable_names variable_index)
-			^ "\"" ^ jani_separator ^ " \"value\" : {"
-			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
-			(*TODO write it for Jani...*)
-			^ "}}"
+			^ "\"" ^ jani_separator ^ " \"value\" : "
+			^ (LinearConstraint.string_of_pxd_linear_term_for_jani model.variable_names linear_term)
+			^ "}"
 		) list_of_clocks_lt)
 
 (* Convert a list of updates into a string *)
@@ -299,10 +319,10 @@ let string_of_discrete_updates model updates =
 	string_of_list_of_string_with_sep (jani_separator^"\n") (List.map (fun (variable_index, arithmetic_expression) ->
 		"\n\t\t\t\t\t\t\t{\"ref\": \""
 		^ (model.variable_names variable_index)
-		^ "\"" ^ jani_separator ^ " \"value\" : {"
+		^ "\"" ^ jani_separator ^ " \"value\" : "
 		^ (DiscreteExpressions.string_of_arithmetic_expression model.variable_names arithmetic_expression)
-		(*TODO write it for Jani...*)
-		^ "}}"
+		(*TODO DYLAN write it for Jani...*)
+		^ "}"
 	) updates)
 
 let string_of_updates model automaton_index action_index clock_updates discrete_updates =
