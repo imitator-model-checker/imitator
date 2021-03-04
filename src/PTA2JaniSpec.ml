@@ -65,7 +65,6 @@ let string_of_header model =
 
 (* Declaration of actions *)
 let string_of_actions model =
-  (*Error in display for the two "". TODO check to patch or remove*)
   "\t\"actions\": [\n"
   ^ (string_of_list_of_string_with_sep (jani_separator^"\n")
 		(List.filter (fun string -> string<>"")
@@ -192,7 +191,6 @@ let string_of_guard_or_invariant actions_and_nb_automata variable_names = functi
 		(* Remove true guard *)
 		if LinearConstraint.pxd_is_true continuous_guard then "" else			
 			let list_of_inequalities = LinearConstraint.pxd_get_inequalities continuous_guard in
-			(*(string_of_list_of_string_with_sep "/" (*TODO write multiple inequalities with op: and, ...*)*)
 			(string_of_multiple_guard_or_invariant 
 				(List.map (fun (inequality) ->
 					let op = match (LinearConstraint.op_of_pxd_linear_inequality inequality) with
@@ -209,11 +207,8 @@ let string_of_guard_or_invariant actions_and_nb_automata variable_names = functi
 					^ "\t\t\t\t\t\t\t\"right\": \"" ^ right ^ "\""
 				) list_of_inequalities)
 			)
-			(*)*)
-	
-		(* (LinearConstraint.customized_string_of_pxd_linear_constraint jani_strings variable_names continuous_guard) *)
 
-	| Discrete_continuous_guard discrete_continuous_guard -> (*TODO*)
+	| Discrete_continuous_guard discrete_continuous_guard -> (*TODO DYLAN*)
 	    let content = (
             (NonlinearConstraint.customized_string_of_nonlinear_constraint jani_strings variable_names discrete_continuous_guard.discrete_guard)
             ^
@@ -259,7 +254,7 @@ let string_of_location model actions_and_nb_automata automaton_index location_in
 	))
 
 	(* Stopwatches *)
-	(*** TODO ***)
+	(*** TODO DYLAN ***)
 
 	(* Footer *)
 	^ "\n\t\t\t\t}"
@@ -275,27 +270,6 @@ let string_of_initial_location model automaton_index =
 	let inital_global_location  = model.initial_location in
 	let initial_location = Location.get_location inital_global_location automaton_index in
 	"\"" ^ (model.location_names automaton_index initial_location) ^ "\""
-
-(*let rec string_of_linear_constraint variable_names linear_term = 
-	(*TODO DYLAN Update called funcitons and here with a new type insteed of tuple*)
-	if (pxd_linear_term_is_unary linear_term)
-	then (
-		let type_return, value_return, _ = left_term_of_pxd_linear_term variable_names linear_term in
-		if type_return = "Coefficient" then value_return else "\""^value_return^"\""
-	) else (
-		let op = op_term_of_pxd_linear_term linear_term in
-		let left_type, left_string, left_term = left_term_of_pxd_linear_term variable_names linear_term in 
-		let right_type, right_string, right_term = right_term_of_pxd_linear_term variable_names linear_term in 
-		
-		let left = (if left_type = "Duary" then string_of_linear_constraint variable_names left_term else left_string) in 
-		let right = (if right_type = "Duary" then string_of_linear_constraint variable_names right_term else right_string) in 
-		"\t\t\t\t\t\t\t\t{\n"
-		^ "\t\t\t\t\t\t\t\t{\"op\": "^ op ^ jani_separator ^ "\n"
-		^ "\t\t\t\t\t\t\t\t \"left\": "^ left ^ jani_separator ^ "\n"
-		^ "\t\t\t\t\t\t\t\t \"right\": "^ right ^ "\n"
-		^ "\t\t\t\t\t\t\t\t}"
-	)
-*)
 
 let string_of_clock_updates model = function
 	| No_update -> ""
