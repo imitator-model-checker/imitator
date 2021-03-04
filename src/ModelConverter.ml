@@ -106,10 +106,13 @@ type useful_parsing_model_information = {
 (** Getting variables *)
 (************************************************************)
 
-(* Convert discrete var type from parsing structure to abstract model *)
-let convert_var_type_discrete = function
+let convert_var_type_discrete_number = function
     | ParsingStructure.Var_type_discrete_rational -> DiscreteValue.Var_type_discrete_rational
     | ParsingStructure.Var_type_discrete_int -> DiscreteValue.Var_type_discrete_int
+
+(* Convert discrete var type from parsing structure to abstract model *)
+let convert_var_type_discrete = function
+    | ParsingStructure.Var_type_discrete_number x -> DiscreteValue.Var_type_discrete_number (convert_var_type_discrete_number x)
     | ParsingStructure.Var_type_discrete_bool -> DiscreteValue.Var_type_discrete_bool
 
 (* Convert var type from parsing structure to abstract model *)
@@ -119,10 +122,14 @@ let convert_var_type = function
     | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteValue.Var_type_discrete (convert_var_type_discrete var_type_discrete)
     | ParsingStructure.Var_type_parameter -> DiscreteValue.Var_type_parameter
 
-let string_of_discrete_type = function
-    | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_int -> "int"
+let string_of_discrete_number_type = function
     | DiscreteValue.Var_type_discrete_rational -> "rat"
+    | DiscreteValue.Var_type_discrete_int -> "int"
+
+
+let string_of_discrete_type = function
+    | DiscreteValue.Var_type_discrete_number x -> string_of_discrete_number_type x
+    | DiscreteValue.Var_type_discrete_bool -> "bool"
 
 let string_of_type = function
     | DiscreteValue.Var_type_clock -> "clock"
@@ -1111,21 +1118,6 @@ let only_discrete_in_linear_expression = check_f_in_linear_expression only_discr
 (* TODO benjamin : not very elegant because of two function for visit leafs *)
 let only_discrete_in_nonlinear_expression = check_f_in_parsed_discrete_boolean_expression only_discrete_in_nonlinear_term only_discrete_in_nonlinear_term_discrete_boolean_expr
 
-(* Semantic type checking *)
-let check_type (* curryied from : index_of_variables type_of_variables constants *) =
-    let check_type_rational index_of_variables type_of_variables constants = function
-        | Parsed_DF_constant _ -> true
-        | Parsed_DF_variable variable_name ->
-            let variable_index = Hashtbl.find index_of_variables variable_name in
-            type_of_variables.(variable_index) = DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_rational
-        | _ -> raise InvalidLeaf
-    in
-    let check_type_bool_variable index_of_variables type_of_variables constants variable_name =
-        let variable_index = Hashtbl.find index_of_variables variable_name in
-        type_of_variables.(variable_index) = DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_bool
-    in
-    check_f_in_parsed_boolean_expression check_type_rational check_type_bool_variable
-
 
 (*------------------------------------------------------------*)
 (* Check that a linear expression contains no variables (neither discrete nor clock) *)
@@ -1878,7 +1870,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 				(* General case: check *)
 			| _ -> if not (all_variables_defined_in_linear_constraint variable_names constants linear_constraint) then well_formed := false;
 			end
-        | Parsed_boolean_predicate (_, _, _) ->
+        | Parsed_boolean_predicate (_, _) ->
             begin
                 print_message Verbose_total ("Not implemented for the moment ;-)");
             end
@@ -2004,7 +1996,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			(* Else add it *)
 			Hashtbl.add init_values_for_discrete discret_index discrete_value;
 			);
-        | Parsed_boolean_predicate (_,_,_) -> ();
+        | Parsed_boolean_predicate (_,_) -> ();
 		| _ -> raise (InternalError ("Must have this form since it was checked before."))
 		) discrete_init;
 

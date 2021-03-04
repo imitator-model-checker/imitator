@@ -12,7 +12,6 @@
  *
  ****************************************************************)
 
-
 (****************************************************************)
 (** Names *)
 (****************************************************************)
@@ -36,11 +35,15 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 (** Declarations *)
 (****************************************************************)
 
+(* Specific type of number *)
+type var_type_discrete_number =
+    | Var_type_discrete_rational
+    | Var_type_discrete_int
+
 (* Specific type of discrete variables *)
 type var_type_discrete =
-    | Var_type_discrete_rational
+    | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_bool
-    | Var_type_discrete_int
 
 (* Type of variable in declarations *)
 type var_type =
@@ -98,6 +101,12 @@ and parsed_boolean_expression =
 	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
 	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
 
+(****************************************************************)
+(** Global expression *)
+(****************************************************************)
+type global_expression =
+    | Parsed_global_arithmetic_expression of parsed_discrete_arithmetic_expression
+    | Parsed_global_boolean_expression of parsed_boolean_expression
 
 
 (****************************************************************)
@@ -203,14 +212,10 @@ type parsed_automaton = automaton_name * sync_name list * parsed_location list
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
 	| Parsed_linear_predicate of linear_constraint
-	| Parsed_boolean_predicate of parsed_discrete_boolean_expression * parsed_relop *  parsed_boolean_expression
-
-type parsed_discrete_init_expression =
-    | Parsed_discrete_init_rational_expression of linear_expression
-    | Parsed_discrete_init_boolean_expression of parsed_boolean_expression
+	| Parsed_boolean_predicate of string *  bool
 
 type parsed_discrete_init =
-    | Parsed_discrete_init of variable_name * parsed_discrete_init_expression
+    | Parsed_discrete_init of variable_name * global_expression
 
 type init_definition = parsed_init_state_predicate list
 type init_discrete_definition = parsed_discrete_init list

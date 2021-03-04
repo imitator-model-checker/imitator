@@ -1,8 +1,12 @@
+(* Specific type of number *)
+type var_type_discrete_number =
+    | Var_type_discrete_rational
+    | Var_type_discrete_int
+
 (* Specific type of discrete variables *)
 type var_type_discrete =
-    | Var_type_discrete_rational
     | Var_type_discrete_bool
-    | Var_type_discrete_int
+    | Var_type_discrete_number of var_type_discrete_number
 
 (* Type of variable in declarations *)
 type var_type =
