@@ -6,9 +6,9 @@
  *
  * Module description: arithmetic and Boolean expressions on discrete variables
  *
- * File contributors : Étienne André
+ * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/10
- * Last modified     : 2021/02/05
+ * Last modified     : 2021/03/04
  *
  ************************************************************)
 
@@ -299,3 +299,68 @@ let customized_string_of_discrete_boolean_expression customized_string variable_
 
 (* TODO benjamin ref in ModelPrinter *)
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.default_string
+
+
+(************** Jani translation **************)
+(* Convert an arithmetic expression into a string *)
+(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
+let customized_string_of_arithmetic_expression_for_jani customized_string variable_names =
+    let rec string_of_arithmetic_expression customized_string = function
+        (* Shortcut: Remove the "+0" / -"0" cases *)
+        | DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
+        | DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
+            string_of_arithmetic_expression customized_string discrete_arithmetic_expression
+
+	| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
+		"{ \"op\": \"" ^ Constants.default_operator_string.plus_string ^ "\", "
+            ^ "\"left\" : " ^ (string_of_arithmetic_expression customized_string discrete_arithmetic_expression) ^ ", " (*OTDO remove space for +*)
+            ^ "\"right\" : " ^ (string_of_term customized_string discrete_term) ^ "}"
+	    
+	| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
+		"{ \"op\": \"" ^ Constants.default_operator_string.minus_string ^ "\", "
+            ^ "\"left\" : " ^ (string_of_arithmetic_expression customized_string discrete_arithmetic_expression) ^ ", " (*OTDO remove space for +*)
+            ^ "\"right\" : " ^ (string_of_term customized_string discrete_term) ^ "}"
+	    
+        | DAE_term discrete_term -> string_of_term customized_string discrete_term
+
+	and string_of_term customized_string = function
+		(* Eliminate the '1' coefficient *)
+		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
+			string_of_factor customized_string discrete_factor
+		| DT_mul (discrete_term, discrete_factor) as expr ->
+		add_left_parenthesis discrete_term (
+			(string_of_term customized_string discrete_term)
+		)
+        ^ Constants.default_operator_string.mul_string
+        ^
+        (add_right_parenthesis (
+            string_of_factor customized_string discrete_factor
+        ) expr)
+
+		| DT_div (discrete_term, discrete_factor) as expr ->
+		add_left_parenthesis discrete_term (
+			(string_of_term customized_string discrete_term)
+        )
+        ^ Constants.default_operator_string.div_string
+        ^
+        (add_right_parenthesis (
+            string_of_factor customized_string discrete_factor
+        ) expr)
+
+		| DT_factor discrete_factor -> string_of_factor customized_string discrete_factor
+
+	and string_of_factor customized_string = function
+		| DF_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
+		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
+		| DF_unary_min discrete_factor ->
+		    Constants.default_operator_string.unary_min_string ^
+		    add_parenthesis_to_unary_minus (
+		         (string_of_factor customized_string discrete_factor)
+		    ) discrete_factor
+		| DF_expression discrete_arithmetic_expression ->
+			(*** TODO: simplify a bit? ***)
+			(string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
+	(* Call top-level *)
+	in string_of_arithmetic_expression customized_string
+
+let string_of_arithmetic_expression_for_jani = customized_string_of_arithmetic_expression_for_jani Constants.default_string

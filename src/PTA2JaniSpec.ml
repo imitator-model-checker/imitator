@@ -10,7 +10,7 @@
  *
  * File contributors : Dylan Marinho
  * Created           : 2021/02/23
- * Last modified     : 2021/03/02
+ * Last modified     : 2021/03/04
  *
  ************************************************************)
  
@@ -189,7 +189,7 @@ let string_of_guard_or_invariant actions_and_nb_automata variable_names = functi
 	(* False *)
 	| False_guard -> "\t\t\t\t\t\t\"exp\": {" ^ jani_strings.false_string ^ "}" ^ "\n"
 
-	| Discrete_guard discrete_guard -> (*TODO*)
+	| Discrete_guard discrete_guard -> (*TODO DYLAN*)
 
         let str_discrete_guard = (NonlinearConstraint.customized_string_of_nonlinear_constraint jani_strings variable_names discrete_guard) in
         let str_discrete_guard_without_true = if str_discrete_guard = "true" then "" else str_discrete_guard in
@@ -227,8 +227,6 @@ let string_of_guard_or_invariant actions_and_nb_automata variable_names = functi
             )
         ) in
         content
-  (*WE DO NOT PRINT INVARIANT FOR NOW
-  | _ -> "\t\t\t\t\t\t\"exp\": {\"todo of the form -{ op: '', ...}-\"}" ^ "\n"*)
 
 
 (* Convert the invariant of a location into a string *)
@@ -242,7 +240,6 @@ let string_of_guard model actions_and_nb_automata model_variable_names transitio
   let guard = string_of_guard_or_invariant actions_and_nb_automata model.variable_names (transition_guard) in
   (* Guard *)
   "\n" ^ guard
-  (*"\n\t\t\t\t\"todo\""*)
 
 (* Convert a location of an automaton into a string *)
 let string_of_location model actions_and_nb_automata automaton_index location_index =
@@ -251,7 +248,6 @@ let string_of_location model actions_and_nb_automata automaton_index location_in
 	"\t\t\t\t{"
 
 	(* Name *)
-	(*** NOTE: arbitrary positioning at (location_id * scaling_factor, -20%) ***)
 	^ "\n\t\t\t\t\t\"name\": \"" ^ (model.location_names automaton_index location_index) ^ "\"" ^ jani_separator
 
 	(* Invariant *)
@@ -302,8 +298,7 @@ let string_of_discrete_updates model updates =
 		"\n\t\t\t\t\t\t\t{\"ref\": \""
 		^ (model.variable_names variable_index)
 		^ "\"" ^ jani_separator ^ " \"value\" : "
-		^ (DiscreteExpressions.string_of_arithmetic_expression model.variable_names arithmetic_expression)
-		(*TODO DYLAN write it for Jani...*)
+		^ (DiscreteExpressions.string_of_arithmetic_expression_for_jani model.variable_names arithmetic_expression)
 		^ "}"
 	) updates)
 
