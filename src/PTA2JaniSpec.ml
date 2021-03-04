@@ -13,6 +13,14 @@
  * Last modified     : 2021/03/02
  *
  ************************************************************)
+ 
+ (*
+ TODO:
+ - if..then..else
+ - synchro
+ - rate of clocks (on the model + continuous set to 1)
+ - the not done string (Discrete, ...)
+ *)
 
 open Constants
 open OCamlUtilities
