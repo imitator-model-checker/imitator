@@ -89,6 +89,12 @@ and discrete_boolean_expression =
 	| DB_variable of Automaton.variable_index
 	| DB_constant of bool
 
+(****************************************************************)
+(** Global expression *)
+(****************************************************************)
+type global_expression =
+    | Global_arithmetic_expression of discrete_arithmetic_expression
+    | Global_boolean_expression of boolean_expression
 
 (************************************************************)
 (** Check whether a Boolean expression evaluates to true when valuated with a valuation *)

@@ -196,9 +196,13 @@ var_type:
 ;
 
 var_type_discrete:
+    | var_type_discrete_number { Var_type_discrete_number $1 }
+    | CT_BOOL { Var_type_discrete_bool }
+;
+
+var_type_discrete_number:
     | CT_DISCRETE { Var_type_discrete_rational }
     | CT_INT { Var_type_discrete_int }
-    | CT_BOOL { Var_type_discrete_bool }
 ;
 
 /************************************************************
@@ -587,11 +591,12 @@ init_value_expression:
     | init_bool_value_expression { DiscreteValue.Bool_value $1 }
 ;
 
-
+/* Init bool expression, like rational_linear_expression it's solvable directly at parsing (at compile time) */
 init_bool_value_expression:
     | CT_TRUE { true } 
     | CT_FALSE { false }
 ;
+
 
 /* Linear expression over int only */
 int_linear_expression:
@@ -720,33 +725,33 @@ init_loc_predicate:
 	| NAME CT_IS CT_IN NAME { ($1, $4) }
 ;
 
-
+/************************************************************/
+/** NEW INIT DEFINITION ZONE : ONLY FOR DISCRETE */
+/************************************************************/
 
 init_discrete_definition:
 	| CT_INIT_DISCRETE OP_ASSIGN init_discrete_expression SEMICOLON { $3 }
 	| { [ ] }
 ;
 
-
-
 init_discrete_expression:
-	| ampersand_opt init_discrete_expression_fol ampersand_opt { $2 }
+	| comma_opt init_discrete_expression_fol comma_opt { $2 }
 	| { [ ] }
 ;
 
 init_discrete_expression_fol:
 	| init_discrete_predicate { [ $1 ] }
 	| LPAREN init_discrete_expression_fol RPAREN { $2 }
-	| init_discrete_expression_fol AMPERSAND init_discrete_expression_fol { $1 @ $3 }
+	| init_discrete_expression_fol COMMA init_discrete_expression_fol { $1 @ $3 }
 ;
 
 init_discrete_predicate:
-    | NAME OP_EQ init_discrete_predicate_expression { Parsed_discrete_init ($1, $3) }
+    | NAME OP_EQ global_expression { Parsed_discrete_init ($1, $3) }
 ;
 
-init_discrete_predicate_expression:
-    | linear_expression { Parsed_discrete_init_rational_expression $1 }
-    | boolean_expression { Parsed_discrete_init_boolean_expression $1 }
+global_expression:
+    | arithmetic_expression { Parsed_global_arithmetic_expression $1 }
+    | boolean_expression { Parsed_global_boolean_expression $1 }
 ;
 
 

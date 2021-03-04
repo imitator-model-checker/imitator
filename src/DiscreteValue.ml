@@ -1,9 +1,12 @@
 exception ComputingException (* Should never happen, if correctly checked before in ModelConverter *)
 
-type var_type_discrete =
+type var_type_discrete_number =
     | Var_type_discrete_rational
-    | Var_type_discrete_bool
     | Var_type_discrete_int
+
+type var_type_discrete =
+    | Var_type_discrete_bool
+    | Var_type_discrete_number of var_type_discrete_number
 
 (** Type of variable in declarations *)
 type var_type =
@@ -22,16 +25,18 @@ type discrete_value =
     | Int_value of Int32.t
 
 let var_type_of_value = function
-    | Rational_value _ -> Var_type_discrete_rational
+    | Rational_value _ -> Var_type_discrete_number Var_type_discrete_rational
     | Bool_value _ -> Var_type_discrete_bool
-    | Int_value _ -> Var_type_discrete_int
+    | Int_value _ -> Var_type_discrete_number Var_type_discrete_int
 
+let string_of_var_type_discrete_number = function
+    | Var_type_discrete_rational -> "discrete"
+    | Var_type_discrete_int -> "int"
 
 (* String of discrete var type *)
 let string_of_var_type_discrete = function
-    | Var_type_discrete_rational -> "discrete"
+    | Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | Var_type_discrete_bool -> "bool"
-    | Var_type_discrete_int -> "int"
 
 (* Convert a var_type into a string *)
 let string_of_var_type = function
@@ -60,9 +65,12 @@ let numconst_default_value = NumConst.zero
 let int32_default_value = Int32.zero
 let bool_default_value = false
 
-let default_discrete_value = function
+let default_discrete_number_value = function
     | Var_type_discrete_rational -> Rational_value numconst_default_value
     | Var_type_discrete_int -> Int_value int32_default_value
+
+let default_discrete_value = function
+    | Var_type_discrete_number x -> default_discrete_number_value x
     | Var_type_discrete_bool -> Bool_value bool_default_value
 
 let default_value = function
