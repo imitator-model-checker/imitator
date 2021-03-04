@@ -1,0 +1,76 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Boolean constant unreachable 
+ * Description      : Test that boolean constant value is taking into account
+ * Correctness      : lend location is unreachable
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Syntax, Computing
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/03/04
+ * Last modified    : 2021/03/04
+ * Model version    : 0.1
+ *
+ * IMITATOR version : > 3.0.0
+ ************************************************************)
+var 
+    x = 0,
+        : clock;
+    i,
+        : rational;
+    b = False,   
+        : bool;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ synclabs: a1;
+ 
+loc l1: invariant True 
+	when b = b & b & i = 0 sync a1 do { } goto lend;
+ 
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+	
+	(*------------------------------------------------------------*)
+	(* Initial clocks *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& i = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial constraint *)
+	(*------------------------------------------------------------*)
+	 & True
+
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
