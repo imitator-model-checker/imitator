@@ -108,6 +108,8 @@ let hash = function
      | Int_value x -> Int32.to_int x
 
 let rational_zero = Rational_value NumConst.zero
+let bool_value_false = Bool_value false
+let bool_value_true = Bool_value true
 
 let equal_to_zero = function
     | Rational_value x -> NumConst.equal x NumConst.zero

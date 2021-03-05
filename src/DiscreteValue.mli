@@ -46,6 +46,8 @@ val float_value : discrete_value -> float
 val hash : discrete_value -> int
 
 val rational_zero : discrete_value
+val bool_value_false : discrete_value
+val bool_value_true : discrete_value
 
 val equal_to_zero : discrete_value -> bool
 val equal_to_one : discrete_value -> bool

@@ -107,6 +107,8 @@ and parsed_boolean_expression =
 type global_expression =
     | Parsed_global_arithmetic_expression of parsed_discrete_arithmetic_expression
     | Parsed_global_boolean_expression of parsed_boolean_expression
+    (* Add Parsed_global_string_expression of parsed_string_expression *)
+    (* Add Parsed_global_bit_expression of parsed_bit_expression *)
 
 
 (****************************************************************)
@@ -212,7 +214,8 @@ type parsed_automaton = automaton_name * sync_name list * parsed_location list
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
 	| Parsed_linear_predicate of linear_constraint
-	| Parsed_boolean_predicate of string *  bool
+	(* TODO benjamin : change to Parsed_discrete_predicate *)
+	| Parsed_boolean_predicate of string *  global_expression
 
 type parsed_discrete_init =
     | Parsed_discrete_init of variable_name * global_expression

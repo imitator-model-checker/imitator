@@ -80,7 +80,7 @@ rule token = parse
 	| "in"             { CT_IN }
 	| "is"             { CT_IS }
 	| "init"           { CT_INIT }
-	| "init-discrete"  { CT_INIT_DISCRETE }
+	| "continuous"       { CT_CONTINUOUS }
 	| "initially"      { CT_INITIALLY }
 	| "invariant"      { CT_INVARIANT }
 	| "loc"            { CT_LOC }
