@@ -141,6 +141,50 @@ let numconst_value_or_fail = function
     | _ -> raise (InternalError ("Constant and variables should be rational in a linear term"))
 
 
+(* Try to resolve the specific type of an arithmetic expression according to literals and variables used *)
+let resolve_arithmetic_expression_type useful_parsing_model_information arithmetic_expr =
+
+    (* Get utils variables for parsing model infos *)
+    let index_of_variables = useful_parsing_model_information.index_of_variables in
+    let constants = useful_parsing_model_information.constants in
+    let type_of_variables = useful_parsing_model_information.type_of_variables in
+
+    (* Create high order function for map arithmetic expression leafs *)
+    let f = function
+        | Parsed_DF_variable variable_name ->
+            (* get type of variable *)
+            let variable_index = Hashtbl.find index_of_variables variable_name in
+            type_of_variables variable_index
+        | Parsed_DF_constant var_value ->
+            (* Get var type of value *)
+            DiscreteValue.var_type_of_value var_value
+        | _ ->
+            (* default value, this case never happen, because function is never triggered by
+            ParsingStructureUtilities.map_parsed_arithmetic_expression_leafs for this pattern,
+            but arbitrary we choose that expression is rational ! *)
+            DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
+    in
+
+    (* Map parsed arithmetic expression to var types *)
+    let leafs = ParsingStructureUtilities.map_parsed_arithmetic_expression_leafs f arithmetic_expr in
+    (* Check that all leafs are of the same type *)
+    let all_same_type = List.for_all (fun x -> x = List.hd leafs) leafs in
+    (* If not, the expression is invalid,
+       for the moment we doesn't authorize the mix of different types in the same expression
+    *)
+    if not (all_same_type) then (
+        (* Forbid mix of type in the same expression ! *)
+        raise InvalidModel;
+    ) else (
+        (* Get first type *)
+        let expr_type = List.hd leafs in
+        match expr_type with
+        (* Extract the specific number type *)
+        | DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_number var_type_discrete_number -> var_type_discrete_number
+        (* If an arithmetic expression is typed as other than a number type, raise exception ! *)
+        | _ -> raise InvalidModel
+    )
+
 (* Try to reduce a parsed global expression, cannot take into account variables *)
 let try_reduce_parsed_global_expression useful_parsing_model_information expr =
 
@@ -803,8 +847,11 @@ let convert_parsed_discrete_boolean_expression useful_parsing_model_information 
 (* Convert parsed_global_expression *)
 let convert_parsed_global_expression useful_parsing_model_information = function
     (* TODO benjamin compute the expression type and affect to global_arithmetic_expression instead of affect directly Rational *)
-    | Parsed_global_arithmetic_expression parsed_global_arithmetic_expression -> Global_arithmetic_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_global_arithmetic_expression, DiscreteValue.Var_type_discrete_rational)
-    | Parsed_global_boolean_expression parsed_global_boolean_expression -> Global_boolean_expression (convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants parsed_global_boolean_expression)
+    | Parsed_global_arithmetic_expression parsed_discrete_arithmetic_expression ->
+        let expression_type = resolve_arithmetic_expression_type useful_parsing_model_information parsed_discrete_arithmetic_expression in
+        Global_arithmetic_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression, expression_type)
+    | Parsed_global_boolean_expression parsed_boolean_expression ->
+        Global_boolean_expression (convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants parsed_boolean_expression)
 
 	
 (* Convert parsed_loc_predicate *)

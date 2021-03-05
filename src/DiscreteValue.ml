@@ -25,9 +25,9 @@ type discrete_value =
     | Int_value of Int32.t
 
 let var_type_of_value = function
-    | Rational_value _ -> Var_type_discrete_number Var_type_discrete_rational
-    | Bool_value _ -> Var_type_discrete_bool
-    | Int_value _ -> Var_type_discrete_number Var_type_discrete_int
+    | Rational_value _ -> Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
+    | Bool_value _ -> Var_type_discrete Var_type_discrete_bool
+    | Int_value _ -> Var_type_discrete (Var_type_discrete_number Var_type_discrete_int)
 
 let string_of_var_type_discrete_number = function
     | Var_type_discrete_rational -> "discrete"
