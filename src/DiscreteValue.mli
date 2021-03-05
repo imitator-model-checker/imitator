@@ -30,7 +30,7 @@ val is_bool_value : discrete_value -> bool
 val string_of_var_type : var_type -> string
 val string_of_var_type_discrete : var_type_discrete -> string
 
-val var_type_of_value : discrete_value -> var_type_discrete
+val var_type_of_value : discrete_value -> var_type
 
 
 val numconst_default_value : NumConst.t
