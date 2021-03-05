@@ -61,21 +61,6 @@ let footer = "\n"
 (** Variable declarations *)
 (************************************************************)
 
-(* TODO benjamin : duplicate somewhere *)
-(* TODO benjamin : check for HyTech support of bool *)
-let string_of_var_type_discrete = function
-    | Var_type_discrete_rational -> "discrete"
-    | Var_type_discrete_bool -> "bool"
-    | Var_type_discrete_int -> "int"
-
-(* TODO benjamin : duplicate somewhere *)
-(* Convert a var_type into a string *)
-let string_of_var_type = function
-	| Var_type_clock -> "clock"
-	| Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
-	| Var_type_parameter -> "parameter"
-
-
 (* Collect all clocks that may be stopped in some location *)
 (*** NOTE: this could be done once for all and stored in the model ***)
 let find_stopwatches () =
