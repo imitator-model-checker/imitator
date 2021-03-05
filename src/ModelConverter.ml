@@ -2756,6 +2756,7 @@ let filtered_updates removed_variable_names updates =
 (** Translate a parsed discrete update into its abstract model *)
 let to_abstract_discrete_update index_of_variables constants (variable_name, parsed_update_arithmetic_expression) =
   let variable_index = Hashtbl.find index_of_variables variable_name in
+  (* TODO benjamin : convert to global expression *)
   let arithmetic_expression = discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
   (variable_index, arithmetic_expression)
 

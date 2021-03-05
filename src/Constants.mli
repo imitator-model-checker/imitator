@@ -127,8 +127,8 @@ val default_cartography_step	: NumConst.t
 (************************************************************)
 (************************************************************)
 
-(** Data structure allowing for customizing string conversions *)
-type customized_string = {
+(** Data structure allowing for customizing string conversions of bool symbols *)
+type customized_boolean_string = {
 	true_string  : string;
 	false_string : string;
 	and_operator : string;
@@ -140,7 +140,8 @@ type customized_string = {
 	g_operator   : string;
 }
 
-type customized_operator_string = {
+(** Data structure allowing for customizing string conversions of arithmetic symbols *)
+type customized_arithmetic_string = {
     plus_string : string;
     minus_string : string;
     mul_string : string;
@@ -148,5 +149,11 @@ type customized_operator_string = {
     unary_min_string : string;
 }
 
-val default_string : customized_string
-val default_operator_string : customized_operator_string
+(** Default string values of bool symbols *)
+val default_string : customized_boolean_string
+(** Default string values of bool symbols without white spaces around operators *)
+val default_string_without_whitespace : customized_boolean_string
+(** Default string values of arithmetic symbols *)
+val default_arithmetic_string : customized_arithmetic_string
+(** Default string values of arithmetic symbols without white spaces around operators *)
+val default_arithmetic_string_without_whitespace : customized_arithmetic_string

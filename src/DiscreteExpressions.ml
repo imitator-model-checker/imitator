@@ -254,11 +254,11 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
 
 		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
             (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
-            ^ Constants.default_operator_string.plus_string
+            ^ Constants.default_arithmetic_string.plus_string
             ^ (string_of_term customized_string discrete_term)
 		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
             (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
-            ^ Constants.default_operator_string.minus_string
+            ^ Constants.default_arithmetic_string.minus_string
             ^ (string_of_term customized_string discrete_term)
         | DAE_term discrete_term -> string_of_term customized_string discrete_term
 
@@ -270,7 +270,7 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
 		add_left_parenthesis discrete_term (
 			(string_of_term customized_string discrete_term)
 		)
-        ^ Constants.default_operator_string.mul_string
+        ^ Constants.default_arithmetic_string.mul_string
         ^
         (add_right_parenthesis (
             string_of_factor customized_string discrete_factor
@@ -280,7 +280,7 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
 		add_left_parenthesis discrete_term (
 			(string_of_term customized_string discrete_term)
         )
-        ^ Constants.default_operator_string.div_string
+        ^ Constants.default_arithmetic_string.div_string
         ^
         (add_right_parenthesis (
             string_of_factor customized_string discrete_factor
@@ -292,7 +292,7 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
 		| DF_variable discrete_index -> variable_names discrete_index
 		| DF_constant discrete_value -> DiscreteValue.string_of_value discrete_value
 		| DF_unary_min discrete_factor ->
-		    Constants.default_operator_string.unary_min_string ^
+		    Constants.default_arithmetic_string.unary_min_string ^
 		    add_parenthesis_to_unary_minus (
 		         (string_of_factor customized_string discrete_factor)
 		    ) discrete_factor
