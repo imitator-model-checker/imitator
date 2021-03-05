@@ -4,9 +4,9 @@
  * Title            : BlT09-fig1
  * Description      : TODO
  * Correctness      : infinite run visiting infinitely often location 3
- * Scalable         : 
- * Generated        : 
- * Categories       : 
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Toy
  * Source           : Laura Bozzelli, Salvatore La Torre: Decision problems for lower/upper bound parametric timed automata. Formal Methods in System Design 35(2): 121-151 (2009), Fig1
  * bibkey           : BT09
  * Author           : Laura Bozzelli, Salvatore La Torre
