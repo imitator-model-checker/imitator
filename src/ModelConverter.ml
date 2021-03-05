@@ -802,7 +802,8 @@ let convert_parsed_discrete_boolean_expression useful_parsing_model_information 
 
 (* Convert parsed_global_expression *)
 let convert_parsed_global_expression useful_parsing_model_information = function
-    | Parsed_global_arithmetic_expression parsed_global_arithmetic_expression -> Global_arithmetic_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_global_arithmetic_expression)
+    (* TODO benjamin compute the expression type and affect to global_arithmetic_expression instead of affect directly Rational *)
+    | Parsed_global_arithmetic_expression parsed_global_arithmetic_expression -> Global_arithmetic_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_global_arithmetic_expression, DiscreteValue.Var_type_discrete_rational)
     | Parsed_global_boolean_expression parsed_global_boolean_expression -> Global_boolean_expression (convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants parsed_global_boolean_expression)
 
 	

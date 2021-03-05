@@ -14,6 +14,7 @@
 
 open Constants
 
+exception NotImplemented (* TODO benjamnin to remove *)
 
 (****************************************************************)
 (** Operators *)
@@ -77,7 +78,8 @@ and discrete_boolean_expression =
 (** Global expression *)
 (****************************************************************)
 type global_expression =
-    | Global_arithmetic_expression of discrete_arithmetic_expression
+    (* A typed arithmetic expression *)
+    | Global_arithmetic_expression of discrete_arithmetic_expression * DiscreteValue.var_type_discrete_number
     | Global_boolean_expression of boolean_expression
     (* Add Global_string_expression of parsed_string_expression *)
     (* Add Global_bit_expression of parsed_bit_expression *)
@@ -191,9 +193,9 @@ and check_discrete_boolean_expression discrete_valuation = function
 (** Evaluate global expressions with a valuation            *)
 (************************************************************)
 let eval_global_expression discrete_valuation = function
-    | Global_arithmetic_expression expr -> eval_discrete_arithmetic_expression discrete_valuation expr
+    | Global_arithmetic_expression (expr, _) -> eval_discrete_arithmetic_expression discrete_valuation expr
     | Global_boolean_expression expr -> DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
-
+    | _ -> raise NotImplemented
 
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_discrete_factor_has_parenthesis = function

@@ -1,3 +1,17 @@
+(************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ *
+ * Module description: General fonctions for map, filter, traverse parsing structure tree
+ *
+ * File contributors : Benjamin L.
+ * Created           : 2021/03/05
+ * Last modified     : 2021/03/05
+ *
+ ************************************************************)
+
 open ParsingStructure
 
 (* Map the leafs of an arithmetic expression according to map_function *)
