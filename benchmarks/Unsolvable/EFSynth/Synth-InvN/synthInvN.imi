@@ -4,9 +4,9 @@
  * Title            : synthInvN
  * Description      : Toy benchmark for which the result is "p = 1/i | i \in N" but IMITATOR cannot find it because the accumulated constraints grow forever
  * Correctness      : Reachability
- * Scalable         : 
- * Generated        : 
- * Categories       : Academic ; Unsolvable
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Academic ; Toy ; Unsolvable
  * Source           : Own work
  * bibkey           : 
  * Author           : Étienne André

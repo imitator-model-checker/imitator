@@ -4,15 +4,15 @@
  * Title            : BRPAAPP21_GSinFSdk
  * Description      : Bounded Retransmission Protocol [version slightly modified]
  * Correctness      : 
- * Scalable         : 
- * Generated        : 
- * Categories       : 
- * Source           : "The Bounded Retransmission Protocol Must Be on Time!"
- * bibkey           : 
- * Author           : Pedro R. D'Argenio , Joost-Pieter Katoen , Theo C. Ruys , G. Jan Tretmans
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Protocol
+ * Source           : "Iterative bounded synthesis for efficient cycle detection in parametric timed automata", TACAS 2021
+ * bibkey           : AAPP21
+ * Author           : Pedro R. D'Argenio , Joost-Pieter Katoen , Theo C. Ruys , G. Jan Tretmans; then Laurent Fribourg, Étienne André, Laure Petrucci, Jaco van de Pol
  * Modeling         : Laurent Fribourg
- * Input by         : 
- * License          : 
+ * Input by         : Étienne André, Laure Petrucci, Jaco van de Pol
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : ? (< 09/2007)
  * Last modified    : 2020/09/22

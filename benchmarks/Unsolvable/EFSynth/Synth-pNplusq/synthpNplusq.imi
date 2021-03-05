@@ -4,9 +4,9 @@
  * Title            : synthpNplusq
  * Description      : Toy benchmark for which the result is "r = p*i+q | i \in N" but IMITATOR cannot find it because the accumulated constraints grow forever
  * Correctness      : Reachability
- * Scalable         : 
- * Generated        : 
- * Categories       : Academic ; Unsolvable
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Academic ; Toy ; Unsolvable
  * Source           : Parametric real-time reasoning.
  * bibkey           : AHV93
  * Author           : Rajeev Alur, Thomas A. Henzinger, Moshe Y. Vardi

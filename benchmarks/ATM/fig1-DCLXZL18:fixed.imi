@@ -4,9 +4,9 @@
  * Title            : fig1-DCLXZL18:fixed
  * Description      : An ATM modeled using a PTA. Version fixed by changing incompatible constraints.
  * Correctness      : N/A
- * Scalable         : 
- * Generated        : 
- * Categories       : 
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Academic ; Toy
  * Source           : Fig.1, "Parameter Synthesis Problems for one parametric clock Timed Automata" (https://arxiv.org/abs/1809.07177)
  * bibkey           : DCL18
  * Author           : Liyun Dai, Taolue Chen, Zhiming Liu, Bican Xia, Naijun Zhan, Kim G. Larsen
