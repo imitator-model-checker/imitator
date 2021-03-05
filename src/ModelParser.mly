@@ -73,7 +73,7 @@ let unzip l = List.fold_left
 	CT_FALSE CT_FLOW
 	CT_GOTO
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IN CT_INIT CT_INIT_DISCRETE CT_INITIALLY CT_INVARIANT CT_IS
+	CT_IF CT_IN CT_INIT CT_CONTINUOUS CT_INITIALLY CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
@@ -107,7 +107,7 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	declarations automata init_definition init_discrete_definition
+	declarations automata init_definition_option
 	end_opt EOF
 	{
 		let declarations	= $1 in
@@ -674,6 +674,7 @@ boolean_expression:
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
 	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
+	/* TODO benjamin add boolean_expression bool_relop discrete_boolean_expression for the form b = (x & y | z), b = 10 > 5... */
 ;
 
 discrete_boolean_expression:
@@ -693,6 +694,12 @@ discrete_boolean_expression:
 /************************************************************/
 /** INIT DEFINITION */
 /************************************************************/
+
+init_definition_option:
+    | init_definition { $1 }
+    | new_init_definition { $1 }
+    | { [ ] }
+;
 
 init_definition:
 	| CT_INIT OP_ASSIGN init_expression SEMICOLON { $3 }
@@ -726,27 +733,60 @@ init_loc_predicate:
 ;
 
 /************************************************************/
-/** NEW INIT DEFINITION ZONE : ONLY FOR DISCRETE */
+/** NEW INIT DEFINITION ZONE : SEPARATION OF DISCRETE AND CONTINUOUS */
 /************************************************************/
 
-init_discrete_definition:
-	| CT_INIT_DISCRETE OP_ASSIGN init_discrete_expression SEMICOLON { $3 }
+new_init_definition:
+	| CT_INIT OP_ASSIGN LBRACE new_init_discrete_continuous_definition RBRACE { $4 }
+;
+
+new_init_discrete_continuous_definition:
+    | new_init_discrete_definition { $1 }
+    | new_init_continuous_definition { $1 }
+    | new_init_discrete_definition new_init_continuous_definition { $1 @ $2 }
+    | new_init_continuous_definition new_init_discrete_definition { $2 @ $1 }
+;
+
+new_init_discrete_definition:
+    | CT_DISCRETE OP_EQ new_init_discrete_expression SEMICOLON { $3 }
+;
+
+new_init_continuous_definition:
+    | CT_CONTINUOUS OP_EQ new_init_continuous_expression SEMICOLON { $3 }
+;
+
+
+
+new_init_discrete_expression:
+	| ampersand_opt new_init_discrete_expression_fol ampersand_opt { $2 }
 	| { [ ] }
 ;
 
-init_discrete_expression:
-	| comma_opt init_discrete_expression_fol comma_opt { $2 }
+new_init_discrete_expression_fol :
+	| new_init_discrete_state_predicate { [ $1 ] }
+	| LPAREN new_init_discrete_expression_fol  RPAREN { $2 }
+	| new_init_discrete_expression_fol  AMPERSAND new_init_discrete_expression_fol  { $1 @ $3 }
+;
+
+new_init_discrete_state_predicate:
+	| init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
+	| NAME OP_EQ arithmetic_expression { Parsed_boolean_predicate ($1, Parsed_global_arithmetic_expression $3) }
+	| NAME OP_EQ LPAREN boolean_expression RPAREN { Parsed_boolean_predicate ($1, Parsed_global_boolean_expression $4) }
+;
+
+new_init_continuous_expression:
+	| ampersand_opt new_init_continuous_expression_fol ampersand_opt { $2 }
 	| { [ ] }
 ;
 
-init_discrete_expression_fol:
-	| init_discrete_predicate { [ $1 ] }
-	| LPAREN init_discrete_expression_fol RPAREN { $2 }
-	| init_discrete_expression_fol COMMA init_discrete_expression_fol { $1 @ $3 }
+new_init_continuous_expression_fol :
+	| new_init_continuous_state_predicate { [ $1 ] }
+	| LPAREN new_init_continuous_expression_fol  RPAREN { $2 }
+	| new_init_continuous_expression_fol AMPERSAND new_init_continuous_expression_fol  { $1 @ $3 }
 ;
 
-init_discrete_predicate:
-    | NAME OP_EQ global_expression { Parsed_discrete_init ($1, $3) }
+new_init_continuous_state_predicate:
+    | linear_constraint { Parsed_linear_predicate $1 }
 ;
 
 global_expression:

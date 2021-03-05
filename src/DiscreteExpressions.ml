@@ -79,6 +79,8 @@ and discrete_boolean_expression =
 type global_expression =
     | Global_arithmetic_expression of discrete_arithmetic_expression
     | Global_boolean_expression of boolean_expression
+    (* Add Global_string_expression of parsed_string_expression *)
+    (* Add Global_bit_expression of parsed_bit_expression *)
 
 (************************************************************)
 (** Evaluate arithmetic expressions with a valuation *)
@@ -134,9 +136,6 @@ and eval_discrete_arithmetic_expression discrete_valuation = function
 	| DAE_term discrete_term ->
 		eval_discrete_term discrete_valuation discrete_term
 
-	
-	
-	
 (************************************************************)
 (** Check whether a Boolean expression evaluates to true when valuated with a valuation *)
 (************************************************************)
@@ -188,6 +187,12 @@ and check_discrete_boolean_expression discrete_valuation = function
         value
 
 
+(************************************************************)
+(** Evaluate global expressions with a valuation            *)
+(************************************************************)
+let eval_global_expression discrete_valuation = function
+    | Global_arithmetic_expression expr -> eval_discrete_arithmetic_expression discrete_valuation expr
+    | Global_boolean_expression expr -> DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
 
 
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
