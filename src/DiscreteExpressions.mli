@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/10
- * Last modified     : 2021/03/04
+ * Last modified     : 2021/03/05
  *
  ************************************************************)
 
@@ -103,3 +103,6 @@ val string_of_arithmetic_expression_for_jani : (Automaton.variable_index -> stri
 
 val customized_string_of_discrete_boolean_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
 val string_of_discrete_boolean_expression : (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
+
+val customized_string_of_discrete_boolean_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
+val string_of_discrete_boolean_expression_for_jani : (Automaton.variable_index -> string) -> discrete_boolean_expression -> string

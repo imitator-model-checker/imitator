@@ -10,7 +10,7 @@
  *
  * File contributors : Dylan Marinho
  * Created           : 2021/02/23
- * Last modified     : 2021/03/04
+ * Last modified     : 2021/03/05
  *
  ************************************************************)
  
@@ -189,9 +189,9 @@ let string_of_guard_or_invariant actions_and_nb_automata variable_names = functi
 	(* False *)
 	| False_guard -> "\t\t\t\t\t\t\"exp\": {" ^ jani_strings.false_string ^ "}" ^ "\n"
 
-	| Discrete_guard discrete_guard -> (*TODO DYLAN*)
+	| Discrete_guard discrete_guard -> (*DOING DYLAN*)
 
-        let str_discrete_guard = (NonlinearConstraint.customized_string_of_nonlinear_constraint jani_strings variable_names discrete_guard) in
+        let str_discrete_guard = (NonlinearConstraint.customized_string_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_guard) in
         let str_discrete_guard_without_true = if str_discrete_guard = "true" then "" else str_discrete_guard in
         str_discrete_guard_without_true
 

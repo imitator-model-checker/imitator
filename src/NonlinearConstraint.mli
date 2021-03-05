@@ -24,3 +24,7 @@ val check_nonlinear_constraint : DiscreteExpressions.discrete_valuation -> nonli
 (* Strings *)
 val customized_string_of_nonlinear_constraint : Constants.customized_string -> (Automaton.variable_index -> string) -> nonlinear_constraint -> string
 val string_of_nonlinear_constraint : (Automaton.variable_index -> string) -> nonlinear_constraint -> string
+
+(*JANI*)
+val customized_string_of_nonlinear_constraint_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> nonlinear_constraint -> string
+val string_of_nonlinear_constraint_for_jani : (Automaton.variable_index -> string) -> nonlinear_constraint -> string

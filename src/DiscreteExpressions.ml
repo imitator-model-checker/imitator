@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/10
- * Last modified     : 2021/03/04
+ * Last modified     : 2021/03/05
  *
  ************************************************************)
 
@@ -364,3 +364,37 @@ let customized_string_of_arithmetic_expression_for_jani customized_string variab
 	in string_of_arithmetic_expression customized_string
 
 let string_of_arithmetic_expression_for_jani = customized_string_of_arithmetic_expression_for_jani Constants.default_string
+
+(** Convert a discrete_boolean_expression into a string *)
+let customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	(*TODO DYLAN*)
+	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
+		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
+		^ (string_of_boolean_operations customized_string relop)
+		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	(*Done for jani, but without test*)
+	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
+		let expr1 = (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression1) in
+		let expr2 = (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression2) in
+		let expr3 = (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression3) in
+		  "{\"op\": \"" ^ customized_string.and_operator ^ "\", "
+		(* expr2 <= expr1 *)
+		^ "\"left\": "
+			^ "{"
+			^ "\"op\": \"" ^ customized_string.le_operator ^ "\", "
+			^ "\"left\": " ^ expr2 ^ ", "
+			^ "\"right\": " ^ expr1
+			^ "}"
+		(* expr1 <= expr3 *)
+		^ "\"right\": "
+			^ "{"
+			^ "\"op\": \"" ^ customized_string.le_operator ^ "\", "
+			^ "\"left\": " ^ expr1 ^ ", "
+			^ "\"right\": " ^ expr3
+			^ "}"
+		^ "}"
+
+(* TODO benjamin ref in ModelPrinter *)
+let string_of_discrete_boolean_expression_for_jani = customized_string_of_discrete_boolean_expression_for_jani Constants.default_string
