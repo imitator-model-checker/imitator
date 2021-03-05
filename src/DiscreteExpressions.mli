@@ -90,11 +90,14 @@ and discrete_boolean_expression =
 	| DB_constant of bool
 
 (****************************************************************)
-(** Global expression *)
+(** Global expression                                           *)
 (****************************************************************)
 type global_expression =
-    | Global_arithmetic_expression of discrete_arithmetic_expression
+    (* A typed arithmetic expression (rational, int32, int64, ...) *)
+    | Global_arithmetic_expression of discrete_arithmetic_expression * DiscreteValue.var_type_discrete_number
     | Global_boolean_expression of boolean_expression
+    (* Add Global_string_expression of parsed_string_expression *)
+    (* Add Global_bit_expression of parsed_bit_expression *)
 
 (************************************************************)
 (** Check whether a Boolean expression evaluates to true when valuated with a valuation *)
