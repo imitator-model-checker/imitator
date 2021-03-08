@@ -161,6 +161,12 @@ type customized_arithmetic_string = {
     unary_min_string : string;
 }
 
+(** Data structure allowing for customizing string conversions of symbols *)
+type customized_string = {
+    arithmetic_string : customized_arithmetic_string;
+    boolean_string : customized_boolean_string;
+}
+
 (** Default string values of bool symbols *)
 let default_string = {
 	true_string   = "True";
@@ -205,4 +211,10 @@ let default_arithmetic_string_without_whitespace = {
     mul_string = "*";
     div_string = "/";
     unary_min_string = "-";
+}
+
+(** Default string values of symbols *)
+let global_default_string = {
+    arithmetic_string = default_arithmetic_string;
+    boolean_string = default_string;
 }

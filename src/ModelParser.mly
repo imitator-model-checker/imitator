@@ -447,23 +447,23 @@ update_nonempty_list:
 /** Normal updates */
 update:
 	/*** NOTE: deprecated syntax ***/
-	| NAME APOSTROPHE OP_EQ arithmetic_expression {
+	| NAME APOSTROPHE OP_EQ global_expression {
 		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
 		($1, $4)
 		}
 
 	/*** NOTE: deprecated syntax ***/
-	| NAME APOSTROPHE OP_ASSIGN arithmetic_expression {
+	| NAME APOSTROPHE OP_ASSIGN global_expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
 		($1, $4)
 	}
 	/*** NOTE: deprecated syntax ***/
-	| NAME OP_EQ arithmetic_expression {
+	| NAME OP_EQ global_expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
 		($1, $3)
 	}
 
-	| NAME OP_ASSIGN arithmetic_expression { ($1, $3) }
+	| NAME OP_ASSIGN global_expression { ($1, $3) }
 ;
 
 /** List containing only normal updates.
@@ -668,27 +668,27 @@ pos_float:
 /** BOOLEAN EXPRESSIONS */
 /************************************************************/
 boolean_expression:
-	| CT_TRUE { Parsed_True }
-	| CT_FALSE { Parsed_False }
-	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
+	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
-	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
+	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
+	| CT_TRUE { Parsed_True }
+	| CT_FALSE { Parsed_False }
 	/* TODO benjamin add boolean_expression bool_relop discrete_boolean_expression for the form b = (x & y | z), b = 10 > 5... */
 ;
 
 discrete_boolean_expression:
+	/* Parsed_DB_variable of variable_name */
+	| NAME { Parsed_DB_variable $1 }
+	/*| arithmetic_expression { Parsed_arithmetic_expression $1 }*/
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
 	| arithmetic_expression relop arithmetic_expression { Parsed_expression ($1, $2, $3) }
-
 	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	/* allowed for convenience */
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	/* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) */
 	| LPAREN boolean_expression RPAREN { Parsed_boolean_expression $2 }
-	/* Parsed_DB_variable of variable_name */
-	| NAME { Parsed_DB_variable $1 }
 ;
 
 /************************************************************/

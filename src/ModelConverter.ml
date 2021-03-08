@@ -146,7 +146,6 @@ let resolve_arithmetic_expression_type useful_parsing_model_information arithmet
 
     (* Get utils variables for parsing model infos *)
     let index_of_variables = useful_parsing_model_information.index_of_variables in
-    let constants = useful_parsing_model_information.constants in
     let type_of_variables = useful_parsing_model_information.type_of_variables in
 
     (* Create high order function for map arithmetic expression leafs *)
@@ -319,11 +318,11 @@ and get_variables_in_parsed_update_arithmetic_expression variables_used_ref = fu
 
 (** Add variables names in normal and conditional updates *)
 and get_variables_in_parsed_update variables_used_ref = function
-	| Normal (_, arithmetic_expression) -> get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
+	| Normal (_, global_expression) -> get_variables_in_parsed_global_expression variables_used_ref global_expression
 	| Condition (bool_expr, update_list_if, update_list_else) -> (** recolect in bool exprs *)
 		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr;
-		List.iter (fun (_, arithmetic_expression) ->
-			get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
+		List.iter (fun (_, global_expression) ->
+			get_variables_in_parsed_global_expression variables_used_ref global_expression
 		) (update_list_if@update_list_else)
 
 and get_variables_in_parsed_boolean_expression variables_used_ref = function
@@ -349,7 +348,11 @@ and get_variables_in_parsed_discrete_boolean_expression variables_used_ref  = fu
 	| Parsed_DB_variable variable_name ->
 		(* Add the variable name to the set and update the reference *)
 		variables_used_ref := StringSet.add variable_name !variables_used_ref
-	
+
+and get_variables_in_parsed_global_expression variables_used_ref = function
+    | Parsed_global_arithmetic_expression expr -> get_variables_in_parsed_update_arithmetic_expression variables_used_ref expr
+    | Parsed_global_boolean_expression expr -> get_variables_in_parsed_boolean_expression variables_used_ref expr
+
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a parsed_update_arithmetic_expression *)
 (*------------------------------------------------------------*)
@@ -462,6 +465,9 @@ and check_f_in_parsed_update_discrete_boolean_expression f = function
     | Parsed_DB_variable variable_name ->
         f variable_name
 
+and check_f_in_parsed_global_expression f = function
+    | Parsed_global_arithmetic_expression expr -> check_f_in_parsed_update_arithmetic_expression f expr
+    | Parsed_global_boolean_expression expr -> check_f_in_parsed_update_boolean_expression f expr
 
 (*------------------------------------------------------------*)
 (* Generic function to test something in discrete arithmetic expression *)
@@ -584,7 +590,15 @@ let check_only_discretes_in_parsed_update_arithmetic_expression index_of_variabl
       )
     )
 
-
+let check_only_discretes_in_parsed_global_expression index_of_variables type_of_variables constants =
+    check_f_in_parsed_global_expression (fun variable_name ->
+        (* Case constant: no problem *)
+        if Hashtbl.mem constants variable_name then true
+        else (
+            let variable_index = Hashtbl.find index_of_variables variable_name in
+            DiscreteValue.is_discrete_type (type_of_variables variable_index)
+        )
+    )
 
 
 (************************************************************)
@@ -732,6 +746,7 @@ and convert_discrete_bool_expr index_of_variables constants = function
 		else
 		    DB_variable (Hashtbl.find index_of_variables variable_name)
 
+let convert_bool_expr_with_model useful_parsing_model_information = convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
 
 (*------------------------------------------------------------*)
 (* Functions for property conversion *)
@@ -806,6 +821,7 @@ let convert_parsed_discrete_boolean_expression2 index_of_variables constants = f
 
 
 (* Convert parsed_discrete_arithmetic_expression *)
+(* TODO benjamin almost the same as discrete_arithmetic_expression_of_parsed_update_arithmetic_expression *)
 let rec convert_parsed_discrete_arithmetic_expression useful_parsing_model_information = function
 	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
 		DAE_plus (
@@ -844,16 +860,15 @@ and convert_parsed_discrete_factor useful_parsing_model_information = function
 let convert_parsed_discrete_boolean_expression useful_parsing_model_information =
     convert_parsed_discrete_boolean_expression2 useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
 
-(* Convert parsed_global_expression *)
+(* Convert parsed_global_expression with raw infos *)
 let convert_parsed_global_expression useful_parsing_model_information = function
-    (* TODO benjamin compute the expression type and affect to global_arithmetic_expression instead of affect directly Rational *)
     | Parsed_global_arithmetic_expression parsed_discrete_arithmetic_expression ->
         let expression_type = resolve_arithmetic_expression_type useful_parsing_model_information parsed_discrete_arithmetic_expression in
-        Global_arithmetic_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression, expression_type)
+        Global_arithmetic_expression (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants parsed_discrete_arithmetic_expression, expression_type)
     | Parsed_global_boolean_expression parsed_boolean_expression ->
         Global_boolean_expression (convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants parsed_boolean_expression)
 
-	
+
 (* Convert parsed_loc_predicate *)
 let convert_parsed_loc_predicate useful_parsing_model_information = function
 	| Parsed_loc_predicate_EQ (automaton_name, location_name) ->
@@ -960,6 +975,7 @@ let get_variables_in_nonlinear_constraint variables_used_ref = function
 let get_variables_in_init_state_predicate variables_used_ref = function
 	| Parsed_loc_assignment _ -> ()
 	| Parsed_linear_predicate linear_constraint -> get_variables_in_linear_constraint variables_used_ref linear_constraint
+	| Parsed_boolean_predicate (_, expr) -> get_variables_in_parsed_global_expression variables_used_ref expr
 
 	
 (*(*------------------------------------------------------------*)
@@ -1681,7 +1697,7 @@ let all_locations_different =
 (*------------------------------------------------------------*)
 let check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update =
 
-	let check_update_normal (variable_name, arithmetic_expression) =
+	let check_update_normal (variable_name, global_expression) =
 		(* Check whether this variable is to be removed because unused elswhere than in resets *)
 		let to_be_removed = List.mem variable_name removed_variable_names in
 
@@ -1710,13 +1726,13 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 			(* Type clock: allow any linear term in updates: so just check that variables have been declared *)
 			| DiscreteValue.Var_type_clock ->
 			print_message Verbose_total ("                A clock!");
-			all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants arithmetic_expression
+			all_variables_defined_in_parsed_global_expression variable_names constants global_expression
 
 			(* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
 			| DiscreteValue.Var_type_discrete var_type_discrete ->
 			let string_of_var_type = DiscreteValue.string_of_var_type_discrete var_type_discrete in
 			print_message Verbose_total ("                A " ^ string_of_var_type ^ "!");
-			let result = check_only_discretes_in_parsed_update_arithmetic_expression index_of_variables type_of_variables constants arithmetic_expression in
+			let result = check_only_discretes_in_parsed_global_expression index_of_variables type_of_variables constants global_expression in
 			if not result then
 				(print_error ("The variable `" ^ variable_name ^ "` is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton `" ^ automaton_name ^ "`."); false)
 			else (
@@ -2754,18 +2770,21 @@ let filtered_updates removed_variable_names updates =
 
 
 (** Translate a parsed discrete update into its abstract model *)
-let to_abstract_discrete_update index_of_variables constants (variable_name, parsed_update_arithmetic_expression) =
-  let variable_index = Hashtbl.find index_of_variables variable_name in
-  (* TODO benjamin : convert to global expression *)
-  let arithmetic_expression = discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
-  (variable_index, arithmetic_expression)
-
+let to_abstract_discrete_update useful_parsing_model_information (variable_name, parsed_update_expression) =
+  let variable_index = Hashtbl.find useful_parsing_model_information.index_of_variables variable_name in
+  let global_expression = convert_parsed_global_expression useful_parsing_model_information parsed_update_expression in
+  (variable_index, global_expression)
 
 (** Translate a parsed clock update into its abstract model *)
 let to_abstract_clock_update index_of_variables constants only_resets updates_list =
 
-  (** Translate parsed clock updte into the tuple clock_index, linear_term *)
-  let to_intermediate_abstract_clock_update (variable_name, parsed_update_arithmetic_expression)=
+  let check_well_typed_clock_update variable_name = function
+    | Parsed_global_arithmetic_expression expr -> expr
+    | _ -> raise (InvalidExpression ("A clock " ^ variable_name ^ " update for isn't an arithmetic expression "))
+  in
+  (** Translate parsed clock update into the tuple clock_index, linear_term *)
+  let to_intermediate_abstract_clock_update (variable_name, parsed_update_expression) =
+    let parsed_update_arithmetic_expression = check_well_typed_clock_update variable_name parsed_update_expression in
     let variable_index = Hashtbl.find index_of_variables variable_name in
     let linear_term = linear_term_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
     (variable_index, linear_term)
@@ -2795,11 +2814,11 @@ let to_abstract_clock_update index_of_variables constants only_resets updates_li
 (** Split normal updates into clock, discrete updates *)
 let split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates =
   (** Check if a normal update is a clock update *)
-  let is_clock_update (variable_name, parsed_update_arithmetic_expression) =
+  let is_clock_update (variable_name, parsed_update_expression) =
     (* Retrieve variable type *)
     if type_of_variables (Hashtbl.find index_of_variables variable_name) = DiscreteValue.Var_type_clock then (
       (* Update flag *)
-      if parsed_update_arithmetic_expression <> Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant DiscreteValue.rational_zero)) then (
+      if parsed_update_expression <> Parsed_global_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant DiscreteValue.rational_zero))) then (
         only_resets := false;
       );
       true
@@ -2809,7 +2828,13 @@ let split_to_clock_discrete_updates index_of_variables only_resets type_of_varia
   List.partition is_clock_update updates
 
 (** Translate a normal parsed update into its abstract model *)
-let convert_normal_updates index_of_variables constants type_of_variables updates_list =
+let convert_normal_updates useful_parsing_model_information updates_list =
+
+    (* Extract values from model infos *)
+    let index_of_variables, type_of_variables, constants =
+        useful_parsing_model_information.index_of_variables, useful_parsing_model_information.type_of_variables,
+        useful_parsing_model_information.constants in
+
 	(* Flag to check if there are clock resets only to 0 *)
 	let only_resets = ref true in
 
@@ -2817,7 +2842,7 @@ let convert_normal_updates index_of_variables constants type_of_variables update
 	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates_list in
 
 	(* Convert the discrete updates *)
-	let discrete_updates : discrete_update list = List.map (to_abstract_discrete_update index_of_variables constants) parsed_discrete_updates in
+	let discrete_updates : discrete_update list = List.map (to_abstract_discrete_update useful_parsing_model_information) parsed_discrete_updates in
 
 	(* Convert the clock updates *)
 	let converted_clock_updates : clock_updates = to_abstract_clock_update index_of_variables constants only_resets parsed_clock_updates in
@@ -2831,20 +2856,20 @@ let convert_normal_updates index_of_variables constants type_of_variables update
 
 
 (** convert normal and conditional updates *)
-let convert_updates index_of_variables constants type_of_variables updates : updates =
+let convert_updates useful_parsing_model_information updates : updates =
 
   (** split normal and conditional updates *)
   let normal_updates, conditional_updates = List.partition is_normal_update updates in
 
   (** convert normal parsed updates *)
-  let converted_updates = convert_normal_updates index_of_variables constants type_of_variables (List.map get_normal_update_value normal_updates) in
+  let converted_updates = convert_normal_updates useful_parsing_model_information (List.map get_normal_update_value normal_updates) in
 
   (** convert normal parsed updates inside conditional updates *)
   let conditional_updates_values : conditional_update list = List.map (fun u ->
       let boolean_value, if_updates, else_updates = get_conditional_update_value u in
-      let convert_boolean = convert_bool_expr index_of_variables constants boolean_value in
-      let convert_if_updates = convert_normal_updates index_of_variables constants type_of_variables if_updates in
-      let convert_else_updates = convert_normal_updates index_of_variables constants type_of_variables else_updates in
+      let convert_boolean = convert_bool_expr_with_model useful_parsing_model_information boolean_value in
+      let convert_if_updates = convert_normal_updates useful_parsing_model_information if_updates in
+      let convert_else_updates = convert_normal_updates useful_parsing_model_information else_updates in
       (convert_boolean, convert_if_updates, convert_else_updates)
     ) conditional_updates in
 
@@ -2861,9 +2886,14 @@ let convert_updates index_of_variables constants type_of_variables updates : upd
 	and creates a structure transition_index -> (guard, action_index, resets, target_state)
 	and creates a structure transition_index -> automaton_index
 *)
-let convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions
+let convert_transitions nb_transitions nb_actions useful_parsing_model_information transitions
 	: (((AbstractModel.transition_index list) array) array) array * (AbstractModel.transition array) * (Automaton.automaton_index array)
 	=
+  (* Extract values from model parsing info *)
+  let index_of_variables, constants, removed_variable_names, type_of_variables =
+    useful_parsing_model_information.index_of_variables, useful_parsing_model_information.constants,
+    useful_parsing_model_information.removed_variable_names, useful_parsing_model_information.type_of_variables in
+
   (* Create the empty array of transitions automaton_index -> location_index -> action_index -> list of (transition_index) *)
   
   (*** NOTE/TODO: why (Array.length transitions) ?! ***)
@@ -2933,7 +2963,7 @@ let convert_transitions nb_transitions nb_actions index_of_variables constants r
                  				in *)
 
               (* translate parsed updates into their abstract model *)
-              let converted_updates = convert_updates index_of_variables constants type_of_variables filtered_updates in
+              let converted_updates = convert_updates useful_parsing_model_information filtered_updates in
 
               (* Convert the updates *)
               (* let converted_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
@@ -5069,7 +5099,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Convert transitions *)
 	(*** TODO: integrate inside 'make_automata' (?) ***)
-	let transitions, transitions_description, automaton_of_transition = convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions in
+	let transitions, transitions_description, automaton_of_transition = convert_transitions nb_transitions nb_actions useful_parsing_model_information transitions in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

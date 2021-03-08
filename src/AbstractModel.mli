@@ -90,8 +90,7 @@ type clock_updates =
 
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
 
-(* TODO benjamin : replace DiscreteExpressions.discrete_aritmetic_expression by global_expression *)
-type discrete_update = discrete_index * DiscreteExpressions.discrete_arithmetic_expression
+type discrete_update = discrete_index * DiscreteExpressions.global_expression
 
 
 

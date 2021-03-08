@@ -150,7 +150,8 @@ let string_of_declarations model =
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
-
+(* Get string of a global expression *)
+let string_of_global_expression = DiscreteExpressions.string_of_global_expression
 (* Get string of an arithmetic expression *)
 let string_of_arithmetic_expression = DiscreteExpressions.string_of_arithmetic_expression
 (* Get string of non-linear constraint inequalities *)
@@ -263,7 +264,6 @@ let string_of_clock_updates model clock_updates =
 
 
 
-
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
 	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_index, arithmetic_expression) ->
@@ -271,7 +271,7 @@ let string_of_discrete_updates ?(sep=", ") model updates =
 		(model.variable_names variable_index)
 		^ " := "
 		(* Convert the arithmetic_expression *)
-		^ (string_of_arithmetic_expression model.variable_names arithmetic_expression)
+		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
 	) updates)
 
 

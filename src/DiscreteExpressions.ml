@@ -358,6 +358,12 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.default_string
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.default_string
 
+let customized_string_of_global_expression customized_string variable_names = function
+    | Global_boolean_expression expr -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
+    | Global_arithmetic_expression (expr, _) -> customized_string_of_arithmetic_expression customized_string.arithmetic_string variable_names expr
+
+let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
+
 
 (************** Jani translation **************)
 (* Convert an arithmetic expression into a string *)
@@ -373,12 +379,12 @@ let customized_string_of_arithmetic_expression_for_jani customized_string variab
 		"{ \"op\": \"" ^ Constants.default_operator_string.plus_string ^ "\", "
             ^ "\"left\" : " ^ (string_of_arithmetic_expression customized_string discrete_arithmetic_expression) ^ ", " (*OTDO remove space for +*)
             ^ "\"right\" : " ^ (string_of_term customized_string discrete_term) ^ "}"
-	    
+
 	| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
 		"{ \"op\": \"" ^ Constants.default_operator_string.minus_string ^ "\", "
             ^ "\"left\" : " ^ (string_of_arithmetic_expression customized_string discrete_arithmetic_expression) ^ ", " (*OTDO remove space for +*)
             ^ "\"right\" : " ^ (string_of_term customized_string discrete_term) ^ "}"
-	    
+
         | DAE_term discrete_term -> string_of_term customized_string discrete_term
 
 	and string_of_term customized_string = function
