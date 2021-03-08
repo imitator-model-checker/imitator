@@ -10,7 +10,7 @@
  *
  * File contributors : Dylan Marinho
  * Created           : 2021/02/23
- * Last modified     : 2021/03/05
+ * Last modified     : 2021/03/08
  *
  ************************************************************)
  
@@ -99,12 +99,14 @@ let string_of_actions model =
 
 (* Convert the initial clocks declarations into a string *)
 let string_of_clocks model =
+  let multirate_bol = model.has_non_1rate_clocks in
   let string_of_variables list_of_variables =
     string_of_list_of_string_with_sep (jani_separator^"\n") (List.map
       (fun var ->
+		let clocks_type = if multirate_bol then "continuous" else "clock" in
           "\t\t{\n"
         ^ "\t\t\t\"name\": \"" ^ model.variable_names var ^ "\"" ^ jani_separator ^ "\n"
-        ^ "\t\t\t\"type\": \"continuous\"" ^ jani_separator ^ "\n"
+        ^ "\t\t\t\"type\": \""^ clocks_type ^"\"" ^ jani_separator ^ "\n"
         ^ "\t\t\t\"initial_value\": 0" ^ "\n"
         ^ "\t\t}"
       )
