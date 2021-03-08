@@ -53,15 +53,6 @@ and discrete_factor =
 	| DF_expression of discrete_arithmetic_expression
 	| DF_unary_min of discrete_factor
 
-val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discrete_value -> bool
-
-(************************************************************)
-(** Evaluate a discrete arithmetic expression with a valuation *)
-(************************************************************)
-
-val eval_discrete_arithmetic_expression : discrete_valuation -> discrete_arithmetic_expression -> DiscreteValue.discrete_value
-
-
 (************************************************************)
 (************************************************************)
 (************************************************************)
@@ -99,6 +90,18 @@ type global_expression =
     (* Add Global_string_expression of parsed_string_expression *)
     (* Add Global_bit_expression of parsed_bit_expression *)
 
+val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discrete_value -> bool
+
+(************************************************************)
+(** Evaluate global expressions with a valuation            *)
+(************************************************************)
+val eval_global_expression : discrete_valuation -> global_expression -> DiscreteValue.discrete_value
+
+(************************************************************)
+(** Evaluate a discrete arithmetic expression with a valuation *)
+(************************************************************)
+val eval_discrete_arithmetic_expression : discrete_valuation -> discrete_arithmetic_expression -> DiscreteValue.discrete_value
+
 (************************************************************)
 (** Check whether a Boolean expression evaluates to true when valuated with a valuation *)
 (************************************************************)
@@ -106,6 +109,8 @@ val is_boolean_expression_satisfied : discrete_valuation -> boolean_expression -
 val check_discrete_boolean_expression : discrete_valuation -> discrete_boolean_expression -> bool
 
 (* String *)
+val customized_string_of_global_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string
+val string_of_global_expression : (Automaton.variable_index -> string) -> global_expression -> string
 
 val customized_string_of_arithmetic_expression : Constants.customized_boolean_string -> (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string
 val string_of_arithmetic_expression : (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string

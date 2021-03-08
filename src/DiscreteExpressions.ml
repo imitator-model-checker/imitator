@@ -357,3 +357,9 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 (* TODO benjamin ref in ModelPrinter *)
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.default_string
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.default_string
+
+let customized_string_of_global_expression customized_string variable_names = function
+    | Global_boolean_expression expr -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
+    | Global_arithmetic_expression (expr, _) -> customized_string_of_arithmetic_expression customized_string.arithmetic_string variable_names expr
+
+let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string

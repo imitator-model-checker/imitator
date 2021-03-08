@@ -83,6 +83,7 @@ and parsed_discrete_factor =
 (****************************************************************)
 
 type parsed_discrete_boolean_expression =
+    | Parsed_arithmetic_expression of parsed_discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression of parsed_discrete_arithmetic_expression * parsed_relop * parsed_discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
@@ -169,7 +170,7 @@ type update =
 	| Normal of normal_update (** Updates withput conditions *)
 	| Condition of condition_update (** Updates with conditions *)
 (** basic updating *)
-and normal_update = variable_name * parsed_discrete_arithmetic_expression
+and normal_update = variable_name * global_expression
 (** conditional updating - NOTE: it does not support nested conditions *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 

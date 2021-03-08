@@ -369,12 +369,12 @@ let string_of_clock_updates model = function
 
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_index, arithmetic_expression) ->
+	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_index, global_expression) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ uppaal_assignment
 		(* Convert the arithmetic_expression *)
-		^ (DiscreteExpressions.string_of_arithmetic_expression model.variable_names arithmetic_expression)
+		^ (DiscreteExpressions.string_of_global_expression model.variable_names global_expression)
 	) updates)
 
 

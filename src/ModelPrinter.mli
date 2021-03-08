@@ -24,6 +24,11 @@ open DiscreteExpressions
 (* Convert a var_type into a string *)
 val string_of_var_type : DiscreteValue.var_type -> string
 
+(************************************************************)
+(** Arithmetic expression *)
+(************************************************************)
+(** Convert a AbstractModel.global_expression into a string *)
+val string_of_global_expression : (Automaton.variable_index -> Automaton.variable_name) -> DiscreteExpressions.global_expression -> string
 
 (************************************************************)
 (** Arithmetic expression *)
