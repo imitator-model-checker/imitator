@@ -136,6 +136,7 @@ type customized_boolean_string = {
 	l_operator   : string;
 	le_operator  : string;
 	eq_operator  : string;
+	neq_operator : string;
 	ge_operator  : string;
 	g_operator   : string;
 }

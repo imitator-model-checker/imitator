@@ -35,6 +35,7 @@ let uppaal_strings : customized_boolean_string = {
 	l_operator    = " &lt; ";
 	le_operator   = " &lt;= ";
 	eq_operator   = " == ";
+	neq_operator   = " != ";
 	ge_operator   = " &gt;= ";
 	g_operator    = " &gt; ";
 }

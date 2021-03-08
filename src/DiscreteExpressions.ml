@@ -309,7 +309,7 @@ let string_of_boolean_operations customized_string = function
 	| OP_L		-> customized_string.l_operator
 	| OP_LEQ	-> customized_string.le_operator
 	| OP_EQ		-> customized_string.eq_operator
-	| OP_NEQ	-> customized_string.l_operator ^ customized_string.g_operator (* TODO benjamin remove whitespace *)
+	| OP_NEQ	-> customized_string.neq_operator
 	| OP_GEQ	-> customized_string.ge_operator
 	| OP_G		-> customized_string.g_operator
 
