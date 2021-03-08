@@ -432,23 +432,47 @@ let string_of_automata model actions_and_nb_automata =
 (************************************************************)
 (* Create the system definition *)
 let string_of_system model =
+	let is_in_automaton action_index automaton_index = (List.mem action_index (model.actions_per_automaton automaton_index)) in
 	(*** WARNING: Do not print the observer ***)
 	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
 	in
 	(* Open *)
 	"\t\"system\": {\n"
 	^ "\t\t\"elements\": ["
-	(* System definition *)
-	^ "\n" ^ (string_of_list_of_string_with_sep (jani_separator^"\n") (
-				List.map (fun automaton_index ->
-					let automaton = model.automata_names automaton_index in
-					"\t\t\t\"automaton\": \"" ^ automaton ^ "\""
-				 )
-				 (pta_without_obs)
-			  ))
-	^ "\n"
-	(* Close *)
-	^ "\t\t]\n"
+		(* System definition *)
+		^ "\n" ^ (string_of_list_of_string_with_sep (jani_separator^"\n") (
+					List.map (fun automaton_index ->
+						let automaton = model.automata_names automaton_index in
+						"\t\t\t{\"automaton\": \"" ^ automaton ^ "\"}"
+					 )
+					 (pta_without_obs)
+				  ))
+		^ "\n"
+		(* Close *)
+		^ "\t\t]" ^ jani_separator ^ "\n"
+	^ "\t\t\"syncs\": ["
+		(* Actions *)
+		^ "\n" ^ (string_of_list_of_string_with_sep (jani_separator^"\n") (
+					List.map (fun action_index ->
+						let action_name = model.action_names action_index in
+						  "\t\t\t{\"synchronise\": ["
+						^ (
+							string_of_list_of_string_with_sep (jani_separator^" ") (
+							List.map (fun automaton_index ->
+								if (is_in_automaton action_index automaton_index)
+								then ("\"" ^ action_name ^ "\"")
+								else "null"
+							) (pta_without_obs))
+						  )
+						^ "]"
+						^ jani_separator ^ " "
+						^ "\"result\": \"" ^ action_name ^ "\" }"
+					 )
+					 (List.filter (fun action_index -> model.action_types action_index = Action_type_sync) model.actions)
+				  ))
+		^ "\n"
+		(* Close *)
+		^ "\t\t]\n"
 	^ "\t}\n"
 
 (************************************************************)
