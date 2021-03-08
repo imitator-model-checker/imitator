@@ -147,6 +147,7 @@ type customized_boolean_string = {
 	l_operator   : string;
 	le_operator  : string;
 	eq_operator  : string;
+	neq_operator : string;
 	ge_operator  : string;
 	g_operator   : string;
 }
@@ -169,6 +170,7 @@ let default_string = {
 	l_operator    = " < ";
 	le_operator   = " <= ";
 	eq_operator   = " = ";
+	neq_operator  = " <> ";
 	ge_operator   = " >= ";
 	g_operator    = " > ";
 }
@@ -182,6 +184,7 @@ let default_string_without_whitespace = {
 	l_operator    = "<";
 	le_operator   = "<=";
 	eq_operator   = "=";
+	neq_operator  = "<>";
 	ge_operator   = ">=";
 	g_operator    = ">";
 }
