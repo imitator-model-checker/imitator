@@ -147,6 +147,7 @@ let resolve_expression_type useful_parsing_model_information expr =
 
     (* Get utils variables for parsing model infos *)
     let index_of_variables = useful_parsing_model_information.index_of_variables in
+    let constants = useful_parsing_model_information.constants in
     let type_of_variables = useful_parsing_model_information.type_of_variables in
 
     let rec resolve_parsed_global_expression_type = function
@@ -189,9 +190,21 @@ let resolve_expression_type useful_parsing_model_information expr =
 
     and resolve_parsed_discrete_factor_type = function
         | Parsed_DF_variable variable_name ->
-            (* Get type of variable *)
-            let variable_index = Hashtbl.find index_of_variables variable_name in
-            type_of_variables variable_index
+            if Hashtbl.mem index_of_variables variable_name then (
+                (* Get type of variable *)
+                let variable_index = Hashtbl.find index_of_variables variable_name in
+                type_of_variables variable_index
+            )
+            else (
+                if Hashtbl.mem constants variable_name then (
+                    (* Retrieve the value of the global constant *)
+                    let value = Hashtbl.find constants variable_name in
+                    (* Get type of constant *)
+                    DiscreteValue.var_type_of_value value
+                ) else (
+                    raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
+                )
+            )
         | Parsed_DF_constant var_value ->
             (* Get var type of value *)
             DiscreteValue.var_type_of_value var_value
