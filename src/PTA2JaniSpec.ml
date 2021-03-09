@@ -198,13 +198,14 @@ let rec string_of_strings_with_sep_and string_list =
 	match string_list with
 	| (elem::[]) -> elem
 	| (elem::q) -> 
-				  "\t\t\t\t\t\t\t\"op\": \"" ^ jani_strings.and_operator ^ "\"" ^ jani_separator ^ "\n"
-				^ "\t\t\t\t\t\t\t\"left\": {\n" ^ elem ^ "\n\t\t\t\t\t\t\t}" ^ jani_separator ^ "\n"
-				^ "\t\t\t\t\t\t\t\"right\": {\n" ^ string_of_strings_with_sep_and q ^ "\n\t\t\t\t\t\t\t}"
+				  "\t\t\t\t\t\t\t{\"op\": \"" ^ jani_strings.and_operator ^ "\"" ^ jani_separator ^ "\n"
+				^ "\t\t\t\t\t\t\t\"left\": " ^ elem ^ jani_separator ^ "\n"
+				^ "\t\t\t\t\t\t\t\"right\": " ^ string_of_strings_with_sep_and q ^ "\n\t\t\t\t\t\t}"
+
+let jani_string_of_strings_with_sep_and = string_of_strings_with_sep_and
 
 (** Convert a guard or an invariant into a string *)
-(*TODO HERE FOR INVARIANT/GUARD DISPLAY*)
-let string_of_guard_or_invariant actions_and_nb_automata variable_names = function
+let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = function
 	(* True guard = no guard *)
 	| True_guard -> ""
 
@@ -213,9 +214,9 @@ let string_of_guard_or_invariant actions_and_nb_automata variable_names = functi
 
 	| Discrete_guard discrete_guard -> (*DOING DYLAN*)
 
-        let str_discrete_guard = (NonlinearConstraint.customized_string_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_guard) in
-        let str_discrete_guard_without_true = if str_discrete_guard = "true" then "" else str_discrete_guard in
-        str_discrete_guard_without_true
+        let list_discrete_guard = (NonlinearConstraint.customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_guard) in
+        let list_discrete_guard_without_true = if list_discrete_guard = [jani_strings.true_string] then [""] else list_discrete_guard in
+        string_of_strings_with_sep_and list_discrete_guard_without_true
 
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
@@ -232,23 +233,18 @@ let string_of_guard_or_invariant actions_and_nb_automata variable_names = functi
 					in
 					let left = LinearConstraint.string_of_left_term_of_pxd_linear_inequality variable_names inequality in 
 					let right = LinearConstraint.string_of_right_term_of_pxd_linear_inequality variable_names inequality in 
-					  "\t\t\t\t\t\t\t\"op\": \"" ^ op ^ "\"" ^ jani_separator ^ "\n"
+					  "\t\t\t\t\t\t\t{\"op\": \"" ^ op ^ "\"" ^ jani_separator ^ "\n"
 					^ "\t\t\t\t\t\t\t\"left\": " ^ left ^ "" ^ jani_separator ^ "\n"
-					^ "\t\t\t\t\t\t\t\"right\": " ^ right ^ ""
+					^ "\t\t\t\t\t\t\t\"right\": " ^ right ^ "}"
 				) list_of_inequalities)
 			)
 
-	| Discrete_continuous_guard discrete_continuous_guard -> (*TODO DYLAN*)
-	    let content = (
-            (NonlinearConstraint.customized_string_of_nonlinear_constraint jani_strings variable_names discrete_continuous_guard.discrete_guard)
-            ^
-            (
-                (* Remove true guard *)
-                if LinearConstraint.pxd_is_true discrete_continuous_guard.continuous_guard then ""
-                else jani_strings.and_operator ^ (LinearConstraint.customized_string_of_pxd_linear_constraint jani_strings variable_names discrete_continuous_guard.continuous_guard)
-            )
-        ) in
-        content
+	| Discrete_continuous_guard discrete_continuous_guard ->
+		let non_linear_constraint_list = NonlinearConstraint.customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_continuous_guard.discrete_guard in
+		let linear_constraint_string = (string_of_guard_or_invariant actions_and_nb_automata variable_names (Continuous_guard discrete_continuous_guard.continuous_guard)) in
+		let list = List.append non_linear_constraint_list [linear_constraint_string] in 
+	    let content = string_of_strings_with_sep_and list in
+	    if content = "" then "" else content
 
 
 (* Convert the invariant of a location into a string *)
@@ -312,11 +308,11 @@ let string_of_location model actions_and_nb_automata automaton_index location_in
 
 	(* Invariant and stopwatches *)
 	^ (if not_display_timeprogress then "" else (
-		  jani_separator ^ "\n\t\t\t\t\t\"time-progress\": {\n\t\t\t\t\t\t\"exp\": {"
-		^ (if twoparts then ("\n\t\t\t\t\t\t\t\t\"op\": \"" ^ jani_strings.and_operator ^ "\"" ^ jani_separator) else "")
-		^ (if twoparts then "\n\t\t\t\t\t\t\t\t\"left\": {" else "") ^ invariant ^ (if twoparts then "\n\t\t\t\t\t\t\t}" ^ jani_separator else "")
-		^ (if twoparts then "\n\t\t\t\t\t\t\t\t\"right\": {" else "") ^ der_clock ^ (if twoparts then "\n\t\t\t\t\t\t\t}" else "")
-		^ "\n\t\t\t\t\t\t}\n\t\t\t\t\t}"
+		  jani_separator ^ "\n\t\t\t\t\t\"time-progress\": {\n\t\t\t\t\t\t\"exp\": "
+		^ (if twoparts then ("{\n\t\t\t\t\t\t\t\t\"op\": \"" ^ jani_strings.and_operator ^ "\"" ^ jani_separator) else "")
+		^ (if twoparts then "\n\t\t\t\t\t\t\t\t\"left\": " else "") ^ invariant ^ (if twoparts then "" ^ jani_separator else "")
+		^ (if twoparts then "\n\t\t\t\t\t\t\t\t\"right\": {" else "") ^ der_clock ^ (if twoparts then "\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}" else "")
+		^ "\n\t\t\t\t\t}"
 	))
 
 	(* Footer *)
@@ -354,7 +350,7 @@ let string_of_clock_updates model = function
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
 	string_of_list_of_string_with_sep (jani_separator^"\n") (List.map (fun (variable_index, arithmetic_expression) ->
-		"\n\t\t\t\t\t\t\t{\"ref\": \""
+		"\t\t\t\t\t\t\t{\"ref\": \""
 		^ (model.variable_names variable_index)
 		^ "\"" ^ jani_separator ^ " \"value\" : "
 		^ (DiscreteExpressions.string_of_arithmetic_expression_for_jani model.variable_names arithmetic_expression)
@@ -373,7 +369,7 @@ let string_of_updates model automaton_index action_index clock_updates discrete_
 	else(
 		"\n"
 		^ (string_of_clock_updates model clock_updates) 
-		^ (if (not no_clock_updates) && (not no_discrete_updates) then jani_separator else "")
+		^ (if (not no_clock_updates) && (not no_discrete_updates) then jani_separator^"\n" else "")
 		^ (string_of_discrete_updates model discrete_updates)
 		^ "\n"
 	)
@@ -393,7 +389,7 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 	(* Guard *)
 	^ (if guard = "\n" then "" else 
 		((
-			"\n\t\t\t\t\t\"guard\": {" ^ guard ^ "\n\t\t\t\t\t}"
+			"\n\t\t\t\t\t\"guard\": " ^ guard ^ ""
 		) ^ jani_separator))
 
 	(* Target *)

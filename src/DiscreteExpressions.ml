@@ -368,11 +368,15 @@ let string_of_arithmetic_expression_for_jani = customized_string_of_arithmetic_e
 (** Convert a discrete_boolean_expression into a string *)
 let customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	(*TODO DYLAN*)
 	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
-		^ (string_of_boolean_operations customized_string relop)
-		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)
+		let expr1 =  (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression1) in
+		let relop =  (string_of_boolean_operations customized_string relop) in (*TODO check*)
+		let expr2 =  (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression2) in
+		"{"
+		^ "\"op\": \"" ^ relop ^ "\", "
+		^ "\"left\": " ^ expr1 ^ ", "
+		^ "\"right\": " ^ expr2
+		^ "}"
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	(*Done for jani, but without test*)
 	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
