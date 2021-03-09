@@ -8,9 +8,9 @@
  * 
  * Module description: unbounded exact rational computation using GMP
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2020/11/11
+ * Last modified     : 2021/03/09
  *
  ************************************************************)
  
@@ -192,6 +192,35 @@ let string_of_numconst a =
 		else
 			(* Nice predefined function *)
 			Gmp.Q.to_string (get_mpq a)
+	)
+
+let jani_string_of_numconst a =
+	(* Avoid 0/1 *)
+	if a =/ (Gmp.Q.zero) then "0" else(
+		(* Avoid 1/1 *)
+		let den = get_den a in 
+		if den = (Gmp.Z.from_int 1) then
+			Gmp.Z.to_string (get_num a)
+		else
+			(* Nice predefined function *)
+			let str = Gmp.Q.to_string (get_mpq a) in
+			(*Use regex to split if needed*)
+			
+			(* Case int *)
+			if Str.string_match (Str.regexp "^[0-9]+$") str 0 then str 
+			
+			(* Case fraction *)
+			else if Str.string_match (Str.regexp "^[0-9]+/[0-9]+$") str 0 then
+				let parts = Str.split (Str.regexp_string "/") str in
+				let denominator =  (*numconst_of_int_string*) (List.nth parts 0) in
+				let fractional = (*numconst_of_int_string*) (List.nth parts 1) in
+				"{\"op\":\"/\", \"left\":" ^ (denominator) ^ ", \"right\":" ^ (fractional) ^ "}"
+				
+			(* Case float *)
+			else if Str.string_match (Str.regexp "^[0-9]+.[0-9]+$") str 0 then str
+			
+			(* Otherwise *)
+			else raise (Unknown_numconst ("Impossible to cast the string '" ^ str ^ "' in function jani_string_of_numconst. Unknown type."))
 	)
 
 (**************************************************)

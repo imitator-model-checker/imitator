@@ -10,7 +10,7 @@
  *
  * File contributors : Dylan Marinho
  * Created           : 2021/02/23
- * Last modified     : 2021/03/08
+ * Last modified     : 2021/03/09
  *
  ************************************************************)
  
@@ -38,13 +38,13 @@ open Result
 let jani_strings : customized_string = {
 	true_string   = "true";
 	false_string  = "false";
-	and_operator  = "&and;";
-	or_operator   = "&or;"; (* useless *)
-	l_operator    = "&lt;";
-	le_operator   = "&le;";
+	and_operator  = "∧";
+	or_operator   = "∨"; (* useless *)
+	l_operator    = "<";
+	le_operator   = "≤";
 	eq_operator   = "=";
-	ge_operator   = "&ge;";
-	g_operator    = "&gt;";
+	ge_operator   = ">";
+	g_operator    = "≥";
 }
 
 let jani_separator = ", "
@@ -133,7 +133,7 @@ let string_of_discrete model =
           "\t\t{\n"
         ^ "\t\t\t\"name\": \"" ^ discrete_name ^ "\"" ^ jani_separator ^ "\n"
         ^ "\t\t\t\"type\": \"int\"" ^ jani_separator ^ "\n"
-        ^ "\t\t\t\"initial_value\": " ^ NumConst.string_of_numconst initial_value ^ "\n"
+        ^ "\t\t\t\"initial_value\": " ^ NumConst.jani_string_of_numconst initial_value ^ "\n"
         ^ "\t\t}"
       ) model.discrete
 			)
@@ -257,7 +257,7 @@ let string_of_clock_rate model actions_and_nb_automata automaton_index location_
 			List.map (
 				fun (variable_index, flow_value) -> 
 					let variable_name = (model.variable_names variable_index) in
-					let value = (NumConst.string_of_numconst flow_value) in 
+					let value = (NumConst.jani_string_of_numconst flow_value) in 
 					  "\t\t\t\t\t\t\t\t\"op\": \"=\"" ^ jani_separator 
 					^ " \"left\": {\"op\": \"der\", \"var\": \"" ^ variable_name ^ "\"}" ^ jani_separator
 					^ " \"right\": " ^ value ^ ""

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/03/02
+ * Last modified     : 2021/03/09
  *
  ************************************************************)
 
@@ -869,6 +869,7 @@ let rec evaluate_linear_term_ppl valuation_function linear_term =
 let string_of_coef = NumConst.string_of_numconst
 let string_of_constant = NumConst.string_of_numconst
 
+let jani_string_of_coef = NumConst.jani_string_of_numconst
 
 (** Convert a linear term into a string *)	
 let rec string_of_linear_term (names : (variable -> string)) (linear_term : linear_term) =
@@ -963,7 +964,7 @@ let op_term_of_pxd_linear_term (linear_term : linear_term) =
 let rec left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : linear_term) = 
 	match linear_term with
 	(*  * linear_term to hack return type *)
-		| Coef z -> "Coefficient", string_of_coef z, linear_term
+		| Coef z -> "Coefficient", jani_string_of_coef z, linear_term
 		
 		| Var v -> "Variable", (names v), linear_term
 		
@@ -985,12 +986,12 @@ let rec left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term
 				
 		| Mi (lterm, rterm) -> "Duary", "", lterm
 				
-		| Ti (z, rterm) -> "Unary", (string_of_coef z), linear_term
+		| Ti (z, rterm) -> "Unary", (jani_string_of_coef z), linear_term
 
 let rec right_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : linear_term) = 
 	match linear_term with
 	(*  * linear_term to hack return type *)
-		| Coef z -> "Coefficient", string_of_coef z, linear_term
+		| Coef z -> "Coefficient", jani_string_of_coef z, linear_term
 		
 		| Var v -> "Variable", (names v), linear_term
 		

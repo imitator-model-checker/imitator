@@ -7,9 +7,9 @@
  * 
  * Module description: unbounded exact rational computation using GMP
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2019/06/03
+ * Last modified     : 2021/03/09
  *
  ************************************************************)
  
@@ -49,6 +49,7 @@ val numconst_of_mpz : Gmp.Z.t -> t
 
 val mpq_of_numconst : t -> Gmp.Q.t
 val string_of_numconst : t -> string
+val jani_string_of_numconst : t -> string
 
 val get_num : t -> Gmp.Z.t
 val get_den : t -> Gmp.Z.t
