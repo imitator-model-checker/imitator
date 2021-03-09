@@ -274,9 +274,9 @@ let string_of_clock_rate model actions_and_nb_automata automaton_index location_
 				fun (variable_index, flow_value) -> 
 					let variable_name = (model.variable_names variable_index) in
 					let value = (NumConst.jani_string_of_numconst flow_value) in 
-					  "\t\t\t\t\t\t\t\t\"op\": \"=\"" ^ jani_separator 
+					  "{\"op\": \"=\"" ^ jani_separator 
 					^ " \"left\": {\"op\": \"der\", \"var\": \"" ^ variable_name ^ "\"}" ^ jani_separator
-					^ " \"right\": " ^ value ^ ""
+					^ " \"right\": " ^ value ^ "}"
 			) (model.flow automaton_index location_index)
 		)
 		
@@ -285,9 +285,9 @@ let string_of_clock_rate model actions_and_nb_automata automaton_index location_
 			List.map (
 				fun variable_index -> 
 					let variable_name = (model.variable_names variable_index) in
-					  "\t\t\t\t\t\t\t\t\"op\": \"=\"" ^ jani_separator 
+					  "{\"op\": \"=\"" ^ jani_separator 
 					^ " \"left\": {\"op\": \"der\", \"var\": \"" ^ variable_name ^ "\"}" ^ jani_separator
-					^ " \"right\": 1"
+					^ " \"right\": 1}"
 			) 
 			(List.filter (fun clock_index -> clock_is_1rate clock_index (model.flow automaton_index location_index)) model.clocks)
 		)
@@ -311,7 +311,7 @@ let string_of_location model actions_and_nb_automata automaton_index location_in
 		  jani_separator ^ "\n\t\t\t\t\t\"time-progress\": {\n\t\t\t\t\t\t\"exp\": "
 		^ (if twoparts then ("{\n\t\t\t\t\t\t\t\t\"op\": \"" ^ jani_strings.and_operator ^ "\"" ^ jani_separator) else "")
 		^ (if twoparts then "\n\t\t\t\t\t\t\t\t\"left\": " else "") ^ invariant ^ (if twoparts then "" ^ jani_separator else "")
-		^ (if twoparts then "\n\t\t\t\t\t\t\t\t\"right\": {" else "") ^ der_clock ^ (if twoparts then "\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}" else "")
+		^ (if twoparts then "\n\t\t\t\t\t\t\t\t\"right\": " else "") ^ der_clock ^ (if twoparts then "\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t}" else "")
 		^ "\n\t\t\t\t\t}"
 	))
 
