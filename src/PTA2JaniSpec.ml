@@ -17,9 +17,7 @@
  (*
  TODO:
  - if..then..else
- - synchro
- - rate of clocks (on the model + continuous set to 1) -> doing
- - the not done strings (Discrete, ...)
+ - check if all the "string_of" were translated
  *)
 
 open Constants
