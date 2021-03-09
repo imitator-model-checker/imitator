@@ -151,7 +151,7 @@ let string_of_parameters model =
 				(* Assign *)
           "\t\t{\n"
         ^ "\t\t\t\"name\": \"" ^ parameter_name ^ "\"" ^ jani_separator ^ "\n"
-        ^ "\t\t\t\"type\": \"real\"" ^ jani_separator ^ "\n"
+        ^ "\t\t\t\"type\": \"real\"\n"
         ^ "\t\t}"
 			) model.parameters
 			)
@@ -378,8 +378,8 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 
 	(* Target *)
 	^ "\n\t\t\t\t\t\"destinations\": [{"
-	^ "\n\t\t\t\t\t\t\"location\": \"" ^ (model.location_names automaton_index transition.target) ^ "\"" ^ jani_separator
-	^  (if assignments = "" then "" else ("\n\t\t\t\t\t\t\"assignments\": [" ^ assignments ^ "\t\t\t\t\t\t]"))
+	^ "\n\t\t\t\t\t\t\"location\": \"" ^ (model.location_names automaton_index transition.target) ^ "\""
+	^  (if assignments = "" then "" else (jani_separator ^ "\n\t\t\t\t\t\t\"assignments\": [" ^ assignments ^ "\t\t\t\t\t\t]"))
 	^ "\n\t\t\t\t\t}]"
 
 	(* Footer *)
