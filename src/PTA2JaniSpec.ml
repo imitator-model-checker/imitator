@@ -213,8 +213,8 @@ let string_of_guard_or_invariant actions_and_nb_automata variable_names = functi
 					let left = LinearConstraint.string_of_left_term_of_pxd_linear_inequality variable_names inequality in 
 					let right = LinearConstraint.string_of_right_term_of_pxd_linear_inequality variable_names inequality in 
 					  "\t\t\t\t\t\t\t\"op\": \"" ^ op ^ "\"" ^ jani_separator ^ "\n"
-					^ "\t\t\t\t\t\t\t\"left\": \"" ^ left ^ "\"" ^ jani_separator ^ "\n"
-					^ "\t\t\t\t\t\t\t\"right\": \"" ^ right ^ "\""
+					^ "\t\t\t\t\t\t\t\"left\": " ^ left ^ "" ^ jani_separator ^ "\n"
+					^ "\t\t\t\t\t\t\t\"right\": " ^ right ^ ""
 				) list_of_inequalities)
 			)
 

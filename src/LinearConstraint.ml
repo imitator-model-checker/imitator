@@ -945,6 +945,43 @@ let rec string_of_ppl_linear_term (names : (variable -> string)) (linear_term : 
 						| Variable    _ -> fstr ^ "*" ^ tstr
 						| _ -> fstr ^ " * (" ^ tstr ^ ")" )
 
+(*TODO DYLAN: with it, we may be able to simplify some calls, check it*)
+let rec jani_string_of_ppl_linear_term (names : (variable -> string)) (linear_term : ppl_linear_term) =
+	match linear_term with
+		| Coefficient z -> jani_string_of_coef (NumConst.numconst_of_string (Gmp.Z.string_from z))
+		
+		| Variable v -> "\"" ^ names v ^ "\""
+		
+		| Unary_Plus t -> jani_string_of_ppl_linear_term names t
+		
+		| Unary_Minus t -> (
+				let str = jani_string_of_ppl_linear_term names t in
+				"-" ^ str ^ "")
+				
+		(* Some simplification *)
+		| Plus (lterm, Coefficient z)
+		| Minus (lterm, Coefficient z)
+			when Gmp.Z.equal z (Gmp.Z.zero) ->
+			  jani_string_of_ppl_linear_term names lterm
+
+		| Plus (lterm, rterm) -> (
+			let lstr = jani_string_of_ppl_linear_term names lterm in
+			let rstr = jani_string_of_ppl_linear_term names rterm in
+				"{\"op\": \"+\", \"left\":" ^ lstr ^ ", \"right\":" ^ rstr ^ "}" )
+				
+		| Minus (lterm, rterm) -> (
+			let lstr = jani_string_of_ppl_linear_term names lterm in
+			let rstr = jani_string_of_ppl_linear_term names rterm in
+				"{\"op\": \"-\", \"left\":" ^ lstr ^ ", \"right\":" ^ rstr ^ "}" )
+				
+		| Times (z, rterm) -> (
+			let tstr = jani_string_of_ppl_linear_term names rterm in
+			if (Gmp.Z.equal z (Gmp.Z.one)) then
+				tstr
+			else 
+				let fstr = jani_string_of_coef (NumConst.numconst_of_string (Gmp.Z.string_from z)) in
+				"{\"op\": \"*\", \"left\":" ^ fstr ^ ", \"right\":" ^ tstr ^ "}")
+
 let pxd_linear_term_is_unary (linear_term : linear_term) =
 	match linear_term with
 		| Coef z -> true
@@ -1355,7 +1392,7 @@ let string_of_left_term_of_linear_inequality (names : (variable -> string)) (lin
 	(* First normalize *)
 	let normalized_linear_inequality = normalize_inequality linear_inequality in
 	let (left : ppl_linear_term), _, _ = split_linear_inequality normalized_linear_inequality in
-	string_of_ppl_linear_term names left
+	jani_string_of_ppl_linear_term names left
 
 let string_of_left_term_of_pxd_linear_inequality = string_of_left_term_of_linear_inequality
 
@@ -1364,7 +1401,7 @@ let string_of_right_term_of_linear_inequality (names : (variable -> string)) (li
 	(* First normalize *)
 	let normalized_linear_inequality = normalize_inequality linear_inequality in
 	let _, (right : ppl_linear_term), _ = split_linear_inequality normalized_linear_inequality in
-	string_of_ppl_linear_term names right
+	jani_string_of_ppl_linear_term names right
 
 let string_of_right_term_of_pxd_linear_inequality = string_of_right_term_of_linear_inequality
 
