@@ -174,3 +174,40 @@ let one_of = function
     | Rational_value _ -> Rational_value NumConst.one
     | Int_value _ -> Int_value Int32.one
     | _ -> raise ComputingException
+
+let _and a b =
+    match a, b with
+        | Bool_value a, Bool_value b -> Bool_value (a && b)
+        | _ -> raise ComputingException
+
+let _or a b =
+    match a, b with
+        | Bool_value a, Bool_value b -> Bool_value (a || b)
+        | _ -> raise ComputingException
+
+let not = function
+    | Bool_value a -> Bool_value (not (a))
+    | _ -> raise ComputingException
+
+let bool_equal a b = Bool_value (equal a b)
+let bool_neq a b = Bool_value (neq a b)
+
+let l a b =
+    match a, b with
+        | Bool_value a, Bool_value b -> Bool_value (a < b)
+        | _ -> raise ComputingException
+
+let leq a b =
+    match a, b with
+        | Bool_value a, Bool_value b -> Bool_value (a <= b)
+        | _ -> raise ComputingException
+
+let g a b =
+    match a, b with
+        | Bool_value a, Bool_value b -> Bool_value (a > b)
+        | _ -> raise ComputingException
+
+let geq a b =
+    match a, b with
+        | Bool_value a, Bool_value b -> Bool_value (a >= b)
+        | _ -> raise ComputingException

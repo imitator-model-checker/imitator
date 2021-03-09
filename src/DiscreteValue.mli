@@ -64,3 +64,15 @@ val div : discrete_value -> discrete_value -> discrete_value
 val neg : discrete_value -> discrete_value
 val zero_of : discrete_value -> discrete_value
 val one_of : discrete_value -> discrete_value
+
+val _and : discrete_value -> discrete_value -> discrete_value
+val _or : discrete_value -> discrete_value -> discrete_value
+val not : discrete_value -> discrete_value
+val bool_equal : discrete_value -> discrete_value -> discrete_value
+val bool_neq : discrete_value -> discrete_value -> discrete_value
+
+
+val l : discrete_value -> discrete_value -> discrete_value
+val leq : discrete_value -> discrete_value -> discrete_value
+val g : discrete_value -> discrete_value -> discrete_value
+val geq : discrete_value -> discrete_value -> discrete_value
