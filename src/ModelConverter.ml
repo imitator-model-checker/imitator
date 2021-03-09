@@ -1046,7 +1046,7 @@ let get_variables_in_nonlinear_constraint variables_used_ref = function
 let get_variables_in_init_state_predicate variables_used_ref = function
 	| Parsed_loc_assignment _ -> ()
 	| Parsed_linear_predicate linear_constraint -> get_variables_in_linear_constraint variables_used_ref linear_constraint
-	| Parsed_boolean_predicate (_, expr) -> get_variables_in_parsed_global_expression variables_used_ref expr
+	| Parsed_discrete_predicate (_, expr) -> get_variables_in_parsed_global_expression variables_used_ref expr
 
 	
 (*(*------------------------------------------------------------*)
@@ -2049,15 +2049,10 @@ let check_init useful_parsing_model_information init_definition observer_automat
 				(* General case: check *)
 			| _ -> if not (all_variables_defined_in_linear_constraint variable_names constants linear_constraint) then well_formed := false;
 			end
-        | Parsed_boolean_predicate (variable_name, expr) ->
+        | Parsed_discrete_predicate (variable_name, expr) ->
             begin
                 (* TODO benjamin : check for variable assignment *)
-                let variable_names_in_assignment =  variable_name :: variable_names in
-
-                for i = 0 to (List.length variable_names_in_assignment) - 1 do
-                    print_message Verbose_standard ("variable " ^ (List.nth variable_names_in_assignment i));
-                done;
-
+                let variable_names_in_assignment = variable_name :: variable_names in
                 if not (all_variables_defined_in_parsed_global_expression variable_names_in_assignment constants expr) then well_formed := false;
             end
 		) init_definition;
@@ -2066,7 +2061,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	let loc_assignments, init_inequalities = List.partition (function
 		| Parsed_loc_assignment _ -> true
 		| Parsed_linear_predicate _
-		| Parsed_boolean_predicate _ -> false
+		| Parsed_discrete_predicate _ -> false
 		) init_definition in
 	(* Make pairs (automaton_name, location_name) *)
 	let initial_locations = List.map (function
@@ -2116,7 +2111,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	(* Remove the inequalities of which the left-hand term is a removed variable *)
 	let filtered_init_inequalities = List.filter (function
 		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _))
-		| Parsed_boolean_predicate (variable_name, _) ->
+		| Parsed_discrete_predicate (variable_name, _) ->
 			(* Filter out if the left-hand is in the removed variable names *)
 			not (List.mem variable_name removed_variable_names)
 		(* Any other combination is OK *)
@@ -2144,7 +2139,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 				))
 			in is_discrete
 	    (* All parsed boolean predicate are for discrete variables, just check the init *)
-        | Parsed_boolean_predicate (variable_name, _) ->
+        | Parsed_discrete_predicate (variable_name, _) ->
             (* TODO benjamin : refactor into a function *)
             if not ((Hashtbl.mem index_of_variables variable_name) || (Hashtbl.mem constants variable_name))  then (
 				(* Otherwise: problem! *)
@@ -2189,8 +2184,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			(* Else add it *)
 			Hashtbl.add init_values_for_discrete discrete_index discrete_value;
 			);
-        | Parsed_boolean_predicate (variable_name, expr) ->
-            (* TODO benjamin : try to evaluate assignment *)
+        | Parsed_discrete_predicate (variable_name, expr) ->
             (* Get the variable index *)
             let discrete_index = Hashtbl.find index_of_variables variable_name in
 			(* Check if it was already declared *)
@@ -2198,9 +2192,21 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			    print_error ("The discrete variable `" ^ variable_name ^ "` is given an initial value several times in the init definition.");
 			    well_formed := false;
 			) else (
+			    (* Check expression type consistency *)
+			    let variable_type = type_of_variables discrete_index in
+			    let expression_type = resolve_expression_type useful_parsing_model_information expr in
+                if variable_type <> expression_type then
+                    raise (TypeError ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type variable_type) ^ " is not compatible with expression "))
+                else ();
+			    (* Try to reduce expression to a value *)
 			    let discrete_value = try_reduce_parsed_global_expression useful_parsing_model_information expr in
-			    (* Else add it *)
-			    Hashtbl.add init_values_for_discrete discrete_index discrete_value;
+			    (* Check computed value type consistency *)
+                let discrete_value_type = DiscreteValue.var_type_of_value discrete_value in
+                if variable_type <> discrete_value_type then
+                    raise (TypeError ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type variable_type) ^ " is not compatible with a " ^ (DiscreteValue.string_of_var_type discrete_value_type) ^ " value"))
+                else
+			        (* Else add it *)
+			        Hashtbl.add init_values_for_discrete discrete_index discrete_value;
 			);
 		| _ -> raise (InternalError ("Must have this form since it was checked before."))
 		) discrete_init;
@@ -3140,7 +3146,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 				))
 			in not is_discrete
         (* Doesn't care about discrete boolean inits for constraint initalization ! *)
-        | Parsed_boolean_predicate _ -> false
+        | Parsed_discrete_predicate _ -> false
 		| _ -> true
 		) linear_predicates in
 	(* Convert the inequalities *)
@@ -4753,10 +4759,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 
 	(* Unless a specific option is activated, we first remove all variables declared but unused *)
-	let clock_names, discrete_names, parameter_names, removed_variable_names =
+	let clock_names, discrete_names, parameter_names, discrete_names_by_type, removed_variable_names =
 	if options#no_variable_autoremove then(
 		(* Nothing to do *)
-		single_clock_names, single_discrete_names, single_parameter_names, []
+		single_clock_names, single_discrete_names, single_parameter_names, single_discrete_names_by_type, []
 	)else (
 		(* Gather all variables used *)
 		let all_variables_used_in_model = get_all_variables_used_in_model parsed_model in
@@ -4784,9 +4790,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		let single_clock_names, removed_clock_names = remove_unused_variables_gen "clock" single_clock_names in
 		let single_discrete_names, removed_discrete_names = remove_unused_variables_gen "discrete" single_discrete_names in
 		let single_parameter_names, removed_parameter_names = remove_unused_variables_gen "parameter" single_parameter_names in
+		(* Remove unused variable names by type *)
+		let single_discrete_names_by_type = List.filter (fun (var_type, variable_name) -> List.mem variable_name single_discrete_names) single_discrete_names_by_type in
 		(* Return and append removed variable names *)
 		let removed_variable_names = List.rev_append removed_clock_names (List.rev_append removed_discrete_names removed_parameter_names) in
-		single_clock_names, single_discrete_names, single_parameter_names, removed_variable_names
+		single_clock_names, single_discrete_names, single_parameter_names, single_discrete_names_by_type, removed_variable_names
 	)
 	in
 	
@@ -4932,9 +4940,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	for i = first_discrete_index to nb_variables - 1 do
 	    (* Get specific var_type of discrete variable *)
 	    (* Remove offset, because array of var_type * variable_name for discrete start from 0 *)
-        let var_type, _ = List.nth single_discrete_names_by_type (i - first_discrete_index) in
+        let var_type, v = List.nth discrete_names_by_type (i - first_discrete_index) in
         (* Convert var_type from ParsingStructure to AbstractModel *)
 		type_of_variables.(i) <- convert_var_type var_type;
+
+		print_message Verbose_standard ("Variable : " ^ v ^ " of " ^ (DiscreteValue.string_of_var_type type_of_variables.(i)))
 	done;
 	(* Functional representation *)
 	let type_of_variables = fun variable_index -> type_of_variables.(variable_index) in

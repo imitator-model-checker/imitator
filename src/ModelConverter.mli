@@ -30,6 +30,8 @@ exception InvalidProperty
 
 exception InvalidExpression of string
 
+exception TypeError of string
+
 (****************************************************************)
 (** Types *)
 (****************************************************************)

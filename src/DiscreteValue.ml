@@ -194,20 +194,24 @@ let bool_neq a b = Bool_value (neq a b)
 
 let l a b =
     match a, b with
-        | Bool_value a, Bool_value b -> Bool_value (a < b)
+        | Rational_value a, Rational_value b -> Bool_value (NumConst.l a b)
+        | Int_value a, Int_value  b -> Bool_value  (a < b)
         | _ -> raise ComputingException
 
 let leq a b =
     match a, b with
-        | Bool_value a, Bool_value b -> Bool_value (a <= b)
+        | Rational_value a, Rational_value b -> Bool_value (NumConst.le a b)
+        | Int_value a, Int_value  b -> Bool_value  (a <= b)
         | _ -> raise ComputingException
 
 let g a b =
     match a, b with
-        | Bool_value a, Bool_value b -> Bool_value (a > b)
+        | Rational_value a, Rational_value b -> Bool_value (NumConst.g a b)
+        | Int_value a, Int_value  b -> Bool_value  (a > b)
         | _ -> raise ComputingException
 
 let geq a b =
     match a, b with
-        | Bool_value a, Bool_value b -> Bool_value (a >= b)
+        | Rational_value a, Rational_value b -> Bool_value (NumConst.ge a b)
+        | Int_value a, Int_value  b -> Bool_value  (a >= b)
         | _ -> raise ComputingException
