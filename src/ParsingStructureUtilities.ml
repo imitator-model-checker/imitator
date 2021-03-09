@@ -14,6 +14,12 @@
 
 open ParsingStructure
 
+let map_global_expression_leafs map_function expr = 0
+
+    let rec map_global_expression_leafs_rec = function
+        | Parsed_global_expression expr ->
+    and
+
 (* Map the leafs of an arithmetic expression according to map_function *)
 (* Leafs are Parsed_DF_variable, Parsed_DF_constant *)
 let map_parsed_arithmetic_expression_leafs map_function arithmetic_expr =

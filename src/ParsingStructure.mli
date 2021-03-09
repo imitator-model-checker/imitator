@@ -106,10 +106,7 @@ and parsed_boolean_expression =
 (** Global expression *)
 (****************************************************************)
 type global_expression =
-    | Parsed_global_arithmetic_expression of parsed_discrete_arithmetic_expression
-    | Parsed_global_boolean_expression of parsed_boolean_expression
-    (* Add Parsed_global_string_expression of parsed_string_expression *)
-    (* Add Parsed_global_bit_expression of parsed_bit_expression *)
+    | Parsed_global_expression of parsed_boolean_expression
 
 
 (****************************************************************)
@@ -218,11 +215,7 @@ type parsed_init_state_predicate =
 	(* TODO benjamin : change to Parsed_discrete_predicate *)
 	| Parsed_boolean_predicate of string *  global_expression
 
-type parsed_discrete_init =
-    | Parsed_discrete_init of variable_name * global_expression
-
 type init_definition = parsed_init_state_predicate list
-type init_discrete_definition = parsed_discrete_init list
 
 (****************************************************************)
 (** Definition of the property *)

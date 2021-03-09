@@ -70,6 +70,7 @@ type boolean_expression =
 	| Discrete_boolean_expression of discrete_boolean_expression
 
 and discrete_boolean_expression =
+    | Discrete_arithmetic_expression of discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
@@ -81,14 +82,12 @@ and discrete_boolean_expression =
 	| DB_constant of bool
 
 (****************************************************************)
-(** Global expression                                           *)
+(** Global expression *)
 (****************************************************************)
 type global_expression =
-    (* A typed arithmetic expression (rational, int32, int64, ...) *)
-    | Global_arithmetic_expression of discrete_arithmetic_expression * DiscreteValue.var_type_discrete_number
-    | Global_boolean_expression of boolean_expression
-    (* Add Global_string_expression of parsed_string_expression *)
-    (* Add Global_bit_expression of parsed_bit_expression *)
+    (* A typed expression *)
+    | Rational_expression of discrete_arithmetic_expression
+    | Bool_expression of boolean_expression
 
 val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discrete_value -> bool
 

@@ -301,6 +301,9 @@ let rec string_of_boolean variable_names = function
 
 (** Convert a discrete_boolean_expression into a string *)
 and string_of_discrete_boolean_expression variable_names = function
+	(** Discrete arithmetic expression of the form variable *)
+	| Discrete_arithmetic_expression expr ->
+	    string_of_arithmetic_expression variable_names expr
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
 		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
@@ -316,13 +319,14 @@ and string_of_discrete_boolean_expression variable_names = function
 		^ " , "
 		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
 		^ "]"
-    (** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
+    (** Boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression boolean_expression ->
 	    "(" ^ (string_of_boolean variable_names boolean_expression) ^ ")"
     | DB_variable variable_index ->
         variable_names variable_index
     | DB_constant value ->
         string_of_bool value
+
 
 
 (** Return if there is no clock updates *)

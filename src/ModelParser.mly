@@ -447,23 +447,23 @@ update_nonempty_list:
 /** Normal updates */
 update:
 	/*** NOTE: deprecated syntax ***/
-	| NAME APOSTROPHE OP_EQ global_expression {
+	| NAME APOSTROPHE OP_EQ expression {
 		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
 		($1, $4)
 		}
 
 	/*** NOTE: deprecated syntax ***/
-	| NAME APOSTROPHE OP_ASSIGN global_expression {
+	| NAME APOSTROPHE OP_ASSIGN expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
 		($1, $4)
 	}
 	/*** NOTE: deprecated syntax ***/
-	| NAME OP_EQ global_expression {
+	| NAME OP_EQ expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
 		($1, $3)
 	}
 
-	| NAME OP_ASSIGN global_expression { ($1, $3) }
+	| NAME OP_ASSIGN expression { ($1, $3) }
 ;
 
 /** List containing only normal updates.
@@ -679,8 +679,8 @@ boolean_expression:
 
 discrete_boolean_expression:
 	/* Parsed_DB_variable of variable_name */
-	| NAME { Parsed_DB_variable $1 }
-	/*| arithmetic_expression { Parsed_arithmetic_expression $1 }*/
+	/*| NAME { Parsed_DB_variable $1 }*/
+	| arithmetic_expression { Parsed_arithmetic_expression $1 }
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
 	| arithmetic_expression relop arithmetic_expression { Parsed_expression ($1, $2, $3) }
 	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
@@ -770,8 +770,7 @@ new_init_discrete_expression_fol :
 
 new_init_discrete_state_predicate:
 	| init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
-	| NAME OP_EQ arithmetic_expression { Parsed_boolean_predicate ($1, Parsed_global_arithmetic_expression $3) }
-	| NAME OP_EQ LPAREN boolean_expression RPAREN { Parsed_boolean_predicate ($1, Parsed_global_boolean_expression $4) }
+	| NAME OP_EQ expression { Parsed_boolean_predicate ($1, $3) }
 ;
 
 new_init_continuous_expression:
@@ -789,9 +788,8 @@ new_init_continuous_state_predicate:
     | linear_constraint { Parsed_linear_predicate $1 }
 ;
 
-global_expression:
-    | arithmetic_expression { Parsed_global_arithmetic_expression $1 }
-    | boolean_expression { Parsed_global_boolean_expression $1 }
+expression:
+    | boolean_expression { Parsed_global_expression $1 }
 ;
 
 

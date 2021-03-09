@@ -64,6 +64,7 @@ type boolean_expression =
 	| Discrete_boolean_expression of discrete_boolean_expression
 
 and discrete_boolean_expression =
+    | Discrete_arithmetic_expression of discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
@@ -78,11 +79,9 @@ and discrete_boolean_expression =
 (** Global expression *)
 (****************************************************************)
 type global_expression =
-    (* A typed arithmetic expression *)
-    | Global_arithmetic_expression of discrete_arithmetic_expression * DiscreteValue.var_type_discrete_number
-    | Global_boolean_expression of boolean_expression
-    (* Add Global_string_expression of parsed_string_expression *)
-    (* Add Global_bit_expression of parsed_bit_expression *)
+    (* A typed expression *)
+    | Rational_expression of discrete_arithmetic_expression
+    | Bool_expression of boolean_expression
 
 (************************************************************)
 (** Evaluate arithmetic expressions with a valuation *)
@@ -162,6 +161,11 @@ let rec is_boolean_expression_satisfied discrete_valuation = function
 
 (** Check if a discrete boolean expression is satisfied *)
 and check_discrete_boolean_expression discrete_valuation = function
+    (** Discrete arithmetic expression of the form variable *)
+    | Discrete_arithmetic_expression expr ->
+        let eval_expr = eval_discrete_arithmetic_expression discrete_valuation expr in
+        (* No need to check type, because it was been at model conversion (ModelConverter) *)
+        DiscreteValue.bool_value eval_expr
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression (discrete_arithmetic_expression_1, relop, discrete_arithmetic_expression_2) ->
 		eval_discrete_relop
@@ -193,8 +197,8 @@ and check_discrete_boolean_expression discrete_valuation = function
 (** Evaluate global expressions with a valuation            *)
 (************************************************************)
 let eval_global_expression discrete_valuation = function
-    | Global_arithmetic_expression (expr, _) -> eval_discrete_arithmetic_expression discrete_valuation expr
-    | Global_boolean_expression expr -> DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
+    | Rational_expression expr -> eval_discrete_arithmetic_expression discrete_valuation expr
+    | Bool_expression expr -> DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
     | _ -> raise NotImplemented
 
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
@@ -334,6 +338,9 @@ let rec customized_string_of_boolean_expression customized_string variable_names
 (* TODO benjamin ref in ModelPrinter *)
 (** Convert a discrete_boolean_expression into a string *)
 and customized_string_of_discrete_boolean_expression customized_string variable_names = function
+    (** Discrete arithmetic expression of the form variable *)
+    | Discrete_arithmetic_expression expr ->
+        customized_string_of_arithmetic_expression customized_string variable_names expr
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
 		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
@@ -359,11 +366,10 @@ let string_of_boolean_expression = customized_string_of_boolean_expression Const
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.default_string
 
 let customized_string_of_global_expression customized_string variable_names = function
-    | Global_boolean_expression expr -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
-    | Global_arithmetic_expression (expr, _) -> customized_string_of_arithmetic_expression customized_string.arithmetic_string variable_names expr
+    | Rational_expression expr -> customized_string_of_arithmetic_expression customized_string.arithmetic_string variable_names expr
+    | Bool_expression expr -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
 
 let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
-
 
 (************** Jani translation **************)
 (* Convert an arithmetic expression into a string *)
