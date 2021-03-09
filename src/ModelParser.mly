@@ -732,6 +732,13 @@ init_loc_predicate:
 	| NAME CT_IS CT_IN NAME { ($1, $4) }
 ;
 
+new_init_loc_predicate:
+	/* loc[my_pta] = my_loc */
+	| CT_LOC LSQBRA NAME RSQBRA OP_ASSIGN NAME { ($3, $6) }
+	/* my_pta IS IN my_loc */
+	| NAME CT_IS CT_IN NAME { ($1, $4) }
+;
+
 /************************************************************/
 /** NEW INIT DEFINITION ZONE : SEPARATION OF DISCRETE AND CONTINUOUS */
 /************************************************************/
@@ -765,12 +772,12 @@ new_init_discrete_expression:
 new_init_discrete_expression_fol :
 	| new_init_discrete_state_predicate { [ $1 ] }
 	| LPAREN new_init_discrete_expression_fol  RPAREN { $2 }
-	| new_init_discrete_expression_fol  AMPERSAND new_init_discrete_expression_fol  { $1 @ $3 }
+	| new_init_discrete_expression_fol COMMA new_init_discrete_expression_fol  { $1 @ $3 }
 ;
 
 new_init_discrete_state_predicate:
-	| init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
-	| NAME OP_EQ expression { Parsed_boolean_predicate ($1, $3) }
+	| new_init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
+	| NAME OP_ASSIGN expression { Parsed_discrete_predicate ($1, $3) }
 ;
 
 new_init_continuous_expression:
