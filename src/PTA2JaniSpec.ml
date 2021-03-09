@@ -55,6 +55,16 @@ let jani_version = "1"
 let jani_type = "sha"
 let jani_features = "[\"derived-operators\"]"
 
+
+(************************************************************)
+(** OCaml Utilities overwrite. TODO: fusion if OK *)
+(************************************************************)
+let string_of_list_of_string_with_sep sep list = 
+	let deal_string sep list = 
+		OCamlUtilities.string_of_list_of_string_with_sep sep list
+	in
+		deal_string sep (List.filter (fun string -> string<>"") list)
+
 (************************************************************)
 (** Header *)
 (************************************************************)
@@ -160,11 +170,21 @@ let string_of_parameters model =
 
 (* Declaration of variables *)
 let string_of_variables model =
-  "\t\"variables\": [\n"
-  ^ (string_of_clocks model) ^ jani_separator ^ "\n"
-  ^ (string_of_discrete model) ^ jani_separator ^ "\n"
-  ^ (string_of_parameters model) ^ "\n"
-  ^ "\t]" ^ jani_separator ^ "\n"
+	let clocks = string_of_clocks model in
+	let discrete = string_of_discrete model in
+	let parameters = string_of_parameters model in
+	let sep_after_clocks = (clocks <> "" && (discrete <> "" || parameters <> "")) in 
+	let sep_after_discrete = (discrete <> "" && parameters <> "") in 
+	
+	if clocks = "" && discrete = "" && parameters = "" then "" else (
+	  "\t\"variables\": [\n"
+	  ^ clocks
+	  ^ (if sep_after_clocks then jani_separator^"\n" else "")
+	  ^ discrete
+	  ^ (if sep_after_discrete then jani_separator^"\n" else "")
+	  ^ parameters
+	  ^ "\t]"
+	  )
 
 (* Properties *)
 let string_of_properties =
@@ -387,22 +407,23 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 
 (* Convert the transitions of an automaton into a string *)
 let string_of_transitions model actions_and_nb_automata automaton_index =
-	string_of_list_of_string_with_sep (jani_separator^"\n") (
-	(* For each location *)
-	List.map (fun location_index ->
-		string_of_list_of_string_with_sep (jani_separator^"\n") (
-		(* For each action *)
-		List.map (fun action_index ->
-			(* Get the list of transitions *)
-			let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
-			(* Convert to string *)
-			string_of_list_of_string_with_sep (jani_separator^"\n") (
-				(* For each transition *)
-				List.map (string_of_transition model actions_and_nb_automata automaton_index location_index) transitions
+	string_of_list_of_string_with_sep (jani_separator^"\n") 
+			(
+			(* For each location *)
+			List.map (fun location_index ->
+				string_of_list_of_string_with_sep (jani_separator^"\n") (
+				(* For each action *)
+				List.map (fun action_index ->
+					(* Get the list of transitions *)
+					let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
+					(* Convert to string *)
+					string_of_list_of_string_with_sep (jani_separator^"\n") (
+						(* For each transition *)
+						List.map (string_of_transition model actions_and_nb_automata automaton_index location_index) transitions
+						)
+					) (model.actions_per_location automaton_index location_index)
 				)
-			) (model.actions_per_location automaton_index location_index)
-		)
-	) (model.locations_per_automaton automaton_index))
+			) (model.locations_per_automaton automaton_index))
 
 (* Convert an automaton into a string *)
 let string_of_automaton model actions_and_nb_automata automaton_index =
@@ -489,11 +510,12 @@ let string_of_model model =
     ) model.actions
     in
 
+	let variables = string_of_variables model in
   "{\n"
   (*Header*)
   ^ string_of_header model
   ^ string_of_actions model
-  ^ string_of_variables model
+  ^ (if variables = "" then "" else variables ^ jani_separator ^ "\n")
   ^ string_of_properties
   ^ string_of_automata model actions_and_nb_automata
   ^ string_of_system model
