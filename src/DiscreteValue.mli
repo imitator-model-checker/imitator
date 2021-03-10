@@ -22,6 +22,8 @@ type discrete_value =
 
 
 val is_discrete_type : var_type -> bool
+(* Check if a Var_type is a Var_type_rational *)
+val is_rational_type : var_type -> bool
 
 val is_rational_value : discrete_value -> bool
 val is_int32_value : discrete_value -> bool

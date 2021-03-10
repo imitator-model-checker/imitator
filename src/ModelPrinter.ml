@@ -548,13 +548,40 @@ let string_of_automata model =
 		List.map (fun automaton_index -> string_of_automaton model automaton_index
 	) model.automata)
 
+(* Convert initial state of locations to string *)
+let string_of_new_initial_locations ?indent_level:(i=1) model =
+	(*** WARNING: Do not print the observer ***)
+	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
+	in
 
+	(* Handle all (other) PTA *)
+	let inital_global_location  = model.initial_location in
+	let initial_automata = List.map
+	(fun automaton_index ->
+		(* Finding the initial location for this automaton *)
+		let initial_location = Location.get_location inital_global_location automaton_index in
+		(* '& loc[pta] = location' *)
+		let tabulations = string_n_times i "\t" in
+		tabulations ^ "loc[" ^ (model.automata_names automaton_index) ^ "] := " ^ (model.location_names automaton_index initial_location)
+	) pta_without_obs
+	in string_of_list_of_string_with_sep ", \n" initial_automata
 
+(* Convert initial state of discrete variables to string *)
+let string_of_new_initial_discretes ?indent_level:(i=1) model =
+	let initial_discrete = List.map
+	(fun discrete_index ->
+		(* Finding the initial value for this discrete *)
+		let initial_value = Location.get_discrete_value model.initial_location discrete_index in
+		(* '& var = val' *)
+		let tabulations = string_n_times i "\t" in
+		tabulations ^ (model.variable_names discrete_index) ^ " := " ^ (DiscreteValue.string_of_value initial_value)
+	) model.discrete
+	in string_of_list_of_string_with_sep ", \n" initial_discrete
 
 (************************************************************)
 (** Initial state *)
 (************************************************************)
-let string_of_initial_state model =
+let string_of_old_initial_state model =
 	(* Print some information *)
 (* 	print_message Verbose_total "Entering `ModelPrinter.string_of_initial_state`…"; *)
 
@@ -612,7 +639,51 @@ let string_of_initial_state model =
 	^ "\n" ^ ""
 	^ "\n" ^ ";"
 
+(************************************************************)
+(** New initial state *)
+(************************************************************)
+let string_of_new_initial_state model =
+	(* Header of initial state *)
+	"\n"
+	^ "\n" ^ "(************************************************************)"
+	^ "\n" ^ "(* Initial state *)"
+	^ "\n" ^ "(************************************************************)"
+	^ "\n" ^ ""
+	^ "\n" ^ "init := {"
+    ^ "\n"
+	(* Discrete zone *)
+	^ "\n" ^ "\t(*------------------------------------------------------------*)"
+	^ "\n" ^ "\t(* Discretes *)"
+	^ "\n" ^ "\t(*------------------------------------------------------------*)"
+    ^ "\n" ^ "\tdiscrete = "
+    ^ "\n" ^ "\t\t(* Locations *)"
+    ^ "\n"
+    ^ (string_of_new_initial_locations ~indent_level:2 model) ^ ","
+    ^ "\n" ^ "\t\t(* Discretes *)"
+    ^ "\n"
+    ^ (string_of_new_initial_discretes ~indent_level:2 model)
+    ^ "\n" ^ "\t;"
+    ^ "\n"
+	(* Continuous zone *)
+	^ "\n" ^ "\t(*------------------------------------------------------------*)"
+	^ "\n" ^ "\t(* Initial constraint *)"
+	^ "\n" ^ "\t(*------------------------------------------------------------*)"
 
+    ^ "\n" ^ "\tcontinuous = "
+    ^ "\n\t\t& " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)
+    ^ "\n" ^ "\t;"
+    ^ "\n"
+	^ "\n" ^ "}"
+
+(* Convert initial state to string *)
+(* Keep retro-compatibility between old init zone and new init zone *)
+let string_of_initial_state model =
+    (* If all variable are rational, we can print initial state as old model *)
+    if List.for_all (fun (var_type, _) -> DiscreteValue.is_rational_type var_type) model.discrete_names_by_type_group then
+        string_of_old_initial_state model
+    (* Else, we use the new init zone *)
+    else
+        string_of_new_initial_state model
 
 (************************************************************)
 (** Property *)
