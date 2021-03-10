@@ -239,6 +239,14 @@ let group_by keySelector l =
     let group_by_keys = List.map (fun key -> (key, List.filter (fun x -> keySelector x = key) l)) uniq_keys in
     group_by_keys
 
+(* Partition list by grouping elements by keys in a list of tuples *)
+(* and map values associated by keys according to valueSelector function *)
+let group_by_and_map keySelector valueSelector l =
+    let keys = List.map keySelector l in
+    let uniq_keys = list_only_once keys in
+    let group_by_keys = List.map (fun key -> (key, List.map valueSelector (List.filter (fun x -> keySelector x = key) l))) uniq_keys in
+    group_by_keys
+
 (* Partition list by grouping elements by keys in a hashtable *)
 let hashtbl_group_by keySelector l =
     let group_by_keys = group_by keySelector l in

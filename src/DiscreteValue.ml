@@ -133,7 +133,7 @@ let neq a b =
 
 let string_of_value = function
     | Rational_value x -> NumConst.string_of_numconst x
-    | Bool_value x -> if x then "true" else "false"
+    | Bool_value x -> if x then "True" else "False"
     | Int_value x -> Int32.to_string x
 
 let add a b =

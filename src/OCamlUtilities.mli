@@ -95,6 +95,10 @@ val sublist : int -> int -> 'a list -> 'a list
 (* Partition list by grouping elements by keys in a list of tuples *)
 val group_by : ('a -> 'b) -> 'a list -> ('b * 'a list) list
 
+(* Partition list by grouping elements by keys in a list of tuples *)
+(* and map values associated by keys according to valueSelector function *)
+val group_by_and_map : ('a -> 'b) -> ('a -> 'c) -> 'a list -> ('b * 'c list) list
+
 (* Partition list by grouping elements by keys in a hashtable *)
 val hashtbl_group_by : ('a -> 'b) -> 'a list -> ('b, 'a list) Hashtbl.t
 

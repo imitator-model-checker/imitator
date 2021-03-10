@@ -31,17 +31,6 @@ type v0 = HyperRectangle.hyper_rectangle
 (** Types *)
 (************************************************************)
 
-type var_type_discrete =
-    | Var_type_discrete_rational
-    | Var_type_discrete_int
-    | Var_type_discrete_bool
-
-(** Type of variable in declarations *)
-type var_type =
-	| Var_type_clock
-	| Var_type_discrete of var_type_discrete
-	| Var_type_parameter
-
 (** Type of sync actions *)
 type action_type =
 	(* Observable action label (does not necessarily mean that it is "synchronized", as it can belong to a single automaton) *)
@@ -210,6 +199,8 @@ type abstract_model = {
 	parameters_and_clocks : variable_index list;
 	(* The function : variable_index -> variable name *)
 	variable_names : variable_index -> variable_name;
+	(* All discrete variable names group by types *)
+    discrete_names_by_type_group : (DiscreteValue.var_type * (variable_name list)) list;
 	(* The type of variables *)
 	type_of_variables : variable_index -> DiscreteValue.var_type;
 
