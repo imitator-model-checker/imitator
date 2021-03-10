@@ -129,7 +129,22 @@ let string_of_var_type_discrete = DiscreteValue.string_of_var_type_discrete
 (* Convert a var_type into a string *)
 let string_of_var_type = DiscreteValue.string_of_var_type
 
+(* Convert discrete variable declarations group (by type) into a string *)
+let string_of_discrete_variables_by_type var_type variable_names =
+	if List.length variable_names > 0 then (
+	    (* Get string of all variable names of the group *)
+	    let string_of_variable_names = string_of_list_of_string_with_sep ", " variable_names in
+	    (* Get string of declaration group *)
+		("\n\t" ^ string_of_variable_names ^ "\n\t\t: " ^ (string_of_var_type var_type) ^ ";\n")
+    )
+    else ""
 
+(* Convert discrete variable declarations into a string *)
+let string_of_discrete_variables model =
+    (* Get string of each variable groups (by type) *)
+    let str = List.map (fun (var_type, variable_names) -> string_of_discrete_variables_by_type var_type variable_names) model.discrete_names_by_type_group in
+    (* Join all strings *)
+    string_of_list_of_string str
 
 (* Convert the initial variable declarations into a string *)
 let string_of_declarations model =
@@ -144,8 +159,7 @@ let string_of_declarations model =
 	(if model.nb_clocks > 0 then
 		("\n\t" ^ (string_of_variables model.clocks_without_special_reset_clock) ^ "\n\t\t: clock;\n") else "")
 	^
-	(if model.nb_discrete > 0 then
-		("\n\t" ^ (string_of_variables model.discrete) ^ "\n\t\t: discrete;\n") else "")
+	(string_of_discrete_variables model)
 	^
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")

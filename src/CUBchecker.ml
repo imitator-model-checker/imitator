@@ -3634,6 +3634,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		parameters_and_clocks = model.parameters_and_clocks;
 		(* The function = variable_index -> variable name *)
 		variable_names = model.variable_names;
+		(* All discrete variable names group by types *)
+		discrete_names_by_type_group = [];
 		(* The type of variables *)
 		type_of_variables = model.type_of_variables;
 		

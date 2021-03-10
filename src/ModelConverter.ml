@@ -1581,12 +1581,12 @@ let get_declared_variable_names variable_declarations =
   (clocks, discrete_rational, parameters, constants, unassigned_constants)
 
 (* Only get declared discrete variables with their specific types *)
-let get_declared_discrete_variable variable_declarations =
+let get_declared_discrete_variables_by_type variable_declarations =
     let get_discrete_variables_in_variable_declaration discretes_by_type (var_type, list_of_names) =
         let new_list, new_constants = get_variables_and_constants list_of_names in
         match var_type with
             | ParsingStructure.Var_type_discrete var_type_discrete ->
-                let new_list_discretes_by_type = List.map (fun variable_names -> (var_type, variable_names)) new_list in
+                let new_list_discretes_by_type = List.map (fun variable_names -> (convert_var_type var_type, variable_names)) new_list in
                 List.rev_append new_list_discretes_by_type discretes_by_type
             | _ ->
                 discretes_by_type
@@ -4630,7 +4630,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	unassigned_constants
 	= get_declared_variable_names parsed_model.variable_declarations in
 	(* Get the declared discrete variable names by type as a tuple of var_type * string list *)
-	let possibly_multiply_defined_discrete_names_by_type = get_declared_discrete_variable parsed_model.variable_declarations in
+	let possibly_multiply_defined_discrete_names_by_type = get_declared_discrete_variables_by_type parsed_model.variable_declarations in
 	(* Get the declared automata names *)
 	let declared_automata_names = get_declared_automata_names parsed_model.automata in
 	(* Get the declared synclabs names *)
@@ -4748,12 +4748,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let single_parameter_names = list_only_once possibly_multiply_defined_parameter_names in
 	let single_discrete_names_by_type = list_only_once possibly_multiply_defined_discrete_names_by_type in
 
-(*	for i = 0 to (List.length possibly_multiply_defined_discrete_names_by_type) - 1 do*)
-(*	    let t, n = List.nth possibly_multiply_defined_discrete_names_by_type i in*)
-(*	    let ct = convert_var_type t in*)
-(*	    print_string ("\n Type : " ^ (string_of_type ct) ^ ", Name : " ^ n);*)
-(*	done;*)
-
 	(*------------------------------------------------------------*)
 	(* Remove unused variables *)
 	(*------------------------------------------------------------*)
@@ -4790,14 +4784,18 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		let single_clock_names, removed_clock_names = remove_unused_variables_gen "clock" single_clock_names in
 		let single_discrete_names, removed_discrete_names = remove_unused_variables_gen "discrete" single_discrete_names in
 		let single_parameter_names, removed_parameter_names = remove_unused_variables_gen "parameter" single_parameter_names in
-		(* Remove unused variable names by type *)
+		(* Remove unused variable names by type in function of single_discrete_names content after auto remove *)
 		let single_discrete_names_by_type = List.filter (fun (var_type, variable_name) -> List.mem variable_name single_discrete_names) single_discrete_names_by_type in
 		(* Return and append removed variable names *)
 		let removed_variable_names = List.rev_append removed_clock_names (List.rev_append removed_discrete_names removed_parameter_names) in
 		single_clock_names, single_discrete_names, single_parameter_names, single_discrete_names_by_type, removed_variable_names
 	)
 	in
-	
+
+    (*  *)
+(*    let convert_discrete_names_by_type = List.map (fun (var_type, var_name) -> convert_var_type var_type, var_name) discrete_names_by_type in*)
+    (* Group variable names by types *)
+	let discrete_names_by_type_group = OCamlUtilities.group_by_and_map (fun (var_type, var_name) -> var_type) (fun (var_type, var_name) -> var_name) discrete_names_by_type in
 
 	(*------------------------------------------------------------*)
 	(* Special clocks *)
@@ -4942,8 +4940,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	    (* Remove offset, because array of var_type * variable_name for discrete start from 0 *)
         let var_type, v = List.nth discrete_names_by_type (i - first_discrete_index) in
         (* Convert var_type from ParsingStructure to AbstractModel *)
-		type_of_variables.(i) <- convert_var_type var_type;
+		type_of_variables.(i) <- var_type;
 
+        (* TODO benjamin remove, just for debug *)
 		print_message Verbose_standard ("Variable : " ^ v ^ " of " ^ (DiscreteValue.string_of_var_type type_of_variables.(i)))
 	done;
 	(* Functional representation *)
@@ -5861,6 +5860,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	parameters_and_clocks = list_append parameters clocks;
 	(* The function : variable_index -> variable name *)
 	variable_names = variable_names;
+	(* All discrete variable names group by types *)
+    discrete_names_by_type_group = discrete_names_by_type_group;
 	(* The type of variables *)
 	type_of_variables = type_of_variables;
 
