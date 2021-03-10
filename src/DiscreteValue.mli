@@ -1,3 +1,5 @@
+open Constants
+
 (* Specific type of number *)
 type var_type_discrete_number =
     | Var_type_discrete_rational
@@ -57,6 +59,7 @@ val equal_to_one : discrete_value -> bool
 val equal : discrete_value -> discrete_value -> bool
 val neq : discrete_value -> discrete_value -> bool
 
+val customized_string_of_value : customized_boolean_string -> discrete_value -> string
 val string_of_value : discrete_value -> string
 
 val add : discrete_value -> discrete_value -> discrete_value

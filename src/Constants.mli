@@ -139,6 +139,7 @@ type customized_boolean_string = {
 	neq_operator : string;
 	ge_operator  : string;
 	g_operator   : string;
+	not_operator : string;
 }
 
 (** Data structure allowing for customizing string conversions of arithmetic symbols *)

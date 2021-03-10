@@ -1,0 +1,67 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Boolean discrete variable update
+ * Description      : Test the update of boolean variable and conversion into Uppaal / Hytech models
+ * Correctness      : lend location is reachable
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Syntax, Computing, Conversion
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/03/04
+ * Last modified    : 2021/03/04
+ * Model version    : 0.1
+ *
+ * IMITATOR version : > 3.0.0
+ ************************************************************)
+var 
+    x = 0,
+        : clock;
+    b
+        : bool;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when b do { b := False } goto l2;
+
+loc l2: invariant True 
+	when (not (b)) do { b := 1 < 2 } goto lend;
+	
+accepting loc lend: invariant b
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        b := True
+    ;
+    continuous = 
+        & x >= 0
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

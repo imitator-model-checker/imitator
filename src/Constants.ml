@@ -150,6 +150,7 @@ type customized_boolean_string = {
 	neq_operator : string;
 	ge_operator  : string;
 	g_operator   : string;
+	not_operator : string;
 }
 
 (** Data structure allowing for customizing string conversions of arithmetic symbols *)
@@ -179,6 +180,7 @@ let default_string = {
 	neq_operator  = " <> ";
 	ge_operator   = " >= ";
 	g_operator    = " > ";
+	not_operator  = " not ";
 }
 
 (** Default string values of bool symbols without white spaces around operators *)
@@ -193,6 +195,7 @@ let default_string_without_whitespace = {
 	neq_operator  = "<>";
 	ge_operator   = ">=";
 	g_operator    = ">";
+	not_operator  = " not ";
 }
 
 (** Default string values of arithmetic symbols *)
