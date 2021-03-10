@@ -28,16 +28,22 @@ open Result
 (************************************************************)
 
 let uppaal_strings : customized_boolean_string = {
-	true_string   = "true";
-	false_string  = "false";
-	and_operator  = " &amp;&amp; ";
-	or_operator   = " or "; (* useless *)
-	l_operator    = " &lt; ";
-	le_operator   = " &lt;= ";
-	eq_operator   = " == ";
-	neq_operator   = " != ";
-	ge_operator   = " &gt;= ";
-	g_operator    = " &gt; ";
+	true_string     = "true";
+	false_string    = "false";
+	and_operator    = " &amp;&amp; ";
+	or_operator     = " or "; (* useless *)
+	l_operator      = " &lt; ";
+	le_operator     = " &lt;= ";
+	eq_operator     = " == ";
+	neq_operator    = " != ";
+	ge_operator     = " &gt;= ";
+	g_operator      = " &gt; ";
+	not_operator    = "!";
+}
+
+let all_uppaal_strings : customized_string = {
+    arithmetic_string = default_arithmetic_string;
+    boolean_string = uppaal_strings;
 }
 
 let uppaal_update_separator = ", "
@@ -45,10 +51,24 @@ let uppaal_update_separator = ", "
 let uppaal_assignment = " = "
 
 
-(* Positining *)
+(* Positioning *)
 let scaling_factor = 200
 
+(* Customized string of discrete number type *)
+let string_of_var_type_discrete_number = function
+    | DiscreteValue.Var_type_discrete_rational -> "int"
+    | DiscreteValue.Var_type_discrete_int -> "int"
 
+(* Customized string of discrete var type *)
+let string_of_var_type_discrete = function
+    | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
+    | DiscreteValue.Var_type_discrete_bool -> "bool"
+
+(* Customized string of var_type *)
+let string_of_var_type = function
+	| DiscreteValue.Var_type_clock -> "clock"
+	| DiscreteValue.Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
+	| DiscreteValue.Var_type_parameter -> "parameter"
 
 (************************************************************)
 (** Header *)
@@ -121,13 +141,14 @@ let string_of_discrete model =
 			(List.map (fun discrete_index ->
 				(* Get the name *)
 				let discrete_name = model.variable_names discrete_index in
-
+                let discrete_type = model.type_of_variables discrete_index in
 				(* Get the initial value *)
 				let inital_global_location  = model.initial_location in
 				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
-
+                let str_initial_value = DiscreteValue.customized_string_of_value uppaal_strings initial_value in
+                let str_type = string_of_var_type discrete_type in
 				(* Assign *)
-				"\nint " ^ discrete_name ^ " = " ^ (DiscreteValue.string_of_value initial_value) ^ ";"
+				"\n" ^ str_type ^ " " ^ discrete_name ^ " = " ^ str_initial_value ^ ";"
 			) model.discrete
 			)
 		)
@@ -374,7 +395,7 @@ let string_of_discrete_updates model updates =
 		(model.variable_names variable_index)
 		^ uppaal_assignment
 		(* Convert the arithmetic_expression *)
-		^ (DiscreteExpressions.string_of_global_expression model.variable_names global_expression)
+		^ (DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names global_expression)
 	) updates)
 
 

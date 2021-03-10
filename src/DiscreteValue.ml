@@ -1,3 +1,5 @@
+open Constants
+
 exception ComputingException (* Should never happen, if correctly checked before in ModelConverter *)
 
 type var_type_discrete_number =
@@ -136,10 +138,12 @@ let equal a b =
 let neq a b =
     not (equal a b)
 
-let string_of_value = function
+let customized_string_of_value customized_boolean_string = function
     | Rational_value x -> NumConst.string_of_numconst x
-    | Bool_value x -> if x then "True" else "False"
+    | Bool_value x -> if x then customized_boolean_string.true_string else customized_boolean_string.false_string
     | Int_value x -> Int32.to_string x
+
+let string_of_value = customized_string_of_value default_string
 
 let add a b =
     match a, b with

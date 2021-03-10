@@ -323,7 +323,7 @@ let string_of_boolean_operations customized_string = function
 let rec customized_string_of_boolean_expression customized_string variable_names = function
 	| True_bool -> customized_string.true_string
 	| False_bool -> customized_string.false_string
-	| Not_bool b -> "<> (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
+	| Not_bool b -> customized_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
 	| And_bool (b1, b2) ->
 		(customized_string_of_boolean_expression customized_string variable_names b1)
 		^ " && "

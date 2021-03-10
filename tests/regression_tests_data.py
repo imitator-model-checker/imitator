@@ -2160,11 +2160,110 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean constant is not assigning by other value than a boolean literal (semantic)',
-		'input_files': ['boolean_expressions/bool-constant-semantic-error.imi'],
+		'purpose'    : 'Test that a boolean variable is correctly updated (computing)',
+		'input_files': ['boolean_expressions/bool-discrete-var-update.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'bool-constant-semantic-error.res' , 'content' : """
+			{'file': 'bool-discrete-var-update.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test boolean variable update conversion to Uppaal (printing)',
+		'input_files': ['boolean_expressions/bool-discrete-var-update.imi'],
+		'options'    : '-imi2Uppaal',
+		'expectations' : [
+			{'file': 'bool-discrete-var-update-uppaal.xml' , 'content' : """
+/* Discrete variables declarations (WARNING: these variables can be rational-valued in IMITATOR, but they become integer-valued in Uppaal) */
+bool b = true;
+
+/* Action declarations */
+
+
+
+	/*------------------------------------------------------------*/
+	/* Initial constraint (not interpreted by Uppaal)             */
+	/*------------------------------------------------------------*/
+	 /* true */
+</declaration>
+
+<template><name x="0" y="0">pta</name><declaration>// No local declaration for automaton 'pta'
+</declaration>
+ 
+<location id="id_pta0_loc0" x="0" y="0">
+	<name x="0" y="-40">l1</name>
+	<label kind="invariant" x="0" y="40"></label></location>
+ 
+<location id="id_pta0_loc1" x="200" y="0">
+	<name x="200" y="-40">l2</name>
+	<label kind="invariant" x="200" y="40"></label></location>
+ 
+<location id="id_pta0_loc2" x="400" y="0">
+	<name x="400" y="-40">lend</name>
+	<label kind="invariant" x="400" y="40"> b</label></location>
+ <init ref="id_pta0_loc0"/>
+ 
+	<transition>
+		<source ref="id_pta0_loc0"/>
+		<target ref="id_pta0_loc1"/>
+		<label kind="guard" x="100" y="40"> b</label>
+		<label kind="assignment" x="100" y="-40">b = false</label>
+	</transition>
+	<transition>
+		<source ref="id_pta0_loc1"/>
+		<target ref="id_pta0_loc2"/>
+		<label kind="guard" x="300" y="40"> (! (b))</label>
+		<label kind="assignment" x="300" y="-40">b = 1 &lt; 2</label>
+	</transition>
+ </template>
+<system>
+// List one or more processes to be composed into a system.
+
+system pta;
+</system></nta>
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test that a boolean constant is initialized with consistant type (semantic)',
+		'input_files': ['boolean_expressions/bool-constant-init-type-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-constant-init-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test that a boolean variable is initialized with consistant type (semantic)',
+		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-variable-init-type-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file
