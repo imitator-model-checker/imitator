@@ -765,7 +765,7 @@ new_init_continuous_definition:
 
 
 new_init_discrete_expression:
-	| ampersand_opt new_init_discrete_expression_fol ampersand_opt { $2 }
+	| comma_opt new_init_discrete_expression_fol comma_opt { $2 }
 	| { [ ] }
 ;
 

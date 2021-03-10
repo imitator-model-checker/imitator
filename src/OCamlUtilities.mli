@@ -164,6 +164,9 @@ val string_of_array_of_string_with_sep : string -> string array -> string
 (** Convert a list of string into a string with separators (uses an internal conversion to array) *)
 val string_of_list_of_string_with_sep : string -> string list -> string
 
+(* Add \t identation of string according to the given level *)
+val indent_paragraph : int -> string -> string
+
 (** Convert a list of int into a string with , separator *)
 val string_of_list_of_int : int list -> string
 

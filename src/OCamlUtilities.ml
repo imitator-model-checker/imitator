@@ -385,6 +385,11 @@ let string_of_list_of_int l =
 (*** WARNING: the behavior of this function is odd (when sep=";;" or "£"; bug hidden here? ***)
 let split sep = Str.split (Str.regexp ("[" ^ sep ^ "]"))
 
+(* Add \t identation of string according to the given level *)
+let indent_paragraph indent_level s =
+    let str_tabulations = string_n_times indent_level "\t" in
+    let lines = split "\n" s in
+    List.fold_left (fun the_string line -> the_string ^ str_tabulations ^ line) "" lines
 
 (** 's_of_int i' Return "s" if i > 1, "" otherwise *)
 let s_of_int i =
