@@ -4,11 +4,11 @@
  * Title            : infinite:5
  * Description      : Toy benchmark for which there exists an infinite accepting run for all p>=5 but IMITATOR cannot find it
  * Correctness      : 
- * Scalable         : 
- * Generated        : 
+ * Scalable         : no
+ * Generated        : no
  * Categories       : Academic ; Toy ; Unsolvable
  * Source           : Iterative Bounded Synthesis for Efficient Cycle Detection in Parametric Timed Automata, Fig. 3a
- * bibkey           : 
+ * bibkey           : [AAPP21]
  * Author           : Étienne André, Jaime Arias, Laure Petrucci, Jaco van de Pol
  * Modeling         : Dylan Marinho
  * Input by         : Dylan Marinho
