@@ -194,6 +194,7 @@ let string_of_properties =
 
 let rec string_of_strings_with_sep_and string_list =
 	match string_list with
+	| [] -> ""
 	| (elem::[]) -> elem
 	| (elem::q) -> 
 				  "\t\t\t\t\t\t\t{\"op\": \"" ^ jani_strings.and_operator ^ "\"" ^ jani_separator ^ "\n"
