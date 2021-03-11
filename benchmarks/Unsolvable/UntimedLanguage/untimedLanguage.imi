@@ -4,15 +4,15 @@
  * Title            : untimedLanguage
  * Description      : Toy benchmark for which the associated language is untimed (a^n.b^n.c^n)
  * Correctness      : Reachability
- * Scalable         : 
- * Generated        : 
+ * Scalable         : no
+ * Generated        : no
  * Categories       : Academic ; Toy ; Unsolvable
  * Source           : André É., Lime D., Roux O.H. (2016) On the Expressiveness of Parametric Timed Automata. In: Fränzle M., Markey N. (eds) Formal Modeling and Analysis of Timed Systems. FORMATS 2016. Lecture Notes in Computer Science, vol 9884. Springer, Cham. https://doi.org/10.1007/978-3-319-44878-7_2. Fig 2
  * bibkey           : ALR16
  * Author           : Étienne André
  * Modeling         : Dylan Marinho
  * Input by         : Dylan Marinho
- * License          : 
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : 2021/01/22
  * Last modified    : 2021/01/22
