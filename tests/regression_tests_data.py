@@ -2276,6 +2276,23 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test that a boolean variable is updated with a consistent typed expression (semantic)',
+		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-variable-update-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test updates (state space)',
 		'input_files': ['testUpdates.imi'],
 		'options'    : '-mode statespace -depth-limit 4 -states-description',

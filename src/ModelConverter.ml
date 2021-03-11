@@ -142,6 +142,107 @@ let numconst_value_or_fail = function
     | DiscreteValue.Rational_value x -> x
     | _ -> raise (InternalError ("Constant and variables should be rational in a linear term"))
 
+
+(* String of a parsed expression *)
+(* Used for error message on type checking *)
+let string_of_parsed_global_expression useful_parsing_model_information expr =
+
+    (* Get constants *)
+    let constants = useful_parsing_model_information.constants in
+    let variable_names = useful_parsing_model_information.variable_names in
+
+    let rec string_of_parsed_global_expression_rec = function
+        | Parsed_global_expression expr -> string_of_parsed_boolean_expression expr
+
+    and string_of_parsed_arithmetic_expression = function
+        | Parsed_DAE_plus (arithmetic_expr, term) ->
+                (string_of_parsed_arithmetic_expression arithmetic_expr) ^
+                " + " ^
+                (string_of_parsed_term term)
+        | Parsed_DAE_minus (arithmetic_expr, term) ->
+                (string_of_parsed_arithmetic_expression arithmetic_expr) ^
+                " - " ^
+                (string_of_parsed_term term)
+        | Parsed_DAE_term term ->
+            string_of_parsed_term term
+
+    and string_of_parsed_term = function
+        | Parsed_DT_mul (term, factor) ->
+                (string_of_parsed_term term) ^
+                " * " ^
+                (string_of_parsed_factor factor)
+        | Parsed_DT_div (term, factor) ->
+                (string_of_parsed_term term) ^
+                " / " ^
+                (string_of_parsed_factor factor)
+        | Parsed_DT_factor factor ->
+            string_of_parsed_factor factor
+
+    and string_of_parsed_factor = function
+        | Parsed_DF_variable variable_name ->
+            if (Hashtbl.mem constants variable_name) then (
+                (* Retrieve the value of the global constant *)
+                let value = Hashtbl.find constants variable_name in
+                DiscreteValue.string_of_value value
+            ) else
+                variable_name
+        | Parsed_DF_constant value -> DiscreteValue.string_of_value value
+        | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression arithmetic_expr
+        | Parsed_DF_unary_min factor ->
+            "-(" ^ (string_of_parsed_factor factor) ^ ")"
+
+    and string_of_parsed_boolean_expression = function
+	    | Parsed_True -> "True"
+	    | Parsed_False -> "False"
+	    | Parsed_And (l_expr, r_expr) ->
+                (string_of_parsed_boolean_expression l_expr) ^
+                " & " ^
+                (string_of_parsed_boolean_expression r_expr)
+	    | Parsed_Or (l_expr, r_expr) ->
+                (string_of_parsed_boolean_expression l_expr) ^
+                " | " ^
+                (string_of_parsed_boolean_expression r_expr)
+	    | Parsed_Not expr ->
+	            "not (" ^ (string_of_parsed_boolean_expression expr) ^ ")"
+	    | Parsed_Discrete_boolean_expression expr ->
+	        string_of_parsed_discrete_boolean_expression expr
+
+    and string_of_parsed_discrete_boolean_expression = function
+        | Parsed_arithmetic_expression expr ->
+            string_of_parsed_arithmetic_expression expr
+        | Parsed_expression (l_expr, relop, r_expr) ->
+            string_of_parsed_relop
+                relop
+                (string_of_parsed_arithmetic_expression l_expr)
+                (string_of_parsed_arithmetic_expression r_expr)
+        | Parsed_expression_in (expr1, expr2, expr3) ->
+		    (* Compute the first one to avoid redundancy *)
+		    let str_expr1 = string_of_parsed_arithmetic_expression expr1 in
+		    let str_expr2 = string_of_parsed_arithmetic_expression expr2 in
+		    let str_expr3 = string_of_parsed_arithmetic_expression expr3 in
+		    str_expr1 ^ " in [" ^ str_expr2 ^ ".." ^ str_expr3 ^ "]"
+        | Parsed_boolean_expression expr ->
+            string_of_parsed_boolean_expression expr
+        | Parsed_DB_variable variable_name ->
+            if (Hashtbl.mem constants variable_name) then (
+                (* Retrieve the value of the global constant *)
+                let value = Hashtbl.find constants variable_name in
+                DiscreteValue.string_of_value value
+            ) else
+                variable_name
+
+    and string_of_parsed_relop relop value_1 value_2 =
+        	match relop with
+        	| PARSED_OP_L		-> value_1 ^ " < " ^ value_2
+        	| PARSED_OP_LEQ	    -> value_1 ^ " <= " ^ value_2
+        	| PARSED_OP_EQ		-> value_1 ^ " = " ^ value_2
+        	| PARSED_OP_NEQ	    -> value_1 ^ " <> " ^ value_2
+        	| PARSED_OP_GEQ	    -> value_1 ^ " >= " ^ value_2
+        	| PARSED_OP_G		-> value_1 ^ " > " ^ value_2
+
+    in
+    string_of_parsed_global_expression_rec expr
+
 (* Try to resolve the specific type of an arithmetic expression according to literals and variables used *)
 let resolve_expression_type useful_parsing_model_information expr =
 
@@ -318,6 +419,36 @@ let try_reduce_parsed_global_expression useful_parsing_model_information expr =
     in
     try_reduce_parsed_global_expression_rec expr
 
+(* Check that an expression assigned to a variable is of the same type *)
+(* If not, raise a TypeError exception with an error message *)
+let check_assignment_type_consistency useful_parsing_model_information variable_name expr =
+
+    (* Function that construct message error *)
+    let get_error_message variable_name variable_type expr_type expr =
+        "Variable "
+        ^ variable_name
+        ^ " of type "
+        ^ (DiscreteValue.string_of_var_type variable_type)
+        ^ " is not compatible with expression : \""
+        ^ (string_of_parsed_global_expression useful_parsing_model_information expr)
+        ^ "\""
+        ^ " of type "
+        ^ (DiscreteValue.string_of_var_type expr_type)
+    in
+    (* Get useful elements of model *)
+    let type_of_variables = useful_parsing_model_information.type_of_variables in
+    let index_of_variables = useful_parsing_model_information.index_of_variables in
+    (* Get the variable index *)
+    let discrete_index = Hashtbl.find index_of_variables variable_name in
+    (* Get variable type *)
+    let variable_type = type_of_variables discrete_index in
+    (* Resolve expression type *)
+    let expression_type = resolve_expression_type useful_parsing_model_information expr in
+    (* Check expression / variable type consistency *)
+    if variable_type <> expression_type then
+        raise (TypeError (get_error_message variable_name variable_type expression_type expr))
+    else
+        true
 
 (*** TODO: these 'get' functions could be merged with the 'check' functions 'check_automata' ***)
 
@@ -2051,7 +2182,6 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			end
         | Parsed_discrete_predicate (variable_name, expr) ->
             begin
-                (* TODO benjamin : check for variable assignment *)
                 let variable_names_in_assignment = variable_name :: variable_names in
                 if not (all_variables_defined_in_parsed_global_expression variable_names_in_assignment constants expr) then well_formed := false;
             end
@@ -2192,16 +2322,16 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			    print_error ("The discrete variable `" ^ variable_name ^ "` is given an initial value several times in the init definition.");
 			    well_formed := false;
 			) else (
-			    (* Check expression type consistency *)
-			    let variable_type = type_of_variables discrete_index in
-			    let expression_type = resolve_expression_type useful_parsing_model_information expr in
-                if variable_type <> expression_type then
-                    raise (TypeError ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type variable_type) ^ " is not compatible with expression "))
-                else ();
+			    (* Check expression / variable type consistency *)
+                check_assignment_type_consistency useful_parsing_model_information variable_name expr;
+
 			    (* Try to reduce expression to a value *)
 			    let discrete_value = try_reduce_parsed_global_expression useful_parsing_model_information expr in
 			    (* Check computed value type consistency *)
                 let discrete_value_type = DiscreteValue.var_type_of_value discrete_value in
+                (* Get variable type *)
+                let variable_type = type_of_variables discrete_index in
+
                 if variable_type <> discrete_value_type then
                     raise (TypeError ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type variable_type) ^ " is not compatible with a " ^ (DiscreteValue.string_of_var_type discrete_value_type) ^ " value"))
                 else
@@ -2211,7 +2341,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 		| _ -> raise (InternalError ("Must have this form since it was checked before."))
 		) discrete_init;
 
-	(* Check that every discrete variable is given at least one (rational) initial value (if not: warns) *)
+	(* Check that every discrete variable is given at least one initial value (if not: warns) *)
 	List.iter (fun discrete_index ->
 		if not (Hashtbl.mem init_values_for_discrete discrete_index) then(
 		    let variable_name = List.nth variable_names discrete_index in
@@ -2860,9 +2990,12 @@ let filtered_updates removed_variable_names updates =
 
 (** Translate a parsed discrete update into its abstract model *)
 let to_abstract_discrete_update useful_parsing_model_information (variable_name, parsed_update_expression) =
-  let variable_index = Hashtbl.find useful_parsing_model_information.index_of_variables variable_name in
-  let global_expression = convert_parsed_global_expression useful_parsing_model_information parsed_update_expression in
-  (variable_index, global_expression)
+    (* Check type consistency of discrete updates *)
+    check_assignment_type_consistency useful_parsing_model_information variable_name parsed_update_expression;
+    (* Convert *)
+    let variable_index = Hashtbl.find useful_parsing_model_information.index_of_variables variable_name in
+    let global_expression = convert_parsed_global_expression useful_parsing_model_information parsed_update_expression in
+    (variable_index, global_expression)
 
 (** Translate a parsed clock update into its abstract model *)
 let to_abstract_clock_update index_of_variables constants only_resets updates_list =
@@ -4651,10 +4784,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		)*) action_names
 	) in
 
+
+    let constant_tuples = constants in
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Make the array of constants *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let (constants : (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t), constants_consistent = make_constants constants in
+
+
 
 	if verbose_mode_greater Verbose_high then(
 		(* Constants *)
@@ -5099,6 +5236,25 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	let init_discrete_pairs, well_formed_init = check_init useful_parsing_model_information parsed_model.init_definition observer_automaton_index_option in
 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check the constants inits *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+    print_message Verbose_high ("*** Checking constant inits…");
+
+    (* Check constants type consistency *)
+    (*
+    let check_constant_type_consistency (name, value) =
+        let variable_index = Hashtbl.find useful_parsing_model_information.index_of_variables name in
+        let constant_type = useful_parsing_model_information.type_of_variables variable_index in
+        let value_type = DiscreteValue.var_type_of_value value in
+        if constant_type <> value_type then (
+            print_error ("Type error on constant"); false
+        )
+        else
+            true
+    in
+    let is_constant_type_consistent = List.for_all check_constant_type_consistency constant_tuples in
+    *)
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check projection definition *)

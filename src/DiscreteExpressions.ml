@@ -318,7 +318,6 @@ let string_of_boolean_operations customized_string = function
 	| OP_G		-> customized_string.g_operator
 
 (* TODO benjamin ref in ModelPrinter *)
-(* TODO replace operator by customized_string *)
 (** Convert a Boolean expression into a string *)
 let rec customized_string_of_boolean_expression customized_string variable_names = function
 	| True_bool -> customized_string.true_string
