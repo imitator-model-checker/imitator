@@ -40,7 +40,7 @@ synclabs: ;
 
 loc l0: invariant x <= 1 & y <= p
 	when x >= 1 do {x := 0} goto l0;
-	when y >= 2 do {x := 0, y := 0} goto lGoal;
+	when y >= 2 goto lGoal;
 
 accepting loc lGoal: invariant True
 	when True goto lGoal;
