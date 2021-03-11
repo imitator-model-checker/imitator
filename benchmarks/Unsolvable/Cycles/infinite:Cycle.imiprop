@@ -2,7 +2,7 @@
  *                                IMITATOR MODEL
  *
  * Title            : infinite loop
- * Description      : Toy benchmark for which there exists an infinite accepting run
+ * Description      : Toy benchmark for which there exists an infinite run
  * Categories       : Academic ; Unsolvable
  * Source           : Iterative Bounded Synthesis for Efficient Cycle Detection in Parametric Timed Automata, Fig. 1
  * Author           : Étienne André, Jaime Arias, Laure Petrucci, Jaco van de Pol
