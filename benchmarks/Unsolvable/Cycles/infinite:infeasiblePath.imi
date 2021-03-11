@@ -2,17 +2,17 @@
  *                                IMITATOR MODEL                               
  * 
  * Title            : infinite:infeasiblePath
- * Description      : Toy benchmark for which the PZG has an infinite path but where the PTA infinite path is infeasible
+ * Description      : Toy benchmark for which the PZG has an infinite path but where the PTA infinite path is infeasible. NOTE: principle similar to `exU-noloop.imi`
  * Correctness      : 
- * Scalable         : 
- * Generated        : 
+ * Scalable         : no
+ * Generated        : no
  * Categories       : Academic ; Toy ; Unsolvable
  * Source           : Iterative Bounded Synthesis for Efficient Cycle Detection in Parametric Timed Automata, Fig. 4
- * bibkey           : 
+ * bibkey           : [AAPP21]
  * Author           : Étienne André, Jaime Arias, Laure Petrucci, Jaco van de Pol
  * Modeling         : Dylan Marinho
  * Input by         : Dylan Marinho
- * License          : 
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : 2021/01/21
  * Last modified    : 2021/01/21

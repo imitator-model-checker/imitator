@@ -4,15 +4,15 @@
  * Title            : infinite:Rplus
  * Description      : Toy benchmark for which there exists an infinite accepting run for p>=0; q=0
  * Correctness      : 
- * Scalable         : 
- * Generated        : 
+ * Scalable         : no
+ * Generated        : no
  * Categories       : Academic ; Toy ; Unsolvable
  * Source           : Own work
  * bibkey           : 
  * Author           : Jaco van de Pol
  * Modeling         : Dylan Marinho and Jaco van de Pol
  * Input by         : Dylan Marinho
- * License          : 
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : 2021/01/21
  * Last modified    : 2021/01/21

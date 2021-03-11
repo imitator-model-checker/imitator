@@ -4,21 +4,21 @@
  * Title            : exU-noloop-infinity
  * Description      : U-PTA for which there exists a loop in the trace set of p=infinity, but not for any actual parameter valuation. Version with p=infinity.
  * Correctness      : 
- * Scalable         : 
- * Generated        : 
+ * Scalable         : no
+ * Generated        : no
  * Categories       : Toy
  * Source           : Didier Lime
  * bibkey           : 
  * Author           : Didier Lime
  * Modeling         : Étienne André
  * Input by         : Étienne André
- * License          : 
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : 2015/09/30
  * Last modified    : 2020/08/14
  * Model version    : 
  * 
- * IMITATOR version : 
+ * IMITATOR version : 3
  ******************************************************************************)
 
 var
