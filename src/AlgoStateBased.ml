@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2021/02/05
+ * Last modified     : 2021/03/11
  *
  ************************************************************)
 
@@ -2309,27 +2309,38 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	(* Print some information *)
 	print_message Verbose_high ("Trying to make the valuation more friendly…");
 	
-	let concrete_target_px_valuation_before_time_elapsing = 
-	(* If intersection is empty, find new valuation *)
-	if LinearConstraint.px_is_false (
-		LinearConstraint.px_intersection[
-			LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , concrete_target_px_valuation variable_index) model.parameters_and_clocks)
-			;
-			z_n_plus_1
-		]
-	) then(
-		(* Print some information *)
-		print_message Verbose_high ("Oops! Intersection of the chosen point with z_n_plus_1 is empty… re-choose a valuation within z_n_plus_1…");
+	let concrete_target_px_valuation_before_time_elapsing =
+		let recomputation_needed =
+		(* If some non-1 flow clocks: might be wrong the keep the valuation, so recompute it (2021/03/11) *)
+		if model.has_non_1rate_clocks then(
+			(* Print some information *)
+			print_message Verbose_high ("Oops! Non-1 flow clocks detected: better recompute a valuation within z_n_plus_1…");
+			true
+		)else(
+			(* If intersection is empty, find new valuation *)
+			if LinearConstraint.px_is_false (
+				LinearConstraint.px_intersection[
+					LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , concrete_target_px_valuation variable_index) model.parameters_and_clocks)
+					;
+					z_n_plus_1
+				]
+			) then(
+			(* Print some information *)
+			print_message Verbose_high ("Oops! Intersection of the chosen point with z_n_plus_1 is empty… re-choose a valuation within z_n_plus_1…");
+			true
+			) else false
+		) in
 		
-		(* Re-choose a valuation in this constraint *)
-		LinearConstraint.px_exhibit_point z_n_plus_1
-	(* Otherwise, keep the original valuation *)
-	)else(
-		(* Print some information *)
-		print_message Verbose_high ("Intersection of the chosen point with z_n_plus_1 is non-empty… keep it.");
+		if recomputation_needed then(
+			(* Re-choose a valuation in this constraint *)
+			LinearConstraint.px_exhibit_point z_n_plus_1
+		(* Otherwise, keep the original valuation *)
+		)else(
+			(* Print some information *)
+			print_message Verbose_high ("Intersection of the chosen point with z_n_plus_1 is non-empty… keep it.");
 
-		concrete_target_px_valuation
-	)
+			concrete_target_px_valuation
+		)
 	in
 	
 	(* Print some information *)
