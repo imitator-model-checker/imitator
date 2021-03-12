@@ -1,12 +1,12 @@
 (*******************************************************************************
  *                                IMITATOR MODEL                               
  * 
- * Title            : exU-noloop-infinity
- * Description      : U-PTA for which there exists a loop in the trace set of p=infinity, but not for any actual parameter valuation. Version with p=infinity.
+ * Title            : exU-noloop
+ * Description      : U-PTA for which there exists a loop in the trace set of p=infinity, but not for any actual parameter valuation. NOTE: principle similar to `infinite:infeasiblePath.imi`
  * Correctness      : 
  * Scalable         : no
  * Generated        : no
- * Categories       : Toy
+ * Categories       : Toy ; Unsolvable
  * Source           : Didier Lime
  * bibkey           : 
  * Author           : Didier Lime
@@ -28,8 +28,8 @@ var
 		: clock;
 
 (* Parameters *)
-(*	p
-		: parameter;*)
+	p
+		: parameter;
 
 
 
@@ -38,9 +38,9 @@ var
 (************************************************************)
 synclabs: ;
 
-loc l1: invariant True (*y <= p*)
+loc l1: invariant y <= p
 	when x = 1 do {x := 0} goto l1;
-	when True (*y <= p*) goto l2;
+	when y <= p goto l2;
 
 loc l2: invariant True
 end (* pta *)
@@ -66,7 +66,7 @@ init :=
 	(*------------------------------------------------------------*)
 	(* Parameter constraints *)
 	(*------------------------------------------------------------*)
-(* 	& p >= 0 *)
+	& p >= 0
 ;
 
 
