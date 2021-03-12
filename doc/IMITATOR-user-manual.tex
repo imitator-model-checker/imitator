@@ -1002,23 +1002,20 @@ list via the \styleOption{-pending-order} option:
 \paragraph{Accepting cycle (NDFS) with iterative deepening}\label{sss:accepting-loop-NDFS-iterative}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-The NDFS algorithm described above with all its options
-can also be applied
-in an iterative manner, based on depth limits. Each iteration explores a deeper state
-space, taking advantage of the previous computation. The iterations are applied until
-either the exact constraint is found or a limit is reached. This iterative analysis
-uses the following options :
+The NDFS algorithm described above with all its options can also be applied in an iterative manner, based on depth limits.
+Each iteration explores a deeper state space, taking advantage of the previous computation.
+The iterations are applied until either the exact constraint is found or a limit is reached.
+This iterative analysis uses the following options:
 
 \begin{description}
 	\item[\styleOption{-depth-init}] allows for starting this iterative computing by indicating
 	      the initial depth limit to be used;
 	\item[\styleOption{-depth-limit}] is the maximal depth at which the last iteration
-	      will be run.
-	\item[\styleOption{-depth-step}] indicates the step between the depths of two iterations;
+	      will be run;
+	\item[\styleOption{-depth-step}] indicates the step between the depths of two iterations.
 \end{description}
 
-The results obtained at each iteration are displayed, thus giving valuable information
-to the user.
+The results obtained at each iteration are displayed, thus giving valuable information to the user.
 
 
 
