@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/02/09
+# Last modified     : 2021/03/12
 #************************************************************
 
 
@@ -6653,6 +6653,118 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test only `accepting` keyword: Loop',
 		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/03/12
+		# Last modified            : 2021/03/12
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: Loop [alias AccCycle]',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred-acccycle.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/03/12
+		# Last modified            : 2021/03/12
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: Loop [alias AcceptingCycle]',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred-acceptingcycle.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/03/12
+		# Last modified            : 2021/03/12
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: Loop [alias AccLoop]',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred-accloop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/03/12
+		# Last modified            : 2021/03/12
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: Loop [alias AcceptingLoop]',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred-acceptingloop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testEFaccepting.res' , 'content' : """
