@@ -2,12 +2,12 @@
  *                                IMITATOR MODEL                               
  * 
  * Title            : infinite:noSolution
- * Description      : Toy benchmark for which there not exists any infinite accepting run for any value of p
+ * Description      : Toy benchmark for which the PZG has an infinite path but where the PTA infinite path is infeasible, i.e., there not exists any infinite accepting run for any value of p. NOTE: principle similar to `exU-noloop.imi`
  * Correctness      : 
  * Scalable         : no
  * Generated        : no
  * Categories       : Academic ; Toy ; Unsolvable
- * Source           : Étienne André, Jaime Arias, Laure Petrucci, Jaco van de Pol. "Iterative Bounded Synthesis for Efficient Cycle Detection in Parametric Timed Automata", TACAS 2021. Fig. 1
+ * Source           : Étienne André, Jaime Arias, Laure Petrucci, Jaco van de Pol. "Iterative Bounded Synthesis for Efficient Cycle Detection in Parametric Timed Automata", TACAS 2021. Fig. 4
  * bibkey           : [AAPP21]
  * Author           : Jaco van de Pol
  * Modeling         : Jaco van de Pol
@@ -38,8 +38,8 @@ var
 (************************************************************)
 synclabs: a;
 
-accepting loc l1: invariant x <= 1 & y <= p
-    when x >= 1 do {x := 0} goto l1;
+accepting loc l0: invariant x <= 1 & y <= p
+    when x >= 1 do {x := 0} goto l0;
 
 end (* pta *)
 
@@ -53,7 +53,7 @@ init :=
 	(*------------------------------------------------------------*)
 	(* Initial location *)
 	(*------------------------------------------------------------*)
-	& loc[pta] = l1
+	& loc[pta] = l0
 
 	(*------------------------------------------------------------*)
 	(* Initial clock constraints *)
