@@ -7,10 +7,10 @@
  * Scalable         : no
  * Generated        : no
  * Categories       : Academic ; Toy ; Unsolvable
- * Source           : Own work
- * bibkey           : 
+ * Source           : Étienne André, Jaime Arias, Laure Petrucci, Jaco van de Pol. "Iterative Bounded Synthesis for Efficient Cycle Detection in Parametric Timed Automata", TACAS 2021. Fig. 1
+ * bibkey           : [AAPP21]
  * Author           : Jaco van de Pol
- * Modeling         : Dylan Marinho and Jaco van de Pol
+ * Modeling         : Jaco van de Pol
  * Input by         : Dylan Marinho
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
