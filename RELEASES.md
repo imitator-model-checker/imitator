@@ -2,6 +2,9 @@
 # FUTURE release XXX (202X-XX-XX) Cheese
 minor release
 
+### Syntax changes in the property
+* `property := AcceptingCycle` now allowed as a shortcut for `property := CycleThrough(accepting)`
+
 ### Result
 * IMITATOR now attempts to generate a result (`.res`) file even in the case of an error such as parsing error of the model or of the property
 

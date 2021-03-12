@@ -860,8 +860,9 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by location matching an accepting condition.
 Such accepting conditions are given in the form of a state predicate, \ie{} a conjunction or disjunction of locations and values for discrete variables.
+The keyword \styleIMI{accepting} can also be used for accepting locations, as defined in the model (see \cref{remark:accepting}).
 
-\imitator{} implements two algorithms to this goal:
+\imitator{} implements two main algorithms to perform parametric cycle synthesis:
 \begin{enumerate}
 	\item a basic BFS algorithm using a variant of Tarjan's strongly connected components algorithm~\cite{AAPP21} (\cref{sss:accepting-loop-BFS}); and
 	\item an NDFS algorithm with several options~\cite{NPP18,AAPP21} (\cref{sss:accepting-loop-NDFS}).
@@ -874,6 +875,20 @@ In both cases, the property syntax is as follows:
 %------------------------------------------------------------
 \begin{syntaxalias}
 	\imitator{} accepts \styleIMI{LoopThrough} as an equivalent keyword for \styleIMI{CycleThrough}.
+\end{syntaxalias}
+%------------------------------------------------------------
+
+%------------------------------------------------------------
+\begin{syntaxalias}
+	For accepting cycles specified only using accepting locations as defined in the model, one can use:
+	
+	\styleIMI{property := \#synth AcceptingCycle;}
+
+	This is syntactic sugar for the following property:
+
+	\styleIMI{property := \#synth CycleThrough(accepting);}
+
+	In addition, \imitator{} accepts the \styleIMI{AccCycle}, \styleIMI{AcceptingLoop} and \styleIMI{AccLoop} keywords as an equivalent for \styleIMI{AcceptingCycle}.
 \end{syntaxalias}
 %------------------------------------------------------------
 
@@ -3014,6 +3029,18 @@ We define each of those two components below.
 
 	% Cycles
 
+	$|$ & \styleIMI{AccCycle}
+		\commentgrammar{alias for \styleIMI{CycleThrough(accepting)}}
+	\\
+	$|$ & \styleIMI{AcceptingCycle}
+		\commentgrammar{alias for \styleIMI{CycleThrough(accepting)}}
+	\\
+	$|$ & \styleIMI{AccLoop}
+		\commentgrammar{alias for \styleIMI{CycleThrough(accepting)}}
+	\\
+	$|$ & \styleIMI{AcceptingLoop}
+		\commentgrammar{alias for \styleIMI{CycleThrough(accepting)}}
+	\\
 	$|$ & \styleIMI{Cycle}                                                                                                \\
 	$|$ & \styleIMI{Loop}
 		\commentgrammar{alias for \styleIMI{Cycle}}
