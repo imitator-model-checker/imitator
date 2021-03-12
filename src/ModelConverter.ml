@@ -145,107 +145,115 @@ let numconst_value_or_fail = function
 
 (* String of a parsed expression *)
 (* Used for error message on type checking *)
-let rec string_of_parsed_global_expression useful_parsing_model_information expr =
+let rec string_of_parsed_global_expression model = function
+    | Parsed_global_expression expr -> string_of_parsed_boolean_expression model expr
 
-    (* Get constants *)
-    let constants = useful_parsing_model_information.constants in
+and string_of_parsed_arithmetic_expression model = function
+    | Parsed_DAE_plus (arithmetic_expr, term) ->
+            (string_of_parsed_arithmetic_expression model arithmetic_expr) ^
+            " + " ^
+            (string_of_parsed_term model term)
+    | Parsed_DAE_minus (arithmetic_expr, term) ->
+            (string_of_parsed_arithmetic_expression model arithmetic_expr) ^
+            " - " ^
+            (string_of_parsed_term model term)
+    | Parsed_DAE_term term ->
+        string_of_parsed_term model term
 
-    let rec string_of_parsed_global_expression_rec = function
-        | Parsed_global_expression expr -> string_of_parsed_boolean_expression expr
+and string_of_parsed_term model = function
+    | Parsed_DT_mul (term, factor) ->
+            (string_of_parsed_term model term) ^
+            " * " ^
+            (string_of_parsed_factor model factor)
+    | Parsed_DT_div (term, factor) ->
+            (string_of_parsed_term model term) ^
+            " / " ^
+            (string_of_parsed_factor model factor)
+    | Parsed_DT_factor factor ->
+        string_of_parsed_factor model factor
 
-    and string_of_parsed_arithmetic_expression = function
-        | Parsed_DAE_plus (arithmetic_expr, term) ->
-                (string_of_parsed_arithmetic_expression arithmetic_expr) ^
-                " + " ^
-                (string_of_parsed_term term)
-        | Parsed_DAE_minus (arithmetic_expr, term) ->
-                (string_of_parsed_arithmetic_expression arithmetic_expr) ^
-                " - " ^
-                (string_of_parsed_term term)
-        | Parsed_DAE_term term ->
-            string_of_parsed_term term
+and string_of_parsed_factor model = function
+    | Parsed_DF_variable variable_name ->
+        if (Hashtbl.mem model.constants variable_name) then (
+            (* Retrieve the value of the global constant *)
+            let value = Hashtbl.find model.constants variable_name in
+            DiscreteValue.string_of_value value
+        ) else
+            variable_name
+    | Parsed_DF_constant value -> DiscreteValue.string_of_value value
+    | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression model arithmetic_expr
+    | Parsed_DF_unary_min factor ->
+        "-(" ^ (string_of_parsed_factor model factor) ^ ")"
 
-    and string_of_parsed_term = function
-        | Parsed_DT_mul (term, factor) ->
-                (string_of_parsed_term term) ^
-                " * " ^
-                (string_of_parsed_factor factor)
-        | Parsed_DT_div (term, factor) ->
-                (string_of_parsed_term term) ^
-                " / " ^
-                (string_of_parsed_factor factor)
-        | Parsed_DT_factor factor ->
-            string_of_parsed_factor factor
+and string_of_parsed_boolean_expression model = function
+    | Parsed_True -> "True"
+    | Parsed_False -> "False"
+    | Parsed_And (l_expr, r_expr) ->
+            (string_of_parsed_boolean_expression model l_expr) ^
+            " & " ^
+            (string_of_parsed_boolean_expression model r_expr)
+    | Parsed_Or (l_expr, r_expr) ->
+            (string_of_parsed_boolean_expression model l_expr) ^
+            " | " ^
+            (string_of_parsed_boolean_expression model r_expr)
+    | Parsed_Not expr ->
+            "not (" ^ (string_of_parsed_boolean_expression model expr) ^ ")"
+    | Parsed_Discrete_boolean_expression expr ->
+        string_of_parsed_discrete_boolean_expression model expr
 
-    and string_of_parsed_factor = function
-        | Parsed_DF_variable variable_name ->
-            if (Hashtbl.mem constants variable_name) then (
-                (* Retrieve the value of the global constant *)
-                let value = Hashtbl.find constants variable_name in
-                DiscreteValue.string_of_value value
-            ) else
-                variable_name
-        | Parsed_DF_constant value -> DiscreteValue.string_of_value value
-        | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression arithmetic_expr
-        | Parsed_DF_unary_min factor ->
-            "-(" ^ (string_of_parsed_factor factor) ^ ")"
+and string_of_parsed_discrete_boolean_expression model = function
+    | Parsed_arithmetic_expression expr ->
+        string_of_parsed_arithmetic_expression model expr
+    | Parsed_expression (l_expr, relop, r_expr) ->
+        string_of_parsed_relop
+            relop
+            (string_of_parsed_arithmetic_expression model l_expr)
+            (string_of_parsed_arithmetic_expression model r_expr)
+    | Parsed_expression_in (expr1, expr2, expr3) ->
+        (* Compute the first one to avoid redundancy *)
+        let str_expr1 = string_of_parsed_arithmetic_expression model expr1 in
+        let str_expr2 = string_of_parsed_arithmetic_expression model expr2 in
+        let str_expr3 = string_of_parsed_arithmetic_expression model expr3 in
+        str_expr1 ^ " in [" ^ str_expr2 ^ ".." ^ str_expr3 ^ "]"
+    | Parsed_boolean_expression expr ->
+        string_of_parsed_boolean_expression model expr
+    | Parsed_DB_variable variable_name ->
+        if (Hashtbl.mem model.constants variable_name) then (
+            (* Retrieve the value of the global constant *)
+            let value = Hashtbl.find model.constants variable_name in
+            DiscreteValue.string_of_value value
+        ) else
+            variable_name
 
-    and string_of_parsed_boolean_expression = function
-	    | Parsed_True -> "True"
-	    | Parsed_False -> "False"
-	    | Parsed_And (l_expr, r_expr) ->
-                (string_of_parsed_boolean_expression l_expr) ^
-                " & " ^
-                (string_of_parsed_boolean_expression r_expr)
-	    | Parsed_Or (l_expr, r_expr) ->
-                (string_of_parsed_boolean_expression l_expr) ^
-                " | " ^
-                (string_of_parsed_boolean_expression r_expr)
-	    | Parsed_Not expr ->
-	            "not (" ^ (string_of_parsed_boolean_expression expr) ^ ")"
-	    | Parsed_Discrete_boolean_expression expr ->
-	        string_of_parsed_discrete_boolean_expression expr
+and string_of_parsed_relop relop value_1 value_2 =
+        match relop with
+        | PARSED_OP_L		-> value_1 ^ " < " ^ value_2
+        | PARSED_OP_LEQ	    -> value_1 ^ " <= " ^ value_2
+        | PARSED_OP_EQ		-> value_1 ^ " = " ^ value_2
+        | PARSED_OP_NEQ	    -> value_1 ^ " <> " ^ value_2
+        | PARSED_OP_GEQ	    -> value_1 ^ " >= " ^ value_2
+        | PARSED_OP_G		-> value_1 ^ " > " ^ value_2
 
-    and string_of_parsed_discrete_boolean_expression = function
-        | Parsed_arithmetic_expression expr ->
-            string_of_parsed_arithmetic_expression expr
-        | Parsed_expression (l_expr, relop, r_expr) ->
-            string_of_parsed_relop
-                relop
-                (string_of_parsed_arithmetic_expression l_expr)
-                (string_of_parsed_arithmetic_expression r_expr)
-        | Parsed_expression_in (expr1, expr2, expr3) ->
-		    (* Compute the first one to avoid redundancy *)
-		    let str_expr1 = string_of_parsed_arithmetic_expression expr1 in
-		    let str_expr2 = string_of_parsed_arithmetic_expression expr2 in
-		    let str_expr3 = string_of_parsed_arithmetic_expression expr3 in
-		    str_expr1 ^ " in [" ^ str_expr2 ^ ".." ^ str_expr3 ^ "]"
-        | Parsed_boolean_expression expr ->
-            string_of_parsed_boolean_expression expr
-        | Parsed_DB_variable variable_name ->
-            if (Hashtbl.mem constants variable_name) then (
-                (* Retrieve the value of the global constant *)
-                let value = Hashtbl.find constants variable_name in
-                DiscreteValue.string_of_value value
-            ) else
-                variable_name
+let get_type_mixin_error_message l_type r_type str_expr =
+    "The expression \""
+    ^ str_expr
+    ^ "\" mix different types : "
+    ^ (DiscreteValue.string_of_var_type l_type)
+    ^ ", "
+    ^ (DiscreteValue.string_of_var_type r_type)
 
-    and string_of_parsed_relop relop value_1 value_2 =
-        	match relop with
-        	| PARSED_OP_L		-> value_1 ^ " < " ^ value_2
-        	| PARSED_OP_LEQ	    -> value_1 ^ " <= " ^ value_2
-        	| PARSED_OP_EQ		-> value_1 ^ " = " ^ value_2
-        	| PARSED_OP_NEQ	    -> value_1 ^ " <> " ^ value_2
-        	| PARSED_OP_GEQ	    -> value_1 ^ " >= " ^ value_2
-        	| PARSED_OP_G		-> value_1 ^ " > " ^ value_2
+let get_triplet_type_mixin_error_message type1 type2 type3 str_expr =
+    "The expression \""
+    ^ str_expr
+    ^ "\" mix different types : "
+    ^ (DiscreteValue.string_of_var_type type1)
+    ^ ", "
+    ^ (DiscreteValue.string_of_var_type type2)
+    ^ ", "
+    ^ (DiscreteValue.string_of_var_type type3)
 
-    in
-    string_of_parsed_global_expression_rec expr
 
-and string_of_parsed_arithmetic_expression useful_parsing_model_information expr =
-    string_of_parsed_global_expression useful_parsing_model_information (Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression expr)))
-
-(* Try to resolve the specific type of an arithmetic expression according to literals and variables used *)
+(* Try to resolve the specific type of an expression according to literals and variables used *)
 let resolve_expression_type useful_parsing_model_information expr =
     (* Printing info *)
     print_message Verbose_high ("Try to resolve expression type of \"" ^ (string_of_parsed_global_expression useful_parsing_model_information expr) ^ "\"");
@@ -259,13 +267,69 @@ let resolve_expression_type useful_parsing_model_information expr =
         | Parsed_global_expression expr -> resolve_parsed_boolean_expression_type expr
 
     and resolve_parsed_boolean_expression_type = function
+        | Parsed_True
+        | Parsed_False -> DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_bool
+        | Parsed_Not expr -> resolve_parsed_boolean_expression_type expr
+        | Parsed_And (l_expr, r_expr)
+        | Parsed_Or (l_expr, r_expr) as be ->
+            let l_type = resolve_parsed_boolean_expression_type l_expr in
+            let r_type = resolve_parsed_boolean_expression_type r_expr in
+            (* Check that left and right types are boolean *)
+            if not (DiscreteValue.is_bool_type l_type && DiscreteValue.is_bool_type r_type) then (
+                let error_msg =
+                    "The expression \""
+                    ^ (string_of_parsed_boolean_expression useful_parsing_model_information be)
+                    ^ "\" is not of type bool"
+                in
+                raise (TypeError error_msg)
+            )
+            else
+                l_type
         | Parsed_Discrete_boolean_expression expr -> resolve_parsed_discrete_boolean_expression_type expr
-        (* Other, expression is a boolean expression *)
-        | _ -> DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_bool
 
     and resolve_parsed_discrete_boolean_expression_type = function
         | Parsed_arithmetic_expression expr -> resolve_parsed_discrete_arithmetic_expression_type expr
         | Parsed_boolean_expression expr -> resolve_parsed_boolean_expression_type expr
+        | Parsed_expression (l_expr, relop, r_expr) as parsed_discrete_boolean_expression ->
+            let l_type = resolve_parsed_discrete_arithmetic_expression_type l_expr in
+            let r_type = resolve_parsed_discrete_arithmetic_expression_type r_expr in
+            (* Check that left and right types are number *)
+            if not (DiscreteValue.is_number_type l_type && DiscreteValue.is_number_type r_type) then (
+                let error_msg =
+                    "Left or right member of expression \""
+                    (* insert expression here *)
+                    ^ "\" is not a number"
+                in
+                raise (TypeError error_msg)
+            )
+            else
+                if l_type <> r_type then (
+                    let error_msg = get_type_mixin_error_message l_type r_type (string_of_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression) in
+                    raise (TypeError error_msg)
+                )
+                else
+                    l_type
+        | Parsed_expression_in (expr, lower_expr, upper_expr) as dae ->
+            let expr_type = resolve_parsed_discrete_arithmetic_expression_type expr in
+            let lower_type = resolve_parsed_discrete_arithmetic_expression_type lower_expr in
+            let upper_type = resolve_parsed_discrete_arithmetic_expression_type upper_expr  in
+            (* Check that left and right types are number *)
+            if not (DiscreteValue.is_number_type expr_type && DiscreteValue.is_number_type lower_type && DiscreteValue.is_number_type upper_type) then (
+                let error_msg =
+                    "Compared, lower or upper bound member of expression \""
+                    ^ (string_of_parsed_discrete_boolean_expression useful_parsing_model_information dae)
+                    ^ "\" is not a number"
+                in
+                raise (TypeError error_msg)
+            )
+            else
+                if expr_type <> upper_type || expr_type <> lower_type || upper_type <> lower_type then (
+                    let error_msg = get_triplet_type_mixin_error_message expr_type lower_type upper_type (string_of_parsed_discrete_boolean_expression useful_parsing_model_information dae) in
+                    raise (TypeError error_msg)
+                )
+                else
+                    expr_type
+
         (* Other, expression is a boolean expression *)
         | _ -> DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_bool
 
@@ -274,15 +338,9 @@ let resolve_expression_type useful_parsing_model_information expr =
         | Parsed_DAE_minus (expr, term) as dae_expr ->
             let l_type = resolve_parsed_discrete_arithmetic_expression_type expr in
             let r_type = resolve_parsed_discrete_term_type term in
+            print_message Verbose_high ("Try to resolve expression type of \"" ^ (string_of_parsed_arithmetic_expression useful_parsing_model_information dae_expr) ^ "\"");
             if l_type <> r_type then (
-                let error_msg =
-                    "The expression \""
-                    ^ (string_of_parsed_arithmetic_expression useful_parsing_model_information dae_expr)
-                    ^ "\" mix different types : "
-                    ^ (DiscreteValue.string_of_var_type l_type)
-                    ^ ", "
-                    ^ (DiscreteValue.string_of_var_type r_type)
-                in
+                let error_msg = get_type_mixin_error_message l_type r_type (string_of_parsed_arithmetic_expression useful_parsing_model_information dae_expr) in
                 raise (TypeError error_msg)
             )
             else
@@ -292,13 +350,13 @@ let resolve_expression_type useful_parsing_model_information expr =
 
     and resolve_parsed_discrete_term_type = function
         | Parsed_DT_mul (term, factor)
-        | Parsed_DT_div (term, factor) ->
+        | Parsed_DT_div (term, factor) as dae_term ->
             let l_type = resolve_parsed_discrete_term_type term in
             let r_type = resolve_parsed_discrete_factor_type factor in
             if l_type <> r_type then (
                 let error_msg =
                     "The expression \""
-(*                    ^ (string_of_parsed_arithmetic_expression expr)*)
+                    ^ (string_of_parsed_term useful_parsing_model_information dae_term)
                     ^ "\" mix different types : "
                     ^ (DiscreteValue.string_of_var_type l_type)
                     ^ ", "
@@ -338,6 +396,16 @@ let resolve_expression_type useful_parsing_model_information expr =
     in
     resolve_parsed_global_expression_type expr
 
+
+let check_type_of_nonlinear_constraint useful_parsing_model_information = function
+    (* It's ok non-linear constraint is of boolean type *)
+    | Parsed_true_nonlinear_constraint
+    | Parsed_false_nonlinear_constraint -> true
+    | Parsed_nonlinear_constraint expr ->
+        (* Convert discrete boolean expression of non-linear constraint to global expression and resolve type to check the type *)
+        let global_expr = Parsed_global_expression (Parsed_Discrete_boolean_expression expr) in
+        let expression_type = resolve_expression_type useful_parsing_model_information global_expr in
+        DiscreteValue.is_bool_type expression_type
 
 
 (* Try to reduce a parsed global expression, cannot take into account variables ! *)
@@ -1690,22 +1758,32 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.convex_predicate into a nonlinear_constraint *)
 (*------------------------------------------------------------*)
-let nonlinear_constraint_of_nonlinear_convex_predicate index_of_variables constants convex_predicate : NonlinearConstraint.nonlinear_constraint =
-  try(
-    (* Compute a list of inequalities *)
-    let nonlinear_inequalities = List.fold_left
+let nonlinear_constraint_of_nonlinear_convex_predicate useful_parsing_model_information convex_predicate : NonlinearConstraint.nonlinear_constraint =
+    try (
+
+        (* Extract useful infos *)
+        let index_of_variables, constants = useful_parsing_model_information.index_of_variables, useful_parsing_model_information.constants in
+
+        (* Compute a list of inequalities from convex_predicate list *)
+        let nonlinear_inequalities = List.fold_left
         (fun nonlinear_inequalities nonlinear_inequality ->
-           match nonlinear_inequality with
-           | Parsed_true_nonlinear_constraint -> nonlinear_inequalities
-           | Parsed_false_nonlinear_constraint -> raise False_exception
-           | Parsed_nonlinear_constraint nonlinear_constraint -> (convert_parsed_discrete_boolean_expression2 index_of_variables constants nonlinear_constraint) :: nonlinear_inequalities
+
+            (* Type checking of nonlinear inequality *)
+            check_type_of_nonlinear_constraint useful_parsing_model_information nonlinear_inequality;
+
+            match nonlinear_inequality with
+            | Parsed_true_nonlinear_constraint -> nonlinear_inequalities
+            | Parsed_false_nonlinear_constraint -> raise False_exception
+            | Parsed_nonlinear_constraint nonlinear_constraint -> (convert_parsed_discrete_boolean_expression2 index_of_variables constants nonlinear_constraint) :: nonlinear_inequalities
+
         ) [] convex_predicate
-    in
-    match nonlinear_inequalities with
-    | [] -> NonlinearConstraint.True_nonlinear_constraint
-    | _ -> NonlinearConstraint.Nonlinear_constraint nonlinear_inequalities
-    (* Stop if any false constraint is found *)
-  ) with False_exception -> NonlinearConstraint.False_nonlinear_constraint
+        in
+        match nonlinear_inequalities with
+        | [] -> NonlinearConstraint.True_nonlinear_constraint
+        | _ -> NonlinearConstraint.Nonlinear_constraint nonlinear_inequalities
+        (* Stop if any false constraint is found *)
+    )
+    with False_exception -> NonlinearConstraint.False_nonlinear_constraint
 
 
 (************************************************************)
@@ -2534,24 +2612,31 @@ let split_convex_predicate_into_discrete_and_continuous_new index_of_variables t
 (*------------------------------------------------------------*)
 (* Convert a guard *)
 (*------------------------------------------------------------*)
-let convert_guard index_of_variables type_of_variables constants guard_convex_predicate =
-  try(
+let convert_guard useful_parsing_model_information guard_convex_predicate =
+  try (
+
+    (* Extract useful infos *)
+    let index_of_variables,
+        type_of_variables,
+        constants =
+        useful_parsing_model_information.index_of_variables,
+        useful_parsing_model_information.type_of_variables,
+        useful_parsing_model_information.constants in
 
     (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
-(*    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants guard_convex_predicate in*)
     let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous_new index_of_variables type_of_variables constants guard_convex_predicate in
 
     match discrete_guard_convex_predicate, continuous_guard_convex_predicate with
     (* No inequalities: true *)
     | [] , [] -> True_guard
     (* Only discrete inequalities: discrete *)
-    | discrete_guard_convex_predicate , [] -> Discrete_guard (nonlinear_constraint_of_nonlinear_convex_predicate index_of_variables constants discrete_guard_convex_predicate)
+    | discrete_guard_convex_predicate , [] -> Discrete_guard (nonlinear_constraint_of_nonlinear_convex_predicate useful_parsing_model_information discrete_guard_convex_predicate)
     (* Only continuous inequalities: continuous *)
     | [] , continuous_guard_convex_predicate -> Continuous_guard (linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate)
     (* Otherwise: both *)
     | discrete_guard_convex_predicate , continuous_guard_convex_predicate ->
       (* Convert both parts *)
-      let discrete_guard = nonlinear_constraint_of_nonlinear_convex_predicate index_of_variables constants discrete_guard_convex_predicate in
+      let discrete_guard = nonlinear_constraint_of_nonlinear_convex_predicate useful_parsing_model_information discrete_guard_convex_predicate in
       let continuous_guard = linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate in
 
       (* TODO benjamin is possible to make this optimisation with separation of discretes and other types of vars ? *)
@@ -2819,7 +2904,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 				transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
 
 				(* Update the array of invariants *)
-				invariants.(automaton_index).(location_index) <- convert_guard index_of_variables type_of_variables constants location.invariant;
+				invariants.(automaton_index).(location_index) <- convert_guard useful_parsing_model_information location.invariant;
 
 				(* Does the model has stopwatches? *)
 				if location.stopped <> [] then has_non_1rate_clocks := true;
@@ -3186,7 +3271,7 @@ let convert_transitions nb_transitions nb_actions useful_parsing_model_informati
           List.iter (fun (action_index, guard, updates, target_location_index) ->
 
               (* Convert the guard *)
-              let converted_guard = convert_guard index_of_variables type_of_variables constants guard in
+              let converted_guard = convert_guard useful_parsing_model_information guard in
 
               (* Filter the updates that should assign some variable name to be removed to any expression *)
               (* let filtered_updates = List.filter (fun (variable_name, (*linear_expression*)_) ->
