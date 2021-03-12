@@ -2293,6 +2293,23 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test that an update expression doesn\'t mix different types (semantic)',
+		'input_files': ['typed_expressions/expression-mixin-update-type-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'expression-mixin-update-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test updates (state space)',
 		'input_files': ['testUpdates.imi'],
 		'options'    : '-mode statespace -depth-limit 4 -states-description',

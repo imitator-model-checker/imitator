@@ -87,6 +87,7 @@ and discrete_boolean_expression =
 type global_expression =
     (* A typed expression *)
     | Rational_expression of discrete_arithmetic_expression
+    | Int_expression of discrete_arithmetic_expression
     | Bool_expression of boolean_expression
 
 val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discrete_value -> bool
@@ -100,6 +101,11 @@ val eval_global_expression : discrete_valuation -> global_expression -> Discrete
 (** Evaluate a discrete arithmetic expression with a valuation *)
 (************************************************************)
 val eval_discrete_arithmetic_expression : discrete_valuation -> discrete_arithmetic_expression -> DiscreteValue.discrete_value
+
+(************************************************************)
+(** Evaluate a rational expression with a valuation *)
+(************************************************************)
+val eval_rational_expression : discrete_valuation -> discrete_arithmetic_expression -> NumConst.t
 
 (************************************************************)
 (** Check whether a Boolean expression evaluates to true when valuated with a valuation *)
