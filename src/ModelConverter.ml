@@ -145,11 +145,10 @@ let numconst_value_or_fail = function
 
 (* String of a parsed expression *)
 (* Used for error message on type checking *)
-let string_of_parsed_global_expression useful_parsing_model_information expr =
+let rec string_of_parsed_global_expression useful_parsing_model_information expr =
 
     (* Get constants *)
     let constants = useful_parsing_model_information.constants in
-    let variable_names = useful_parsing_model_information.variable_names in
 
     let rec string_of_parsed_global_expression_rec = function
         | Parsed_global_expression expr -> string_of_parsed_boolean_expression expr
@@ -243,8 +242,13 @@ let string_of_parsed_global_expression useful_parsing_model_information expr =
     in
     string_of_parsed_global_expression_rec expr
 
+and string_of_parsed_arithmetic_expression useful_parsing_model_information expr =
+    string_of_parsed_global_expression useful_parsing_model_information (Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression expr)))
+
 (* Try to resolve the specific type of an arithmetic expression according to literals and variables used *)
 let resolve_expression_type useful_parsing_model_information expr =
+    (* Printing info *)
+    print_message Verbose_high ("Try to resolve expression type of \"" ^ (string_of_parsed_global_expression useful_parsing_model_information expr) ^ "\"");
 
     (* Get utils variables for parsing model infos *)
     let index_of_variables = useful_parsing_model_information.index_of_variables in
@@ -267,11 +271,20 @@ let resolve_expression_type useful_parsing_model_information expr =
 
     and resolve_parsed_discrete_arithmetic_expression_type = function
         | Parsed_DAE_plus (expr, term)
-        | Parsed_DAE_minus (expr, term) ->
+        | Parsed_DAE_minus (expr, term) as dae_expr ->
             let l_type = resolve_parsed_discrete_arithmetic_expression_type expr in
             let r_type = resolve_parsed_discrete_term_type term in
-            if l_type <> r_type then
-                raise (TypeError ("Left and right members of an arithmetic expression are of different types : " ^ (DiscreteValue.string_of_var_type l_type) ^ "," ^ (DiscreteValue.string_of_var_type r_type))) (* TODO benjamin change to Type error *)
+            if l_type <> r_type then (
+                let error_msg =
+                    "The expression \""
+                    ^ (string_of_parsed_arithmetic_expression useful_parsing_model_information dae_expr)
+                    ^ "\" mix different types : "
+                    ^ (DiscreteValue.string_of_var_type l_type)
+                    ^ ", "
+                    ^ (DiscreteValue.string_of_var_type r_type)
+                in
+                raise (TypeError error_msg)
+            )
             else
                 l_type
         | Parsed_DAE_term term ->
@@ -282,8 +295,17 @@ let resolve_expression_type useful_parsing_model_information expr =
         | Parsed_DT_div (term, factor) ->
             let l_type = resolve_parsed_discrete_term_type term in
             let r_type = resolve_parsed_discrete_factor_type factor in
-            if l_type <> r_type then
-                raise (TypeError ("Left and right members of an arithmetic term are of different types : " ^ (DiscreteValue.string_of_var_type l_type) ^ "," ^ (DiscreteValue.string_of_var_type r_type))) (* TODO benjamin change to Type error *)
+            if l_type <> r_type then (
+                let error_msg =
+                    "The expression \""
+(*                    ^ (string_of_parsed_arithmetic_expression expr)*)
+                    ^ "\" mix different types : "
+                    ^ (DiscreteValue.string_of_var_type l_type)
+                    ^ ", "
+                    ^ (DiscreteValue.string_of_var_type r_type)
+                in
+                raise (TypeError error_msg)
+            )
             else
                 l_type
         | Parsed_DT_factor factor ->
@@ -324,7 +346,6 @@ let try_reduce_parsed_global_expression useful_parsing_model_information expr =
 
     (* Get constants *)
     let constants = useful_parsing_model_information.constants in
-    let variable_names = useful_parsing_model_information.variable_names in
 
     let rec try_reduce_parsed_global_expression_rec = function
         | Parsed_global_expression expr -> try_reduce_parsed_boolean_expression expr
@@ -445,7 +466,7 @@ let check_assignment_type_consistency useful_parsing_model_information variable_
     (* Resolve expression type *)
     let expression_type = resolve_expression_type useful_parsing_model_information expr in
     (* Check expression / variable type consistency *)
-    if variable_type <> expression_type then
+    if not (DiscreteValue.is_type_compatibles variable_type expression_type) then
         raise (TypeError (get_error_message variable_name variable_type expression_type expr))
     else
         true
@@ -1056,6 +1077,19 @@ let rational_expression_of_parsed_expression useful_parsing_model_information (*
     in
     rational_expression_of_parsed_expression
 
+(* Get typed int expression of global parsed expression *)
+let int_expression_of_parsed_expression useful_parsing_model_information (* expr *) =
+
+    let rec int_expression_of_parsed_expression = function
+        | Parsed_Discrete_boolean_expression expr -> int_expression_of_parsed_discrete_boolean_expression expr
+        | _ -> raise (TypeError "") (* TODO benjamin complete error *)
+
+    and int_expression_of_parsed_discrete_boolean_expression = function
+        | Parsed_arithmetic_expression expr ->
+            Int_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information expr)
+        | _ -> raise (TypeError "") (* TODO benjamin complete error *)
+    in
+    int_expression_of_parsed_expression
 
 
 
@@ -1068,7 +1102,10 @@ let convert_parsed_global_expression useful_parsing_model_information = function
             bool_expression_of_parsed_expression useful_parsing_model_information expr
         | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational) ->
             rational_expression_of_parsed_expression useful_parsing_model_information expr
-
+        | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int) ->
+            int_expression_of_parsed_expression useful_parsing_model_information expr
+        | _ ->
+            raise (TypeError "An expression cannot have clock or parameter type")
 
 
 (* Convert parsed_loc_predicate *)
@@ -2332,8 +2369,8 @@ let check_init useful_parsing_model_information init_definition observer_automat
                 (* Get variable type *)
                 let variable_type = type_of_variables discrete_index in
 
-                if variable_type <> discrete_value_type then
-                    raise (TypeError ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type variable_type) ^ " is not compatible with a " ^ (DiscreteValue.string_of_var_type discrete_value_type) ^ " value"))
+                if not (DiscreteValue.is_type_compatibles variable_type discrete_value_type) then
+                    raise (TypeError ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type variable_type) ^ " is not compatible with value \"" ^ (DiscreteValue.string_of_value discrete_value) ^ "\" of type " ^ (DiscreteValue.string_of_var_type discrete_value_type)))
                 else
 			        (* Else add it *)
 			        Hashtbl.add init_values_for_discrete discrete_index discrete_value;
@@ -5072,16 +5109,20 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	for i = first_clock_index to first_discrete_index - 1 do
 		type_of_variables.(i) <- DiscreteValue.Var_type_clock;
 	done;
+
+    (* Print some information *)
+    print_message Verbose_high ("\nSetting discretes variables types…");
+
 	for i = first_discrete_index to nb_variables - 1 do
 	    (* Get specific var_type of discrete variable *)
 	    (* Remove offset, because array of var_type * variable_name for discrete start from 0 *)
         let var_type, v = List.nth discrete_names_by_type (i - first_discrete_index) in
         (* Convert var_type from ParsingStructure to AbstractModel *)
 		type_of_variables.(i) <- var_type;
-
-        (* TODO benjamin remove, just for debug *)
-		print_message Verbose_standard ("Variable : " ^ v ^ " of " ^ (DiscreteValue.string_of_var_type type_of_variables.(i)))
+        (* Print type infos *)
+		print_message Verbose_high ("variable " ^ v ^ " : " ^ (DiscreteValue.string_of_var_type type_of_variables.(i)))
 	done;
+
 	(* Functional representation *)
 	let type_of_variables = fun variable_index -> type_of_variables.(variable_index) in
 

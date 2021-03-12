@@ -36,6 +36,9 @@ val string_of_var_type_discrete : var_type_discrete -> string
 
 val var_type_of_value : discrete_value -> var_type
 
+(* Check if two types are compatible *)
+(* To be compatible, two type should have the same kind (number, boolean, ...) *)
+val is_type_compatibles : var_type -> var_type -> bool
 
 val numconst_default_value : NumConst.t
 val int32_default_value : Int32.t

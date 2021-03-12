@@ -81,6 +81,7 @@ and discrete_boolean_expression =
 type global_expression =
     (* A typed expression *)
     | Rational_expression of discrete_arithmetic_expression
+    | Int_expression of discrete_arithmetic_expression
     | Bool_expression of boolean_expression
 
 (************************************************************)
@@ -136,6 +137,112 @@ and eval_discrete_arithmetic_expression discrete_valuation = function
 		
 	| DAE_term discrete_term ->
 		eval_discrete_term discrete_valuation discrete_term
+
+
+(************************************************************)
+(** Evaluate a rational expression with a valuation *)
+(************************************************************)
+let eval_rational_expression discrete_valuation expr =
+
+    let rec eval_rational_expression_rec = function
+        | DAE_plus (expr, term) ->
+            NumConst.add
+                (eval_rational_expression_rec expr)
+                (eval_rational_term term)
+        | DAE_minus (expr, term) ->
+            NumConst.sub
+                (eval_rational_expression_rec expr)
+                (eval_rational_term term)
+        | DAE_term term ->
+            eval_rational_term term
+
+    and eval_rational_term = function
+        | DT_mul (term, factor) ->
+            NumConst.mul
+            (eval_rational_term term)
+            (eval_rational_factor factor)
+        | DT_div (term, factor) ->
+            let numerator	= (eval_rational_term term) in
+            let denominator	= (eval_rational_factor factor) in
+
+            (* Check for 0-denominator *)
+            if NumConst.equal denominator NumConst.zero then(
+                raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (NumConst.string_of_numconst numerator) ^ " / " ^ (NumConst.string_of_numconst denominator) ^ ""))
+            );
+
+            (* Divide *)
+            NumConst.div
+                numerator
+                denominator
+
+        | DT_factor factor ->
+            eval_rational_factor factor
+
+    and eval_rational_factor = function
+        | DF_variable variable_index ->
+            DiscreteValue.numconst_value (discrete_valuation variable_index)
+        | DF_constant variable_value ->
+            DiscreteValue.numconst_value variable_value
+        | DF_expression expr ->
+            eval_rational_expression_rec expr
+        | DF_unary_min factor ->
+            NumConst.neg (eval_rational_factor factor)
+
+    in
+    eval_rational_expression_rec expr
+
+(************************************************************)
+(** Evaluate a int32 expression with a valuation *)
+(************************************************************)
+let eval_int_expression discrete_valuation expr =
+
+    let rec eval_int_expression_rec = function
+        | DAE_plus (expr, term) ->
+            Int32.add
+                (eval_int_expression_rec expr)
+                (eval_int_term term)
+        | DAE_minus (expr, term) ->
+            Int32.sub
+                (eval_int_expression_rec expr)
+                (eval_int_term term)
+        | DAE_term term ->
+            eval_int_term term
+
+    and eval_int_term = function
+        | DT_mul (term, factor) ->
+            Int32.mul
+            (eval_int_term term)
+            (eval_int_factor factor)
+        | DT_div (term, factor) ->
+            let numerator	= (eval_int_term term) in
+            let denominator	= (eval_int_factor factor) in
+
+            (* Check for 0-denominator *)
+            if Int32.equal denominator Int32.zero then(
+                raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (Int32.to_string numerator) ^ " / " ^ (Int32.to_string denominator) ^ ""))
+            );
+
+            (* Divide *)
+            Int32.div
+                numerator
+                denominator
+
+        | DT_factor factor ->
+            eval_int_factor factor
+
+    and eval_int_factor = function
+        | DF_variable variable_index ->
+            DiscreteValue.int32_value (discrete_valuation variable_index)
+        | DF_constant variable_value ->
+            DiscreteValue.int32_value variable_value
+        | DF_expression expr ->
+            eval_int_expression_rec expr
+        | DF_unary_min factor ->
+            Int32.neg (eval_int_factor factor)
+
+    in
+    eval_int_expression_rec expr
+
 
 (************************************************************)
 (** Check whether a Boolean expression evaluates to true when valuated with a valuation *)
@@ -197,7 +304,8 @@ and check_discrete_boolean_expression discrete_valuation = function
 (** Evaluate global expressions with a valuation            *)
 (************************************************************)
 let eval_global_expression discrete_valuation = function
-    | Rational_expression expr -> eval_discrete_arithmetic_expression discrete_valuation expr
+    | Rational_expression expr -> DiscreteValue.Rational_value (eval_rational_expression discrete_valuation expr)
+    | Int_expression expr -> DiscreteValue.Int_value (eval_int_expression discrete_valuation expr)
     | Bool_expression expr -> DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
     | _ -> raise NotImplemented
 
@@ -365,6 +473,7 @@ let string_of_boolean_expression = customized_string_of_boolean_expression Const
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.default_string
 
 let customized_string_of_global_expression customized_string variable_names = function
+    | Int_expression expr
     | Rational_expression expr -> customized_string_of_arithmetic_expression customized_string.arithmetic_string variable_names expr
     | Bool_expression expr -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
 

@@ -16,10 +16,6 @@ type var_type =
 	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
 
-type numeric_value =
-    | Rational_value of NumConst.t
-    | Int_value of Int32.t
-
 (* Discrete value of different specific types *)
 type discrete_value =
     | Rational_value of NumConst.t
@@ -30,6 +26,15 @@ let var_type_of_value = function
     | Rational_value _ -> Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
     | Bool_value _ -> Var_type_discrete Var_type_discrete_bool
     | Int_value _ -> Var_type_discrete (Var_type_discrete_number Var_type_discrete_int)
+
+(* Check if two types are compatible *)
+(* To be compatible, two type should have the same kind (number, boolean, ...) *)
+let is_type_compatibles type_a type_b =
+    match type_a, type_b with
+    | a, b when a = b -> true
+    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational), Var_type_discrete (Var_type_discrete_number Var_type_discrete_int)
+    |  Var_type_discrete (Var_type_discrete_number Var_type_discrete_int), Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational) -> true
+    | _ -> false
 
 let string_of_var_type_discrete_number = function
     | Var_type_discrete_rational -> "discrete"
