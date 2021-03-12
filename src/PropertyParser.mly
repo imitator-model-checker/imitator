@@ -56,7 +56,7 @@ let resolve_property l =
 %token COLON COMMA DOUBLEDOT SEMICOLON SYMBOL_AND SYMBOL_OR
 
 %token
-	CT_ACCEPTING CT_AG CT_AGnot CT_ALWAYS
+	CT_ACCEPTING CT_ACCEPTINGCYCLE CT_AG CT_AGnot CT_ALWAYS
 	CT_BCBORDER CT_BCLEARN CT_BCRANDOM CT_BCRANDOMSEQ CT_BCSHUFFLE CT_BEFORE
 	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
@@ -170,6 +170,9 @@ property:
 
 	/* Accepting infinite-run (cycle) through a state predicate */
 	| CT_INFCYCLETHROUGH state_predicate { Parsed_Cycle_Through $2 }
+
+	/* Accepting infinite-run (cycle) through accepting locations */
+	| CT_ACCEPTINGCYCLE { Parsed_Cycle_Through (Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_accepting))) }
 
 	/* Infinite-run (cycle) with non-Zeno assumption */
 	| CT_NZCYCLE { Parsed_NZ_Cycle }
