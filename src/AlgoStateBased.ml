@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2021/03/11
+ * Last modified     : 2021/03/15
  *
  ************************************************************)
 
@@ -2273,7 +2273,17 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	LinearConstraint.px_intersection_assign z_n_plus_1 [target_state.px_constraint];
 	
 	(* Apply the updates to find the "initial" valuations of zn+1, only if the run is not empty *)
-	let z_n_plus_1 = if symbolic_run.symbolic_steps = [] then z_n_plus_1
+	let z_n_plus_1 = if symbolic_run.symbolic_steps = [] then(
+		(* Re-intersect with the *initial* continuous valuations to indeed get an initial valuation *)
+		LinearConstraint.px_intersection_assign z_n_plus_1 [model.initial_constraint];
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("Symbolic run of length 0: intersect with initial valuations:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
+		);
+
+		z_n_plus_1
+	)
 	else(
 		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps (List.length symbolic_run.symbolic_steps - 1) in
 		let state_n = StateSpace.get_state state_space symbolic_step_n.source in
