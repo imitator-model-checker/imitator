@@ -2286,8 +2286,9 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	)
 	else(
 		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps (List.length symbolic_run.symbolic_steps - 1) in
-		let state_n : State.state = StateSpace.get_state state_space symbolic_step_n.source in
-		let location_n = state_n.global_location in
+		let state_n		: State.state							= StateSpace.get_state state_space symbolic_step_n.source in
+		let location_n	: Location.global_location				= state_n.global_location in
+		let z_n			: LinearConstraint.px_linear_constraint	= state_n.px_constraint in
 		(*** BADPROG: multiple computations! ***)
 		let _, _, continuous_guards, updates_n = compute_new_location_guards_updates location_n symbolic_step_n.transition in
 
@@ -2396,12 +2397,13 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps n in
 		
 		(* Get state n *)
-		let state_n = StateSpace.get_state state_space symbolic_step_n.source in
+		let state_n : State.state = StateSpace.get_state state_space symbolic_step_n.source in
 		(* Get state n+1 *)
 (* 		let state_n_plus_1 = StateSpace.get_state state_space state_index_n_plus_1 in *)
 		
 		(* Get the location and zone for state_n *)
-		let location_n, z_n = state_n.global_location, state_n.px_constraint in
+		let location_n	: Location.global_location				= state_n.global_location in
+		let z_n			: LinearConstraint.px_linear_constraint	= state_n.px_constraint in
 		
 		(* Get the n-1 elements *)
 		let z_n_minus_1, continuous_guard_n_minus_1, updates_n_minus_1 =
@@ -2411,15 +2413,18 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 				let symbolic_step_n_minus_1 = List.nth symbolic_run.symbolic_steps (n-1) in
 
 				(* Get the state *)
-				let state_n_minus_1 = StateSpace.get_state state_space symbolic_step_n_minus_1.source in
+				let state_n_minus_1 : State.state = StateSpace.get_state state_space symbolic_step_n_minus_1.source in
 				(* Get location and constraint *)
-				let location_n_minus_1, z_n_minus_1 = state_n_minus_1.global_location, state_n_minus_1.px_constraint in
+				let location_n_minus_1	: Location.global_location				= state_n_minus_1.global_location in
+				let z_n_minus_1			: LinearConstraint.px_linear_constraint	= state_n_minus_1.px_constraint in
 				
 				(* Reconstruct the continuous guard from n-1 to n *)
 				(*** WARNING/BADPROG/TOOPTIMIZE: double computation as we recompute it at the next n-1 ***)
 				let _, _, continuous_guards_n_minus_1, updates_n_minus_1 = compute_new_location_guards_updates location_n_minus_1 symbolic_step_n_minus_1.transition in
 				
-				z_n_minus_1, LinearConstraint.pxd_intersection continuous_guards_n_minus_1, updates_n_minus_1
+				z_n_minus_1,
+				LinearConstraint.pxd_intersection continuous_guards_n_minus_1,
+				updates_n_minus_1
 			
 			(* Case "before" 0 *)
 			) else(
