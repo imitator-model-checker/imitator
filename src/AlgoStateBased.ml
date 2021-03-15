@@ -2286,7 +2286,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	)
 	else(
 		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps (List.length symbolic_run.symbolic_steps - 1) in
-		let state_n = StateSpace.get_state state_space symbolic_step_n.source in
+		let state_n : State.state = StateSpace.get_state state_space symbolic_step_n.source in
 		let location_n = state_n.global_location in
 		(*** BADPROG: multiple computations! ***)
 		let _, _, continuous_guards, updates_n = compute_new_location_guards_updates location_n symbolic_step_n.transition in
