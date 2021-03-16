@@ -2273,7 +2273,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	LinearConstraint.px_intersection_assign z_n_plus_1 [target_state.px_constraint];
 	
 	(*------------------------------------------------------------*)
-	(* Find the "initial" valuations of zn+1, only if the run is not empty *)
+	(* Find the "initial" valuations of zn+1 *)
 	(*------------------------------------------------------------*)
 
 	(* Case of an empty run *)
@@ -2336,6 +2336,11 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	)
 	in
 	
+	
+	(*------------------------------------------------------------*)
+	(* Pick one "initial" valuation of zn+1 *)
+	(*------------------------------------------------------------*)
+
 	(* To make things more human-friendly, we change the initial valuation only if it did not belong to the admissible "initial points" before time elapsing *)
 	
 	(* Print some information *)
@@ -2381,6 +2386,10 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	);
 	
 
+	(*------------------------------------------------------------*)
+	(* Reconstruct concrete run *)
+	(*------------------------------------------------------------*)
+
 	(* We reconstruct a concrete run, for which we need absolute time *)
 	
 
@@ -2403,6 +2412,9 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 
 	let te_and_valuations = ref [] in
 	
+	(*------------------------------------------------------------*)
+	(* For n to length-1 to 0 *)
+	(*------------------------------------------------------------*)
 	for n = List.length symbolic_run.symbolic_steps - 1 downto 0 do
 	
 		print_message Verbose_low ("\n\nComputing concrete valuation in symbolic run at position " ^ (string_of_int n) ^ "…");
@@ -2474,7 +2486,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(* Create the time polyhedron depending on the clocks *)
 		let time_polyhedron = pxd_compute_time_polyhedron Backward location_n in
 		
-		(* Zn+1 is the target valuation, preceeded by time past plus invariant intersection *)
+		(* Zn+1 is the *initial* valuation at n+1 (i.e., before time elapsing) *)
 		
 		let z_n_plus_1 : LinearConstraint.px_linear_constraint = LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , !valuation_n_plus_1 variable_index) model.parameters_and_clocks) in
 		
@@ -2531,7 +2543,9 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		te_and_valuations := (time_elapsed_n , symbolic_step_n.transition, location_n, pxd_valuation) :: !te_and_valuations;
 		valuation_n_plus_1 := valuation_n;
 		
+	(*------------------------------------------------------------*)
 	done;
+	(*------------------------------------------------------------*)
 
 	
 	(* Print some information *)
