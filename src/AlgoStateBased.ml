@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2021/03/15
+ * Last modified     : 2021/03/16
  *
  ************************************************************)
 
@@ -2272,8 +2272,12 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	(* Intersect with invariant (NOTE: shorter: we can fact intersect with the symbolic state, that already contains the invariant!) *)
 	LinearConstraint.px_intersection_assign z_n_plus_1 [target_state.px_constraint];
 	
-	(* Apply the updates to find the "initial" valuations of zn+1, only if the run is not empty *)
-	let z_n_plus_1 = if symbolic_run.symbolic_steps = [] then(
+	(*------------------------------------------------------------*)
+	(* Find the "initial" valuations of zn+1, only if the run is not empty *)
+	(*------------------------------------------------------------*)
+
+	(* Case of an empty run *)
+	let z_n_plus_1_initial = if symbolic_run.symbolic_steps = [] then(
 		(* Re-intersect with the *initial* continuous valuations to indeed get an initial valuation *)
 		LinearConstraint.px_intersection_assign z_n_plus_1 [model.initial_constraint];
 
@@ -2284,6 +2288,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 
 		z_n_plus_1
 	)
+	(* Case of a non-empty run *)
 	else(
 		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps (List.length symbolic_run.symbolic_steps - 1) in
 		let state_n		: State.state							= StateSpace.get_state state_space symbolic_step_n.source in
@@ -2291,8 +2296,23 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let z_n			: LinearConstraint.px_linear_constraint	= state_n.px_constraint in
 		(*** BADPROG: multiple computations! ***)
 		let _, _, continuous_guards, updates_n = compute_new_location_guards_updates location_n symbolic_step_n.transition in
+		
+		(* Our goal: intersect the previous state (z_n) with the guard, and then apply updates *)
 
-		(*** BADPROG: multiple conversions here! ***)
+		(* Compute the intersection of Z_n (mostly to get the invariant I_n) with the outgoing guard from n to n+1 *)
+		let z_n_and_continuous_guard : LinearConstraint.pxd_linear_constraint = LinearConstraint.pxd_intersection ((LinearConstraint.pxd_of_px_constraint z_n) :: continuous_guards) in
+
+		(* Apply updates *)
+		apply_updates_assign z_n_and_continuous_guard updates_n;
+		
+		(* Remove discrete from n, as they can be different from discrete at n+1 *)
+		let z_n_and_continuous_guard_without_discrete : LinearConstraint.px_linear_constraint = LinearConstraint.pxd_hide_discrete_and_collapse z_n_and_continuous_guard in
+		
+		(* Intersect with ZN+1 *)
+		LinearConstraint.px_intersection_assign z_n_plus_1 [z_n_and_continuous_guard_without_discrete];
+
+		(* BEGIN OLD VERSION (removed 2021/03/16) *)
+(*		(*** BADPROG: multiple conversions here! ***)
 		let z_n_plus_1 = LinearConstraint.pxd_of_px_constraint z_n_plus_1 in
 		apply_updates_assign z_n_plus_1 updates_n;
 		let z_n_plus_1 = LinearConstraint.pxd_hide_discrete_and_collapse z_n_plus_1 in
@@ -2304,11 +2324,11 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(* Remove discrete *)
 		let continuous_guard_without_discrete = LinearConstraint.pxd_hide_discrete_and_collapse continuous_guard in
 		(* Intersect *)
-		LinearConstraint.px_intersection_assign z_n_plus_1 [continuous_guard_without_discrete];
+		LinearConstraint.px_intersection_assign z_n_plus_1 [continuous_guard_without_discrete];*)
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high ("Intersected state n+1 with its incoming guard and invariant:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
+			print_message Verbose_high ("Intersected state n+1 with Z_n, and its incoming guard, and updated variables to n+1:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
 		);
 		
 		z_n_plus_1
@@ -2333,7 +2353,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 				LinearConstraint.px_intersection[
 					LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , concrete_target_px_valuation variable_index) model.parameters_and_clocks)
 					;
-					z_n_plus_1
+					z_n_plus_1_initial
 				]
 			) then(
 			(* Print some information *)
@@ -2344,7 +2364,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		
 		if recomputation_needed then(
 			(* Re-choose a valuation in this constraint *)
-			LinearConstraint.px_exhibit_point z_n_plus_1
+			LinearConstraint.px_exhibit_point z_n_plus_1_initial
 		(* Otherwise, keep the original valuation *)
 		)else(
 			(* Print some information *)
