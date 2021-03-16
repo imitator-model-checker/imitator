@@ -2325,6 +2325,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let continuous_guard_without_discrete = LinearConstraint.pxd_hide_discrete_and_collapse continuous_guard in
 		(* Intersect *)
 		LinearConstraint.px_intersection_assign z_n_plus_1 [continuous_guard_without_discrete];*)
+		(* END OLD VERSION (removed 2021/03/16) *)
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
@@ -2470,12 +2471,6 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let continuous_guard_n = LinearConstraint.pxd_intersection continuous_guards_n in
 		
 
-(*		(*** BEGIN OLD VERSION (< 2020/09) ***)
-		(* Get the elapsed and stopped clocks (+ other variables) *)
-		let stopped_clocks_n, elapsing_clocks_n = compute_stopwatches location_n in
-		let all_stopped_variables_n = List.rev_append stopped_clocks_n model.parameters in
-		(*** END OLD VERSION (< 2020/09) ***)*)
-		
 		(* Create the time polyhedron depending on the clocks *)
 		let time_polyhedron = pxd_compute_time_polyhedron Backward location_n in
 		
