@@ -53,6 +53,7 @@ val numconst_value : discrete_value -> NumConst.t
 val int32_value : discrete_value -> Int32.t
 val bool_value : discrete_value -> bool
 val float_value : discrete_value -> float
+val convert_value : discrete_value -> var_type -> discrete_value
 
 val hash : discrete_value -> int
 

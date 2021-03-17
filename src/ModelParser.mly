@@ -587,8 +587,7 @@ linear_term:
 
 /* Init expression for variable */
 init_value_expression:
-    | rational_linear_expression { DiscreteValue.Rational_value $1 } /* TODO benjamin change rational_linear to number_linear ? */
-    | init_bool_value_expression { DiscreteValue.Bool_value $1 }
+    | expression { $1 }
 ;
 
 /* Init bool expression, like rational_linear_expression it's solvable directly at parsing (at compile time) */

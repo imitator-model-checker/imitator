@@ -1506,7 +1506,6 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		(* Update discrete *)
 		List.iter (fun (discrete_index, global_expression) ->
 			(* Compute its new value *)
-(* 			let new_value = LinearConstraint.evaluate_pxd_linear_term (Location.get_discrete_value source_location) linear_term in *)
 			let new_value = (*try( *)
 			DiscreteExpressions.eval_global_expression (Location.get_discrete_value source_location) global_expression
 (*				) with Division_by_0_while_evaluating_discrete -> (

@@ -2242,7 +2242,7 @@ system pta;
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean constant is initialized with consistant type (semantic)',
+		'purpose'    : 'Test that a boolean constant is initialized with consistant type (type checking)',
 		'input_files': ['boolean_expressions/bool-constant-init-type-error.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2259,7 +2259,7 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean variable is initialized with consistant type (semantic)',
+		'purpose'    : 'Test that a boolean variable is initialized with consistant type (type checking)',
 		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -2276,7 +2276,7 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean variable is updated with a consistent typed expression (semantic)',
+		'purpose'    : 'Test that a boolean variable is updated with a consistent typed expression (type checking)',
 		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -2293,11 +2293,62 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that an update expression doesn\'t mix different types (semantic)',
-		'input_files': ['typed_expressions/expression-mixin-update-type-error.imi'],
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in addition (type checking)',
+		'input_files': ['typed_expressions/expression-mixin-type-error-1.imi'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'expression-mixin-update-type-error.res' , 'content' : """
+			{'file': 'expression-mixin-type-error-1.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in multiplication (type checking)',
+		'input_files': ['typed_expressions/expression-mixin-type-error-2.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'expression-mixin-type-error-2.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in comparison (type checking)',
+		'input_files': ['typed_expressions/expression-mixin-type-error-3.imi'],
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'expression-mixin-type-error-3.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in "in" expression (type checking)',
+		'input_files': ['typed_expressions/expression-mixin-type-error-4.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'expression-mixin-type-error-4.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file
@@ -13112,7 +13163,7 @@ end
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test init zone printing - old init zone (printing)',
+		'purpose'    : 'Test init state printing - old state zone (printing)',
 		'input_files': ['init_zone/old-init-zone-printing.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
@@ -13190,7 +13241,7 @@ end
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test init zone printing - new init zone (printing)',
+		'purpose'    : 'Test init state printing - new init state (printing)',
 		'input_files': ['init_zone/new-init-zone-printing.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [

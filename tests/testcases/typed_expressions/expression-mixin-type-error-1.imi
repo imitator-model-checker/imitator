@@ -1,7 +1,7 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Expression mixin of type 
+ * Title            : Expression mixin of type in addition
  * Description      : Mix of different types in arithmetic expression, should lead to a type error
  * Correctness      : Type error 
  * Scalable         : No

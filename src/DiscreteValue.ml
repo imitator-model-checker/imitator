@@ -1,6 +1,6 @@
 open Constants
 
-exception ComputingException (* Should never happen, if correctly checked before in ModelConverter *)
+exception ComputingException of string (* Should never happen, if correctly checked before in ModelConverter *)
 
 type var_type_discrete_number =
     | Var_type_discrete_rational
@@ -22,18 +22,26 @@ type discrete_value =
     | Bool_value of bool
     | Int_value of Int32.t
 
+let var_type_rational = Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
+let var_type_int = Var_type_discrete (Var_type_discrete_number Var_type_discrete_int)
+let var_type_bool = Var_type_discrete Var_type_discrete_bool
+
 let var_type_of_value = function
-    | Rational_value _ -> Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
-    | Bool_value _ -> Var_type_discrete Var_type_discrete_bool
-    | Int_value _ -> Var_type_discrete (Var_type_discrete_number Var_type_discrete_int)
+    | Rational_value _ -> var_type_rational
+    | Bool_value _ -> var_type_bool
+    | Int_value _ -> var_type_int
 
 (* Check if two types are compatible *)
 (* To be compatible, two type should have the same kind (number, boolean, ...) *)
 let is_type_compatibles type_a type_b =
     match type_a, type_b with
     | a, b when a = b -> true
+    | Var_type_clock, Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
+    | Var_type_parameter, Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
+    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational), Var_type_clock
+    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational), Var_type_parameter
     | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational), Var_type_discrete (Var_type_discrete_number Var_type_discrete_int)
-    |  Var_type_discrete (Var_type_discrete_number Var_type_discrete_int), Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational) -> true
+    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_int), Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational) -> true
     | _ -> false
 
 let string_of_var_type_discrete_number = function
@@ -124,6 +132,27 @@ let float_value = function
     | Bool_value x -> if x then 0.0 else 0.0
     | Int_value x -> Int32.to_float x
 
+(* Convert any discrete value to a rational value *)
+let convert_to_rational_value value =
+    Rational_value (numconst_value value)
+
+(* Convert any discrete value to a rational value *)
+let convert_to_int_value value =
+    Int_value (int32_value value)
+
+let convert_value value target_type =
+    let source_type = var_type_of_value value in
+    match source_type, target_type with
+    (* Source and target type identical *)
+    |  s, t when s = t -> value
+    (* Rational to int, int to rational *)
+    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational), Var_type_discrete (Var_type_discrete_number Var_type_discrete_int) -> convert_to_int_value value
+    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_int), Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational) -> convert_to_rational_value value
+    (* Other conversions, don't do anything *)
+    | _ -> value
+
+
+
 let hash = function
      | Rational_value x -> Gmp.Z.to_int (NumConst.get_num x)
      | Bool_value x -> if x then 1 else 0
@@ -164,54 +193,54 @@ let add a b =
     match a, b with
         | Rational_value a, Rational_value b -> Rational_value (NumConst.add a b)
         | Int_value a, Int_value b -> Int_value (Int32.add a b)
-        | _ -> raise ComputingException
+        | _ -> raise (ComputingException ("add : " ^ (string_of_var_type (var_type_of_value a)) ^ "," ^ (string_of_var_type (var_type_of_value b))))
 
 let sub a b =
     match a, b with
         | Rational_value a, Rational_value b -> Rational_value (NumConst.sub a b)
         | Int_value a, Int_value b -> Int_value (Int32.sub a b)
-        | _ -> raise ComputingException
+        | _ -> raise (ComputingException "sub")
 
 let mul a b =
     match a, b with
         | Rational_value a, Rational_value b -> Rational_value (NumConst.mul a b)
         | Int_value a, Int_value b -> Int_value (Int32.mul a b)
-        | _ -> raise ComputingException
+        | _ -> raise (ComputingException "mul")
 
 let div a b =
     match a, b with
         | Rational_value a, Rational_value b -> Rational_value (NumConst.div a b)
         | Int_value a, Int_value  b -> Int_value  (Int32.div a b)
-        | _ -> raise ComputingException
+        | _ -> raise (ComputingException "div")
 
 let neg = function
     | Rational_value x -> Rational_value (NumConst.neg x)
     | Int_value x -> Int_value (Int32.neg x)
-    | _ -> raise ComputingException
+    | _ -> raise (ComputingException "neg")
 
 let zero_of = function
     | Rational_value _ -> Rational_value NumConst.zero
     | Int_value _ -> Int_value Int32.zero
-    | _ -> raise ComputingException
+    | _ -> raise (ComputingException "zero_of")
 
 let one_of = function
     | Rational_value _ -> Rational_value NumConst.one
     | Int_value _ -> Int_value Int32.one
-    | _ -> raise ComputingException
+    | _ -> raise (ComputingException "one_of")
 
 let _and a b =
     match a, b with
         | Bool_value a, Bool_value b -> Bool_value (a && b)
-        | _ -> raise ComputingException
+        | _ -> raise (ComputingException "and")
 
 let _or a b =
     match a, b with
         | Bool_value a, Bool_value b -> Bool_value (a || b)
-        | _ -> raise ComputingException
+        | _ -> raise (ComputingException "or")
 
 let not = function
     | Bool_value a -> Bool_value (not (a))
-    | _ -> raise ComputingException
+    | _ -> raise (ComputingException "not")
 
 let bool_equal a b = Bool_value (equal a b)
 let bool_neq a b = Bool_value (neq a b)
@@ -220,22 +249,22 @@ let l a b =
     match a, b with
         | Rational_value a, Rational_value b -> Bool_value (NumConst.l a b)
         | Int_value a, Int_value  b -> Bool_value  (a < b)
-        | _ -> raise ComputingException
+        | _ -> raise (ComputingException "l")
 
 let leq a b =
     match a, b with
         | Rational_value a, Rational_value b -> Bool_value (NumConst.le a b)
         | Int_value a, Int_value  b -> Bool_value  (a <= b)
-        | _ -> raise ComputingException
+        | _ -> raise (ComputingException "leq")
 
 let g a b =
     match a, b with
         | Rational_value a, Rational_value b -> Bool_value (NumConst.g a b)
         | Int_value a, Int_value  b -> Bool_value  (a > b)
-        | _ -> raise ComputingException
+        | _ -> raise (ComputingException "g")
 
 let geq a b =
     match a, b with
         | Rational_value a, Rational_value b -> Bool_value (NumConst.ge a b)
         | Int_value a, Int_value  b -> Bool_value  (a >= b)
-        | _ -> raise ComputingException
+        | _ -> raise (ComputingException "geq")
