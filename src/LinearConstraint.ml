@@ -242,7 +242,7 @@ type coef = NumConst.t
 (* instead of integers. *)
 (*** WARNING: probably useless construction (by Ulrich Kuehne, around 2010) ***)
 type linear_term =
-	  Var of variable
+	| Var of variable
 	| Coef of coef
 	| Pl of linear_term * linear_term
 	| Mi of linear_term * linear_term
@@ -808,8 +808,37 @@ let get_coefficient_in_linear_term linear_term =
 
 
 
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Renaming linear terms} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+(* `rename_linear_term variable_pairs linear_term` renames variables within linear_term as follows: v is replaced with v' for any pair `(v,v')` in variable_pairs *)
+let rename_linear_term (variable_pairs : (variable * variable) list) (linear_term : linear_term) : linear_term =
+	(* Recursive subfunction *)
+	let rec rename_linear_term_rec linear_term = match linear_term with
+		(* Variable: Try to rename *)
+		| Var v -> let replaced_v = try(
+				(* Try to find the correspondence of v within the list of pairs *)
+				List.assoc v variable_pairs
+			)with
+				(* Not found: no replacement => keep v *)
+				Not_found -> v
+			in Var replaced_v
+		
+		(* Coef: unchanged *)
+		| Coef c -> Coef c
+		
+		(* Recursive calls *)
+		| Pl (linear_term1, linear_term2) ->
+			Pl (rename_linear_term_rec linear_term1, rename_linear_term_rec linear_term2)
+		| Mi (linear_term1, linear_term2) ->
+			Mi (rename_linear_term_rec linear_term1, rename_linear_term_rec linear_term2)
+		| Ti (coef, linear_term) -> Ti (coef, rename_linear_term_rec linear_term)
+	in
+	(* Call it with the initial linear_term *)
+	rename_linear_term_rec linear_term
 
+let rename_pxd_linear_term = rename_linear_term
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

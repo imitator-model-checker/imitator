@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/03/02
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -91,6 +91,9 @@ val add_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
 val sub_p_linear_terms : p_linear_term -> p_linear_term -> p_linear_term
 (*val sub_px_linear_terms : px_linear_term -> px_linear_term -> px_linear_term*)
 val sub_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
+
+(* `rename_pxd_linear_term variable_pairs pxd_linear_term` renames variables within pxd_linear_term as follows: v is replaced with v' for any pair `(v,v')` in variable_pairs *)
+val rename_pxd_linear_term : (variable * variable) list -> pxd_linear_term -> pxd_linear_term
 
 (** Evaluate a linear term with a function assigning a value to each variable. *)
 val evaluate_p_linear_term : p_valuation -> p_linear_term -> coef
