@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2021/01/19
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
  
@@ -87,7 +87,7 @@ let run_graph command =
 	(* Actually execute it *)
 	let execution = Sys.command command in
 	
-	if execution != 0 then
+	if execution <> 0 then
 		(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility (from the 'plotutils' package in Debian)."););
 	
 	(* Print some information *)
@@ -1762,7 +1762,7 @@ let dot dot_image_extension radical dot_source_file : (string option) =
 		(* Print some information *)
 		print_message Verbose_medium ("Result of the `dot` command: " ^ (string_of_int command_result));
 		
-		if command_result != 0 then(
+		if command_result <> 0 then(
 			print_error ("Something went wrong when calling `dot`. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the `dot` utility (from the `graphviz` package in Debian).");
 			(* Something went wrong *)
 			false

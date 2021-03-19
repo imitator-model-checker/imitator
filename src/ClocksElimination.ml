@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2015/11/27
- * Last modified     : 2019/05/29
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -273,7 +273,7 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
         );
 
         (* Start the algorithm *)
-        while !waiting != [] do
+        while !waiting <> [] do
           (* Pick a location from the waiting list *)
           match !waiting with
           | location_index :: rest ->

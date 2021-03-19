@@ -9,7 +9,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2020/12/04
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -747,7 +747,7 @@ let get_all_clocks_ge_zero_comstraint model =
 let get_all_clocks_ge_zero_comstraint2 clock_index model = 
 	let ls = ref [] in
 	List.iter (fun clock_indx ->
-		if (clock_index != clock_indx)
+		if (clock_index <> clock_indx)
 		then
 			(
 			ls := !ls@[tuple2pxd_constraint (create_x_ge_zero clock_indx)];
@@ -1886,7 +1886,7 @@ let filter_inf model cons =
 	| _  -> 
 			(	
 			List.iter ( fun (clock_index, op, linear_term) -> 
-				if (op != LinearConstraint.Op_ge &&  linear_term != zero_term)
+				if (op <> LinearConstraint.Op_ge &&  linear_term <> zero_term)
 				then
 					(
 					ls_temp := !ls_temp@[(clock_index, op, linear_term )];
@@ -3030,7 +3030,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Create the list of location_index for this PTA *)
 	let list_of_location_index_for_this_pta = (* list_of_interval 0 (new_nb_locations-1) in *)
 	let ls = ref [] in
-	if new_nb_locations != 0
+	if new_nb_locations <> 0
 	then
 		(
 		for i = 0 to new_nb_locations - 1 do

@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2021/03/16
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -495,7 +495,7 @@ let apply_updates_assign_gen (quantify: bool) (linear_constraint : LinearConstra
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
-	if clock_updates != [] then(
+	if clock_updates <> [] then(
 		(* Merge updates *)
 
 		(*** TO OPTIMIZE: only create the hash if there are indeed some resets/updates ***)
@@ -795,7 +795,7 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 			(* Get the list of stopped clocks *)
 			let stopped = model.stopwatches automaton_index location_index in
 			(* If list non null: we have stopwatches here *)
-			if stopped != [] then stopwatch_mode := true;
+			if stopped <> [] then stopwatch_mode := true;
 			(* Add each clock *)
 			List.iter (fun stopwatch_id ->
 				Hashtbl.replace stopwatches_hashtable stopwatch_id true
@@ -838,7 +838,7 @@ let compute_flows (location : Location.global_location) : ((Automaton.clock_inde
 		(* 1. Manage the list of stopped clocks *)
 		let stopped = model.stopwatches automaton_index location_index in
 		(* If list non null: we have flows <> 1 *)
-		if stopped != [] then flow_mode := true;
+		if stopped <> [] then flow_mode := true;
 		(* Add each clock *)
 		List.iter (fun stopwatch_id ->
 			Hashtbl.replace flows_hashtable stopwatch_id NumConst.zero

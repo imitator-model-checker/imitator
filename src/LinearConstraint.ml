@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/03/09
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -3468,9 +3468,9 @@ let pdbm_update i (b:linear_term) pdbm =
 	let nb_clocks = Array.length pdbm - 1 in
 	let zeroclock = nb_clocks in
 
- 	(* for all j != i: ( *** WARNING: what about zeroclock ? I assume it should be included too) *)
+ 	(* for all j <> i: ( *** WARNING: what about zeroclock ? I assume it should be included too) *)
 	for j = 0 to nb_clocks (* - 1 *) do
-		if j != i then(
+		if j <> i then(
 			(* Dij <- (e0j + b), ~0j *)
 			let (e0j : pdbm_eij), op0j = pdbm.(zeroclock).(j) in
 			pdbm.(i).(j) <- pdbm_add_linear_terms e0j (Eij b), op0j;
@@ -3503,7 +3503,7 @@ let pdbm_time_elapsing pdbm =
 	let nb_clocks = Array.length matrix - 1 in
 	let zeroclock = nb_clocks in
 
-	(* Set (xi - xz) to (inf, <) for all i != zero_clock *)
+	(* Set (xi - xz) to (inf, <) for all i <> zero_clock *)
 	for i = 0 to nb_clocks - 1 do
 		matrix.(i).(zeroclock) <- Infinity , PDBM_l;
 	done

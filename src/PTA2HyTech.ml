@@ -12,7 +12,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2020/01/08
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -243,7 +243,7 @@ let string_of_transition model automaton_index transition =
 	(* Clock updates *)
 	^ (string_of_clock_updates model clock_updates)
 	(* Add a coma in case of both clocks and discrete *)
-	^ (if clock_updates != No_update && discrete_updates != [] then ", " else "")
+	^ (if clock_updates <> No_update && discrete_updates <> [] then ", " else "")
 	(* Discrete updates *)
 	^ (string_of_discrete_updates model discrete_updates)
 	^ "} "

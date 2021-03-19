@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2020/09/23
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -106,7 +106,7 @@ class algoIMK (pval : PVal.pval) =
 		(* Check the pi0-compatibility *)
 		self#print_algo_message_newline Verbose_high ("Checking pi-compatibility:");
 		let compatible, incompatible = LinearConstraint.partition_pi0_compatible reference_pval#get_value p_constraint in
-		let is_pi0_incompatible = incompatible != [] in
+		let is_pi0_incompatible = incompatible <> [] in
 		
 		(* If pi0-incompatible: select an inequality *)
 		if is_pi0_incompatible then (
