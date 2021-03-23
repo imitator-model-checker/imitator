@@ -510,18 +510,23 @@ arithmetic_expression:
 arithmetic_term:
 	| arithmetic_factor { Parsed_DT_factor $1 }
 	/* Shortcut for syntax rational NAME without the multiplication operator */
-	| rational NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant (DiscreteValue.Rational_value $1)), Parsed_DF_variable $2) }
+	| number NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant ($1)), Parsed_DF_variable $2) }
 	| arithmetic_term OP_MUL arithmetic_factor { Parsed_DT_mul ($1, $3) }
 	| arithmetic_term OP_DIV arithmetic_factor { Parsed_DT_div ($1, $3) }
 	| OP_MINUS arithmetic_factor { Parsed_DT_factor(Parsed_DF_unary_min $2) }
 ;
 
 arithmetic_factor:
-	| rational { Parsed_DF_constant (DiscreteValue.Rational_value $1) }
+	| number { Parsed_DF_constant ($1) }
 	| NAME { Parsed_DF_variable $1 }
 	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
 ;
 
+number:
+	| integer { DiscreteValue.Number_value $1 }
+	| float { DiscreteValue.Number_value $1 }
+	| integer OP_DIV pos_integer { ( DiscreteValue.Rational_value (NumConst.div $1 $3)) }
+;
 
 /************************************************************/
 /** RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES */

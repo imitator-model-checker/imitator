@@ -135,3 +135,9 @@ and string_of_parsed_relop relop value_1 value_2 =
         | PARSED_OP_NEQ	    -> value_1 ^ " <> " ^ value_2
         | PARSED_OP_GEQ	    -> value_1 ^ " >= " ^ value_2
         | PARSED_OP_G		-> value_1 ^ " > " ^ value_2
+
+
+let string_of_parsed_nonlinear_constraint parsed_model = function
+    | Parsed_true_nonlinear_constraint -> "True"
+    | Parsed_false_nonlinear_constraint -> "False"
+    | Parsed_nonlinear_constraint expr -> string_of_parsed_discrete_boolean_expression parsed_model expr

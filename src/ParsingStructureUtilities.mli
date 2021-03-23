@@ -28,3 +28,5 @@ val string_of_parsed_arithmetic_expression : useful_parsing_model_information ->
 val string_of_parsed_term : useful_parsing_model_information -> parsed_discrete_term -> string
 val string_of_parsed_factor : useful_parsing_model_information -> parsed_discrete_factor -> string
 val string_of_parsed_relop : parsed_relop -> string -> string -> string
+
+val string_of_parsed_nonlinear_constraint : useful_parsing_model_information -> nonlinear_constraint -> string

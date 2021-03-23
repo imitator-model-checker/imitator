@@ -113,9 +113,21 @@ let string_of_type = function
     | DiscreteValue.Var_type_discrete x -> string_of_discrete_type x
 
 let numconst_value_or_fail = function
+    | DiscreteValue.Number_value x
     | DiscreteValue.Rational_value x -> x
-    | _ -> raise (InternalError ("Constant and variables should be rational in a linear term"))
+    | x ->
+        let str_value = DiscreteValue.string_of_value x in
+        let str_type = DiscreteValue.string_of_var_type (DiscreteValue.var_type_of_value x) in
+        let error_msg =
+            "Linear expressions only support rational literals and constants, value "
+            ^ str_value
+            ^ " of type "
+            ^ str_type
+            ^ " is not rational"
+        in
+        raise (InvalidExpression  error_msg)
 
+(* TODO benjamin move to ParsingStructureUtilities *)
 (* Try to reduce a parsed global expression, cannot take into account variables ! *)
 (* This function is used for computing constant values *)
 let try_reduce_parsed_global_expression constants expr =
@@ -694,7 +706,8 @@ and convert_discrete_bool_expr index_of_variables constants = function
 		else
 		    DB_variable (Hashtbl.find index_of_variables variable_name)
 
-let convert_bool_expr_with_model useful_parsing_model_information = convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
+let convert_bool_expr_with_model useful_parsing_model_information =
+    convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
 
 (*------------------------------------------------------------*)
 (* Functions for property conversion *)
@@ -819,12 +832,12 @@ let rational_expression_of_parsed_expression useful_parsing_model_information (*
 
     let rec rational_expression_of_parsed_expression = function
         | Parsed_Discrete_boolean_expression expr -> rational_expression_of_parsed_discrete_boolean_expression expr
-        | _ -> raise (TypeError "") (* TODO benjamin complete error *)
+        | _ -> raise (TypeError "type error 1") (* TODO benjamin complete error *)
 
     and rational_expression_of_parsed_discrete_boolean_expression = function
         | Parsed_arithmetic_expression expr ->
             Rational_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information expr)
-        | _ -> raise (TypeError "") (* TODO benjamin complete error *)
+        | _ -> raise (TypeError "type error 2") (* TODO benjamin complete error *)
     in
     rational_expression_of_parsed_expression
 
@@ -847,17 +860,24 @@ let int_expression_of_parsed_expression useful_parsing_model_information (* expr
 (* Convert a parsed global expression to an abstract model expression *)
 let convert_parsed_global_expression useful_parsing_model_information = function
     | Parsed_global_expression expr as global_expr ->
-        (* TODO benjamin, here without implicit conversion, i think that 0 + 0 will be rational and computed like this *)
-        let expression_type = TypeChecker.resolve_expression_type useful_parsing_model_information global_expr in
-        match expression_type with
-        | DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_bool ->
+        (* TYPE CHECK *)
+(*        let expr_type = TypeChecker.get_expression_type useful_parsing_model_information global_expr in*)
+        let _, expr_type = TypeChecker.resolve_expression_type useful_parsing_model_information global_expr in
+
+        match expr_type with
+        | DiscreteValue.Expression_type_discrete_bool _ ->
             bool_expression_of_parsed_expression useful_parsing_model_information expr
-        | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational) ->
+        | DiscreteValue.Expression_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
             rational_expression_of_parsed_expression useful_parsing_model_information expr
-        | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int) ->
+        | DiscreteValue.Expression_type_discrete_number DiscreteValue.Var_type_discrete_int ->
             int_expression_of_parsed_expression useful_parsing_model_information expr
         | _ ->
+            (* Should never happen *)
             raise (TypeError "An expression cannot have clock or parameter type")
+
+
+
+
 
 
 (* Convert parsed_loc_predicate *)
@@ -1160,7 +1180,7 @@ let rec check_f_in_linear_expression f index_of_variables type_of_variables cons
 (* Check that a linear expression contains only discrete variables and constants *)
 (*------------------------------------------------------------*)
 let only_discrete_in_linear_term index_of_variables type_of_variables constants = function
-  | Constant _ -> true
+  | Constant _ -> true (* TODO benjamin check here because constant are not only rational now !*)
   | Variable (_, variable_name) ->
     (* Constants are allowed *)
     (Hashtbl.mem constants variable_name)
@@ -1184,7 +1204,7 @@ let only_discrete_in_linear_term index_of_variables type_of_variables constants 
 (* Check that a non-linear expression contains only discrete variables and constants *)
 (*------------------------------------------------------------*)
 let only_discrete_in_nonlinear_term index_of_variables type_of_variables constants = function
-  | Parsed_DF_constant _ -> true
+  | Parsed_DF_constant _ -> true (* TODO benjamin check here because constant are not only rational now !*)
   | Parsed_DF_variable variable_name -> (
     (* Constants are allowed *)
     (Hashtbl.mem constants variable_name)
@@ -1452,12 +1472,7 @@ let nonlinear_constraint_of_nonlinear_convex_predicate useful_parsing_model_info
         let nonlinear_inequalities = List.fold_left
         (fun nonlinear_inequalities nonlinear_inequality ->
 
-            (* Eventually convert implicitly literal numbers of nonlinear inequality *)
-            let converted_nonlinear_inequality = TypeChecker.implicit_convert_literal_of_nonlinear_constraint useful_parsing_model_information nonlinear_inequality in
-            (* Type checking of nonlinear inequality *)
-            TypeChecker.check_type_of_nonlinear_constraint useful_parsing_model_information converted_nonlinear_inequality;
-
-            match converted_nonlinear_inequality with
+            match nonlinear_inequality with
             | Parsed_true_nonlinear_constraint -> nonlinear_inequalities
             | Parsed_false_nonlinear_constraint -> raise False_exception
             | Parsed_nonlinear_constraint nonlinear_constraint -> (convert_parsed_discrete_boolean_expression2 index_of_variables constants nonlinear_constraint) :: nonlinear_inequalities
@@ -2225,20 +2240,14 @@ and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = fun
 (* If it's not possible, we raise an InvalidExpression exception *)
 and try_convert_linear_term_of_parsed_discrete_factor = function
         | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name)
-        | Parsed_DF_constant var_value -> (
-            match var_value with
-            | DiscreteValue.Rational_value x -> Constant x
-            | _ -> raise (InvalidExpression "A linear expression should only use rational constants / literals")
-        )
+        | Parsed_DF_constant value -> Constant (numconst_value_or_fail value)
         | Parsed_DF_unary_min parsed_discrete_factor ->
             (* Check for unary min, negate variable and constant *)
             (match parsed_discrete_factor with
                 | Parsed_DF_variable variable_name -> Variable(NumConst.minus_one, variable_name)
-                | Parsed_DF_constant var_value -> (
-                    match var_value with
-                    | DiscreteValue.Rational_value x -> Constant (NumConst.neg x)
-                    | _ -> raise (InvalidExpression "A linear expression should only use rational constants / literals")
-                )
+                | Parsed_DF_constant value ->
+                    let numconst_value = numconst_value_or_fail value in
+                    Constant (NumConst.neg numconst_value)
                 | _ -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
             )
         (* Parenthesis used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
@@ -2268,24 +2277,10 @@ let linear_constraint_of_nonlinear_constraint = function
     | Parsed_nonlinear_constraint nonlinear_constraint ->
         try_convert_linear_expression_of_parsed_discrete_boolean_expression nonlinear_constraint
 
-
-(*------------------------------------------------------------*)
-(** Split between the discrete and continuous inequalities of a convex predicate; raises False_exception if a false linear expression is found *)
-(*------------------------------------------------------------*)
-let split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants convex_predicate =
-  (* Compute a list of inequalities *)
-  List.partition
-    (fun linear_inequality ->
-       match linear_inequality with
-       | Parsed_true_constraint -> true (*** NOTE: we arbitrarily send "true" to the discrete part ***)
-       | Parsed_false_constraint -> raise False_exception
-       | Parsed_linear_constraint (linexpr1, _, linexpr2) -> only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr1 && only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr2
-    ) convex_predicate
-
 (* Split convex_predicate into two lists *)
 (* One only contain discrete expression to nonlinear_constraint *)
 (* One that doesn't only contain discrete expression to linear_constraint *)
-let split_convex_predicate_into_discrete_and_continuous_new index_of_variables type_of_variables constants convex_predicate =
+let split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants convex_predicate =
   (* Compute a list of inequalities *)
   let partitions = List.partition
     (fun nonlinear_inequality ->
@@ -2314,8 +2309,12 @@ let convert_guard useful_parsing_model_information guard_convex_predicate =
         useful_parsing_model_information.type_of_variables,
         useful_parsing_model_information.constants in
 
+    (* TODO benjamin rename converted_guards to uniform_typed_guard ! *)
+    let converted_guards, guard_type = TypeChecker.resolve_guard_type useful_parsing_model_information guard_convex_predicate in
+
     (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
-    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous_new index_of_variables type_of_variables constants guard_convex_predicate in
+(*    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants guard_convex_predicate in*)
+    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants converted_guards in
 
     match discrete_guard_convex_predicate, continuous_guard_convex_predicate with
     (* No inequalities: true *)
@@ -2802,8 +2801,6 @@ let filtered_updates removed_variable_names updates =
 
 (** Translate a parsed discrete update into its abstract model *)
 let to_abstract_discrete_update useful_parsing_model_information (variable_name, parsed_update_expression) =
-    (* Check type consistency of discrete updates *)
-    let _ = TypeChecker.check_type_assignment useful_parsing_model_information variable_name parsed_update_expression in
     (* Convert *)
     let variable_index = Hashtbl.find useful_parsing_model_information.index_of_variables variable_name in
     let global_expression = convert_parsed_global_expression useful_parsing_model_information parsed_update_expression in
@@ -2856,6 +2853,14 @@ let split_to_clock_discrete_updates index_of_variables only_resets type_of_varia
   in
   List.partition is_clock_update updates
 
+(* TODO benjamin maybe move to TypeChecker *)
+(* Convert literal numbers of an update implicitly *)
+let uniform_type_literals_of_normal_update useful_parsing_model_information expr =
+    (* Get parsed expression converted in function of expression type *)
+    let converted_update, expr_type = TypeChecker.resolve_expression_type useful_parsing_model_information expr in
+    print_message Verbose_standard ("We convert update expression literals of : " ^ (ParsingStructureUtilities.string_of_parsed_global_expression useful_parsing_model_information expr) ^ " to " ^ (DiscreteValue.string_of_expression_type expr_type) );
+    converted_update, expr_type
+
 (** Translate a normal parsed update into its abstract model *)
 let convert_normal_updates useful_parsing_model_information updates_list =
 
@@ -2864,11 +2869,27 @@ let convert_normal_updates useful_parsing_model_information updates_list =
         useful_parsing_model_information.index_of_variables, useful_parsing_model_information.type_of_variables,
         useful_parsing_model_information.constants in
 
+    (* TYPE CHECK *)
+    (* Convert literal numbers of updates implicitly *)
+    let converted_updates_list = List.map (fun (variable_name, expr) ->
+        let uniformly_typed_expr, expr_type = TypeChecker.resolve_expression_type useful_parsing_model_information expr in
+        (* TODO benjamin move to TypeChecker *)
+        let var_type = TypeChecker.get_type_of_variable_by_name useful_parsing_model_information variable_name in
+        (* Check type of variable is compatible with expression type *)
+        if not (DiscreteValue.is_var_type_compatible_with_expr_type var_type expr_type) then (
+            raise (TypeError ("Bob ! " ^ (DiscreteValue.string_of_var_type var_type) ^ "," ^ (DiscreteValue.string_of_expression_type expr_type)))
+        );
+        variable_name, uniformly_typed_expr
+    ) updates_list in
+
+
+
+
 	(* Flag to check if there are clock resets only to 0 *)
 	let only_resets = ref true in
 
 	(** split clock and discrete updates *)
-	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates_list in
+	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates index_of_variables only_resets type_of_variables converted_updates_list in
 
 	(* Convert the discrete updates *)
 	let discrete_updates : discrete_update list = List.map (to_abstract_discrete_update useful_parsing_model_information) parsed_discrete_updates in
@@ -2887,23 +2908,31 @@ let convert_normal_updates useful_parsing_model_information updates_list =
 (** convert normal and conditional updates *)
 let convert_updates useful_parsing_model_information updates : updates =
 
-  (** split normal and conditional updates *)
-  let normal_updates, conditional_updates = List.partition is_normal_update updates in
+    (** split normal and conditional updates *)
+    let normal_updates, conditional_updates = List.partition is_normal_update updates in
 
-  (** convert normal parsed updates *)
-  let converted_updates = convert_normal_updates useful_parsing_model_information (List.map get_normal_update_value normal_updates) in
+    (** convert normal parsed updates *)
+    let converted_updates = convert_normal_updates useful_parsing_model_information (List.map get_normal_update_value normal_updates) in
 
-  (** convert normal parsed updates inside conditional updates *)
-  let conditional_updates_values : conditional_update list = List.map (fun u ->
-      let boolean_value, if_updates, else_updates = get_conditional_update_value u in
-      let convert_boolean = convert_bool_expr_with_model useful_parsing_model_information boolean_value in
-      let convert_if_updates = convert_normal_updates useful_parsing_model_information if_updates in
-      let convert_else_updates = convert_normal_updates useful_parsing_model_information else_updates in
-      (convert_boolean, convert_if_updates, convert_else_updates)
+    (** convert normal parsed updates inside conditional updates *)
+    let conditional_updates_values : conditional_update list = List.map (fun u ->
+        let boolean_value, if_updates, else_updates = get_conditional_update_value u in
+
+        (* TYPE CHECK *)
+        (* TODO benjamin move to TypeChecker *)
+        let uniformly_typed_bool_expr, bool_expr_type = TypeChecker.resolve_bool_expression_type useful_parsing_model_information boolean_value in
+        if not (DiscreteValue.is_bool_expression bool_expr_type) then (
+            raise (TypeError "Update condition is not a booleaaaan") (* TODO benjamin complete message*)
+        );
+
+        let convert_boolean = convert_bool_expr_with_model useful_parsing_model_information uniformly_typed_bool_expr in
+        let convert_if_updates = convert_normal_updates useful_parsing_model_information if_updates in
+        let convert_else_updates = convert_normal_updates useful_parsing_model_information else_updates in
+        (convert_boolean, convert_if_updates, convert_else_updates)
     ) conditional_updates in
 
-  (** updates abstract model *)
-  { converted_updates with conditional = conditional_updates_values }
+    (** updates abstract model *)
+    { converted_updates with conditional = conditional_updates_values }
 
 
 (*------------------------------------------------------------*)
@@ -4611,13 +4640,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         raise (TypeError "Constant init") (* TODO benjamin complete with real message *)
     );
 
-    (* Implicit constant conversion to real var_type of constant *)
-    (* Create tuples for representing constants as name * value *)
+    (* Convert value assigned to the constant to the type of the constant *)
+    (* and create tuples for representing constants as name * value *)
     let constant_tuples = List.map (fun (name, expr, value, var_type) ->
         name, DiscreteValue.convert_value value var_type
     ) evaluated_constants in
 
-(*    let constant_tuples = List.map (fun (name, expr, value, var_type) -> name, value) evaluated_constants in*)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Make the array of constants *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
