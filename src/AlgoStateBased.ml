@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2021/03/19
+ * Last modified     : 2021/03/23
  *
  ************************************************************)
 
@@ -1175,6 +1175,119 @@ let apply_time_elapsing_to_concrete_valuation (location : Location.global_locati
 (** Compute the predecessors of a zone *)
 (*------------------------------------------------------------*)
 
+(* `continuous_predecessor location_n initial_z_n z_n z_n_post` (where `z_n_post` is a set of "final" valuations of location n, `z_n` is the symbolic zone of location n, and `initial_z_n` is the set of admissible initial valuations for location n) computes the set of valuations at location n that are initial admissible valuations *and* that are predecessor (via time past) of valuations of `z_n_post`. If `z_n_post` is a single point, note that the result is a single point (or possibly a set of points) corresponding to valuations right when entering location n. *)
+let continuous_predecessors
+	(location_n			: Location.global_location)
+	(initial_z_n		: LinearConstraint.px_linear_constraint)
+	(z_n				: LinearConstraint.px_linear_constraint)
+	(z_n_post			: LinearConstraint.px_linear_constraint)
+		: LinearConstraint.px_linear_constraint
+		=
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
+	(* Copy (for safety concerns) *)
+	let current_pxd_constraint = LinearConstraint.px_copy z_n_post in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_medium ("Initial constraint: " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names current_pxd_constraint ) ^ "");
+	);
+
+	(* Step 1: Apply time past *)
+
+	(* Create the time polyhedron at location n depending on the clocks *)
+	let time_polyhedron : LinearConstraint.px_linear_constraint = px_compute_time_polyhedron Backward location_n in
+	
+	(* Apply time past *)
+	print_message Verbose_total ("Applying time past…");
+
+	(* Apply time past *)
+	LinearConstraint.px_time_elapse_assign_wrt_polyhedron time_polyhedron current_pxd_constraint;
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Applied timed past at state n:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names current_pxd_constraint) ^ "");
+	);
+	
+	(* Step 2: Intersect with invariant and admissible initial valuations *)
+
+	(* Intersect with invariant n (NOTE: shorter: we can fact intersect with the symbolic state, that already contains the invariant!) AND intersect with initial admissible valuations *)
+	(*** NOTE: if `initial_z_n` is already included into `z_n`, this latter could be used alone ***)
+	LinearConstraint.px_intersection_assign current_pxd_constraint [z_n; initial_z_n];
+	
+	(* Return the constraint *)
+	current_pxd_constraint
+
+
+(* `discrete_predecessors z_n_minus_1 guard_n_minus_1_n updates_n_minus_1_n initial_z_n` (where `initial_z_n` is a set of "initial" valuations of location n, `guard_n_minus_1_n` and `updates_n_minus_1_n` are the guard and updates from n-1 to n, and `z_n_minus_1` is the symbolic zone of location n-1) computes the set of valuations at location n-1 that are "final" admissible valuations *and* that are predecessor (via discrete successor) of valuations of `initial_z_n`. That is, the result is the set of points corresponding to valuations right before taking the transition from n-1 to n, and leading to `initial_z_n`. *)
+
+let discrete_predecessors
+	(z_n_minus_1		: LinearConstraint.px_linear_constraint)
+	(guard_n_minus_1_n	: LinearConstraint.pxd_linear_constraint)
+	(updates_n_minus_1_n: AbstractModel.clock_updates list)
+	(initial_z_n		: LinearConstraint.px_linear_constraint)
+		: LinearConstraint.px_linear_constraint
+		=
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
+	(* Copy the constraint and convert to PXD *)
+	let current_pxd_constraint = LinearConstraint.pxd_of_px_constraint initial_z_n in
+	
+	
+	(* Step 1: Apply inverted updates *)
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_medium ("Now applying updates backwards…");
+	);
+
+	(* Apply the inverted updates (from n-1 to n) *)
+	apply_updates_assign_backward current_pxd_constraint updates_n_minus_1_n;
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Updates were applied: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_pxd_constraint) ^ "");
+	);
+	
+
+	(* Step 2: Intersect with source guard and invariant *)
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Now intersecting with source guard and source invariant…");
+	);
+
+	(* Intersect with the guard from n-1 to n, AND with the invariant at n-1 (NOTE: to simplify, we intersect with z_n_minus_1) *)
+	LinearConstraint.pxd_intersection_assign current_pxd_constraint [guard_n_minus_1_n; (LinearConstraint.pxd_of_px_constraint z_n_minus_1)];
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("After intersection with source guard and source invariant: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_pxd_constraint) ^ "");
+	);
+
+	
+	(* Step 3: Remove discrete *)
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Removing discrete variables…");
+	);
+
+	(* Return a px-constraint *)
+	let final_px_constraint = LinearConstraint.pxd_hide_discrete_and_collapse current_pxd_constraint in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("After removing discrete variables: " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names final_px_constraint) ^ "");
+	);
+	
+	(* Return result *)
+	final_px_constraint
+
+
+	
 (** Given `Zn-1` and `Zn` such that
 	`Zn` is the successor zone of `Zn-1` by guard `g-1` and updating variables in `Un-1` to some values,
 	given `Zn+1` a set of concrete points (valuations) successor of zone `Zn` by guard `gn`, updates `Rn`,
