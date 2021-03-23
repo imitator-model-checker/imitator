@@ -1,14 +1,14 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : model
+ * Title            : template
  * Description      : Empty template of a case study
  * Correctness      : TODO
- * Scalable         : TBD
- * Generated        : TBD
+ * Scalable         : no
+ * Generated        : no
  * Categories       : TBD
- * Source           : TBD
- * bibkey           : TBD
+ * Source           : Own work
+ * bibkey           : 
  * Author           : ME
  * Modeling         : ME
  * Input by         : ME
@@ -18,7 +18,7 @@
  * Last modified    : 2021/01/01
  * Model version    : 0.1
  *
- * IMITATOR version :
+ * IMITATOR version : 3.0
  ************************************************************)
 
 var
