@@ -678,12 +678,9 @@ boolean_expression:
 	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
 	| CT_TRUE { Parsed_True }
 	| CT_FALSE { Parsed_False }
-	/* TODO benjamin add boolean_expression bool_relop discrete_boolean_expression for the form b = (x & y | z), b = 10 > 5... */
 ;
 
 discrete_boolean_expression:
-	/* Parsed_DB_variable of variable_name */
-	/*| NAME { Parsed_DB_variable $1 }*/
 	| arithmetic_expression { Parsed_arithmetic_expression $1 }
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
 	| arithmetic_expression relop arithmetic_expression { Parsed_expression ($1, $2, $3) }

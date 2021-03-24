@@ -65,6 +65,16 @@ let get_type_of_variable_by_name parsed_model variable_name =
     let discrete_index = Hashtbl.find parsed_model.index_of_variables variable_name in
     get_type_of_variable parsed_model discrete_index
 
+(* Get variable discrete type given it's index *)
+let get_discrete_type_of_variable parsed_model variable_index =
+    let var_type = get_type_of_variable parsed_model variable_index in
+    DiscreteValue.discrete_type_of_var_type var_type
+
+(* Get variable discrete type given it's name *)
+let get_discrete_type_of_variable_by_name parsed_model variable_name =
+    let var_type = get_type_of_variable_by_name parsed_model variable_name in
+    DiscreteValue.discrete_type_of_var_type var_type
+
 (* TODO benjamin rename all convert_literal_ by uniform_var_type_of_expression, something like that *)
 let rec convert_literal_types_of_expression parsed_model target_type = function
     | Parsed_global_expression expr ->
@@ -153,12 +163,15 @@ let convert_literal_types_of_nonlinear_constraint parsed_model target_type = fun
 let rec get_expression_type parsed_model = function
     | Parsed_global_expression expr as global_expr ->
         let expr_type = get_parsed_boolean_expression_type parsed_model expr in
+        expr_type
+        (*
         (* If type is a number, we choose that expression is rational *)
         (* else get the expression type *)
         if DiscreteValue.is_unknown_number_type expr_type then
             DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
         else
             expr_type
+        *)
 
 and get_parsed_boolean_expression_type parsed_model = function
     | Parsed_True
@@ -295,7 +308,7 @@ and get_parsed_discrete_factor_type parsed_model = function
             (* Get type of variable *)
             let variable_index = Hashtbl.find parsed_model.index_of_variables variable_name in
             let variable_type = parsed_model.type_of_variables variable_index in
-            DiscreteValue.inner_type_of variable_type
+            DiscreteValue.discrete_type_of_var_type variable_type
         )
         else (
             if Hashtbl.mem parsed_model.constants variable_name then (
@@ -407,14 +420,14 @@ let resolve_expression_type parsed_model expr =
 
     (* Get var type of the expression, deduced by the used variables *)
     let expr_var_type = get_expression_type parsed_model expr in
-
+    (*
     (* If type cannot be resolved (no variable for example, turn to rational *)
     let expr_var_type = (
         if DiscreteValue.is_unknown_number_type expr_var_type then
             DiscreteValue.var_type_rational
         else
             expr_var_type
-    ) in
+    ) in *)
     (* TODO benjamin change verbose mode *)
     print_message Verbose_standard (
         "Literals of expression \""
@@ -512,18 +525,89 @@ let resolve_nonlinear_constraint_type parsed_model expr =
 
     (* Return uniform typed expression and it's type *)
     uniformly_typed_nonlinear_constraint, expr_type
+(*
+let check_expression parsed_model expr =
+    (* Resolve expression type and get uniformly typed expression *)
+    let uniformly_typed_expr, expr_type = resolve_expression_type parsed_model expr in
+*)
+let check_nonlinear_constraint parsed_model nonlinear_constraint =
+    let error_msg =
+        "Guard or invariant expression \""
+        ^ (string_of_parsed_nonlinear_constraint parsed_model nonlinear_constraint)
+        ^ "\" is not a boolean expression"
+    in
 
-let resolve_guard_type parsed_model guard =
+    let uniformly_typed_nonlinear_constraint, expr_type = resolve_nonlinear_constraint_type parsed_model nonlinear_constraint in
 
-    let resolved_nonlinear_constraints = List.map (resolve_nonlinear_constraint_type parsed_model) guard in
+    (* Check that non-linear constraint is a boolean expression *)
+    if not (DiscreteValue.is_bool_expression_type expr_type) then
+        raise (TypeError error_msg)
+    else
+        uniformly_typed_nonlinear_constraint, expr_type
+
+let check_guard parsed_model guard =
+
+    let resolved_nonlinear_constraints = List.map (check_nonlinear_constraint parsed_model) guard in
 
     let uniformly_typed_nonlinear_constraints = List.map (fun (u, _) -> u) resolved_nonlinear_constraints in
     let nonlinear_constraint_types = List.map (fun (_, t) -> t) resolved_nonlinear_constraints in
 
-    (* TODO benjamin type check of guard *)
-
     uniformly_typed_nonlinear_constraints, List.hd nonlinear_constraint_types
 
+
+let check_update parsed_model variable_name expr =
+
+    (* Get var type of the expression, deduced by the used variables *)
+    let expr_var_type = get_expression_type parsed_model expr in
+
+    (* Resolve expression type and get uniformly typed expression *)
+    let uniformly_typed_expr, expr_type = resolve_expression_type parsed_model expr in
+    (* Get assigned variable type *)
+    let var_type = get_type_of_variable_by_name parsed_model variable_name in
+    (* Get underlying type of assigned variable *)
+    let var_type_discrete = get_discrete_type_of_variable_by_name parsed_model variable_name in
+
+    (*  *)
+    let typed_expr =
+        (* Check var_type is compatible with expression type, if yes, convert expression *)
+        if not (DiscreteValue.is_var_type_compatible_with_expr_type var_type_discrete expr_type) then (
+            raise (TypeError (
+                "Variable \""
+                ^ variable_name
+                ^ "\" of type "
+                ^ (DiscreteValue.string_of_var_type var_type_discrete)
+                ^ " is not compatible with expression \""
+                ^ (ParsingStructureUtilities.string_of_parsed_global_expression parsed_model uniformly_typed_expr)
+                ^ "\" of "
+                ^ (DiscreteValue.string_of_expression_type expr_type)
+                )
+            )
+        (* Check if expression type is resolved as unknown number *)
+        ) else if DiscreteValue.is_unknown_number_expression_type expr_type then (
+            (* If the expression type is unknown number, and as expression type and var type are compatible *)
+            (* convert expression type to variable type *)
+            convert_literal_types_of_expression parsed_model var_type uniformly_typed_expr
+        (* Else, just return the new typed expression *)
+        ) else
+            uniformly_typed_expr
+    in
+    variable_name, typed_expr
+
+
+(* Resolve and check conditional expression *)
+let check_conditional parsed_model expr =
+
+    let uniformly_typed_bool_expr, bool_expr_type = resolve_bool_expression_type parsed_model expr in
+    if not (DiscreteValue.is_bool_expression_type bool_expr_type) then (
+        raise (TypeError (
+            "Expression \""
+            ^ (string_of_parsed_boolean_expression parsed_model expr)
+            ^ "\" in conditional statement, is not a boolean expression"
+            )
+        )
+    )
+    else
+        uniformly_typed_bool_expr, bool_expr_type
 
 let check_type_of_nonlinear_constraint parsed_model = function
     (* It's ok non-linear constraint is of boolean type *)

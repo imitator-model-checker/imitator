@@ -90,6 +90,8 @@ type global_expression =
     | Int_expression of discrete_arithmetic_expression
     | Bool_expression of boolean_expression
 
+val var_type_of_expression : global_expression -> DiscreteValue.var_type
+
 val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discrete_value -> bool
 
 (************************************************************)

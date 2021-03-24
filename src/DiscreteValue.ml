@@ -33,15 +33,15 @@ type discrete_value =
     | Bool_value of bool
     | Int_value of Int32.t
 
-
-
 let var_type_of_value = function
     | Rational_value _ -> var_type_rational
     | Bool_value _ -> var_type_bool
     | Int_value _ -> var_type_int
     | Number_value _ -> var_type_unknown_number
 
-let inner_type_of = function
+
+
+let discrete_type_of_var_type = function
     | Var_type_clock
     | Var_type_parameter -> var_type_rational
     | other_type -> other_type
@@ -74,19 +74,27 @@ let is_type_compatibles type_a type_b =
 (* Check if a variable type is compatible with an expression type *)
 let is_var_type_compatible_with_expr_type var_type expr_type =
     match var_type, expr_type with
+    (*
     (* Clocks are rationals *)
     | Var_type_clock, Expression_type_discrete_number Var_type_discrete_rational
     (* Parameters are rationals *)
     | Var_type_parameter, Expression_type_discrete_number Var_type_discrete_rational
+    *)
     (* Booleans are compatible with any boolean expression *)
     | Var_type_discrete Var_type_discrete_bool,  Expression_type_discrete_bool _ -> true
+    (* All number types are compatible with unknown number typed expression *)
+    | Var_type_discrete (Var_type_discrete_number _), Expression_type_discrete_number Var_type_discrete_unknown_number -> true
     (* Number type is compatible with an arithmetic expression of the same type *)
-    | Var_type_discrete Var_type_discrete_number var_type, Expression_type_discrete_number expr_type when var_type = expr_type -> true
+    | Var_type_discrete (Var_type_discrete_number var_type), Expression_type_discrete_number expr_type when var_type = expr_type -> true
     | _ -> false
 
 (* Check if an expression is a boolean expression *)
-let is_bool_expression = function
+let is_bool_expression_type = function
     | Expression_type_discrete_bool _ -> true
+    | _ -> false
+
+let is_unknown_number_expression_type = function
+    | Expression_type_discrete_number Var_type_discrete_unknown_number -> true
     | _ -> false
 
 let string_of_var_type_discrete_number = function

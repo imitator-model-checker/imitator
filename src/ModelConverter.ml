@@ -2310,7 +2310,7 @@ let convert_guard useful_parsing_model_information guard_convex_predicate =
         useful_parsing_model_information.constants in
 
     (* TODO benjamin rename converted_guards to uniform_typed_guard ! *)
-    let converted_guards, guard_type = TypeChecker.resolve_guard_type useful_parsing_model_information guard_convex_predicate in
+    let converted_guards, guard_type = TypeChecker.check_guard useful_parsing_model_information guard_convex_predicate in
 
     (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
 (*    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants guard_convex_predicate in*)
@@ -2853,14 +2853,6 @@ let split_to_clock_discrete_updates index_of_variables only_resets type_of_varia
   in
   List.partition is_clock_update updates
 
-(* TODO benjamin maybe move to TypeChecker *)
-(* Convert literal numbers of an update implicitly *)
-let uniform_type_literals_of_normal_update useful_parsing_model_information expr =
-    (* Get parsed expression converted in function of expression type *)
-    let converted_update, expr_type = TypeChecker.resolve_expression_type useful_parsing_model_information expr in
-    print_message Verbose_standard ("We convert update expression literals of : " ^ (ParsingStructureUtilities.string_of_parsed_global_expression useful_parsing_model_information expr) ^ " to " ^ (DiscreteValue.string_of_expression_type expr_type) );
-    converted_update, expr_type
-
 (** Translate a normal parsed update into its abstract model *)
 let convert_normal_updates useful_parsing_model_information updates_list =
 
@@ -2869,21 +2861,10 @@ let convert_normal_updates useful_parsing_model_information updates_list =
         useful_parsing_model_information.index_of_variables, useful_parsing_model_information.type_of_variables,
         useful_parsing_model_information.constants in
 
-    (* TYPE CHECK *)
-    (* Convert literal numbers of updates implicitly *)
+    (* TYPE CHECK / RESOLVE *)
     let converted_updates_list = List.map (fun (variable_name, expr) ->
-        let uniformly_typed_expr, expr_type = TypeChecker.resolve_expression_type useful_parsing_model_information expr in
-        (* TODO benjamin move to TypeChecker *)
-        let var_type = TypeChecker.get_type_of_variable_by_name useful_parsing_model_information variable_name in
-        (* Check type of variable is compatible with expression type *)
-        if not (DiscreteValue.is_var_type_compatible_with_expr_type var_type expr_type) then (
-            raise (TypeError ("Bob ! " ^ (DiscreteValue.string_of_var_type var_type) ^ "," ^ (DiscreteValue.string_of_expression_type expr_type)))
-        );
-        variable_name, uniformly_typed_expr
+        TypeChecker.check_update useful_parsing_model_information variable_name expr
     ) updates_list in
-
-
-
 
 	(* Flag to check if there are clock resets only to 0 *)
 	let only_resets = ref true in
@@ -2919,11 +2900,7 @@ let convert_updates useful_parsing_model_information updates : updates =
         let boolean_value, if_updates, else_updates = get_conditional_update_value u in
 
         (* TYPE CHECK *)
-        (* TODO benjamin move to TypeChecker *)
-        let uniformly_typed_bool_expr, bool_expr_type = TypeChecker.resolve_bool_expression_type useful_parsing_model_information boolean_value in
-        if not (DiscreteValue.is_bool_expression bool_expr_type) then (
-            raise (TypeError "Update condition is not a booleaaaan") (* TODO benjamin complete message*)
-        );
+        let uniformly_typed_bool_expr, bool_expr_type = TypeChecker.check_conditional useful_parsing_model_information boolean_value in
 
         let convert_boolean = convert_bool_expr_with_model useful_parsing_model_information uniformly_typed_bool_expr in
         let convert_if_updates = convert_normal_updates useful_parsing_model_information if_updates in

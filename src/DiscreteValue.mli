@@ -54,7 +54,7 @@ val string_of_var_type_discrete : var_type_discrete -> string
 
 val string_of_expression_type : expression_type -> string
 
-val inner_type_of : var_type -> var_type
+val discrete_type_of_var_type : var_type -> var_type
 val var_type_of_value : discrete_value -> var_type
 
 (* Check if two types are compatible *)
@@ -63,8 +63,10 @@ val is_type_compatibles : var_type -> var_type -> bool
 
 (* Check if a variable type is compatible with an expression type *)
 val is_var_type_compatible_with_expr_type : var_type -> expression_type -> bool
-(* Check if an expression is a boolean expression *)
-val is_bool_expression : expression_type -> bool
+(* Check if expression type is a boolean expression type *)
+val is_bool_expression_type : expression_type -> bool
+(* Check if expression type is a unknown number type *)
+val is_unknown_number_expression_type : expression_type -> bool
 
 val numconst_default_value : NumConst.t
 val int32_default_value : Int32.t
