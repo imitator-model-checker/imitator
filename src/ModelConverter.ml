@@ -865,11 +865,11 @@ let convert_parsed_global_expression useful_parsing_model_information = function
         let _, expr_type = TypeChecker.resolve_expression_type useful_parsing_model_information global_expr in
 
         match expr_type with
-        | DiscreteValue.Expression_type_discrete_bool _ ->
+        | DiscreteExpressions.Expression_type_discrete_bool _ ->
             bool_expression_of_parsed_expression useful_parsing_model_information expr
-        | DiscreteValue.Expression_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
+        | DiscreteExpressions.Expression_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
             rational_expression_of_parsed_expression useful_parsing_model_information expr
-        | DiscreteValue.Expression_type_discrete_number DiscreteValue.Var_type_discrete_int ->
+        | DiscreteExpressions.Expression_type_discrete_number DiscreteValue.Var_type_discrete_int ->
             int_expression_of_parsed_expression useful_parsing_model_information expr
         | _ ->
             (* Should never happen *)

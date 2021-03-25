@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+type expression_type =
+    | Expression_type_discrete_bool of DiscreteValue.var_type_discrete
+    | Expression_type_discrete_number of DiscreteValue.var_type_discrete_number
 
 (************************************************************)
 (************************************************************)
@@ -90,7 +93,16 @@ type global_expression =
     | Int_expression of discrete_arithmetic_expression
     | Bool_expression of boolean_expression
 
+
+val string_of_expression_type : expression_type -> string
 val var_type_of_expression : global_expression -> DiscreteValue.var_type
+(* Check if a variable type is compatible with an expression type *)
+val is_var_type_compatible_with_expr_type : DiscreteValue.var_type -> expression_type -> bool
+(* Check if expression type is a boolean expression type *)
+val is_bool_expression_type : expression_type -> bool
+(* Check if expression type is a unknown number type *)
+val is_unknown_number_expression_type : expression_type -> bool
+
 
 val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discrete_value -> bool
 

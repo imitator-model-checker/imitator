@@ -30,13 +30,13 @@ val get_expression_type : ParsingStructure.useful_parsing_model_information -> P
 
 (* Try to resolve the specific type of an expression according to literals and variables used *)
 (* Doing type checking of the expression at the same time*)
-val resolve_expression_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.global_expression -> ParsingStructure.global_expression * DiscreteValue.expression_type
-val resolve_bool_expression_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_boolean_expression -> ParsingStructure.parsed_boolean_expression * DiscreteValue.expression_type
-val resolve_nonlinear_constraint_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.nonlinear_constraint -> ParsingStructure.nonlinear_constraint * DiscreteValue.expression_type
+val resolve_expression_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.global_expression -> ParsingStructure.global_expression * DiscreteExpressions.expression_type
+val resolve_bool_expression_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_boolean_expression -> ParsingStructure.parsed_boolean_expression * DiscreteExpressions.expression_type
+val resolve_nonlinear_constraint_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.nonlinear_constraint -> ParsingStructure.nonlinear_constraint * DiscreteExpressions.expression_type
 
-val check_guard : ParsingStructure.useful_parsing_model_information -> ParsingStructure.convex_predicate -> ParsingStructure.convex_predicate * DiscreteValue.expression_type
+val check_guard : ParsingStructure.useful_parsing_model_information -> ParsingStructure.convex_predicate -> ParsingStructure.convex_predicate * DiscreteExpressions.expression_type
 val check_update : ParsingStructure.useful_parsing_model_information -> string -> ParsingStructure.global_expression -> string * ParsingStructure.global_expression
-val check_conditional : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_boolean_expression -> ParsingStructure.parsed_boolean_expression  * DiscreteValue.expression_type
+val check_conditional : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_boolean_expression -> ParsingStructure.parsed_boolean_expression  * DiscreteExpressions.expression_type
 
 val convert_literal_types_of_expression :  ParsingStructure.useful_parsing_model_information -> DiscreteValue.var_type -> ParsingStructure.global_expression -> ParsingStructure.global_expression
 val convert_literal_types_of_nonlinear_constraint : ParsingStructure.useful_parsing_model_information -> DiscreteValue.var_type -> ParsingStructure.nonlinear_constraint -> ParsingStructure.nonlinear_constraint

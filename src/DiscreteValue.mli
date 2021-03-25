@@ -23,10 +23,6 @@ val var_type_int : var_type
 val var_type_unknown_number : var_type
 val var_type_bool : var_type
 
-type expression_type =
-    | Expression_type_discrete_bool of var_type_discrete
-    | Expression_type_discrete_number of var_type_discrete_number
-
 (* Discrete value of different specific types *)
 type discrete_value =
     | Number_value of NumConst.t
@@ -51,8 +47,7 @@ val is_bool_value : discrete_value -> bool
 
 val string_of_var_type : var_type -> string
 val string_of_var_type_discrete : var_type_discrete -> string
-
-val string_of_expression_type : expression_type -> string
+val string_of_var_type_discrete_number : var_type_discrete_number -> string
 
 val discrete_type_of_var_type : var_type -> var_type
 val var_type_of_value : discrete_value -> var_type
@@ -61,12 +56,8 @@ val var_type_of_value : discrete_value -> var_type
 (* To be compatible, two type should have the same kind (number, boolean, ...) *)
 val is_type_compatibles : var_type -> var_type -> bool
 
-(* Check if a variable type is compatible with an expression type *)
-val is_var_type_compatible_with_expr_type : var_type -> expression_type -> bool
-(* Check if expression type is a boolean expression type *)
-val is_bool_expression_type : expression_type -> bool
-(* Check if expression type is a unknown number type *)
-val is_unknown_number_expression_type : expression_type -> bool
+
+
 
 val numconst_default_value : NumConst.t
 val int32_default_value : Int32.t
@@ -113,3 +104,4 @@ val l : discrete_value -> discrete_value -> discrete_value
 val leq : discrete_value -> discrete_value -> discrete_value
 val g : discrete_value -> discrete_value -> discrete_value
 val geq : discrete_value -> discrete_value -> discrete_value
+

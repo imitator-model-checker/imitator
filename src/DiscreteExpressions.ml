@@ -16,6 +16,12 @@ open Constants
 
 exception NotImplemented (* TODO benjamnin to remove *)
 
+
+
+type expression_type =
+    | Expression_type_discrete_bool of DiscreteValue.var_type_discrete
+    | Expression_type_discrete_number of DiscreteValue.var_type_discrete_number
+
 (****************************************************************)
 (** Operators *)
 (****************************************************************)
@@ -93,6 +99,9 @@ let var_type_of_expression = function
 (****************************************************************)
 (** Strings *)
 (****************************************************************)
+let string_of_expression_type = function
+    | Expression_type_discrete_number x -> "arithmetic of " ^ (DiscreteValue.string_of_var_type_discrete_number x)
+    | Expression_type_discrete_bool x -> "boolean of " ^ (DiscreteValue.string_of_var_type_discrete x)
 
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_discrete_factor_has_parenthesis = function
@@ -263,6 +272,36 @@ let customized_string_of_global_expression customized_string variable_names = fu
     | Bool_expression expr -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
 
 let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
+
+(************************************************************)
+(** General functions on expression types *)
+(************************************************************)
+
+(* Check if an expression is a boolean expression *)
+let is_bool_expression_type = function
+    | Expression_type_discrete_bool _ -> true
+    | _ -> false
+
+let is_unknown_number_expression_type = function
+    | Expression_type_discrete_number Var_type_discrete_unknown_number -> true
+    | _ -> false
+
+(* Check if a variable type is compatible with an expression type *)
+let is_var_type_compatible_with_expr_type var_type expr_type =
+    match var_type, expr_type with
+    (*
+    (* Clocks are rationals *)
+    | Var_type_clock, Expression_type_discrete_number Var_type_discrete_rational
+    (* Parameters are rationals *)
+    | Var_type_parameter, Expression_type_discrete_number Var_type_discrete_rational
+    *)
+    (* Booleans are compatible with any boolean expression *)
+    | DiscreteValue.Var_type_discrete Var_type_discrete_bool,  Expression_type_discrete_bool _ -> true
+    (* All number types are compatible with unknown number typed expression *)
+    | DiscreteValue.Var_type_discrete (Var_type_discrete_number _), Expression_type_discrete_number Var_type_discrete_unknown_number -> true
+    (* Number type is compatible with an arithmetic expression of the same type *)
+    | DiscreteValue.Var_type_discrete (Var_type_discrete_number var_type), Expression_type_discrete_number expr_type when var_type = expr_type -> true
+    | _ -> false
 
 (************************************************************)
 (** Evaluate arithmetic expressions with a valuation *)

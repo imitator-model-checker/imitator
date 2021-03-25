@@ -22,10 +22,6 @@ let var_type_int = Var_type_discrete (Var_type_discrete_number Var_type_discrete
 let var_type_unknown_number = Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number)
 let var_type_bool = Var_type_discrete Var_type_discrete_bool
 
-type expression_type =
-    | Expression_type_discrete_bool of var_type_discrete
-    | Expression_type_discrete_number of var_type_discrete_number
-
 (* Discrete value of different specific types *)
 type discrete_value =
     | Number_value of NumConst.t
@@ -71,31 +67,7 @@ let is_type_compatibles type_a type_b =
     -> true
     | _ -> false
 
-(* Check if a variable type is compatible with an expression type *)
-let is_var_type_compatible_with_expr_type var_type expr_type =
-    match var_type, expr_type with
-    (*
-    (* Clocks are rationals *)
-    | Var_type_clock, Expression_type_discrete_number Var_type_discrete_rational
-    (* Parameters are rationals *)
-    | Var_type_parameter, Expression_type_discrete_number Var_type_discrete_rational
-    *)
-    (* Booleans are compatible with any boolean expression *)
-    | Var_type_discrete Var_type_discrete_bool,  Expression_type_discrete_bool _ -> true
-    (* All number types are compatible with unknown number typed expression *)
-    | Var_type_discrete (Var_type_discrete_number _), Expression_type_discrete_number Var_type_discrete_unknown_number -> true
-    (* Number type is compatible with an arithmetic expression of the same type *)
-    | Var_type_discrete (Var_type_discrete_number var_type), Expression_type_discrete_number expr_type when var_type = expr_type -> true
-    | _ -> false
 
-(* Check if an expression is a boolean expression *)
-let is_bool_expression_type = function
-    | Expression_type_discrete_bool _ -> true
-    | _ -> false
-
-let is_unknown_number_expression_type = function
-    | Expression_type_discrete_number Var_type_discrete_unknown_number -> true
-    | _ -> false
 
 let string_of_var_type_discrete_number = function
     | Var_type_discrete_rational -> "discrete"
@@ -113,9 +85,7 @@ let string_of_var_type = function
 	| Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
 	| Var_type_parameter -> "parameter"
 
-let string_of_expression_type = function
-    | Expression_type_discrete_number x -> "arithmetic of " ^ (string_of_var_type_discrete_number x)
-    | Expression_type_discrete_bool x -> "boolean of " ^ (string_of_var_type_discrete x)
+
 
 (* Check if a Var_type is a Var_type_discrete of anything *)
 let is_discrete_type = function

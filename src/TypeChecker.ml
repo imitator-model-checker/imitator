@@ -335,7 +335,7 @@ let rec get_expression_type_new parsed_model = function
 and get_parsed_boolean_expression_type_new parsed_model = function
     | Parsed_True
     | Parsed_False ->
-        DiscreteValue.Expression_type_discrete_bool DiscreteValue.Var_type_discrete_bool
+        DiscreteExpressions.Expression_type_discrete_bool DiscreteValue.Var_type_discrete_bool
     | Parsed_Not expr
     | Parsed_And (expr, _)
     | Parsed_Or (expr, _) ->
@@ -350,7 +350,7 @@ and get_parsed_boolean_expression_type_new parsed_model = function
             | x -> raise (TypeError ("Bad expression type " ^ (DiscreteValue.string_of_var_type x) ^ " for bool "))
         ) in
         (* Return typed expression *)
-        DiscreteValue.Expression_type_discrete_bool discrete_type
+        DiscreteExpressions.Expression_type_discrete_bool discrete_type
 
     | Parsed_Discrete_boolean_expression expr -> get_parsed_discrete_boolean_expression_type_new parsed_model expr
 
@@ -369,7 +369,7 @@ and get_parsed_discrete_boolean_expression_type_new parsed_model = function
             | x -> raise (TypeError ("Bad expression type " ^ (DiscreteValue.string_of_var_type x) ^ " for bool"))
         ) in
         (* Return typed expression *)
-        DiscreteValue.Expression_type_discrete_bool discrete_type
+        DiscreteExpressions.Expression_type_discrete_bool discrete_type
 
     | Parsed_boolean_expression expr -> get_parsed_boolean_expression_type_new parsed_model expr
     | Parsed_arithmetic_expression expr ->
@@ -380,20 +380,20 @@ and get_parsed_discrete_boolean_expression_type_new parsed_model = function
         (* Check before, it should be a number type *)
         let expr_type = (
             match inner_type with
-                | Var_type_discrete (Var_type_discrete_number number_type) -> DiscreteValue.Expression_type_discrete_number number_type
-                | Var_type_discrete Var_type_discrete_bool -> DiscreteValue.Expression_type_discrete_bool DiscreteValue.Var_type_discrete_bool
+                | Var_type_discrete (Var_type_discrete_number number_type) -> DiscreteExpressions.Expression_type_discrete_number number_type
+                | Var_type_discrete Var_type_discrete_bool -> DiscreteExpressions.Expression_type_discrete_bool DiscreteValue.Var_type_discrete_bool
                 | x -> raise (TypeError ("Bad expression type " ^ (DiscreteValue.string_of_var_type x) ^ " for number"))
         ) in
         expr_type
 
     | Parsed_DB_variable _ ->
-        DiscreteValue.Expression_type_discrete_bool DiscreteValue.Var_type_discrete_bool
+        DiscreteExpressions.Expression_type_discrete_bool DiscreteValue.Var_type_discrete_bool
 
 
 let get_nonlinear_constraint_type_new parsed_model = function
     | Parsed_true_nonlinear_constraint
     | Parsed_false_nonlinear_constraint ->
-        DiscreteValue.Expression_type_discrete_bool DiscreteValue.Var_type_discrete_bool
+        DiscreteExpressions.Expression_type_discrete_bool DiscreteValue.Var_type_discrete_bool
     | Parsed_nonlinear_constraint expr ->
         get_parsed_discrete_boolean_expression_type_new parsed_model expr
 
@@ -446,7 +446,7 @@ let resolve_expression_type parsed_model expr =
         "Resolve expression type of \""
         ^ (string_of_parsed_global_expression parsed_model expr)
         ^ "\" as "
-        ^ (DiscreteValue.string_of_expression_type expr_type)
+        ^ (DiscreteExpressions.string_of_expression_type expr_type)
     );
 
     (* Return uniform typed expression and it's type *)
@@ -483,7 +483,7 @@ let resolve_bool_expression_type parsed_model expr =
         "Resolve expression type of \""
         ^ (string_of_parsed_boolean_expression parsed_model expr)
         ^ "\" as "
-        ^ (DiscreteValue.string_of_expression_type expr_type)
+        ^ (DiscreteExpressions.string_of_expression_type expr_type)
     );
 
     (* Return uniform typed expression and it's type *)
@@ -520,7 +520,7 @@ let resolve_nonlinear_constraint_type parsed_model expr =
         "Resolve expression type of \""
         ^ (string_of_parsed_nonlinear_constraint parsed_model expr)
         ^ "\" as "
-        ^ (DiscreteValue.string_of_expression_type expr_type)
+        ^ (DiscreteExpressions.string_of_expression_type expr_type)
     );
 
     (* Return uniform typed expression and it's type *)
@@ -540,7 +540,7 @@ let check_nonlinear_constraint parsed_model nonlinear_constraint =
     let uniformly_typed_nonlinear_constraint, expr_type = resolve_nonlinear_constraint_type parsed_model nonlinear_constraint in
 
     (* Check that non-linear constraint is a boolean expression *)
-    if not (DiscreteValue.is_bool_expression_type expr_type) then
+    if not (DiscreteExpressions.is_bool_expression_type expr_type) then
         raise (TypeError error_msg)
     else
         uniformly_typed_nonlinear_constraint, expr_type
@@ -570,7 +570,7 @@ let check_update parsed_model variable_name expr =
     (*  *)
     let typed_expr =
         (* Check var_type is compatible with expression type, if yes, convert expression *)
-        if not (DiscreteValue.is_var_type_compatible_with_expr_type var_type_discrete expr_type) then (
+        if not (DiscreteExpressions.is_var_type_compatible_with_expr_type var_type_discrete expr_type) then (
             raise (TypeError (
                 "Variable \""
                 ^ variable_name
@@ -579,11 +579,11 @@ let check_update parsed_model variable_name expr =
                 ^ " is not compatible with expression \""
                 ^ (ParsingStructureUtilities.string_of_parsed_global_expression parsed_model uniformly_typed_expr)
                 ^ "\" of "
-                ^ (DiscreteValue.string_of_expression_type expr_type)
+                ^ (DiscreteExpressions.string_of_expression_type expr_type)
                 )
             )
         (* Check if expression type is resolved as unknown number *)
-        ) else if DiscreteValue.is_unknown_number_expression_type expr_type then (
+        ) else if DiscreteExpressions.is_unknown_number_expression_type expr_type then (
             (* If the expression type is unknown number, and as expression type and var type are compatible *)
             (* convert expression type to variable type *)
             convert_literal_types_of_expression parsed_model var_type uniformly_typed_expr
@@ -598,7 +598,7 @@ let check_update parsed_model variable_name expr =
 let check_conditional parsed_model expr =
 
     let uniformly_typed_bool_expr, bool_expr_type = resolve_bool_expression_type parsed_model expr in
-    if not (DiscreteValue.is_bool_expression_type bool_expr_type) then (
+    if not (DiscreteExpressions.is_bool_expression_type bool_expr_type) then (
         raise (TypeError (
             "Expression \""
             ^ (string_of_parsed_boolean_expression parsed_model expr)
