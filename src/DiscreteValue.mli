@@ -1,4 +1,24 @@
+(************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ *
+ * Module description: Contain all types and functions for operations onto discrete value
+ *
+ * File contributors : Benjamin L.
+ * Created           : 2021/03/01
+ * Last modified     : 2021/03/01
+ *
+ ************************************************************)
+
 open Constants
+
+(************************************************************)
+(** Types  *)
+(************************************************************)
 
 (* Specific type of number *)
 type var_type_discrete_number =
@@ -30,6 +50,9 @@ type discrete_value =
     | Bool_value of bool
     | Int_value of Int32.t
 
+(************************************************************)
+(** Type functions  *)
+(************************************************************)
 
 val is_discrete_type : var_type -> bool
 (* Check if a Var_type is a Var_type_number *)
@@ -41,14 +64,6 @@ val is_rational_type : var_type -> bool
 (* Check if a Var_type is a Var_type_bool *)
 val is_bool_type : var_type -> bool
 
-val is_rational_value : discrete_value -> bool
-val is_int32_value : discrete_value -> bool
-val is_bool_value : discrete_value -> bool
-
-val string_of_var_type : var_type -> string
-val string_of_var_type_discrete : var_type_discrete -> string
-val string_of_var_type_discrete_number : var_type_discrete_number -> string
-
 val discrete_type_of_var_type : var_type -> var_type
 val var_type_of_value : discrete_value -> var_type
 
@@ -56,52 +71,99 @@ val var_type_of_value : discrete_value -> var_type
 (* To be compatible, two type should have the same kind (number, boolean, ...) *)
 val is_type_compatibles : var_type -> var_type -> bool
 
+val string_of_var_type : var_type -> string
+val string_of_var_type_discrete : var_type_discrete -> string
+val string_of_var_type_discrete_number : var_type_discrete_number -> string
 
+(************************************************************)
+(** Value functions  *)
+(************************************************************)
 
-
-val numconst_default_value : NumConst.t
-val int32_default_value : Int32.t
-val bool_default_value : bool
-val default_value : var_type -> discrete_value
-
-val numconst_value : discrete_value -> NumConst.t
-val int32_value : discrete_value -> Int32.t
-val bool_value : discrete_value -> bool
-val float_value : discrete_value -> float
-val convert_value : discrete_value -> var_type -> discrete_value
-
-val hash : discrete_value -> int
-
-val rational_zero : discrete_value
-val bool_value_false : discrete_value
-val bool_value_true : discrete_value
-
-val equal_to_zero : discrete_value -> bool
-val equal_to_one : discrete_value -> bool
-
-val equal : discrete_value -> discrete_value -> bool
-val neq : discrete_value -> discrete_value -> bool
-
+(** String of values  **)
 val customized_string_of_value : customized_boolean_string -> discrete_value -> string
 val string_of_value : discrete_value -> string
 
-val add : discrete_value -> discrete_value -> discrete_value
-val sub : discrete_value -> discrete_value -> discrete_value
-val mul : discrete_value -> discrete_value -> discrete_value
-val div : discrete_value -> discrete_value -> discrete_value
-val neg : discrete_value -> discrete_value
+(** Check value type  **)
+
+(* Check whether the value is rational *)
+val is_rational_value : discrete_value -> bool
+(* Check whether the value is int *)
+val is_int_value : discrete_value -> bool
+(* Check whether the value is boolean *)
+val is_bool_value : discrete_value -> bool
+
+(** Default values  **)
+
+(* Get default NumConst.t value *)
+val numconst_default_value : NumConst.t
+(* Get default Int32.t value *)
+val int_default_value : Int32.t
+(* Get default bool value *)
+val bool_default_value : bool
+(* Get default discrete value *)
+val default_value : var_type -> discrete_value
+
+(* Get zero value of Rational_value *)
+val rational_zero : discrete_value
+(* Get false value of Bool_value *)
+val bool_value_false : discrete_value
+(* Get true value of Bool_value *)
+val bool_value_true : discrete_value
+
+(* Get a zero discrete value according to given discrete value type *)
 val zero_of : discrete_value -> discrete_value
+(* Get a one discrete value according to given discrete value type *)
 val one_of : discrete_value -> discrete_value
 
+(** Convert values  **)
+
+(* Get NumConst.t value of discrete value *)
+val numconst_value : discrete_value -> NumConst.t
+(* Get Int32.t value of discrete value *)
+val int_value : discrete_value -> Int32.t
+(* Get bool value of discrete value *)
+val bool_value : discrete_value -> bool
+(* Get float value of discrete value *)
+val float_value : discrete_value -> float
+(* Convert discrete value to given type *)
+val convert_value : discrete_value -> var_type -> discrete_value
+(* Hash code of discrete value *)
+val hash : discrete_value -> int
+
+(** Computing operation on values  **)
+
+(* Check if a discrete value is equal to another discrete value *)
+val equal : discrete_value -> discrete_value -> bool
+(* Check if a discrete value is not equal to another discrete value *)
+val neq : discrete_value -> discrete_value -> bool
+
+(* Add two discrete value *)
+val add : discrete_value -> discrete_value -> discrete_value
+(* Subtract two discrete value *)
+val sub : discrete_value -> discrete_value -> discrete_value
+(* Multiply two discrete value *)
+val mul : discrete_value -> discrete_value -> discrete_value
+(* Divide two discrete value *)
+val div : discrete_value -> discrete_value -> discrete_value
+(* Negate a discrete value *)
+val neg : discrete_value -> discrete_value
+
+(* Logical and on two discrete value *)
 val _and : discrete_value -> discrete_value -> discrete_value
+(* Logical or on two discrete value *)
 val _or : discrete_value -> discrete_value -> discrete_value
+(* Logical not on a discrete value *)
 val not : discrete_value -> discrete_value
+(* Logical equality on two discrete value *)
 val bool_equal : discrete_value -> discrete_value -> discrete_value
+(* Logical equality inverse on two discrete value *)
 val bool_neq : discrete_value -> discrete_value -> discrete_value
 
-
+(* Comparison, less between two discrete value *)
 val l : discrete_value -> discrete_value -> discrete_value
+(* Comparison, less or equal between two discrete value *)
 val leq : discrete_value -> discrete_value -> discrete_value
+(* Comparison, greater between two discrete value *)
 val g : discrete_value -> discrete_value -> discrete_value
+(* Comparison, greater or equal between two discrete value *)
 val geq : discrete_value -> discrete_value -> discrete_value
-

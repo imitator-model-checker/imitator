@@ -451,9 +451,9 @@ let eval_int_expression discrete_valuation expr =
 
     and eval_int_factor = function
         | DF_variable variable_index ->
-            DiscreteValue.int32_value (discrete_valuation variable_index)
+            DiscreteValue.int_value (discrete_valuation variable_index)
         | DF_constant variable_value ->
-            DiscreteValue.int32_value variable_value
+            DiscreteValue.int_value variable_value
         | DF_expression expr ->
             eval_int_expression_rec expr
         | DF_unary_min factor ->
