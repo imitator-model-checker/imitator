@@ -10,10 +10,10 @@
  *
  * File contributors : Dylan Marinho
  * Created           : 2021/02/23
- * Last modified     : 2021/03/09
+ * Last modified     : 2021/03/25
  *
  ************************************************************)
- 
+
  (*
  TODO:
  - if..then..else
@@ -45,9 +45,11 @@ let jani_strings : customized_string = {
 	g_operator    = "≥";
 }
 
+let not_operator	= "¬"
+
 let jani_separator = ", "
 
-let jani_assignment = " = "
+let jani_assignment = "="
 
 let jani_version = "1"
 let jani_type = "sha"
@@ -57,8 +59,8 @@ let jani_features = "[\"derived-operators\"]"
 (************************************************************)
 (** OCaml Utilities overwrite. TODO: fusion if OK *)
 (************************************************************)
-let string_of_list_of_string_with_sep sep list = 
-	let deal_string sep list = 
+let string_of_list_of_string_with_sep sep list =
+	let deal_string sep list =
 		OCamlUtilities.string_of_list_of_string_with_sep sep list
 	in
 		deal_string sep (List.filter (fun string -> string<>"") list)
@@ -171,9 +173,9 @@ let string_of_variables model =
 	let clocks = string_of_clocks model in
 	let discrete = string_of_discrete model in
 	let parameters = string_of_parameters model in
-	let sep_after_clocks = (clocks <> "" && (discrete <> "" || parameters <> "")) in 
-	let sep_after_discrete = (discrete <> "" && parameters <> "") in 
-	
+	let sep_after_clocks = (clocks <> "" && (discrete <> "" || parameters <> "")) in
+	let sep_after_discrete = (discrete <> "" && parameters <> "") in
+
 	if clocks = "" && discrete = "" && parameters = "" then "" else (
 	  "\t\"variables\": [\n"
 	  ^ clocks
@@ -196,7 +198,7 @@ let rec string_of_strings_with_sep_and string_list =
 	match string_list with
 	| [] -> ""
 	| (elem::[]) -> elem
-	| (elem::q) -> 
+	| (elem::q) ->
 				  "\t\t\t\t\t\t\t{\"op\": \"" ^ jani_strings.and_operator ^ "\"" ^ jani_separator ^ "\n"
 				^ "\t\t\t\t\t\t\t\"left\": " ^ elem ^ jani_separator ^ "\n"
 				^ "\t\t\t\t\t\t\t\"right\": " ^ string_of_strings_with_sep_and q ^ "\n\t\t\t\t\t\t}"
@@ -219,9 +221,9 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
-		if LinearConstraint.pxd_is_true continuous_guard then "" else			
+		if LinearConstraint.pxd_is_true continuous_guard then "" else
 			let list_of_inequalities = LinearConstraint.pxd_get_inequalities continuous_guard in
-			(string_of_strings_with_sep_and 
+			(string_of_strings_with_sep_and
 				(List.map (fun (inequality) ->
 					let op = match (LinearConstraint.op_of_pxd_linear_inequality inequality) with
 						| Op_l		-> jani_strings.l_operator
@@ -230,8 +232,8 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 						| Op_ge 	-> jani_strings.ge_operator
 						| Op_g		-> jani_strings.g_operator
 					in
-					let left = LinearConstraint.string_of_left_term_of_pxd_linear_inequality variable_names inequality in 
-					let right = LinearConstraint.string_of_right_term_of_pxd_linear_inequality variable_names inequality in 
+					let left = LinearConstraint.string_of_left_term_of_pxd_linear_inequality variable_names inequality in
+					let right = LinearConstraint.string_of_right_term_of_pxd_linear_inequality variable_names inequality in
 					  "\t\t\t\t\t\t\t{\"op\": \"" ^ op ^ "\"" ^ jani_separator ^ "\n"
 					^ "\t\t\t\t\t\t\t\"left\": " ^ left ^ "" ^ jani_separator ^ "\n"
 					^ "\t\t\t\t\t\t\t\"right\": " ^ right ^ "}"
@@ -241,7 +243,7 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 	| Discrete_continuous_guard discrete_continuous_guard ->
 		let non_linear_constraint_list = NonlinearConstraint.customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_continuous_guard.discrete_guard in
 		let linear_constraint_string = (string_of_guard_or_invariant actions_and_nb_automata variable_names (Continuous_guard discrete_continuous_guard.continuous_guard)) in
-		let list = List.append non_linear_constraint_list [linear_constraint_string] in 
+		let list = List.append non_linear_constraint_list [linear_constraint_string] in
 	    let content = string_of_strings_with_sep_and list in
 	    if content = "" then "" else content
 
@@ -258,8 +260,8 @@ let string_of_guard model actions_and_nb_automata model_variable_names transitio
   (* Guard *)
   "\n" ^ guard
 
-let string_of_clock_rate model actions_and_nb_automata automaton_index location_index = 
-	let rec clock_is_1rate clock_index flow_list = 
+let string_of_clock_rate model actions_and_nb_automata automaton_index location_index =
+	let rec clock_is_1rate clock_index flow_list =
 		match flow_list with
 		| [] -> true
 		| ((var, _)::q) -> if clock_index = var then false else (clock_is_1rate clock_index q)
@@ -270,24 +272,24 @@ let string_of_clock_rate model actions_and_nb_automata automaton_index location_
 		(*Step 1: explicit rates*)
 		(
 			List.map (
-				fun (variable_index, flow_value) -> 
+				fun (variable_index, flow_value) ->
 					let variable_name = (model.variable_names variable_index) in
-					let value = (NumConst.jani_string_of_numconst flow_value) in 
-					  "{\"op\": \"=\"" ^ jani_separator 
+					let value = (NumConst.jani_string_of_numconst flow_value) in
+					  "{\"op\": \"=\"" ^ jani_separator
 					^ " \"left\": {\"op\": \"der\", \"var\": \"" ^ variable_name ^ "\"}" ^ jani_separator
 					^ " \"right\": " ^ value ^ "}"
 			) (model.flow automaton_index location_index)
 		)
-		
+
 		(*Step 2: set rate 1 to unspecified clocks*)
 		(
 			List.map (
-				fun variable_index -> 
+				fun variable_index ->
 					let variable_name = (model.variable_names variable_index) in
-					  "{\"op\": \"=\"" ^ jani_separator 
+					  "{\"op\": \"=\"" ^ jani_separator
 					^ " \"left\": {\"op\": \"der\", \"var\": \"" ^ variable_name ^ "\"}" ^ jani_separator
 					^ " \"right\": 1}"
-			) 
+			)
 			(List.filter (fun clock_index -> clock_is_1rate clock_index (model.flow automaton_index location_index)) model.clocks)
 		)
 	)
@@ -355,21 +357,150 @@ let string_of_discrete_updates model updates =
 		^ (DiscreteExpressions.string_of_arithmetic_expression_for_jani model.variable_names arithmetic_expression)
 		^ "}"
 	) updates)
+(*
+  (** Generic template to convert conditional updates into a string *)
+  let string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep =
+  	string_of_list_of_string_with_sep sep (List.map (fun (boolean_expr, if_updates, else_updates) ->
+  		let if_separator, _ = separator_comma if_updates in
+  		let empty_else = no_clock_updates else_updates.clock && else_updates.discrete = [] && else_updates.conditional = [] in
+  		(** Convert the Boolean expression *)
+  		(wrap_if boolean_expr)
+  		(** Convert the if updates *)
+  		^ (string_of_clock_updates model if_updates.clock)
+  		^ (if if_separator then sep else "")
+  		^ (string_of_discrete_updates model if_updates.discrete)
+  		(** Convert the else updates *)
+  		^ (if empty_else then "" else
+  			let else_separator, _ = separator_comma else_updates in
+  			wrap_else
+  			^ (string_of_clock_updates model else_updates.clock)
+  			^ (if else_separator then sep else "")
+  			^ (string_of_discrete_updates model else_updates.discrete))
+  		^ wrap_end
+  	) conditional_updates)
+*)
+(** Return if there is no clock updates *)
+let no_clock_updates clock_updates =
+	clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
 
-let string_of_updates model automaton_index action_index clock_updates discrete_updates =
+(** Convert a discrete_boolean_expression into a string *)
+let string_of_discrete_boolean_expression variable_names =
+	DiscreteExpressions.string_of_discrete_boolean_expression_for_jani variable_names
+
+(** Convert a Boolean expression into a string *)
+let rec string_of_boolean variable_names = function
+	| True_bool -> string_of_true
+	| False_bool -> string_of_false
+	| Not_bool b -> "{\"op\": \""^ not_operator ^"\"" ^ jani_separator ^ "\"exp\": " ^ (string_of_boolean variable_names b) ^ "}"
+	| And_bool (b1, b2) ->
+		"{\"op\": \"" ^ jani_strings.and_operator ^ "\"" ^ jani_separator
+		^ "\"left\": " ^ (string_of_boolean variable_names b1) ^ jani_separator
+		^ "\"right\": " ^ (string_of_boolean variable_names b2) ^ "}"
+	| Or_bool (b1, b2) ->
+		"{\"op\": \"" ^ jani_strings.or_operator ^ "\"" ^ jani_separator
+		^ "\"left\": " ^ (string_of_boolean variable_names b1) ^ jani_separator
+		^ "\"right\": " ^ (string_of_boolean variable_names b2) ^"}"
+	| Discrete_boolean_expression discrete_boolean_expression ->
+		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
+
+let string_of_conditional_clock_updates model boolean_expr order = function
+	| No_update -> ""
+	| Resets list_of_clocks ->
+		string_of_list_of_string_with_sep (jani_separator^"\n") (List.map (fun variable_index ->
+			let variable_name = "\"" ^ (model.variable_names variable_index) ^ "\"" in
+			"\t\t\t\t\t\t\t{\"ref\": " ^ variable_name ^ jani_separator
+			^ " \"value\" : "
+			^ " {\"op\": \"ite\"" ^ jani_separator
+			^ "\"if\":" ^ string_of_boolean model.variable_names boolean_expr ^ jani_separator
+			^ "\"then\":" ^ (if order="if" then "0" else variable_name) ^ jani_separator
+			^ "\"else\":" ^ (if order="if" then variable_name else "0")
+			^ "}}"
+		) list_of_clocks)
+	| Updates list_of_clocks_lt ->
+		string_of_list_of_string_with_sep (jani_separator^"\n") (List.map (fun (variable_index, linear_term) ->
+			let variable_name = "\"" ^ (model.variable_names variable_index) ^ "\"" in
+			let expression = (LinearConstraint.string_of_pxd_linear_term_for_jani model.variable_names linear_term) in
+			"\t\t\t\t\t\t\t{\"ref\": " ^ variable_name ^ jani_separator
+			^ " \"value\" : "
+			^ " {\"op\": \"ite\"" ^ jani_separator
+			^ "\"if\":" ^ string_of_boolean model.variable_names boolean_expr ^ jani_separator
+			^ "\"then\":" ^ (if order="if" then expression else variable_name) ^ jani_separator
+			^ "\"else\":" ^ (if order="if" then variable_name else expression)
+			^ "}}"
+		) list_of_clocks_lt)
+
+(* Convert a list of discrete updates into a string *)
+let string_of_conditional_discrete_updates model boolean_expr order updates =
+	string_of_list_of_string_with_sep (jani_separator^"\n") (List.rev_map (fun (variable_index, arithmetic_expression) ->
+		let expression = (DiscreteExpressions.string_of_arithmetic_expression_for_jani model.variable_names arithmetic_expression) in
+		let variable_name = "\"" ^ (model.variable_names variable_index) ^ "\"" in
+		"\t\t\t\t\t\t\t{\"ref\": " ^ variable_name ^ jani_separator
+		^ " \"value\" : "
+		^ " {\"op\": \"ite\"" ^ jani_separator
+		^ "\"if\":" ^ string_of_boolean model.variable_names boolean_expr ^ jani_separator
+		^ "\"then\":" ^ (if order="if" then expression else variable_name) ^ jani_separator
+		^ "\"else\":" ^ (if order="if" then variable_name else expression)
+		^ "}}"
+	) updates)
+
+(** Convert a list of conditional updates into a string *)
+let string_of_conditional_updates model conditional_updates =
+  string_of_list_of_string_with_sep (jani_separator^"\n") (List.map (fun (boolean_expr, if_updates, else_updates) ->
+    let empty_else = no_clock_updates else_updates.clock && else_updates.discrete = [] && else_updates.conditional = [] in
+	(*
+	(** Convert the if updates *)
+    ^ (string_of_conditional_clock_updates model if_updates.clock)
+    ^ (if if_separator then jani_separator else "")
+    ^ (string_of_discrete_updates model if_updates.discrete)
+    (** Convert the else updates *)
+    ^ (if empty_else then "" else
+      let else_separator, _ = separator_comma else_updates in
+      wrap_else
+      ^ (string_of_clock_updates model else_updates.clock)
+      ^ (if else_separator then sep else "")
+      ^ (string_of_discrete_updates model else_updates.discrete))
+    ^ wrap_end
+*)
+		(*Then*)
+		let clocks_string = (string_of_conditional_clock_updates model boolean_expr "if" if_updates.clock) in
+		let discrete_string = (string_of_conditional_discrete_updates model boolean_expr "if" if_updates.discrete) in
+		let if_separator = clocks_string<>"" && discrete_string<>"" in
+			clocks_string
+		^ (if if_separator then jani_separator else "")
+		^ discrete_string
+		^ (
+			if empty_else then "" else
+			let clocks_string = (string_of_conditional_clock_updates model boolean_expr "else" else_updates.clock) in
+			let discrete_string = (string_of_conditional_discrete_updates model boolean_expr "else" else_updates.discrete) in
+			let else_separator = clocks_string<>"" && discrete_string<>"" in
+					jani_separator^"\n"
+				^	clocks_string
+				^ (if else_separator then jani_separator else "")
+				^ discrete_string
+			)
+  ) conditional_updates)
+
+let string_of_updates model automaton_index action_index clock_updates discrete_updates transition =
+  (*TODO DYLAN: use transition for cloclk/discrete ?*)
 	(* Check for emptiness of some updates *)
 	let no_clock_updates =
 		clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
 	in
 	let no_discrete_updates = discrete_updates = [] in
+  let no_conditional_updates = transition.updates.conditional = [] in
 	(* If no update at all: empty string *)
-	if no_clock_updates && no_discrete_updates then ""
+	if no_clock_updates && no_discrete_updates && no_conditional_updates then ""
 
 	else(
-		"\n"
-		^ (string_of_clock_updates model clock_updates) 
-		^ (if (not no_clock_updates) && (not no_discrete_updates) then jani_separator^"\n" else "")
+    let first_separator = (not no_clock_updates) && (not no_discrete_updates) in
+    let second_separator = ( (not no_clock_updates) && (no_discrete_updates) && (not no_conditional_updates) ) || ( (not no_discrete_updates) && (not no_conditional_updates) ) in
+    let conditional_updates = transition.updates.conditional in
+    "\n"
+		^ (string_of_clock_updates model clock_updates)
+		^ (if first_separator then jani_separator^"\n" else "")
 		^ (string_of_discrete_updates model discrete_updates)
+    ^ (if second_separator then jani_separator^"\n" else "")
+    ^ (string_of_conditional_updates model conditional_updates)
 		^ "\n"
 	)
 
@@ -378,7 +509,7 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
 	let guard = (string_of_guard model actions_and_nb_automata model.variable_names transition.guard) in
-	let assignments = (string_of_updates model automaton_index transition.action clock_updates discrete_updates) in
+	let assignments = (string_of_updates model automaton_index transition.action clock_updates discrete_updates transition) in
 	(* Header *)
 	"\t\t\t\t{"
 
@@ -386,7 +517,7 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 	^ "\n\t\t\t\t\t\"location\": \"" ^ (model.location_names automaton_index source_location) ^ "\"" ^ jani_separator
 
 	(* Guard *)
-	^ (if guard = "\n" then "" else 
+	^ (if guard = "\n" then "" else
 		((
 			"\n\t\t\t\t\t\"guard\": " ^ guard ^ ""
 		) ^ jani_separator))
@@ -402,7 +533,7 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 
 (* Convert the transitions of an automaton into a string *)
 let string_of_transitions model actions_and_nb_automata automaton_index =
-	string_of_list_of_string_with_sep (jani_separator^"\n") 
+	string_of_list_of_string_with_sep (jani_separator^"\n")
 			(
 			(* For each location *)
 			List.map (fun location_index ->
