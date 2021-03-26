@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2021/03/23
+ * Last modified     : 2021/03/26
  *
  ************************************************************)
 
@@ -1171,265 +1171,6 @@ let apply_time_elapsing_to_concrete_valuation (location : Location.global_locati
 
 
 
-(*------------------------------------------------------------*)
-(** Compute the predecessors of a zone *)
-(*------------------------------------------------------------*)
-
-(* `continuous_predecessor location_n initial_z_n z_n z_n_post` (where `z_n_post` is a set of "final" valuations of location n, `z_n` is the symbolic zone of location n, and `initial_z_n` is the set of admissible initial valuations for location n) computes the set of valuations at location n that are initial admissible valuations *and* that are predecessor (via time past) of valuations of `z_n_post`. If `z_n_post` is a single point, note that the result is a single point (or possibly a set of points) corresponding to valuations right when entering location n. *)
-let continuous_predecessors
-	(location_n			: Location.global_location)
-	(initial_z_n		: LinearConstraint.px_linear_constraint)
-	(z_n				: LinearConstraint.px_linear_constraint)
-	(z_n_post			: LinearConstraint.px_linear_constraint)
-		: LinearConstraint.px_linear_constraint
-		=
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	
-	(* Copy (for safety concerns) *)
-	let current_pxd_constraint = LinearConstraint.px_copy z_n_post in
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_medium ("Initial constraint: " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names current_pxd_constraint ) ^ "");
-	);
-
-	(* Step 1: Apply time past *)
-
-	(* Create the time polyhedron at location n depending on the clocks *)
-	let time_polyhedron : LinearConstraint.px_linear_constraint = px_compute_time_polyhedron Backward location_n in
-	
-	(* Apply time past *)
-	print_message Verbose_total ("Applying time past…");
-
-	(* Apply time past *)
-	LinearConstraint.px_time_elapse_assign_wrt_polyhedron time_polyhedron current_pxd_constraint;
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Applied timed past at state n:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names current_pxd_constraint) ^ "");
-	);
-	
-	(* Step 2: Intersect with invariant and admissible initial valuations *)
-
-	(* Intersect with invariant n (NOTE: shorter: we can fact intersect with the symbolic state, that already contains the invariant!) AND intersect with initial admissible valuations *)
-	(*** NOTE: if `initial_z_n` is already included into `z_n`, this latter could be used alone ***)
-	LinearConstraint.px_intersection_assign current_pxd_constraint [z_n; initial_z_n];
-	
-	(* Return the constraint *)
-	current_pxd_constraint
-
-
-(* `discrete_predecessors z_n_minus_1 guard_n_minus_1_n updates_n_minus_1_n initial_z_n` (where `initial_z_n` is a set of "initial" valuations of location n, `guard_n_minus_1_n` and `updates_n_minus_1_n` are the guard and updates from n-1 to n, and `z_n_minus_1` is the symbolic zone of location n-1) computes the set of valuations at location n-1 that are "final" admissible valuations *and* that are predecessor (via discrete successor) of valuations of `initial_z_n`. That is, the result is the set of points corresponding to valuations right before taking the transition from n-1 to n, and leading to `initial_z_n`. *)
-
-let discrete_predecessors
-	(z_n_minus_1		: LinearConstraint.px_linear_constraint)
-	(guard_n_minus_1_n	: LinearConstraint.pxd_linear_constraint)
-	(updates_n_minus_1_n: AbstractModel.clock_updates list)
-	(initial_z_n		: LinearConstraint.px_linear_constraint)
-		: LinearConstraint.px_linear_constraint
-		=
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	
-	(* Copy the constraint and convert to PXD *)
-	let current_pxd_constraint = LinearConstraint.pxd_of_px_constraint initial_z_n in
-	
-	
-	(* Step 1: Apply inverted updates *)
-
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_medium ("Now applying updates backwards…");
-	);
-
-	(* Apply the inverted updates (from n-1 to n) *)
-	apply_updates_assign_backward current_pxd_constraint updates_n_minus_1_n;
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Updates were applied: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_pxd_constraint) ^ "");
-	);
-	
-
-	(* Step 2: Intersect with source guard and invariant *)
-
-	(* Print some information *)
-	if verbose_mode_greater Verbose_total then(
-		print_message Verbose_total ("Now intersecting with source guard and source invariant…");
-	);
-
-	(* Intersect with the guard from n-1 to n, AND with the invariant at n-1 (NOTE: to simplify, we intersect with z_n_minus_1) *)
-	LinearConstraint.pxd_intersection_assign current_pxd_constraint [guard_n_minus_1_n; (LinearConstraint.pxd_of_px_constraint z_n_minus_1)];
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("After intersection with source guard and source invariant: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_pxd_constraint) ^ "");
-	);
-
-	
-	(* Step 3: Remove discrete *)
-
-	(* Print some information *)
-	if verbose_mode_greater Verbose_total then(
-		print_message Verbose_total ("Removing discrete variables…");
-	);
-
-	(* Return a px-constraint *)
-	let final_px_constraint = LinearConstraint.pxd_hide_discrete_and_collapse current_pxd_constraint in
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("After removing discrete variables: " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names final_px_constraint) ^ "");
-	);
-	
-	(* Return result *)
-	final_px_constraint
-
-
-	
-(** Given `Zn-1` and `Zn` such that
-	`Zn` is the successor zone of `Zn-1` by guard `g-1` and updating variables in `Un-1` to some values,
-	given `Zn+1` a set of concrete points (valuations) successor of zone `Zn` by guard `gn`, updates `Rn`,
-	then `constraint_zone_predecessor_g_u(Zn-1, gn-1, Un-1, Zn, gn, Un, Zn+1)` computes the subset of points in `Zn` that are predecessors of `Zn` (by updates of `Un`, guard `gn`), and that are direct successors (without time elapsing) of `Zn-1` via `gn-1` and `Un-1`. *)
-(*** NOTE: no check is made that Zn is a successor of Zn-1, nor that Zn+1 is a subset of Zn ***)
-let constraint_zone_predecessor_g_u
-	(zn_minus_1			: LinearConstraint.px_linear_constraint)
-	(gn_minus_1			: LinearConstraint.pxd_linear_constraint)
-	(updates_n_minus_1	: AbstractModel.clock_updates list)
-	(zn					: LinearConstraint.px_linear_constraint)
-	(time_polyhedron	: LinearConstraint.pxd_linear_constraint)
-	(gn					: LinearConstraint.pxd_linear_constraint)
-	(updates_n			: AbstractModel.clock_updates list)
-	(zn_plus_1			: LinearConstraint.px_linear_constraint)
-		: LinearConstraint.px_linear_constraint
-		=
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	
-	(* Copy the constraint and convert to PXD *)
-	let pxd_linear_constraint = LinearConstraint.pxd_of_px_constraint zn_plus_1 in
-	
-	(* Useful conversions *)
-	let pxd_zn = LinearConstraint.pxd_of_px_constraint zn in
-
-	(* Print some information *)
-	if verbose_mode_greater Verbose_total then(
-		print_message Verbose_total ("\n------------------------------------------------------------");
-		print_message Verbose_total ("Entering constraint_zone_predecessor_g_u with the following arguments:");
-		print_message Verbose_total ("* zn_minus_1       : " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names zn_minus_1) ^ "\n");
-		print_message Verbose_total ("* gn_minus_1       : " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names gn_minus_1) ^ "\n");
-		print_message Verbose_total ("* updates_n_minus_1: " ^ (string_of_list_of_string_with_sep ", " (List.map (ModelPrinter.string_of_clock_updates model) updates_n_minus_1)) ^ "\n");
-		print_message Verbose_total ("* zn               : " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names zn) ^ "\n");
-		print_message Verbose_total ("* time_polyhedron  : " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_polyhedron) ^ "\n");
-		print_message Verbose_total ("* gn               : " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names gn) ^ "\n");
-		print_message Verbose_total ("* updates_n        : " ^ (string_of_list_of_string_with_sep ", " (List.map (ModelPrinter.string_of_clock_updates model) updates_n)) ^ "\n");
-		print_message Verbose_total ("* zn_plus_1        : " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names zn_plus_1) ^ "\n");
-		print_message Verbose_total ("------------------------------------------------------------");
-	);
-
-	
-	(* Step 1: compute the predecessors of zn_plus_1 in zn without time elapsing, i.e., the points zn' subset of zn such that zn' ^ g ^ updates = zn_plus_1 *)
-	(* Method: zn_plus_1 => assign the updates to updates_n => free variables in updates_n => intersect with g => intersect with zn *)
-
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_medium ("Initial constraint Zn+1: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint ) ^ "");
-	);
-
-	(* Apply the updates to find the "initial" valuations of zn_plus_1 *)
-	apply_updates_assign pxd_linear_constraint updates_n;
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Applied updates to find the 'initial' valuations of Zn+1: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
-	);
-
-	(* Hide the updated variables *)
-	LinearConstraint.pxd_hide_assign (get_clocks_in_updates updates_n) pxd_linear_constraint;
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Hid variables concerned by the updates, i.e., `" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names (get_clocks_in_updates updates_n))) ^ "`: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
-	);
-
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Intersecting with incoming guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names gn) ^ "\n  and intersecting with Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_zn) ^ "…");
-	);
-
-	(* Intersect with the incoming guard *)
-	LinearConstraint.pxd_intersection_assign pxd_linear_constraint [pxd_zn ; gn];
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_medium ("Initial valuations of Zn+1: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
-	);
-
-	
-	(* Step 2: compute the time predecessors of zn' in zn *)
-	(* Method: zn' => backward elapsing => intersection with zn *)
-	
-	(*** BEGIN OLD VERSION (< 2020/09) ***)
-(* 	LinearConstraint.pxd_time_past_assign variables_elapse_n variables_constant_n pxd_linear_constraint; *)
-	(*** END OLD VERSION (< 2020/09) ***)
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("The time polyhedron is: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_polyhedron) ^ "");
-	);
-
-	LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron pxd_linear_constraint;
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Applied timed past at state n: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
-		print_message Verbose_high ("\nIntersecting again with zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_zn) ^ "…");
-	);
-
-	(* Intersect again with zn *)
-	LinearConstraint.pxd_intersection_assign pxd_linear_constraint [pxd_zn];
-
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_medium ("Time predecessors of Zn+1 within Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
-	);
-
-	
-	(* Step 3: compute the subset of zn' that comes from a direct update (without time elapsing) from zn-1 *)
-	(* Method: zn' => assign the updates to Un-1 => intersection with (zn-1 ^ gn-1 \ Un-1) => intersection again with zn *)
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_medium ("Now applying updates…");
-	);
-
-	(* Apply the inverted updates to find the "initial" valuations of zn *)
-	apply_updates_assign_backward pxd_linear_constraint updates_n_minus_1;
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Updates were applied: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
-	);
-	(* Intersect with the points that pass the guard, and remove these variables *)
-	let zn_gn = LinearConstraint.pxd_intersection [LinearConstraint.pxd_of_px_constraint zn_minus_1 ; gn_minus_1] in
-	LinearConstraint.pxd_hide_assign (get_clocks_in_updates updates_n_minus_1) zn_gn;
-	LinearConstraint.pxd_intersection_assign pxd_linear_constraint [zn_gn];
-	
-(* 	nnconvex_intersection_assign zn' (nnconvex_hide (let variables, _ = List.split updates_n_minus_1 in variables) (nnconvex_intersection zn_minus_1 gn_minus_1)); *)
-
-	(* Intersect again with zn to make sure we are part of the zone *)
-	LinearConstraint.pxd_intersection_assign pxd_linear_constraint [pxd_zn];
-
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_medium ("Initial valuations of Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint ) ^ "");
-	);
-
-	(* Return the result on px dimensions *)
-	LinearConstraint.pxd_hide_discrete_and_collapse pxd_linear_constraint
-	
-
 	
 	
 (*------------------------------------------------------------*)
@@ -2221,6 +1962,172 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 (** Reconstruct a (valid) concrete run from a symbolic run *)
 (************************************************************)
 
+
+(*------------------------------------------------------------*)
+(** Compute the predecessors of a zone *)
+(*------------------------------------------------------------*)
+
+(* `continuous_predecessor location_n initial_z_n z_n z_n_post` (where `z_n_post` is a set of "final" valuations of location n, `z_n` is the symbolic zone of location n, and `initial_z_n` is the set of admissible initial valuations for location n) computes the set of valuations at location n that are initial admissible valuations *and* that are predecessor (via time past) of valuations of `z_n_post`. If `z_n_post` is a single point, note that the result is a single point (or possibly a set of points) corresponding to valuations right when entering location n. *)
+let continuous_predecessors
+	(location_n			: Location.global_location)
+	(initial_z_n		: LinearConstraint.px_linear_constraint)
+	(z_n				: LinearConstraint.px_linear_constraint)
+	(z_n_post			: LinearConstraint.px_linear_constraint)
+		: LinearConstraint.px_linear_constraint
+		=
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
+	(* Copy (for safety concerns) *)
+	let current_pxd_constraint = LinearConstraint.px_copy z_n_post in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_medium ("Initial constraint: " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names current_pxd_constraint ) ^ "");
+	);
+
+	(* Step 1: Apply time past *)
+
+	(* Create the time polyhedron at location n depending on the clocks *)
+	let time_polyhedron : LinearConstraint.px_linear_constraint = px_compute_time_polyhedron Backward location_n in
+	
+	(* Apply time past *)
+	print_message Verbose_total ("Applying time past…");
+
+	(* Apply time past *)
+	LinearConstraint.px_time_elapse_assign_wrt_polyhedron time_polyhedron current_pxd_constraint;
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Applied timed past at state n:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names current_pxd_constraint) ^ "");
+	);
+	
+	(* Step 2: Intersect with invariant and admissible initial valuations *)
+
+	(* Intersect with invariant n (NOTE: shorter: we can fact intersect with the symbolic state, that already contains the invariant!) AND intersect with initial admissible valuations *)
+	(*** NOTE: if `initial_z_n` is already included into `z_n`, this latter could be used alone ***)
+	LinearConstraint.px_intersection_assign current_pxd_constraint [z_n; initial_z_n];
+	
+	(* Return the constraint *)
+	current_pxd_constraint
+
+
+(* `discrete_predecessors state_n_minus_1 transition_n_minus_1_n initial_z_n` (where `initial_z_n` is a set of "initial" valuations of location n, `transition_n_minus_1_n` is the transition from n-1 to n, and `state_n_minus_1` is the symbolic state n-1) computes the set of valuations at location n-1 that are "final" admissible valuations *and* that are predecessor (via discrete successor) of valuations of `initial_z_n`. That is, the result is the set of points corresponding to valuations right before taking the transition from n-1 to n, and leading to `initial_z_n`. *)
+
+let discrete_predecessors
+	(state_n_minus_1		: State.state)
+	(transition_n_minus_1_n	: StateSpace.combined_transition)
+	(initial_z_n			: LinearConstraint.px_linear_constraint)
+		: LinearConstraint.px_linear_constraint
+		=
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
+	(* Get location and constraint*)
+	let location_n_minus_1 : Location.global_location					= state_n_minus_1.global_location in
+	let z_n_minus_1			: LinearConstraint.px_linear_constraint		= state_n_minus_1.px_constraint in
+	
+	(*** BADPROG: multiple computations! ***)
+	let _, _, (guards_n_minus_1_n : LinearConstraint.pxd_linear_constraint list), (updates_n_minus_1_n : AbstractModel.clock_updates list) = compute_new_location_guards_updates location_n_minus_1 transition_n_minus_1_n in
+
+	(* Copy the constraint and convert to PXD *)
+	let current_pxd_constraint = LinearConstraint.pxd_of_px_constraint initial_z_n in
+	
+	
+	(* Step 1: Apply inverted updates *)
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_medium ("Now applying updates backwards…");
+	);
+
+	(* Apply the inverted updates (from n-1 to n) *)
+	apply_updates_assign_backward current_pxd_constraint updates_n_minus_1_n;
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Updates were applied: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_pxd_constraint) ^ "");
+	);
+	
+
+	(* Step 2: Intersect with source guard and invariant *)
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Now intersecting with source guard and source invariant…");
+	);
+
+	(* Intersect with the guard from n-1 to n, AND with the invariant at n-1 (NOTE: to simplify, we intersect with z_n_minus_1) *)
+	LinearConstraint.pxd_intersection_assign current_pxd_constraint ((LinearConstraint.pxd_of_px_constraint z_n_minus_1) :: guards_n_minus_1_n);
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("After intersection with source guard and source invariant: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_pxd_constraint) ^ "");
+	);
+
+	
+	(* Step 3: Remove discrete *)
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Removing discrete variables…");
+	);
+
+	(* Return a px-constraint *)
+	let final_px_constraint = LinearConstraint.pxd_hide_discrete_and_collapse current_pxd_constraint in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("After removing discrete variables: " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names final_px_constraint) ^ "");
+	);
+	
+	(* Return result *)
+	final_px_constraint
+
+
+
+(* Rebuild the "initial admissible valuations" after taking a transition from state n-1 to n, i.e., apply guard and updates to z_n-1, and intersect with z_n *)
+let compute_admissible_valuations_after_transition
+		(state_n_minus_1		: State.state)
+		(transition_n_minus_1_n	: StateSpace.combined_transition)
+		(state_n				: State.state)
+		: LinearConstraint.px_linear_constraint
+	=
+	
+	(* Get location and constraint at n-1 and n *)
+	let location_n_minus_1	: Location.global_location					= state_n_minus_1.global_location in
+	let z_n_minus_1			: LinearConstraint.px_linear_constraint		= state_n_minus_1.px_constraint in
+	let z_n					: LinearConstraint.px_linear_constraint		= state_n.px_constraint in
+
+	(* Reconstruct guards and updates *)
+	(*** BADPROG: multiple computations! ***)
+	let _, _, (continuous_guards : LinearConstraint.pxd_linear_constraint list), (updates_n_minus_1 : AbstractModel.clock_updates list) = compute_new_location_guards_updates location_n_minus_1 transition_n_minus_1_n in
+	
+	(* Our goal: intersect the previous state (z_n_minus_1) with the guard, and then apply updates *)
+
+	(* Compute the intersection of z_n-1 (mostly to get the invariant I_n-1) with the outgoing guard from n-1 to n *)
+	let z_n_minus_1_and_continuous_guard : LinearConstraint.pxd_linear_constraint = LinearConstraint.pxd_intersection ((LinearConstraint.pxd_of_px_constraint z_n_minus_1) :: continuous_guards) in
+
+	(* Apply updates *)
+	apply_updates_assign z_n_minus_1_and_continuous_guard updates_n_minus_1;
+	
+	(* Remove discrete from n, as they can be different from discrete at n+1 *)
+	let z_n_minus_1_and_continuous_guard_without_discrete : LinearConstraint.px_linear_constraint = LinearConstraint.pxd_hide_discrete_and_collapse z_n_minus_1_and_continuous_guard in
+	
+	(* Intersect with Z *)
+	LinearConstraint.px_intersection_assign z_n_minus_1_and_continuous_guard_without_discrete [z_n];
+
+	(* Return result *)
+	z_n_minus_1_and_continuous_guard_without_discrete
+
+
+
+
+
+(*------------------------------------------------------------*)
+(** Convert a symbolic  run into a (valid) concrete run *)
+(*------------------------------------------------------------*)
+
 (*** NOTE: this function could be in StateSpace but that would create a circular dependency with ModelPrinter ***)
 
 let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) (concrete_target_px_valuation : LinearConstraint.px_valuation ) : StateSpace.concrete_run =
@@ -2364,115 +2271,90 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	let target_state_index = symbolic_run.final_state in
 	let target_state = StateSpace.get_state state_space target_state_index in
 	
+	(* Reminder: symbolic_run contains n steps, followed by a final state (called n+1 in the following) *)
+	
 
+	(*------------------------------------------------------------*)
+	(* Find the "initial" valuations of zn+1 *)
+	(*------------------------------------------------------------*)
+	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_low then(
 		print_message Verbose_medium ("");
 		print_message Verbose_low ("Cancelling the time elapsing of the last valuation of the symbolic run…:\n " ^ (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation) ^ "");
 	);
 
-	(* Zn+1 is the target valuation, preceeded by time past plus invariant intersection *)
-	
-	let z_n_plus_1 : LinearConstraint.px_linear_constraint = LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , concrete_target_px_valuation variable_index) model.parameters_and_clocks) in
-	
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Starting from state target:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
-	);
-	
+	(* Step 0: get variables *)
+
 	(* Get the location state_n_plus_1 *)
 	let location_n_plus_1 = target_state.global_location in
-	
+	(* Print some information *)
 	if verbose_mode_greater Verbose_medium then(
 		print_message Verbose_medium ("Location n+1: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_n_plus_1));
 	);
 	
-(*	(* Get the elapsed and stopped clocks (+ other variables) *)
-	let stopped_clocks_n_plus_1, elapsing_clocks_n_plus_1 = compute_stopwatches location_n_plus_1 in
-	let all_stopped_variables_n_plus_1 = List.rev_append stopped_clocks_n_plus_1 model.parameters in
-	LinearConstraint.px_time_past_assign elapsing_clocks_n_plus_1 all_stopped_variables_n_plus_1 z_n_plus_1;*)
-
-	(* Create the time polyhedron depending on the clocks *)
-	let time_polyhedron = px_compute_time_polyhedron Backward location_n_plus_1 in
-	
-		(* BEGIN COPY PASTE *)
-	(* Apply time past *)
-	print_message Verbose_total ("Applying time past…");
-
-	LinearConstraint.px_time_elapse_assign_wrt_polyhedron time_polyhedron z_n_plus_1;
-	
+	(* Get the constraint at n+1 *)
+	let z_n_plus_1 = target_state.px_constraint in
 	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Applied timed past at state n+1:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
+	if verbose_mode_greater Verbose_medium then(
+		print_message Verbose_medium ("Z n+1: " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
 	);
 	
-	(* Intersect with invariant (NOTE: shorter: we can fact intersect with the symbolic state, that already contains the invariant!) *)
-	LinearConstraint.px_intersection_assign z_n_plus_1 [target_state.px_constraint];
-		(* END COPY PASTE *)
+	(* Get the "final" locations at n+1, i.e., the conversion into a polyhedron of the target point (after time elapsing) *)
+	let z_n_plus_1_final : LinearConstraint.px_linear_constraint = LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , concrete_target_px_valuation variable_index) model.parameters_and_clocks) in
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Starting from target valuations after time elapsing:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1_final) ^ "");
+	);
 	
-	(*------------------------------------------------------------*)
-	(* Find the "initial" valuations of zn+1 *)
-	(*------------------------------------------------------------*)
+	
+	(* Step 1: compute the set of admissible initial valuations at n+1 *)
+	
+	let admissible_initial_valuations : LinearConstraint.px_linear_constraint = 
+	(* Case of an empty run: just keep the initial constraint *)
+	if symbolic_run.symbolic_steps = [] then(
+		(* Print some information *)
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("Symbolic run of length 0: the admissible initial valuations are given by the initial constraint:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint) ^ "");
+		);
 
-	(* Case of an empty run *)
-	let z_n_plus_1_initial = if symbolic_run.symbolic_steps = [] then(
 		(* Re-intersect with the *initial* continuous valuations to indeed get an initial valuation *)
-		LinearConstraint.px_intersection_assign z_n_plus_1 [model.initial_constraint];
+		model.initial_constraint
+	)else(
+	(* Case of a non-empty run: the initial admissible valuations are the predecessor constraint (location n) intersected with the guard from n to n+1, to which we apply updates from n to n+1, and then intersected with the constraint at location n+1 (mainly to have the invariant) *)
+	
+		let symbolic_step_n : StateSpace.symbolic_step 				= List.nth symbolic_run.symbolic_steps (List.length symbolic_run.symbolic_steps - 1) in
+		let transition_n_n_plus_1 : StateSpace.combined_transition	= symbolic_step_n.transition in
+		let state_n			: State.state							= StateSpace.get_state state_space symbolic_step_n.source in
 
-		(* Print some information *)
-		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high ("Symbolic run of length 0: intersect with initial valuations:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
-		);
-
-		z_n_plus_1
-	)
-	(* Case of a non-empty run *)
-	else(
-		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps (List.length symbolic_run.symbolic_steps - 1) in
-		let state_n		: State.state							= StateSpace.get_state state_space symbolic_step_n.source in
-		let location_n	: Location.global_location				= state_n.global_location in
-		let z_n			: LinearConstraint.px_linear_constraint	= state_n.px_constraint in
-		(*** BADPROG: multiple computations! ***)
-		let _, _, continuous_guards, updates_n = compute_new_location_guards_updates location_n symbolic_step_n.transition in
-		
-		(* Our goal: intersect the previous state (z_n) with the guard, and then apply updates *)
-
-		(* Compute the intersection of Z_n (mostly to get the invariant I_n) with the outgoing guard from n to n+1 *)
-		let z_n_and_continuous_guard : LinearConstraint.pxd_linear_constraint = LinearConstraint.pxd_intersection ((LinearConstraint.pxd_of_px_constraint z_n) :: continuous_guards) in
-
-		(* Apply updates *)
-		apply_updates_assign z_n_and_continuous_guard updates_n;
-		
-		(* Remove discrete from n, as they can be different from discrete at n+1 *)
-		let z_n_and_continuous_guard_without_discrete : LinearConstraint.px_linear_constraint = LinearConstraint.pxd_hide_discrete_and_collapse z_n_and_continuous_guard in
-		
-		(* Intersect with ZN+1 *)
-		LinearConstraint.px_intersection_assign z_n_plus_1 [z_n_and_continuous_guard_without_discrete];
-
-		(* BEGIN OLD VERSION (removed 2021/03/16) *)
-(*		(*** BADPROG: multiple conversions here! ***)
-		let z_n_plus_1 = LinearConstraint.pxd_of_px_constraint z_n_plus_1 in
-		apply_updates_assign z_n_plus_1 updates_n;
-		let z_n_plus_1 = LinearConstraint.pxd_hide_discrete_and_collapse z_n_plus_1 in
-		
-		(* Compute the guard minus the variables to be reset, projected onto the clocks *)
-		(*** WARNING: behavior might be incorrect here, e.g. for some reset of the form x := x, or similar! (ÉA, 2020/10/19) ***)
-		let continuous_guard = LinearConstraint.pxd_intersection continuous_guards in
-		apply_updates_assign continuous_guard updates_n;
-		(* Remove discrete *)
-		let continuous_guard_without_discrete = LinearConstraint.pxd_hide_discrete_and_collapse continuous_guard in
-		(* Intersect *)
-		LinearConstraint.px_intersection_assign z_n_plus_1 [continuous_guard_without_discrete];*)
-		(* END OLD VERSION (removed 2021/03/16) *)
+		(* Call dedicated function *)
+		let admissible_initial_valuations : LinearConstraint.px_linear_constraint = compute_admissible_valuations_after_transition state_n transition_n_n_plus_1 target_state in
 		
 		(* Print some information *)
-		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high ("Intersected state n+1 with Z_n, and its incoming guard, and updated variables to n+1:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("Intersected state n+1 with Z_n, and its incoming guard, and updated variables to n+1:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names admissible_initial_valuations) ^ "");
 		);
 		
-		z_n_plus_1
+		admissible_initial_valuations
 	)
+	
 	in
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Admissible valuations:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names admissible_initial_valuations) ^ "");
+	);
+	
+	
+	(* Step 2: cancelling time elapsing, i.e., compute continuous predecessors *)
+	
+	let valuations_n_plus_1_before_time_elapsing : LinearConstraint.px_linear_constraint = continuous_predecessors location_n_plus_1 admissible_initial_valuations z_n_plus_1 z_n_plus_1_final in	
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Valuations before time elapsing:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names valuations_n_plus_1_before_time_elapsing) ^ "");
+	);
+	
 	
 	
 	(*------------------------------------------------------------*)
@@ -2497,7 +2379,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 				LinearConstraint.px_intersection[
 					LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , concrete_target_px_valuation variable_index) model.parameters_and_clocks)
 					;
-					z_n_plus_1_initial
+					valuations_n_plus_1_before_time_elapsing
 				]
 			) then(
 			(* Print some information *)
@@ -2508,7 +2390,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		
 		if recomputation_needed then(
 			(* Re-choose a valuation in this constraint *)
-			LinearConstraint.px_exhibit_point z_n_plus_1_initial
+			LinearConstraint.px_exhibit_point valuations_n_plus_1_before_time_elapsing
 		(* Otherwise, keep the original valuation *)
 		)else(
 			(* Print some information *)
@@ -2546,10 +2428,13 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 
 	(* Iterate starting from s_n and going backward *)
 	
+	(* Reminder: valuation_n_plus_1 is the initial valuation *after* the transition from the current state n *)
 	let valuation_n_plus_1 : LinearConstraint.px_valuation ref = ref concrete_target_px_valuation_before_time_elapsing in
 
+	(* List to maintain the valuations for the concrete run *)
 	let te_and_valuations = ref [] in
 	
+
 	(*------------------------------------------------------------*)
 	(* For n to length-1 to 0 *)
 	(*------------------------------------------------------------*)
@@ -2559,154 +2444,73 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		
 		(* Get the values *)
 		
-(*		let state_index_n_plus_1 : State.state_index =
-			if n = List.length symbolic_run.symbolic_steps - 1
-			then target_state_index
-			else ((List.nth symbolic_run.symbolic_steps (n+1)).source)
-		in*)
-
 		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps n in
 		
 		(* Get state n *)
 		let state_n : State.state = StateSpace.get_state state_space symbolic_step_n.source in
-		(* Get state n+1 *)
-(* 		let state_n_plus_1 = StateSpace.get_state state_space state_index_n_plus_1 in *)
 		
 		(* Get the location and zone for state_n *)
 		let location_n	: Location.global_location				= state_n.global_location in
 		let z_n			: LinearConstraint.px_linear_constraint	= state_n.px_constraint in
 		
-		(* Get the n-1 elements *)
-		let z_n_minus_1, continuous_guard_n_minus_1, updates_n_minus_1 =
-			(* Normal case *)
-			if n > 0 then(
-				(* Get the state index *)
-				let symbolic_step_n_minus_1 = List.nth symbolic_run.symbolic_steps (n-1) in
 
-				(* Get the state *)
-				let state_n_minus_1 : State.state = StateSpace.get_state state_space symbolic_step_n_minus_1.source in
-				(* Get location and constraint *)
-				let location_n_minus_1	: Location.global_location				= state_n_minus_1.global_location in
-				let z_n_minus_1			: LinearConstraint.px_linear_constraint	= state_n_minus_1.px_constraint in
-				
-				(* Reconstruct the continuous guard from n-1 to n *)
-				(*** WARNING/BADPROG/TOOPTIMIZE: double computation as we recompute it at the next n-1 ***)
-				let _, _, continuous_guards_n_minus_1, updates_n_minus_1 = compute_new_location_guards_updates location_n_minus_1 symbolic_step_n_minus_1.transition in
-				
-				z_n_minus_1,
-				LinearConstraint.pxd_intersection continuous_guards_n_minus_1,
-				updates_n_minus_1
-			
-			(* Case "before" 0 *)
-			) else(
-				(* Print some information *)
-				if verbose_mode_greater Verbose_medium then(
-					print_message Verbose_medium ("Now handling final case at position n=" ^ (string_of_int n) ^ ":");
-				);
-				
-				(* True "previous" zone *)
-				LinearConstraint.px_true_constraint(),
-				(* Guard: set the absolute time clock to 0 *)
-				LinearConstraint.pxd_constraint_of_point [(absolute_time_clock, NumConst.zero)],
-				(* No updates *)
-				[]
-		)
-		in
-		
-		(* Get all updates from the combined transition n *)
-		let clock_updates, _ = (*AlgoStateBased.*)get_updates_in_combined_transition location_n symbolic_step_n.transition in
-		
-		(* Reconstruct the continuous guard from n to n+1 *)
-		let _, _, continuous_guards_n, updates_n = compute_new_location_guards_updates location_n symbolic_step_n.transition in
-		let continuous_guard_n = LinearConstraint.pxd_intersection continuous_guards_n in
-		
-
-		(* Create the time polyhedron depending on the clocks *)
-		let time_polyhedron = pxd_compute_time_polyhedron Backward location_n in
-		
 		(* Zn+1 is the *initial* valuation at n+1 (i.e., before time elapsing) *)
 		
 		let z_n_plus_1 : LinearConstraint.px_linear_constraint = LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , !valuation_n_plus_1 variable_index) model.parameters_and_clocks) in
 		
-		(* BEGIN COPY PASTE *)
-		(* Apply time past *)
-		print_message Verbose_total ("Applying time past…");
+		
+		(* Step 1: apply discrete predecessor from n+1 to n, i.e., compute the valuations just before the discrete step *)
+		let valuations_n_after_time_elapsing : LinearConstraint.px_linear_constraint = discrete_predecessors state_n symbolic_step_n.transition z_n_plus_1 in
 
-		(*** TODO: work in progress here ***)
-(* 		LinearConstraint.px_time_elapse_assign_wrt_polyhedron time_polyhedron z_n_plus_1; *)
 		
-		(* Print some information *)
-		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high ("Applied timed past at state n+1:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
-		);
+		(* Step 2: compute the initial admissible valuations *)
 		
-		(* Intersect with invariant (NOTE: shorter: we can fact intersect with the symbolic state, that already contains the invariant!) *)
-		LinearConstraint.px_intersection_assign z_n_plus_1 [z_n];
-		(* END COPY PASTE *)
-		
-		(*** NOTE: work in progress here ***)
-(*		(* BEGIN ALMOST COPY PASTE *)
-		(* Case initial state *)
-		let z_n_plus_1_initial = if n = 0 then(
+		let admissible_initial_valuations_at_n : LinearConstraint.px_linear_constraint = 
+		(* Case first state: just keep the initial constraint *)
+		if n = 0 then(
+			(* Print some information *)
+			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total ("Found state 0: the admissible initial valuations are given by the initial constraint:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint) ^ "");
+			);
+
 			(* Re-intersect with the *initial* continuous valuations to indeed get an initial valuation *)
-			LinearConstraint.px_intersection_assign z_n_plus_1 [model.initial_constraint];
+			model.initial_constraint
+		)else(
+		(* Case non-first state: the initial admissible valuations are the predecessor constraint (location n) intersected with the guard from n-1 to n, to which we apply updates from n-1 to n, and then intersected with the constraint at location n (mainly to have the invariant) *)
+		
+			let symbolic_step_n_minus_1	: StateSpace.symbolic_step 			= List.nth symbolic_run.symbolic_steps (n - 1) in
+			let transition_n_minus_1_n	: StateSpace.combined_transition	= symbolic_step_n_minus_1.transition in
+			let state_n_minus_1			: State.state						= StateSpace.get_state state_space symbolic_step_n_minus_1.source in
 
-			(* Print some information *)
-			if verbose_mode_greater Verbose_high then(
-				print_message Verbose_high ("Symbolic run of length 0: intersect with initial valuations:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
-			);
-
-			z_n_plus_1
-		)
-		(* Case n > 0 *)
-		else(			
-			(* Our goal: intersect the previous state (z_n) with the guard, and then apply updates *)
-
-			(* Compute the intersection of Z_n (mostly to get the invariant I_n) with the outgoing guard from n to n+1 *)
-			let z_n_and_continuous_guard : LinearConstraint.pxd_linear_constraint = LinearConstraint.pxd_intersection ((LinearConstraint.pxd_of_px_constraint z_n) :: continuous_guards) in
-
-			(* Apply updates *)
-			apply_updates_assign z_n_and_continuous_guard updates_n;
+			(* Call dedicated function *)
+			let admissible_initial_valuations_at_n : LinearConstraint.px_linear_constraint = compute_admissible_valuations_after_transition state_n_minus_1 transition_n_minus_1_n state_n in
 			
-			(* Remove discrete from n, as they can be different from discrete at n+1 *)
-			let z_n_and_continuous_guard_without_discrete : LinearConstraint.px_linear_constraint = LinearConstraint.pxd_hide_discrete_and_collapse z_n_and_continuous_guard in
-			
-			(* Intersect with ZN+1 *)
-			LinearConstraint.px_intersection_assign z_n_plus_1 [z_n_and_continuous_guard_without_discrete];
-
-			(* Print some information *)
-			if verbose_mode_greater Verbose_high then(
-				print_message Verbose_high ("Intersected state n+1 with Z_n, and its incoming guard, and updated variables to n+1:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
-			);
-			
-			z_n_plus_1
+			admissible_initial_valuations_at_n
 		)
 		in
-		(* END ALMOST COPY PASTE *)*)
-
-		(* Compute a set of valuations that can be a predecessor of the valuation of n+1 *)
-		let predecessors_of_valuation_n_plus_1 = (*AlgoStateBased.*)constraint_zone_predecessor_g_u
-			(* Zn-1 *) z_n_minus_1
-			(* gn-1 *) continuous_guard_n_minus_1
-			(* Un-1 *) updates_n_minus_1
-			(* Zn *)   z_n
-			(* time polyhedron *)time_polyhedron
-			(* gn *)   continuous_guard_n
-			(*** NOTE: a bit twice the work here, as they were processed by get_updates_in_combined_transition ***)
-			(* Un *)   [clock_updates]
-			(* Zn+1 *) z_n_plus_1
-			in
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high ("Predecessors of valution n+1:\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names predecessors_of_valuation_n_plus_1));
+			print_message Verbose_high ("Admissible valuations:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names admissible_initial_valuations_at_n) ^ "");
 		);
 		
+
+		(* Step 3: apply continuous predecessor at state n *)
+		
+		let valuations_n_before_time_elapsing = continuous_predecessors location_n admissible_initial_valuations_at_n z_n valuations_n_after_time_elapsing in
+		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("Valuations before time elapsing:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names valuations_n_before_time_elapsing) ^ "");
+		);
+
+
+	
 		(* Pick a valuation *)
 		let valuation_n =
 			try(
-				LinearConstraint.px_exhibit_point predecessors_of_valuation_n_plus_1
-			)with LinearConstraint.EmptyConstraint ->(
+				LinearConstraint.px_exhibit_point valuations_n_before_time_elapsing
+			) with LinearConstraint.EmptyConstraint ->(
 				raise (InternalError "Empty constraint found when picking a point in the predecessors of n+1!")
 			)
 		in
