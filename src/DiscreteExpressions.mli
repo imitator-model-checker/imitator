@@ -97,12 +97,15 @@ type global_expression =
 val string_of_expression_type : expression_type -> string
 val var_type_of_expression : global_expression -> DiscreteValue.var_type
 (* Check if a variable type is compatible with an expression type *)
+val is_var_type_discrete_compatible_with_expr_type : DiscreteValue.var_type_discrete -> expression_type -> bool
+(* Check if a variable type is compatible with an expression type *)
 val is_var_type_compatible_with_expr_type : DiscreteValue.var_type -> expression_type -> bool
 (* Check if expression type is a boolean expression type *)
 val is_bool_expression_type : expression_type -> bool
 (* Check if expression type is a unknown number type *)
 val is_unknown_number_expression_type : expression_type -> bool
-
+(* Check if expression type is a bool of unknown number type *)
+val is_bool_of_unknown_number_expression_type : expression_type -> bool
 
 val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discrete_value -> bool
 

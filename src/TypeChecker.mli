@@ -14,40 +14,45 @@
  *
  ************************************************************)
 
+(** Exceptions **)
+
 (* Type error exception *)
 exception TypeError of string
 
-(* TODO benjamin peut-être à déplacer dans ParsingStructureUtilities *)
+(** Get variables types **)
+
+(* Get var type of a variable given it's index *)
 val get_type_of_variable : ParsingStructure.useful_parsing_model_information -> int -> DiscreteValue.var_type
+(* Get var type of a variable given it's name *)
 val get_type_of_variable_by_name : ParsingStructure.useful_parsing_model_information -> string -> DiscreteValue.var_type
-val get_discrete_type_of_variable : ParsingStructure.useful_parsing_model_information -> int -> DiscreteValue.var_type
-val get_discrete_type_of_variable_by_name : ParsingStructure.useful_parsing_model_information -> string -> DiscreteValue.var_type
+(* Get discrete type of a variable given it's index *)
+val get_discrete_type_of_variable : ParsingStructure.useful_parsing_model_information -> int -> DiscreteValue.var_type_discrete
+(* Get discrete type of a variable given it's name *)
+val get_discrete_type_of_variable_by_name : ParsingStructure.useful_parsing_model_information -> string -> DiscreteValue.var_type_discrete
 
-(* Check if a value is compatible with given type *)
-val check_value_compatible_with_type : DiscreteValue.discrete_value -> DiscreteValue.var_type -> bool
-
-val get_expression_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.global_expression -> DiscreteValue.var_type
+(** Resolve expression type **)
 
 (* Try to resolve the specific type of an expression according to literals and variables used *)
 (* Doing type checking of the expression at the same time*)
 val resolve_expression_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.global_expression -> ParsingStructure.global_expression * DiscreteExpressions.expression_type
-val resolve_bool_expression_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_boolean_expression -> ParsingStructure.parsed_boolean_expression * DiscreteExpressions.expression_type
-val resolve_nonlinear_constraint_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.nonlinear_constraint -> ParsingStructure.nonlinear_constraint * DiscreteExpressions.expression_type
 
+(** Type checking **)
+
+(* Type check a guard / invariant *)
+(* return a tuple containing the guard uniformly typed and the resolved type of the expression *)
 val check_guard : ParsingStructure.useful_parsing_model_information -> ParsingStructure.convex_predicate -> ParsingStructure.convex_predicate * DiscreteExpressions.expression_type
+
+(* Type check an update *)
+(* return a tuple containing the update uniformly typed and the resolved type of the expression *)
 val check_update : ParsingStructure.useful_parsing_model_information -> string -> ParsingStructure.global_expression -> string * ParsingStructure.global_expression
+
+(* Type check a conditional expression *)
+(* return a tuple containing the conditional expression uniformly typed and the resolved type of the expression *)
 val check_conditional : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_boolean_expression -> ParsingStructure.parsed_boolean_expression  * DiscreteExpressions.expression_type
-
-val convert_literal_types_of_expression :  ParsingStructure.useful_parsing_model_information -> DiscreteValue.var_type -> ParsingStructure.global_expression -> ParsingStructure.global_expression
-val convert_literal_types_of_nonlinear_constraint : ParsingStructure.useful_parsing_model_information -> DiscreteValue.var_type -> ParsingStructure.nonlinear_constraint -> ParsingStructure.nonlinear_constraint
-
-val check_type_of_nonlinear_constraint : ParsingStructure.useful_parsing_model_information -> ParsingStructure.nonlinear_constraint -> bool
-
-(* Get new parsed model with literal rationals implicitly converted to suitable number type *)
-(* Example : i * 2 with i : int, convert 2 from rational to int *)
-(*val implicit_convert_literal_of_parsed_global_expression : ParsingStructure.useful_parsing_model_information -> ParsingStructure.global_expression -> ParsingStructure.global_expression*)
-(*val implicit_convert_literal_of_nonlinear_constraint : ParsingStructure.useful_parsing_model_information -> ParsingStructure.nonlinear_constraint -> ParsingStructure.nonlinear_constraint*)
 
 (* Check that an expression assigned to a variable is of the same type *)
 (* If not, raise a TypeError exception with an error message *)
 val check_type_assignment : ParsingStructure.useful_parsing_model_information -> string -> ParsingStructure.global_expression -> unit
+
+(* Check if a value is compatible with given type *)
+val check_value_compatible_with_type : DiscreteValue.discrete_value -> DiscreteValue.var_type -> bool

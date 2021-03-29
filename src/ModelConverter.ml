@@ -99,6 +99,7 @@ let convert_var_type = function
     | ParsingStructure.Var_type_parameter -> DiscreteValue.Var_type_parameter
 
 let string_of_discrete_number_type = function
+    | DiscreteValue.Var_type_discrete_unknown_number -> "num"
     | DiscreteValue.Var_type_discrete_rational -> "rat"
     | DiscreteValue.Var_type_discrete_int -> "int"
 
@@ -117,7 +118,7 @@ let numconst_value_or_fail = function
     | DiscreteValue.Rational_value x -> x
     | x ->
         let str_value = DiscreteValue.string_of_value x in
-        let str_type = DiscreteValue.string_of_var_type (DiscreteValue.var_type_of_value x) in
+        let str_type = DiscreteValue.string_of_var_type_discrete (DiscreteValue.var_type_discrete_of_value x) in
         let error_msg =
             "Linear expressions only support rational literals and constants, value "
             ^ str_value
@@ -861,7 +862,6 @@ let int_expression_of_parsed_expression useful_parsing_model_information (* expr
 let convert_parsed_global_expression useful_parsing_model_information = function
     | Parsed_global_expression expr as global_expr ->
         (* TYPE CHECK *)
-(*        let expr_type = TypeChecker.get_expression_type useful_parsing_model_information global_expr in*)
         let _, expr_type = TypeChecker.resolve_expression_type useful_parsing_model_information global_expr in
 
         match expr_type with
@@ -2139,22 +2139,24 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			    print_error ("The discrete variable `" ^ variable_name ^ "` is given an initial value several times in the init definition.");
 			    well_formed := false;
 			) else (
+
+			    (* TODO benjamin move to TypeChecker *)
 			    (* TYPE CHECKING *)
 			    (* Check expression / variable type consistency *)
                 TypeChecker.check_type_assignment useful_parsing_model_information variable_name expr;
 			    (* Try to reduce expression to a value *)
 			    let discrete_value = try_reduce_parsed_global_expression_with_model useful_parsing_model_information expr in
 			    (* Check computed value type consistency *)
-            let discrete_value_type = DiscreteValue.var_type_of_value discrete_value in
+                let discrete_value_type = DiscreteValue.var_type_discrete_of_value discrete_value in
                 (* Get variable type *)
-                let variable_type = type_of_variables discrete_index in
+                let variable_type = TypeChecker.get_discrete_type_of_variable useful_parsing_model_information discrete_index in
 
-                if not (DiscreteValue.is_type_compatibles variable_type discrete_value_type) then
-                    raise (TypeError ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type variable_type) ^ " is not compatible with value \"" ^ (DiscreteValue.string_of_value discrete_value) ^ "\" of type " ^ (DiscreteValue.string_of_var_type discrete_value_type)))
+                if not (DiscreteValue.is_discrete_type_compatibles variable_type discrete_value_type) then
+                    raise (TypeError ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type_discrete variable_type) ^ " is not compatible with value \"" ^ (DiscreteValue.string_of_value discrete_value) ^ "\" of type " ^ (DiscreteValue.string_of_var_type_discrete discrete_value_type)))
                 else (
                     (* As literal value is compatible with variable type,
                     convert literal value to variable type *)
-                    let converted_value = DiscreteValue.convert_value discrete_value variable_type in
+                    let converted_value = DiscreteValue.convert_value_to_discrete_type discrete_value variable_type in
 			        (* Else add it *)
 			        Hashtbl.add init_values_for_discrete discrete_index converted_value;
                 )

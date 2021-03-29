@@ -194,6 +194,8 @@ let string_of_numconst a =
 			Gmp.Q.to_string (get_mpq a)
 	)
 
+let to_string = string_of_numconst
+
 let jani_string_of_numconst a =
 	(* Avoid 0/1 *)
 	if a =/ (Gmp.Q.zero) then "0" else(

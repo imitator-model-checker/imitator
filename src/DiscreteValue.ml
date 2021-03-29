@@ -50,26 +50,44 @@ let var_type_bool = Var_type_discrete Var_type_discrete_bool
 type discrete_value =
     | Number_value of NumConst.t
     | Rational_value of NumConst.t
-    | Bool_value of bool
     | Int_value of Int32.t
+    | Bool_value of bool
 
 (************************************************************)
 (** Type functions  *)
 (************************************************************)
 
-let var_type_of_value = function
-    | Rational_value _ -> var_type_rational
-    | Bool_value _ -> var_type_bool
-    | Int_value _ -> var_type_int
-    | Number_value _ -> var_type_unknown_number
+(** String of types  **)
 
-let discrete_type_of_var_type = function
-    | Var_type_clock
-    | Var_type_parameter -> var_type_rational
-    | other_type -> other_type
+(* String of number var type *)
+let string_of_var_type_discrete_number = function
+    | Var_type_discrete_rational -> "discrete"
+    | Var_type_discrete_int -> "int"
+    | Var_type_discrete_unknown_number -> "number"
+
+(* String of discrete var type *)
+let string_of_var_type_discrete = function
+    | Var_type_discrete_number x -> string_of_var_type_discrete_number x
+    | Var_type_discrete_bool -> "bool"
+
+(* String of var type *)
+let string_of_var_type = function
+	| Var_type_clock -> "clock"
+	| Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
+	| Var_type_parameter -> "parameter"
+
+(** Check types **)
+
+(* Check if two discrete types are compatible *)
+let is_discrete_type_compatibles type_a type_b =
+    match type_a, type_b with
+    | Var_type_discrete_number _, Var_type_discrete_bool
+    | Var_type_discrete_bool, Var_type_discrete_number _ -> false
+    | _, _ -> true
 
 (* Check if two types are compatible *)
 (* To be compatible, two type should have the same kind (number, boolean, ...) *)
+(* TODO benjamin refactor with use of is_discrete_type_compatibles function *)
 let is_type_compatibles type_a type_b =
     match type_a, type_b with
     | a, b when a = b -> true
@@ -91,23 +109,6 @@ let is_type_compatibles type_a type_b =
     -> true
     | _ -> false
 
-(* String of number var type *)
-let string_of_var_type_discrete_number = function
-    | Var_type_discrete_rational -> "discrete"
-    | Var_type_discrete_int -> "int"
-    | Var_type_discrete_unknown_number -> "number"
-
-(* String of discrete var type *)
-let string_of_var_type_discrete = function
-    | Var_type_discrete_number x -> string_of_var_type_discrete_number x
-    | Var_type_discrete_bool -> "bool"
-
-(* String of var type *)
-let string_of_var_type = function
-	| Var_type_clock -> "clock"
-	| Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
-	| Var_type_parameter -> "parameter"
-
 (* Check if a Var_type is a Var_type_discrete of anything *)
 let is_discrete_type = function
     | Var_type_discrete _ -> true
@@ -120,19 +121,43 @@ let is_number_type = function
    | Var_type_discrete Var_type_discrete_number _ -> true
    | _ -> false
 
-let is_unknown_number_type = function
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number) -> true
+let is_discrete_type_number_type = function
+   | Var_type_discrete_number _ -> true
+   | _ -> false
+
+(* Check if discrete type is a Var_type_unknown_number *)
+let is_discrete_type_unknown_number_type = function
+    | Var_type_discrete_number Var_type_discrete_unknown_number -> true
     | _ -> false
 
-(* Check if a Var_type is a Var_type_rational *)
+(* Check if discrete type is a Var_type_rational *)
 let is_rational_type = function
     | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational) -> true
     | _ -> false
 
-(* Check if a Var_type is a Var_type_bool *)
-let is_bool_type = function
-    | Var_type_discrete Var_type_discrete_bool -> true
+(* Check if discrete type is a Var_type_bool *)
+let is_discrete_type_bool_type = function
+    | Var_type_discrete_bool -> true
     | _ -> false
+
+(* Get var type of a discrete value *)
+let var_type_of_value = function
+    | Number_value _ -> var_type_unknown_number
+    | Rational_value _ -> var_type_rational
+    | Int_value _ -> var_type_int
+    | Bool_value _ -> var_type_bool
+
+(* Get discrete var type of a discrete value *)
+let var_type_discrete_of_value = function
+    | Number_value _ -> Var_type_discrete_number Var_type_discrete_unknown_number
+    | Rational_value _ -> Var_type_discrete_number Var_type_discrete_rational
+    | Int_value _ -> Var_type_discrete_number Var_type_discrete_int
+    | Bool_value _ -> Var_type_discrete_bool
+
+let discrete_type_of_var_type = function
+    | Var_type_clock
+    | Var_type_parameter -> Var_type_discrete_number Var_type_discrete_rational
+    | Var_type_discrete x -> x
 
 (************************************************************)
 (** Value functions  *)
@@ -175,6 +200,7 @@ let bool_default_value = false
 
 (* Get default discrete number value *)
 let default_discrete_number_value = function
+    | Var_type_discrete_unknown_number
     | Var_type_discrete_rational -> Rational_value numconst_default_value
     | Var_type_discrete_int -> Int_value int_default_value
 
@@ -229,12 +255,14 @@ let int_value = function
 
 (* Get bool value of discrete value *)
 let bool_value = function
+    | Number_value x
     | Rational_value x -> if NumConst.equal x NumConst.one then true else false
     | Bool_value x -> x
     | Int_value x -> if Int32.equal x Int32.one then true else false
 
 (* Get float value of discrete value *)
 let float_value = function
+    | Number_value x
     | Rational_value x -> (NumConst.to_float x)
     | Bool_value x -> if x then 0.0 else 0.0
     | Int_value x -> Int32.to_float x
@@ -247,33 +275,45 @@ let convert_to_rational_value value =
 let convert_to_int_value value =
     Int_value (int_value value)
 
-(* Convert discrete value to given type *)
-let convert_value value target_type =
-    let source_type = var_type_of_value value in
-    match source_type, target_type with
-    (* Source and target type identical *)
-    |  s, t when s = t -> value
-    (* Number to int *)
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number), Var_type_discrete (Var_type_discrete_number Var_type_discrete_int)
-    (* Rational to int *)
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational), Var_type_discrete (Var_type_discrete_number Var_type_discrete_int) -> convert_to_int_value value
-    (* Number to rational *)
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number), Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
-    (* Number to parameter *)
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number), Var_type_parameter
-    (* Number to clock *)
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number), Var_type_clock
-    (* Int to rational *)
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_int), Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational) -> convert_to_rational_value value
+(* Convert discrete value to another discrete type *)
+let convert_value_to_discrete_type value target_type =
+    match value, target_type with
+    (* Source and target type are identical *)
+    | Rational_value _, Var_type_discrete_number Var_type_discrete_rational
+    | Int_value _, Var_type_discrete_number Var_type_discrete_int
+    | Bool_value _, Var_type_discrete_bool
+    | Number_value _, Var_type_discrete_number Var_type_discrete_unknown_number -> value
+    (* Number_value to Rational_value *)
+    | Number_value _, Var_type_discrete_number Var_type_discrete_rational
+    (* Int_value to Rational_value *)
+    | Int_value _, Var_type_discrete_number Var_type_discrete_rational ->
+        convert_to_rational_value value
+    (* Number_value to Int_value *)
+    | Number_value _, Var_type_discrete_number Var_type_discrete_int
+    (* Rational_value to Int_value *)
+    | Rational_value _, Var_type_discrete_number Var_type_discrete_int ->
+        convert_to_int_value value
+    (* Other are not supported *)
+    | x, t -> failwith (
+        "Conversion of value "
+        ^ (string_of_value x)
+        ^ " to "
+        ^ (string_of_var_type_discrete t)
+        ^ " type is not supported"
+    )
 
-    (* Other conversions, don't do anything *)
-    | _ -> value (* TODO benjamin SHOULD RAISE AN EXCEPTION ! *)
+(* Convert discrete value to another var type *)
+let convert_value value target_type =
+    let target_discrete_type = discrete_type_of_var_type target_type in
+    convert_value_to_discrete_type value target_discrete_type
+
 
 (* Hash code of discrete value *)
 let hash = function
-     | Rational_value x -> Gmp.Z.to_int (NumConst.get_num x)
-     | Bool_value x -> if x then 1 else 0
-     | Int_value x -> Int32.to_int x
+    | Number_value x
+    | Rational_value x -> Gmp.Z.to_int (NumConst.get_num x)
+    | Bool_value x -> if x then 1 else 0
+    | Int_value x -> Int32.to_int x
 
 (** Computing operation on values  **)
 
@@ -294,14 +334,14 @@ let add a b =
     match a, b with
         | Rational_value a, Rational_value b -> Rational_value (NumConst.add a b)
         | Int_value a, Int_value b -> Int_value (Int32.add a b)
-        | _ -> raise (ComputingException ("add : " ^ (string_of_var_type (var_type_of_value a)) ^ "," ^ (string_of_var_type (var_type_of_value b))))
+        | _ -> raise (ComputingException ("add : " ^ (string_of_var_type_discrete (var_type_discrete_of_value a)) ^ "," ^ (string_of_var_type_discrete (var_type_discrete_of_value b))))
 
 (* Subtract two discrete value *)
 let sub a b =
     match a, b with
         | Rational_value a, Rational_value b -> Rational_value (NumConst.sub a b)
         | Int_value a, Int_value b -> Int_value (Int32.sub a b)
-        | x, y -> raise (ComputingException ("sub " ^ (string_of_var_type (var_type_of_value y)) ))
+        | x, y -> raise (ComputingException ("sub " ^ (string_of_var_type_discrete (var_type_discrete_of_value y)) ))
 
 (* Multiply two discrete value *)
 let mul a b =

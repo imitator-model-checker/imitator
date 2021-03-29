@@ -47,33 +47,59 @@ val var_type_bool : var_type
 type discrete_value =
     | Number_value of NumConst.t
     | Rational_value of NumConst.t
-    | Bool_value of bool
     | Int_value of Int32.t
+    | Bool_value of bool
 
 (************************************************************)
 (** Type functions  *)
 (************************************************************)
 
+(** String of types  **)
+
+(* String of var type *)
+val string_of_var_type : var_type -> string
+(* String of discrete var type *)
+val string_of_var_type_discrete : var_type_discrete -> string
+(* String of number var type *)
+val string_of_var_type_discrete_number : var_type_discrete_number -> string
+
+(** Check types **)
+
 val is_discrete_type : var_type -> bool
 (* Check if a Var_type is a Var_type_number *)
 val is_number_type : var_type -> bool
-
-val is_unknown_number_type : var_type -> bool
-(* Check if a Var_type is a Var_type_rational *)
-val is_rational_type : var_type -> bool
-(* Check if a Var_type is a Var_type_bool *)
-val is_bool_type : var_type -> bool
-
-val discrete_type_of_var_type : var_type -> var_type
-val var_type_of_value : discrete_value -> var_type
-
+val is_discrete_type_number_type : var_type_discrete -> bool
+(* Check if two discrete types are compatible *)
+val is_discrete_type_compatibles : var_type_discrete -> var_type_discrete -> bool
 (* Check if two types are compatible *)
 (* To be compatible, two type should have the same kind (number, boolean, ...) *)
 val is_type_compatibles : var_type -> var_type -> bool
 
-val string_of_var_type : var_type -> string
-val string_of_var_type_discrete : var_type_discrete -> string
-val string_of_var_type_discrete_number : var_type_discrete_number -> string
+(* Check if discrete type is a Var_type_unknown_number *)
+val is_discrete_type_unknown_number_type : var_type_discrete -> bool
+(* Check if discrete type is a Var_type_rational *)
+val is_rational_type : var_type -> bool
+(* Check if discrete type is a Var_type_bool *)
+val is_discrete_type_bool_type : var_type_discrete -> bool
+
+(** Values and types  **)
+
+(* Get var type of a discrete value *)
+val var_type_of_value : discrete_value -> var_type
+(* Get discrete var type of a discrete value *)
+val var_type_discrete_of_value : discrete_value -> var_type_discrete
+(* Get discrete type of a var type *)
+(* Note : clocks / parameter are of rational type *)
+val discrete_type_of_var_type : var_type -> var_type_discrete
+
+
+
+
+
+
+
+
+
 
 (************************************************************)
 (** Value functions  *)
@@ -125,8 +151,12 @@ val int_value : discrete_value -> Int32.t
 val bool_value : discrete_value -> bool
 (* Get float value of discrete value *)
 val float_value : discrete_value -> float
-(* Convert discrete value to given type *)
+
+(* Convert discrete value to another var type *)
 val convert_value : discrete_value -> var_type -> discrete_value
+(* Convert discrete value to another discrete type *)
+val convert_value_to_discrete_type : discrete_value -> var_type_discrete -> discrete_value
+
 (* Hash code of discrete value *)
 val hash : discrete_value -> int
 

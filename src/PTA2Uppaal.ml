@@ -56,6 +56,7 @@ let scaling_factor = 200
 
 (* Customized string of discrete number type *)
 let string_of_var_type_discrete_number = function
+    | DiscreteValue.Var_type_discrete_unknown_number
     | DiscreteValue.Var_type_discrete_rational -> "int"
     | DiscreteValue.Var_type_discrete_int -> "int"
 

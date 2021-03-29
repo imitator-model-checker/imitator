@@ -282,8 +282,25 @@ let is_bool_expression_type = function
     | Expression_type_discrete_bool _ -> true
     | _ -> false
 
+(* Check if expression type is a unknown number type *)
 let is_unknown_number_expression_type = function
-    | Expression_type_discrete_number Var_type_discrete_unknown_number -> true
+    | Expression_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number -> true
+    | _ -> false
+
+(* Check if expression type is a bool of unknown number type *)
+let is_bool_of_unknown_number_expression_type = function
+    | Expression_type_discrete_bool (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number) -> true
+    | _ -> false
+
+(* Check if a variable type is compatible with an expression type *)
+let is_var_type_discrete_compatible_with_expr_type var_type_discrete expr_type =
+    match var_type_discrete, expr_type with
+    (* Booleans are compatible with any boolean expression *)
+    | DiscreteValue.Var_type_discrete_bool,  Expression_type_discrete_bool _ -> true
+    (* All number types are compatible with unknown number typed expression *)
+    | DiscreteValue.Var_type_discrete_number _, Expression_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number -> true
+    (* Number type is compatible with an arithmetic expression of the same type *)
+    | DiscreteValue.Var_type_discrete_number var_type, Expression_type_discrete_number expr_type when var_type = expr_type -> true
     | _ -> false
 
 (* Check if a variable type is compatible with an expression type *)
@@ -296,11 +313,11 @@ let is_var_type_compatible_with_expr_type var_type expr_type =
     | Var_type_parameter, Expression_type_discrete_number Var_type_discrete_rational
     *)
     (* Booleans are compatible with any boolean expression *)
-    | DiscreteValue.Var_type_discrete Var_type_discrete_bool,  Expression_type_discrete_bool _ -> true
+    | DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_bool,  Expression_type_discrete_bool _ -> true
     (* All number types are compatible with unknown number typed expression *)
-    | DiscreteValue.Var_type_discrete (Var_type_discrete_number _), Expression_type_discrete_number Var_type_discrete_unknown_number -> true
+    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number _), Expression_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number -> true
     (* Number type is compatible with an arithmetic expression of the same type *)
-    | DiscreteValue.Var_type_discrete (Var_type_discrete_number var_type), Expression_type_discrete_number expr_type when var_type = expr_type -> true
+    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number var_type), Expression_type_discrete_number expr_type when var_type = expr_type -> true
     | _ -> false
 
 (************************************************************)
@@ -361,6 +378,12 @@ and eval_discrete_arithmetic_expression discrete_valuation = function
 (************************************************************)
 (** Evaluate a rational expression with a valuation *)
 (************************************************************)
+(*
+let eval_rational_expression discrete_valuation expr =
+    let evaluator = ExpressionsEvaluator.MakeEvaluator(NumConst) in
+    evaluator.eval_expression discrete_valuation expr
+*)
+
 let eval_rational_expression discrete_valuation expr =
 
     let rec eval_rational_expression_rec = function
@@ -410,9 +433,15 @@ let eval_rational_expression discrete_valuation expr =
     in
     eval_rational_expression_rec expr
 
+(*
 (************************************************************)
 (** Evaluate a int32 expression with a valuation *)
 (************************************************************)
+let eval_int_expression discrete_valuation expr =
+    let evaluator = ExpressionsEvaluator.MakeEvaluator(Int32) in
+    evaluator.evaluate_expression discrete_valuation expr
+*)
+
 let eval_int_expression discrete_valuation expr =
 
     let rec eval_int_expression_rec = function
@@ -535,7 +564,6 @@ let eval_global_expression discrete_valuation = function
         (* TODO benjamin remove message *)
 (*        ImitatorUtilities.print_message Verbose_standard ("Evaluate bool expression : ");*)
         DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
-    | _ -> raise NotImplemented
 
 (************** Jani translation **************)
 (* Convert an arithmetic expression into a string *)
