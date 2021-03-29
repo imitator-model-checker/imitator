@@ -11,7 +11,7 @@
 #
 # File description  : non-regression tests data
 #
-# File contributors : Étienne André, Jaime Arias
+# File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
 # Last modified     : 2021/04/01
@@ -23,6 +23,31 @@
 # TESTS TO CARRY
 #************************************************************
 tests = [
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TEMPLATE
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	##------------------------------------------------------------
+	#{
+		## Test version             : 1
+		## Test since               : 2021/03/33
+		## Last modified            : 2021/03/33
+		## Test for IMITATOR version: 3
+		#'purpose'    : 'Test something',
+		#'input_files': ['somemodel.imi'],
+		#'options'    : '-mode checksyntax ',
+		#'expectations' : [
+			#{'file': 'somemodel.res' , 'content' : """
+#here the content to check
+		#"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+
+	#,
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# FILE NOT FOUND TESTS
