@@ -1,0 +1,81 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test model for EFexemplify
+ * Description      : Test model for EFexemplify
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : 
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/04/01
+ * Last modified    : 2021/04/01
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3
+ ************************************************************)
+
+var
+
+(* Clocks *)
+	x,
+	y,
+ 	global_time,
+		: clock;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant x <= 2 flow{ y' = 0}
+	(* x = 2, y = 0, t = 2 *)
+	when x = 2 do { y := 5} goto l2;
+
+loc l2: invariant x <= 5 flow{ x' = 3, y' = 2}
+	(* x = 5, y = 7, t = 3 *)
+	when x = 5 do { x := y, y := x} goto l3;
+	(* x = 7, y = 5, t = 3 *)
+
+loc l3: invariant x >= 0 flow{ x' = -12}
+	(* x = 1, y = 5.5, t = 3.5 *)
+	when x = 1 do { y := y - x} goto lTarget;
+	(* x = 1, y = 4.5, t = 3.5 *)
+
+urgent loc lTarget: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x				= 0
+	& y				= 0
+	& global_time	= 0
+
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

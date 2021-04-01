@@ -1,0 +1,78 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test model for EFexemplify
+ * Description      : Test model for EFexemplify
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : 
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/04/01
+ * Last modified    : 2021/04/01
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	global_time,
+		: clock;
+
+(* Discrete *)
+	i
+		: discrete;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant True
+	when True do { i := 3} goto l2;
+
+loc l2: invariant True
+	when True do { i := i + 1} goto lTarget;
+
+loc lTarget: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& global_time	= 0
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& i				= 0
+
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

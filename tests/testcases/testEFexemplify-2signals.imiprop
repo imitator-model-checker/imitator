@@ -1,0 +1,24 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test model for EFexemplify
+ * Description      : Test model for EFexemplify
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : 
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/04/01
+ * Last modified    : 2021/04/01
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3
+ ************************************************************)
+
+property := #synth EFexemplify(loc[pta] = lTarget);

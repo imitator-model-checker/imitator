@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/03/12
+# Last modified     : 2021/04/01
 #************************************************************
 
 
@@ -4153,9 +4153,323 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2021/04/01
+		# Last modified            : 2021/04/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EFexemplify on a toy example with only discrete',
+		'input_files': ['testEFexemplify-discrete.imi', 'testEFexemplify-discrete.imiprop'],
+		'options'    : '-no-merge -comparison none',
+		'expectations' : [
+			{'file': 'testEFexemplify-discrete.res' , 'content' : """
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  
+
+pta: l1, i = 0 ==> 
+global_time = 0
+ | 
+ | via d = 1/2
+ | followed by combined transition [PTA pta: guard{True} updates{i := 3}  (* sync nosync_1*)  Target l2] 
+ | 
+ v  pta: l2, i = 3 ==> 
+global_time = 1/2
+
+ | 
+ | via d = 1/2
+ | followed by combined transition [PTA pta: guard{True} updates{i := i + 1}  (* sync nosync_2*)  Target lTarget] 
+ | 
+ v  pta: lTarget, i = 4 ==> 
+global_time = 1
+(************************************************************)
+
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/04/01
+		# Last modified            : 2021/04/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock',
+		'input_files': ['testEFexemplify-1clock.imi', 'testEFexemplify-1clock.imiprop'],
+		'options'    : '-no-merge -comparison none',
+		'expectations' : [
+			{'file': 'testEFexemplify-1clock.res' , 'content' : """
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  
+
+pta: l1 ==> 
+x = 0 & global_time = 0
+ | 
+ | via d = 2
+ | followed by combined transition [PTA pta: guard{ x = 2} updates{x := 0}  (* sync nosync_1*)  Target l2] 
+ | 
+ v  pta: l2 ==> 
+x = 0 & global_time = 2
+
+ | 
+ | via d = 3
+ | followed by combined transition [PTA pta: guard{ x = 3} updates{x := x}  (* sync nosync_2*)  Target lTarget] 
+ | 
+ v  pta: lTarget ==> 
+x = 3 & global_time = 5
+(************************************************************)
+
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/04/01
+		# Last modified            : 2021/04/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock (+ non-1 flows, non-0 resets)',
+		'input_files': ['testEFexemplify-1complexclock.imi', 'testEFexemplify-1complexclock.imiprop'],
+		'options'    : '-no-merge -comparison none',
+		'expectations' : [
+			{'file': 'testEFexemplify-1complexclock.res' , 'content' : """
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  
+
+pta: l1 ==> 
+x = 0 & global_time = 0
+ | 
+ | via d = 2
+ | followed by combined transition [PTA pta: guard{ x = 2} updates{x := 5}  (* sync nosync_1*)  Target l2] 
+ | 
+ v  pta: l2 ==> 
+x = 5 & global_time = 2
+
+ | 
+ | via d = 1
+ | followed by combined transition [PTA pta: guard{ x = 8} updates{x := 2*x}  (* sync nosync_2*)  Target l3] 
+ | 
+ v  pta: l3 ==> 
+x = 16 & global_time = 3
+
+ | 
+ | via d = 10
+ | followed by combined transition [PTA pta: guard{ x = 6} updates{x := x + -3}  (* sync nosync_3*)  Target lTarget] 
+ | 
+ v  pta: lTarget ==> 
+x = 3 & global_time = 13
+(************************************************************)
+
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/04/01
+		# Last modified            : 2021/04/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EFexemplify on a toy example with 2 clocks (+ non-1 flows, non-0 resets)',
+		'input_files': ['testEFexemplify-2complexclocks.imi', 'testEFexemplify-2complexclocks.imiprop'],
+		'options'    : '-no-merge -comparison none',
+		'expectations' : [
+			{'file': 'testEFexemplify-2complexclocks.res' , 'content' : """
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  
+
+pta: l1 ==> 
+x = 0 & y = 0 & global_time = 0
+ | 
+ | via d = 2
+ | followed by combined transition [PTA pta: guard{ x = 2} updates{y := 5}  (* sync nosync_1*)  Target l2] 
+ | 
+ v  pta: l2 ==> 
+x = 2 & y = 5 & global_time = 2
+
+ | 
+ | via d = 1
+ | followed by combined transition [PTA pta: guard{ x = 5} updates{x := y, y := x}  (* sync nosync_2*)  Target l3] 
+ | 
+ v  pta: l3 ==> 
+x = 7 & y = 5 & global_time = 3
+
+ | 
+ | via d = 1/2
+ | followed by combined transition [PTA pta: guard{ x = 1} updates{y := -1*x + y}  (* sync nosync_3*)  Target lTarget] 
+ | 
+ v  pta: lTarget ==> 
+x = 1 & y = 9/2 & global_time = 7/2
+(************************************************************)
+
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/04/01
+		# Last modified            : 2021/04/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EFexemplify on a toy example with 1 clock and 2 bounded signals',
+		'input_files': ['testEFexemplify-2signals.imi', 'testEFexemplify-2signals.imiprop'],
+		'options'    : '-no-merge -comparison none',
+		'expectations' : [
+			# WARNING: there is a lot of non-determinism, so a failure on this test does not necessarily mean the algorithm is wrong! It should then be manually inspected
+			{'file': 'testEFexemplify-2signals.res' , 'content' : """
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  
+
+pta: l1, signal_1: increasing_slow, signal_2: increasing_slow ==> 
+x = 0 & s_1 = 37/4 & s_2 = 29/8 & global_time = 0
+ | 
+ | via d = 1
+ | followed by combined transition [PTA signal_1: guard{True} updates{}  sync stabilize_1 Target stabilized] 
+ | 
+ v  pta: l1, signal_1: stabilized, signal_2: increasing_slow ==> 
+x = 1 & s_1 = 41/4 & s_2 = 37/8 & global_time = 1
+
+ | 
+ | via d = 1
+ | followed by combined transition [PTA pta: guard{ s_1 > s_2
+& x = 2} updates{x := 0}  (* sync nosync_1*)  Target l2] 
+ | 
+ v  pta: l2, signal_1: stabilized, signal_2: increasing_slow ==> 
+x = 0 & s_1 = 41/4 & s_2 = 45/8 & global_time = 2
+
+ | 
+ | via d = 17/4
+ | followed by combined transition [PTA pta: guard{ x > 4
+& 10 > s_2} updates{}  (* sync nosync_2*)  Target l3] 
+ | 
+ v  pta: l3, signal_1: stabilized, signal_2: increasing_slow ==> 
+x = 17/4 & s_1 = 41/4 & s_2 = 79/8 & global_time = 25/4
+
+ | 
+ | via d = 83/8
+ | followed by combined transition [PTA pta: guard{ x > 20
+& s_1 > 10
+& s_1 + 10 = s_2} updates{}  (* sync nosync_3*)  Target lTarget] 
+ | 
+ v  pta: lTarget, signal_1: stabilized, signal_2: increasing_slow ==> 
+x = 25 & s_1 = 41/4 & s_2 = 81/4 & global_time = 133/8
+(************************************************************)
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EFexemplify on a toy example',
 		'input_files': ['testCounterExSimple-3.imi', 'testCounterExSimple-3.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-3.res' , 'content' : """
 BEGIN RESULT
@@ -4255,7 +4569,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (clock initially non-zero, strict constraints)',
 		'input_files': ['testCounterExSimple-4.imi', 'testCounterExSimple-4.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-4.res' , 'content' : """
 BEGIN RESULT
@@ -4357,7 +4671,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only in the initial state)',
 		'input_files': ['testCounterExSimple-5.imi', 'testCounterExSimple-5.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5.res' , 'content' : """
 BEGIN RESULT
@@ -4494,7 +4808,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at position 2)',
 		'input_files': ['testCounterExSimple-5b.imi', 'testCounterExSimple-5b.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5b.res' , 'content' : """
 BEGIN RESULT
@@ -4629,7 +4943,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at last position)',
 		'input_files': ['testCounterExSimple-5c.imi', 'testCounterExSimple-5c.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5c.res' , 'content' : """
 BEGIN RESULT
@@ -4763,7 +5077,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter valuation derived)',
 		'input_files': ['testCounterExSimple-6.imi', 'testCounterExSimple-6.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-6.res' , 'content' : """
 BEGIN RESULT
@@ -4860,7 +5174,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
 		'input_files': ['testCounterExSimple-7.imi', 'testCounterExSimple-7.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-7.res' , 'content' : """
 
@@ -4920,7 +5234,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
 		'input_files': ['testCounterExSimple-8.imi', 'testCounterExSimple-8.imiprop'],
-		'options'    : '-draw-cart',
+		'options'    : '-no-merge -comparison none -draw-cart',
 		'expectations' : [
 			{'file': 'testCounterExSimple-8.res' , 'content' : """
 
@@ -5074,7 +5388,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy monitoring-style example',
 		'input_files': ['testCounterExSimple-9.imi', 'testCounterExSimple-9.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-9.res' , 'content' : """
 
@@ -5171,7 +5485,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example without parameter',
 		'input_files': ['testCounterExSimple.imi', 'testCounterExSimple.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple.res' , 'content' : """
 
@@ -5284,7 +5598,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example with parameters and discrete variables',
 		'input_files': ['testCounterExSimple-2.imi', 'testCounterExSimple-2.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-2.res' , 'content' : """
 

@@ -1,0 +1,115 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test model for EFexemplify
+ * Description      : Test model for EFexemplify
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : 
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/04/01
+ * Last modified    : 2021/04/01
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3
+ ************************************************************)
+
+var
+
+(* Clocks *)
+	x,
+	s_1,
+	s_2,
+ 	global_time,
+		: clock;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant x <= 2
+	when x = 2 & s_1 > s_2 do { x := 0} goto l2;
+
+loc l2: invariant x <= 5
+	when x > 4 & s_2 < 10 goto l3;
+
+loc l3: invariant True flow{x' = 2}
+	when x > 20 & s_2 > 20 & s_2 = s_1 + 10 goto lTarget;
+
+loc lTarget: invariant True
+
+end (* pta *)
+
+
+(************************************************************)
+  automaton signal_1
+(************************************************************)
+synclabs: decrease_slow_1, stabilize_1, increase_slow_1;
+
+loc increasing_slow: invariant True flow {s_1' = 1}
+	when True sync stabilize_1 goto stabilized;
+
+loc stabilized: invariant True flow {s_1' = 0}
+	when True sync increase_slow_1 goto increasing_slow;
+	when s_1 > 0 sync decrease_slow_1 goto decreasing_slow;
+
+loc decreasing_slow: invariant s_1 >= 0 flow {s_1' = -1}
+	when True sync stabilize_1 goto stabilized;
+
+end (* signal_1 *)
+
+
+(************************************************************)
+  automaton signal_2
+(************************************************************)
+synclabs: decrease_slow_2, stabilize_2, increase_slow_2;
+
+loc increasing_slow: invariant True flow {s_2' = 1}
+	when True sync stabilize_2 goto stabilized;
+
+loc stabilized: invariant True flow {s_2' = 0}
+	when True sync increase_slow_2 goto increasing_slow;
+	when s_2 > 0 sync decrease_slow_2 goto decreasing_slow;
+
+loc decreasing_slow: invariant s_2 >= 0 flow {s_2' = -1}
+	when True sync stabilize_2 goto stabilized;
+
+end (* signal_2 *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta]		= l1
+	& loc[signal_1]	= increasing_slow
+	& loc[signal_2]	= increasing_slow
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x				= 0
+	& global_time	= 0
+	& s_1			>= 0
+	& s_2			>= 0
+
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
