@@ -297,6 +297,10 @@ let string_of_boolean_operations = function
 	| OP_GEQ	-> ">="
 	| OP_G		-> ">"
 
+let string_of_boolean variable_names expr = DiscreteExpressions.string_of_boolean_expression variable_names expr
+
+(* TODO benjamin remove comment when refact ok ! *)
+(*
 (** Convert a Boolean expression into a string *)
 let rec string_of_boolean variable_names = function
 	| True_bool -> string_of_true
@@ -313,11 +317,9 @@ let rec string_of_boolean variable_names = function
 	| Discrete_boolean_expression discrete_boolean_expression ->
 		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
 
+
 (** Convert a discrete_boolean_expression into a string *)
 and string_of_discrete_boolean_expression variable_names = function
-	(** Discrete arithmetic expression of the form variable *)
-	| Discrete_arithmetic_expression expr ->
-	    string_of_arithmetic_expression variable_names expr
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
 		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
@@ -336,11 +338,7 @@ and string_of_discrete_boolean_expression variable_names = function
     (** Boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression boolean_expression ->
 	    "(" ^ (string_of_boolean variable_names boolean_expression) ^ ")"
-    | DB_variable variable_index ->
-        variable_names variable_index
-    | DB_constant value ->
-        string_of_bool value
-
+*)
 
 
 (** Return if there is no clock updates *)

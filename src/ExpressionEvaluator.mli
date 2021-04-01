@@ -34,14 +34,23 @@ sig
 
     val eval_expression : discrete_valuation -> discrete_arithmetic_expression -> num
     val is_boolean_expression_satisfied : discrete_valuation -> boolean_expression -> bool
+    val check_discrete_boolean_expression : discrete_valuation -> discrete_boolean_expression -> bool
 
 end
 
 (* Functor for making a new evaluator module *)
 module MakeEvaluator (Num : NumberType) (Convert : ConvertType with type num = Num.t) : ExpressionsEvaluatorType with type num = Num.t
 
+(* Module for NumConst.t evaluation *)
+module RationalEvaluator : ExpressionsEvaluatorType
+(* Module for Int32 evaluation *)
+module IntEvaluator : ExpressionsEvaluatorType
+
 (* Main module used for evaluation *)
 module type DiscreteExpressionsEvaluatorType =
 sig
+
+
+
     val eval_global_expression : discrete_valuation -> global_expression -> DiscreteValue.discrete_value
 end

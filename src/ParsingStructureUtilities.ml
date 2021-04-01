@@ -119,13 +119,6 @@ and string_of_parsed_discrete_boolean_expression parsed_model = function
         str_expr1 ^ " in [" ^ str_expr2 ^ ".." ^ str_expr3 ^ "]"
     | Parsed_boolean_expression expr ->
         string_of_parsed_boolean_expression parsed_model expr
-    | Parsed_DB_variable variable_name ->
-        if (Hashtbl.mem parsed_model.constants variable_name) then (
-            (* Retrieve the value of the global constant *)
-            let value = Hashtbl.find parsed_model.constants variable_name in
-            DiscreteValue.string_of_value value
-        ) else
-            variable_name
 
 and string_of_parsed_relop relop value_1 value_2 =
         match relop with

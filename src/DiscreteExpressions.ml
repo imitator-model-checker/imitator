@@ -17,7 +17,7 @@ open Constants
 exception NotImplemented (* TODO benjamnin to remove *)
 
 
-
+(* Expression type *)
 type expression_type =
     | Expression_type_discrete_bool of DiscreteValue.var_type_discrete
     | Expression_type_discrete_number of DiscreteValue.var_type_discrete_number
@@ -70,16 +70,16 @@ type boolean_expression =
 	| Discrete_boolean_expression of discrete_boolean_expression
 
 and discrete_boolean_expression =
-    | Discrete_arithmetic_expression of discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression of boolean_expression
-	(* Parsed_DB_variable of variable_name *)
+	(** Discrete variable *)
 	| DB_variable of Automaton.variable_index
-	| DB_constant of bool
+	(** Discrete constant *)
+	| DB_constant of DiscreteValue.discrete_value
 
 (****************************************************************)
 (** Global expression *)
@@ -239,9 +239,6 @@ let rec customized_string_of_boolean_expression customized_string variable_names
 (* TODO benjamin ref in ModelPrinter *)
 (** Convert a discrete_boolean_expression into a string *)
 and customized_string_of_discrete_boolean_expression customized_string variable_names = function
-    (** Discrete arithmetic expression of the form variable *)
-    | Discrete_arithmetic_expression expr ->
-        customized_string_of_arithmetic_expression customized_string variable_names expr
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
 		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
@@ -257,10 +254,8 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 		^ "]"
     | Boolean_expression boolean_expression ->
         "(" ^ (customized_string_of_boolean_expression customized_string variable_names boolean_expression) ^ ")"
-    | DB_variable variable_index ->
-        variable_names variable_index
-    | DB_constant value ->
-        string_of_bool value
+    | DB_variable discrete_index -> variable_names discrete_index
+    | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
 
 (* TODO benjamin ref in ModelPrinter *)
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.default_string
@@ -320,6 +315,7 @@ let is_var_type_compatible_with_expr_type var_type expr_type =
     | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number var_type), Expression_type_discrete_number expr_type when var_type = expr_type -> true
     | _ -> false
 
+(* TODO benjamin comment all below *)
 (************************************************************)
 (** Evaluate arithmetic expressions with a valuation *)
 (************************************************************)
@@ -516,11 +512,10 @@ let rec is_boolean_expression_satisfied discrete_valuation = function
 
 (** Check if a discrete boolean expression is satisfied *)
 and check_discrete_boolean_expression discrete_valuation = function
-    (** Discrete arithmetic expression of the form variable *)
-    | Discrete_arithmetic_expression expr ->
-        let eval_expr = eval_discrete_arithmetic_expression discrete_valuation expr in
-        (* No need to check type, because it was been at model conversion (ModelConverter) *)
-        DiscreteValue.bool_value eval_expr
+    | DB_variable variable_index ->
+        DiscreteValue.bool_value (discrete_valuation variable_index)
+    | DB_constant var_value ->
+        DiscreteValue.bool_value var_value
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression (discrete_arithmetic_expression_1, relop, discrete_arithmetic_expression_2) ->
 		eval_discrete_relop
@@ -541,11 +536,6 @@ and check_discrete_boolean_expression discrete_valuation = function
 			(eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_3)
     | Boolean_expression boolean_expression ->
         is_boolean_expression_satisfied discrete_valuation boolean_expression
-    | DB_variable variable_index ->
-        (* DB_variable should be a bool value, so we can convert directly to bool with no problem *)
-        DiscreteValue.bool_value (discrete_valuation variable_index)
-    | DB_constant value ->
-        value
 
 
 (************************************************************)

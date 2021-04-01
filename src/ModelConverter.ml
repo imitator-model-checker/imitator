@@ -207,12 +207,6 @@ let try_reduce_parsed_global_expression constants expr =
 			    (DiscreteValue.leq expr1_evaluated expr3_evaluated)
         | Parsed_boolean_expression expr ->
             try_reduce_parsed_boolean_expression expr
-        | Parsed_DB_variable variable_name ->
-            if (Hashtbl.mem constants variable_name) then (
-                (* Retrieve the value of the global constant *)
-                Hashtbl.find constants variable_name
-            ) else
-                raise (InvalidExpression ("Use of variable " ^ variable_name ^ " in assignment is forbidden"))
 
     and eval_parsed_relop relop value_1 value_2 =
         	match relop with
@@ -301,9 +295,6 @@ and get_variables_in_parsed_discrete_boolean_expression variables_used_ref  = fu
 		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr3
 	| Parsed_boolean_expression parsed_boolean_expression ->
 	    get_variables_in_parsed_boolean_expression variables_used_ref parsed_boolean_expression
-	| Parsed_DB_variable variable_name ->
-		(* Add the variable name to the set and update the reference *)
-		variables_used_ref := StringSet.add variable_name !variables_used_ref
     | Parsed_arithmetic_expression expr ->
         get_variables_in_parsed_update_arithmetic_expression variables_used_ref expr
 
@@ -421,8 +412,6 @@ and check_f_in_parsed_update_discrete_boolean_expression f = function
             (check_f_in_parsed_update_arithmetic_expression f expr3)
     | Parsed_boolean_expression parsed_boolean_expression ->
         check_f_in_parsed_update_boolean_expression f parsed_boolean_expression
-    | Parsed_DB_variable variable_name ->
-        f variable_name
 
 and check_f_in_parsed_global_expression f = function
     | Parsed_global_expression expr -> check_f_in_parsed_update_boolean_expression f expr
@@ -486,8 +475,6 @@ and check_f_in_parsed_discrete_boolean_expression f visit_leaf_of_discrete_boole
             (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr3)
     | Parsed_boolean_expression parsed_boolean_expression ->
         check_f_in_parsed_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants parsed_boolean_expression
-    | Parsed_DB_variable variable_name ->
-        visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants variable_name
 
 (*------------------------------------------------------------*)
 (* Check that all variables are defined in a discrete update *)
@@ -684,8 +671,18 @@ let rec convert_bool_expr index_of_variables constants = function
 		Discrete_boolean_expression (convert_discrete_bool_expr index_of_variables constants parsed_discrete_boolean_expression)
 
 and convert_discrete_bool_expr index_of_variables constants = function
-    | Parsed_arithmetic_expression expr ->
-         Discrete_arithmetic_expression (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr)
+    | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_variable variable_name))) ->
+		(* First check whether this is a constant *)
+		if Hashtbl.mem constants variable_name then
+			DB_constant (Hashtbl.find constants variable_name)
+		(* Otherwise: a variable *)
+		else
+		    DB_variable (Hashtbl.find index_of_variables variable_name)
+    | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant var_value))) ->
+        DB_constant var_value
+    (* TODO benjamin modify message of error *)
+    | Parsed_arithmetic_expression _ ->
+         raise (TypeError ("BOB"))
 	| Parsed_expression (expr1, relop, expr2) -> Expression (
 		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
 		(convert_parsed_relop relop),
@@ -698,14 +695,6 @@ and convert_discrete_bool_expr index_of_variables constants = function
 		)
     | Parsed_boolean_expression parsed_boolean_expression ->
         Boolean_expression (convert_bool_expr index_of_variables constants parsed_boolean_expression)
-    | Parsed_DB_variable variable_name ->
-		(* First check whether this is a constant *)
-		if Hashtbl.mem constants variable_name then
-		    (* Extract bool value because DB_constant can only be of bool type *)
-			DB_constant (DiscreteValue.bool_value (Hashtbl.find constants variable_name))
-		(* Otherwise: a variable *)
-		else
-		    DB_variable (Hashtbl.find index_of_variables variable_name)
 
 let convert_bool_expr_with_model useful_parsing_model_information =
     convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
@@ -757,8 +746,18 @@ and convert_parsed_discrete_factor2 index_of_variables constants = function
 (* It's a version without using useful_parsing_model_information *)
 (* TODO benjamin refactor because it's almost a duplicate of convert_parsed_discrete_boolean_expression *)
 let convert_parsed_discrete_boolean_expression2 index_of_variables constants = function
-    | Parsed_arithmetic_expression expr ->
-        Discrete_arithmetic_expression (convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr)
+    | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_variable variable_name))) ->
+		(* First check whether this is a constant *)
+		if Hashtbl.mem constants variable_name then
+			DB_constant (Hashtbl.find constants variable_name)
+		(* Otherwise: a variable *)
+		else
+		    DB_variable (Hashtbl.find index_of_variables variable_name)
+    | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant var_value))) ->
+        DB_constant var_value
+        (* TODO benjamin modify message of error *)
+    | Parsed_arithmetic_expression _ ->
+        raise (TypeError "BOB")
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression (l_expr , parsed_relop ,r_expr) ->
 		Expression (
@@ -775,13 +774,6 @@ let convert_parsed_discrete_boolean_expression2 index_of_variables constants = f
 		)
 	| Parsed_boolean_expression boolean_expression ->
 	     Boolean_expression (convert_bool_expr index_of_variables constants boolean_expression)
-    | Parsed_DB_variable variable_name ->
-		(* First check whether this is a constant *)
-		if Hashtbl.mem constants variable_name then
-		    (* Extract bool value because DB_constant can only be of bool type *)
-			DB_constant (DiscreteValue.bool_value (Hashtbl.find constants variable_name))
-		(* Otherwise: a variable *)
-		else DB_variable (Hashtbl.find index_of_variables variable_name)
 
 
 (* Convert parsed_discrete_arithmetic_expression *)
@@ -2268,7 +2260,6 @@ let try_convert_linear_expression_of_parsed_discrete_boolean_expression = functi
     (* Expression in used ! So it's impossible to make the conversion, we raise an exception*)
     | Parsed_expression_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
     | Parsed_boolean_expression _ -> raise (InvalidExpression "A non-convex predicate involve clock(s) / parameter(s)")
-    | Parsed_DB_variable variable_name -> raise (InvalidExpression ("An expression involving clock(s) / parameter(s) use a boolean variable '" ^ variable_name ^ "'"))
 
 
 (* Convert nonlinear_constraint to linear_constraint if possible
@@ -3720,13 +3711,6 @@ and check_parsed_discrete_boolean_expression useful_parsing_model_information = 
     (** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
     | Parsed_boolean_expression parsed_boolean_expression ->
         check_parsed_boolean_expression useful_parsing_model_information parsed_boolean_expression
-    | Parsed_DB_variable variable_name ->
-        if not (Hashtbl.mem useful_parsing_model_information.index_of_variables variable_name) && not (Hashtbl.mem useful_parsing_model_information.constants variable_name) then (
-            print_error ("Undefined variable name `" ^ variable_name ^ "` in the property");
-            false
-        )else(
-            true
-        )
 
 		
 (*------------------------------------------------------------*)

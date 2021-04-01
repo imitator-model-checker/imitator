@@ -171,7 +171,6 @@ let customized_string_of_value customized_boolean_string = function
     | Int_value x -> Int32.to_string x
 
 let string_of_value = customized_string_of_value default_string
-
 (** Check value type  **)
 
 (* Check whether the value is rational *)

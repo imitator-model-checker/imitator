@@ -232,9 +232,6 @@ and get_parsed_discrete_boolean_expression_discrete_type parsed_model = function
                 (* Arbitrary return expression member type *)
                 expr_type
 
-    (* Other, expression is a boolean expression *)
-    | Parsed_DB_variable _ -> DiscreteValue.Var_type_discrete_bool
-
 and get_parsed_discrete_arithmetic_expression_discrete_type parsed_model = function
     | Parsed_DAE_plus (expr, term)
     | Parsed_DAE_minus (expr, term) as dae_expr ->
@@ -351,9 +348,6 @@ and get_parsed_discrete_boolean_expression_type parsed_model = function
                 | DiscreteValue.Var_type_discrete_bool -> DiscreteExpressions.Expression_type_discrete_bool DiscreteValue.Var_type_discrete_bool
         ) in
         expr_type
-
-    | Parsed_DB_variable _ ->
-        DiscreteExpressions.Expression_type_discrete_bool DiscreteValue.Var_type_discrete_bool
 
 
 let get_nonlinear_constraint_type parsed_model = function
@@ -550,7 +544,7 @@ let check_update parsed_model variable_name expr =
         ) else if DiscreteExpressions.is_unknown_number_expression_type expr_type then (
             (* If the expression type is unknown number, and as expression type and var type are compatible *)
             (* convert expression type to variable type *)
-            print_message Verbose_standard (
+            print_message Verbose_high (
                 "Reconvert update expression "
                 ^ (string_of_parsed_global_expression parsed_model expr)
                 ^ " to "
@@ -559,7 +553,7 @@ let check_update parsed_model variable_name expr =
             convert_literal_types_of_expression parsed_model var_type_discrete uniformly_typed_expr
         (* Else, just return the new typed expression *)
         ) else if DiscreteExpressions.is_bool_of_unknown_number_expression_type expr_type then (
-            print_message Verbose_standard (
+            print_message Verbose_high (
                 "Reconvert update expression literals "
                 ^ (string_of_parsed_global_expression parsed_model expr)
                 ^ " to rational"

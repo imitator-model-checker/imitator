@@ -84,8 +84,6 @@ type parsed_discrete_boolean_expression =
 	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Parsed_boolean_expression of parsed_boolean_expression
-	(* Parsed_DB_variable of variable_name *)
-	| Parsed_DB_variable of variable_name
 
 
 and parsed_boolean_expression =

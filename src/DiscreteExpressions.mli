@@ -12,6 +12,7 @@
  *
  ************************************************************)
 
+(* Expression type *)
 type expression_type =
     | Expression_type_discrete_bool of DiscreteValue.var_type_discrete
     | Expression_type_discrete_number of DiscreteValue.var_type_discrete_number
@@ -73,16 +74,16 @@ type boolean_expression =
 	| Discrete_boolean_expression of discrete_boolean_expression
 
 and discrete_boolean_expression =
-    | Discrete_arithmetic_expression of discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression of boolean_expression
-	(* Parsed_DB_variable of variable_name *)
+	(** discrete variable in boolean expression *)
 	| DB_variable of Automaton.variable_index
-	| DB_constant of bool
+	(** discrete constant in boolean expression *)
+	| DB_constant of DiscreteValue.discrete_value
 
 (****************************************************************)
 (** Global expression *)
@@ -107,6 +108,7 @@ val is_unknown_number_expression_type : expression_type -> bool
 (* Check if expression type is a bool of unknown number type *)
 val is_bool_of_unknown_number_expression_type : expression_type -> bool
 
+(* TODO benjamin comment all below *)
 val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discrete_value -> bool
 
 (************************************************************)
@@ -129,6 +131,7 @@ val eval_rational_expression : discrete_valuation -> discrete_arithmetic_express
 (************************************************************)
 val is_boolean_expression_satisfied : discrete_valuation -> boolean_expression -> bool
 val check_discrete_boolean_expression : discrete_valuation -> discrete_boolean_expression -> bool
+(* TODO benjamin comment end *)
 
 (* String *)
 val customized_string_of_global_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string
