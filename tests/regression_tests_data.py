@@ -2556,6 +2556,72 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/04/02
+		## Last modified            : 2021/04/02
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a clock isn\'t updated with a bad type (type checking)',
+		'input_files': ['type_checking/clock-update-type-error.imi'],
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'clock-update-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/02
+		## Last modified            : 2021/04/02
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a clock isn\'t compared with a bad type (type checking)',
+		'input_files': ['type_checking/clock-comparison-type-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'clock-comparison-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/02
+		## Last modified            : 2021/04/02
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a parameter isn\'t compared with a bad type (type checking)',
+		'input_files': ['type_checking/parameter-comparison-type-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'parameter-comparison-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test updates (state space)',
 		'input_files': ['testUpdates.imi'],
 		'options'    : '-mode statespace -depth-limit 4 -states-description',
