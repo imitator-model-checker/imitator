@@ -30,3 +30,6 @@ val string_of_parsed_factor : useful_parsing_model_information -> parsed_discret
 val string_of_parsed_relop : parsed_relop -> string -> string -> string
 
 val string_of_parsed_nonlinear_constraint : useful_parsing_model_information -> nonlinear_constraint -> string
+
+val try_reduce_parsed_global_expression : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> global_expression -> DiscreteValue.discrete_value
+val try_reduce_parsed_global_expression_with_model : useful_parsing_model_information -> global_expression -> DiscreteValue.discrete_value

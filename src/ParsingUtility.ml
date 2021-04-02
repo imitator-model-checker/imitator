@@ -276,7 +276,7 @@ let compile_model_and_property (options : Options.imitator_options) =
 			let failure_message = "The property contains errors. Please check it again." in
 			print_error_and_abort options failure_message (Result.InvalidModel_error)
 
-        | ModelConverter.InvalidExpression message	->
+        | InvalidExpression message	->
             (* Abort properly *)
             let failure_message =  "An expression contains errors. Please check it again.\nDetails : " ^ message in
             print_error_and_abort options failure_message (Result.InvalidModel_error)

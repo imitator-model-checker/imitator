@@ -12,6 +12,7 @@
  *
  ************************************************************)
 
+open Exceptions
 open ParsingStructure
 
 
@@ -134,3 +135,102 @@ let string_of_parsed_nonlinear_constraint parsed_model = function
     | Parsed_true_nonlinear_constraint -> "True"
     | Parsed_false_nonlinear_constraint -> "False"
     | Parsed_nonlinear_constraint expr -> string_of_parsed_discrete_boolean_expression parsed_model expr
+
+
+(* Try to reduce a parsed global expression, cannot take into account variables ! *)
+(* This function is used for computing constant values *)
+let try_reduce_parsed_global_expression constants expr =
+
+    let rec try_reduce_parsed_global_expression_rec = function
+        | Parsed_global_expression expr -> try_reduce_parsed_boolean_expression expr
+
+    and try_reduce_parsed_arithmetic_expression = function
+        | Parsed_DAE_plus (arithmetic_expr, term) ->
+            DiscreteValue.add
+                (try_reduce_parsed_arithmetic_expression arithmetic_expr)
+                (try_reduce_parsed_term term)
+        | Parsed_DAE_minus (arithmetic_expr, term) ->
+            DiscreteValue.sub
+                (try_reduce_parsed_arithmetic_expression arithmetic_expr)
+                (try_reduce_parsed_term term)
+        | Parsed_DAE_term term ->
+            try_reduce_parsed_term term
+
+    and try_reduce_parsed_term = function
+        | Parsed_DT_mul (term, factor) ->
+            DiscreteValue.mul
+                (try_reduce_parsed_term term)
+                (try_reduce_parsed_factor factor)
+        | Parsed_DT_div (term, factor) ->
+            DiscreteValue.div
+                (try_reduce_parsed_term term)
+                (try_reduce_parsed_factor factor)
+        | Parsed_DT_factor factor ->
+            try_reduce_parsed_factor factor
+
+    and try_reduce_parsed_factor = function
+        | Parsed_DF_variable variable_name ->
+            if (Hashtbl.mem constants variable_name) then (
+                (* Retrieve the value of the global constant *)
+                Hashtbl.find constants variable_name
+            ) else
+                raise (InvalidExpression ("Use of variable " ^ variable_name ^ " in assignment is forbidden"))
+        | Parsed_DF_constant value -> value
+        | Parsed_DF_expression arithmetic_expr -> try_reduce_parsed_arithmetic_expression arithmetic_expr
+        | Parsed_DF_unary_min factor ->
+            DiscreteValue.neg (try_reduce_parsed_factor factor)
+
+    and try_reduce_parsed_boolean_expression = function
+	    | Parsed_True -> DiscreteValue.bool_value_true
+	    | Parsed_False -> DiscreteValue.bool_value_false
+	    | Parsed_And (l_expr, r_expr) ->
+	        DiscreteValue._and
+                (try_reduce_parsed_boolean_expression l_expr)
+                (try_reduce_parsed_boolean_expression r_expr)
+	    | Parsed_Or (l_expr, r_expr) ->
+	        DiscreteValue._or
+                (try_reduce_parsed_boolean_expression l_expr)
+                (try_reduce_parsed_boolean_expression r_expr)
+	    | Parsed_Not expr ->
+	        DiscreteValue.not
+	            (try_reduce_parsed_boolean_expression expr)
+	    | Parsed_Discrete_boolean_expression expr ->
+	        try_reduce_parsed_discrete_boolean_expression expr
+
+    and try_reduce_parsed_discrete_boolean_expression = function
+        | Parsed_arithmetic_expression expr ->
+            try_reduce_parsed_arithmetic_expression expr
+        | Parsed_expression (l_expr, relop, r_expr) ->
+            eval_parsed_relop
+                relop
+                (try_reduce_parsed_arithmetic_expression l_expr)
+                (try_reduce_parsed_arithmetic_expression r_expr)
+        | Parsed_expression_in (expr1, expr2, expr3) ->
+		    (* Compute the first one to avoid redundancy *)
+		    let expr1_evaluated = try_reduce_parsed_arithmetic_expression expr1 in
+		    let expr2_evaluated = try_reduce_parsed_arithmetic_expression expr2 in
+		    let expr3_evaluated = try_reduce_parsed_arithmetic_expression expr3 in
+		    DiscreteValue._and
+			    (DiscreteValue.leq expr2_evaluated expr1_evaluated)
+			    (DiscreteValue.leq expr1_evaluated expr3_evaluated)
+        | Parsed_boolean_expression expr ->
+            try_reduce_parsed_boolean_expression expr
+
+    and eval_parsed_relop relop value_1 value_2 =
+        	match relop with
+        	| PARSED_OP_L		-> DiscreteValue.l value_1 value_2
+        	| PARSED_OP_LEQ	    -> DiscreteValue.leq value_1 value_2
+        	| PARSED_OP_EQ		-> DiscreteValue.bool_equal value_1  value_2
+        	| PARSED_OP_NEQ	    -> DiscreteValue.bool_neq value_1 value_2
+        	| PARSED_OP_GEQ	    -> DiscreteValue.geq value_1 value_2
+        	| PARSED_OP_G		-> DiscreteValue.g value_1  value_2
+
+    in
+    try_reduce_parsed_global_expression_rec expr
+
+(* Try to reduce a parsed global expression, cannot take into account variables ! *)
+(* This function is used for computing constant values *)
+let try_reduce_parsed_global_expression_with_model useful_parsing_model_information (* expr *) =
+    (* Get constants *)
+    let constants = useful_parsing_model_information.constants in
+    try_reduce_parsed_global_expression constants
