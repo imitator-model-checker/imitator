@@ -48,7 +48,7 @@ init := {
 
     discrete = 
         loc[pta] := l1,
-        b := 2 + 2 
+        b := 4 + 2 
     ;
     continuous = 
         & x >= 0

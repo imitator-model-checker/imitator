@@ -371,8 +371,6 @@ let get_nonlinear_constraint_discrete_type parsed_model = function
         else
             expr_var_type_discrete
 
-(* TODO benjamin try to encapsulate functions below in module with functor for no repeat *)
-
 (** Resolve expression type **)
 
 (* Resolve and convert literal *)

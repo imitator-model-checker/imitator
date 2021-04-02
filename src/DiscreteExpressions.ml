@@ -14,8 +14,6 @@
 
 open Constants
 
-exception NotImplemented (* TODO benjamnin to remove *)
-
 
 (* Expression type *)
 type expression_type =

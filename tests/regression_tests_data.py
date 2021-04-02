@@ -1587,6 +1587,11 @@ DESCRIPTION OF THE TRANSITIONS
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in guards (linear D reachable)',
 		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1606,6 +1611,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in guards (linear PD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1626,6 +1636,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in guards (linear XD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1645,6 +1660,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in guards (linear PXD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1664,6 +1684,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in invariants (linear D reachable)',
 		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1683,6 +1708,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in invariants (linear PD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1703,6 +1733,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in invariants (linear XD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1722,6 +1757,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in invariants (linear PXD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1741,6 +1781,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in guards (non-linear D reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1760,6 +1805,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in guards (non-linear PD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1780,6 +1830,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in guards (non-linear XD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1799,6 +1854,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in guards (non-linear PXD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1818,6 +1878,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in guards (non-linear PD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1835,6 +1900,11 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in guards (non-linear XD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1852,6 +1922,11 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in guards (non-linear PXD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1869,6 +1944,11 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in invariants (non-linear D reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1888,6 +1968,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in invariants (non-linear PD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1908,6 +1993,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in invariants (non-linear XD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1927,6 +2017,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in invariants (non-linear PXD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1946,6 +2041,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in invariants (non-linear PD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1963,6 +2063,11 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in invariants (non-linear XD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1980,6 +2085,11 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test expression consistency in invariants (non-linear PXD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1997,6 +2107,11 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test linear expression unary minus in guard (computing)',
 		'input_files': ['linear_expressions/unary-minus-linear-expression.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2016,6 +2131,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test linear expression unary minus in guard (printing)',
 		'input_files': ['linear_expressions/unary-minus-linear-expression.imi'],
 		'options'    : '-imi2IMI',
@@ -2034,6 +2154,11 @@ when  y + 7 > 2*x
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test arithmetic expression unary minus in guard (computing)',
 		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2053,6 +2178,11 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test arithmetic expression unary minus in guard (printing)',
 		'input_files': ['arithmetic_expressions/unary-minus-guard.imi'],
 		'options'    : '-imi2IMI',
@@ -2078,6 +2208,11 @@ when  -(i * 2) = -2 * i
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test arithmetic expression unary minus in update (printing)',
 		'input_files': ['arithmetic_expressions/unary-minus-update.imi'],
 		'options'    : '-imi2IMI',
@@ -2095,6 +2230,11 @@ when  i = 0 do {i := -(i * 2), i := -2 * i, i := -(i * -2), i := -(i / 2), i := 
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test arithmetic expression with parenthesis (printing)',
 		'input_files': ['arithmetic_expressions/arithmetic-expr-printing-1.imi'],
 		'options'    : '-imi2IMI',
@@ -2121,6 +2261,11 @@ when  z * x / y > x do {}  sync a1 goto lend;
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test arithmetic expression without parenthesis (printing)',
 		'input_files': ['arithmetic_expressions/arithmetic-expr-printing-2.imi'],
 		'options'    : '-imi2IMI',
@@ -2301,6 +2446,11 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/03/11
+		## Last modified            : 2021/03/11
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test that a boolean variable is updated with a consistent typed expression (type checking)',
 		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2318,8 +2468,13 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/03/12
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test that an update expression doesn\'t mix different types in addition (type checking)',
-		'input_files': ['typed_expressions/expression-mixin-type-error-1.imi'],
+		'input_files': ['type_checking/expression-mixin-type-error-1.imi'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'expression-mixin-type-error-1.res' , 'content' : """
@@ -2335,8 +2490,13 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/03/12
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test that an update expression doesn\'t mix different types in multiplication (type checking)',
-		'input_files': ['typed_expressions/expression-mixin-type-error-2.imi'],
+		'input_files': ['type_checking/expression-mixin-type-error-2.imi'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'expression-mixin-type-error-2.res' , 'content' : """
@@ -2352,8 +2512,13 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/03/12
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test that an update expression doesn\'t mix different types in comparison (type checking)',
-		'input_files': ['typed_expressions/expression-mixin-type-error-3.imi'],
+		'input_files': ['type_checking/expression-mixin-type-error-3.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
 			{'file': 'expression-mixin-type-error-3.res' , 'content' : """
@@ -2369,8 +2534,13 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/03/12
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test that an update expression doesn\'t mix different types in "in" expression (type checking)',
-		'input_files': ['typed_expressions/expression-mixin-type-error-4.imi'],
+		'input_files': ['type_checking/expression-mixin-type-error-4.imi'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'expression-mixin-type-error-4.res' , 'content' : """
@@ -13188,6 +13358,11 @@ end
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/03/10
+		## Last modified            : 2021/03/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test init state printing - old state zone (printing)',
 		'input_files': ['init_zone/old-init-zone-printing.imi'],
 		'options'    : '-imi2IMI',
@@ -13266,6 +13441,11 @@ end
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2021/03/10
+		## Last modified            : 2021/03/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
 		'purpose'    : 'Test init state printing - new init state (printing)',
 		'input_files': ['init_zone/new-init-zone-printing.imi'],
 		'options'    : '-imi2IMI',

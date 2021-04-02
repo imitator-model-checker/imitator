@@ -741,7 +741,7 @@ new_init_loc_predicate:
 ;
 
 /************************************************************/
-/** NEW INIT DEFINITION ZONE : SEPARATION OF DISCRETE AND CONTINUOUS */
+/** NEW INIT DEFINITION SECTION : SEPARATION OF DISCRETE AND CONTINUOUS */
 /************************************************************/
 
 new_init_definition:
