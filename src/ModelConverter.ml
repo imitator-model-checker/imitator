@@ -817,8 +817,10 @@ let convert_parsed_discrete_boolean_expression useful_parsing_model_information 
     convert_parsed_discrete_boolean_expression2 useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
 
 (* Get typed bool expression of global parsed expression *)
-let bool_expression_of_parsed_expression useful_parsing_model_information expr =
-     Bool_expression (convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants expr)
+(* discrete type is the inner type of the boolean expression, for example : *)
+(* if x + 1 > 0 then x else y with x : int, give a Bool_expression (expr, Var_type_discrete_int) *)
+let bool_expression_of_parsed_expression useful_parsing_model_information expr discrete_var_type =
+     Bool_expression (convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants expr, discrete_var_type)
 
 (* Get typed rational expression of global parsed expression *)
 let rational_expression_of_parsed_expression useful_parsing_model_information (* expr *) =
@@ -857,8 +859,8 @@ let convert_parsed_global_expression useful_parsing_model_information = function
         let _, expr_type = TypeChecker.resolve_expression_type useful_parsing_model_information global_expr in
 
         match expr_type with
-        | DiscreteExpressions.Expression_type_discrete_bool _ ->
-            bool_expression_of_parsed_expression useful_parsing_model_information expr
+        | DiscreteExpressions.Expression_type_discrete_bool discrete_var_type ->
+            bool_expression_of_parsed_expression useful_parsing_model_information expr discrete_var_type
         | DiscreteExpressions.Expression_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
             rational_expression_of_parsed_expression useful_parsing_model_information expr
         | DiscreteExpressions.Expression_type_discrete_number DiscreteValue.Var_type_discrete_int ->

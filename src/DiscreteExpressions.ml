@@ -88,7 +88,7 @@ type global_expression =
     (* A typed expression *)
     | Rational_expression of discrete_arithmetic_expression
     | Int_expression of discrete_arithmetic_expression
-    | Bool_expression of boolean_expression
+    | Bool_expression of boolean_expression * DiscreteValue.var_type_discrete
 
 (* Get var type of expression *)
 let var_type_of_expression = function
@@ -264,7 +264,7 @@ let string_of_discrete_boolean_expression = customized_string_of_discrete_boolea
 let customized_string_of_global_expression customized_string variable_names = function
     | Int_expression expr
     | Rational_expression expr -> customized_string_of_arithmetic_expression customized_string.arithmetic_string variable_names expr
-    | Bool_expression expr -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
+    | Bool_expression (expr, _) -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
 
 let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
 
@@ -316,6 +316,7 @@ let is_var_type_compatible_with_expr_type var_type expr_type =
     | _ -> false
 
 (* TODO benjamin comment all below *)
+
 (************************************************************)
 (** Evaluate arithmetic expressions with a valuation *)
 (************************************************************)
@@ -543,15 +544,12 @@ and check_discrete_boolean_expression discrete_valuation = function
 (************************************************************)
 let eval_global_expression discrete_valuation = function
     | Rational_expression expr ->
-        (* TODO benjamin remove message *)
 (*        ImitatorUtilities.print_message Verbose_standard ("Evaluate rational expression : " ^ (string_of_arithmetic_expression discrete_valuation expr));*)
         DiscreteValue.Rational_value (eval_rational_expression discrete_valuation expr)
     | Int_expression expr ->
-        (* TODO benjamin remove message *)
 (*        ImitatorUtilities.print_message Verbose_standard ("Evaluate int expression : " ^ (string_of_arithmetic_expression discrete_valuation expr));*)
         DiscreteValue.Int_value (eval_int_expression discrete_valuation expr)
-    | Bool_expression expr ->
-        (* TODO benjamin remove message *)
+    | Bool_expression (expr, _) ->
 (*        ImitatorUtilities.print_message Verbose_standard ("Evaluate bool expression : ");*)
         DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
 

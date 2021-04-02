@@ -71,9 +71,6 @@ val is_number_type : var_type -> bool
 val is_discrete_type_number_type : var_type_discrete -> bool
 (* Check if two discrete types are compatible *)
 val is_discrete_type_compatibles : var_type_discrete -> var_type_discrete -> bool
-(* Check if two types are compatible *)
-(* To be compatible, two type should have the same kind (number, boolean, ...) *)
-val is_type_compatibles : var_type -> var_type -> bool
 
 (* Check if discrete type is a Var_type_unknown_number *)
 val is_discrete_type_unknown_number_type : var_type_discrete -> bool

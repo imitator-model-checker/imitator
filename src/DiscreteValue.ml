@@ -85,36 +85,12 @@ let is_discrete_type_compatibles type_a type_b =
     | Var_type_discrete_bool, Var_type_discrete_number _ -> false
     | _, _ -> true
 
-(* Check if two types are compatible *)
-(* To be compatible, two type should have the same kind (number, boolean, ...) *)
-(* TODO benjamin refactor with use of is_discrete_type_compatibles function *)
-let is_type_compatibles type_a type_b =
-    match type_a, type_b with
-    | a, b when a = b -> true
-
-    | Var_type_clock, Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational), Var_type_clock
-    | Var_type_clock, Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number)
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number), Var_type_clock
-
-    | Var_type_parameter, Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational), Var_type_parameter
-    | Var_type_parameter, Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number)
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number), Var_type_parameter
-
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational), Var_type_discrete (Var_type_discrete_number Var_type_discrete_int)
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_int), Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number), Var_type_discrete (Var_type_discrete_number _)
-    | Var_type_discrete (Var_type_discrete_number _), Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number)
-    -> true
-    | _ -> false
-
 (* Check if a Var_type is a Var_type_discrete of anything *)
 let is_discrete_type = function
     | Var_type_discrete _ -> true
     | _ -> false
 
-(* Check if a Var_type is a Var_type_number *)
+(* Check if a Var_type is a Var_type_nuTOmber *)
 let is_number_type = function
    | Var_type_clock
    | Var_type_parameter

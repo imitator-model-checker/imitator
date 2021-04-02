@@ -92,7 +92,7 @@ type global_expression =
     (* A typed expression *)
     | Rational_expression of discrete_arithmetic_expression
     | Int_expression of discrete_arithmetic_expression
-    | Bool_expression of boolean_expression
+    | Bool_expression of boolean_expression * DiscreteValue.var_type_discrete
 
 
 val string_of_expression_type : expression_type -> string
@@ -131,6 +131,7 @@ val eval_rational_expression : discrete_valuation -> discrete_arithmetic_express
 (************************************************************)
 val is_boolean_expression_satisfied : discrete_valuation -> boolean_expression -> bool
 val check_discrete_boolean_expression : discrete_valuation -> discrete_boolean_expression -> bool
+
 (* TODO benjamin comment end *)
 
 (* String *)
