@@ -732,7 +732,7 @@ let rational_expression_of_parsed_expression useful_parsing_model_information (*
 
     and rational_expression_of_parsed_discrete_boolean_expression = function
         | Parsed_arithmetic_expression expr ->
-            Rational_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information expr)
+            Arithmetic_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information expr, DiscreteValue.Var_type_discrete_rational)
         | _ -> raise (TypeError "type error 2") (* TODO benjamin complete error *)
     in
     rational_expression_of_parsed_expression
@@ -746,7 +746,7 @@ let int_expression_of_parsed_expression useful_parsing_model_information (* expr
 
     and int_expression_of_parsed_discrete_boolean_expression = function
         | Parsed_arithmetic_expression expr ->
-            Int_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information expr)
+            Arithmetic_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information expr, DiscreteValue.Var_type_discrete_int)
         | _ -> raise (TypeError "") (* TODO benjamin complete error *)
     in
     int_expression_of_parsed_expression

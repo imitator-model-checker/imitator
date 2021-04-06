@@ -131,10 +131,10 @@ struct
     (** Evaluate global expressions with a valuation            *)
     (************************************************************)
     let eval_global_expression discrete_valuation = function
-        | Rational_expression expr ->
+        | Arithmetic_expression (expr, DiscreteValue.Var_type_discrete_rational) ->
 (*            ImitatorUtilities.print_message Verbose_standard ("Evaluate rational expression : " ^ (string_of_arithmetic_expression discrete_valuation expr));*)
             DiscreteValue.Rational_value (RationalEvaluator.eval_expression discrete_valuation expr)
-        | Int_expression expr ->
+        | Arithmetic_expression (expr, DiscreteValue.Var_type_discrete_int) ->
 (*            ImitatorUtilities.print_message Verbose_standard ("Evaluate int expression : " ^ (string_of_arithmetic_expression discrete_valuation expr));*)
             DiscreteValue.Int_value (IntEvaluator.eval_expression discrete_valuation expr)
         | Bool_expression (expr, discrete_var_type) ->
