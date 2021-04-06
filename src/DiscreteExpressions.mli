@@ -15,7 +15,7 @@
 (* Expression type *)
 type expression_type =
     | Expression_type_discrete_bool of DiscreteValue.var_type_discrete
-    | Expression_type_discrete_number of DiscreteValue.var_type_discrete_number
+    | Expression_type_discrete_arithmetic of DiscreteValue.var_type_discrete_number
 
 (************************************************************)
 (************************************************************)

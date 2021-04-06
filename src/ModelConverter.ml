@@ -762,9 +762,9 @@ let convert_parsed_global_expression useful_parsing_model_information = function
         match expr_type with
         | DiscreteExpressions.Expression_type_discrete_bool discrete_var_type ->
             bool_expression_of_parsed_expression useful_parsing_model_information expr discrete_var_type
-        | DiscreteExpressions.Expression_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
+        | DiscreteExpressions.Expression_type_discrete_arithmetic DiscreteValue.Var_type_discrete_rational ->
             rational_expression_of_parsed_expression useful_parsing_model_information expr
-        | DiscreteExpressions.Expression_type_discrete_number DiscreteValue.Var_type_discrete_int ->
+        | DiscreteExpressions.Expression_type_discrete_arithmetic DiscreteValue.Var_type_discrete_int ->
             int_expression_of_parsed_expression useful_parsing_model_information expr
         | _ ->
             (* Should never happen *)

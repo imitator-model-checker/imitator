@@ -344,7 +344,7 @@ and get_parsed_discrete_boolean_expression_type parsed_model = function
         (* Check before, it should be a number type *)
         let expr_type = (
             match discrete_type with
-                | DiscreteValue.Var_type_discrete_number number_type -> DiscreteExpressions.Expression_type_discrete_number number_type
+                | DiscreteValue.Var_type_discrete_number number_type -> DiscreteExpressions.Expression_type_discrete_arithmetic number_type
                 | DiscreteValue.Var_type_discrete_bool -> DiscreteExpressions.Expression_type_discrete_bool DiscreteValue.Var_type_discrete_bool
         ) in
         expr_type
