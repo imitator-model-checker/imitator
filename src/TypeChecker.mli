@@ -56,3 +56,6 @@ val check_type_assignment : ParsingStructure.useful_parsing_model_information ->
 
 (* Check if a value is compatible with given type *)
 val check_value_compatible_with_type : DiscreteValue.discrete_value -> DiscreteValue.var_type -> bool
+
+(* Check that constant declarations are well typed *)
+val check_constant_declarations : (string * ParsingStructure.global_expression * DiscreteValue.discrete_value * DiscreteValue.var_type) list -> (string * DiscreteValue.discrete_value) list

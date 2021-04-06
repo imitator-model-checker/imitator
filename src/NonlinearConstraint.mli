@@ -8,8 +8,8 @@ type nonlinear_inequality = DiscreteExpressions.discrete_arithmetic_expression *
 
 (*type nonlinear_constraint = nonlinear_inequality list*)
 type nonlinear_constraint =
-  | True_nonlinear_constraint (* TODO to remove ? *)
-  | False_nonlinear_constraint (* TODO to remove ? *)
+  | True_nonlinear_constraint
+  | False_nonlinear_constraint
   | Nonlinear_constraint of DiscreteExpressions.discrete_boolean_expression list
 
 (* Evaluations *)

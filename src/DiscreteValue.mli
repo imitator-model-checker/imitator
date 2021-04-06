@@ -149,8 +149,8 @@ val bool_value : discrete_value -> bool
 (* Get float value of discrete value *)
 val float_value : discrete_value -> float
 
-(* Convert discrete value to another var type *)
-val convert_value : discrete_value -> var_type -> discrete_value
+(*(* Convert discrete value to another var type *)*)
+(*val convert_value : discrete_value -> var_type -> discrete_value*)
 (* Convert discrete value to another discrete type *)
 val convert_value_to_discrete_type : discrete_value -> var_type_discrete -> discrete_value
 

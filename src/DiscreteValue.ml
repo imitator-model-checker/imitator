@@ -277,10 +277,10 @@ let convert_value_to_discrete_type value target_type =
         ^ " type is not supported"
     )
 
-(* Convert discrete value to another var type *)
-let convert_value value target_type =
-    let target_discrete_type = discrete_type_of_var_type target_type in
-    convert_value_to_discrete_type value target_discrete_type
+(*(* Convert discrete value to another var type *)*)
+(*let convert_value value target_type =*)
+(*    let target_discrete_type = discrete_type_of_var_type target_type in*)
+(*    convert_value_to_discrete_type value target_discrete_type*)
 
 
 (* Hash code of discrete value *)
@@ -295,6 +295,7 @@ let hash = function
 (* Check if a discrete value is equal to another discrete value *)
 let equal a b =
     match a, b with
+    | Number_value a, Number_value b
     | Rational_value a, Rational_value b -> NumConst.equal a b
     | Bool_value a, Bool_value b -> a = b
     | Int_value a, Int_value b -> Int32.equal a b
@@ -307,6 +308,7 @@ let neq a b =
 (* Add two discrete value *)
 let add a b =
     match a, b with
+        | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Rational_value (NumConst.add a b)
         | Int_value a, Int_value b -> Int_value (Int32.add a b)
         | _ -> raise (ComputingException ("add : " ^ (string_of_var_type_discrete (var_type_discrete_of_value a)) ^ "," ^ (string_of_var_type_discrete (var_type_discrete_of_value b))))
@@ -314,6 +316,7 @@ let add a b =
 (* Subtract two discrete value *)
 let sub a b =
     match a, b with
+        | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Rational_value (NumConst.sub a b)
         | Int_value a, Int_value b -> Int_value (Int32.sub a b)
         | x, y -> raise (ComputingException ("sub " ^ (string_of_var_type_discrete (var_type_discrete_of_value y)) ))
@@ -321,6 +324,7 @@ let sub a b =
 (* Multiply two discrete value *)
 let mul a b =
     match a, b with
+        | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Rational_value (NumConst.mul a b)
         | Int_value a, Int_value b -> Int_value (Int32.mul a b)
         | _ -> raise (ComputingException "mul")
@@ -328,12 +332,14 @@ let mul a b =
 (* Divide two discrete value *)
 let div a b =
     match a, b with
+        | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Rational_value (NumConst.div a b)
         | Int_value a, Int_value  b -> Int_value  (Int32.div a b)
         | _ -> raise (ComputingException "div")
 
 (* Negate a discrete value *)
 let neg = function
+    | Number_value x
     | Rational_value x -> Rational_value (NumConst.neg x)
     | Int_value x -> Int_value (Int32.neg x)
     | _ -> raise (ComputingException "neg")
@@ -364,6 +370,7 @@ let bool_neq a b = Bool_value (neq a b)
 (* Comparison, less between two discrete value *)
 let l a b =
     match a, b with
+        | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Bool_value (NumConst.l a b)
         | Int_value a, Int_value  b -> Bool_value  (a < b)
         | _ -> raise (ComputingException "l")
@@ -371,6 +378,7 @@ let l a b =
 (* Comparison, less or equal between two discrete value *)
 let leq a b =
     match a, b with
+        | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Bool_value (NumConst.le a b)
         | Int_value a, Int_value  b -> Bool_value  (a <= b)
         | _ -> raise (ComputingException "leq")
@@ -378,6 +386,7 @@ let leq a b =
 (* Comparison, greater between two discrete value *)
 let g a b =
     match a, b with
+        | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Bool_value (NumConst.g a b)
         | Int_value a, Int_value  b -> Bool_value  (a > b)
         | _ -> raise (ComputingException "g")
@@ -385,6 +394,7 @@ let g a b =
 (* Comparison, greater or equal between two discrete value *)
 let geq a b =
     match a, b with
+        | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Bool_value (NumConst.ge a b)
         | Int_value a, Int_value  b -> Bool_value  (a >= b)
         | _ -> raise (ComputingException "geq")

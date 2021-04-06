@@ -2205,12 +2205,11 @@ let convert_guard useful_parsing_model_information guard_convex_predicate =
         useful_parsing_model_information.type_of_variables,
         useful_parsing_model_information.constants in
 
-    (* TODO benjamin rename converted_guards to uniform_typed_guard ! *)
-    let converted_guards, guard_type = TypeChecker.check_guard useful_parsing_model_information guard_convex_predicate in
+    let uniform_type_guards, guard_type = TypeChecker.check_guard useful_parsing_model_information guard_convex_predicate in
 
     (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
 (*    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants guard_convex_predicate in*)
-    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants converted_guards in
+    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants uniform_type_guards in
 
     match discrete_guard_convex_predicate, continuous_guard_convex_predicate with
     (* No inequalities: true *)
@@ -4491,26 +4490,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		)*) action_names
 	) in
 
-    (* TYPE CHECKING : CONSTANTS IN DECLARATION *)
+
     (* Evaluate the constants init expressions *)
-    (* and if types are compatibles, proceed to implicit conversion of constants from rational to the constant var_type *)
-    (* because of parser set all constants as rational by default, but it's not always the case *)
     let evaluated_constants = List.map (fun (name, expr, var_type) -> name, expr, ParsingStructureUtilities.try_reduce_parsed_global_expression (Hashtbl.create 0) expr, var_type) constants in
 
+    (* TYPE CHECKING : CONSTANTS IN DECLARATION *)
     (* Check type consistency between constant type and value *)
-    let is_types_consistents = List.for_all (fun (name, expr, value, var_type) ->
-        TypeChecker.check_value_compatible_with_type value var_type
-    ) evaluated_constants in
-
-    if not (is_types_consistents) then (
-        raise (TypeError "Constant init") (* TODO benjamin complete with real message *)
-    );
-
-    (* Convert value assigned to the constant to the type of the constant *)
-    (* and create tuples for representing constants as name * value *)
-    let constant_tuples = List.map (fun (name, expr, value, var_type) ->
-        name, DiscreteValue.convert_value value var_type
-    ) evaluated_constants in
+    let constant_tuples = TypeChecker.check_constant_declarations evaluated_constants in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Make the array of constants *)
