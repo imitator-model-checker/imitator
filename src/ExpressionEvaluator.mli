@@ -50,7 +50,7 @@ module IntEvaluator : ExpressionsEvaluatorType
 module type DiscreteExpressionsEvaluatorType =
 sig
 
-
+    val check_typed_discrete_boolean_expression : discrete_valuation -> discrete_boolean_expression * DiscreteValue.var_type_discrete -> bool
 
     val eval_global_expression : discrete_valuation -> global_expression -> DiscreteValue.discrete_value
 end

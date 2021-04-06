@@ -79,13 +79,16 @@ and discrete_boolean_expression =
 	(** Discrete constant *)
 	| DB_constant of DiscreteValue.discrete_value
 
+type typed_boolean_expression = boolean_expression * DiscreteValue.var_type_discrete
+type typed_discrete_boolean_expression = discrete_boolean_expression * DiscreteValue.var_type_discrete
+
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
 type global_expression =
     (* A typed expression *)
     | Arithmetic_expression of discrete_arithmetic_expression * DiscreteValue.var_type_discrete_number
-    | Bool_expression of boolean_expression * DiscreteValue.var_type_discrete
+    | Bool_expression of typed_boolean_expression
 
 (****************************************************************)
 (** Strings *)
@@ -247,6 +250,9 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
         "(" ^ (customized_string_of_boolean_expression customized_string variable_names boolean_expression) ^ ")"
     | DB_variable discrete_index -> variable_names discrete_index
     | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
+
+let customized_string_of_typed_discrete_boolean_expression customized_string variable_names (typed_expr, discrete_type) =
+    customized_string_of_discrete_boolean_expression customized_string variable_names typed_expr
 
 (* TODO benjamin ref in ModelPrinter *)
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.default_string

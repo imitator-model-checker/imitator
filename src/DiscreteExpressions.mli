@@ -85,13 +85,17 @@ and discrete_boolean_expression =
 	(** discrete constant in boolean expression *)
 	| DB_constant of DiscreteValue.discrete_value
 
+
+type typed_boolean_expression = boolean_expression * DiscreteValue.var_type_discrete
+type typed_discrete_boolean_expression = discrete_boolean_expression * DiscreteValue.var_type_discrete
+
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
 type global_expression =
     (* A typed expression *)
     | Arithmetic_expression of discrete_arithmetic_expression * DiscreteValue.var_type_discrete_number
-    | Bool_expression of boolean_expression * DiscreteValue.var_type_discrete
+    | Bool_expression of typed_boolean_expression
 
 
 val string_of_expression_type : expression_type -> string
@@ -107,6 +111,7 @@ val is_unknown_number_expression_type : expression_type -> bool
 val is_bool_of_unknown_number_expression_type : expression_type -> bool
 
 (* TODO benjamin comment all below *)
+
 val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discrete_value -> bool
 
 (************************************************************)
@@ -130,7 +135,10 @@ val eval_rational_expression : discrete_valuation -> discrete_arithmetic_express
 val is_boolean_expression_satisfied : discrete_valuation -> boolean_expression -> bool
 val check_discrete_boolean_expression : discrete_valuation -> discrete_boolean_expression -> bool
 
+
 (* TODO benjamin comment end *)
+
+
 
 (* String *)
 val customized_string_of_global_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string
@@ -144,6 +152,8 @@ val string_of_boolean_expression : (Automaton.variable_index -> string) -> boole
 
 val customized_string_of_discrete_boolean_expression : Constants.customized_boolean_string -> (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
 val string_of_discrete_boolean_expression : (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
+
+val customized_string_of_typed_discrete_boolean_expression : Constants.customized_boolean_string -> (Automaton.variable_index -> string) -> discrete_boolean_expression * DiscreteValue.var_type_discrete -> string
 val customized_string_of_arithmetic_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string
 val string_of_arithmetic_expression_for_jani : (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string
 

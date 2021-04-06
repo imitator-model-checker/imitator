@@ -38,9 +38,11 @@ val resolve_expression_type : ParsingStructure.useful_parsing_model_information 
 
 (** Type checking **)
 
+val check_nonlinear_constraint : ParsingStructure.useful_parsing_model_information -> ParsingStructure.nonlinear_constraint -> ParsingStructure.nonlinear_constraint * DiscreteValue.var_type_discrete
+
 (* Type check a guard / invariant *)
 (* return a tuple containing the guard uniformly typed and the resolved type of the expression *)
-val check_guard : ParsingStructure.useful_parsing_model_information -> ParsingStructure.convex_predicate -> ParsingStructure.convex_predicate * DiscreteExpressions.expression_type
+val check_guard : ParsingStructure.useful_parsing_model_information -> ParsingStructure.convex_predicate -> ParsingStructure.convex_predicate * DiscreteValue.var_type_discrete
 
 (* Type check an update *)
 (* return a tuple containing the update uniformly typed and the resolved type of the expression *)

@@ -498,10 +498,10 @@ let check_nonlinear_constraint parsed_model nonlinear_constraint =
     let uniformly_typed_nonlinear_constraint, expr_type = resolve_nonlinear_constraint_type parsed_model nonlinear_constraint in
 
     (* Check that non-linear constraint is a boolean expression *)
-    if not (DiscreteExpressions.is_bool_expression_type expr_type) then
-        raise (TypeError error_msg)
-    else
-        uniformly_typed_nonlinear_constraint, expr_type
+    match expr_type with
+    | DiscreteExpressions.Expression_type_discrete_bool discrete_type -> uniformly_typed_nonlinear_constraint, discrete_type
+    | _ -> raise (TypeError error_msg)
+
 
 (* Type check guard / invariant *)
 (* return a tuple containing the expression uniformly typed and the resolved type of the expression *)

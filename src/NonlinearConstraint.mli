@@ -10,7 +10,7 @@ type nonlinear_inequality = DiscreteExpressions.discrete_arithmetic_expression *
 type nonlinear_constraint =
   | True_nonlinear_constraint
   | False_nonlinear_constraint
-  | Nonlinear_constraint of DiscreteExpressions.discrete_boolean_expression list
+  | Nonlinear_constraint of DiscreteExpressions.typed_discrete_boolean_expression list
 
 (* Evaluations *)
 val check_nonlinear_constraint : DiscreteExpressions.discrete_valuation -> nonlinear_constraint -> bool

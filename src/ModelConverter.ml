@@ -1367,13 +1367,26 @@ let nonlinear_constraint_of_nonlinear_convex_predicate useful_parsing_model_info
         let nonlinear_inequalities = List.fold_left
         (fun nonlinear_inequalities nonlinear_inequality ->
 
-            match nonlinear_inequality with
+            (* TODO checking make here, so we should remove checking on guard level *)
+            (* Get typed non-linear constraint inequality *)
+            let uniform_typed_nonlinear_inequality, discrete_type = TypeChecker.check_nonlinear_constraint useful_parsing_model_information nonlinear_inequality in
+
+            match uniform_typed_nonlinear_inequality with
             | Parsed_true_nonlinear_constraint -> nonlinear_inequalities
             | Parsed_false_nonlinear_constraint -> raise False_exception
-            | Parsed_nonlinear_constraint nonlinear_constraint -> (convert_parsed_discrete_boolean_expression2 index_of_variables constants nonlinear_constraint) :: nonlinear_inequalities
+            | Parsed_nonlinear_constraint nonlinear_constraint  ->
+                (* Convert non-linear constraint to abstract model *)
+                let convert_nonlinear_constraint = convert_parsed_discrete_boolean_expression2 index_of_variables constants nonlinear_constraint in
+                (* Construct typed discrete boolean expression *)
+                let typed_discrete_boolean_expr = convert_nonlinear_constraint, discrete_type in
+                (* Add typed discrete boolean expression to inequality list *)
+                typed_discrete_boolean_expr :: nonlinear_inequalities
 
         ) [] convex_predicate
         in
+
+
+
         match nonlinear_inequalities with
         | [] -> NonlinearConstraint.True_nonlinear_constraint
         | _ -> NonlinearConstraint.Nonlinear_constraint nonlinear_inequalities
@@ -2205,6 +2218,7 @@ let convert_guard useful_parsing_model_information guard_convex_predicate =
         useful_parsing_model_information.type_of_variables,
         useful_parsing_model_information.constants in
 
+    (* TODO benjamin check here ? *)
     let uniform_type_guards, guard_type = TypeChecker.check_guard useful_parsing_model_information guard_convex_predicate in
 
     (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
