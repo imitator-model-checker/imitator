@@ -139,7 +139,6 @@ struct
             RationalEvaluator.check_discrete_boolean_expression discrete_valuation expr
 
     let is_typed_boolean_expression_satisfied discrete_valuation (expr, discrete_type) =
-        ImitatorUtilities.print_message Verbose_standard ("CHECK CONDITIONAL EXPR " ^ (DiscreteValue.string_of_var_type_discrete discrete_type));
         match discrete_type with
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int -> IntEvaluator.is_boolean_expression_satisfied discrete_valuation expr
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational
@@ -151,10 +150,8 @@ struct
     (************************************************************)
     let eval_global_expression discrete_valuation = function
         | Arithmetic_expression (expr, DiscreteValue.Var_type_discrete_rational) ->
-(*            ImitatorUtilities.print_message Verbose_standard ("Evaluate rational expression : " ^ (string_of_arithmetic_expression discrete_valuation expr));*)
             DiscreteValue.Rational_value (RationalEvaluator.eval_expression discrete_valuation expr)
         | Arithmetic_expression (expr, DiscreteValue.Var_type_discrete_int) ->
-(*            ImitatorUtilities.print_message Verbose_standard ("Evaluate int expression : " ^ (string_of_arithmetic_expression discrete_valuation expr));*)
             DiscreteValue.Int_value (IntEvaluator.eval_expression discrete_valuation expr)
         | Bool_expression (expr, discrete_var_type) ->
             let value = (
@@ -162,15 +159,11 @@ struct
                 (* If boolean expression of bool, there is no number so we can use rational evaluator arbitrary *)
                 | DiscreteValue.Var_type_discrete_bool
                 | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
-                    ImitatorUtilities.print_message Verbose_total ("Evaluate bool expression of rat");
                     RationalEvaluator.is_boolean_expression_satisfied discrete_valuation expr
                 | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
-                    ImitatorUtilities.print_message Verbose_total ("Evaluate bool expression of int");
                     IntEvaluator.is_boolean_expression_satisfied discrete_valuation expr
             )
             in
-            (* TODO benjamin remove message *)
-    (*        ImitatorUtilities.print_message Verbose_standard ("Evaluate bool expression : ");*)
             DiscreteValue.Bool_value value
 
 

@@ -318,7 +318,7 @@ let is_var_type_compatible_with_expr_type var_type expr_type =
     | _ -> false
 
 (* TODO benjamin comment all below *)
-
+(*
 (************************************************************)
 (** Evaluate arithmetic expressions with a valuation *)
 (************************************************************)
@@ -555,6 +555,7 @@ let eval_global_expression discrete_valuation = function
 (*        ImitatorUtilities.print_message Verbose_standard ("Evaluate bool expression : ");*)
         DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
 
+*)
 (************** Jani translation **************)
 (* Convert an arithmetic expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)

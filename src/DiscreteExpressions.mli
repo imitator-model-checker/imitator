@@ -112,7 +112,7 @@ val is_unknown_number_expression_type : expression_type -> bool
 val is_bool_of_unknown_number_expression_type : expression_type -> bool
 
 (* TODO benjamin comment all below *)
-
+(*
 val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discrete_value -> bool
 
 (************************************************************)
@@ -135,7 +135,7 @@ val eval_rational_expression : discrete_valuation -> discrete_arithmetic_express
 (************************************************************)
 val is_boolean_expression_satisfied : discrete_valuation -> boolean_expression -> bool
 val check_discrete_boolean_expression : discrete_valuation -> discrete_boolean_expression -> bool
-
+*)
 
 (* TODO benjamin comment end *)
 
