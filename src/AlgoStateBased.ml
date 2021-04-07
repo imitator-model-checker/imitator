@@ -1444,7 +1444,7 @@ let get_updates (source_location : Location.global_location) (updates : Abstract
 	List.fold_left (
 	fun (acc_clock, acc_discrete) (conditional_update : AbstractModel.conditional_update) ->
 		let boolean_expr, if_updates, else_updates = conditional_update in
-		let filter_updates = if (DiscreteExpressions.is_boolean_expression_satisfied (Location.get_discrete_value source_location) boolean_expr) then if_updates else else_updates in
+		let filter_updates = if (ExpressionsEvaluator.DiscreteExpressionsEvaluator.is_typed_boolean_expression_satisfied (Location.get_discrete_value source_location) boolean_expr) then if_updates else else_updates in
 		(merge_clock_updates acc_clock filter_updates.clock, list_append acc_discrete filter_updates.discrete)
 	) (updates.clock, updates.discrete) updates.conditional
 

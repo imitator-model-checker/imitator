@@ -131,11 +131,20 @@ struct
     (** Evaluate discrete boolean expressions with a valuation  *)
     (************************************************************)
     let check_typed_discrete_boolean_expression discrete_valuation (expr, discrete_type) =
+
         match discrete_type with
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int -> IntEvaluator.check_discrete_boolean_expression discrete_valuation expr
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational
         | DiscreteValue.Var_type_discrete_bool ->
             RationalEvaluator.check_discrete_boolean_expression discrete_valuation expr
+
+    let is_typed_boolean_expression_satisfied discrete_valuation (expr, discrete_type) =
+        ImitatorUtilities.print_message Verbose_standard ("CHECK CONDITIONAL EXPR " ^ (DiscreteValue.string_of_var_type_discrete discrete_type));
+        match discrete_type with
+        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int -> IntEvaluator.is_boolean_expression_satisfied discrete_valuation expr
+        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational
+        | DiscreteValue.Var_type_discrete_bool ->
+            RationalEvaluator.is_boolean_expression_satisfied discrete_valuation expr
 
     (************************************************************)
     (** Evaluate global expressions with a valuation            *)

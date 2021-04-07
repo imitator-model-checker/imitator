@@ -53,7 +53,7 @@ val check_update : ParsingStructure.useful_parsing_model_information -> string -
 
 (* Type check a conditional expression *)
 (* return a tuple containing the conditional expression uniformly typed and the resolved type of the expression *)
-val check_conditional : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_boolean_expression -> ParsingStructure.parsed_boolean_expression  * DiscreteExpressions.expression_type
+val check_conditional : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_boolean_expression -> ParsingStructure.parsed_boolean_expression  * DiscreteValue.var_type_discrete
 
 (* Check that an expression assigned to a variable is of the same type *)
 (* If not, raise a TypeError exception with an error message *)

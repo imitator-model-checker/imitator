@@ -288,58 +288,8 @@ let string_of_discrete_updates ?(sep=", ") model updates =
 		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
 	) updates)
 
-
-let string_of_boolean_operations = function
-	| OP_L		-> "<"
-	| OP_LEQ	-> "<="
-	| OP_EQ		-> "="
-	| OP_NEQ	-> "<>"
-	| OP_GEQ	-> ">="
-	| OP_G		-> ">"
-
-let string_of_boolean variable_names expr = DiscreteExpressions.string_of_boolean_expression variable_names expr
-
-(* TODO benjamin remove comment when refact ok ! *)
-(*
-(** Convert a Boolean expression into a string *)
-let rec string_of_boolean variable_names = function
-	| True_bool -> string_of_true
-	| False_bool -> string_of_false
-	| Not_bool b -> "<> (" ^ (string_of_boolean variable_names b) ^ ")"
-	| And_bool (b1, b2) ->
-		(string_of_boolean variable_names b1)
-		^ " && "
-		^ (string_of_boolean variable_names b2)
-	| Or_bool (b1, b2) ->
-		(string_of_boolean variable_names b1)
-		^ " || "
-		^ (string_of_boolean variable_names b2)
-	| Discrete_boolean_expression discrete_boolean_expression ->
-		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
-
-
-(** Convert a discrete_boolean_expression into a string *)
-and string_of_discrete_boolean_expression variable_names = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " "
-		^ (string_of_boolean_operations relop)
-		^ " "
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
-		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " in ["
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
-		^ " , "
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
-		^ "]"
-    (** Boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
-	| Boolean_expression boolean_expression ->
-	    "(" ^ (string_of_boolean variable_names boolean_expression) ^ ")"
-*)
-
+let string_of_boolean_expression = DiscreteExpressions.string_of_boolean_expression
+let string_of_typed_boolean_expression = DiscreteExpressions.string_of_typed_boolean_expression
 
 (** Return if there is no clock updates *)
 let no_clock_updates clock_updates =
@@ -379,7 +329,7 @@ let string_of_conditional_updates_template model conditional_updates string_of_c
 
 (** Convert a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
-	let wrap_if boolean_expr  = "if (" ^ (string_of_boolean model.variable_names boolean_expr) ^  ") then " in
+	let wrap_if boolean_expr  = "if (" ^ (DiscreteExpressions.string_of_typed_boolean_expression model.variable_names boolean_expr) ^  ") then " in
 	let wrap_else = " else " in
 	let wrap_end = " end" in
 	let sep = ", " in

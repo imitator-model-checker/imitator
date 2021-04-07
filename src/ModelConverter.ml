@@ -54,6 +54,7 @@ exception InvalidProperty
 (* This avoid the non exhaustive pattern matching warning *)
 exception InvalidLeaf
 
+(* TODO benjamin remove all references to TypeError in ModelConverter *)
 exception TypeError of string
 
 (************************************************************)
@@ -572,18 +573,10 @@ let rec convert_bool_expr index_of_variables constants = function
 		Discrete_boolean_expression (convert_discrete_bool_expr index_of_variables constants parsed_discrete_boolean_expression)
 
 and convert_discrete_bool_expr index_of_variables constants = function
-    | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_variable variable_name))) ->
-		(* First check whether this is a constant *)
-		if Hashtbl.mem constants variable_name then
-			DB_constant (Hashtbl.find constants variable_name)
-		(* Otherwise: a variable *)
-		else
-		    DB_variable (Hashtbl.find index_of_variables variable_name)
-    | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant var_value))) ->
-        DB_constant var_value
-    (* TODO benjamin modify message of error *)
-    | Parsed_arithmetic_expression _ ->
-         raise (TypeError ("BOB"))
+    | Parsed_arithmetic_expression expr ->
+        (* Search boolean variables, constants in DF_variable, DF_constant *)
+        search_variable_of_discrete_arithmetic_expression index_of_variables constants expr
+
 	| Parsed_expression (expr1, relop, expr2) -> Expression (
 		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
 		(convert_parsed_relop relop),
@@ -596,6 +589,32 @@ and convert_discrete_bool_expr index_of_variables constants = function
 		)
     | Parsed_boolean_expression parsed_boolean_expression ->
         Boolean_expression (convert_bool_expr index_of_variables constants parsed_boolean_expression)
+
+and search_variable_of_discrete_arithmetic_expression index_of_variables constants expr =
+    let rec search_variable_of_discrete_arithmetic_expression_rec = function
+        | Parsed_DAE_plus _
+        | Parsed_DAE_minus _ -> raise (InvalidModel)
+        | Parsed_DAE_term term -> search_variable_of_discrete_term term
+
+    and search_variable_of_discrete_term = function
+        | Parsed_DT_mul _
+        | Parsed_DT_div _ -> raise (InvalidModel)
+        | Parsed_DT_factor factor -> search_variable_of_discrete_factor factor
+
+    and search_variable_of_discrete_factor = function
+        | Parsed_DF_expression expr -> search_variable_of_discrete_arithmetic_expression_rec expr
+        | Parsed_DF_unary_min _ -> raise (InvalidModel)
+        | Parsed_DF_variable variable_name ->
+            (* First check whether this is a constant *)
+            if Hashtbl.mem constants variable_name then
+                DB_constant (Hashtbl.find constants variable_name)
+            (* Otherwise: a variable *)
+            else
+                DB_variable (Hashtbl.find index_of_variables variable_name)
+        | Parsed_DF_constant var_value ->
+            DB_constant var_value
+    in
+    search_variable_of_discrete_arithmetic_expression_rec expr
 
 let convert_bool_expr_with_model useful_parsing_model_information =
     convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
@@ -647,18 +666,10 @@ and convert_parsed_discrete_factor2 index_of_variables constants = function
 (* It's a version without using useful_parsing_model_information *)
 (* TODO benjamin refactor because it's almost a duplicate of convert_parsed_discrete_boolean_expression *)
 let convert_parsed_discrete_boolean_expression2 index_of_variables constants = function
-    | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_variable variable_name))) ->
-		(* First check whether this is a constant *)
-		if Hashtbl.mem constants variable_name then
-			DB_constant (Hashtbl.find constants variable_name)
-		(* Otherwise: a variable *)
-		else
-		    DB_variable (Hashtbl.find index_of_variables variable_name)
-    | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant var_value))) ->
-        DB_constant var_value
-        (* TODO benjamin modify message of error *)
-    | Parsed_arithmetic_expression _ ->
-        raise (TypeError "BOB")
+    | Parsed_arithmetic_expression expr ->
+        (* Search boolean variables, constants in DF_variable, DF_constant *)
+        search_variable_of_discrete_arithmetic_expression index_of_variables constants expr
+
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression (l_expr , parsed_relop ,r_expr) ->
 		Expression (
@@ -2811,10 +2822,11 @@ let convert_updates useful_parsing_model_information updates : updates =
         (* TYPE CHECK *)
         let uniformly_typed_bool_expr, bool_expr_type = TypeChecker.check_conditional useful_parsing_model_information boolean_value in
 
-        let convert_boolean = convert_bool_expr_with_model useful_parsing_model_information uniformly_typed_bool_expr in
+        let convert_boolean_expr = convert_bool_expr_with_model useful_parsing_model_information uniformly_typed_bool_expr in
+        let typed_boolean_expr = convert_boolean_expr, bool_expr_type in
         let convert_if_updates = convert_normal_updates useful_parsing_model_information if_updates in
         let convert_else_updates = convert_normal_updates useful_parsing_model_information else_updates in
-        (convert_boolean, convert_if_updates, convert_else_updates)
+        (typed_boolean_expr, convert_if_updates, convert_else_updates)
     ) conditional_updates in
 
     (** updates abstract model *)

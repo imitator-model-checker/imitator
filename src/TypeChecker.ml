@@ -570,17 +570,18 @@ let check_update parsed_model variable_name expr =
 (* return a tuple containing the conditional expression uniformly typed and the resolved type of the expression *)
 let check_conditional parsed_model expr =
 
-    let uniformly_typed_bool_expr, bool_expr_type = resolve_bool_expression_type parsed_model expr in
-    if not (DiscreteExpressions.is_bool_expression_type bool_expr_type) then (
+    let uniformly_typed_bool_expr, expr_type = resolve_bool_expression_type parsed_model expr in
+
+    (* Check that non-linear constraint is a boolean expression *)
+    match expr_type with
+    | DiscreteExpressions.Expression_type_discrete_bool discrete_type -> uniformly_typed_bool_expr, discrete_type
+    | _ ->
         raise (TypeError (
             "Expression \""
             ^ (string_of_parsed_boolean_expression parsed_model expr)
             ^ "\" in conditional statement, is not a boolean expression"
             )
         )
-    )
-    else
-        uniformly_typed_bool_expr, bool_expr_type
 
 let check_type_of_nonlinear_constraint parsed_model = function
     (* It's ok non-linear constraint is of boolean type *)

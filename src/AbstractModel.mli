@@ -113,7 +113,7 @@ type updates = {
 }
 (** Conditional updates *)
 (* TODO benjamin modifier pour avoir typed_boolean_expression *)
-and conditional_update = DiscreteExpressions.boolean_expression * updates * updates
+and conditional_update = DiscreteExpressions.typed_boolean_expression * updates * updates
 
 (** Transition: guard, action, list of updates, destination location *)
 type transition = {

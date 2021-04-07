@@ -126,7 +126,7 @@ let string_of_boolean_operations op =
 
 
 
-
+(* TODO benjamin refactoriser avec ModelPrinter / DiscreteExpressions *)
 (** Convert a Boolean expression into a string *)
 let rec string_of_boolean variable_names = function
 	| True_bool -> string_of_true
@@ -162,11 +162,11 @@ and string_of_discrete_boolean_expression variable_names = function
     | Boolean_expression boolean_expression ->
         "(" ^ string_of_boolean variable_names boolean_expression ^ ")"
 
-
+let string_of_typed_boolean variable_names (expr, discrete_type) = string_of_boolean variable_names expr
 
 (** Convert a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
-	let wrap_if boolean_expr  = "\n\t\t\\multicolumn{2}{l}{if ($" ^ (string_of_boolean variable_names_with_style boolean_expr) ^ "$) then}\\\\%" in
+	let wrap_if boolean_expr  = "\n\t\t\\multicolumn{2}{l}{if ($" ^ (string_of_typed_boolean variable_names_with_style boolean_expr) ^ "$) then}\\\\%" in
 	let wrap_else = "\n\t\t\\multicolumn{2}{l}{else}\\\\%" in
 	let wrap_end = "\n\t\t\\multicolumn{2}{l}{end}%" in
 	let sep = "" in

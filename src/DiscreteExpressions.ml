@@ -252,12 +252,17 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
     | DB_variable discrete_index -> variable_names discrete_index
     | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
 
+let customized_string_of_typed_boolean_expression customized_string variable_names (typed_expr, discrete_type) =
+    customized_string_of_boolean_expression customized_string variable_names typed_expr
+
 let customized_string_of_typed_discrete_boolean_expression customized_string variable_names (typed_expr, discrete_type) =
     customized_string_of_discrete_boolean_expression customized_string variable_names typed_expr
 
-(* TODO benjamin ref in ModelPrinter *)
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.default_string
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.default_string
+
+let string_of_typed_boolean_expression = customized_string_of_typed_boolean_expression Constants.default_string
+let string_of_typed_discrete_boolean_expression = customized_string_of_typed_discrete_boolean_expression Constants.default_string
 
 let customized_string_of_global_expression customized_string variable_names = function
     | Arithmetic_expression (expr, _) -> customized_string_of_arithmetic_expression customized_string.arithmetic_string variable_names expr
