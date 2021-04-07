@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2017/10/03
- * Last modified     : 2018/04/06
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -67,7 +67,7 @@ let increase setup_index max_index =
 let compare current_setup_index max_index = 
 	let b = ref true in
 	for i = 0 to (Array.length max_index -1) do
-  		if ( current_setup_index.(i) != max_index.(i) ) then b := false;
+  		if ( current_setup_index.(i) <> max_index.(i) ) then b := false;
 	done;
 !b
 
@@ -301,7 +301,7 @@ class algoNZCUBdist =
 		(* let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) ) in *)
 		(* let final_good_or_bad_constraint = ref ( Good_constraint ( LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint , Result.Constraint_exact) ) in *)
 
-		while !counter != no_nodes -1 do
+		while !counter <> no_nodes -1 do
 
 		let pull_request = (receive_pull_request_NZCUB ()) in
 		(

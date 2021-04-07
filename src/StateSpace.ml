@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2020/11/11
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -926,7 +926,7 @@ let reconstruct_scc state_space source_state_index : scc option =
 				scc := w.state_index :: !scc;
 
 				if w = v then found_v := true
-			(* while (w != v) *)
+			(* while (w <> v) *)
 			done;
 
 			(* output the current strongly connected component *)
@@ -1201,7 +1201,7 @@ let new_location_index state_space location =
 	(* Add to Dyn Array *)
 	DynArray.add state_space.locations location;
 	(* Check length (COULD BE REMOVED) *)
-	(* if DynArray.length state_space.locations != Hashtbl.length state_space.index_of_locations then(
+	(* if DynArray.length state_space.locations <> Hashtbl.length state_space.index_of_locations then(
 		raise (InternalError "Locations and index_of_locations seem not to be consistent anymore."); *)
         new_index;
 	) in

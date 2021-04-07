@@ -6,7 +6,7 @@
  * Correctness      : N/A
  * Scalable         : yes
  * Generated        : yes
- * Categories       : Toy
+ * Categories       : Monitoring ; Toy
  * Source           : Étienne André, Ichiro Husuo, Masaki Waga "Offline timed pattern matching under uncertainty" (ICECCS 2018)
  * bibkey           : AHW18
  * Author           : Étienne André and Masaki Waga

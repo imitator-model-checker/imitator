@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2020/08/28
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -238,7 +238,7 @@ class virtual algoBCCoverDistributedSubdomain (v0 : HyperRectangle.hyper_rectang
 			end
 		done;
 		(*check if length every edge if equals to unit*)
-		if (!max_pi0s != 1) then 
+		if (!max_pi0s <> 1) then 
 		begin
 			self#print_algo_message_newline Verbose_medium ("Max pi0s in list is : " ^ (string_of_int !max_pi0s) ^ " in subdomain : " ^ (string_of_int !subno));
 			(*get list split subdomains*)

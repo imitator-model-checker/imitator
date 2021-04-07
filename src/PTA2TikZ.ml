@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2021/01/07
+ * Last modified     : 2021/03/19
  *
  ****************************************************************)
 
@@ -372,7 +372,7 @@ let string_of_automata model =
 	^ "\ngeneral_info[shape=record, label=\"" (*Model|{*)
 	^ "{Clocks|" ^ (vertical_string_of_list_of_variables model.clocks) ^ "}"
 	^ "|{Parameters|" ^ (vertical_string_of_list_of_variables model.parameters) ^ "}"
-	^ (if model.discrete != [] then
+	^ (if model.discrete <> [] then
 		"|{Discrete|" ^ (vertical_string_of_list_of_variables model.discrete) ^ "}"
 		else "")
 	^ "|{Initial|" ^ (escape_string_for_dot (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)) ^ "}"

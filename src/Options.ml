@@ -8,9 +8,9 @@
  *
  * Module description: Options definitions
  *
- * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
+ * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/01/19
+ * Last modified     : 2021/02/24
  *
  ************************************************************)
 
@@ -276,7 +276,7 @@ class imitator_options =
 		method carto_time_limit						= carto_time_limit
 		method check_ippta							= check_ippta
 		method check_point							= check_point
-		
+
 		method comparison_operator					= value_of_option "comparison_operator" comparison_operator
 		method is_set_comparison_operator			= comparison_operator <> None
 		method set_comparison_operator b			= comparison_operator <- Some b
@@ -293,11 +293,11 @@ class imitator_options =
 		method draw_cart							= draw_cart
 		(* method dynamic = dynamic *)
 		method dynamic_clock_elimination			= dynamic_clock_elimination
-		
+
 		method exploration_order					= value_of_option "exploration_order" exploration_order
 		method is_set_exploration_order				= exploration_order <> None
 		method set_exploration_order new_exploration_order = exploration_order <- Some new_exploration_order
-		
+
 		method files_prefix							= files_prefix
 		method imitator_mode						= imitator_mode
 
@@ -326,7 +326,7 @@ class imitator_options =
 		method no_time_elapsing						= no_time_elapsing
 		method no_random							= no_random
 		method no_variable_autoremove				= no_variable_autoremove
-		
+
 		(* Method used for infinite-run (cycle) with non-Zeno assumption *)
 		method nz_method : AbstractAlgorithm.nz_method = value_of_option "nz_method" nz_method
 		method is_set_nz_method : bool				= nz_method <> None
@@ -520,11 +520,11 @@ class imitator_options =
 				(** Method by transforming the PTA into a CUB-PTA *)
 				else if nz_method_string = "transform" then
 					nz_method <- Some NZ_transform
-						
+
 				(** Method assuming the PTA is already a CUB-PTA *)
 				else if nz_method_string = "already" then
 					nz_method <- Some NZ_already
-				
+
 				else(
 					print_error ("The method `" ^ nz_method_string ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
@@ -770,6 +770,11 @@ class imitator_options =
 				), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
 				");
 
+        ("-imi2Jani", Unit (fun _ ->
+					imitator_mode <- Translation JaniSpec
+				), "Translate the model into a JaniSpec model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
+				");
+
 
 				("-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some true), " Layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled (i.e., no layer).");
 				("-no-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some false), " No layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled (i.e., no layer).
@@ -989,11 +994,11 @@ class imitator_options =
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options: options with threats on the result correctness *)
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-			
+
 			(*------------------------------------------------------------*)
 			(* Inclusion *)
 			(*------------------------------------------------------------*)
-			
+
 			begin
 			match property_option with
 			| None ->
@@ -1006,12 +1011,12 @@ class imitator_options =
 					-> print_warning ("The `-comparison` option value may not preserve the correctness of this analysis. Result may be incorrect.");
 				| _ -> ()
 				end;
-			
+
 			| Some property ->
 				if not (AlgorithmOptions.is_state_comparison_correct property self#comparison_operator) then(
 					print_warning ("The `-comparison` option value may not preserve the correctness of this analysis. Result may be incorrect.");
 				);
-(*				
+(*
 				(*** HACK: hard-coded special case for NDFS + Including_check => also a warning! ***)
 				begin
 				match property.property, comparison_operator with
@@ -1021,11 +1026,11 @@ class imitator_options =
 				end;*)
 			end;
 
-			
+
 			(*------------------------------------------------------------*)
 			(* Merging *)
 			(*------------------------------------------------------------*)
-			
+
 			if merge = Some true then(
 				match property_option with
 				| None ->
@@ -1036,12 +1041,12 @@ class imitator_options =
 					);
 			);
 
-			
-			
+
+
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options: ignoring some options *)
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-			
+
 			if acyclic && comparison_operator = Some No_check then (
 				acyclic <- false;
 				print_warning ("Ayclic mode is set although no state comparison is requested.");
@@ -1065,7 +1070,7 @@ class imitator_options =
 					);
 			end;
 
-			
+
 			(*------------------------------------------------------------*)
 			(* No cart options if not in cartography *)
 			(*------------------------------------------------------------*)
@@ -1087,7 +1092,7 @@ class imitator_options =
 					print_warning ("The option `-no-cumulative-pruning` is reserved for selected synthesis algorithms. It will thus be ignored.");
 				)else(
 					let property = get_property() in
-					
+
 					(*** HACK: hard-coded => to externalize somewhere? ***)
 					match property.property with
 					(* Reachability *)
@@ -1127,14 +1132,14 @@ class imitator_options =
 			(*------------------------------------------------------------*)
 			if imitator_mode = Algorithm then(
 				let property = get_property() in
-				
+
 				if property.property <> NZ_Cycle && self#is_set_nz_method then(
 					print_warning ("The `-nz-method` option is reserved for non-Zeno cycle synthesis algorithms. Ignored.");
 				);
 			);
 
 
-			
+
 			(*** TODO: check NDFS options only for NDFS; and NDFS only for Cycle_through ***)
 
 
@@ -1153,16 +1158,16 @@ class imitator_options =
 			begin
 			match comparison_operator with
 				| Some comparison_operator -> print_message Verbose_experiments ("State comparison operator: " ^ AbstractAlgorithm.string_of_state_comparison_operator comparison_operator)
-				
+
 				| None -> print_message Verbose_low ("No state comparison operator set.")
 			end;
-			
-			
+
+
 			(* Exploration order *)
 			begin
 			match exploration_order with
 				| Some exploration_order -> print_message Verbose_experiments ("Exploration order: " ^ AbstractAlgorithm.string_of_exploration_order exploration_order)
-				
+
 				| None -> print_message Verbose_low ("No exploration order set.")
 			end;
 
@@ -1256,8 +1261,8 @@ class imitator_options =
 				print_message Verbose_standard ("Considering branch and bound (work in progress!!).")
 			else
 				print_message Verbose_medium ("No branch and bound mode (default).");*)
-				
-				
+
+
 			(* OPTIONS *)
 			begin match mergeq with
 			| Some true ->

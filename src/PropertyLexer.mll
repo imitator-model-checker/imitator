@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/09/14
+ * Last modified     : 2021/03/12
 *****************************************************************)
 
 {
@@ -44,6 +44,10 @@ rule token = parse
  	| "#synth"         { CT_SYNTH }
  	
  	(* Keywords for properties *)
+	| "AccCycle"       { CT_ACCEPTINGCYCLE }
+	| "AcceptingCycle" { CT_ACCEPTINGCYCLE }
+	| "AccLoop"        { CT_ACCEPTINGCYCLE }
+	| "AcceptingLoop"  { CT_ACCEPTINGCYCLE }
 	| "AG"             { CT_AG }
 	| "AGnot"          { CT_AGnot }
  	| "DeadlockFree"   { CT_DEADLOCKFREE }
@@ -85,7 +89,6 @@ rule token = parse
 	| "in"             { CT_IN }
 	| "is"             { CT_IS }
 	| "loc"            { CT_LOC }
-	| "loop"           { CT_LOOP }
 	| "next"           { CT_NEXT }
 	| "not"            { CT_NOT }
  	| "once"           { CT_ONCE }

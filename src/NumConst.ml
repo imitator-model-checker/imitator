@@ -1,19 +1,19 @@
 (************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
- * 
+ *
  * Module description: unbounded exact rational computation using GMP
- * 
- * File contributors : Étienne André
+ *
+ * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2020/11/11
+ * Last modified     : 2021/03/09
  *
  ************************************************************)
- 
+
 (**************************************************)
 (* Type definition *)
 (**************************************************)
@@ -52,19 +52,19 @@ let get_mpq a = a
 	op result a b;
 	result*)
 
-let add = ( +/ ) 
+let add = ( +/ )
 (*	arithmetic_gen Gmp.Q.add*)
 
-let sub = ( -/ ) 
+let sub = ( -/ )
 (*	arithmetic_gen Gmp.Q.sub*)
 
-let mul = ( */ ) 
+let mul = ( */ )
 (*	arithmetic_gen Gmp.Q.mul*)
 
-let div = ( // ) 
+let div = ( // )
 (*	arithmetic_gen Gmp.Q.div*)
 
-let neg a = Gmp.Q.neg a	
+let neg a = Gmp.Q.neg a
 (*	let a = get_mpq a in           *)
 (*	let result = Gmp.Q.create () in*)
 (*	Gmp.Q.neg result a;            *)
@@ -81,7 +81,7 @@ let abs a =
 
 let get_num = Gmp.Q.get_num
 
-let get_den = Gmp.Q.get_den 
+let get_den = Gmp.Q.get_den
 
 let numconst_of_int i = (Gmp.Q.from_int i)
 
@@ -90,7 +90,7 @@ let numconst_of_frac i j = (Gmp.Q.from_ints i j)
 let numconst_of_zfrac i j = (Gmp.Q.from_zs i j)
 
 
-(*** WARNING !!!!! 
+(*** WARNING !!!!!
 	It seems that many functions were NOT tester for negative numbers !!!!!
 ***)
 
@@ -123,14 +123,14 @@ let numconst_of_positive_string str =
 	(* Case int *)
 	if Str.string_match (Str.regexp "^[0-9]+$") str 0 then
 		numconst_of_int_string str
-	
+
 	(* Case fraction *)
 	else if Str.string_match (Str.regexp "^[0-9]+/[0-9]+$") str 0 then
 		let parts = Str.split (Str.regexp_string "/") str in
 		let denominator =  numconst_of_int_string (List.nth parts 0) in
 		let fractional = numconst_of_int_string (List.nth parts 1) in
 		denominator // fractional
-		
+
 	(* Case float *)
 	else if Str.string_match (Str.regexp "^[0-9]+.[0-9]+$") str 0 then(
 (* 			numconst_of_float (float_of_string str) *)
@@ -146,7 +146,7 @@ let numconst_of_positive_string str =
 		integer_part +/ (fractional_part // denominator)
 	)
 
-	
+
 	(* Otherwise *)
 	else raise (Unknown_numconst ("Impossible to cast the string '" ^ str ^ "' to a NumConst in function numconst_of_string. Unknown type."))
 	(* 	Gmp.Q.from_z (Gmp.Z.from_string str) *)
@@ -155,13 +155,13 @@ let numconst_of_positive_string str =
 let numconst_of_string str =
 	let s = "^-\\(.+\\)$" in
 	let r = Str.regexp s in
-	
+
 	let matched = try
 		(*** NOTE: try could be safely removed ***)
 		Str.string_match r str 0
 		with Failure f -> raise (Failure("Failure while unserializing numconst '" ^ str ^ "'. Error: " ^ f));
 	in
-	
+
 	(* Case negative *)
 	if matched then(
 		(* Retrieve the rest *)
@@ -175,7 +175,7 @@ let numconst_of_string str =
 	(* Case positive *)
 	else numconst_of_positive_string str
 
-	
+
 let numconst_of_mpq m = m
 
 let numconst_of_mpz z = Gmp.Q.from_z z
@@ -186,12 +186,41 @@ let string_of_numconst a =
 	(* Avoid 0/1 *)
 	if a =/ (Gmp.Q.zero) then "0" else(
 		(* Avoid 1/1 *)
-		let den = get_den a in 
+		let den = get_den a in
 		if den = (Gmp.Z.from_int 1) then
 			Gmp.Z.to_string (get_num a)
 		else
 			(* Nice predefined function *)
 			Gmp.Q.to_string (get_mpq a)
+	)
+
+let jani_string_of_numconst a =
+	(* Avoid 0/1 *)
+	if a =/ (Gmp.Q.zero) then "0" else(
+		(* Avoid 1/1 *)
+		let den = get_den a in
+		if den = (Gmp.Z.from_int 1) then
+			Gmp.Z.to_string (get_num a)
+		else
+			(* Nice predefined function *)
+			let str = Gmp.Q.to_string (get_mpq a) in
+			(*Use regex to split if needed*)
+
+			(* Case int *)
+			if Str.string_match (Str.regexp "^[0-9]+$") str 0 then str
+
+			(* Case fraction *)
+			else if Str.string_match (Str.regexp "^[0-9]+/[0-9]+$") str 0 then
+				let parts = Str.split (Str.regexp_string "/") str in
+				let denominator =  (*numconst_of_int_string*) (List.nth parts 0) in
+				let fractional = (*numconst_of_int_string*) (List.nth parts 1) in
+				"{\"op\":\"/\", \"left\":" ^ (denominator) ^ ", \"right\":" ^ (fractional) ^ "}"
+
+			(* Case float *)
+			else if Str.string_match (Str.regexp "^[0-9]+.[0-9]+$") str 0 then str
+
+			(* Otherwise *)
+			else raise (Unknown_numconst ("Impossible to cast the string '" ^ str ^ "' in function jani_string_of_numconst. Unknown type."))
 	)
 
 (**************************************************)
@@ -250,7 +279,7 @@ let is_integer n =
 
 
 (* Convert to int without checking anything *)
-let raw_to_int n = 
+let raw_to_int n =
 	let den = get_num n in
 	Gmp.Z.to_int den
 
@@ -299,20 +328,20 @@ let to_float = Gmp.Q.to_float
 let find_multiple_gen tcdiv_q base_number step number =
 	(* 1) Compute m = number - base_number *)
 	let m = sub number base_number in
-	
+
 	(* 2) Compute d = m / step (hence, m = n * step) *)
 	let d = div m step in
-	
+
 	(* 3) Find the closest integer k below d *)
 		(* 3a) Extract numerator and denominator (integers) *)
 	let d_num = get_num d in
 	let d_den = get_den d in
 		(* 3b) Use integer division (rounded above/below) *)
 	let k = tcdiv_q d_num d_den in
-	
+
 	(* 4) Return n = k * step + base_number *)
 	add
-		(mul 
+		(mul
 			(Gmp.Q.from_z k)
 			step
 		)
@@ -323,35 +352,35 @@ let find_multiple_gen tcdiv_q base_number step number =
 (* That is: find the largest n s.t. n = k * step + base_number, with k integer, and n <= number *)
 let find_multiple_below =
 	find_multiple_gen Gmp.Z.tdiv_q
-		
+
 
 (** WARNING: not really tested !!! *)
 (** Find the closest multiple of step from base_number above (or equal to) number *)
 (* That is: find the smallest n s.t. n = k * step + base_number, with k integer, and n >= number *)
 let find_multiple_above =
 	find_multiple_gen Gmp.Z.cdiv_q
-		
+
 
 (* Return a unique random generator (only one time in an IMITATOR execution - singleton pattern) *)
-let random_generator() = 
+let random_generator() =
 	(* Singleton pattern *)
 	match !random_generator_state with
 		| Some random_generator -> random_generator
 		| None ->
 			(*** HACK: should maybe not be there ***)
 			Random.self_init();
-			
+
 			(* Initialize random *)
 			(*** EXPLANATION: total HACK here, tried greater than 128 (e.g. 255) entails 'exception Invalid_argument("Gmp.Random.randinit"); WARNING! Got one time "Fatal error: exception Invalid_argument("Gmp.Random.randinit")" with 128 too; should add an exception mechanism with retry, just in case...' ***)
 			let max_random = (*max_int*)128 in
-			
+
 			let random_value = ref (Random.int max_random + 1) in
 			(*** HACK: The 4 lines below are written to empirically try a good value ! ***)
 		(*	for i = 0 to 100000 do
 				print_string ".";
 				let _ = Gmp.RNG.randinit (Gmp.RNG.GMP_RAND_ALG_LC random_value) in ()
 			done;*)
-			
+
 			(* Try several times just in case of a "Fatal error: exception Invalid_argument("Gmp.Random.randinit")" *)
 			(*** NOTE (2016/03/23: in fact, it seems the problem simply occurs when random_value = 0! Solution: 1) add "+1" 2) Calling again Random.int is enough ***)
 			let max_tries = 10(*5*) in
@@ -372,7 +401,7 @@ let random_generator() =
 					prerr_newline();
 				);
 			done;
-			
+
 			let result =
 			match !random_generator with
 				| Some random_generator ->
@@ -396,19 +425,19 @@ let random_integer min max =
 	(* Preliminary check *)
 	if not (is_integer min && is_integer max) then
 		raise (Failure("Random integers must be in between integer bounds."));
-	
+
 	(* Compute the number of integers *)
 	let nb = max -/ min +/ one in
 
 	(* Convert to Z *)
 	let nb = get_num nb in
-	
+
 	(* Compute random *)
 	let random_number = Gmp.Z.urandomm (random_generator()) nb in
 (* 	let plouf = Gmp.Q.mpz_urandomm in *)
 	(* Convert back to Gmp.Q *)
 	let random_number = Gmp.Q.from_z random_number in
-	
+
 	(* Go back to the specified interval *)
 	random_number +/ min
 
@@ -436,7 +465,7 @@ let n_big = numconst_of_string "1234567857985798759847574039753457304758" in
 let n_big2 = numconst_of_string "123456785798579875984848248981718902747574039753457304758" in
 
 let numbers = [a ; b ; c ; d ; e ; n1 ; n2 ; n3 ; n4 ; n_small ; n_small2 ; n_medium; n_big ; n_big2] in
-List.iter (fun number -> 
+List.iter (fun number ->
 	print_string ("\n n = " ^ (string_of_numconst number) ^ " ; Is it an integer ? " ^ (string_of_bool (is_integer number))  ^ " ; Is it an int ? " ^ (string_of_bool (is_int number)));
 ) numbers ;
 

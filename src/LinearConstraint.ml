@@ -7,9 +7,9 @@
  * 
  * Module description: Common definitions for linear terms and constraints (interface to PPL)
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2020/12/15
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -242,7 +242,7 @@ type coef = NumConst.t
 (* instead of integers. *)
 (*** WARNING: probably useless construction (by Ulrich Kuehne, around 2010) ***)
 type linear_term =
-	  Var of variable
+	| Var of variable
 	| Coef of coef
 	| Pl of linear_term * linear_term
 	| Mi of linear_term * linear_term
@@ -254,6 +254,7 @@ type pxd_linear_term = linear_term
 
 
 (*** WARNING: probably useless construction (by Ulrich) ***)
+(*** NOTE (2021): not that useless (encapsulation of PPL concepts) ***)
 type op =
 	| Op_g
 	| Op_ge
@@ -277,6 +278,13 @@ let string_of_op = function
 	| Op_eq -> "="
 	| Op_le -> "<="
 	| Op_l  -> "<"
+
+
+(* The predefined operators in PPL (Less_Than_RS, Less_Or_Equal_RS, Equal_RS, Greater_Or_Equal_RS, Greater_Than_RS *)
+type ppl_op = Ppl.relation_symbol
+
+(* The predefined linear term in PPL *)
+type ppl_linear_term = Ppl.linear_expression
 
 
 type linear_inequality = Ppl.linear_constraint
@@ -800,8 +808,37 @@ let get_coefficient_in_linear_term linear_term =
 
 
 
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Renaming linear terms} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+(* `rename_linear_term variable_pairs linear_term` renames variables within linear_term as follows: v is replaced with v' for any pair `(v,v')` in variable_pairs *)
+let rename_linear_term (variable_pairs : (variable * variable) list) (linear_term : linear_term) : linear_term =
+	(* Recursive subfunction *)
+	let rec rename_linear_term_rec linear_term = match linear_term with
+		(* Variable: Try to rename *)
+		| Var v -> let replaced_v = try(
+				(* Try to find the correspondence of v within the list of pairs *)
+				List.assoc v variable_pairs
+			)with
+				(* Not found: no replacement => keep v *)
+				Not_found -> v
+			in Var replaced_v
+		
+		(* Coef: unchanged *)
+		| Coef c -> Coef c
+		
+		(* Recursive calls *)
+		| Pl (linear_term1, linear_term2) ->
+			Pl (rename_linear_term_rec linear_term1, rename_linear_term_rec linear_term2)
+		| Mi (linear_term1, linear_term2) ->
+			Mi (rename_linear_term_rec linear_term1, rename_linear_term_rec linear_term2)
+		| Ti (coef, linear_term) -> Ti (coef, rename_linear_term_rec linear_term)
+	in
+	(* Call it with the initial linear_term *)
+	rename_linear_term_rec linear_term
 
+let rename_pxd_linear_term = rename_linear_term
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -861,9 +898,10 @@ let rec evaluate_linear_term_ppl valuation_function linear_term =
 let string_of_coef = NumConst.string_of_numconst
 let string_of_constant = NumConst.string_of_numconst
 
+let jani_string_of_coef = NumConst.jani_string_of_numconst
 
 (** Convert a linear term into a string *)	
-let rec string_of_linear_term names linear_term =
+let rec string_of_linear_term (names : (variable -> string)) (linear_term : linear_term) =
 	match linear_term with
 		| Coef c -> string_of_coef c
 		
@@ -897,36 +935,36 @@ let string_of_p_linear_term = string_of_linear_term
 let string_of_pxd_linear_term = string_of_linear_term 
 
 (** Convert a linear term (PPL) into a string *)
-let rec string_of_linear_term_ppl names linear_term =
+let rec string_of_ppl_linear_term (names : (variable -> string)) (linear_term : ppl_linear_term) =
 	match linear_term with
 		| Coefficient z -> Gmp.Z.string_from z
 		
 		| Variable v -> names v
 		
-		| Unary_Plus t -> string_of_linear_term_ppl names t
+		| Unary_Plus t -> string_of_ppl_linear_term names t
 		
 		| Unary_Minus t -> (
-				let str = string_of_linear_term_ppl names t in
+				let str = string_of_ppl_linear_term names t in
 				"-(" ^ str ^ ")")
 				
 		(* Some simplification *)
 		| Plus (lterm, Coefficient z)
 		| Minus (lterm, Coefficient z)
 			when Gmp.Z.equal z (Gmp.Z.zero) ->
-			  string_of_linear_term_ppl names lterm
+			  string_of_ppl_linear_term names lterm
 
 		| Plus (lterm, rterm) -> (
-			  let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
+			  let lstr = string_of_ppl_linear_term names lterm in
+				let rstr = string_of_ppl_linear_term names rterm in
 				lstr ^ " + " ^ rstr )
 				
 		| Minus (lterm, rterm) -> (
-			  let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
+			  let lstr = string_of_ppl_linear_term names lterm in
+				let rstr = string_of_ppl_linear_term names rterm in
 				lstr ^ " - (" ^ rstr ^ ")" )
 				
 		| Times (z, rterm) -> (
-				let tstr = string_of_linear_term_ppl names rterm in
+				let tstr = string_of_ppl_linear_term names rterm in
 				if (Gmp.Z.equal z (Gmp.Z.one)) then
 					tstr
 				else 
@@ -935,8 +973,135 @@ let rec string_of_linear_term_ppl names linear_term =
 						| Coefficient _ -> fstr ^ "*" ^ tstr
 						| Variable    _ -> fstr ^ "*" ^ tstr
 						| _ -> fstr ^ " * (" ^ tstr ^ ")" )
-				
 
+(*TODO DYLAN: with it, we may be able to simplify some calls, check it*)
+let rec jani_string_of_ppl_linear_term (names : (variable -> string)) (linear_term : ppl_linear_term) =
+	match linear_term with
+		| Coefficient z -> jani_string_of_coef (NumConst.numconst_of_string (Gmp.Z.string_from z))
+		
+		| Variable v -> "\"" ^ names v ^ "\""
+		
+		| Unary_Plus t -> jani_string_of_ppl_linear_term names t
+		
+		| Unary_Minus t -> (
+				let str = jani_string_of_ppl_linear_term names t in
+				"-" ^ str ^ "")
+				
+		(* Some simplification *)
+		| Plus (lterm, Coefficient z)
+		| Minus (lterm, Coefficient z)
+			when Gmp.Z.equal z (Gmp.Z.zero) ->
+			  jani_string_of_ppl_linear_term names lterm
+
+		| Plus (lterm, rterm) -> (
+			let lstr = jani_string_of_ppl_linear_term names lterm in
+			let rstr = jani_string_of_ppl_linear_term names rterm in
+				"{\"op\": \"+\", \"left\":" ^ lstr ^ ", \"right\":" ^ rstr ^ "}" )
+				
+		| Minus (lterm, rterm) -> (
+			let lstr = jani_string_of_ppl_linear_term names lterm in
+			let rstr = jani_string_of_ppl_linear_term names rterm in
+				"{\"op\": \"-\", \"left\":" ^ lstr ^ ", \"right\":" ^ rstr ^ "}" )
+				
+		| Times (z, rterm) -> (
+			let tstr = jani_string_of_ppl_linear_term names rterm in
+			if (Gmp.Z.equal z (Gmp.Z.one)) then
+				tstr
+			else 
+				let fstr = jani_string_of_coef (NumConst.numconst_of_string (Gmp.Z.string_from z)) in
+				"{\"op\": \"*\", \"left\":" ^ fstr ^ ", \"right\":" ^ tstr ^ "}")
+
+let pxd_linear_term_is_unary (linear_term : linear_term) =
+	match linear_term with
+		| Coef z -> true
+		| Var v -> true
+		| Pl (t,u) -> false
+		| Mi (t,u) -> false
+		| Ti (t,u) -> false
+
+let op_term_of_pxd_linear_term (linear_term : linear_term) =
+	match linear_term with
+		| Coef z -> "" 
+		| Var v ->  "" 
+		| Pl (t,u) -> "+"
+		| Mi (t,u) -> "-"
+		| Ti (t,u) -> "*"
+
+let rec left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : linear_term) = 
+	match linear_term with
+	(*  * linear_term to hack return type *)
+		| Coef z -> "Coefficient", jani_string_of_coef z, linear_term
+		
+		| Var v -> "Variable", (names v), linear_term
+		
+(*		| Unary_Plus t -> "Unary", (string_of_ppl_linear_term names t), linear_term
+		
+		| Unary_Minus t -> "Unary", (
+				let str = string_of_ppl_linear_term names t in
+				"-(" ^ str ^ ")")
+				(*TODO DYLAN check how to write in jani*)
+				, linear_term*)
+				 
+		(* Some simplification *)
+(*		| Pl (lterm, Coef z)
+		| Mi (lterm, Coef z)
+			when Gmp.Z.equal z (Gmp.Z.zero) ->
+			  left_term_of_pxd_linear_term names lterm*)
+
+		| Pl (lterm, rterm) -> "Duary", "", lterm
+				
+		| Mi (lterm, rterm) -> "Duary", "", lterm
+				
+		| Ti (z, rterm) -> "Unary", (jani_string_of_coef z), linear_term
+
+let rec right_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : linear_term) = 
+	match linear_term with
+	(*  * linear_term to hack return type *)
+		| Coef z -> "Coefficient", jani_string_of_coef z, linear_term
+		
+		| Var v -> "Variable", (names v), linear_term
+		
+(*		| Unary_Plus t -> "Unary", (string_of_ppl_linear_term names t), linear_term
+		
+		| Unary_Minus t -> "Unary", (
+				let str = string_of_ppl_linear_term names t in
+				"-(" ^ str ^ ")")
+				(*TODO DYLAN check how to write in jani*)
+				 , linear_term*)
+				
+		(* Some simplification *)
+(*		| Pl (lterm, Coef z)
+		| Mi (lterm, Coef z)
+			when Gmp.Z.equal z (Gmp.Z.zero) ->
+			  right_term_of_pxd_linear_term names lterm*)
+
+		| Pl (lterm, rterm) -> "Duary", "", rterm
+				
+		| Mi (lterm, rterm) -> "Duary", "", rterm
+				
+		| Ti (z, rterm) -> "Duary", "", rterm
+
+let rec string_of_linear_term_for_jani variable_names linear_term = 
+	(*TODO DYLAN Update called funcitons and here with a new type insteed of tuple*)
+	if (pxd_linear_term_is_unary linear_term)
+	then (
+		let type_return, value_return, _ = left_term_of_pxd_linear_term variable_names linear_term in
+		if type_return = "Coefficient" then value_return else "\""^value_return^"\""
+	) else (
+		let op = op_term_of_pxd_linear_term linear_term in
+		let left_type, left_string, left_term = left_term_of_pxd_linear_term variable_names linear_term in 
+		let right_type, right_string, right_term = right_term_of_pxd_linear_term variable_names linear_term in 
+		
+		let left = (if left_type = "Duary" then string_of_linear_term_for_jani variable_names left_term else left_string) in 
+		let right = (if right_type = "Duary" then string_of_linear_term_for_jani variable_names right_term else right_string) in 
+		"\n\t\t\t\t\t\t\t\t{\n"
+		^ "\t\t\t\t\t\t\t\t\"op\": \"" ^ op ^ "\",\n"
+		^ "\t\t\t\t\t\t\t\t \"left\": "^ left ^ ",\n"
+		^ "\t\t\t\t\t\t\t\t \"right\": " ^ right ^ "\n"
+		^ "\t\t\t\t\t\t\t\t}"
+	)
+	
+let string_of_pxd_linear_term_for_jani = string_of_linear_term_for_jani
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to PPL} *)
@@ -1041,36 +1206,56 @@ let make_linear_inequality linear_term op =
 	(* Build zero term for comparison with the operator *)
 	let zero_term = Coefficient Gmp.Z.zero in
 	match op with
-		| Op_g -> Greater_Than (linear_expression, zero_term)
-		| Op_ge -> Greater_Or_Equal (linear_expression, zero_term)
-		| Op_eq -> Equal (linear_expression, zero_term)
-		| Op_le -> Less_Or_Equal (linear_expression, zero_term)
-		| Op_l -> Less_Than (linear_expression, zero_term)
+		| Op_g	-> Greater_Than (linear_expression, zero_term)
+		| Op_ge	-> Greater_Or_Equal (linear_expression, zero_term)
+		| Op_eq	-> Equal (linear_expression, zero_term)
+		| Op_le	-> Less_Or_Equal (linear_expression, zero_term)
+		| Op_l	-> Less_Than (linear_expression, zero_term)
 
-let make_p_linear_inequality = make_linear_inequality
-let make_px_linear_inequality = make_linear_inequality
-let make_pxd_linear_inequality = make_linear_inequality
+let make_p_linear_inequality	= make_linear_inequality
+let make_px_linear_inequality	= make_linear_inequality
+let make_pxd_linear_inequality	= make_linear_inequality
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Access} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(** split a linear_inequality into its two terms and the operator *)
+let split_linear_inequality = function
+	| Less_Than (lterm, rterm)			-> lterm, rterm, Less_Than_RS
+	| Less_Or_Equal (lterm, rterm)		-> lterm, rterm, Less_Or_Equal_RS
+	| Equal (lterm, rterm)				-> lterm, rterm, Equal_RS
+	| Greater_Or_Equal (lterm, rterm)	-> lterm, rterm, Greater_Or_Equal_RS
+	| Greater_Than (lterm, rterm)		-> lterm, rterm, Greater_Than_RS
+
+
+(* Get the PPL operator `ppl_op` of a linear inequality *)
+let ppl_op_of_linear_inequality	(linear_inequality : linear_inequality) : ppl_op =
+	let _, _, ppl_op = split_linear_inequality linear_inequality in
+	ppl_op
+
+(* Function translating a PPL operator to an `op` operator *)
+let op_of_ppl_op = function
+	| Less_Than_RS			-> Op_l
+	| Less_Or_Equal_RS		-> Op_le
+	| Equal_RS				-> Op_eq
+	| Greater_Or_Equal_RS	-> Op_ge
+	| Greater_Than_RS		-> Op_g
+
+
+(* Get the `op` operator of a linear inequality *)
+let op_of_linear_inequality	(linear_inequality : linear_inequality) : op =
+	op_of_ppl_op (ppl_op_of_linear_inequality linear_inequality)
+
+let op_of_pxd_linear_inequality = op_of_linear_inequality
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** split a linear inequality into its two terms and the operator *)
-let split_linear_inequality = function
-	| Less_Than (lterm, rterm) -> lterm, rterm, Less_Than_RS
-	| Less_Or_Equal (lterm, rterm) -> lterm, rterm, Less_Or_Equal_RS
-	| Equal (lterm, rterm) -> lterm, rterm, Equal_RS
-	| Greater_Than (lterm, rterm) -> lterm, rterm, Greater_Than_RS
-	| Greater_Or_Equal (lterm, rterm) -> lterm, rterm, Greater_Or_Equal_RS
-	
-(** build a linear inequality from two terms and an operator *)
-let build_linear_inequality lterm rterm op = 
-	match op with
-		| Less_Than_RS -> Less_Than (lterm, rterm)
-		| Less_Or_Equal_RS -> Less_Or_Equal (lterm, rterm)
-		| Equal_RS -> Equal (lterm, rterm)
-		| Greater_Than_RS -> Greater_Than (lterm, rterm)
-		| Greater_Or_Equal_RS -> Greater_Or_Equal (lterm, rterm)
 
 
 (** evaluate a linear inequality for a given valuation *)
@@ -1147,8 +1332,17 @@ let negate_inequality = function
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)				   	
+(** {3 Normalization (for pretty-printing)} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(** build a linear inequality from two terms and an operator *)
+let build_linear_inequality lterm rterm op = 
+	match op with
+		| Less_Than_RS -> Less_Than (lterm, rterm)
+		| Less_Or_Equal_RS -> Less_Or_Equal (lterm, rterm)
+		| Equal_RS -> Equal (lterm, rterm)
+		| Greater_Than_RS -> Greater_Than (lterm, rterm)
+		| Greater_Or_Equal_RS -> Greater_Or_Equal (lterm, rterm)
 
 
 let is_zero_coef = function
@@ -1203,9 +1397,11 @@ let rec sign_split_expression = function
 		)			
 
 
+
+
 (** normalize an inequality for pretty printing; *)
-(** the expressions are rearranged such that only posistive coefficients occur *)
-let normalize_inequality ineq = 
+(** the expressions are rearranged such that only positive coefficients occur *)
+let normalize_inequality (ineq : linear_inequality) = 
 	let lterm, rterm, op = split_linear_inequality ineq in
 	let lpos, lneg = sign_split_expression lterm in
 	let rpos, rneg = sign_split_expression rterm in
@@ -1214,12 +1410,37 @@ let normalize_inequality ineq =
 	build_linear_inequality lnew rnew op
 
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Conversion} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)				   	
+
+
+(* Get the left-hand linear term of a linear inequality *)
+let string_of_left_term_of_linear_inequality (names : (variable -> string)) (linear_inequality : linear_inequality) : string =
+	(* First normalize *)
+	let normalized_linear_inequality = normalize_inequality linear_inequality in
+	let (left : ppl_linear_term), _, _ = split_linear_inequality normalized_linear_inequality in
+	jani_string_of_ppl_linear_term names left
+
+let string_of_left_term_of_pxd_linear_inequality = string_of_left_term_of_linear_inequality
+
+(* Get the right-hand linear term of a linear inequality *)
+let string_of_right_term_of_linear_inequality (names : (variable -> string)) (linear_inequality : linear_inequality) : string =
+	(* First normalize *)
+	let normalized_linear_inequality = normalize_inequality linear_inequality in
+	let _, (right : ppl_linear_term), _ = split_linear_inequality normalized_linear_inequality in
+	jani_string_of_ppl_linear_term names right
+
+let string_of_right_term_of_pxd_linear_inequality = string_of_right_term_of_linear_inequality
+
+
 (** Convert a linear inequality into a string *)
-let string_of_linear_inequality customized_string names linear_inequality =
+let string_of_linear_inequality customized_string names (linear_inequality : linear_inequality) =
 	let normal_ineq = normalize_inequality linear_inequality in
-	let lterm, rterm, op = split_linear_inequality normal_ineq in
-	let lstr = string_of_linear_term_ppl names lterm in
-	let rstr = string_of_linear_term_ppl names rterm in	
+	let lterm, rterm, (op : ppl_op) = split_linear_inequality normal_ineq in
+	let lstr = string_of_ppl_linear_term names lterm in
+	let rstr = string_of_ppl_linear_term names rterm in	
 	let opstr = match op with
 		| Less_Than_RS        -> customized_string.l_operator
 		| Less_Or_Equal_RS    -> customized_string.le_operator
@@ -1258,7 +1479,7 @@ let clock_guard_of_linear_inequality linear_inequality =
 	let linear_term = Minus (lterm, rterm) in
 	
 (*	print_newline();
-	print_string (string_of_linear_term_ppl (fun i -> "v_" ^ (string_of_int i)) linear_term);
+	print_string (string_of_ppl_linear_term (fun i -> "v_" ^ (string_of_int i)) linear_term);
 	print_newline();*)
 
 	
@@ -3276,9 +3497,9 @@ let pdbm_update i (b:linear_term) pdbm =
 	let nb_clocks = Array.length pdbm - 1 in
 	let zeroclock = nb_clocks in
 
- 	(* for all j != i: ( *** WARNING: what about zeroclock ? I assume it should be included too) *)
+ 	(* for all j <> i: ( *** WARNING: what about zeroclock ? I assume it should be included too) *)
 	for j = 0 to nb_clocks (* - 1 *) do
-		if j != i then(
+		if j <> i then(
 			(* Dij <- (e0j + b), ~0j *)
 			let (e0j : pdbm_eij), op0j = pdbm.(zeroclock).(j) in
 			pdbm.(i).(j) <- pdbm_add_linear_terms e0j (Eij b), op0j;
@@ -3311,7 +3532,7 @@ let pdbm_time_elapsing pdbm =
 	let nb_clocks = Array.length matrix - 1 in
 	let zeroclock = nb_clocks in
 
-	(* Set (xi - xz) to (inf, <) for all i != zero_clock *)
+	(* Set (xi - xz) to (inf, <) for all i <> zero_clock *)
 	for i = 0 to nb_clocks - 1 do
 		matrix.(i).(zeroclock) <- Infinity , PDBM_l;
 	done

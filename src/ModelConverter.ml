@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/12/04
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -1557,7 +1557,7 @@ let check_stopwatches index_of_variables type_of_variables location_name stopwat
 		(* Get variable name *)
 		try (
 			let variable_index = Hashtbl.find index_of_variables stopwatch in
-			if type_of_variables variable_index != Var_type_clock then (
+			if type_of_variables variable_index <> Var_type_clock then (
 			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined as a clock.");
 			ok := false;
 			);
@@ -1587,7 +1587,7 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 			let variable_index = Hashtbl.find index_of_variables clock_name in
 			
 			(* Check variable type *)
-			if type_of_variables variable_index != Var_type_clock then (
+			if type_of_variables variable_index <> Var_type_clock then (
 				print_error ("The variable `" ^ clock_name ^ "` used in a flow in location `" ^ location_name ^ "` is not defined as a clock.");
 				ok := false;
 			);
@@ -2281,7 +2281,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 				invariants.(automaton_index).(location_index) <- convert_guard index_of_variables type_of_variables constants location.invariant;
 
 				(* Does the model has stopwatches? *)
-				if location.stopped != [] then has_non_1rate_clocks := true;
+				if location.stopped <> [] then has_non_1rate_clocks := true;
 				(* Convert the stopwatches names into variables *)
 				let list_of_stopwatch_names = list_only_once location.stopped in
 				(* Update the array of stopwatches *)
@@ -2291,7 +2291,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 
 				(* Does the model has clocks with <> rate? *)
 				(*** NOTE: technically, we should update the flag only whenever the rate is <> 1… ***)
-				if location.flow != [] then has_non_1rate_clocks := true;
+				if location.flow <> [] then has_non_1rate_clocks := true;
 				(* Convert the flow names into variables *)
 				(* Update the array of flows *)
 				flow_array.(automaton_index).(location_index) <-
@@ -4684,7 +4684,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_non_1rate_clocks, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option != None) in
+	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_non_1rate_clocks, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option <> None) in
 	
 	let nb_actions = List.length actions in
 	

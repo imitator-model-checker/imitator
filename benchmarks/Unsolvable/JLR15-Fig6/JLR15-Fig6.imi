@@ -4,9 +4,9 @@
  * Title            : JLR15-Fig6
  * Description      : Example from [Figure 6, JLR15]
  * Correctness      : l2 is reachable
- * Scalable         : 
- * Generated        : 
- * Categories       : 
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Toy ; Unsolvable
  * Source           : "Integer Parameter Synthesis for Real-time Systems" (used to be Figure 1 in "Integer Parameter Synthesis for Timed Automata" in [TACAS, 2013])
  * bibkey           : JLR15
  * Author           : Aleksandra Jovanović, Didier Lime, Olivier H. Roux

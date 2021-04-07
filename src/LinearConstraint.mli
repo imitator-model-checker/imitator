@@ -7,9 +7,9 @@
  * 
  * Module description: Common definitions for linear terms and constraints (interface to PPL)
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2020/12/15
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -28,7 +28,6 @@ exception Not_a_1d_parameter_constraint
 
 (* Raised when trying to get a point in an empty (false) constraint *)
 exception EmptyConstraint
-
 
 (************************************************************)
 (** {2 Variables and coefficients} *)
@@ -93,6 +92,9 @@ val sub_p_linear_terms : p_linear_term -> p_linear_term -> p_linear_term
 (*val sub_px_linear_terms : px_linear_term -> px_linear_term -> px_linear_term*)
 val sub_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
 
+(* `rename_pxd_linear_term variable_pairs pxd_linear_term` renames variables within pxd_linear_term as follows: v is replaced with v' for any pair `(v,v')` in variable_pairs *)
+val rename_pxd_linear_term : (variable * variable) list -> pxd_linear_term -> pxd_linear_term
+
 (** Evaluate a linear term with a function assigning a value to each variable. *)
 val evaluate_p_linear_term : p_valuation -> p_linear_term -> coef
 val evaluate_pxd_linear_term : pxd_valuation -> pxd_linear_term -> coef
@@ -107,6 +109,15 @@ val evaluate_pxd_linear_term : pxd_valuation -> pxd_linear_term -> coef
 val string_of_p_linear_term : (variable -> string) -> p_linear_term -> string
 val string_of_pxd_linear_term : (variable -> string) -> pxd_linear_term -> string
 
+(* Export of linear term parts *)
+(*
+val pxd_linear_term_is_unary : p_linear_term -> bool
+val op_term_of_pxd_linear_term : (pxd_linear_term) -> string
+val left_term_of_pxd_linear_term : (variable -> string) -> pxd_linear_term -> (string * string * pxd_linear_term)
+val right_term_of_pxd_linear_term : (variable -> string) -> pxd_linear_term -> (string * string * pxd_linear_term)
+*)
+val string_of_pxd_linear_term_for_jani : (variable -> string) -> pxd_linear_term -> string
+(*val string_of_linear_constraint_for_jani : (variable -> string) -> linear_term -> string*)
 
 (************************************************************)
 (** {2 Linear inequalities} *)
@@ -144,6 +155,15 @@ val make_px_linear_inequality : px_linear_term -> op -> px_linear_inequality
 val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Access} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Get the op of a linear_inequality *)
+val op_of_pxd_linear_inequality				: pxd_linear_inequality -> op
+
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -172,6 +192,12 @@ val negate_inequality : p_linear_inequality -> p_linear_inequality
 (*------------------------------------------------------------*)
 val clock_guard_of_linear_inequality : pxd_linear_inequality -> (Automaton.clock_index * op * p_linear_term)
 
+
+(** Convert to string the left-hand term of a linear_inequality *)
+val string_of_left_term_of_pxd_linear_inequality : (variable -> string) -> pxd_linear_inequality -> string
+
+(** Convert to string the right-hand term of a linear_inequality *)
+val string_of_right_term_of_pxd_linear_inequality : (variable -> string) -> pxd_linear_inequality -> string
 
 
 (** Convert a linear inequality into a string *)

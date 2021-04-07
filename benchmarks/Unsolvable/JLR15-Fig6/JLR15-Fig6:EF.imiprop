@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
  * Example from [Figure 6, JLR15]
  *
@@ -13,6 +13,8 @@
  *
  * Created         : 2020/08/14
  * Last modified   : 2021/02/09
+ *
+ * Computation     : Unsolvable
  *
  * IMITATOR version: 3.0
  ************************************************************)

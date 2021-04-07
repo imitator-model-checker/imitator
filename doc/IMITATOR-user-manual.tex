@@ -431,14 +431,14 @@ A stopwatch has flow~0.
 \begin{remark}
 	It is possible to defined ill-formed models where contradictory flows are defined for a given clock.
 	For example, in
-	
+
 	\styleIMI{stop \{ x \} flow \{x' = 2, y' = 0\}}
-	
+
 	\noindent
 	\styleIMI{x} is assigned both flow~0 (because it is defined as a stopped clock) and 2 (in the explicit flow definition).
-	
+
 	Alternatively, in a \NIPTA{}, it is possible to be in a global location such that, in one location of one of the automata a given clock is assigned a given flow, and in another location of another automata in parallel, the same clock is assigned another flow.
-	
+
 	In the case of such contradictory flows, \imitator{} will trigger a warning on-the-fly, and the result of the analysis is unspecified.
 \end{remark}
 %------------------------------------------------------------
@@ -686,17 +686,17 @@ output the text description of all states (option \styleOption{-states-descripti
 	That is, one can define properties of the form:
 
 	\styleIMI{property := \#witness EF(accepting);}
-	
+
 	or even:
-	
+
 	\styleIMI{property := \#synth EF(loc[pta] = l1 | (accepting \& loc[pta] <> l2));}
-	
+
 	The semantics of the acceptance of a state is as follows: ``at least one of the locations is accepting (as specified by the \styleIMI{accepting} keyword in the model).''
-	
+
 % 	If one defines \styleIMI{accepting} locations in the model \emph{and} uses a \styleIMI{state\_predicate} in the property, \emph{both} acceptance conditions are considered at the same time.
 % 	In this case,
 % 	the semantics of the acceptance of a state is as follows: ``either at least one of the locations is accepting (thanks to the \styleIMI{accepting} keyword), \emph{or} the state matches the \styleIMI{state\_predicate} in the property.''
-% 	
+%
 % 	The presence of the \styleIMI{accepting} keyword can be seen as a ``hack'' to make property writing easier in some cases.
 \end{remark}
 %------------------------------------------------------------
@@ -704,13 +704,13 @@ output the text description of all states (option \styleOption{-states-descripti
 % %------------------------------------------------------------
 % \begin{becareful}
 % 	From \cref{remark:accepting}, one can see that
-% 	
+%
 % 	\styleIMI{property := \#synth EF(False);}
-% 	
+%
 % 	is absolutely equivalent to
-% 	
+%
 % 	\styleIMI{property := \#synth EF(accepting);}.
-% 	
+%
 % 	This might be seem counterintuitive; but remember that the \styleIMI{accepting} keyword can be seen as a ``hack'', and the acceptance condition should normally be defined in \emph{properties} only.
 % \end{becareful}
 % %------------------------------------------------------------
@@ -905,24 +905,24 @@ This (non-default) algorithm can be called using the following option syntax:
 % Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one accepting cycle.
 % This algorithm differs from the one in \cref{sss:accepting-loop-BFS} in the sense that this algorithm performs a nested depth-first search (NDFS) exploration until a cycle is found~\cite{NPP18}.
 % In addition, this algorithm is (by default) not complete.
-% 
+%
 % The property syntax is as follows:
-% 
+%
 % \styleIMI{property := \#synth inf\_acc\_cycle;}
-% 
+%
 % However, there are two main differences with \cref{ss:loop,sss:accepting-loop-BFS}:
 % \begin{enumerate}
 % 	\item accepting locations must be specified using the keyword \styleIMI{accepting} (this keyword is not used by other algorithms\footnote{This comes from the fact that the developers of this algorithm are mainly Jaco Van~de~Pol and Laure~Petrucci, who used a different accepting location system.});
 % 	\item an exploration order may be specified as command line (see below).
 % \end{enumerate}
-% 
+%
 % The command is therefore:
-% 
+%
 % \styleCommand{\binimitator{} model.imi property.imiprop -expl-order NDFS}
-% 
+%
 % Several heuristics can be used, some of them synthesizing all parameter values for which a cycle can be found.
 % These are accessible via the \styleOption{-expl-order} option:
-% 
+%
 % \begin{description}
 % 	\item[\styleOption{-expl-order NDFS}]: use standard NDFS to find an accepting cycle;
 % 	\item[\styleOption{-expl-order NDFSsub}]: standard NDFS with subsumption;
@@ -1674,6 +1674,44 @@ To generate an equivalent \hytech{} model without performing any analysis, use:
 Note that the translation of properties is not supported.
 % TODO
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Translation to \jani{}}\label{section:jani}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Since version ....., \imitator{} supports a translation of the model to \jani{} specification~\cite{BDHHJT17}.
+To generate an equivalent \jani{} model without performing any analysis, use:
+
+\styleCommand{\binimitator{} model.imi -imi2Jani}
+
+\imitator{} will generate a file \stylePath{model.jani}.
+Note that the translation of properties is not supported.
+
+Due to the different semantics and features between \imitator{} and \jani{}, the translation is done in a ``best effort'' manner, but the semantics may differ.
+We review some points in the following.
+
+\paragraph{Assignments}
+\imitator{} and \jani{} do not have a same semantics to allow \styleIMI{if}-\styleIMI{then}-\styleIMI{else} assignments. In order to provide a same behavior, the translation is performed as follow.
+
+\styleIMI{if (x=1) then (x:=2, y:=3) else (x=4)}\\ is transformed (and, after, written in \jani{} format) into
+
+\styleIMI{
+\begin{tabular}{l l}
+	x := & (if (x=1) then 2 else x)\\
+	y := & (if (x=1) then 3 else y)\\
+	x := & (if (x=1) then x else 4)
+\end{tabular}
+}
+
+\paragraph{Stopwatched and multi-rate clocks}
+If neither clock has a multi-rate (\ie{} there is no mention to clock rates in the model), all of them are declared in \jani{} model with the \styleIMI{clock} type.
+
+Otherwise, if one rate is mentionned in the \imitator{} model, all of the clocks (including non multi-rate ones) are declared with the \styleIMI{continuous} type and the corresponding derivative (1 if non specified) is explicitly specified in each location.
+
+\paragraph{Synchronization}
+\jani{} synchronization semantics is more permissive than the \imitator{} one, therefore the exact meaning can be kept. It is done by listing synchronization vectors in the \styleIMI{syncs} entry.
+
+\paragraph{Properties}
+Properties are so far not translated to \jani{}. The corresponding input in the \jani{} file exists but remains empty.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Export to graphics}
