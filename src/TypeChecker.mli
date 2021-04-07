@@ -19,16 +19,19 @@
 (* Type error exception *)
 exception TypeError of string
 
+type variable_name = string
+type variable_index = int
+
 (** Get variables types **)
 
 (* Get var type of a variable given it's index *)
-val get_type_of_variable : ParsingStructure.useful_parsing_model_information -> int -> DiscreteValue.var_type
+val get_type_of_variable : ParsingStructure.useful_parsing_model_information -> variable_index -> DiscreteValue.var_type
 (* Get var type of a variable given it's name *)
-val get_type_of_variable_by_name : ParsingStructure.useful_parsing_model_information -> string -> DiscreteValue.var_type
+val get_type_of_variable_by_name : ParsingStructure.useful_parsing_model_information -> variable_name -> DiscreteValue.var_type
 (* Get discrete type of a variable given it's index *)
-val get_discrete_type_of_variable : ParsingStructure.useful_parsing_model_information -> int -> DiscreteValue.var_type_discrete
+val get_discrete_type_of_variable : ParsingStructure.useful_parsing_model_information -> variable_index -> DiscreteValue.var_type_discrete
 (* Get discrete type of a variable given it's name *)
-val get_discrete_type_of_variable_by_name : ParsingStructure.useful_parsing_model_information -> string -> DiscreteValue.var_type_discrete
+val get_discrete_type_of_variable_by_name : ParsingStructure.useful_parsing_model_information -> variable_name -> DiscreteValue.var_type_discrete
 
 (** Resolve expression type **)
 
@@ -54,10 +57,10 @@ val check_conditional : ParsingStructure.useful_parsing_model_information -> Par
 
 (* Check that an expression assigned to a variable is of the same type *)
 (* If not, raise a TypeError exception with an error message *)
-val check_type_assignment : ParsingStructure.useful_parsing_model_information -> string -> ParsingStructure.global_expression -> unit
+val check_type_assignment : ParsingStructure.useful_parsing_model_information -> variable_name -> ParsingStructure.global_expression -> unit
 
 (* Check if a value is compatible with given type *)
 val check_value_compatible_with_type : DiscreteValue.discrete_value -> DiscreteValue.var_type -> bool
 
 (* Check that constant declarations are well typed *)
-val check_constant_declarations : (string * ParsingStructure.global_expression * DiscreteValue.discrete_value * DiscreteValue.var_type) list -> (string * DiscreteValue.discrete_value) list
+val check_constant_declarations : (variable_name * ParsingStructure.global_expression * DiscreteValue.discrete_value * DiscreteValue.var_type) list -> (variable_name * DiscreteValue.discrete_value) list

@@ -81,13 +81,14 @@ and discrete_boolean_expression =
 
 type typed_boolean_expression = boolean_expression * DiscreteValue.var_type_discrete
 type typed_discrete_boolean_expression = discrete_boolean_expression * DiscreteValue.var_type_discrete
+type typed_discrete_arithmetic_expression = discrete_arithmetic_expression * DiscreteValue.var_type_discrete_number
 
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
 type global_expression =
     (* A typed expression *)
-    | Arithmetic_expression of discrete_arithmetic_expression * DiscreteValue.var_type_discrete_number
+    | Arithmetic_expression of typed_discrete_arithmetic_expression
     | Bool_expression of typed_boolean_expression
 
 (****************************************************************)

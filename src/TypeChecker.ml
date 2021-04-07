@@ -24,6 +24,9 @@ open ImitatorUtilities
 exception TypeError of string
 exception InternalError of string
 
+type variable_name = string
+type variable_index = int
+
 (** Error messages **)
 
 (* Error message when mixin of different types *)

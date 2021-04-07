@@ -127,6 +127,9 @@ module IntEvaluator = MakeEvaluator(Int32)(
 module DiscreteExpressionsEvaluator : DiscreteExpressionsEvaluatorType =
 struct
 
+    (************************************************************)
+    (** Evaluate discrete boolean expressions with a valuation  *)
+    (************************************************************)
     let check_typed_discrete_boolean_expression discrete_valuation (expr, discrete_type) =
         match discrete_type with
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int -> IntEvaluator.check_discrete_boolean_expression discrete_valuation expr
