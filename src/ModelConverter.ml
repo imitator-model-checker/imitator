@@ -143,7 +143,7 @@ let rec get_variables_in_parsed_update_factor variables_used_ref = function
 		variables_used_ref := StringSet.add variable_name !variables_used_ref
 
 	| Parsed_DF_constant _ -> ()
-
+    | Builtin_function_rational_of_int parsed_update_arithmetic_expression
 	| Parsed_DF_expression parsed_update_arithmetic_expression ->
 		get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression
 
@@ -213,7 +213,7 @@ let rec get_variables_in_parsed_discrete_factor variables_used_ref = function
 		variables_used_ref := StringSet.add variable_name !variables_used_ref
 
 	| Parsed_DF_constant _ -> ()
-
+    | Builtin_function_rational_of_int parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
 		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref parsed_discrete_arithmetic_expression
 
@@ -255,7 +255,7 @@ let rec check_f_in_parsed_update_factor f = function
 		f variable_name
 
 	| Parsed_DF_constant _ -> true
-
+    | Builtin_function_rational_of_int parsed_update_arithmetic_expression
 	| Parsed_DF_expression parsed_update_arithmetic_expression ->
 		check_f_in_parsed_update_arithmetic_expression f parsed_update_arithmetic_expression
 	
@@ -325,6 +325,7 @@ and check_f_in_parsed_global_expression f = function
 let rec check_f_in_parsed_discrete_factor f index_of_variables type_of_variables constants = function
 	| Parsed_DF_variable _ | Parsed_DF_constant _ as variable ->
 		f index_of_variables type_of_variables constants variable
+	| Builtin_function_rational_of_int parsed_update_arithmetic_expression
 	| Parsed_DF_expression parsed_update_arithmetic_expression ->
 		check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants parsed_update_arithmetic_expression
 	| Parsed_DF_unary_min parsed_discrete_factor ->
@@ -498,6 +499,7 @@ let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_
 		| Parsed_DF_constant var_value -> DF_constant var_value
 		(*** TODO: here, we could very easily get rid of the DF_unary_min by negating the inside expression… ***)
 		| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (discrete_factor_of_parsed_update_factor parsed_discrete_factor)
+		| Builtin_function_rational_of_int parsed_update_arithmetic_expression -> DF_rational_of_int (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
 		| Parsed_DF_expression parsed_update_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
 	in
 	discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec
@@ -509,6 +511,7 @@ let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_
 (*------------------------------------------------------------*)
 
 
+(* TODO benjamin see if used ??? *)
 (*** TODO (though really not critical): try to do some simplifications… ***)
 (* First valuate a parsed_update_arithmetic_expression if requested; raises InternalError if some non-constant variable is met *)
 let rec valuate_parsed_update_arithmetic_expression constants = function
@@ -545,6 +548,7 @@ let rec valuate_parsed_update_arithmetic_expression constants = function
 		)
 	| Parsed_DF_constant var_value -> numconst_value_or_fail var_value
 	| Parsed_DF_unary_min parsed_discrete_factor -> NumConst.neg (valuate_parsed_update_factor constants parsed_discrete_factor)
+	| Builtin_function_rational_of_int parsed_update_arithmetic_expression
 	| Parsed_DF_expression parsed_update_arithmetic_expression -> valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression
 
 
@@ -602,6 +606,7 @@ and search_variable_of_discrete_arithmetic_expression index_of_variables constan
         | Parsed_DT_factor factor -> search_variable_of_discrete_factor factor
 
     and search_variable_of_discrete_factor = function
+        | Builtin_function_rational_of_int expr
         | Parsed_DF_expression expr -> search_variable_of_discrete_arithmetic_expression_rec expr
         | Parsed_DF_unary_min _ -> raise (InvalidModel)
         | Parsed_DF_variable variable_name ->
@@ -659,6 +664,7 @@ and convert_parsed_discrete_factor2 index_of_variables constants = function
 		else DF_variable (Hashtbl.find index_of_variables variable_name)
 	| Parsed_DF_constant var_value -> DF_constant var_value
 	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (convert_parsed_discrete_arithmetic_expression2 index_of_variables constants parsed_discrete_arithmetic_expression)
+	| Builtin_function_rational_of_int parsed_discrete_arithmetic_expression -> DF_rational_of_int (convert_parsed_discrete_arithmetic_expression2 index_of_variables constants parsed_discrete_arithmetic_expression)
 	| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (convert_parsed_discrete_factor2 index_of_variables constants parsed_discrete_factor)
 
 
@@ -721,6 +727,7 @@ and convert_parsed_discrete_factor useful_parsing_model_information = function
 		else DF_variable (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name)
 	| Parsed_DF_constant var_value -> DF_constant var_value
 	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+	| Builtin_function_rational_of_int parsed_discrete_arithmetic_expression -> DF_rational_of_int (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
 	| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
 
 
@@ -2173,7 +2180,9 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
             )
         (* Parenthesis used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
         (* Note : This error was managed by the syntactic analysis (parser) at the time when we could only use linear expressions *)
-        | Parsed_DF_expression expr -> raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
+        | Parsed_DF_expression expr
+        (* TODO benjamin see if correct ? *)
+        | Builtin_function_rational_of_int expr -> raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
 
 let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
     | Parsed_arithmetic_expression _ ->
@@ -2680,8 +2689,10 @@ let linear_term_of_parsed_update_arithmetic_expression index_of_variables consta
             constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
 		| Parsed_DF_unary_min parsed_discrete_factor ->
 			update_coef_array_in_parsed_update_factor mult_factor parsed_discrete_factor
-		| Parsed_DF_expression parsed_update_arithmetic_expression ->
-			update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
+		| Parsed_DF_expression parsed_update_arithmetic_expression
+	    (* TODO benjamin see if correct ? *)
+		| Builtin_function_rational_of_int parsed_update_arithmetic_expression ->
+		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
 	in
 
 	(* Call the recursive function updating the coefficients *)
@@ -3603,6 +3614,7 @@ and check_parsed_discrete_factor useful_parsing_model_information = function
 			true
 		)
 	| Parsed_DF_constant _ -> true
+	| Builtin_function_rational_of_int parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
 		check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min parsed_discrete_factor ->

@@ -55,6 +55,7 @@ and discrete_factor =
 	| DF_variable of Automaton.variable_index
 	| DF_constant of DiscreteValue.discrete_value
 	| DF_expression of discrete_arithmetic_expression
+	| DF_rational_of_int of discrete_arithmetic_expression
 	| DF_unary_min of discrete_factor
 
 (************************************************************)

@@ -51,6 +51,7 @@ and discrete_factor =
 	| DF_variable of Automaton.variable_index
 	| DF_constant of DiscreteValue.discrete_value
 	| DF_expression of discrete_arithmetic_expression
+	| DF_rational_of_int of discrete_arithmetic_expression
 	| DF_unary_min of discrete_factor
 
 
@@ -197,9 +198,10 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
 		    add_parenthesis_to_unary_minus (
 		         (string_of_factor customized_string discrete_factor)
 		    ) discrete_factor
+		| DF_rational_of_int discrete_arithmetic_expression ->
+		    string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 		| DF_expression discrete_arithmetic_expression ->
-			(*** TODO: simplify a bit? ***)
-			(string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
+			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 	(* Call top-level *)
 	in string_of_arithmetic_expression customized_string
 
@@ -329,10 +331,10 @@ let rec eval_discrete_factor discrete_valuation = function
 
 	| DF_constant variable_value ->
 		variable_value
-		
+
 	| DF_expression discrete_arithmetic_expression ->
 		eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression
-	
+
 	| DF_unary_min discrete_factor ->
 		DiscreteValue.neg (eval_discrete_factor discrete_valuation discrete_factor)
 
@@ -341,11 +343,11 @@ and eval_discrete_term discrete_valuation = function
 		DiscreteValue.mul
 		(eval_discrete_term discrete_valuation discrete_term)
 		(eval_discrete_factor discrete_valuation discrete_factor)
-		
+
 	| DT_div (discrete_term, discrete_factor) ->
 		let numerator	= (eval_discrete_term discrete_valuation discrete_term) in
 		let denominator	= (eval_discrete_factor discrete_valuation discrete_factor) in
-		
+
 		(* Check for 0-denominator *)
 		if DiscreteValue.equal denominator (DiscreteValue.zero_of denominator) then(
 			raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (DiscreteValue.string_of_value numerator) ^ " / " ^ (DiscreteValue.string_of_value denominator) ^ ""))
@@ -355,7 +357,7 @@ and eval_discrete_term discrete_valuation = function
 		DiscreteValue.div
 		numerator
 		denominator
-		
+
 	| DT_factor discrete_factor ->
 		eval_discrete_factor discrete_valuation discrete_factor
 
@@ -364,12 +366,12 @@ and eval_discrete_arithmetic_expression discrete_valuation = function
 		DiscreteValue.add
 		(eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression)
 		(eval_discrete_term discrete_valuation discrete_term)
-		
+
 	| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
 		DiscreteValue.sub
 		(eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression)
 		(eval_discrete_term discrete_valuation discrete_term)
-		
+
 	| DAE_term discrete_term ->
 		eval_discrete_term discrete_valuation discrete_term
 
@@ -444,23 +446,23 @@ let eval_int_expression discrete_valuation expr =
 let eval_int_expression discrete_valuation expr =
 
     let rec eval_int_expression_rec = function
-        | DAE_plus (expr, term) ->
+        | Int_plus (expr, term) ->
             Int32.add
                 (eval_int_expression_rec expr)
                 (eval_int_term term)
-        | DAE_minus (expr, term) ->
+        | Int_minus (expr, term) ->
             Int32.sub
                 (eval_int_expression_rec expr)
                 (eval_int_term term)
-        | DAE_term term ->
+        | Int_term term ->
             eval_int_term term
 
     and eval_int_term = function
-        | DT_mul (term, factor) ->
+        | Int_mul (term, factor) ->
             Int32.mul
             (eval_int_term term)
             (eval_int_factor factor)
-        | DT_div (term, factor) ->
+        | Int_div (term, factor) ->
             let numerator	= (eval_int_term term) in
             let denominator	= (eval_int_factor factor) in
 
@@ -474,17 +476,17 @@ let eval_int_expression discrete_valuation expr =
                 numerator
                 denominator
 
-        | DT_factor factor ->
+        | Int_factor factor ->
             eval_int_factor factor
 
     and eval_int_factor = function
-        | DF_variable variable_index ->
+        | Int_variable variable_index ->
             DiscreteValue.int_value (discrete_valuation variable_index)
-        | DF_constant variable_value ->
+        | Int_constant variable_value ->
             DiscreteValue.int_value variable_value
-        | DF_expression expr ->
+        | Int_expression expr ->
             eval_int_expression_rec expr
-        | DF_unary_min factor ->
+        | Int_unary_min factor ->
             Int32.neg (eval_int_factor factor)
 
     in

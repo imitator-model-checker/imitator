@@ -85,6 +85,7 @@ let unzip l = List.fold_left
 	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
+        CT_BUILTIN_FUNC_RATIONAL_OF_INT
 
 
 %token EOF
@@ -520,6 +521,7 @@ arithmetic_factor:
 	| number { Parsed_DF_constant ($1) }
 	| NAME { Parsed_DF_variable $1 }
 	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+	| CT_BUILTIN_FUNC_RATIONAL_OF_INT LPAREN arithmetic_expression RPAREN { Builtin_function_rational_of_int $3 }
 ;
 
 number:

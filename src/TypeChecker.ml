@@ -141,6 +141,10 @@ and convert_literal_types_of_parsed_discrete_factor parsed_model target_type = f
         Parsed_DF_constant (DiscreteValue.convert_value_to_discrete_type var_value target_type)
     | Parsed_DF_expression expr ->
         Parsed_DF_expression (convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr)
+    | Builtin_function_rational_of_int expr ->
+        (* as it was already type checked, we convert inner expression of the built-in function to int *)
+        let inner_target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
+        Builtin_function_rational_of_int (convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model inner_target_type expr)
     | Parsed_DF_unary_min factor ->
         Parsed_DF_unary_min (convert_literal_types_of_parsed_discrete_factor parsed_model target_type factor)
 
@@ -163,20 +167,33 @@ and get_parsed_boolean_expression_discrete_type parsed_model = function
     | Parsed_False -> DiscreteValue.Var_type_discrete_bool
     | Parsed_Not expr -> get_parsed_boolean_expression_discrete_type parsed_model expr
     | Parsed_And (l_expr, r_expr)
-    | Parsed_Or (l_expr, r_expr) as be ->
+    | Parsed_Or (l_expr, r_expr) as parsed_boolean_expression ->
         let l_type = get_parsed_boolean_expression_discrete_type parsed_model l_expr in
         let r_type = get_parsed_boolean_expression_discrete_type parsed_model r_expr in
+        (*
         (* Check that left and right types are boolean *)
         if not (DiscreteValue.is_discrete_type_bool_type l_type && DiscreteValue.is_discrete_type_bool_type r_type) then (
             let error_msg =
                 "The expression \""
                 ^ (string_of_parsed_boolean_expression parsed_model be)
-                ^ "\" is not of type bool"
+                ^ "\" is not of type bool: "
+                ^ (DiscreteValue.string_of_var_type_discrete l_type)
+                ^ ","
+                ^ (DiscreteValue.string_of_var_type_discrete r_type)
             in
             raise (TypeError error_msg)
         )
         else
             l_type
+        *)
+        if l_type <> r_type then (
+            let error_msg = get_type_mixin_error_message l_type r_type (string_of_parsed_boolean_expression parsed_model parsed_boolean_expression) in
+            raise (TypeError error_msg)
+        )
+        else
+            (* Arbitrary return left member type *)
+            l_type
+
     | Parsed_Discrete_boolean_expression expr -> get_parsed_discrete_boolean_expression_discrete_type parsed_model expr
 
 and get_parsed_discrete_boolean_expression_discrete_type parsed_model = function
@@ -306,6 +323,20 @@ and get_parsed_discrete_factor_discrete_type parsed_model = function
         DiscreteValue.var_type_discrete_of_value var_value
     | Parsed_DF_expression expr ->
         get_parsed_discrete_arithmetic_expression_discrete_type parsed_model expr
+    | Builtin_function_rational_of_int expr ->
+        let expr_type = get_parsed_discrete_arithmetic_expression_discrete_type parsed_model expr in
+        if not (DiscreteValue.is_discrete_type_unknown_number_type expr_type || DiscreteValue.is_discrete_type_int_type expr_type) then (
+            raise (
+                TypeError (
+                    "Expression \""
+                    ^ (string_of_parsed_arithmetic_expression parsed_model expr)
+                    ^ "\" of type "
+                    ^ (DiscreteValue.string_of_var_type_discrete expr_type)
+                    ^ " is not an int expression"
+                )
+            )
+        ) else
+            DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational
     | Parsed_DF_unary_min factor ->
         get_parsed_discrete_factor_discrete_type parsed_model factor
 

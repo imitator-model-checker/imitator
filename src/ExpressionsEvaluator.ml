@@ -42,10 +42,14 @@ struct
 
         and eval_number_factor = function
             | DF_variable variable_index ->
+                ImitatorUtilities.print_message Verbose_standard "start variable eval ";
                 Convert.get_value (discrete_valuation variable_index)
             | DF_constant variable_value ->
-                Convert.get_value variable_value
+                ImitatorUtilities.print_message Verbose_standard "start constant eval";
+                Convert.get_value variable_value;
             | DF_expression expr ->
+                eval_expression_rec expr
+            | DF_rational_of_int expr ->
                 eval_expression_rec expr
             | DF_unary_min factor ->
                 Num.neg (eval_number_factor factor)

@@ -76,6 +76,11 @@ val is_discrete_type_compatibles : var_type_discrete -> var_type_discrete -> boo
 val is_discrete_type_unknown_number_type : var_type_discrete -> bool
 (* Check if discrete type is a Var_type_rational *)
 val is_rational_type : var_type -> bool
+
+(* Check if discrete type is a Var_type_discrete_rational *)
+val is_discrete_type_rational_type : var_type_discrete -> bool
+(* Check if discrete type is a Var_type_discrete_int *)
+val is_discrete_type_int_type : var_type_discrete -> bool
 (* Check if discrete type is a Var_type_bool *)
 val is_discrete_type_bool_type : var_type_discrete -> bool
 
@@ -153,6 +158,9 @@ val float_value : discrete_value -> float
 (*val convert_value : discrete_value -> var_type -> discrete_value*)
 (* Convert discrete value to another discrete type *)
 val convert_value_to_discrete_type : discrete_value -> var_type_discrete -> discrete_value
+
+(* Convert any discrete value to a Rational_value *)
+val convert_to_rational_value : discrete_value -> discrete_value
 
 (* Hash code of discrete value *)
 val hash : discrete_value -> int

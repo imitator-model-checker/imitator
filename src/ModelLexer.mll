@@ -101,6 +101,7 @@ rule token = parse
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
 	| "within"         { CT_WITHIN }
+        | "rational_of_int"{ CT_BUILTIN_FUNC_RATIONAL_OF_INT }
 
 
 
