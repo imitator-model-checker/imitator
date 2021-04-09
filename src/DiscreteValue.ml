@@ -134,7 +134,7 @@ let var_type_of_value = function
     | Bool_value _ -> var_type_bool
 
 (* Get discrete var type of a discrete value *)
-let var_type_discrete_of_value = function
+let discrete_type_of_value = function
     | Number_value _ -> Var_type_discrete_number Var_type_discrete_unknown_number
     | Rational_value _ -> Var_type_discrete_number Var_type_discrete_rational
     | Int_value _ -> Var_type_discrete_number Var_type_discrete_int
@@ -157,6 +157,7 @@ let customized_string_of_value customized_boolean_string = function
     | Int_value x -> Int32.to_string x
 
 let string_of_value = customized_string_of_value default_string
+
 (** Check value type  **)
 
 (* Check whether the value is rational *)
@@ -321,7 +322,7 @@ let add a b =
         | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Rational_value (NumConst.add a b)
         | Int_value a, Int_value b -> Int_value (Int32.add a b)
-        | _ -> raise (ComputingException ("add : " ^ (string_of_var_type_discrete (var_type_discrete_of_value a)) ^ "," ^ (string_of_var_type_discrete (var_type_discrete_of_value b))))
+        | _ -> raise (ComputingException ("add : " ^ (string_of_var_type_discrete (discrete_type_of_value a)) ^ "," ^ (string_of_var_type_discrete (discrete_type_of_value b))))
 
 (* Subtract two discrete value *)
 let sub a b =
@@ -329,7 +330,7 @@ let sub a b =
         | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Rational_value (NumConst.sub a b)
         | Int_value a, Int_value b -> Int_value (Int32.sub a b)
-        | x, y -> raise (ComputingException ("sub " ^ (string_of_var_type_discrete (var_type_discrete_of_value y)) ))
+        | x, y -> raise (ComputingException ("sub " ^ (string_of_var_type_discrete (discrete_type_of_value y)) ))
 
 (* Multiply two discrete value *)
 let mul a b =

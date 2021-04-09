@@ -89,7 +89,7 @@ val is_discrete_type_bool_type : var_type_discrete -> bool
 (* Get var type of a discrete value *)
 val var_type_of_value : discrete_value -> var_type
 (* Get discrete var type of a discrete value *)
-val var_type_discrete_of_value : discrete_value -> var_type_discrete
+val discrete_type_of_value : discrete_value -> var_type_discrete
 (* Get discrete type of a var type *)
 (* Note : clocks / parameter are of rational type *)
 val discrete_type_of_var_type : var_type -> var_type_discrete

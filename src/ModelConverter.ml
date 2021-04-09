@@ -117,7 +117,7 @@ let numconst_value_or_fail = function
     | DiscreteValue.Rational_value x -> x
     | x ->
         let str_value = DiscreteValue.string_of_value x in
-        let str_type = DiscreteValue.string_of_var_type_discrete (DiscreteValue.var_type_discrete_of_value x) in
+        let str_type = DiscreteValue.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value x) in
         let error_msg =
             "Linear expressions only support rational literals and constants, value "
             ^ str_value
@@ -2073,7 +2073,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			    (* Try to reduce expression to a value *)
 			    let discrete_value = ParsingStructureUtilities.try_reduce_parsed_global_expression_with_model useful_parsing_model_information expr in
 			    (* Check computed value type consistency *)
-                let discrete_value_type = DiscreteValue.var_type_discrete_of_value discrete_value in
+                let discrete_value_type = DiscreteValue.discrete_type_of_value discrete_value in
                 (* Get variable type *)
                 let variable_type = TypeChecker.get_discrete_type_of_variable useful_parsing_model_information discrete_index in
 

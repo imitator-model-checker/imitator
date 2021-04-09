@@ -314,13 +314,13 @@ and get_parsed_discrete_factor_discrete_type parsed_model = function
                 (* Retrieve the value of the global constant *)
                 let value = Hashtbl.find parsed_model.constants variable_name in
                 (* Get type of constant *)
-                DiscreteValue.var_type_discrete_of_value value
+                DiscreteValue.discrete_type_of_value value
             ) else (
                 raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
             )
         )
     | Parsed_DF_constant var_value ->
-        DiscreteValue.var_type_discrete_of_value var_value
+        DiscreteValue.discrete_type_of_value var_value
     | Parsed_DF_expression expr ->
         get_parsed_discrete_arithmetic_expression_discrete_type parsed_model expr
     | Builtin_function_rational_of_int expr ->
@@ -654,7 +654,7 @@ let check_type_assignment parsed_model variable_name expr =
 (* Check if a value is compatible with given type *)
 let check_value_compatible_with_type value var_type =
     (* Get discrete type of value *)
-    let value_type = DiscreteValue.var_type_discrete_of_value value in
+    let value_type = DiscreteValue.discrete_type_of_value value in
     (* Get discrete type of var type *)
     let var_type_discrete = DiscreteValue.discrete_type_of_var_type var_type in
     (* Check compatibility of discrete types *)
@@ -675,7 +675,7 @@ let check_constant_declarations evaluated_constants =
                 ^ " is not compatible with value "
                 ^ (DiscreteValue.string_of_value value)
                 ^ " of type "
-                ^ (DiscreteValue.string_of_var_type_discrete (DiscreteValue.var_type_discrete_of_value value))
+                ^ (DiscreteValue.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value value))
             )
         );
         is_compatible
