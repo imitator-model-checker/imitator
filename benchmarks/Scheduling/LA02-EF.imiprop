@@ -1,0 +1,24 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : LA02_2
+ * Description      : This property means "There exists an execution that leads to all tasks completion within the global deadline".
+ * Correctness      : ?
+ * Scalable         : no
+ * Generated        : ?
+ * Categories       : RTS
+ * Source           : Naoyuki Tamura. CSP2SAT: JSS benchmark results. 2007.
+ * bibkey           : [Tamura07]
+ * Author           : Naoyuki Tamura
+ * Modeling         : ?? (Romain Soulat?)
+ * Input by         : ?? (Romain Soulat?)
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/04/12
+ * Last modified    : 2021/04/12
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.0
+ ************************************************************)
+ 
+property := #synth EF(loc[checker] = success);

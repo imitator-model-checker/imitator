@@ -21,27 +21,7 @@
  * IMITATOR version : 3.0
  ************************************************************)
  
-var
-	time
-		: clock;
-	deadline = 231
-		: parameter;
 
-	c_1:clock;
-(* --	wcet_m_0_job_1, wcet_m_3_job_1, wcet_m_1_job_1, wcet_m_4_job_1, wcet_m_2_job_1:parameter; *)
-			wcet_m_0_job_1 = 20,
-			wcet_m_1_job_1 = 31,
-			wcet_m_2_job_1 = 17,
-			wcet_m_3_job_1 = 87,
-			wcet_m_4_job_1 = 76
-		:parameter;
-
-	c_2:clock;
-	wcet_m_4_job_2, wcet_m_2_job_2, wcet_m_0_job_2, wcet_m_1_job_2, wcet_m_3_job_2:parameter;
-
-
-	
-	
 automaton checker
 
 synclabs: m_0_job_1_beginning, m_0_job_1_finishing, m_3_job_1_beginning, m_3_job_1_finishing, m_1_job_1_beginning, m_1_job_1_finishing, m_4_job_1_beginning, m_4_job_1_finishing, m_2_job_1_beginning, m_2_job_1_finishing,m_4_job_2_beginning, m_4_job_2_finishing, m_2_job_2_beginning, m_2_job_2_finishing, m_0_job_2_beginning, m_0_job_2_finishing, m_1_job_2_beginning, m_1_job_2_finishing, m_3_job_2_beginning, m_3_job_2_finishing, DEADLINE;
@@ -388,48 +368,3 @@ loc success : invariant True
 
 end
 
-(************************************************************)
-(* Initial state *)
-(************************************************************)
-
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-			loc[checker] = check_1 &
-			loc[job_1] = m_0_waiting &
-			loc[job_2] = m_4_waiting &
-			c_1 = 0 &
-			c_2 = 0 &
-			time = 0 &
-
-			wcet_m_0_job_1 = 20 &
-			wcet_m_1_job_1 = 31 &
-			wcet_m_2_job_1 = 17 &
-			wcet_m_3_job_1 = 87 &
-			wcet_m_4_job_1 = 76 &
-
-(*--			wcet_m_0_job_2 = 24 &
---			wcet_m_1_job_2 = 18 &
---			wcet_m_2_job_2 = 32 &
---			wcet_m_3_job_2 = 81 &			
---			wcet_m_4_job_2 = 25 &*)
-			deadline = 231 &
-			True
-			
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-			& wcet_m_4_job_2 >= 0
-			& wcet_m_2_job_2 >= 0
-			& wcet_m_0_job_2 >= 0
-			& wcet_m_1_job_2 >= 0
-			& wcet_m_3_job_2 >= 0
-;
-
-			
-
-(************************************************************)
-(* The end *)
-(************************************************************)
-end
