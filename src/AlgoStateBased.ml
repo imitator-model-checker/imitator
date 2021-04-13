@@ -1509,11 +1509,6 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 			(* Compute its new value *)
 			let new_value = (*try( *)
 			DiscreteExpressionEvaluator.eval_global_expression (Location.get_discrete_value source_location) global_expression
-(*				) with Division_by_0_while_evaluating_discrete -> (
-					(*** NOTE: we could still go on with the computation by setting the discrete to, e.g., 0 but this seems really not good for a model checker ***)
-					raise (Division_by_0 ("Division by 0 encountered when evaluating the successor of the discrete variables!"))
-					(*** TODO: give more info (i.e., "Value of the current variables: TODO Update: TODO ") ****)
-				)*)
 			in
 
 			(* Check if already updated *)

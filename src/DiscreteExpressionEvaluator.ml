@@ -7,8 +7,12 @@ let rec eval_global_expression discrete_valuation = function
     | Bool_expression expr -> DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
 
 and eval_discrete_arithmetic_expression discrete_valuation = function
-    | Rational_arithmetic_expression expr -> DiscreteValue.Rational_value (eval_expression discrete_valuation expr)
-    | Int_arithmetic_expression expr -> DiscreteValue.Int_value (eval_int_expression discrete_valuation expr)
+    | Rational_arithmetic_expression expr ->
+        ImitatorUtilities.print_message Verbose_standard "Evaluate a rational expression !!!";
+        DiscreteValue.Rational_value (eval_expression discrete_valuation expr)
+    | Int_arithmetic_expression expr ->
+        ImitatorUtilities.print_message Verbose_standard "Evaluate a int expression !!!";
+        DiscreteValue.Int_value (eval_int_expression discrete_valuation expr)
 
 and eval_expression discrete_valuation expr =
     let rec eval_expression_rec = function
@@ -53,7 +57,6 @@ and eval_expression discrete_valuation expr =
         | DF_expression expr ->
             eval_expression_rec expr
         | DF_rational_of_int expr ->
-            ImitatorUtilities.print_message Verbose_standard "Evaluate a int expression !!!";
             (* TODO benjamin warning double conversion ! *)
             NumConst.numconst_of_int (Int32.to_int (eval_int_expression discrete_valuation expr))
         | DF_unary_min factor ->

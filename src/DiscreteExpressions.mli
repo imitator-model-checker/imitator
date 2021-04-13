@@ -131,36 +131,6 @@ val is_unknown_number_expression_type : expression_type -> bool
 (* Check if expression type is a bool of unknown number type *)
 val is_bool_of_unknown_number_expression_type : expression_type -> bool
 
-(* TODO benjamin comment all below *)
-(*
-val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discrete_value -> bool
-
-(************************************************************)
-(** Evaluate global expressions with a valuation            *)
-(************************************************************)
-val eval_global_expression : discrete_valuation -> global_expression -> DiscreteValue.discrete_value
-
-(************************************************************)
-(** Evaluate a discrete arithmetic expression with a valuation *)
-(************************************************************)
-val eval_discrete_arithmetic_expression : discrete_valuation -> discrete_arithmetic_expression -> DiscreteValue.discrete_value
-
-(************************************************************)
-(** Evaluate a rational expression with a valuation *)
-(************************************************************)
-val eval_rational_expression : discrete_valuation -> discrete_arithmetic_expression -> NumConst.t
-
-(************************************************************)
-(** Check whether a Boolean expression evaluates to true when valuated with a valuation *)
-(************************************************************)
-val is_boolean_expression_satisfied : discrete_valuation -> boolean_expression -> bool
-val check_discrete_boolean_expression : discrete_valuation -> discrete_boolean_expression -> bool
-*)
-
-(* TODO benjamin comment end *)
-
-
-
 (* String *)
 val customized_string_of_global_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string
 val string_of_global_expression : (Automaton.variable_index -> string) -> global_expression -> string
