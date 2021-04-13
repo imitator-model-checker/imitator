@@ -454,51 +454,6 @@ let check_only_discretes_in_parsed_global_expression index_of_variables type_of_
 (** Converting discrete arithmetic expressions *)
 (************************************************************)
 
-(*------------------------------------------------------------*)
-(* Convert a parsed_update_arithmetic_expression into a linear_term *)
-(*------------------------------------------------------------*)
-
-
-(* TODO benjamin see if used ??? *)
-(*** TODO (though really not critical): try to do some simplifications… ***)
-(* First valuate a parsed_update_arithmetic_expression if requested; raises InternalError if some non-constant variable is met *)
-let rec valuate_parsed_update_arithmetic_expression constants = function
-	| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		NumConst.add
-		(valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
-		(valuate_parsed_update_term constants parsed_update_term)
-	| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		NumConst.sub
-		(valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
-		(valuate_parsed_update_term constants parsed_update_term)
-	| Parsed_DAE_term parsed_update_term ->
-		valuate_parsed_update_term constants parsed_update_term;
-
-	and valuate_parsed_update_term constants = function
-	| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
-		NumConst.mul
-		(valuate_parsed_update_term constants parsed_update_term)
-		(valuate_parsed_update_factor constants parsed_update_factor)
-	| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
-		NumConst.div
-		(valuate_parsed_update_term constants parsed_update_term)
-		(valuate_parsed_update_factor constants parsed_update_factor)
-	| Parsed_DT_factor parsed_update_factor -> valuate_parsed_update_factor constants parsed_update_factor
-
-	and valuate_parsed_update_factor constants = function
-	| Parsed_DF_variable variable_name ->
-		if Hashtbl.mem constants variable_name then (
-            (* Retrieve the value of the global constant *)
-            let value = Hashtbl.find constants variable_name in
-            numconst_value_or_fail value
-		) else (
-		    raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'valuate_parsed_update_arithmetic_expression' although it should have been checked before."))
-		)
-	| Parsed_DF_constant var_value -> numconst_value_or_fail var_value
-	| Parsed_DF_unary_min parsed_discrete_factor -> NumConst.neg (valuate_parsed_update_factor constants parsed_discrete_factor)
-	| Builtin_function_rational_of_int parsed_update_arithmetic_expression
-	| Parsed_DF_expression parsed_update_arithmetic_expression -> valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression
-
 let rec convert_parsed_discrete_arithmetic_expression index_of_variables constants expr = function
     | DiscreteValue.Var_type_discrete_bool -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression2 index_of_variables constants expr)
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression2 index_of_variables constants expr)
@@ -691,7 +646,7 @@ let convert_parsed_int_arithmetic_expression_with_model  useful_parsing_model_in
 (* Convert parsed_discrete_boolean_expression *)
 (* It's a version without using useful_parsing_model_information *)
 (* TODO benjamin seems duplicate of convert_discrete_bool_expr*)
-let convert_parsed_discrete_boolean_expression2 index_of_variables constants number_type = function
+let convert_parsed_discrete_boolean_expression index_of_variables constants number_type = function
     | Parsed_arithmetic_expression expr ->
         (* Search boolean variables, constants in DF_variable, DF_constant *)
         search_variable_of_discrete_arithmetic_expression index_of_variables constants expr
@@ -719,8 +674,8 @@ let rec convert_parsed_discrete_arithmetic_expression_with_model useful_parsing_
     convert_parsed_discrete_arithmetic_expression useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
 
 (* Convert parsed_discrete_boolean_expression *)
-let convert_parsed_discrete_boolean_expression useful_parsing_model_information =
-    convert_parsed_discrete_boolean_expression2 useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
+let convert_parsed_discrete_boolean_expression_with_model useful_parsing_model_information =
+    convert_parsed_discrete_boolean_expression useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
 
 (* Get typed bool expression of global parsed expression *)
 (* discrete type is the inner type of the boolean expression, for example : *)
@@ -793,7 +748,7 @@ let convert_parsed_loc_predicate useful_parsing_model_information = function
 
 (* Convert parsed_simple_predicate *)
 let convert_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression useful_parsing_model_information (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational) parsed_discrete_boolean_expression)
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression_with_model useful_parsing_model_information (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational) parsed_discrete_boolean_expression)
 	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
 	| Parsed_state_predicate_true -> State_predicate_true
 	| Parsed_state_predicate_false -> State_predicate_false
@@ -1383,7 +1338,7 @@ let nonlinear_constraint_of_nonlinear_convex_predicate useful_parsing_model_info
             | Parsed_false_nonlinear_constraint -> raise False_exception
             | Parsed_nonlinear_constraint nonlinear_constraint  ->
                 (* Convert non-linear constraint to abstract model *)
-                let convert_nonlinear_constraint = convert_parsed_discrete_boolean_expression2 index_of_variables constants discrete_type nonlinear_constraint in
+                let convert_nonlinear_constraint = convert_parsed_discrete_boolean_expression index_of_variables constants discrete_type nonlinear_constraint in
                 (* Add typed discrete boolean expression to inequality list *)
                 convert_nonlinear_constraint :: nonlinear_inequalities
 
@@ -2638,15 +2593,17 @@ let linear_term_of_parsed_update_arithmetic_expression index_of_variables consta
 		(* Multiplication is only allowed with a constant multiplier *)
 		| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
 		(* Valuate the term *)
-		let valued_term = valuate_parsed_update_term constants parsed_update_term in
+		let valued_term = ParsingStructureUtilities.try_reduce_parsed_term constants parsed_update_term in
+		let numconst_valued_term = DiscreteValue.numconst_value valued_term in
 		(* Update coefficients *)
-		update_coef_array_in_parsed_update_factor (NumConst.mul valued_term mult_factor) parsed_update_factor
+		update_coef_array_in_parsed_update_factor (NumConst.mul numconst_valued_term mult_factor) parsed_update_factor
 
 		| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
 		(* Valuate the discrete factor *)
-		let valued_factor = valuate_parsed_update_factor constants parsed_update_factor in
+		let valued_factor = ParsingStructureUtilities.try_reduce_parsed_factor constants parsed_update_factor in
+		let numconst_valued_factor = DiscreteValue.numconst_value valued_factor in
 		(* Update coefficients *)
-		update_coef_array_in_parsed_update_term (NumConst.div mult_factor valued_factor) parsed_update_term
+		update_coef_array_in_parsed_update_term (NumConst.div mult_factor numconst_valued_factor) parsed_update_term
 
 		| Parsed_DT_factor parsed_update_factor ->
 		update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor

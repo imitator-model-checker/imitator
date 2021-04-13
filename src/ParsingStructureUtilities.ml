@@ -230,6 +230,14 @@ let try_reduce_parsed_global_expression constants expr =
     in
     try_reduce_parsed_global_expression_rec expr
 
+let try_reduce_parsed_term constants term =
+    let expr = Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term term))) in
+    try_reduce_parsed_global_expression constants expr
+
+let try_reduce_parsed_factor constants factor =
+    let expr = Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor factor)))) in
+    try_reduce_parsed_global_expression constants expr
+
 (* Try to reduce a parsed global expression, cannot take into account variables ! *)
 (* This function is used for computing constant values *)
 let try_reduce_parsed_global_expression_with_model useful_parsing_model_information (* expr *) =

@@ -33,3 +33,6 @@ val string_of_parsed_nonlinear_constraint : useful_parsing_model_information -> 
 
 val try_reduce_parsed_global_expression : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> global_expression -> DiscreteValue.discrete_value
 val try_reduce_parsed_global_expression_with_model : useful_parsing_model_information -> global_expression -> DiscreteValue.discrete_value
+
+val try_reduce_parsed_term : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> parsed_discrete_term -> DiscreteValue.discrete_value
+val try_reduce_parsed_factor : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> parsed_discrete_factor -> DiscreteValue.discrete_value
