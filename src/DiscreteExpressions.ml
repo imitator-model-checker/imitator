@@ -34,26 +34,50 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 type discrete_valuation = Automaton.discrete_index -> DiscreteValue.discrete_value
 
 
+
 (****************************************************************)
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
-type discrete_arithmetic_expression =
-	| DAE_plus of discrete_arithmetic_expression * discrete_term
-	| DAE_minus of discrete_arithmetic_expression * discrete_term
-	| DAE_term of discrete_term
+type rational_arithmetic_expression =
+	| DAE_plus of rational_arithmetic_expression * rational_term
+	| DAE_minus of rational_arithmetic_expression * rational_term
+	| DAE_term of rational_term
 
-and discrete_term =
-	| DT_mul of discrete_term * discrete_factor
-	| DT_div of discrete_term * discrete_factor
-	| DT_factor of discrete_factor
+and rational_term =
+	| DT_mul of rational_term * rational_factor
+	| DT_div of rational_term * rational_factor
+	| DT_factor of rational_factor
 
-and discrete_factor =
+and rational_factor =
 	| DF_variable of Automaton.variable_index
-	| DF_constant of DiscreteValue.discrete_value
-	| DF_expression of discrete_arithmetic_expression
-	| DF_rational_of_int of discrete_arithmetic_expression
-	| DF_unary_min of discrete_factor
+	| DF_constant of NumConst.t
+	| DF_expression of rational_arithmetic_expression
+	| DF_rational_of_int of int_arithmetic_expression
+	| DF_unary_min of rational_factor
 
+(************************************************************)
+(** Int arithmetic expressions for discrete variables *)
+(************************************************************)
+(************************************************************)
+and int_arithmetic_expression =
+	| Int_plus of int_arithmetic_expression * int_term
+	| Int_minus of int_arithmetic_expression * int_term
+	| Int_term of int_term
+
+and int_term =
+	| Int_mul of int_term * int_factor
+	| Int_div of int_term * int_factor
+	| Int_factor of int_factor
+
+and int_factor =
+	| Int_variable of Automaton.variable_index
+	| Int_constant of Int32.t
+	| Int_expression of int_arithmetic_expression
+	| Int_unary_min of int_factor
+
+type discrete_arithmetic_expression =
+    | Rational_arithmetic_expression of rational_arithmetic_expression
+    | Int_arithmetic_expression of int_arithmetic_expression
 
 (****************************************************************)
 (** Boolean expressions for discrete variables *)
@@ -80,17 +104,14 @@ and discrete_boolean_expression =
 	(** Discrete constant *)
 	| DB_constant of DiscreteValue.discrete_value
 
-type typed_boolean_expression = boolean_expression * DiscreteValue.var_type_discrete
-type typed_discrete_boolean_expression = discrete_boolean_expression * DiscreteValue.var_type_discrete
-type typed_discrete_arithmetic_expression = discrete_arithmetic_expression * DiscreteValue.var_type_discrete_number
 
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
 type global_expression =
     (* A typed expression *)
-    | Arithmetic_expression of typed_discrete_arithmetic_expression
-    | Bool_expression of typed_boolean_expression
+    | Arithmetic_expression of discrete_arithmetic_expression
+    | Bool_expression of boolean_expression
 
 (****************************************************************)
 (** Strings *)
@@ -145,13 +166,71 @@ let add_parenthesis_to_unary_minus str = function
     | DF_expression _ -> "(" ^ str ^ ")"
     | _ -> str
 
+
+
+
+
+
+(* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
+let is_int_factor_has_parenthesis = function
+    | Int_unary_min _
+    | Int_expression(Int_plus _)
+    | Int_expression(Int_minus _) -> true
+    | _ -> false
+
+(* Check if discrete factor is a multiplication *)
+let is_int_factor_is_mul = function
+    | Int_expression(Int_term(Int_mul _)) -> true
+    | _ -> false
+
+(* Check if a left expression should have parenthesis *)
+(* is (x + y) * z *)
+(* or (x - y) * z *)
+(* or (x + y) / z *)
+(* or (x - y) / z *)
+let is_left_int_expr_has_parenthesis = function
+    | Int_factor factor -> is_int_factor_has_parenthesis factor
+    | _ -> false
+
+(* Check if a right expression should have parenthesis *)
+(* is x * (y + z) *)
+(* or x * (y - z) *)
+(* or x / (y + z) *)
+(* or x / (y - z) *)
+(* or x / (y * z) *)
+let is_right_int_expr_has_parenthesis = function
+    (* check x / (y * z) *)
+    | Int_div (term, factor) when is_int_factor_is_mul factor -> true
+    (* check x / (y + z) or x / (y - z) *)
+    | Int_div (term, factor)
+    (* check x * (y + z) or x * (y - z) *)
+    | Int_mul (term, factor) -> is_int_factor_has_parenthesis factor
+    | _ -> false
+
+let add_left_parenthesis_int expr str =
+    if is_left_int_expr_has_parenthesis expr then "(" ^ str ^ ")" else str
+
+let add_right_parenthesis_int str expr =
+    if is_right_int_expr_has_parenthesis expr then "(" ^ str ^ ")" else str
+
+let add_parenthesis_to_unary_minus_int str = function
+    | Int_expression _ -> "(" ^ str ^ ")"
+    | _ -> str
+
+
+
+
 (* Convert an arithmetic expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
-let customized_string_of_arithmetic_expression customized_string variable_names =
+let rec customized_string_of_arithmetic_expression customized_string variable_names = function
+    | Rational_arithmetic_expression expr -> customized_string_of_rational_arithmetic_expression customized_string variable_names expr
+    | Int_arithmetic_expression expr -> customized_string_of_int_arithmetic_expression customized_string variable_names expr
+
+and customized_string_of_rational_arithmetic_expression customized_string variable_names =
     let rec string_of_arithmetic_expression customized_string = function
         (* Shortcut: Remove the "+0" / -"0" cases *)
         | DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
-        | DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when DiscreteValue.equal c (DiscreteValue.zero_of c) ->
+        | DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
             string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 
 		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
@@ -166,7 +245,7 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
 
 	and string_of_term customized_string = function
 		(* Eliminate the '1' coefficient *)
-		| DT_mul (DT_factor (DF_constant c), discrete_factor) when DiscreteValue.equal c (DiscreteValue.one_of c) ->
+		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
 			string_of_factor customized_string discrete_factor
 		| DT_mul (discrete_term, discrete_factor) as expr ->
 		add_left_parenthesis discrete_term (
@@ -192,20 +271,84 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
 
 	and string_of_factor customized_string = function
 		| DF_variable discrete_index -> variable_names discrete_index
-		| DF_constant discrete_value -> DiscreteValue.string_of_value discrete_value
+		| DF_constant value -> NumConst.to_string value
 		| DF_unary_min discrete_factor ->
 		    Constants.default_arithmetic_string.unary_min_string ^
 		    add_parenthesis_to_unary_minus (
 		         (string_of_factor customized_string discrete_factor)
 		    ) discrete_factor
 		| DF_rational_of_int discrete_arithmetic_expression ->
-		    string_of_arithmetic_expression customized_string discrete_arithmetic_expression
+		    customized_string_of_int_arithmetic_expression customized_string variable_names discrete_arithmetic_expression
 		| DF_expression discrete_arithmetic_expression ->
 			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 	(* Call top-level *)
 	in string_of_arithmetic_expression customized_string
+(* Convert an arithmetic expression into a string *)
+(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
+and customized_string_of_int_arithmetic_expression customized_string variable_names =
+
+    let rec string_of_int_arithmetic_expression customized_string = function
+        (* Shortcut: Remove the "+0" / -"0" cases *)
+        | Int_plus (expr, Int_factor (Int_constant c))
+        | Int_minus (expr, Int_factor (Int_constant c)) when Int32.equal c Int32.zero ->
+            string_of_int_arithmetic_expression customized_string expr
+
+		| Int_plus (expr, term) ->
+            (string_of_int_arithmetic_expression customized_string expr)
+            ^ Constants.default_arithmetic_string.plus_string
+            ^ (string_of_int_term customized_string term)
+
+		| Int_minus (expr, term) ->
+            (string_of_int_arithmetic_expression customized_string expr)
+            ^ Constants.default_arithmetic_string.minus_string
+            ^ (string_of_int_term customized_string term)
+
+        | Int_term term ->
+            string_of_int_term customized_string term
+
+	and string_of_int_term customized_string = function
+		(* Eliminate the '1' coefficient *)
+		| Int_mul (Int_factor (Int_constant c), factor) when Int32.equal c Int32.one ->
+			string_of_int_factor customized_string factor
+
+		| Int_mul (term, factor) as expr ->
+            add_left_parenthesis_int term (
+                (string_of_int_term customized_string term)
+            )
+            ^ Constants.default_arithmetic_string.mul_string
+            ^
+            (add_right_parenthesis_int (
+                string_of_int_factor customized_string factor
+            ) expr)
+
+		| Int_div (term, factor) as expr ->
+            add_left_parenthesis_int term (
+                (string_of_int_term customized_string term)
+            )
+            ^ Constants.default_arithmetic_string.div_string
+            ^
+            (add_right_parenthesis_int (
+                string_of_int_factor customized_string factor
+            ) expr)
+
+		| Int_factor factor ->
+		    string_of_int_factor customized_string factor
+
+	and string_of_int_factor customized_string = function
+		| Int_variable i -> variable_names i
+		| Int_constant value -> Int32.to_string value
+		| Int_unary_min factor ->
+		    Constants.default_arithmetic_string.unary_min_string ^
+		    add_parenthesis_to_unary_minus_int (
+		         (string_of_int_factor customized_string factor)
+		    ) factor
+		| Int_expression expr ->
+			string_of_int_arithmetic_expression customized_string expr
+	(* Call top-level *)
+	in string_of_int_arithmetic_expression customized_string
 
 let string_of_arithmetic_expression = customized_string_of_arithmetic_expression Constants.default_string
+let string_of_int_arithmetic_expression = customized_string_of_int_arithmetic_expression Constants.default_string
 
 (* TODO benjamin ref in ModelPrinter *)
 let string_of_boolean_operations customized_string = function
@@ -254,21 +397,13 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
     | DB_variable discrete_index -> variable_names discrete_index
     | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
 
-let customized_string_of_typed_boolean_expression customized_string variable_names (typed_expr, discrete_type) =
-    customized_string_of_boolean_expression customized_string variable_names typed_expr
-
-let customized_string_of_typed_discrete_boolean_expression customized_string variable_names (typed_expr, discrete_type) =
-    customized_string_of_discrete_boolean_expression customized_string variable_names typed_expr
-
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.default_string
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.default_string
 
-let string_of_typed_boolean_expression = customized_string_of_typed_boolean_expression Constants.default_string
-let string_of_typed_discrete_boolean_expression = customized_string_of_typed_discrete_boolean_expression Constants.default_string
 
 let customized_string_of_global_expression customized_string variable_names = function
-    | Arithmetic_expression (expr, _) -> customized_string_of_arithmetic_expression customized_string.arithmetic_string variable_names expr
-    | Bool_expression (expr, _) -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
+    | Arithmetic_expression expr -> customized_string_of_arithmetic_expression customized_string.boolean_string variable_names expr
+    | Bool_expression expr -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
 
 let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
 

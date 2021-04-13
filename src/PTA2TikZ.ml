@@ -164,12 +164,9 @@ and string_of_discrete_boolean_expression variable_names = function
     | DB_variable discrete_index -> variable_names discrete_index
     | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
 
-
-let string_of_typed_boolean variable_names (expr, discrete_type) = string_of_boolean variable_names expr
-
 (** Convert a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
-	let wrap_if boolean_expr  = "\n\t\t\\multicolumn{2}{l}{if ($" ^ (string_of_typed_boolean variable_names_with_style boolean_expr) ^ "$) then}\\\\%" in
+	let wrap_if boolean_expr  = "\n\t\t\\multicolumn{2}{l}{if ($" ^ (string_of_boolean variable_names_with_style boolean_expr) ^ "$) then}\\\\%" in
 	let wrap_else = "\n\t\t\\multicolumn{2}{l}{else}\\\\%" in
 	let wrap_end = "\n\t\t\\multicolumn{2}{l}{end}%" in
 	let sep = "" in

@@ -77,7 +77,7 @@ let string_of_discrete_updates model discrete_updates =
 
 (** Converts a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
-	let wrap_if boolean_expr  = "if (" ^ (ModelPrinter.string_of_typed_boolean_expression model.variable_names boolean_expr) ^  ") then\\n" in
+	let wrap_if boolean_expr  = "if (" ^ (ModelPrinter.string_of_boolean_expression model.variable_names boolean_expr) ^  ") then\\n" in
 	let wrap_else = "\\nelse\\n" in
 	let wrap_end = "\\nend" in
 	let sep = "\\n" in

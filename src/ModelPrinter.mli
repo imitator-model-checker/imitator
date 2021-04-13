@@ -93,10 +93,9 @@ val string_of_boolean_template : (Automaton.variable_index -> Automaton.variable
 
 (** Convert a boolean expression into a string *)
 val string_of_boolean_expression : (Automaton.discrete_index -> Automaton.variable_name) -> boolean_expression -> string
-val string_of_typed_boolean_expression : (Automaton.discrete_index -> Automaton.variable_name) -> typed_boolean_expression -> string
 
 (** Template to convert conditional updates into a string *)
-val string_of_conditional_updates_template : AbstractModel.abstract_model -> conditional_update list -> (abstract_model -> clock_updates -> string) -> (abstract_model -> discrete_update list -> string) -> (typed_boolean_expression -> string) -> string -> string -> string -> string
+val string_of_conditional_updates_template : AbstractModel.abstract_model -> conditional_update list -> (abstract_model -> clock_updates -> string) -> (abstract_model -> discrete_update list -> string) -> (boolean_expression -> string) -> string -> string -> string -> string
 
 (** Convert conditional updates into a string *)
 val string_of_conditional_updates : AbstractModel.abstract_model -> conditional_update list -> string

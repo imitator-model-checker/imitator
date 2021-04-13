@@ -10,11 +10,11 @@ type nonlinear_inequality = DiscreteExpressions.discrete_arithmetic_expression *
 type nonlinear_constraint =
   | True_nonlinear_constraint
   | False_nonlinear_constraint
-  | Nonlinear_constraint of DiscreteExpressions.typed_discrete_boolean_expression list
+  | Nonlinear_constraint of DiscreteExpressions.discrete_boolean_expression list
 
 (* if all true, it's satisfied *)
 let check_nonlinear_inequalities discrete_valuation =
-  List.for_all (ExpressionsEvaluator.DiscreteExpressionsEvaluator.check_typed_discrete_boolean_expression discrete_valuation)
+  List.for_all (DiscreteExpressionEvaluator.check_discrete_boolean_expression discrete_valuation)
 
 (* Check if a nonlinear constraint is satisfied *)
 let check_nonlinear_constraint discrete_valuation = function
@@ -30,7 +30,7 @@ let customized_string_of_nonlinear_constraint customized_string variable_names =
 	    " " ^
 	    (string_of_list_of_string_with_sep
 		    customized_string.and_operator
-		    (List.rev_map (DiscreteExpressions.customized_string_of_typed_discrete_boolean_expression customized_string variable_names) nonlinear_constraint)
+		    (List.rev_map (DiscreteExpressions.customized_string_of_discrete_boolean_expression customized_string variable_names) nonlinear_constraint)
 	    )
 
 (* Get string of non-linear constraint inequalities with default strings *)

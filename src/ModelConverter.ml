@@ -499,49 +499,109 @@ let rec valuate_parsed_update_arithmetic_expression constants = function
 	| Builtin_function_rational_of_int parsed_update_arithmetic_expression
 	| Parsed_DF_expression parsed_update_arithmetic_expression -> valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression
 
+let rec convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr = function
+    | DiscreteValue.Var_type_discrete_bool -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression2 index_of_variables constants expr)
+    | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression2 index_of_variables constants expr)
+    | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int -> Int_arithmetic_expression (convert_parsed_int_arithmetic_expression2 index_of_variables constants expr)
 
 (* Convert a parsed discrete arithmetic expression *)
 (* It's a version without using useful_parsing_model_information *)
-let rec convert_parsed_discrete_arithmetic_expression2 index_of_variables constants = function
-	| Parsed_DAE_plus (expr , term) ->
-		DAE_plus (
-            (convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr),
-			(convert_parsed_discrete_term2 index_of_variables constants term)
-		)
-	| Parsed_DAE_minus (expr , term) ->
-		DAE_minus (
-			(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr),
-			(convert_parsed_discrete_term2 index_of_variables constants term)
-		)
-	| Parsed_DAE_term term ->
-	    DAE_term (convert_parsed_discrete_term2 index_of_variables constants term)
+and convert_parsed_rational_arithmetic_expression2 index_of_variables constants (* expr *) =
+    let rec convert_parsed_discrete_arithmetic_expression2_rec = function
+        | Parsed_DAE_plus (expr , term) ->
+            DAE_plus (
+                (convert_parsed_discrete_arithmetic_expression2_rec expr),
+                (convert_parsed_discrete_term2 term)
+            )
+        | Parsed_DAE_minus (expr , term) ->
+            DAE_minus (
+                (convert_parsed_discrete_arithmetic_expression2_rec expr),
+                (convert_parsed_discrete_term2 term)
+            )
+        | Parsed_DAE_term term ->
+            DAE_term (convert_parsed_discrete_term2 term)
 
-and convert_parsed_discrete_term2 index_of_variables constants = function
-	| Parsed_DT_mul (term , factor) ->
-		DT_mul (
-		    (convert_parsed_discrete_term2 index_of_variables constants term),
-		    (convert_parsed_discrete_factor2 index_of_variables constants factor)
-        )
-	| Parsed_DT_div (term, factor) ->
-		DT_div (
-		    (convert_parsed_discrete_term2 index_of_variables constants term) ,
-		    (convert_parsed_discrete_factor2 index_of_variables constants factor)
-        )
-	| Parsed_DT_factor factor ->
-	    DT_factor (convert_parsed_discrete_factor2 index_of_variables constants factor)
+    and convert_parsed_discrete_term2 = function
+        | Parsed_DT_mul (term , factor) ->
+            DT_mul (
+                (convert_parsed_discrete_term2 term),
+                (convert_parsed_discrete_factor2 factor)
+            )
+        | Parsed_DT_div (term, factor) ->
+            DT_div (
+                (convert_parsed_discrete_term2 term) ,
+                (convert_parsed_discrete_factor2 factor)
+            )
+        | Parsed_DT_factor factor ->
+            DT_factor (convert_parsed_discrete_factor2 factor)
 
-and convert_parsed_discrete_factor2 index_of_variables constants = function
-	| Parsed_DF_variable variable_name ->
-		(* First check whether this is a constant *)
-		if Hashtbl.mem constants variable_name then
-			DF_constant (Hashtbl.find constants variable_name)
-		(* Otherwise: a variable *)
-		else DF_variable (Hashtbl.find index_of_variables variable_name)
+    and convert_parsed_discrete_factor2 = function
+        | Parsed_DF_variable variable_name ->
+            (* First check whether this is a constant *)
+            if Hashtbl.mem constants variable_name then (
+                let value = Hashtbl.find constants variable_name in
+                let numconst_value = DiscreteValue.numconst_value value in
+                DF_constant numconst_value
+            )
+            (* Otherwise: a variable *)
+            else
+                DF_variable (Hashtbl.find index_of_variables variable_name)
 
-	| Parsed_DF_constant var_value -> DF_constant var_value
-	| Parsed_DF_expression expr -> DF_expression (convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr)
-	| Builtin_function_rational_of_int expr -> DF_rational_of_int (convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr)
-	| Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_discrete_factor2 index_of_variables constants factor)
+        | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.numconst_value var_value)
+        | Parsed_DF_expression expr -> DF_expression (convert_parsed_discrete_arithmetic_expression2_rec expr)
+        | Builtin_function_rational_of_int expr -> DF_rational_of_int (convert_parsed_int_arithmetic_expression2 index_of_variables constants expr)
+        | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_discrete_factor2 factor)
+    in
+    convert_parsed_discrete_arithmetic_expression2_rec
+
+and convert_parsed_int_arithmetic_expression2 index_of_variables constants (* expr *) =
+    let rec convert_parsed_int_arithmetic_expression2_rec = function
+        | Parsed_DAE_plus (expr , term) ->
+            Int_plus (
+                (convert_parsed_int_arithmetic_expression2_rec expr),
+                (convert_parsed_int_term2 term)
+            )
+        | Parsed_DAE_minus (expr , term) ->
+            Int_minus (
+                (convert_parsed_int_arithmetic_expression2_rec expr),
+                (convert_parsed_int_term2 term)
+            )
+        | Parsed_DAE_term term ->
+            Int_term (convert_parsed_int_term2 term)
+
+    and convert_parsed_int_term2 = function
+        | Parsed_DT_mul (term , factor) ->
+            Int_mul (
+                (convert_parsed_int_term2 term),
+                (convert_parsed_int_factor2 factor)
+            )
+        | Parsed_DT_div (term, factor) ->
+            Int_div (
+                (convert_parsed_int_term2 term) ,
+                (convert_parsed_int_factor2 factor)
+            )
+        | Parsed_DT_factor factor ->
+            Int_factor (convert_parsed_int_factor2 factor)
+
+    and convert_parsed_int_factor2 = function
+        | Parsed_DF_variable variable_name ->
+            (* First check whether this is a constant *)
+            if Hashtbl.mem constants variable_name then (
+                let value = Hashtbl.find constants variable_name in
+                let int_value = DiscreteValue.int_value value in
+                Int_constant int_value
+            )
+            (* Otherwise: a variable *)
+            else
+                Int_variable (Hashtbl.find index_of_variables variable_name)
+
+        | Parsed_DF_constant var_value -> Int_constant (DiscreteValue.int_value var_value)
+        | Parsed_DF_expression expr -> Int_expression (convert_parsed_int_arithmetic_expression2_rec expr)
+        | Parsed_DF_unary_min factor -> Int_unary_min (convert_parsed_int_factor2 factor)
+        | Builtin_function_rational_of_int _ -> raise (InvalidModel) (* TODO benjamin set a message *)
+    in
+    convert_parsed_int_arithmetic_expression2_rec
+
 
 
 (** Convert a Boolean operator to its abstract model *)
@@ -557,32 +617,32 @@ let convert_parsed_relop = function
 
 		
 (** Convert a boolean expression in its abstract model *)
-let rec convert_bool_expr index_of_variables constants = function
+let rec convert_bool_expr index_of_variables constants number_type = function
 	| Parsed_True -> True_bool
 	| Parsed_False -> False_bool
-	| Parsed_Not e -> Not_bool (convert_bool_expr index_of_variables constants e)
-	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
-	| Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
+	| Parsed_Not e -> Not_bool (convert_bool_expr index_of_variables constants number_type e)
+	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr index_of_variables constants number_type e1), (convert_bool_expr index_of_variables constants number_type e2))
+	| Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr index_of_variables constants number_type e1), (convert_bool_expr index_of_variables constants number_type e2))
 	| Parsed_Discrete_boolean_expression parsed_discrete_boolean_expression ->
-		Discrete_boolean_expression (convert_discrete_bool_expr index_of_variables constants parsed_discrete_boolean_expression)
+		Discrete_boolean_expression (convert_discrete_bool_expr index_of_variables constants number_type parsed_discrete_boolean_expression)
 
-and convert_discrete_bool_expr index_of_variables constants = function
+and convert_discrete_bool_expr index_of_variables constants number_type = function
     | Parsed_arithmetic_expression expr ->
         (* Search boolean variables, constants in DF_variable, DF_constant *)
         search_variable_of_discrete_arithmetic_expression index_of_variables constants expr
 
 	| Parsed_expression (expr1, relop, expr2) -> Expression (
-		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1),
+		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1 number_type),
 		(convert_parsed_relop relop),
-		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2)
+		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2 number_type)
 		)
 	| Parsed_expression_in (expr1, expr2, expr3) -> Expression_in (
-		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1),
-		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2),
-		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr3)
+		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1 number_type),
+		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2 number_type),
+		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr3 number_type)
 		)
     | Parsed_boolean_expression parsed_boolean_expression ->
-        Boolean_expression (convert_bool_expr index_of_variables constants parsed_boolean_expression)
+        Boolean_expression (convert_bool_expr index_of_variables constants number_type parsed_boolean_expression)
 
 and search_variable_of_discrete_arithmetic_expression index_of_variables constants expr =
     let rec search_variable_of_discrete_arithmetic_expression_rec = function
@@ -614,6 +674,12 @@ and search_variable_of_discrete_arithmetic_expression index_of_variables constan
 let convert_bool_expr_with_model useful_parsing_model_information =
     convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
 
+let convert_parsed_rational_arithmetic_expression_with_model useful_parsing_model_information =
+    convert_parsed_rational_arithmetic_expression2 useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
+
+let convert_parsed_int_arithmetic_expression_with_model  useful_parsing_model_information =
+    convert_parsed_int_arithmetic_expression2 useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
+
 (*------------------------------------------------------------*)
 (* Functions for property conversion *)
 (*------------------------------------------------------------*)
@@ -624,7 +690,8 @@ let convert_bool_expr_with_model useful_parsing_model_information =
 
 (* Convert parsed_discrete_boolean_expression *)
 (* It's a version without using useful_parsing_model_information *)
-let convert_parsed_discrete_boolean_expression2 index_of_variables constants = function
+(* TODO benjamin seems duplicate of convert_discrete_bool_expr*)
+let convert_parsed_discrete_boolean_expression2 index_of_variables constants number_type = function
     | Parsed_arithmetic_expression expr ->
         (* Search boolean variables, constants in DF_variable, DF_constant *)
         search_variable_of_discrete_arithmetic_expression index_of_variables constants expr
@@ -632,19 +699,19 @@ let convert_parsed_discrete_boolean_expression2 index_of_variables constants = f
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression (l_expr , parsed_relop ,r_expr) ->
 		Expression (
-			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants l_expr,
+			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants l_expr number_type,
 			convert_parsed_relop parsed_relop,
-			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants r_expr
+			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants r_expr number_type
 		)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in (expr1 , expr2 , expr3) ->
 		Expression_in (
-			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1,
-			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2,
-			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr3
+			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1 number_type,
+			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2 number_type,
+			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr3 number_type
 		)
 	| Parsed_boolean_expression boolean_expression ->
-	     Boolean_expression (convert_bool_expr index_of_variables constants boolean_expression)
+	     Boolean_expression (convert_bool_expr index_of_variables constants number_type boolean_expression)
 
 
 (* Convert parsed_discrete_arithmetic_expression *)
@@ -658,9 +725,10 @@ let convert_parsed_discrete_boolean_expression useful_parsing_model_information 
 (* Get typed bool expression of global parsed expression *)
 (* discrete type is the inner type of the boolean expression, for example : *)
 (* if x + 1 > 0 then x else y with x : int, give a Bool_expression (expr, Var_type_discrete_int) *)
-let bool_expression_of_parsed_expression useful_parsing_model_information expr discrete_var_type =
-     Bool_expression (convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants expr, discrete_var_type)
+let bool_expression_of_parsed_expression useful_parsing_model_information expr discrete_type =
+     Bool_expression (convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants discrete_type expr)
 
+(* TODO benjamin refactor this part ! *)
 (* Get typed rational expression of global parsed expression *)
 let rational_expression_of_parsed_expression useful_parsing_model_information (* expr *) =
 
@@ -670,7 +738,7 @@ let rational_expression_of_parsed_expression useful_parsing_model_information (*
 
     and rational_expression_of_parsed_discrete_boolean_expression = function
         | Parsed_arithmetic_expression expr ->
-            Arithmetic_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information expr, DiscreteValue.Var_type_discrete_rational)
+            Arithmetic_expression (Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression_with_model useful_parsing_model_information expr))
         | _ -> raise (TypeError "type error 2") (* TODO benjamin complete error *)
     in
     rational_expression_of_parsed_expression
@@ -684,7 +752,7 @@ let int_expression_of_parsed_expression useful_parsing_model_information (* expr
 
     and int_expression_of_parsed_discrete_boolean_expression = function
         | Parsed_arithmetic_expression expr ->
-            Arithmetic_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information expr, DiscreteValue.Var_type_discrete_int)
+            Arithmetic_expression (Int_arithmetic_expression (convert_parsed_int_arithmetic_expression_with_model useful_parsing_model_information expr))
         | _ -> raise (TypeError "") (* TODO benjamin complete error *)
     in
     int_expression_of_parsed_expression
@@ -725,7 +793,7 @@ let convert_parsed_loc_predicate useful_parsing_model_information = function
 
 (* Convert parsed_simple_predicate *)
 let convert_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression)
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression useful_parsing_model_information (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational) parsed_discrete_boolean_expression)
 	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
 	| Parsed_state_predicate_true -> State_predicate_true
 	| Parsed_state_predicate_false -> State_predicate_false
@@ -1267,12 +1335,13 @@ let linear_inequality_of_linear_constraint index_of_variables constants (linexpr
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.nonlinear_constraint into a NonlinearConstraint.nonlinear_inequality *)
 (*------------------------------------------------------------*)
+(*
 let nonlinear_inequality_of_nonlinear_constraint index_of_variables constants (expr1, relop, expr2) =
   let convert_relop = convert_parsed_relop relop
   in
     let nl_inequality : NonlinearConstraint.nonlinear_inequality = (convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1, convert_relop, convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2)
     in nl_inequality
-
+*)
 
 
 (*------------------------------------------------------------*)
@@ -1314,11 +1383,9 @@ let nonlinear_constraint_of_nonlinear_convex_predicate useful_parsing_model_info
             | Parsed_false_nonlinear_constraint -> raise False_exception
             | Parsed_nonlinear_constraint nonlinear_constraint  ->
                 (* Convert non-linear constraint to abstract model *)
-                let convert_nonlinear_constraint = convert_parsed_discrete_boolean_expression2 index_of_variables constants nonlinear_constraint in
-                (* Construct typed discrete boolean expression *)
-                let typed_discrete_boolean_expr = convert_nonlinear_constraint, discrete_type in
+                let convert_nonlinear_constraint = convert_parsed_discrete_boolean_expression2 index_of_variables constants discrete_type nonlinear_constraint in
                 (* Add typed discrete boolean expression to inequality list *)
-                typed_discrete_boolean_expr :: nonlinear_inequalities
+                convert_nonlinear_constraint :: nonlinear_inequalities
 
         ) [] convex_predicate
         in
@@ -2751,13 +2818,12 @@ let convert_updates useful_parsing_model_information updates : updates =
         let boolean_value, if_updates, else_updates = get_conditional_update_value u in
 
         (* TYPE CHECK *)
-        let uniformly_typed_bool_expr, bool_expr_type = TypeChecker.check_conditional useful_parsing_model_information boolean_value in
+        let uniformly_typed_bool_expr, discrete_type = TypeChecker.check_conditional useful_parsing_model_information boolean_value in
 
-        let convert_boolean_expr = convert_bool_expr_with_model useful_parsing_model_information uniformly_typed_bool_expr in
-        let typed_boolean_expr = convert_boolean_expr, bool_expr_type in
+        let convert_boolean_expr = convert_bool_expr_with_model useful_parsing_model_information discrete_type uniformly_typed_bool_expr in
         let convert_if_updates = convert_normal_updates useful_parsing_model_information if_updates in
         let convert_else_updates = convert_normal_updates useful_parsing_model_information else_updates in
-        (typed_boolean_expr, convert_if_updates, convert_else_updates)
+        (convert_boolean_expr, convert_if_updates, convert_else_updates)
     ) conditional_updates in
 
     (** updates abstract model *)

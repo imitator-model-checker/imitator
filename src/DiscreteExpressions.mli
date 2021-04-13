@@ -36,27 +36,51 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 type discrete_valuation = Automaton.discrete_index -> DiscreteValue.discrete_value
 
 
-(************************************************************)
-(************************************************************)
+
+
+(****************************************************************)
 (** Arithmetic expressions for discrete variables *)
-(************************************************************)
-(************************************************************)
-type discrete_arithmetic_expression =
-	| DAE_plus of discrete_arithmetic_expression * discrete_term
-	| DAE_minus of discrete_arithmetic_expression * discrete_term
-	| DAE_term of discrete_term
+(****************************************************************)
+type rational_arithmetic_expression =
+	| DAE_plus of rational_arithmetic_expression * rational_term
+	| DAE_minus of rational_arithmetic_expression * rational_term
+	| DAE_term of rational_term
 
-and discrete_term =
-	| DT_mul of discrete_term * discrete_factor
-	| DT_div of discrete_term * discrete_factor
-	| DT_factor of discrete_factor
+and rational_term =
+	| DT_mul of rational_term * rational_factor
+	| DT_div of rational_term * rational_factor
+	| DT_factor of rational_factor
 
-and discrete_factor =
+and rational_factor =
 	| DF_variable of Automaton.variable_index
-	| DF_constant of DiscreteValue.discrete_value
-	| DF_expression of discrete_arithmetic_expression
-	| DF_rational_of_int of discrete_arithmetic_expression
-	| DF_unary_min of discrete_factor
+	| DF_constant of NumConst.t
+	| DF_expression of rational_arithmetic_expression
+	| DF_rational_of_int of int_arithmetic_expression
+	| DF_unary_min of rational_factor
+
+(************************************************************)
+(** Int arithmetic expressions for discrete variables *)
+(************************************************************)
+(************************************************************)
+and int_arithmetic_expression =
+	| Int_plus of int_arithmetic_expression * int_term
+	| Int_minus of int_arithmetic_expression * int_term
+	| Int_term of int_term
+
+and int_term =
+	| Int_mul of int_term * int_factor
+	| Int_div of int_term * int_factor
+	| Int_factor of int_factor
+
+and int_factor =
+	| Int_variable of Automaton.variable_index
+	| Int_constant of Int32.t
+	| Int_expression of int_arithmetic_expression
+	| Int_unary_min of int_factor
+
+type discrete_arithmetic_expression =
+    | Rational_arithmetic_expression of rational_arithmetic_expression
+    | Int_arithmetic_expression of int_arithmetic_expression
 
 (************************************************************)
 (************************************************************)
@@ -86,18 +110,13 @@ and discrete_boolean_expression =
 	(** discrete constant in boolean expression *)
 	| DB_constant of DiscreteValue.discrete_value
 
-
-type typed_boolean_expression = boolean_expression * DiscreteValue.var_type_discrete
-type typed_discrete_boolean_expression = discrete_boolean_expression * DiscreteValue.var_type_discrete
-type typed_discrete_arithmetic_expression = discrete_arithmetic_expression * DiscreteValue.var_type_discrete_number
-
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
 type global_expression =
     (* A typed expression *)
-    | Arithmetic_expression of typed_discrete_arithmetic_expression
-    | Bool_expression of typed_boolean_expression
+    | Arithmetic_expression of discrete_arithmetic_expression
+    | Bool_expression of boolean_expression
 
 
 val string_of_expression_type : expression_type -> string
@@ -154,12 +173,6 @@ val string_of_boolean_expression : (Automaton.variable_index -> string) -> boole
 
 val customized_string_of_discrete_boolean_expression : Constants.customized_boolean_string -> (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
 val string_of_discrete_boolean_expression : (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
-
-val customized_string_of_typed_boolean_expression : Constants.customized_boolean_string -> (Automaton.variable_index -> string) -> typed_boolean_expression -> string
-val string_of_typed_boolean_expression : (Automaton.variable_index -> string) -> typed_boolean_expression -> string
-
-val customized_string_of_typed_discrete_boolean_expression : Constants.customized_boolean_string -> (Automaton.variable_index -> string) -> typed_discrete_boolean_expression -> string
-val string_of_typed_discrete_boolean_expression : (Automaton.variable_index -> string) -> typed_discrete_boolean_expression -> string
 
 val customized_string_of_arithmetic_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string
 val string_of_arithmetic_expression_for_jani : (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string

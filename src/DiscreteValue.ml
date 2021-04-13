@@ -288,12 +288,6 @@ let convert_value_to_discrete_type value target_type =
         ^ " type is not supported"
     )
 
-(*(* Convert discrete value to another var type *)*)
-(*let convert_value value target_type =*)
-(*    let target_discrete_type = discrete_type_of_var_type target_type in*)
-(*    convert_value_to_discrete_type value target_discrete_type*)
-
-
 (* Hash code of discrete value *)
 let hash = function
     | Number_value x
@@ -301,7 +295,7 @@ let hash = function
     | Bool_value x -> if x then 1 else 0
     | Int_value x -> Int32.to_int x
 
-(** Computing operation on values  **)
+(** Dynamic computing operations on values  **)
 
 (* Check if a discrete value is equal to another discrete value *)
 let equal a b =

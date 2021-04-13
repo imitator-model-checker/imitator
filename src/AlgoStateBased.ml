@@ -1444,7 +1444,7 @@ let get_updates (source_location : Location.global_location) (updates : Abstract
 	List.fold_left (
 	fun (acc_clock, acc_discrete) (conditional_update : AbstractModel.conditional_update) ->
 		let boolean_expr, if_updates, else_updates = conditional_update in
-		let filter_updates = if (ExpressionsEvaluator.DiscreteExpressionsEvaluator.is_typed_boolean_expression_satisfied (Location.get_discrete_value source_location) boolean_expr) then if_updates else else_updates in
+		let filter_updates = if (DiscreteExpressionEvaluator.is_boolean_expression_satisfied (Location.get_discrete_value source_location) boolean_expr) then if_updates else else_updates in
 		(merge_clock_updates acc_clock filter_updates.clock, list_append acc_discrete filter_updates.discrete)
 	) (updates.clock, updates.discrete) updates.conditional
 
@@ -1508,7 +1508,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
 			(* Compute its new value *)
 			let new_value = (*try( *)
-			ExpressionsEvaluator.DiscreteExpressionsEvaluator.eval_global_expression (Location.get_discrete_value source_location) global_expression
+			DiscreteExpressionEvaluator.eval_global_expression (Location.get_discrete_value source_location) global_expression
 (*				) with Division_by_0_while_evaluating_discrete -> (
 					(*** NOTE: we could still go on with the computation by setting the discrete to, e.g., 0 but this seems really not good for a model checker ***)
 					raise (Division_by_0 ("Division by 0 encountered when evaluating the successor of the discrete variables!"))

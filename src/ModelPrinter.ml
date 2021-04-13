@@ -289,7 +289,6 @@ let string_of_discrete_updates ?(sep=", ") model updates =
 	) updates)
 
 let string_of_boolean_expression = DiscreteExpressions.string_of_boolean_expression
-let string_of_typed_boolean_expression = DiscreteExpressions.string_of_typed_boolean_expression
 
 (** Return if there is no clock updates *)
 let no_clock_updates clock_updates =
@@ -329,7 +328,7 @@ let string_of_conditional_updates_template model conditional_updates string_of_c
 
 (** Convert a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
-	let wrap_if boolean_expr  = "if (" ^ (DiscreteExpressions.string_of_typed_boolean_expression model.variable_names boolean_expr) ^  ") then " in
+	let wrap_if boolean_expr  = "if (" ^ (DiscreteExpressions.string_of_boolean_expression model.variable_names boolean_expr) ^  ") then " in
 	let wrap_else = " else " in
 	let wrap_end = " end" in
 	let sep = ", " in
