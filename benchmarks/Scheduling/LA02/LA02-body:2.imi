@@ -1,7 +1,7 @@
-(************************************************************
- *                                IMITATOR MODEL
- *
- * Title            : LA02_2
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : LA02-body:2
  * Description      : ?
  * Correctness      : ?
  * Scalable         : no
@@ -13,13 +13,13 @@
  * Modeling         : ?? (Romain Soulat?)
  * Input by         : ?? (Romain Soulat?)
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : < 2013
  * Last modified    : 2021/04/12
  * Model version    : 0.1
- *
+ * 
  * IMITATOR version : 3.0
- ************************************************************)
+ ******************************************************************************)
  
 
 automaton checker

@@ -1,7 +1,7 @@
-(************************************************************
- *                                IMITATOR MODEL
- *
- * Title            : LA02_3
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : LA02:3-5param
  * Description      : ?
  * Correctness      : ?
  * Scalable         : no
@@ -13,13 +13,13 @@
  * Modeling         : ?? (Romain Soulat?)
  * Input by         : ?? (Romain Soulat?)
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : < 2013
  * Last modified    : 2021/04/12
  * Model version    : 0.1
- *
+ * 
  * IMITATOR version : 3.0
- ************************************************************)
+ ******************************************************************************)
  
  var
 	c_3:clock;
@@ -45,10 +45,10 @@
 	c_1:clock;
 	
 		wcet_m_0_job_1,
-		wcet_m_1_job_1 = 31,
-		wcet_m_2_job_1 = 17,
-		wcet_m_3_job_1 = 87,
-		wcet_m_4_job_1 = 76,
+		wcet_m_1_job_1,
+		wcet_m_2_job_1,
+		wcet_m_3_job_1,
+		wcet_m_4_job_1,
 	: parameter;
 
 
@@ -57,7 +57,7 @@
 (************************************************************)
 (* Including body *)
 (************************************************************)
-#include "LA02_3-body.imi";
+#include "LA02-body:3.imi";
 
 
 (************************************************************)
@@ -82,6 +82,10 @@ init :=
 	(* Parameter constraints *)
 	(*------------------------------------------------------------*)
 		& wcet_m_0_job_1 >= 0
+		& wcet_m_1_job_1 >= 0
+		& wcet_m_2_job_1 >= 0
+		& wcet_m_3_job_1 >= 0
+		& wcet_m_4_job_1 >= 0
 ;
 
 

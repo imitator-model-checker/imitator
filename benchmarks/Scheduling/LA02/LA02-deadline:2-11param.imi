@@ -1,7 +1,7 @@
-(************************************************************
- *                                IMITATOR MODEL
- *
- * Title            : LA02_3
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : LA02-deadline:2-11param
  * Description      : ?
  * Correctness      : ?
  * Scalable         : no
@@ -13,51 +13,36 @@
  * Modeling         : ?? (Romain Soulat?)
  * Input by         : ?? (Romain Soulat?)
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : < 2013
  * Last modified    : 2021/04/12
  * Model version    : 0.1
- *
+ * 
  * IMITATOR version : 3.0
- ************************************************************)
+ ******************************************************************************)
  
- var
-	c_3:clock;
-		wcet_m_0_job_3,
-		wcet_m_1_job_3,
-		wcet_m_2_job_3,
-		wcet_m_3_job_3,
-		wcet_m_4_job_3,
-	: parameter;
-
-	c_2:clock;
-	
-		wcet_m_0_job_2,
-		wcet_m_1_job_2,
-		wcet_m_2_job_2,
-		wcet_m_3_job_2,
-		wcet_m_4_job_2,
-	: parameter;
-
-	time: clock;
-	deadline: parameter;
+var
+	time
+		: clock;
+	deadline
+		: parameter;
 
 	c_1:clock;
-	
-		wcet_m_0_job_1,
-		wcet_m_1_job_1,
-		wcet_m_2_job_1,
-		wcet_m_3_job_1,
-		wcet_m_4_job_1,
-	: parameter;
+			wcet_m_0_job_1,
+			wcet_m_1_job_1,
+			wcet_m_2_job_1,
+			wcet_m_3_job_1,
+			wcet_m_4_job_1,
+		:parameter;
+
+	c_2:clock;
+	wcet_m_4_job_2, wcet_m_2_job_2, wcet_m_0_job_2, wcet_m_1_job_2, wcet_m_3_job_2:parameter;
 
 
-
-		
 (************************************************************)
 (* Including body *)
 (************************************************************)
-#include "LA02_3-body.imi";
+#include "LA02-body:2.imi";
 
 
 (************************************************************)
@@ -71,38 +56,29 @@ init :=
 			loc[checker] = check_1 &
 			loc[job_1] = m_0_waiting &
 			loc[job_2] = m_4_waiting &
-			loc[job_3] = m_1_waiting &
-			
 			c_1 = 0 &
 			c_2 = 0 &
-			c_3 = 0 &
 			time = 0
-
+			
 	(*------------------------------------------------------------*)
 	(* Parameter constraints *)
 	(*------------------------------------------------------------*)
-		& wcet_m_0_job_1 >= 0
-		& wcet_m_1_job_1 >= 0
-		& wcet_m_2_job_1 >= 0
-		& wcet_m_3_job_1 >= 0
-		& wcet_m_4_job_1 >= 0
+			& deadline >= 0
+			
+			& wcet_m_0_job_1 >= 0
+			& wcet_m_1_job_1 >= 0
+			& wcet_m_2_job_1 >= 0
+			& wcet_m_3_job_1 >= 0
+			& wcet_m_4_job_1 >= 0
 
-		& wcet_m_0_job_2 >= 0
-		& wcet_m_1_job_2 >= 0
-		& wcet_m_2_job_2 >= 0
-		& wcet_m_3_job_2 >= 0
-		& wcet_m_4_job_2 >= 0
-
-		& wcet_m_0_job_3 >= 0
-		& wcet_m_1_job_3 >= 0
-		& wcet_m_2_job_3 >= 0
-		& wcet_m_3_job_3 >= 0
-		& wcet_m_4_job_3 >= 0
-
-		& deadline >= 0
+			& wcet_m_4_job_2 >= 0
+			& wcet_m_2_job_2 >= 0
+			& wcet_m_0_job_2 >= 0
+			& wcet_m_1_job_2 >= 0
+			& wcet_m_3_job_2 >= 0
 ;
 
-
+			
 
 (************************************************************)
 (* The end *)
