@@ -9,32 +9,32 @@ let rec eval_global_expression discrete_valuation = function
 and eval_discrete_arithmetic_expression discrete_valuation = function
     | Rational_arithmetic_expression expr ->
         ImitatorUtilities.print_message Verbose_standard "Evaluate a rational expression !!!";
-        DiscreteValue.Rational_value (eval_expression discrete_valuation expr)
+        DiscreteValue.Rational_value (eval_rational_expression discrete_valuation expr)
     | Int_arithmetic_expression expr ->
         ImitatorUtilities.print_message Verbose_standard "Evaluate a int expression !!!";
         DiscreteValue.Int_value (eval_int_expression discrete_valuation expr)
 
-and eval_expression discrete_valuation expr =
-    let rec eval_expression_rec = function
+and eval_rational_expression discrete_valuation expr =
+    let rec eval_rational_expression_rec = function
         | DAE_plus (expr, term) ->
             NumConst.add
-                (eval_expression_rec expr)
-                (eval_term term)
+                (eval_rational_expression_rec expr)
+                (eval_rational_term term)
         | DAE_minus (expr, term) ->
             NumConst.sub
-                (eval_expression_rec expr)
-                (eval_term term)
+                (eval_rational_expression_rec expr)
+                (eval_rational_term term)
         | DAE_term term ->
-            eval_term term
+            eval_rational_term term
 
-    and eval_term = function
+    and eval_rational_term = function
         | DT_mul (term, factor) ->
             NumConst.mul
-            (eval_term term)
-            (eval_number_factor factor)
+            (eval_rational_term term)
+            (eval_rational_factor factor)
         | DT_div (term, factor) ->
-            let numerator	= (eval_term term) in
-            let denominator	= (eval_number_factor factor) in
+            let numerator	= (eval_rational_term term) in
+            let denominator	= (eval_rational_factor factor) in
 
             (* Check for 0-denominator *)
             if NumConst.equal denominator NumConst.zero then(
@@ -47,22 +47,22 @@ and eval_expression discrete_valuation expr =
                 denominator
 
         | DT_factor factor ->
-            eval_number_factor factor
+            eval_rational_factor factor
 
-    and eval_number_factor = function
+    and eval_rational_factor = function
         | DF_variable variable_index ->
             DiscreteValue.numconst_value (discrete_valuation variable_index)
         | DF_constant variable_value ->
             variable_value;
         | DF_expression expr ->
-            eval_expression_rec expr
+            eval_rational_expression_rec expr
         | DF_rational_of_int expr ->
             (* TODO benjamin warning double conversion ! *)
             NumConst.numconst_of_int (Int32.to_int (eval_int_expression discrete_valuation expr))
         | DF_unary_min factor ->
-            NumConst.neg (eval_number_factor factor)
+            NumConst.neg (eval_rational_factor factor)
     in
-    eval_expression_rec expr
+    eval_rational_expression_rec expr
 
 and eval_int_expression discrete_valuation (* expr *) =
     let rec eval_int_expression_rec = function

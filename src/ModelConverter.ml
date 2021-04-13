@@ -499,7 +499,7 @@ let rec valuate_parsed_update_arithmetic_expression constants = function
 	| Builtin_function_rational_of_int parsed_update_arithmetic_expression
 	| Parsed_DF_expression parsed_update_arithmetic_expression -> valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression
 
-let rec convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr = function
+let rec convert_parsed_discrete_arithmetic_expression index_of_variables constants expr = function
     | DiscreteValue.Var_type_discrete_bool -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression2 index_of_variables constants expr)
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression2 index_of_variables constants expr)
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int -> Int_arithmetic_expression (convert_parsed_int_arithmetic_expression2 index_of_variables constants expr)
@@ -507,15 +507,15 @@ let rec convert_parsed_discrete_arithmetic_expression2 index_of_variables consta
 (* Convert a parsed discrete arithmetic expression *)
 (* It's a version without using useful_parsing_model_information *)
 and convert_parsed_rational_arithmetic_expression2 index_of_variables constants (* expr *) =
-    let rec convert_parsed_discrete_arithmetic_expression2_rec = function
+    let rec convert_parsed_discrete_arithmetic_expression_rec = function
         | Parsed_DAE_plus (expr , term) ->
             DAE_plus (
-                (convert_parsed_discrete_arithmetic_expression2_rec expr),
+                (convert_parsed_discrete_arithmetic_expression_rec expr),
                 (convert_parsed_discrete_term2 term)
             )
         | Parsed_DAE_minus (expr , term) ->
             DAE_minus (
-                (convert_parsed_discrete_arithmetic_expression2_rec expr),
+                (convert_parsed_discrete_arithmetic_expression_rec expr),
                 (convert_parsed_discrete_term2 term)
             )
         | Parsed_DAE_term term ->
@@ -548,11 +548,11 @@ and convert_parsed_rational_arithmetic_expression2 index_of_variables constants 
                 DF_variable (Hashtbl.find index_of_variables variable_name)
 
         | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.numconst_value var_value)
-        | Parsed_DF_expression expr -> DF_expression (convert_parsed_discrete_arithmetic_expression2_rec expr)
+        | Parsed_DF_expression expr -> DF_expression (convert_parsed_discrete_arithmetic_expression_rec expr)
         | Builtin_function_rational_of_int expr -> DF_rational_of_int (convert_parsed_int_arithmetic_expression2 index_of_variables constants expr)
         | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_discrete_factor2 factor)
     in
-    convert_parsed_discrete_arithmetic_expression2_rec
+    convert_parsed_discrete_arithmetic_expression_rec
 
 and convert_parsed_int_arithmetic_expression2 index_of_variables constants (* expr *) =
     let rec convert_parsed_int_arithmetic_expression2_rec = function
@@ -632,14 +632,14 @@ and convert_discrete_bool_expr index_of_variables constants number_type = functi
         search_variable_of_discrete_arithmetic_expression index_of_variables constants expr
 
 	| Parsed_expression (expr1, relop, expr2) -> Expression (
-		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1 number_type),
+		(convert_parsed_discrete_arithmetic_expression index_of_variables constants expr1 number_type),
 		(convert_parsed_relop relop),
-		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2 number_type)
+		(convert_parsed_discrete_arithmetic_expression index_of_variables constants expr2 number_type)
 		)
 	| Parsed_expression_in (expr1, expr2, expr3) -> Expression_in (
-		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1 number_type),
-		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2 number_type),
-		(convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr3 number_type)
+		(convert_parsed_discrete_arithmetic_expression index_of_variables constants expr1 number_type),
+		(convert_parsed_discrete_arithmetic_expression index_of_variables constants expr2 number_type),
+		(convert_parsed_discrete_arithmetic_expression index_of_variables constants expr3 number_type)
 		)
     | Parsed_boolean_expression parsed_boolean_expression ->
         Boolean_expression (convert_bool_expr index_of_variables constants number_type parsed_boolean_expression)
@@ -699,24 +699,24 @@ let convert_parsed_discrete_boolean_expression2 index_of_variables constants num
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression (l_expr , parsed_relop ,r_expr) ->
 		Expression (
-			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants l_expr number_type,
+			convert_parsed_discrete_arithmetic_expression index_of_variables constants l_expr number_type,
 			convert_parsed_relop parsed_relop,
-			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants r_expr number_type
+			convert_parsed_discrete_arithmetic_expression index_of_variables constants r_expr number_type
 		)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in (expr1 , expr2 , expr3) ->
 		Expression_in (
-			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1 number_type,
-			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2 number_type,
-			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr3 number_type
+			convert_parsed_discrete_arithmetic_expression index_of_variables constants expr1 number_type,
+			convert_parsed_discrete_arithmetic_expression index_of_variables constants expr2 number_type,
+			convert_parsed_discrete_arithmetic_expression index_of_variables constants expr3 number_type
 		)
 	| Parsed_boolean_expression boolean_expression ->
 	     Boolean_expression (convert_bool_expr index_of_variables constants number_type boolean_expression)
 
 
 (* Convert parsed_discrete_arithmetic_expression *)
-let rec convert_parsed_discrete_arithmetic_expression useful_parsing_model_information =
-    convert_parsed_discrete_arithmetic_expression2 useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
+let rec convert_parsed_discrete_arithmetic_expression_with_model useful_parsing_model_information =
+    convert_parsed_discrete_arithmetic_expression useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
 
 (* Convert parsed_discrete_boolean_expression *)
 let convert_parsed_discrete_boolean_expression useful_parsing_model_information =
@@ -1339,7 +1339,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (linexpr
 let nonlinear_inequality_of_nonlinear_constraint index_of_variables constants (expr1, relop, expr2) =
   let convert_relop = convert_parsed_relop relop
   in
-    let nl_inequality : NonlinearConstraint.nonlinear_inequality = (convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1, convert_relop, convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2)
+    let nl_inequality : NonlinearConstraint.nonlinear_inequality = (convert_parsed_discrete_arithmetic_expression index_of_variables constants expr1, convert_relop, convert_parsed_discrete_arithmetic_expression index_of_variables constants expr2)
     in nl_inequality
 *)
 
