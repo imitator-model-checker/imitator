@@ -70,7 +70,8 @@ and parsed_discrete_factor =
 	| Parsed_DF_constant of DiscreteValue.discrete_value
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min of parsed_discrete_factor
-	| Builtin_function_rational_of_int of parsed_discrete_arithmetic_expression
+	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
+(*	| Parsed_pow_function of parsed_discrete_arithmetic_expression*)
 
 
 (****************************************************************)

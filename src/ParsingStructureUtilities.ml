@@ -87,7 +87,7 @@ and string_of_parsed_factor parsed_model = function
     | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression parsed_model arithmetic_expr
     | Parsed_DF_unary_min factor ->
         "-(" ^ (string_of_parsed_factor parsed_model factor) ^ ")"
-    | Builtin_function_rational_of_int arithmetic_expr ->
+    | Parsed_rational_of_int_function arithmetic_expr ->
         "rational_of_int(" ^ (string_of_parsed_arithmetic_expression parsed_model arithmetic_expr) ^ ")"
 
 and string_of_parsed_boolean_expression parsed_model = function

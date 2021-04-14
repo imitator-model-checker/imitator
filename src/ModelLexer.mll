@@ -80,7 +80,7 @@ rule token = parse
 	| "in"             { CT_IN }
 	| "is"             { CT_IS }
 	| "init"           { CT_INIT }
-	| "continuous"       { CT_CONTINUOUS }
+	| "continuous"     { CT_CONTINUOUS }
 	| "initially"      { CT_INITIALLY }
 	| "invariant"      { CT_INVARIANT }
 	| "loc"            { CT_LOC }
@@ -101,7 +101,8 @@ rule token = parse
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
 	| "within"         { CT_WITHIN }
-        | "rational_of_int"{ CT_BUILTIN_FUNC_RATIONAL_OF_INT }
+    | "rational_of_int"{ CT_BUILTIN_FUNC_RATIONAL_OF_INT }
+    | "pow"            { CT_POW }
 
 
 
