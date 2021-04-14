@@ -455,42 +455,42 @@ let check_only_discretes_in_parsed_global_expression index_of_variables type_of_
 (************************************************************)
 
 let rec convert_parsed_discrete_arithmetic_expression index_of_variables constants expr = function
-    | DiscreteValue.Var_type_discrete_bool -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression2 index_of_variables constants expr)
-    | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression2 index_of_variables constants expr)
-    | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int -> Int_arithmetic_expression (convert_parsed_int_arithmetic_expression2 index_of_variables constants expr)
+    | DiscreteValue.Var_type_discrete_bool -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression index_of_variables constants expr)
+    | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression index_of_variables constants expr)
+    | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int -> Int_arithmetic_expression (convert_parsed_int_arithmetic_expression index_of_variables constants expr)
 
 (* Convert a parsed discrete arithmetic expression *)
 (* It's a version without using useful_parsing_model_information *)
-and convert_parsed_rational_arithmetic_expression2 index_of_variables constants (* expr *) =
-    let rec convert_parsed_discrete_arithmetic_expression_rec = function
+and convert_parsed_rational_arithmetic_expression index_of_variables constants (* expr *) =
+    let rec convert_parsed_rational_arithmetic_expression_rec = function
         | Parsed_DAE_plus (expr , term) ->
             DAE_plus (
-                (convert_parsed_discrete_arithmetic_expression_rec expr),
-                (convert_parsed_discrete_term2 term)
+                (convert_parsed_rational_arithmetic_expression_rec expr),
+                (convert_parsed_rational_term term)
             )
         | Parsed_DAE_minus (expr , term) ->
             DAE_minus (
-                (convert_parsed_discrete_arithmetic_expression_rec expr),
-                (convert_parsed_discrete_term2 term)
+                (convert_parsed_rational_arithmetic_expression_rec expr),
+                (convert_parsed_rational_term term)
             )
         | Parsed_DAE_term term ->
-            DAE_term (convert_parsed_discrete_term2 term)
+            DAE_term (convert_parsed_rational_term term)
 
-    and convert_parsed_discrete_term2 = function
+    and convert_parsed_rational_term = function
         | Parsed_DT_mul (term , factor) ->
             DT_mul (
-                (convert_parsed_discrete_term2 term),
-                (convert_parsed_discrete_factor2 factor)
+                (convert_parsed_rational_term term),
+                (convert_parsed_rational_factor factor)
             )
         | Parsed_DT_div (term, factor) ->
             DT_div (
-                (convert_parsed_discrete_term2 term) ,
-                (convert_parsed_discrete_factor2 factor)
+                (convert_parsed_rational_term term) ,
+                (convert_parsed_rational_factor factor)
             )
         | Parsed_DT_factor factor ->
-            DT_factor (convert_parsed_discrete_factor2 factor)
+            DT_factor (convert_parsed_rational_factor factor)
 
-    and convert_parsed_discrete_factor2 = function
+    and convert_parsed_rational_factor = function
         | Parsed_DF_variable variable_name ->
             (* First check whether this is a constant *)
             if Hashtbl.mem constants variable_name then (
@@ -503,42 +503,42 @@ and convert_parsed_rational_arithmetic_expression2 index_of_variables constants 
                 DF_variable (Hashtbl.find index_of_variables variable_name)
 
         | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.numconst_value var_value)
-        | Parsed_DF_expression expr -> DF_expression (convert_parsed_discrete_arithmetic_expression_rec expr)
-        | Builtin_function_rational_of_int expr -> DF_rational_of_int (convert_parsed_int_arithmetic_expression2 index_of_variables constants expr)
-        | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_discrete_factor2 factor)
+        | Parsed_DF_expression expr -> DF_expression (convert_parsed_rational_arithmetic_expression_rec expr)
+        | Builtin_function_rational_of_int expr -> DF_rational_of_int (convert_parsed_int_arithmetic_expression index_of_variables constants expr)
+        | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_rational_factor factor)
     in
-    convert_parsed_discrete_arithmetic_expression_rec
+    convert_parsed_rational_arithmetic_expression_rec
 
-and convert_parsed_int_arithmetic_expression2 index_of_variables constants (* expr *) =
-    let rec convert_parsed_int_arithmetic_expression2_rec = function
+and convert_parsed_int_arithmetic_expression index_of_variables constants (* expr *) =
+    let rec convert_parsed_int_arithmetic_expression_rec = function
         | Parsed_DAE_plus (expr , term) ->
             Int_plus (
-                (convert_parsed_int_arithmetic_expression2_rec expr),
-                (convert_parsed_int_term2 term)
+                (convert_parsed_int_arithmetic_expression_rec expr),
+                (convert_parsed_int_term term)
             )
         | Parsed_DAE_minus (expr , term) ->
             Int_minus (
-                (convert_parsed_int_arithmetic_expression2_rec expr),
-                (convert_parsed_int_term2 term)
+                (convert_parsed_int_arithmetic_expression_rec expr),
+                (convert_parsed_int_term term)
             )
         | Parsed_DAE_term term ->
-            Int_term (convert_parsed_int_term2 term)
+            Int_term (convert_parsed_int_term term)
 
-    and convert_parsed_int_term2 = function
+    and convert_parsed_int_term = function
         | Parsed_DT_mul (term , factor) ->
             Int_mul (
-                (convert_parsed_int_term2 term),
-                (convert_parsed_int_factor2 factor)
+                (convert_parsed_int_term term),
+                (convert_parsed_int_factor factor)
             )
         | Parsed_DT_div (term, factor) ->
             Int_div (
-                (convert_parsed_int_term2 term) ,
-                (convert_parsed_int_factor2 factor)
+                (convert_parsed_int_term term) ,
+                (convert_parsed_int_factor factor)
             )
         | Parsed_DT_factor factor ->
-            Int_factor (convert_parsed_int_factor2 factor)
+            Int_factor (convert_parsed_int_factor factor)
 
-    and convert_parsed_int_factor2 = function
+    and convert_parsed_int_factor = function
         | Parsed_DF_variable variable_name ->
             (* First check whether this is a constant *)
             if Hashtbl.mem constants variable_name then (
@@ -551,11 +551,11 @@ and convert_parsed_int_arithmetic_expression2 index_of_variables constants (* ex
                 Int_variable (Hashtbl.find index_of_variables variable_name)
 
         | Parsed_DF_constant var_value -> Int_constant (DiscreteValue.int_value var_value)
-        | Parsed_DF_expression expr -> Int_expression (convert_parsed_int_arithmetic_expression2_rec expr)
-        | Parsed_DF_unary_min factor -> Int_unary_min (convert_parsed_int_factor2 factor)
+        | Parsed_DF_expression expr -> Int_expression (convert_parsed_int_arithmetic_expression_rec expr)
+        | Parsed_DF_unary_min factor -> Int_unary_min (convert_parsed_int_factor factor)
         | Builtin_function_rational_of_int _ -> raise (InvalidModel) (* TODO benjamin set a message *)
     in
-    convert_parsed_int_arithmetic_expression2_rec
+    convert_parsed_int_arithmetic_expression_rec
 
 
 
@@ -630,10 +630,10 @@ let convert_bool_expr_with_model useful_parsing_model_information =
     convert_bool_expr useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
 
 let convert_parsed_rational_arithmetic_expression_with_model useful_parsing_model_information =
-    convert_parsed_rational_arithmetic_expression2 useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
+    convert_parsed_rational_arithmetic_expression useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
 
 let convert_parsed_int_arithmetic_expression_with_model  useful_parsing_model_information =
-    convert_parsed_int_arithmetic_expression2 useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
+    convert_parsed_int_arithmetic_expression useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
 
 (*------------------------------------------------------------*)
 (* Functions for property conversion *)
