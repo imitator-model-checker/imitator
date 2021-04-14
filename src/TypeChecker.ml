@@ -645,27 +645,20 @@ let check_type_assignment parsed_model variable_name expr =
     let expr_var_type_discrete = get_expression_discrete_type parsed_model expr in
     (* Check expression / variable type consistency *)
     let is_consistent = DiscreteValue.is_discrete_type_compatibles variable_type expr_var_type_discrete in
-
+    print_message Verbose_standard ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type_discrete variable_type)
+    ^ " is compatible with expr of type " ^ (DiscreteValue.string_of_var_type_discrete expr_var_type_discrete));
     (* Not consistent ? raise a type error with appropriate message*)
     if not (is_consistent) then (
         raise (TypeError (get_error_message variable_name variable_type expr_var_type_discrete expr))
     );;
 
-(* Check if a value is compatible with given type *)
-let check_value_compatible_with_type value var_type =
-    (* Get discrete type of value *)
-    let value_type = DiscreteValue.discrete_type_of_value value in
-    (* Get discrete type of var type *)
-    let var_type_discrete = DiscreteValue.discrete_type_of_var_type var_type in
-    (* Check compatibility of discrete types *)
-    DiscreteValue.is_discrete_type_compatibles value_type var_type_discrete
 
 (* Check that constant declarations are well typed *)
 let check_constant_declarations evaluated_constants =
 
     (* Check type consistency between constant type and value *)
     let is_types_consistents = List.for_all (fun (name, _, value, var_type) ->
-        let is_compatible = check_value_compatible_with_type value var_type in
+        let is_compatible = DiscreteValue.check_value_compatible_with_type value var_type in
         (* If not compatibles, display an error message *)
         if not (is_compatible) then (
             print_error ("Constant "

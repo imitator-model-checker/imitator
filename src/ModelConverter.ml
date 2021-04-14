@@ -4455,7 +4455,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Constants *)
 		print_message Verbose_high ("\n*** Constants:");
 		Hashtbl.iter (fun key value ->
-			print_message Verbose_total (key ^ " = " ^ (DiscreteValue.string_of_value value) ^ "")
+			print_message Verbose_high (key ^ " = " ^ (DiscreteValue.string_of_value value) ^ "")
 		) constants;
 	);
 

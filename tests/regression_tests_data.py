@@ -2470,6 +2470,50 @@ Error                                   : invalid model
 	{
 		## Test version             : 1
 		## Test since               : 2021/03/12
+		## Last modified            : 2021/04/14
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a constant is not initialized with a rational literal (type checking)',
+		'input_files': ['type_checking/constant-int-divide-type-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'constant-int-divide-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/04/14
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a variable is not initialized with a rational literal (type checking)',
+		'input_files': ['type_checking/variable-int-divide-type-error.imi'],
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'variable-int-divide-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
 		## Last modified            : 2021/03/12
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria

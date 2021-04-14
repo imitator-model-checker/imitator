@@ -1,0 +1,64 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that a constant is not initialized with a rational
+ * Description      : Init a constant with a rational number should lead to an error
+ * Correctness      : Type error 
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/03/12
+ * Last modified    : 2021/04/14
+ * Model version    : 0.1
+ *
+ * IMITATOR version : > 3.0.0
+ ************************************************************)
+var 
+    x = 0,
+        : clock;
+    i = 2 / 3 (* forbidden assignment *)
+    	: int;
+
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when True goto lend;
+	
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+    ;
+    continuous = 
+        & x >= 0
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -78,13 +78,6 @@ let string_of_var_type = function
 
 (** Check types **)
 
-(* Check if two discrete types are compatible *)
-let is_discrete_type_compatibles type_a type_b =
-    match type_a, type_b with
-    | Var_type_discrete_number _, Var_type_discrete_bool
-    | Var_type_discrete_bool, Var_type_discrete_number _ -> false
-    | _, _ -> true
-
 (* Check if a Var_type is a Var_type_discrete of anything *)
 let is_discrete_type = function
     | Var_type_discrete _ -> true
@@ -144,6 +137,33 @@ let discrete_type_of_var_type = function
     | Var_type_clock
     | Var_type_parameter -> Var_type_discrete_number Var_type_discrete_rational
     | Var_type_discrete x -> x
+
+(* Check if two discrete types are compatible *)
+let is_discrete_type_compatibles type_a type_b =
+    match type_a, type_b with
+    | Var_type_discrete_number _, Var_type_discrete_bool
+    | Var_type_discrete_bool, Var_type_discrete_number _ -> false
+    | _, _ -> true
+
+(* Check if two discrete types are compatible *)
+(* Taking account of the direction of assignment *)
+(* as type_a x = value : type_b *)
+(* So int x = 4 / 3 is forbidden, but rational x = 4 is authorized *)
+let is_discrete_type_compatibles type_a type_b =
+    match type_a, type_b with
+    | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_rational
+    | Var_type_discrete_number _, Var_type_discrete_bool
+    | Var_type_discrete_bool, Var_type_discrete_number _ -> false
+    | _, _ -> true
+
+(* Check if a value is compatible with given type *)
+let check_value_compatible_with_type value var_type =
+    (* Get discrete type of value *)
+    let value_type = discrete_type_of_value value in
+    (* Get discrete type of var type *)
+    let var_type_discrete = discrete_type_of_var_type var_type in
+    (* Check compatibility of discrete types *)
+    is_discrete_type_compatibles var_type_discrete value_type
 
 (************************************************************)
 (** Value functions  *)

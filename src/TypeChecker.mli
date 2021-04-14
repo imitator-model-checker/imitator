@@ -59,8 +59,5 @@ val check_conditional : ParsingStructure.useful_parsing_model_information -> Par
 (* If not, raise a TypeError exception with an error message *)
 val check_type_assignment : ParsingStructure.useful_parsing_model_information -> variable_name -> ParsingStructure.global_expression -> unit
 
-(* Check if a value is compatible with given type *)
-val check_value_compatible_with_type : DiscreteValue.discrete_value -> DiscreteValue.var_type -> bool
-
 (* Check that constant declarations are well typed *)
 val check_constant_declarations : (variable_name * ParsingStructure.global_expression * DiscreteValue.discrete_value * DiscreteValue.var_type) list -> (variable_name * DiscreteValue.discrete_value) list

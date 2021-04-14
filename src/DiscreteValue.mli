@@ -69,8 +69,6 @@ val is_discrete_type : var_type -> bool
 (* Check if a Var_type is a Var_type_number *)
 val is_number_type : var_type -> bool
 val is_discrete_type_number_type : var_type_discrete -> bool
-(* Check if two discrete types are compatible *)
-val is_discrete_type_compatibles : var_type_discrete -> var_type_discrete -> bool
 
 (* Check if discrete type is a Var_type_unknown_number *)
 val is_discrete_type_unknown_number_type : var_type_discrete -> bool
@@ -83,6 +81,11 @@ val is_discrete_type_rational_type : var_type_discrete -> bool
 val is_discrete_type_int_type : var_type_discrete -> bool
 (* Check if discrete type is a Var_type_bool *)
 val is_discrete_type_bool_type : var_type_discrete -> bool
+
+(* Check if two discrete types are compatible *)
+val is_discrete_type_compatibles : var_type_discrete -> var_type_discrete -> bool
+(* Check if a value is compatible with given type *)
+val check_value_compatible_with_type : discrete_value -> var_type -> bool
 
 (** Values and types  **)
 
