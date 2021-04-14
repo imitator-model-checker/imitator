@@ -13474,10 +13474,10 @@ end
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'purpose'    : 'Test init state printing - old state zone (printing)',
-		'input_files': ['init_zone/old-init-zone-printing.imi'],
+		'input_files': ['init_state/old-init-state-printing.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
-			{'file': 'old-init-zone-printing-regenerated.imi' , 'content' : """
+			{'file': 'old-init-state-printing-regenerated.imi' , 'content' : """
 var 
 	i, j
 		: discrete;
@@ -13557,10 +13557,10 @@ end
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'purpose'    : 'Test init state printing - new init state (printing)',
-		'input_files': ['init_zone/new-init-zone-printing.imi'],
+		'input_files': ['init_state/new-init-state-printing.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
-			{'file': 'new-init-zone-printing-regenerated.imi' , 'content' : """
+			{'file': 'new-init-state-printing-regenerated.imi' , 'content' : """
 var 
 	b
 		: bool;
