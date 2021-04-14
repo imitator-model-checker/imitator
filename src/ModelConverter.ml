@@ -2084,11 +2084,12 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
                     Constant (NumConst.neg numconst_value)
                 | _ -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
             )
-        (* Parenthesis used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
-        (* Note : This error was managed by the syntactic analysis (parser) at the time when we could only use linear expressions *)
-        | Parsed_DF_expression expr
-        (* TODO benjamin see if correct ? *)
-        | Parsed_rational_of_int_function expr -> raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
+
+        (* Nested expression used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
+        | Parsed_DF_expression expr ->
+            raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
+        | Parsed_rational_of_int_function expr ->
+            raise (InvalidExpression "Use of \"rational_of_int\" function is forbidden in an expression involving clock(s) or parameter(s)")
 
 let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
     | Parsed_arithmetic_expression _ ->

@@ -142,7 +142,7 @@ and convert_literal_types_of_parsed_discrete_factor parsed_model target_type = f
     | Parsed_DF_expression expr ->
         Parsed_DF_expression (convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr)
     | Parsed_rational_of_int_function expr ->
-        (* as it was already type checked, we convert inner expression of the built-in function to int *)
+        (* as it was already type checked, we convert inner expression of the function to int *)
         let inner_target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
         Parsed_rational_of_int_function (convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model inner_target_type expr)
     | Parsed_DF_unary_min factor ->

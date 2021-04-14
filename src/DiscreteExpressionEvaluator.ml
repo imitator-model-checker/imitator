@@ -58,6 +58,7 @@ and eval_rational_expression discrete_valuation expr =
             eval_rational_expression_rec expr
         | DF_rational_of_int expr ->
             (* TODO benjamin warning double conversion ! *)
+            ImitatorUtilities.print_message Verbose_standard "Evaluate a int expression";
             NumConst.numconst_of_int (Int32.to_int (eval_int_expression discrete_valuation expr))
         | DF_unary_min factor ->
             NumConst.neg (eval_rational_factor factor)
