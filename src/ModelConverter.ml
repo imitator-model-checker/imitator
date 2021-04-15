@@ -1546,7 +1546,19 @@ let all_locations_different =
 (*------------------------------------------------------------*)
 (* Check that an update is well formed *)
 (*------------------------------------------------------------*)
-let check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update =
+let check_update useful_parsing_model_information automaton_name update =
+
+    let index_of_variables,
+        type_of_variables,
+        variable_names,
+        removed_variable_names,
+        constants =
+        useful_parsing_model_information.index_of_variables,
+        useful_parsing_model_information.type_of_variables,
+        useful_parsing_model_information.variable_names,
+        useful_parsing_model_information.removed_variable_names,
+        useful_parsing_model_information.constants
+    in
 
 	let check_update_normal (variable_name, global_expression) =
 		(* Check whether this variable is to be removed because unused elswhere than in resets *)
@@ -1595,15 +1607,45 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 		)
 		)
 	in
+
+    (* Function that check the condition of the conditional update *)
+	let check_update_condition_elements variable_name =
+        if not (List.mem variable_name variable_names) then (
+            print_error ("Variable " ^ variable_name ^ " in the condition of a conditional update is not declared.");
+            false
+        ) else (
+            let index = Hashtbl.find index_of_variables variable_name in
+            let type_of_variable = type_of_variables index in
+            match type_of_variable with
+            | Var_type_clock -> print_error ("The variable " ^ variable_name ^ " is a clock and cannot be used in the condition of a conditional update."); false
+            | Var_type_parameter -> print_error ("The variable " ^ variable_name ^ " is a parameter and cannot be used in the condition of a conditional update."); false
+            | _ -> print_message Verbose_total ("                Check passed."); true
+        )
+    in
 	(* Print some information *)
 	print_message Verbose_total ("              Checking one update");
 
 	match update with
 	| Normal update -> check_update_normal update
-	| Condition (_, updates_if, updates_else) ->
-		List.fold_left (fun acc u ->
-			(check_update_normal u) && acc
-		) true (updates_if@updates_else)
+	| Condition (update, updates_if, updates_else) ->
+	    (* Check if condition is well formed *)
+	    let is_well_formed_condition = check_f_in_parsed_update_boolean_expression check_update_condition_elements update in
+	    (* Check if updates are well formed *)
+	    let is_well_formed_updates = List.fold_left (fun acc u ->
+            (check_update_normal u) && acc
+        ) true (updates_if@updates_else)
+        in
+        (* If condition not well formed display specific message *)
+        if not (is_well_formed_condition) then (
+            print_error (
+                "Condition "
+                ^ (ParsingStructureUtilities.string_of_parsed_boolean_expression useful_parsing_model_information update)
+                ^ " is ill-formed"
+            );
+            false
+        )
+        else
+            is_well_formed_condition && is_well_formed_updates
 
 
 (*------------------------------------------------------------*)
@@ -1776,7 +1818,7 @@ let check_automata useful_parsing_model_information automata =
 				if not (all_variables_defined_in_nonlinear_convex_predicate variable_names constants convex_predicate) then well_formed := false;
 				(* Check the updates *)
 				print_message Verbose_total ("            Checking updates");
-				List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update) then well_formed := false) updates;
+				List.iter (fun update -> if not (check_update useful_parsing_model_information automaton_name update) then well_formed := false) updates;
 				(* Check the sync *)
 				print_message Verbose_total ("            Checking sync name ");
 				if not (check_sync sync_name_list automaton_name sync) then well_formed := false;

@@ -165,7 +165,7 @@ type update =
 	| Condition of condition_update (** Updates with conditions *)
 (** basic updating *)
 and normal_update = variable_name * global_expression
-(** conditional updating - NOTE: it does not support nested conditions *)
+(** conditional updating *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 
 (* A list of pairs (clock, rational) *)
