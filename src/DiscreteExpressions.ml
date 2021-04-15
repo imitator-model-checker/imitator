@@ -278,7 +278,9 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 		         (string_of_factor customized_string discrete_factor)
 		    ) discrete_factor
 		| DF_rational_of_int discrete_arithmetic_expression ->
-		    customized_string_of_int_arithmetic_expression customized_string variable_names discrete_arithmetic_expression
+		    "rational_of_int("
+		    ^ (customized_string_of_int_arithmetic_expression customized_string variable_names discrete_arithmetic_expression)
+		    ^ ")"
 		| DF_expression discrete_arithmetic_expression ->
 			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 	(* Call top-level *)
