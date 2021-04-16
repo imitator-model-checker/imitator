@@ -645,8 +645,8 @@ let check_type_assignment parsed_model variable_name expr =
     let expr_var_type_discrete = get_expression_discrete_type parsed_model expr in
     (* Check expression / variable type consistency *)
     let is_consistent = DiscreteValue.is_discrete_type_compatibles variable_type expr_var_type_discrete in
-    print_message Verbose_standard ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type_discrete variable_type)
-    ^ " is compatible with expr of type " ^ (DiscreteValue.string_of_var_type_discrete expr_var_type_discrete));
+(*    print_message Verbose_standard ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type_discrete variable_type)*)
+(*    ^ " is compatible with expr of type " ^ (DiscreteValue.string_of_var_type_discrete expr_var_type_discrete));*)
     (* Not consistent ? raise a type error with appropriate message*)
     if not (is_consistent) then (
         raise (TypeError (get_error_message variable_name variable_type expr_var_type_discrete expr))

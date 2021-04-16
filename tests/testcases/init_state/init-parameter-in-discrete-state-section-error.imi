@@ -1,0 +1,66 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Init parameter in discrete state section
+ * Description      : Init a parameter in discrete state section should lead to an error
+ * Correctness      : lend should be reachable and no error occurs
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Syntax
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/04/16
+ * Last modified    : 2021/04/16
+ * Model version    : 0.1
+ *
+ * IMITATOR version : > 3.0.0
+ ************************************************************)
+var 
+    x,
+        : clock;
+    p,
+        : parameter;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when p >= x goto lend;
+	
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        p := 5
+    ;
+    continuous = 
+        & True
+        & p >= 5
+        & x >= 0
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -13650,6 +13650,50 @@ end
 
 	,
 
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/16
+		## Last modified            : 2021/04/16
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that init of a clock in discrete state section is forbidden - new init state (semantic)',
+		'input_files': ['init_state/init-clock-in-discrete-state-section-error.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'init-clock-in-discrete-state-section-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/16
+		## Last modified            : 2021/04/16
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that init of a parameter in discrete state section is forbidden - new init state (semantic)',
+		'input_files': ['init_state/init-parameter-in-discrete-state-section-error.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'init-parameter-in-discrete-state-section-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 
 	#------------------------------------------------------------
 	{

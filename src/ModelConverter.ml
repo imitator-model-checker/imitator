@@ -1293,7 +1293,7 @@ let nonlinear_constraint_of_nonlinear_convex_predicate useful_parsing_model_info
         let nonlinear_inequalities = List.fold_left
         (fun nonlinear_inequalities nonlinear_inequality ->
 
-            (* TODO checking make here, so we should remove checking on guard level *)
+            (* TODO benjamin checking make here, so we should remove checking on guard level *)
             (* Get typed non-linear constraint inequality *)
             let uniform_typed_nonlinear_inequality, discrete_type = TypeChecker.check_nonlinear_constraint useful_parsing_model_information nonlinear_inequality in
 
@@ -2023,7 +2023,13 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			    (* Check computed value type consistency *)
                 let discrete_value_type = DiscreteValue.discrete_type_of_value discrete_value in
                 (* Get variable type *)
+                let var_type = TypeChecker.get_type_of_variable useful_parsing_model_information discrete_index in
                 let variable_type = TypeChecker.get_discrete_type_of_variable useful_parsing_model_information discrete_index in
+                let is_clock_or_parameter = var_type == DiscreteValue.Var_type_clock || var_type == DiscreteValue.Var_type_parameter in
+
+                if (is_clock_or_parameter) then (
+                    raise (TypeError ("Initialisation of a " ^ (DiscreteValue.string_of_var_type var_type) ^ " in discrete init state section is forbidden"))
+                );
 
                 if not (DiscreteValue.is_discrete_type_compatibles variable_type discrete_value_type) then
                     raise (TypeError ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type_discrete variable_type) ^ " is not compatible with value \"" ^ (DiscreteValue.string_of_value discrete_value) ^ "\" of type " ^ (DiscreteValue.string_of_var_type_discrete discrete_value_type)))
