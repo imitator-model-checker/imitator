@@ -409,6 +409,77 @@ let customized_string_of_global_expression customized_string variable_names = fu
 
 let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
 
+(* JANI *)
+
+(* TODO benjamin uncomment on merge with Dylan *)
+(*let customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names =*)
+(*    let rec string_of_int_arithmetic_expression customized_string = function*)
+(*        (* Shortcut: Remove the "+0" / -"0" cases *)*)
+(*        | Int_plus (discrete_arithmetic_expression, Int_factor (Int_constant c))*)
+(*        | Int_minus (discrete_arithmetic_expression, Int_factor (Int_constant c)) when Int32.equal c Int32.zero ->*)
+(*            string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression*)
+
+(*	| Int_plus (discrete_arithmetic_expression, discrete_term) ->*)
+(*		"{ \"op\": \"" ^ Constants.default_operator_string.plus_string ^ "\", "*)
+(*            ^ "\"left\" : " ^ (string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression) ^ ", " (*OTDO remove space for +*)*)
+(*            ^ "\"right\" : " ^ (string_of_int_term customized_string discrete_term) ^ "}"*)
+
+(*	| Int_minus (discrete_arithmetic_expression, discrete_term) ->*)
+(*		"{ \"op\": \"" ^ Constants.default_operator_string.minus_string ^ "\", "*)
+(*            ^ "\"left\" : " ^ (string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression) ^ ", " (*OTDO remove space for +*)*)
+(*            ^ "\"right\" : " ^ (string_of_int_term customized_string discrete_term) ^ "}"*)
+
+(*        | Int_term discrete_term -> string_of_int_term customized_string discrete_term*)
+
+(*	and string_of_int_term customized_string = function*)
+(*		(* Eliminate the '1' coefficient *)*)
+(*		| Int_mul (Int_factor (Int_constant c), discrete_factor) when Int32.equal c Int32.one ->*)
+(*			string_of_int_factor customized_string discrete_factor*)
+(*		| Int_mul (discrete_term, discrete_factor) as expr ->*)
+(*            add_left_parenthesis discrete_term (*)
+(*                (string_of_int_term customized_string discrete_term)*)
+(*            )*)
+(*            ^ Constants.default_operator_string.mul_string*)
+(*            ^*)
+(*            (add_right_parenthesis (*)
+(*                string_of_int_factor customized_string discrete_factor*)
+(*            ) expr)*)
+
+(*		| Int_div (discrete_term, discrete_factor) as expr ->*)
+(*            add_left_parenthesis discrete_term (*)
+(*                (string_of_int_term customized_string discrete_term)*)
+(*            )*)
+(*            ^ Constants.default_operator_string.div_string*)
+(*            ^*)
+(*            (add_right_parenthesis (*)
+(*                string_of_int_factor customized_string discrete_factor*)
+(*            ) expr)*)
+
+(*		| Int_factor discrete_factor -> string_of_int_factor customized_string discrete_factor*)
+
+(*	and string_of_int_factor customized_string = function*)
+(*		| Int_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""*)
+(*		| Int_constant value -> Int32.to_string value*)
+(*		| Int_unary_min discrete_factor ->*)
+(*		    Constants.default_operator_string.unary_min_string ^*)
+(*		    add_parenthesis_to_unary_minus (*)
+(*		         (string_of_int_factor customized_string discrete_factor)*)
+(*		    ) discrete_factor*)
+(*		| Int_expression discrete_arithmetic_expression ->*)
+(*			(*** TODO: simplify a bit? ***)*)
+(*			string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression*)
+(*	(* Call top-level *)*)
+(*	in string_of_int_arithmetic_expression customized_string*)
+
+(*let customized_string_of_global_expression_for_jani customized_string variable_names = function*)
+(*    | Arithmetic_expression expr -> customized_string_of_arithmetic_expression_for_jani customized_string.boolean_string variable_names expr*)
+(*    | Bool_expression expr -> customized_string_of_boolean_expression_for_jani customized_string.boolean_string variable_names expr*)
+(*and customized_string_of_arithmetic_expression_for_jani customized_string variable_names = function*)
+(*    | Rational_arithmetic_expression expr -> customized_string_of_rational_arithmetic_expression_for_jani customized_string variable_names expr*)
+(*    | Int_arithmetic_expression expr -> customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr*)
+
+(*let string_of_global_expression_for_jani = customized_string_of_global_expression_for_jani Constants.global_default_string*)
+
 (************************************************************)
 (** General functions on expression types *)
 (************************************************************)
