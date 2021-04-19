@@ -422,6 +422,7 @@ let rec convert_parsed_discrete_arithmetic_expression index_of_variables constan
     | DiscreteValue.Var_type_discrete_bool -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression index_of_variables constants expr)
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression index_of_variables constants expr)
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int -> Int_arithmetic_expression (convert_parsed_int_arithmetic_expression index_of_variables constants expr)
+    | _ -> raise InvalidModel (* TODO benjamin IMPORTANT DANGEROUS, IT MUST DISAPEAR WHEN I WILL USE NUMBER VAR TYPE INSTEAD OF VAR_TYPE ! *)
 
 (* Convert a parsed discrete arithmetic expression *)
 (* It's a version without using useful_parsing_model_information *)
@@ -1617,8 +1618,8 @@ let check_update useful_parsing_model_information automaton_name update =
             let index = Hashtbl.find index_of_variables variable_name in
             let type_of_variable = type_of_variables index in
             match type_of_variable with
-            | Var_type_clock -> print_error ("The variable " ^ variable_name ^ " is a clock and cannot be used in the condition of a conditional update."); false
-            | Var_type_parameter -> print_error ("The variable " ^ variable_name ^ " is a parameter and cannot be used in the condition of a conditional update."); false
+            | DiscreteValue.Var_type_clock -> print_error ("The variable " ^ variable_name ^ " is a clock and cannot be used in the condition of a conditional update."); false
+            | DiscreteValue.Var_type_parameter -> print_error ("The variable " ^ variable_name ^ " is a parameter and cannot be used in the condition of a conditional update."); false
             | _ -> print_message Verbose_total ("                Check passed."); true
         )
     in
@@ -1763,7 +1764,6 @@ let check_automata useful_parsing_model_information automata =
 	let index_of_automata		= useful_parsing_model_information.index_of_automata in
 	let index_of_variables		= useful_parsing_model_information.index_of_variables in
 	let array_of_location_names	= useful_parsing_model_information.array_of_location_names in
-	let removed_variable_names	= useful_parsing_model_information.removed_variable_names in
 	let type_of_variables		= useful_parsing_model_information.type_of_variables in
 	let variable_names			= useful_parsing_model_information.variable_names in
 

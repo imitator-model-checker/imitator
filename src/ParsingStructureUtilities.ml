@@ -15,7 +15,7 @@
 open Exceptions
 open ParsingStructure
 
-
+(*
 (* Map the leafs of an arithmetic expression according to map_function *)
 (* Leafs are Parsed_DF_variable, Parsed_DF_constant *)
 let map_parsed_arithmetic_expression_leafs map_function arithmetic_expr =
@@ -42,7 +42,7 @@ let map_parsed_arithmetic_expression_leafs map_function arithmetic_expr =
     in
 
     map_parsed_arithmetic_expression_leafs_rec arithmetic_expr
-
+*)
 
 (* String of a parsed expression *)
 (* Used for error message on type checking *)
@@ -169,7 +169,6 @@ let try_reduce_parsed_global_expression constants expr =
                 (try_reduce_parsed_factor factor)
         | Parsed_DT_factor factor ->
             try_reduce_parsed_factor factor
-
     and try_reduce_parsed_factor = function
         | Parsed_DF_variable variable_name ->
             if (Hashtbl.mem constants variable_name) then (
@@ -181,6 +180,8 @@ let try_reduce_parsed_global_expression constants expr =
         | Parsed_DF_expression arithmetic_expr -> try_reduce_parsed_arithmetic_expression arithmetic_expr
         | Parsed_DF_unary_min factor ->
             DiscreteValue.neg (try_reduce_parsed_factor factor)
+        | Parsed_rational_of_int_function expr ->
+            raise (InvalidExpression "Not implemented") (* TODO benjamin IMPORTANT implement this !!! *)
 
     and try_reduce_parsed_boolean_expression = function
 	    | Parsed_True -> DiscreteValue.bool_value_true
