@@ -210,6 +210,11 @@ let nb_merging_attempts = create_discrete_counter_and_register "StateSpace.mergi
 (* Numbers of actual merges *)
 let nb_merged = create_discrete_counter_and_register "StateSpace.merges" States_counter Verbose_standard
 
+(* Complete time for merging *)
+let tcounter_merge = create_time_counter_and_register "StateSpace.Merge time" States_counter Verbose_standard
+(* Complete time for state space reconstruction while merging *)
+let tcounter_merge_statespace = create_time_counter_and_register "StateSpace.Merge (reconstruct state space)" States_counter Verbose_standard
+
 (* Functions *)
 let counter_add_state = create_hybrid_counter_and_register "StateSpace.add_state" States_counter Verbose_experiments
 let counter_compute_predecessors_with_combined_transitions = create_hybrid_counter_and_register "StateSpace.compute_predecessors" States_counter Verbose_experiments
@@ -481,7 +486,7 @@ let get_combined_transition_between_states (state_space : state_space) (source_s
 		(* Iterate *)
 
 		List.iter (fun (combined_transition, state_index) -> if state_index = target_state_index then raise (Found_transition combined_transition)) successors;
-		
+
 		(* If not found *)
 		raise Not_found
 	) with Found_transition combined_transition -> combined_transition
@@ -1123,7 +1128,7 @@ let backward_symbolic_run state_space (target_state_index : state_index) (lasso 
 
 	in
 	(*------------------------------------------------------------*)
-	
+
 	(* If a lasso is provided, first reconstruct the final symbolic steps for the lasso *)
 	let (final_symbolic_steps , target_state_index_for_backward_reconstruction) = match lasso with
 		(* No lasso *)
@@ -1131,42 +1136,42 @@ let backward_symbolic_run state_space (target_state_index : state_index) (lasso 
 			[] , target_state_index
 
 		(* A non-empty lasso *)
-		| first_state_of_the_lasso :: rest_of_the_lasso -> 
-			
+		| first_state_of_the_lasso :: rest_of_the_lasso ->
+
 			(*** BADPROG: mix imperative and functional programming… ***)
 			let current_state_index : state_index ref = ref first_state_of_the_lasso in
-			
+
 			(* Convert each state of the lasso (except the last one) into a pair (state, combined_transition) *)
 			let final_symbolic_steps : symbolic_step list =
 			(* Iterate on the successor of each state of the lasso except the first one *)
 			List.map (fun (current_successor : state_index) : symbolic_step ->
 				(* Retrieve the transition (state, successor) *)
 				let combined_transition : combined_transition = get_combined_transition_between_states state_space !current_state_index current_successor in
-				
+
 				(* Compute *)
 				let symbolic_step : symbolic_step=
 					{source = !current_state_index ; transition = combined_transition }
 				in
-				
+
 				(* Update current index for next step *)
 				current_state_index := current_successor;
-				
+
 				(* Replace with the previously computed symbolic_step *)
 				symbolic_step
 			) rest_of_the_lasso
 			in
-			
+
 			(*** NOTE: the last state of the lasso is actually the current value of !current_state_index ***)
 			final_symbolic_steps, !current_state_index
 	in
-	
+
 	(* Call the recursive procedure and reverse the result *)
 	match backward_symbolic_run_rec target_state_index_for_backward_reconstruction with
-	
+
 	(* Oops! *)
 	(*** NOTE: what if the lasso is non-empty in this situation?! ***)
 	| None -> raise Not_found
-	
+
 	| Some symbolic_steps ->
 		(* Construct the structure symbolic_run *)
 		{
@@ -1210,10 +1215,10 @@ let states_compare (constraint_comparison_function : LinearConstraint.px_linear_
 
 		(* Retrieve the model *)
 		let model = Input.get_model() in
-		
+
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
-		
+
 		let constr1, constr2 =
 		(* Specific option to remove the global time clock *)
 		if options#no_global_time_in_comparison then(
@@ -1231,7 +1236,7 @@ let states_compare (constraint_comparison_function : LinearConstraint.px_linear_
 			(* Check with standard constraints *)
 			constr1, constr2
 		) in
-		
+
 		(* Perform the actual comparison *)
 		constraint_comparison_function constr1 constr2
 	)
@@ -1419,20 +1424,20 @@ let add_state state_space state_comparison (new_state : state) =
 						if state_included state new_state then(
 							(* Statistics *)
 							statespace_dcounter_nb_states_including#increment;
-							
+
 							(* Check if equality, i.e., reverse direction *)
 							if state_included new_state state then(
 								(* Print some information *)
 								print_message Verbose_medium ("Found an old state = the new state");
-								
+
 								(* Statistics *)
 								statespace_dcounter_nb_states_included#increment;
-								
+
 								raise (Found_old state_index)
 							)else(
 								(* Print some information *)
 								print_message Verbose_medium ("Found an old state < the new state");
-								
+
 								(* Replace old with new *)
 								replace_constraint state_space state_index new_state.px_constraint;
 
@@ -1534,6 +1539,8 @@ let add_p_constraint_to_states state_space p_constraint =
 
 (* Merges states in queue with states in state space. Removes unreachable states. Returns unmerged part of queue *)
 let merge state_space queue =
+	(* Statistics *)
+	tcounter_merge#start;
 
 (* Check if two states can be merged *)
 (*** NOTE: with side-effects! ***)
@@ -1647,7 +1654,16 @@ in
 					main_merger ss;
 					if Hashtbl.mem state_space.all_states s then (* treat s only if it is still reachable *)
 					let eaten = merge_state s in
-					if eaten <> [] then copy_and_reduce state_space s eaten
+					if eaten <> [] then(
+						(* Statistics *)
+						tcounter_merge_statespace#start;
+
+						(* Reconstruct state space *)
+						copy_and_reduce state_space s eaten;
+
+						(* Statistics *)
+						tcounter_merge_statespace#stop;
+					)
 				     end
 in
 	(* Do it! main function of StateSpace.merge *)
@@ -1665,6 +1681,10 @@ in
 		"[Merge] " ^ (string_of_int diff_states) ^ " states merged ("
 		^ (string_of_int diff_explored) ^ " explored, " ^ (string_of_int diff_queue) ^ " queued), out of "
 		^ (string_of_int orig_nb_states) ^ " states (" ^ (string_of_int orig_nb_queue) ^ " in queue)");
+
+	(* Statistics *)
+	tcounter_merge#stop;
+
 	(* return *)
 	new_queue
 
