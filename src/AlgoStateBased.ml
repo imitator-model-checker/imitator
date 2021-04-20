@@ -5006,6 +5006,9 @@ class virtual algoStateBased =
 					| Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
 					| _ -> ();
 				)
+			)
+			else if options#merge212 then(
+				raise (NotImplemented "merge v.2.12");
 			);
 			(*** END OLD MIXED VERSION (2020-09) ***)
 
@@ -5195,8 +5198,12 @@ class virtual algoStateBased =
 			
 			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
 
-			if options#merge (*|| options#merge_before*) then
+			if options#merge (*|| options#merge_before*) then(
 				new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
+			)
+			else if options#merge212 then(
+				raise (NotImplemented "merge v.2.12");
+			);
 			(*** END OLD MIXED VERSION (2020-09) ***)
 				
 			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)
