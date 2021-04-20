@@ -200,6 +200,7 @@ class imitator_options =
 		(* Merging states on the fly *)
 		val mutable merge : bool option				= None
 		val mutable mergeq : bool option			= None
+		val mutable merge212 : bool option			= None
 		(* Merging states on the fly (after pi0-compatibility check) *)
 (* 		val mutable merge_before = false *)
 
@@ -316,6 +317,10 @@ class imitator_options =
 		method mergeq								= value_of_option "mergeq" mergeq
 		method is_set_mergeq						= mergeq <> None
 		method set_mergeq b							= mergeq <- Some b
+
+		method merge212								= value_of_option "merge212" merge212
+		method is_set_merge212						= merge212 <> None
+		method set_merge212 b						= merge212 <- Some b
 
 (* 		method merge_before = merge_before *)
 		method merge_heuristic						= merge_heuristic
@@ -795,6 +800,10 @@ class imitator_options =
 				("-no-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm.
 				");
 
+				("-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some true), "Use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS");
+				("-no-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some false), " Do not use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS.
+				");
+
 				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Possible values are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.
 				");
 
@@ -967,7 +976,7 @@ class imitator_options =
 			(*------------------------------------------------------------*)
 			if property_file_name <> None then(
 				match imitator_mode with
-				| Syntax_check 
+				| Syntax_check
 				| State_space_computation
 				| Translation _
 				->
@@ -1000,7 +1009,7 @@ class imitator_options =
 			print_message Verbose_low ("Command: `" ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv) ^ "`" );
 
 
-			
+
 			(*------------------------------------------------------------*)
 			(* Print mode or property *)
 			(*------------------------------------------------------------*)
@@ -1081,7 +1090,7 @@ class imitator_options =
 				| None -> false
 				| Some property -> AlgorithmOptions.is_cartography property
 			in
-			
+
 
 			(*------------------------------------------------------------*)
 			(* Check if #witness is supported for this algorithm *)
@@ -1347,6 +1356,14 @@ class imitator_options =
 				end;
 			| None ->
 				print_message Verbose_medium ("Merging technique of [AFS13] enabled if requested by the algorithm.")
+			end;
+
+			(* OPTIONS *)
+			begin match merge212 with
+			| Some true ->
+				print_message Verbose_standard ("Merging technique of [AFS13] enabled (in version 2.12).");
+			| _ ->
+				print_message Verbose_medium ("Merging technique of [AFS13] (in version 2.12) disabled.")
 			end;
 
 (*			if !merge_before then

@@ -37,7 +37,7 @@ class imitator_options :
 		method carto_time_limit				: int option
 		method check_ippta					: bool
 		method check_point					: bool
-		
+
 		method comparison_operator			: AbstractAlgorithm.state_comparison_operator
 		method is_set_comparison_operator	: bool
 		method set_comparison_operator		: AbstractAlgorithm.state_comparison_operator -> unit
@@ -55,11 +55,11 @@ class imitator_options :
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination	: bool
 		method no_global_time_in_comparison	: bool
-		
+
 		method exploration_order			: AbstractAlgorithm.exploration_order
 		method is_set_exploration_order		: bool
 		method set_exploration_order		: AbstractAlgorithm.exploration_order -> unit
-		
+
 		method files_prefix					: string
 		method imitator_mode				: AbstractAlgorithm.imitator_mode
 
@@ -71,10 +71,13 @@ class imitator_options :
 		method is_set_merge					: bool
 		method set_merge					: bool -> unit
 
-		(* 		method merge_before : bool *)
 		method mergeq						: bool
 		method is_set_mergeq				: bool
 		method set_mergeq					: bool -> unit
+
+		method merge212						: bool
+		method is_set_merge212				: bool
+		method set_merge212					: bool -> unit
 
 		(* 		method merge_before : bool *)
 		method merge_heuristic				: merge_heuristic
@@ -89,12 +92,12 @@ class imitator_options :
 		method no_random					: bool
 		method no_time_elapsing				: bool
 		method no_variable_autoremove		: bool
-		
+
 		(* Method used for infinite-run (cycle) with non-Zeno assumption *)
 		method nz_method					: AbstractAlgorithm.nz_method
 		method is_set_nz_method				: bool
 		method set_nz_method				: AbstractAlgorithm.nz_method -> unit
-		
+
 		method output_bc_cart				: bool
 		method output_bc_result				: bool
 		method output_cart_x_min			: int option
@@ -113,7 +116,7 @@ class imitator_options :
 		method property_file_name			: string option
 		method states_limit					: int option
 		method statistics					: bool
-		
+
 		method subsumption					: bool
 		method is_set_subsumption			: bool
 		method set_subsumption				: bool -> unit
