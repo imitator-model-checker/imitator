@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2021/03/19
+ * Last modified     : 2021/04/21
  *
  ************************************************************)
  
@@ -1756,8 +1756,14 @@ let dot dot_image_extension radical dot_source_file : (string option) =
 	
 	let dot_success =
 	try (
+		(* Prepare the command *)
+		let dot_command = Constants.dot_binary_name ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "" in
+		
+		(* Print some information *)
+		print_message Verbose_high ("About to execute the following command: " ^ dot_command);
+
 		(* Actually call dot *)
-		let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "") in
+		let command_result = Sys.command dot_command in
 		
 		(* Print some information *)
 		print_message Verbose_medium ("Result of the `dot` command: " ^ (string_of_int command_result));
