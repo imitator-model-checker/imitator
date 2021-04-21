@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2020/12/15
+ * Last modified     : 2021/04/21
  *
  ************************************************************)
  
@@ -372,7 +372,7 @@ let waswere_of_int  i =
 	if i > 1 then "were" else "was"
 
 
-(** Escape \n & > for use in dot *)
+(** Escape \n & > & < for use in dot *)
 let escape_string_for_dot str =
 	(** BUG: cannot work with global replace *)
 (*		Str.global_substitute (Str.regexp ">\\|&") (fun s -> if s = ">" then "\\>" else if s = "&" then "\\&" else s)
@@ -381,7 +381,9 @@ let escape_string_for_dot str =
 	Str.global_replace (Str.regexp "\"") ("\\\"")
 		(Str.global_replace (Str.regexp "\n") (" \\n ")
 			(Str.global_replace (Str.regexp ">") ("\\>")
-				(Str.global_replace (Str.regexp "&") ("\\&") str)
+				(Str.global_replace (Str.regexp "<") ("\\<")
+					(Str.global_replace (Str.regexp "&") ("\\&") str)
+				)
 			)
 		)
 
