@@ -144,5 +144,7 @@ val string_of_boolean_expression : (Automaton.variable_index -> string) -> boole
 val customized_string_of_discrete_boolean_expression : Constants.customized_boolean_string -> (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
 val string_of_discrete_boolean_expression : (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
 
+val customized_string_of_global_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string
+val customized_string_of_discrete_boolean_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
 val customized_string_of_arithmetic_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string
 val string_of_arithmetic_expression_for_jani : (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string

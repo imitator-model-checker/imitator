@@ -595,7 +595,7 @@ let apply_updates_assign_gen (time_direction: time_direction) (linear_constraint
 						(* Consider cases for clocks *)
 						match model.type_of_variables variable_index with
 						(* Clocks: X = 0 *)
-						| Var_type_clock ->
+						| DiscreteValue.Var_type_clock ->
 							let x_lt = LinearConstraint.make_pxd_linear_term [
 								NumConst.one, variable_index;
 							] NumConst.zero in
