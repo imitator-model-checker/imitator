@@ -550,9 +550,11 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
 		    add_parenthesis_to_unary_minus (
 		         (string_of_factor customized_string discrete_factor)
 		    ) discrete_factor
-		| DF_expression discrete_arithmetic_expression ->
+		| DF_expression expr ->
 			(*** TODO: simplify a bit? ***)
-			(string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
+			string_of_arithmetic_expression customized_string expr
+		| DF_rational_of_int expr ->
+		    customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
 	(* Call top-level *)
 	in string_of_arithmetic_expression customized_string
 
@@ -615,12 +617,8 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 
-
-
-let string_of_arithmetic_expression_for_jani = customized_string_of_arithmetic_expression_for_jani Constants.global_default_string
-
 (** Convert a discrete_boolean_expression into a string *)
-let customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names = function
+and customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
 		let expr1 =  (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression1) in
@@ -653,6 +651,13 @@ let customized_string_of_discrete_boolean_expression_for_jani customized_string 
 			^ "\"right\": " ^ expr3
 			^ "}"
 		^ "}"
+    | Boolean_expression expr ->
+        customized_string_of_boolean_expression_for_jani customized_string variable_names expr
+    | DB_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
+    | DB_constant value -> DiscreteValue.string_of_value value
+
+
+let string_of_arithmetic_expression_for_jani = customized_string_of_arithmetic_expression_for_jani Constants.global_default_string
 
 (* TODO benjamin ref in ModelPrinter *)
 let string_of_discrete_boolean_expression_for_jani = customized_string_of_discrete_boolean_expression_for_jani Constants.global_default_string
