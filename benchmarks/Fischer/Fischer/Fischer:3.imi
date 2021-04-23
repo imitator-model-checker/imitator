@@ -121,11 +121,11 @@ end
 
 automaton observer
 
-	loc obs_OK: invariant True wait {}
+	loc obs_OK: invariant True
 		(* Change '2' with any number of processes in CS *)
 		when nb = 2 do {} goto obs_BAD;
 
-	loc obs_BAD: invariant True wait {}
+	loc obs_BAD: invariant True
 end (* observer *)
 
 

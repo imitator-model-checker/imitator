@@ -13,7 +13,7 @@
  # Script authors  : Michal Knapick, Étienne André
  #
  # Created         : 2015/05/15
- # Last modified   : 2020/08/14
+ # Last modified   : 2021/04/23
  #
  # IMITATOR version: 3
  ############################################################
@@ -83,11 +83,11 @@ def getVar(n):
 def getInit(n):
     print("\nautomaton observer")
 
-    print("\n\tloc obs_OK: invariant True wait {}")
+    print("\n\tloc obs_OK: invariant True")
     print("\t	(* Change '2' with any number of processes in CS *)")
     print("\t	when nb = 2 do {} goto obs_BAD;")
 
-    print("\n\tloc obs_BAD: invariant True wait {}")
+    print("\n\tloc obs_BAD: invariant True")
     print("end (* observer *)")
 
     print("\n\n\tinit := True")
