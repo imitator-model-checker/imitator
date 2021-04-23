@@ -33,7 +33,7 @@ open Result
 (** Customized values for constraint conversion *)
 (************************************************************)
 
-let jani_strings : customized_string = {
+let jani_boolean_strings : customized_boolean_string = {
 	true_string   = "true";
 	false_string  = "false";
 	and_operator  = "∧";
@@ -41,11 +41,16 @@ let jani_strings : customized_string = {
 	l_operator    = "<";
 	le_operator   = "≤";
 	eq_operator   = "=";
+	neq_operator   = "<>";
 	ge_operator   = ">";
 	g_operator    = "≥";
+	not_operator  = "¬";
 }
 
-let not_operator	= "¬"
+let jani_strings = {
+    arithmetic_string = Constants.default_arithmetic_string;
+    boolean_string = jani_boolean_strings;
+}
 
 let jani_separator = ", "
 
@@ -137,7 +142,7 @@ let string_of_discrete model =
 
 				(* Get the initial value *)
 				let inital_global_location  = model.initial_location in
-				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
+				let initial_value = Location.get_discrete_rational_value inital_global_location discrete_index in
 
 				(* Assign *)
           "\t\t{\n"
@@ -199,7 +204,7 @@ let rec string_of_strings_with_sep_and string_list =
 	| [] -> ""
 	| (elem::[]) -> elem
 	| (elem::q) ->
-				  "\t\t\t\t\t\t\t{\"op\": \"" ^ jani_strings.and_operator ^ "\"" ^ jani_separator ^ "\n"
+				  "\t\t\t\t\t\t\t{\"op\": \"" ^ jani_boolean_strings.and_operator ^ "\"" ^ jani_separator ^ "\n"
 				^ "\t\t\t\t\t\t\t\"left\": " ^ elem ^ jani_separator ^ "\n"
 				^ "\t\t\t\t\t\t\t\"right\": " ^ string_of_strings_with_sep_and q ^ "\n\t\t\t\t\t\t}"
 
@@ -211,12 +216,12 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 	| True_guard -> ""
 
 	(* False *)
-	| False_guard -> "\t\t\t\t\t\t\"exp\": {" ^ jani_strings.false_string ^ "}" ^ "\n"
+	| False_guard -> "\t\t\t\t\t\t\"exp\": {" ^ jani_boolean_strings.false_string ^ "}" ^ "\n"
 
 	| Discrete_guard discrete_guard -> (*DOING DYLAN*)
 
         let list_discrete_guard = (NonlinearConstraint.customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_guard) in
-        let list_discrete_guard_without_true = if list_discrete_guard = [jani_strings.true_string] then [""] else list_discrete_guard in
+        let list_discrete_guard_without_true = if list_discrete_guard = [jani_boolean_strings.true_string] then [""] else list_discrete_guard in
         string_of_strings_with_sep_and list_discrete_guard_without_true
 
 	| Continuous_guard continuous_guard ->
@@ -226,11 +231,11 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 			(string_of_strings_with_sep_and
 				(List.map (fun (inequality) ->
 					let op = match (LinearConstraint.op_of_pxd_linear_inequality inequality) with
-						| Op_l		-> jani_strings.l_operator
-						| Op_le		-> jani_strings.le_operator
-						| Op_eq		-> jani_strings.eq_operator
-						| Op_ge 	-> jani_strings.ge_operator
-						| Op_g		-> jani_strings.g_operator
+						| Op_l		-> jani_boolean_strings.l_operator
+						| Op_le		-> jani_boolean_strings.le_operator
+						| Op_eq		-> jani_boolean_strings.eq_operator
+						| Op_ge 	-> jani_boolean_strings.ge_operator
+						| Op_g		-> jani_boolean_strings.g_operator
 					in
 					let left = LinearConstraint.string_of_left_term_of_pxd_linear_inequality variable_names inequality in
 					let right = LinearConstraint.string_of_right_term_of_pxd_linear_inequality variable_names inequality in
@@ -310,7 +315,7 @@ let string_of_location model actions_and_nb_automata automaton_index location_in
 	(* Invariant and stopwatches *)
 	^ (if not_display_timeprogress then "" else (
 		  jani_separator ^ "\n\t\t\t\t\t\"time-progress\": {\n\t\t\t\t\t\t\"exp\": "
-		^ (if twoparts then ("{\n\t\t\t\t\t\t\t\t\"op\": \"" ^ jani_strings.and_operator ^ "\"" ^ jani_separator) else "")
+		^ (if twoparts then ("{\n\t\t\t\t\t\t\t\t\"op\": \"" ^ jani_boolean_strings.and_operator ^ "\"" ^ jani_separator) else "")
 		^ (if twoparts then "\n\t\t\t\t\t\t\t\t\"left\": " else "") ^ invariant ^ (if twoparts then "" ^ jani_separator else "")
 		^ (if twoparts then "\n\t\t\t\t\t\t\t\t\"right\": " else "") ^ der_clock ^ (if twoparts then "\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t}" else "")
 		^ "\n\t\t\t\t\t}"
@@ -350,11 +355,11 @@ let string_of_clock_updates model = function
 
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep (jani_separator^"\n") (List.map (fun (variable_index, arithmetic_expression) ->
+	string_of_list_of_string_with_sep (jani_separator^"\n") (List.map (fun (variable_index, global_expression) ->
 		"\t\t\t\t\t\t\t{\"ref\": \""
 		^ (model.variable_names variable_index)
 		^ "\"" ^ jani_separator ^ " \"value\" : "
-		^ (DiscreteExpressions.string_of_arithmetic_expression_for_jani model.variable_names arithmetic_expression)
+		^ (DiscreteExpressions.customized_string_of_global_expression_for_jani jani_strings model.variable_names global_expression)
 		^ "}"
 	) updates)
 (*
@@ -385,19 +390,19 @@ let no_clock_updates clock_updates =
 
 (** Convert a discrete_boolean_expression into a string *)
 let string_of_discrete_boolean_expression variable_names =
-	DiscreteExpressions.string_of_discrete_boolean_expression_for_jani variable_names
+	DiscreteExpressions.customized_string_of_discrete_boolean_expression_for_jani jani_strings variable_names
 
 (** Convert a Boolean expression into a string *)
 let rec string_of_boolean variable_names = function
 	| True_bool -> string_of_true
 	| False_bool -> string_of_false
-	| Not_bool b -> "{\"op\": \""^ not_operator ^"\"" ^ jani_separator ^ "\"exp\": " ^ (string_of_boolean variable_names b) ^ "}"
+	| Not_bool b -> "{\"op\": \""^ jani_boolean_strings.not_operator ^"\"" ^ jani_separator ^ "\"exp\": " ^ (string_of_boolean variable_names b) ^ "}"
 	| And_bool (b1, b2) ->
-		"{\"op\": \"" ^ jani_strings.and_operator ^ "\"" ^ jani_separator
+		"{\"op\": \"" ^ jani_boolean_strings.and_operator ^ "\"" ^ jani_separator
 		^ "\"left\": " ^ (string_of_boolean variable_names b1) ^ jani_separator
 		^ "\"right\": " ^ (string_of_boolean variable_names b2) ^ "}"
 	| Or_bool (b1, b2) ->
-		"{\"op\": \"" ^ jani_strings.or_operator ^ "\"" ^ jani_separator
+		"{\"op\": \"" ^ jani_boolean_strings.or_operator ^ "\"" ^ jani_separator
 		^ "\"left\": " ^ (string_of_boolean variable_names b1) ^ jani_separator
 		^ "\"right\": " ^ (string_of_boolean variable_names b2) ^"}"
 	| Discrete_boolean_expression discrete_boolean_expression ->
@@ -431,8 +436,8 @@ let string_of_conditional_clock_updates model boolean_expr order = function
 
 (* Convert a list of discrete updates into a string *)
 let string_of_conditional_discrete_updates model boolean_expr order updates =
-	string_of_list_of_string_with_sep (jani_separator^"\n") (List.rev_map (fun (variable_index, arithmetic_expression) ->
-		let expression = (DiscreteExpressions.string_of_arithmetic_expression_for_jani model.variable_names arithmetic_expression) in
+	string_of_list_of_string_with_sep (jani_separator^"\n") (List.rev_map (fun (variable_index, global_expression) ->
+		let expression = (DiscreteExpressions.customized_string_of_global_expression_for_jani jani_strings model.variable_names global_expression) in
 		let variable_name = "\"" ^ (model.variable_names variable_index) ^ "\"" in
 		"\t\t\t\t\t\t\t{\"ref\": " ^ variable_name ^ jani_separator
 		^ " \"value\" : "

@@ -54,3 +54,6 @@ exception TerminateAnalysis
 exception UnexpectedToken of char
 
 exception UnsatisfiableInitialState
+
+(* Used when an expression is not well formed *)
+exception InvalidExpression of string

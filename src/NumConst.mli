@@ -48,6 +48,7 @@ val numconst_of_mpq : Gmp.Q.t -> t
 val numconst_of_mpz : Gmp.Z.t -> t
 
 val mpq_of_numconst : t -> Gmp.Q.t
+val to_string : t -> string
 val string_of_numconst : t -> string
 val jani_string_of_numconst : t -> string
 

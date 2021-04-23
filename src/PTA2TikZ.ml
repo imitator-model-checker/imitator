@@ -44,9 +44,9 @@ let variable_names_with_style variable_index =
 	let model = Input.get_model() in
 	let name = escape_latex (model.variable_names variable_index) in
 	match model.type_of_variables variable_index with
-	| Var_type_clock -> "\\styleclock{" ^ name ^ "}"
-	| Var_type_discrete -> "\\styledisc{" ^ name ^ "}"
-	| Var_type_parameter -> "\\styleparam{" ^ name ^ "}"
+	| DiscreteValue.Var_type_clock -> "\\styleclock{" ^ name ^ "}"
+	| DiscreteValue.Var_type_discrete _ -> "\\styledisc{" ^ name ^ "}"
+	| DiscreteValue.Var_type_parameter -> "\\styleparam{" ^ name ^ "}"
 
 
 (** Proper form for constraints *)
@@ -103,13 +103,13 @@ let string_of_clock_updates model clock_updates =
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, arithmetic_expression) ->
+	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, global_expression) ->
 			"\n\t\t & $"
 			(* Convert the variable name *)
 			^ (variable_names_with_style variable_index)
 			^ ":="
 			(* Convert the arithmetic_expression *)
-			^ (ModelPrinter.string_of_arithmetic_expression variable_names_with_style arithmetic_expression)
+			^ (ModelPrinter.string_of_global_expression variable_names_with_style global_expression)
 			(*** HACK!!! without the "%", a strange "\n" that occurs immediately after leads to a LaTeX compiling error when strictly >= 2 updates ***)
 			^ "$\\\\% "
 	) updates)
@@ -124,25 +124,9 @@ let string_of_boolean_operations op =
 	| OP_G -> ">"
 
 
-(** Convert a discrete_boolean_expression into a string *)
-let string_of_discrete_boolean_expression variable_names = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " "
-		^ (string_of_boolean_operations relop)
-		^ " "
-		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
-		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " \\in ["
-		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
-		^ " , "
-		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
-		^ "]"
 
 
+(* TODO benjamin refactoriser avec ModelPrinter / DiscreteExpressions *)
 (** Convert a Boolean expression into a string *)
 let rec string_of_boolean variable_names = function
 	| True_bool -> string_of_true
@@ -158,9 +142,27 @@ let rec string_of_boolean variable_names = function
 		^ (string_of_boolean variable_names b2)
 	| Discrete_boolean_expression discrete_boolean_expression ->
 		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
-
-
-
+(** Convert a discrete_boolean_expression into a string *)
+and string_of_discrete_boolean_expression variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
+		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		^ " "
+		^ (string_of_boolean_operations relop)
+		^ " "
+		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
+		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		^ " \\in ["
+		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+		^ " , "
+		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
+		^ "]"
+    | Boolean_expression boolean_expression ->
+        "(" ^ string_of_boolean variable_names boolean_expression ^ ")"
+    | DB_variable discrete_index -> variable_names discrete_index
+    | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
 
 (** Convert a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
@@ -334,7 +336,7 @@ let string_of_automaton model automaton_index =
 	^ "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 
 	^ "\n\t\\begin{subfigure}[b]{\\ratio}"
-	^ "\n\t\\begin{tikzpicture}[scale=2, auto, ->, >=stealth']" (*, thin*)
+	^ "\n\t\\begin{tikzpicture}[pta, scale=2]" (*, thin*)
 
 	(* Handling locations *)
 	^ "\n " ^ (string_of_locations model automaton_index)

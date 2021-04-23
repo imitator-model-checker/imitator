@@ -347,7 +347,7 @@ discrete_term:
 
 discrete_factor:
 	| NAME { Parsed_DF_variable $1 }
-	| positive_rational { Parsed_DF_constant $1 }
+	| positive_rational { Parsed_DF_constant (DiscreteValue.Rational_value $1) }
 	| RPAREN discrete_expression LPAREN { Parsed_DF_expression $2 }
 	| OP_MINUS discrete_factor { Parsed_DF_unary_min $2 }
 ;

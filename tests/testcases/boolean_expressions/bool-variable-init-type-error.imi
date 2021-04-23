@@ -1,0 +1,64 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : 
+ * Description      : 
+ * Correctness      : 
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Syntax
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/03/04
+ * Last modified    : 2021/03/04
+ * Model version    : 0.1
+ *
+ * IMITATOR version : > 3.0.0
+ ************************************************************)
+var 
+    x = 0,
+        : clock;
+    b
+        : bool;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when b goto lend;
+	
+accepting loc lend: invariant b
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        b := 4 + 2 
+    ;
+    continuous = 
+        & x >= 0
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

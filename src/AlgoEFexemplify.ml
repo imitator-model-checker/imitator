@@ -546,8 +546,8 @@ class algoEFexemplify (state_predicate : AbstractProperty.state_predicate) =
 							(* Construct the px-valuation *)
 							(*** NOTE: technically (internally), the concrete_x_valuation already contains the parameter valuations! but for type soundness, we pretend to take parameters from pval ***)
 							let concrete_px_valuation_i variable_index = match model.type_of_variables variable_index with
-								| Var_type_clock -> concrete_x_valuation variable_index
-								| Var_type_parameter -> functional_pval_positive variable_index
+								| DiscreteValue.Var_type_clock -> concrete_x_valuation variable_index
+								| DiscreteValue.Var_type_parameter -> functional_pval_positive variable_index
 								| _ -> raise (InternalError ("Only clocks or parameters are expected at this point (in algoEFexemplify#process_counterexample)"))
 							in
 (*							(*** NOTE: technically (internally), the concrete_x_valuation already contains the parameter valuations! but for type soundness, we pretend to re-intersect with the pval ***)

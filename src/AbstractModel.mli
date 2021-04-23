@@ -31,21 +31,12 @@ type v0 = HyperRectangle.hyper_rectangle
 (** Types *)
 (************************************************************)
 
-(** Type of variable in declarations *)
-type var_type =
-	| Var_type_clock
-	| Var_type_discrete
-	| Var_type_parameter
-
 (** Type of sync actions *)
 type action_type =
 	(* Observable action label (does not necessarily mean that it is "synchronized", as it can belong to a single automaton) *)
 	| Action_type_sync
 	(* Non-observable, silent action label (necessarily non-synchronized) *)
 	| Action_type_nosync
-
-
-type discrete_value = NumConst.t
 
 
 (************************************************************)
@@ -88,7 +79,7 @@ type clock_updates =
 
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
 
-type discrete_update = discrete_index * DiscreteExpressions.discrete_arithmetic_expression
+type discrete_update = discrete_index * DiscreteExpressions.global_expression
 
 
 
@@ -208,8 +199,10 @@ type abstract_model = {
 	parameters_and_clocks : variable_index list;
 	(* The function : variable_index -> variable name *)
 	variable_names : variable_index -> variable_name;
+	(* All discrete variable names group by types *)
+    discrete_names_by_type_group : (DiscreteValue.var_type * (variable_name list)) list;
 	(* The type of variables *)
-	type_of_variables : variable_index -> var_type;
+	type_of_variables : variable_index -> DiscreteValue.var_type;
 
 	(* The automata *)
 	automata : automaton_index list;

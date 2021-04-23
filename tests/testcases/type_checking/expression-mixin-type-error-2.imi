@@ -1,0 +1,68 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Expression mixin of type in multiplication
+ * Description      : Mix of different types in arithmetic expression, should lead to a type error
+ * Correctness      : Type error 
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/03/12
+ * Last modified    : 2021/03/12
+ * Model version    : 0.1
+ *
+ * IMITATOR version : > 3.0.0
+ ************************************************************)
+var 
+    x = 0,
+        : clock;
+    j
+        : rational;
+    i
+        : int;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+    (* Update expression involve two different type with i as rational and j as int *)
+	when True do { i := i * j } goto lend;
+	
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        i := 2,
+        j := 1
+    ;
+    continuous = 
+        & x >= 0
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
