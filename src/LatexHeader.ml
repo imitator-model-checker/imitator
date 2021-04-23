@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2020/03/18
+ * Last modified     : 2021/02/25
  *
  ************************************************************)
 
@@ -40,6 +40,7 @@ let latex_header = "
 % Tikz
 \\usepackage{tikz}
 \\usetikzlibrary{arrows,automata}
+\\tikzstyle{pta}=[auto, ->, >=stealth']
 \\tikzstyle{every node}=[initial text=]
 \\tikzstyle{location}=[rectangle, rounded corners, minimum size=12pt, draw=black, inner sep=1.5pt]
 \\tikzstyle{invariant}=[draw=black, xshift=1em, inner sep=1pt]

@@ -92,6 +92,15 @@ val list_set_nth : int -> 'a -> 'a list -> 'a list
 (** Select the sublist of a list from position i to position j *)
 val sublist : int -> int -> 'a list -> 'a list
 
+(* Partition list by grouping elements by keys in a list of tuples *)
+val group_by : ('a -> 'b) -> 'a list -> ('b * 'a list) list
+
+(* Partition list by grouping elements by keys in a list of tuples *)
+(* and map values associated by keys according to valueSelector function *)
+val group_by_and_map : ('a -> 'b) -> ('a -> 'c) -> 'a list -> ('b * 'c list) list
+
+(* Partition list by grouping elements by keys in a hashtable *)
+val hashtbl_group_by : ('a -> 'b) -> 'a list -> ('b, 'a list) Hashtbl.t
 
 (************************************************************)
 (** Useful functions on arrays *)
@@ -154,6 +163,9 @@ val string_of_array_of_string_with_sep : string -> string array -> string
 
 (** Convert a list of string into a string with separators (uses an internal conversion to array) *)
 val string_of_list_of_string_with_sep : string -> string list -> string
+
+(* Add \t identation of string according to the given level *)
+val indent_paragraph : int -> string -> string
 
 (** Convert a list of int into a string with , separator *)
 val string_of_list_of_int : int list -> string

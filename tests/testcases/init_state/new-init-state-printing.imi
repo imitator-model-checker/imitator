@@ -1,0 +1,79 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test new init zone printing
+ * Description      : As there is other type of discrete variable than rational, check if the model is correctly printing the new init zone 
+ * Correctness      : 
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Printing
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/03/09
+ * Last modified    : 2021/03/09
+ * Model version    : 0.1
+ *
+ * IMITATOR version : > 3.0.0
+ ************************************************************)
+var 
+    x = 0,
+        : clock;
+    i, j
+        : rational;
+    k, l
+        : int;
+    b
+        : bool;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when b & i = 0 & j = 0 & k = 0 & l = 0 goto lend;
+	
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+(************************************************************)
+ automaton pta2
+(************************************************************)
+ 
+loc l2: invariant True 
+	when b & i = 0 & j = 0 & k = 0 & l = 0 goto lend2;
+	
+accepting loc lend2: invariant True
+ end (* pta2 *)
+(************************************************************)
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1, loc[pta2] := l2,
+        i := 1, j := 2
+    ;
+    continuous = 
+        & True
+        & x >= 0
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
