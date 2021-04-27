@@ -145,10 +145,10 @@ This model contains two clocks: \styleIMI{x1} is process~1's clock, and \styleIM
 
 This model contains two parameters: \styleIMI{delta} is the parametric duration specifying how long a process is idle at most, whereas \styleIMI{gamma} is the parametric duration specifying the minimum duration between the time a process checks for the availability of the critical section and the time the same process indeed enters the critical section (if it is still available).
 
-Two discrete variables (\ie{} global, rational-valued variables, see \cref{section:discrete}) are used:
+Two rational-valued variables (\ie{} global, discrete variables, see \cref{section:discrete}) are used:
 \styleIMI{turn} checks which process is attempting to enter the critical section;
 \styleIMI{counter} records how many processes are in the critical section (this variable will not be used for the verification, but was used in the original \pat{} model, and we choose to keep it).
-% TODO: use it for verification once IMITATOR supports global variables in properties
+% TODO: use it for verification since IMITATOR supports global variables in properties
 
 Finally, a global constant \styleIMI{IDLE} is set to \styleIMI{-1} (just as in the original \pat{} model), and encodes that no process is attempting to enter the critical section.
 
@@ -196,31 +196,36 @@ Note that the observer simply observes the system state, and synchronizes on the
 A graphical representation of the \IPTA{} \styleIMI{observer} is given in \cref{pta:observer}.
 
 
-\paragraph{Initial definitions}
+\paragraph{Initial state definition}
 
-The initial state is defined the part of the file following \styleIMI{init :=}.
+The initial state is defined by the part of the file following \styleIMI{init :=}.
 
-Since \imitator{} 3.1, an \imitator{} model accept a new form of initial definition section that separate discrete initializations from initial constraints.
+Since \imitator{} 3.1, the initial definition section is split between the \emph{discrete} initialization and the \emph{continuous} initialization (the latter being given in the form of a set of constraints).
 
-This new section introduce a more powerful initialization system allowing initialization of discrete variables by constant expressions. It mean that it's possible to initialize any discrete variables of any type (proposed by \imitator{}) with an expression that can be resolved at compile time (use of variables is forbbiden). It's also the only way to initialize discrete integer and discrete boolean variables.
+% This new section introduce a more powerful initialization system allowing initialization of discrete variables by constant expressions. It mean that it's possible to initialize any discrete variables of any type (proposed by \imitator{}) with an expression that can be resolved at compile time (use of variables is forbbiden). It's also the only way to initialize discrete integer and discrete boolean variables.
 
-Note the difference between constraints initializations and discrete variables initializations. The first are initialized in the \styleIMI{continuous} part while other are initialized in the \styleIMI{discrete} part. Moreover, discrete variables are initialized with the assignment operator \styleIMI{:=} in contrast with unification operator \styleIMI{=} used for constraints. As all discrete variables are independent, the initializations are separated with a comma.
-
-As discrete variables are syntactic sugar for locations, you can see that locations are initialized in the same manner as discrete variables in the \styleIMI{discrete} part. Except this particular elements, this new init state follow the same rules and behavior than the previous init state.
-
-Init \styleIMI{discrete} part must contain the initial location of each \IPTA{}.
+% Note the difference between constraints initializations and discrete variables initializations.
+% Disrete are initialized in the \styleIMI{continuous} part while other are initialized in the \styleIMI{discrete} part. 
+The discrete initialization (introduced by the \styleIMI{discrete} keyword) assigns an initial value to each discrete (global) variable, and sets the initial location for each automaton.
+Note that the assignment operator \styleIMI{:=} is used (in contrast with unification operator \styleIMI{=} used for constraints).
+% As all discrete variables are independent, the initializations are separated with a comma.
+%
+% As discrete variables are syntactic sugar for locations, you can see that locations are initialized in the same manner as discrete variables in the \styleIMI{discrete} part. Except this particular elements, this new init state follow the same rules and behavior than the previous init state.
+%
+% Init \styleIMI{discrete} part must contain the initial location of each \IPTA{}.
 For example, \styleIMI{loc[proc1] := idle1} states that \styleIMI{proc1} is initially in location \styleIMI{idle1}.
 The initial definition should assign a constant value to each discrete variable:
-here \styleIMI{turn} is initially equal to \styleIMI{IDLE}, and \styleIMI{counter} is initially equal to~0.
+here \styleIMI{turn} is initially assigned to \styleIMI{IDLE}, and \styleIMI{counter} is initially assigned to~0.
 
-Init \styleIMI{continuous} part must contain the initial constraints for clocks and parameters.
-
+The continuous initialization (introduced by the \styleIMI{continuous} keyword) defines the initial constraints over clocks and parameters (possibly also using discrete variables).
+%
 The initial definition may (only may, see \cref{section:init}) give an initial value to the clocks, for example requiring them to be equal to some constant (typically~0).
-Here, clocks are only bound to be greater or equal to~0.
-
-Finally, parameters are bound to be positive or null (this is not assumed by default by \imitator{}, so users are strongly advised to add this constraint).
-
-Note that the initial definition can introduce more complex constraints on clocks, parameters and discrete variables; see \cref{section:init} for details.
+In our example, clocks are only bound to be greater or equal to~0.
+%
+Finally, in this example, parameters are bound to be non-negative as well.
+% (this is not assumed by default by \imitator{}, so users are strongly advised to add this constraint).
+%
+Note that the initial definition can introduce more complex constraints over clocks, parameters and discrete variables; see \cref{section:init} for details.
 
 
 

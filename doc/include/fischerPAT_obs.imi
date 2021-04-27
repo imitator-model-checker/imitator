@@ -7,7 +7,7 @@
  * Correctness     : Not 2 processes together in the critical section (location obs_violation unreachable)
  * Source          : PAT library of benchmarks
  * Author          : ?
- * Input by        : Étienne André
+ * Input by        : Etienne Andre
  *
  * Created         : 2012/10/08
  * Last modified   : 2021/04/27
