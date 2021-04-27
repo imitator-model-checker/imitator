@@ -1,6 +1,5 @@
 *******************************************************
-# FUTURE release XXX (202X-XX-XX) Cheese
-minor release
+# FUTURE release 3.1 (202X-XX-XX) Cheese Artichoke
 
 ### Syntax changes in the property
 * `property := AcceptingCycle` now allowed as a shortcut for `property := CycleThrough(accepting)`
@@ -10,6 +9,9 @@ minor release
 
 ### Bug fixing:
 * Fixed an issue met in v3 when a division by 0 is encountered.
+
+### Benchmarks
+* Entire refactoring of the benchmarks library [AMP21]
 
 
 *******************************************************
