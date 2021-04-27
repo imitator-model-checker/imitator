@@ -132,6 +132,17 @@ let string_of_clocks model =
     (string_of_variables model.clocks_without_special_reset_clock)
     else ""
 
+(* String of number var type *)
+let string_of_var_type_discrete_number_for_jani = function
+    | DiscreteValue.Var_type_discrete_rational -> "real"
+    | DiscreteValue.Var_type_discrete_int -> "int"
+    | DiscreteValue.Var_type_discrete_unknown_number -> "number"
+
+(* String of discrete var type *)
+let string_of_var_type_discrete_for_jani = function
+    | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
+    | DiscreteValue.Var_type_discrete_bool -> "bool"
+
 (* Convert the initial discrete var declarations into a string *)
 let string_of_discrete model =
 	if model.nb_discrete > 0 then(
@@ -139,16 +150,23 @@ let string_of_discrete model =
 			(List.map (fun discrete_index ->
 				(* Get the name *)
 				let discrete_name = model.variable_names discrete_index in
-
+                (* Get the type *)
+                let discrete_type = DiscreteValue.discrete_type_of_var_type (model.type_of_variables discrete_index) in
+                (* Get str for the type*)
+                let str_discrete_type = string_of_var_type_discrete_for_jani discrete_type in
 				(* Get the initial value *)
 				let inital_global_location  = model.initial_location in
-				let initial_value = Location.get_discrete_rational_value inital_global_location discrete_index in
+(*				let initial_value = Location.get_discrete_rational_value inital_global_location discrete_index in*)
+				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
+
+				let str_initial_value = DiscreteValue.string_of_value initial_value in
 
 				(* Assign *)
           "\t\t{\n"
         ^ "\t\t\t\"name\": \"" ^ discrete_name ^ "\"" ^ jani_separator ^ "\n"
-        ^ "\t\t\t\"type\": \"int\"" ^ jani_separator ^ "\n"
-        ^ "\t\t\t\"initial_value\": " ^ NumConst.jani_string_of_numconst initial_value ^ "\n"
+        ^ "\t\t\t\"type\": \"" ^ str_discrete_type ^ "\"" ^ jani_separator ^ "\n"
+(*        ^ "\t\t\t\"initial_value\": " ^ NumConst.jani_string_of_numconst initial_value ^ "\n"*)
+        ^ "\t\t\t\"initial_value\": " ^ str_initial_value ^ "\n"
         ^ "\t\t}"
       ) model.discrete
 			)
@@ -218,7 +236,7 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 	(* False *)
 	| False_guard -> "\t\t\t\t\t\t\"exp\": {" ^ jani_boolean_strings.false_string ^ "}" ^ "\n"
 
-	| Discrete_guard discrete_guard -> (*DOING DYLAN*)
+	| Discrete_guard discrete_guard ->
 
         let list_discrete_guard = (NonlinearConstraint.customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_guard) in
         let list_discrete_guard_without_true = if list_discrete_guard = [jani_boolean_strings.true_string] then [""] else list_discrete_guard in
