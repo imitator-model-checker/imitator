@@ -29,6 +29,8 @@ var
 
 (* Discrete *)
 	i,
+		: int;
+	r,
 		: rational;
 
 (* Parameters *)
@@ -43,7 +45,7 @@ var
 synclabs: a;
 
 loc l1: invariant True
-	when x = 1 sync a do {x := 0} goto l1;
+	when x = 1 sync a do {x := p/2, i := i+1, r := r*r} goto l1;
 
 end (* pta *)
 
@@ -62,9 +64,10 @@ init := {
 		loc[pta] := l1,
 
 		(*------------------------------------------------------------*)
-		(* Initial discrete assignments *)
+		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		i := 0
+		r := 1/2,
+		i := 0,
 
     ;
 
