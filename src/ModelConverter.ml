@@ -419,7 +419,8 @@ let check_only_discretes_in_parsed_global_expression index_of_variables type_of_
 (************************************************************)
 
 let rec convert_parsed_discrete_arithmetic_expression index_of_variables constants expr = function
-    | DiscreteValue.Var_type_discrete_bool -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression index_of_variables constants expr)
+(*    | DiscreteValue.Var_type_discrete_bool -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression index_of_variables constants expr)*)
+    | DiscreteValue.Var_type_discrete_bool -> raise (InvalidExpression "Cannot compare boolean for the moment")
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression index_of_variables constants expr)
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int -> Int_arithmetic_expression (convert_parsed_int_arithmetic_expression index_of_variables constants expr)
     | _ -> raise InvalidModel (* TODO benjamin IMPORTANT DANGEROUS, IT MUST DISAPEAR WHEN I WILL USE NUMBER VAR TYPE INSTEAD OF VAR_TYPE ! *)
@@ -2999,7 +3000,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		(* Create pairs of (index , value) for discrete variables *)
 		(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in *)
 
-        (* TODO check with étienne *)
+        (* TODO check with étienne : visiblement c'est ok *)
         (* Get only rational discrete for constraint encoding *)
         let init_discrete_rational_pairs = List.filter (fun (discrete_index, discrete_value) -> DiscreteValue.is_rational_value discrete_value) init_discrete_pairs in
         (* map to num const *)
