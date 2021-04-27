@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2021/03/19
+ * Last modified     : 2021/04/27
  *
  ************************************************************)
 
@@ -3022,11 +3022,11 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 	(* Check that all parameters are bound to be >= 0 *)
 	List.iter (fun parameter_id ->
 		(* Print some information *)
-		print_message Verbose_low ("Checking that parameter '" ^ (variable_names parameter_id) ^ "' is >= 0 in the initial constraint…");
+		print_message Verbose_low ("Checking that parameter `" ^ (variable_names parameter_id) ^ "` is >= 0 in the initial constraint…");
 
 		(* Check *)
 		if not (LinearConstraint.px_is_positive_in parameter_id initial_constraint) then
-			print_warning ("Parameter '" ^ (variable_names parameter_id) ^ "' is not necessarily positive in the initial constraint. The behavior of " ^ Constants.program_name ^ " is unspecified in this case. You are advised to add inequality '" ^ (variable_names parameter_id) ^ " >= 0' to the initial state of the model.");
+			print_warning ("Parameter `" ^ (variable_names parameter_id) ^ "` is not necessarily positive in the initial constraint. The behavior of " ^ Constants.program_name ^ " is unspecified in this case. You are advised to add inequality `" ^ (variable_names parameter_id) ^ " >= 0` to the initial state of the model.");
 		) parameters;
 
 	(* Return the initial state *)
@@ -3273,7 +3273,7 @@ let check_action_name index_of_actions action_name =
 
 (*
 (*------------------------------------------------------------*)
-(* Check a list of local location declaration (i.e., of the form 'loc[automaton] = location')
+(* Check a list of local location declaration (i.e., of the form `loc[automaton] = location`)
  * Return a list of unreachable_location, and a Boolean encoding whether all checks passed
  * May print warnings or errors
 *)
@@ -3318,7 +3318,7 @@ let check_and_convert_unreachable_local_locations index_of_automata index_of_loc
             true
           )else(
             (* Otherwise: error *)
-            print_warning ("Automaton `" ^ automaton_name ^ "` is assigned to several different location names (e.g., `" ^ location_name ^ "` and '" ^ old_name ^ "') in the correctness property.");
+            print_warning ("Automaton `" ^ automaton_name ^ "` is assigned to several different location names (e.g., `" ^ location_name ^ "` and `" ^ old_name ^ "`) in the correctness property.");
             (* Problem *)
             false
           )
@@ -3339,7 +3339,7 @@ let check_and_convert_unreachable_local_locations index_of_automata index_of_loc
   if not !checks_passed then(
     [] , false
   )else(
-    (* Return all pairs 'loc[automaton] = location' *)
+    (* Return all pairs `loc[automaton] = location` *)
     let pairs = Hashtbl.fold (fun automaton_name location_name former_pairs ->
         (* Retrieve automaton index (no test because was tested earlier) *)
         let automaton_index = Hashtbl.find index_of_automata automaton_name in
@@ -3353,7 +3353,7 @@ let check_and_convert_unreachable_local_locations index_of_automata index_of_loc
 
 
 (*------------------------------------------------------------*)
-(* Check a list of discrete constraints declaration (i.e., of the form 'd ~ constant(s)')
+(* Check a list of discrete constraints declaration (i.e., of the form `d ~ constant(s)`)
  * Return a list of discrete_constraint, and a Boolean encoding whether all checks passed
  * May print warnings or errors
 *)
@@ -3455,7 +3455,7 @@ let check_and_convert_unreachable_discrete_constraints index_of_variables type_o
           -> true
         | Parsed_discrete_interval (_ , min_bound , max_bound )
           -> if NumConst.g min_bound max_bound then(
-            print_error ("The interval '[" ^ (NumConst.string_of_numconst min_bound) ^ " , " ^ (NumConst.string_of_numconst max_bound) ^ "]' used in the correctness property is not well-formed.");
+            print_error ("The interval `[" ^ (NumConst.string_of_numconst min_bound) ^ " , " ^ (NumConst.string_of_numconst max_bound) ^ "]` used in the correctness property is not well-formed.");
             (* Problem *)
             false
           ) else true
@@ -3598,7 +3598,7 @@ and check_parsed_discrete_boolean_expression useful_parsing_model_information = 
 		evaluate_and
 			(check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1)
 			(check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2)
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	(** Discrete arithmetic expression of the form `Expr in [Expr, Expr ]` *)
 	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
 		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1 in
 		let check2 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2 in
@@ -4043,7 +4043,7 @@ let convert_parsed_pval useful_parsing_model_information (parsed_pval : ParsingS
 		let valuation = try(
 			List.assoc parameter_name parsed_pval
 		) with Not_found ->
-			raise (InternalError ("The parameter name '" ^ parameter_name ^ "' was not found in parsed_pval although checks should have been performed before."))
+			raise (InternalError ("The parameter name `" ^ parameter_name ^ "` was not found in parsed_pval although checks should have been performed before."))
 		in
 		pval#set_value i valuation
 	done;
@@ -4480,7 +4480,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			(* If it is used everywhere: keep *)
 			true
 			(* If there exists an automaton where it is not used : warns and remove *)
-			else (print_warning ("The synclab '" ^ synclab_name ^ "' is not used in some of the automata where it is declared: it will thus be removed."); false)
+			else (print_warning ("The synclab `" ^ synclab_name ^ "` is not used in some of the automata where it is declared: it will thus be removed."); false)
 		)*) action_names
 	) in
 
@@ -4526,7 +4526,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		else
 		(
 			List.iter (fun unassigned_constant ->
-				print_error("Constant '" ^ unassigned_constant ^ "' is not assigned a value in the variable declarations.");
+				print_error("Constant `" ^ unassigned_constant ^ "` is not assigned a value in the variable declarations.");
 			) unassigned_constants;
 			(* Check failed *)
 			false;
@@ -4563,12 +4563,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		begin
 			match observer_automaton with
 			| None -> ()
-			| Some observer_automaton -> print_message Verbose_high ("Adding extra automaton '" ^ observer_automaton ^ "' for the observer.");
+			| Some observer_automaton -> print_message Verbose_high ("Adding extra automaton `" ^ observer_automaton ^ "` for the observer.");
 		end;
 		begin
 			match observer_clock_option with
 			| None -> ()
-			| Some observer_clock_name -> print_message Verbose_high ("Adding extra clock '" ^ observer_clock_name ^ "' for the observer.");
+			| Some observer_clock_name -> print_message Verbose_high ("Adding extra clock `" ^ observer_clock_name ^ "` for the observer.");
 		end;
 	);
 
@@ -4739,7 +4739,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* The array of automata names ; index -> automaton name *)
 	let array_of_automata_names = Array.of_list declared_automata_names in
-	(* A (constant) hash table 'automaton name -> index' *)
+	(* A (constant) hash table `automaton name -> index` *)
 	let index_of_automata : (Automaton.automaton_name, Automaton.automaton_index) Hashtbl.t = Hashtbl.create nb_automata in
 	for i = 0 to nb_automata - 1 do
 		Hashtbl.add index_of_automata array_of_automata_names.(i) i;
@@ -4755,7 +4755,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* The array of actions ; index -> action name *)
 	let actions : action_name array = Array.of_list action_names in
-	(* A (constant) hash table 'action name -> index' *)
+	(* A (constant) hash table `action name -> index` *)
 	let index_of_actions = Hashtbl.create nb_actions in
 	for i = 0 to nb_actions - 1 do
 		Hashtbl.add index_of_actions actions.(i) i;
@@ -4763,7 +4763,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* The array of variables names ; index -> variable name *)
 	let variables = Array.of_list variable_names in
-	(* A (constant) hash table 'variable name -> index' *)
+	(* A (constant) hash table `variable name -> index` *)
 	let index_of_variables : (Automaton.variable_name, Automaton.variable_index) Hashtbl.t = Hashtbl.create nb_variables in
 	for i = 0 to nb_variables - 1 do
 		Hashtbl.add index_of_variables variables.(i) i;
@@ -4773,7 +4773,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let first_clock_index    = first_parameter_index + nb_parameters in
 	let first_discrete_index  = first_clock_index + nb_clocks in
 
-	(* An array 'variable index -> AbstractModel.var_type' *)
+	(* An array `variable index -> AbstractModel.var_type` *)
 	let type_of_variables = Array.make nb_variables DiscreteValue.Var_type_parameter in
 	for i = first_clock_index to first_discrete_index - 1 do
 		type_of_variables.(i) <- DiscreteValue.Var_type_clock;
@@ -4856,7 +4856,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			array_of_location_names.(automaton_index) <- ObserverPatterns.get_locations parsed_property
 	end;
 
-	(* A (constant) array of hash tables 'automaton_index -> location_name -> location_index' *)
+	(* A (constant) array of hash tables `automaton_index -> location_name -> location_index` *)
 	let index_of_locations = Array.make nb_automata (Hashtbl.create 0) in
 	for automaton_index = 0 to nb_automata - 1 do
 		let nb_locations = Array.length (array_of_location_names.(automaton_index)) in
@@ -5038,7 +5038,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_total ("" ^ (string_of_int nb_transitions_without_observer) ^ " transition" ^ (s_of_int nb_transitions_without_observer) ^ " in the model, and " ^ (string_of_int nb_transitions_for_observer) ^ " additional transition" ^ (s_of_int nb_transitions_for_observer) ^ " for the observer");
 
 	(* Convert transitions *)
-	(*** TODO: integrate inside 'make_automata' (?) ***)
+	(*** TODO: integrate inside `make_automata` (?) ***)
 	let transitions, transitions_description, automaton_of_transition = convert_transitions nb_transitions nb_actions useful_parsing_model_information transitions in
 
 
@@ -5099,7 +5099,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 							(* Update automaton of transition *)
 							automaton_of_transition.(current_transition_index) <- observer_id;
 						) with
-							| Invalid_argument e -> raise (InternalError ("Invalid argument '" ^ e ^ "' when updating observer transitions (current index: " ^ (string_of_int current_transition_index) ^ " max size: " ^ (string_of_int (Array.length transitions_description)) ^ ")"))
+							| Invalid_argument e -> raise (InternalError ("Invalid argument `" ^ e ^ "` when updating observer transitions (current index: " ^ (string_of_int current_transition_index) ^ " max size: " ^ (string_of_int (Array.length transitions_description)) ^ ")"))
 						;
 						end;
 						
