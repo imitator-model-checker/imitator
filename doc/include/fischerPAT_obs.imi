@@ -7,12 +7,12 @@
  * Correctness     : Not 2 processes together in the critical section (location obs_violation unreachable)
  * Source          : PAT library of benchmarks
  * Author          : ?
- * Input by        : Etienne Andre
+ * Input by        : Étienne André
  *
  * Created         : 2012/10/08
- * Last modified   : 2020/04/03
+ * Last modified   : 2021/04/27
  *
- * IMITATOR version: 3
+ * IMITATOR version: 3.1
  ************************************************************)
 
 var 
@@ -44,7 +44,6 @@ loc active1: invariant x1 <= delta
 
 loc check1: invariant True
 	when x1 >= gamma & turn = 1 sync access_1 do {x1 := 0} goto access1;
-	(* No "<>" operator: hence we use both '>' and '<' *)
 	when x1 >= gamma & turn <> 1 sync no_access_1 do {x1 := 0}  goto idle1;
 
 loc access1: invariant True
@@ -69,7 +68,6 @@ loc active2: invariant x2 <= delta
 
 loc check2: invariant True
 	when x2 >= gamma & turn = 2 sync access_2 do {x2 := 0} goto access2;
-	(* No "<>" operator: hence we use both '>' and '<' *)
 	when x2 >= gamma & turn <> 2 sync no_access_2 do {x2 := 0} goto idle2;
 
 loc access2: invariant True
@@ -112,29 +110,29 @@ init := {
 
     
     discrete =
-        (*------------------------------------------------------------
-        INITIAL LOCATION
-        ------------------------------------------------------------*)
-        loc[proc1] := idle1,
-        loc[proc2] := idle2,
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+        loc[proc1]    := idle1,
+        loc[proc2]    := idle2,
         loc[observer] := obs_waiting,
-        (*------------------------------------------------------------
-        INITIAL DISCRETE
-        ------------------------------------------------------------*)
-        turn := IDLE,
-        counter := 0
+		(*------------------------------------------------------------*)
+		(* Initial discrete assignments *)
+		(*------------------------------------------------------------*)
+        turn          := IDLE,
+        counter       := 0
     ;
 
     continuous =        
-        (*------------------------------------------------------------
-        INITIAL CLOCKS
-        ------------------------------------------------------------*)
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
         & x1 >= 0
         & x2 >= 0
         
-        (*------------------------------------------------------------
-        PARAMETER CONSTRAINTS
-        ------------------------------------------------------------*)
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
         & delta >= 0
         & gamma >= 0
 	;
