@@ -8,9 +8,9 @@
  *
  * Module description: Parser for the input model
  *
- * File contributors : Étienne André, Jaime Arias, Laure Petrucci
+ * File contributors : Étienne André, Jaime Arias, Benjamin Loillier, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/17
+ * Last modified     : 2021/04/27
  *
  ************************************************************/
 
@@ -741,35 +741,34 @@ new_init_continuous_definition:
 ;
 
 
-
 new_init_discrete_expression:
-	| comma_opt new_init_discrete_expression_fol comma_opt { $2 }
+	| comma_opt init_discrete_expression_nonempty_list { $2 }
 	| { [ ] }
 ;
 
-new_init_discrete_expression_fol :
-	| new_init_discrete_state_predicate { [ $1 ] }
-	| LPAREN new_init_discrete_expression_fol  RPAREN { $2 }
-	| new_init_discrete_expression_fol COMMA new_init_discrete_expression_fol  { $1 @ $3 }
+init_discrete_expression_nonempty_list :
+	| new_init_discrete_state_predicate COMMA init_discrete_expression_nonempty_list  { $1 :: $3 }
+	| new_init_discrete_state_predicate comma_opt { [ $1 ] }
 ;
 
 new_init_discrete_state_predicate:
 	| new_init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
+	| LPAREN new_init_discrete_state_predicate  RPAREN { $2 }
 	| NAME OP_ASSIGN expression { Parsed_discrete_predicate ($1, $3) }
 ;
 
 new_init_continuous_expression:
-	| ampersand_opt new_init_continuous_expression_fol ampersand_opt { $2 }
+	| ampersand_opt init_continuous_expression_nonempty_list { $2 }
 	| { [ ] }
 ;
 
-new_init_continuous_expression_fol :
-	| new_init_continuous_state_predicate { [ $1 ] }
-	| LPAREN new_init_continuous_expression_fol  RPAREN { $2 }
-	| new_init_continuous_expression_fol AMPERSAND new_init_continuous_expression_fol  { $1 @ $3 }
+init_continuous_expression_nonempty_list :
+	| new_init_continuous_state_predicate AMPERSAND init_continuous_expression_nonempty_list  { $1 :: $3 }
+	| new_init_continuous_state_predicate ampersand_opt { [ $1 ] }
 ;
 
 new_init_continuous_state_predicate:
+    | LPAREN new_init_continuous_state_predicate RPAREN { $2 }
     | linear_constraint { Parsed_linear_predicate $1 }
 ;
 
