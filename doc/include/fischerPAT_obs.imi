@@ -22,7 +22,7 @@ var
 
 	turn,
 	counter
-		: discrete;
+		: rational;
 
 	delta,
 	gamma
@@ -45,8 +45,7 @@ loc active1: invariant x1 <= delta
 loc check1: invariant True
 	when x1 >= gamma & turn = 1 sync access_1 do {x1 := 0} goto access1;
 	(* No "<>" operator: hence we use both '>' and '<' *)
-	when x1 >= gamma & turn < 1 sync no_access_1 do {x1 := 0}  goto idle1;
-	when x1 >= gamma & turn > 1 sync no_access_1 do {x1 := 0}  goto idle1; 
+	when x1 >= gamma & turn <> 1 sync no_access_1 do {x1 := 0}  goto idle1;
 
 loc access1: invariant True
 	when True sync enter_1 do {counter := counter + 1} goto CS1;
@@ -71,8 +70,7 @@ loc active2: invariant x2 <= delta
 loc check2: invariant True
 	when x2 >= gamma & turn = 2 sync access_2 do {x2 := 0} goto access2;
 	(* No "<>" operator: hence we use both '>' and '<' *)
-	when x2 >= gamma & turn < 2 sync no_access_2 do {x2 := 0} goto idle2;
-	when x2 >= gamma & turn > 2 sync no_access_2 do {x2 := 0} goto idle2;
+	when x2 >= gamma & turn <> 2 sync no_access_2 do {x2 := 0} goto idle2;
 
 loc access2: invariant True
 	when True sync enter_2 do {counter := counter + 1} goto CS2;
@@ -135,6 +133,44 @@ init :=
 	& delta >= 0
 	& gamma >= 0
 ;
+
+(************************************************************)
+(* New initial state *)
+(************************************************************)
+(*
+init := {
+
+    
+    discrete =
+        (*------------------------------------------------------------
+        INITIAL LOCATION
+        ------------------------------------------------------------*)
+        loc[proc1] := idle1,
+        loc[proc2] := idle2,
+        loc[observer] := obs_waiting,
+        (*------------------------------------------------------------
+        INITIAL DISCRETE
+        ------------------------------------------------------------*)
+        turn := IDLE,
+        counter := 0
+    ;
+
+    continuous =        
+        (*------------------------------------------------------------
+        INITIAL CLOCKS
+        ------------------------------------------------------------*)
+        & x1 >= 0
+        & x2 >= 0
+        
+        (*------------------------------------------------------------
+        PARAMETER CONSTRAINTS
+        ------------------------------------------------------------*)
+        & delta >= 0
+        & gamma >= 0
+	;
+
+}
+*)
 
 (************************************************************)
 (* The end *)

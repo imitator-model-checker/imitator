@@ -9,7 +9,7 @@
 #
 # Script description: COMPARATOR (script for comparing model translation between two IMITATOR versions)
 #
-# File contributors : Benjamin Loillier
+# File contributors : Benjamin L.
 # Created           : 2021/02/02
 # Last modified     : 2021/02/03
 # ************************************************************

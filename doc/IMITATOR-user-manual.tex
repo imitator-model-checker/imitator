@@ -175,7 +175,6 @@ At any time, this \IPTA{} may synchronize on action \styleIMI{update\_1}, reset 
 In location \styleIMI{check1}, the process wait at least \styleIMI{gamma} time units (modeled by the inequality \styleIMI{x1 >= gamma}, in all outgoing transitions).
 If \styleIMI{turn} is still equal to \styleIMI{1} (that is, no other process attempted in the meanwhile to enter the critical section), then process~1 is indeed ready to enter the critical section, by synchronizing \styleIMI{access\_1} and resetting \styleIMI{x1}.
 If \styleIMI{turn} is different from \styleIMI{1} (that is, another process attempted in the meanwhile to enter the critical section, and it is not safe for process~1 to enter), then process~1 returns to its idle location, by synchronizing \styleIMI{no\_access\_1} and resetting \styleIMI{x1}.
-Note that we have to use two transitions checking that either \styleIMI{turn < 1} or \styleIMI{turn > 1} to compensate that the ``different from'' operator (``\styleIMI{$\neq$}'') is not (yet) supported by \imitator{} for constraints involving clocks or parameters.
 
 In location \styleIMI{access1}, process~1 can remain any time, and eventually enters the critical section by synchronizing \styleIMI{enter\_1} and incrementing the global variable \styleIMI{counter} by~1.
 
@@ -211,6 +210,19 @@ here \styleIMI{turn} is initially equal to \styleIMI{IDLE}, and \styleIMI{counte
 Finally, parameters are bound to be positive or null (this is not assumed by default by \imitator{}, so users are strongly advised to add this constraint).
 
 Note that the initial definition can introduce more complex constraints on clocks, parameters and discrete variables; see \cref{section:init} for details.
+
+\paragraph{New initial definitions section}
+
+Since \imitator{} 3.1, an \imitator{} model accept a new form of initial definition section that separate discrete initializations from initial constraints. You can see it, commented, on the model above.
+
+This new section introduce a more powerful initialization system allowing initialization of discrete variables by constant expressions. It mean that it's possible to initialize any discrete variables of any type (proposed by \imitator{}) with an expression that can be resolved at compile time (use of variables is forbbiden). It's also the only way to initialize discrete integer and discrete boolean variables.
+
+Note the difference between constraints initializations and discrete variables initializations. The first are initialized in the \styleIMI{continuous} section while other are initialized in the \styleIMI{discrete} section. Moreover, discrete variables are initialized with the assignment operator \styleIMI{:=} in contrast with unification operator \styleIMI{=} used for constraints. As all discrete variables are independent, the initializations are separated with a comma.
+
+As discrete variables are syntactic sugar for locations, you can see that locations are initialized in the same manner as discrete variables in the \styleIMI{discrete} section.
+
+Except this particular elements, this new init state follow the same rules and behavior than the previous init state.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Property syntax}
@@ -278,7 +290,7 @@ An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of pa
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-\subsection{Clocks, parameters, discrete variables}
+\subsection{Clocks, parameters}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 
 \emph{Clocks} are real-valued variables.
@@ -293,9 +305,27 @@ A set of parameters is $\Param = \{ \param_1, \dots, \param_\ParamCard \} $;
 a parameter valuation is a function $\pval\colon \Param \rightarrow \grandr$.
 We will often identify a valuation~$\pval$ with the \emph{point} $(\pval(\param_1), \dots, \pval(\param_{\ParamCard}))$.
 
-\emph{Discrete variables} are rational-valued variables.
-A set of discrete variables is $\DVar = \{ \dvar_1, \dots, \dvar_\DVarCard \} $;
-a discrete variable valuation is a function $\dval \colon \DVar \rightarrow \grandn$.
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+\subsection{Discrete variables}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+
+\emph{Rational variables} are rational-valued variables.
+A set of rational variables is $\RVar = \{ \rvar_1, \dots, \rvar_\RVarCard \} $;
+a rational variable valuation is a function $\rval \colon \RVar \rightarrow \grandn$.
+
+\emph{Integer variables} are bounded signed integer-valued variables encoded on 32 bits.
+A set of integer variables is $\IVar = \{ \ivar_1, \dots, \ivar_\IVarCard \} $;
+a integer variable valuation is a function $\ival \colon \IVar \in \left[-2147483648, 2147483647\right]$.
+Warning : All arithmetic operations over int64 are taken modulo $2^{32}$.
+
+\emph{Boolean variables} are boolean-valued variables.
+A set of boolean variables is $\BVar = \{ \bvar_1, \dots, \bvar_\BVarCard \} $;
+a boolean variable valuation is a function $\bval \colon \BVar \in \{True, False\}$.
+
+\emph{Discrete variables} are rational-valued, integer-valued or boolean-valued variables.
+A set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar $;
+%a discrete variable valuation is a function $\dval \colon \DVar \rightarrow \grandn$.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
@@ -334,7 +364,7 @@ In \imitator{}, we will consider constraints belonging to sets such as $\LConstr
 \subsection{Arithmetic expressions}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 
-Let $\ArithExprD$ denote the set of arithmetic expressions over the discrete variables, \ie{} made of addition, subtraction, multiplication, and division over rational (or integer) constants and discrete variables.
+Let $\ArithExprD$ denote the set of arithmetic expressions over the numerical discrete variables, \ie{} made of addition, subtraction, multiplication, and division over rational (or integer) constants and discrete numerical variables.
 
 
 
@@ -510,13 +540,65 @@ Let us precisely define what it means:
 \end{definition}
 %------------------------------------------------------------
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Type system}\label{section:type_system}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Since version 3.1 \imitator{} support typed discrete variables. Few common primitive types as integer, rational and boolean are available. They can be declared with the following keywords :
+
+\begin{itemize}
+\item Rational: \styleIMI{discrete} or \styleIMI{rational}
+\item Integer (32 bits): \styleIMI{int}
+\item Boolean: \styleIMI{bool}
+\end{itemize}
+
+Theses types are divided into two categories: numerical and boolean. Integer and rational types belong to numerical category, while boolean type belong to boolean category.
+
+\imitator{} models are statically typed in the sense of their variables and expressions types are resolved upstream of the algorithms execution.
+
+In this continuity, discrete variables are not latently typed. The types are associated with variables and not with values. In other terms, once a variable is declared with a defined type, it only accept this type.
+
+\subsection{Type checking}
+
+In order to verify the model type consistency, a step called type checking, is applied - during the semantic analysis - on all expressions of the model: declarations, assignments, updates, conditions (\styleIMI{if-then-else}), guards and invariants. Type checking step do the following :
+
+\begin{itemize}
+ \item It check type consistency within the expressions
+ \item It resolve the types of the expressions
+ \item It apply a numerical type to literal numbers according to the numerical type holding by their outer expression
+ \item It check consistency between an expression type and variable type, in case of assignment
+ \item It check consistency between an expression type and it's grammar rule
+\end{itemize}
+
+\subsection{Expression type solving}
+
+The expression tree is traversed (depth-first search) in order to deduce it's type. As soon as a variable, constant or literal is found, the expression take it's type. If the expression only contain literals numbers, it will be deduce as a rational arithmetic expression. 
+
+All variables, constants or literals types must be in accordance with each other. In other words, an expression doesn't support the mixing of different types because \imitator{} model language doesn't support implicit conversion.
+
+If an expression mix different types, a type error is raise
+
+
+\subsection{Literal number type inference}
+
+The types of literal numbers are automatically resolved during the semantic analysis and more precisely during the type checking step. Once an expression type is resolved, all literal numbers within are automatically typed as the numerical type holding by the expression. 
+
+For example, in the following update expression \styleIMI{b := True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1}  will be automatically typed as a \styleIMI{int}.
+
+\subsection{Type conversion}
+
+As said previously, there is no implicit conversion of variables, constants or literals from one type to another type. All expressions are holding exactly one type and cannot mix different types. However, it's possible to convert an expression to another type using built-in conversion functions:
+
+\begin{itemize}
+\item \styleIMI{rational\_of\_int}: convert an int expression to a rational one
+\end{itemize}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Discrete variables}\label{section:discrete}
+\section{Discrete rational variables}\label{section:discrete}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Discrete variables\footnote{%
+Discrete rational variables\footnote{%
 	The name ``discrete variable'' comes from \hytech{}.
 }
 are global rational-valued variables.
@@ -527,15 +609,38 @@ In \imitator{}, rationals are exact and unbounded, just as in maths (\ie{} they 
 Hence, no overflow can occur, and the representation of the constraints is always exact.
 Note that floating-point numbers (``float'') are totally absent from the \imitator{} implementation (except for the generation of graphical outputs).
 
-Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
+Discrete rational variables must be initialized to a single constant value in the \styleIMI{init} definition;
 if they are not, a warning is issued, and they are arbitrarily set to~0.
 
-Discrete variables can be tested in guards, and updated along transitions.
-They are first tested, then updated.
+Discrete rational variables can be tested in guards, and updated along transitions.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Discrete integer variables}\label{section:discrete_int}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Discrete integer variables are global integer-valued variables. As the same manner as discrete rational variables, their value is global. Discrete integer variables are encoded by a 32 bits signed integer and is architecture independent. The range of it's values is \styleIMI{[-2147483648, 2147483647]}. Integer are exact but bounded, so overflow can occur. In this case, \imitator{} can have an unspecified behavior.
+
+Discrete integer variables must be initialized to a single constant expression or value, of the same type, in the init discrete definition; if they are not, a warning is issued, and they are arbitrarily set to 0.
+
+As well as discrete rational variables, discrete integer variables can be tested in guards, and updated along transitions.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Discrete boolean variables}\label{section:discrete_boolean}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Discrete boolean variables are global boolean-valued variables. As the same manner as discrete rational variables, their value is global. Discrete boolean variables are encoded by two values : \styleIMI{True} or \styleIMI{False}.
+
+Discrete boolean variables must be initialized to a single constant boolean expression or boolean value in the init discrete definition; if they are not, a warning is issued, and they are arbitrarily set to False.
+
+As well as discrete rational variables, discrete boolean variables can be tested in guards, and updated along transitions.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Discrete variables updates}\label{section:discrete_boolean}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Discrete variables are first tested, then updated.
 If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i := 2} while another one performs \styleIMI{i := 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
 If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Initial state and initialization of variables}\label{section:init}
@@ -2555,6 +2660,9 @@ We define each of those two components below.
 	$|$ & \styleIMI{clock}     \\
 	$|$ & \styleIMI{constant}  \\
 	$|$ & \styleIMI{discrete}  \\
+	$|$ & \styleIMI{rational}  \\
+	$|$ & \styleIMI{int}  \\
+	$|$ & \styleIMI{bool}  \\
 	$|$ & \styleIMI{parameter} \\
 \end{tabular}
 
@@ -2618,12 +2726,12 @@ We define each of those two components below.
 \regleGrammaire{location}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}                  \\
-	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}           \\
-	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}        \\
-	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
-	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
-	% 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{transitions} \\
+	\   & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}                  \\
+	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}           \\
+	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}        \\
+	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
+	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
+	% 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{nonlinear\_convex\_predicate} \nt{transitions} \\
 \end{tabular}
 
 % \smallskip
@@ -2707,7 +2815,7 @@ We define each of those two components below.
 \regleGrammaire{transition}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{when} \nt{convex\_predicate} \nt{update\_synchronization} \styleIMI{goto} \styleIMI{<name>} \styleIMI{;} \\
+	\  & \styleIMI{when} \nt{nonlinear\_convex\_predicate} \nt{update\_synchronization} \styleIMI{goto} \styleIMI{<name>} \styleIMI{;} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2783,10 +2891,19 @@ We define each of those two components below.
 \begin{tabular}{l l}
 	\   & \styleIMI{True}                                                    \\
 	$|$ & \styleIMI{False}                                                   \\
-	$|$ & \styleIMI{<>} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
+	$|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
 	$|$ & \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression}    \\
 	$|$ & \nt{boolean\_expression} \styleIMI{|} \nt{boolean\_expression}     \\
 	$|$ & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{discrete\_boolean\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
+	$|$ & \nt{arithmetic\_expression} \styleIMI{in} $[$ \nt{arithmetic\_expression} \styleIMI{,} \nt{arithmetic\_expression} $]$ \\
+	$|$ & \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2848,10 +2965,35 @@ We define each of those two components below.
 \end{tabular}
 
 %------------------------------------------------------------
+\regleGrammaire{nonlinear\_convex\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{\&} \nt{nonlinear\_convex\_predicate\_fol} \\
+	$|$ & \nt{nonlinear\_convex\_predicate\_fol}               \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{nonlinear\_convex\_predicate\_fol}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{nonlinear\_constraint} \styleIMI{\&} \nt{nonlinear\_convex\_predicate} \\
+	$|$ & \nt{nonlinear\_constraint}                                      \\
+\end{tabular}
+
+%------------------------------------------------------------
 \regleGrammaire{linear\_constraint}
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\   & \nt{linear\_expression} \nt{relop} \nt{linear\_expression} \\
+	$|$ & \styleIMI{True}                                            \\
+	$|$ & \styleIMI{False}                                           \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{nonlinear\_constraint}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{discrete\_boolean\_expression} \\
 	$|$ & \styleIMI{True}                                            \\
 	$|$ & \styleIMI{False}                                           \\
 \end{tabular}
@@ -2863,6 +3005,7 @@ We define each of those two components below.
 	\   & \styleIMI{<}  \\
 	$|$ & \styleIMI{<=} \\
 	$|$ & \styleIMI{=}  \\
+	$|$ & \styleIMI{<>}  \\
 	$|$ & \styleIMI{>=} \\
 	$|$ & \styleIMI{>}  \\
 	% 	$|$ & \styleIMI{<>} \\
