@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2020/08/28
+ * Last modified     : 2021/04/21
  *
  ************************************************************)
 
@@ -37,7 +37,7 @@ val path_to_program : string
 (************************************************************)
 (************************************************************)
 
-val dot_command : string
+val dot_binary_name : string
 
 (************************************************************)
 (************************************************************)
@@ -120,3 +120,51 @@ val special_reset_clock_name	: string
 
 (* Default step for the cartography algorithms *)
 val default_cartography_step	: NumConst.t
+
+(************************************************************)
+(************************************************************)
+(* Strings *)
+(************************************************************)
+(************************************************************)
+
+(** Data structure allowing for customizing string conversions of bool symbols *)
+type customized_boolean_string = {
+	true_string  : string;
+	false_string : string;
+	and_operator : string;
+	or_operator  : string;
+	l_operator   : string;
+	le_operator  : string;
+	eq_operator  : string;
+	neq_operator : string;
+	ge_operator  : string;
+	g_operator   : string;
+	not_operator : string;
+}
+
+(** Data structure allowing for customizing string conversions of arithmetic symbols *)
+type customized_arithmetic_string = {
+    plus_string : string;
+    minus_string : string;
+    mul_string : string;
+    div_string : string;
+    unary_min_string : string;
+}
+
+(** Data structure allowing for customizing string conversions of symbols *)
+type customized_string = {
+    arithmetic_string : customized_arithmetic_string;
+    boolean_string : customized_boolean_string;
+}
+
+val global_default_string : customized_string
+(** Default string values of bool symbols *)
+val default_string : customized_boolean_string
+(** Default string values of bool symbols without white spaces around operators *)
+val default_string_without_whitespace : customized_boolean_string
+(** Default string values of arithmetic symbols *)
+val default_arithmetic_string : customized_arithmetic_string
+(** Default string values of arithmetic symbols without white spaces around operators *)
+val default_arithmetic_string_without_whitespace : customized_arithmetic_string
+(** Default string of symbols *)
+val global_default_string : customized_string

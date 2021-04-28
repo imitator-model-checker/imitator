@@ -1,0 +1,19 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * An ATM modeled using a PTA
+ *
+ * Description     : An ATM modeled using a PTA.
+ * Correctness     : N/A
+ * Source          : Fig.1, "Parameter Synthesis Problems for one parametric clock Timed Automata" (https://arxiv.org/abs/1809.07177)
+ * Author          : Liyun Dai, Taolue Chen, Zhiming Liu, Bican Xia, Naijun Zhan, Kim G. Larsen
+ * Modeling        : Liyun Dai, Taolue Chen, Zhiming Liu, Bican Xia, Naijun Zhan, Kim G. Larsen + Étienne André
+ * Input by        : Jawher Jerray, Étienne André
+ * License         : unclear ("Non-exclusive license to distribute" on arxiv: https://arxiv.org/licenses/nonexclusive-distrib/1.0/license.html)
+ *
+ * Created         : 2021/02/09
+ * Last modified   : 2021/02/09
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+property := #synth DeadlockFree;

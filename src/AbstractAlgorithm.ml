@@ -6,9 +6,9 @@
  *
  * Module description: Mode and algorithms for IMITATOR
  *
- * File contributors : Étienne André
+ * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/18
- * Last modified     : 2020/09/23
+ * Last modified     : 2021/02/24
  *
  ************************************************************)
 
@@ -26,11 +26,13 @@ open Exceptions
 type translation =
 	| HyTech
 	| IMI
+	| DOT
 	| JPG
 	| PDF
 	| PNG
 	| TikZ
 	| Uppaal
+  | JaniSpec
 
 
 (************************************************************)
@@ -147,10 +149,10 @@ type cycle_algorithm =
 type nz_method =
 	(** Method by checking whether the PTA is already a CUB-PTA for some valuation *)
 	| NZ_check
-	
+
 	(** Method by transforming the PTA into a CUB-PTA *)
 	| NZ_transform
-	
+
 	(** Method assuming the PTA is already a CUB-PTA *)
 	| NZ_already
 
@@ -211,11 +213,13 @@ let cartography_drawing_possible = function
 let string_of_translation = function
 	| HyTech -> "HyTech"
 	| IMI    -> "IMITATOR"
+	| DOT    -> "DOT"
 	| JPG    -> "JPG"
 	| PDF    -> "PDF"
 	| PNG    -> "PNG"
 	| TikZ   -> "TikZ"
 	| Uppaal -> "Uppaal"
+  | JaniSpec -> "JaniSpec"
 
 
 let string_of_mode (imitator_mode : imitator_mode) : string = match imitator_mode with
@@ -268,4 +272,3 @@ let string_of_state_comparison_operator (state_comparison_operator : state_compa
 	| Including_check -> "including check"
 	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
 	| Double_inclusion_check -> "double inclusion check"
-

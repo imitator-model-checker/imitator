@@ -1,21 +1,28 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * Wireless fire alarm system
- *
- * Description     : wireless fire alarm system. Note that [BBLS15] only synthesize point valuations, and not the most general constraint satisfying correctness.
- * Correctness     : No failure and no timeout (safety property)
- *
- * Source          : "Language Emptiness of Continuous-Time Parametric Timed Automata" by Nikola Benes, Peter Bezdek, Kim G. Larsen, and Jiri Srba (the model was described in Sergio Feo-Arenis, Bernd Westphal, Daniel Dietsch, Marco Mun ̃iz, and Siyar Andisha. The wireless fire alarm system: Ensuring conformance to industrial standards through formal verification. In FM'14, volume 8442 of LNCS, pages 658–672. Springer, 2014.)
- * URL             : http://arxiv.org/abs/1504.07838v1
- * Author          : cf. above
- * Input by        : Étienne André
- *
- * Created         : 2015/05/13
- * Last modified   : 2020/08/13
- *
- * IMITATOR version: 3
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : WFAS-BBLS15
+ * Description      : wireless fire alarm system. Note that [BBLS15] only synthesize point valuations, and not the most general constraint satisfying correctness.
+ * Correctness      : No failure and no timeout (safety property)
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Academic
+ * Source           : "Language Emptiness of Continuous-Time Parametric Timed Automata" by Nikola Benes, Peter Bezdek, Kim G. Larsen, and Jiri Srba (the model was described in Sergio Feo-Arenis, Bernd Westphal, Daniel Dietsch, Marco Mun ̃iz, and Siyar An- disha. The wireless fire alarm system: Ensuring conformance to industrial standards through formal verification. In FM'14, volume 8442 of LNCS, pages 658–672. Springer, 2014.) (URL http://arxiv.org/abs/1504.07838v1)
+ * bibkey           : BBLS15
+ * Author           : cf. above
+ * Modeling         : 
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2015/05/13
+ * Last modified    : 2020/08/13
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 var
 
@@ -122,10 +129,10 @@ init := True
 	  ------------------------------------------------------------*)
 	& p1 >= 0
 	& p2 >= 0
-	
+
 (*	& p1 <= 50
 	& p2 <= 50*)
-	
+
 (* 	& 0 < p1 & p1 < 5 *)
 (* 	& p1 > 2 *)
 

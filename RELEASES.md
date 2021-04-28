@@ -1,4 +1,23 @@
 *******************************************************
+# release 3.1.0-beta (2021-04-28) Cheese Artichoke
+
+### Syntax changes in the property
+* `property := AcceptingCycle` now allowed as a shortcut for `property := CycleThrough(accepting)`
+
+### Result
+* IMITATOR now attempts to generate a result (`.res`) file even in the case of an error such as parsing error of the model or of the property
+
+### Export
+* New translation to the [JANI](https://jani-spec.org/) interchange format
+
+### Bug fixing:
+* Fixed an issue met in v3 when a division by 0 is encountered.
+
+### Benchmarks
+* Entire refactoring of the benchmarks library [AMP21]
+
+
+*******************************************************
 # release 3 (2021-01-12) Cheese
 MAJOR RELEASE
 

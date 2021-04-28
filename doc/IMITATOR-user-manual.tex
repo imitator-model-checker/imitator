@@ -135,7 +135,7 @@ First, text in comments gives generalities about the model (author, date, descri
 The form is not normalized, but it could be in the future, so it is strongly advised to follow this form.\footnote{%
 	An empty model template with all these comments ready to be filled out (containing also a sample \IPTA{} and its initial definitions) is available at:
 
-	\url{https://github.com/imitator-model-checker/imitator/blob/master/benchmarks/model.imi}.
+	\url{https://github.com/imitator-model-checker/imitator/blob/master/benchmarks/template.imi}.
 }
 
 \paragraph{Variable declarations}
@@ -145,10 +145,10 @@ This model contains two clocks: \styleIMI{x1} is process~1's clock, and \styleIM
 
 This model contains two parameters: \styleIMI{delta} is the parametric duration specifying how long a process is idle at most, whereas \styleIMI{gamma} is the parametric duration specifying the minimum duration between the time a process checks for the availability of the critical section and the time the same process indeed enters the critical section (if it is still available).
 
-Two discrete variables (\ie{} global, rational-valued variables, see \cref{section:discrete}) are used:
+Two rational-valued variables (\ie{} global, discrete variables, see \cref{section:discrete}) are used:
 \styleIMI{turn} checks which process is attempting to enter the critical section;
 \styleIMI{counter} records how many processes are in the critical section (this variable will not be used for the verification, but was used in the original \pat{} model, and we choose to keep it).
-% TODO: use it for verification once IMITATOR supports global variables in properties
+% TODO: use it for verification since IMITATOR supports global variables in properties
 
 Finally, a global constant \styleIMI{IDLE} is set to \styleIMI{-1} (just as in the original \pat{} model), and encodes that no process is attempting to enter the critical section.
 
@@ -175,7 +175,6 @@ At any time, this \IPTA{} may synchronize on action \styleIMI{update\_1}, reset 
 In location \styleIMI{check1}, the process wait at least \styleIMI{gamma} time units (modeled by the inequality \styleIMI{x1 >= gamma}, in all outgoing transitions).
 If \styleIMI{turn} is still equal to \styleIMI{1} (that is, no other process attempted in the meanwhile to enter the critical section), then process~1 is indeed ready to enter the critical section, by synchronizing \styleIMI{access\_1} and resetting \styleIMI{x1}.
 If \styleIMI{turn} is different from \styleIMI{1} (that is, another process attempted in the meanwhile to enter the critical section, and it is not safe for process~1 to enter), then process~1 returns to its idle location, by synchronizing \styleIMI{no\_access\_1} and resetting \styleIMI{x1}.
-Note that we have to use two transitions checking that either \styleIMI{turn < 1} or \styleIMI{turn > 1} to compensate that the ``different from'' operator (``\styleIMI{$\neq$}'') is not (yet) supported by \imitator{} for constraints involving clocks or parameters.
 
 In location \styleIMI{access1}, process~1 can remain any time, and eventually enters the critical section by synchronizing \styleIMI{enter\_1} and incrementing the global variable \styleIMI{counter} by~1.
 
@@ -197,20 +196,39 @@ Note that the observer simply observes the system state, and synchronizes on the
 A graphical representation of the \IPTA{} \styleIMI{observer} is given in \cref{pta:observer}.
 
 
-\paragraph{Initial definitions}
-The initial state is defined the part of the file following \styleIMI{init :=}.
-This part must contain the initial location of each \IPTA{}.
-For example, \styleIMI{loc[proc1] = idle1} states that \styleIMI{proc1} is initially in location \styleIMI{idle1}.
+\paragraph{Initial state definition}
 
-The initial definition may (only may, see \cref{section:init}) give an initial value to the clocks, for example requiring them to be equal to some constant (typically~0).
-Here, clocks are only bound to be greater or equal to~0.
+The initial state is defined by the part of the file following \styleIMI{init :=}.
 
+Since \imitator{} 3.1, the initial definition section is split between the \emph{discrete} initialization and the \emph{continuous} initialization (the latter being given in the form of a set of constraints).
+
+% This new section introduce a more powerful initialization system allowing initialization of discrete variables by constant expressions. It mean that it's possible to initialize any discrete variables of any type (proposed by \imitator{}) with an expression that can be resolved at compile time (use of variables is forbbiden). It's also the only way to initialize discrete integer and discrete boolean variables.
+
+% Note the difference between constraints initializations and discrete variables initializations.
+% Disrete are initialized in the \styleIMI{continuous} part while other are initialized in the \styleIMI{discrete} part. 
+The discrete initialization (introduced by the \styleIMI{discrete} keyword) assigns an initial value to each discrete (global) variable, and sets the initial location for each automaton.
+Note that the assignment operator \styleIMI{:=} is used (in contrast with unification operator \styleIMI{=} used for constraints).
+% As all discrete variables are independent, the initializations are separated with a comma.
+%
+% As discrete variables are syntactic sugar for locations, you can see that locations are initialized in the same manner as discrete variables in the \styleIMI{discrete} part. Except this particular elements, this new init state follow the same rules and behavior than the previous init state.
+%
+% Init \styleIMI{discrete} part must contain the initial location of each \IPTA{}.
+For example, \styleIMI{loc[proc1] := idle1} states that \styleIMI{proc1} is initially in location \styleIMI{idle1}.
 The initial definition should assign a constant value to each discrete variable:
-here \styleIMI{turn} is initially equal to \styleIMI{IDLE}, and \styleIMI{counter} is initially equal to~0.
+here \styleIMI{turn} is initially assigned to \styleIMI{IDLE}, and \styleIMI{counter} is initially assigned to~0.
 
-Finally, parameters are bound to be positive or null (this is not assumed by default by \imitator{}, so users are strongly advised to add this constraint).
+The continuous initialization (introduced by the \styleIMI{continuous} keyword) defines the initial constraints over clocks and parameters (possibly also using discrete variables).
+%
+The initial definition may (only may, see \cref{section:init}) give an initial value to the clocks, for example requiring them to be equal to some constant (typically~0).
+In our example, clocks are only bound to be greater or equal to~0.
+%
+Finally, in this example, parameters are bound to be non-negative as well.
+% (this is not assumed by default by \imitator{}, so users are strongly advised to add this constraint).
+%
+Note that the initial definition can introduce more complex constraints over clocks, parameters and discrete variables; see \cref{section:init} for details.
 
-Note that the initial definition can introduce more complex constraints on clocks, parameters and discrete variables; see \cref{section:init} for details.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Property syntax}
@@ -278,24 +296,104 @@ An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of pa
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-\subsection{Clocks, parameters, discrete variables}
+\subsection{Clocks, parameters}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 
 \emph{Clocks} are real-valued variables.
 A set of clocks is $\Clock = \{ \clock_1, \dots, \clock_\ClockCard \}$;
 a clock valuation is
-$\clockval \colon \Clock \rightarrow \grandrplus$.
+$\clockval : \Clock \rightarrow \setRplus$.
 By default, all clocks are evolving at the same rate (1), but this rate can be defined to any rational value in \imitator{}.
-Clocks can also be \emph{stopped} in \imitator{}.
+Clocks can also be \emph{stopped} in \imitator{}, \ie{} their rate can be null.
 
 \emph{Parameters} are rational-valued variables, that act as unknown constants.
 A set of parameters is $\Param = \{ \param_1, \dots, \param_\ParamCard \} $;
-a parameter valuation is a function $\pval\colon \Param \rightarrow \grandr$.
+a parameter valuation is a function $\pval : \Param \rightarrow \setR$.
 We will often identify a valuation~$\pval$ with the \emph{point} $(\pval(\param_1), \dots, \pval(\param_{\ParamCard}))$.
 
-\emph{Discrete variables} are rational-valued variables.
-A set of discrete variables is $\DVar = \{ \dvar_1, \dots, \dvar_\DVarCard \} $;
-a discrete variable valuation is a function $\dval \colon \DVar \rightarrow \grandn$.
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+\subsection{Discrete variables}\label{section:discrete}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+
+\imitator{} features \emph{discrete} variables.
+%
+Discrete variables\footnote{%
+	The name ``discrete variable'' comes from \hytech{}.
+}
+are global variables.
+Their value is global, in the sense that they are shared by all \IPTA{} of the model.
+They can be seen as syntactic sugar to represent a possibly unbounded number of locations.
+
+
+Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
+if they are not, a warning is issued, and they are arbitrarily set to a standard value (\eg{}~0 for numerical variables, and to \BFalse{} for Boolean variables).
+
+Discrete variables can be tested in guards, and updated along transitions.
+
+\imitator{} currently supports three types of discrete variables:
+\begin{enumerate}
+	\item rational-valued variables
+	\item ``int''-valued variables (over 32~bits)
+	\item Boolean variables
+\end{enumerate}
+
+%------------------------------------------------------------
+\subsubsection{Rational-valued variables}
+%------------------------------------------------------------
+
+\emph{Rational variables} are rational-valued variables.
+
+In \imitator{}, rationals are exact and unbounded, just as in maths (\ie{} they are \emph{not} represented using a limited number of bits, such as 32 or 64 bits).
+%
+Rational variables are encoded in \imitator{} as \emph{exact rational arithmetics}, thanks to the GNU Multiple Precision Arithmetic (GMP) library.
+Therefore, neither floating-point approximation, nor overflow, can occur;
+%
+% Hence, no overflow can occur,
+and the representation of the constraints is always exact.
+Note that floating-point numbers (``float'') are totally absent from the \imitator{} implementation (except for the generation of graphical outputs).
+
+In the following, we define the set of rational variables as $\RVar = \{ \rvar_1, \dots, \rvar_\RVarCard \} $;
+a rational variable valuation is a function $\rval : \RVar \rightarrow \setQ$.
+
+
+
+%------------------------------------------------------------
+\subsubsection{``Int''-valued variables}
+%------------------------------------------------------------
+
+\emph{Int variables} are bounded signed integer-valued variables encoded on 32 bits (which is architecture independent).
+
+Int variables are encoded in \imitator{} using the \styleFileContent{int} type of OCaml.
+
+\begin{becareful}[int encoding]
+	All arithmetic operations over the ``int'' variables are taken modulo $2^{32}$.
+	Overflow can therefore occur.
+	
+	For critical models, it is highly advised to use \emph{rational} variables instead (the computation using rational variables is slower but always exact).
+\end{becareful}
+
+Formally, the set of integer variables is $\IVar = \{ \ivar_1, \dots, \ivar_\IVarCard \} $;
+an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \cap \left[-2,147,483,648, +2,147,483,647\right]$.
+
+
+%------------------------------------------------------------
+\subsubsection{Boolean variables}
+%------------------------------------------------------------
+
+% \emph{Boolean variables} are boolean-valued variables.
+\imitator{} also features Boolean-valued variables.
+The set of Boolean variables is $\BVar = \{ \bvar_1, \dots, \bvar_\BVarCard \} $;
+a Boolean variable valuation is a function $\bval : \BVar \rightarrow \setB$, where $\setB = \{\BTrue, \BFalse \}$.
+
+
+%------------------------------------------------------------
+\subsubsection{Discrete variables}
+%------------------------------------------------------------
+
+The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar $.
+
+%a discrete variable valuation is a function $\dval : \DVar \rightarrow \setN$.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
@@ -303,16 +401,16 @@ a discrete variable valuation is a function $\dval \colon \DVar \rightarrow \gra
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 
 Let us formalize the set of linear constraints allowed in \imitator{}.
-Given a set of variables~$\Var = \{ \var_1, \dots, \var_\VarCard \}$ (in the following, this set will be instantiated with $\Clock$ and/or $\Param$ and/or $\DVar$), a \emph{linear term} over $\Var$ is an expression of the form
+Given a set of variables~$\Var = \{ \var_1, \dots, \var_\VarCard \}$ (in the following, this set will be instantiated with $\Clock$ and/or $\Param$ and/or $\RVar$), a \emph{linear term} over $\Var$ is an expression of the form
 $$
 	\sum_{1 \leq i \leq n} \alpha_i \var_i + d
 $$
-for some $n \in \grandn$,
+for some $n \in \setN$,
 where
 $\var_{i} \in \Var$,
-$\alpha_{i} \in \grandq$, for $1 \leq i \leq n$,
+$\alpha_{i} \in \setQ$, for $1 \leq i \leq n$,
 and
-$d \in \grandq$.
+$d \in \setQ$.
 
 An~\emph{atomic constraint} over $\Var$ is an expression of the form
 % An \emph{inequality} over $\Clock$ and~$\Param$ is $e \bowtie 0$, where , and $e$ is a linear term %of the form
@@ -326,7 +424,7 @@ ${\bowtie} \in \{ <, \leq, =, \geq, > \}$.
 
 A~\emph{constraint} over $\Var$ is a conjunction of atomic constraints.
 We denote by $\LTerm(\Var)$ the set of linear terms over~$\Var$, and by $\LConstraint(\Var)$ the set of constraints over~$\Var$.
-In \imitator{}, we will consider constraints belonging to sets such as $\LConstraintXP$ (\ie{} the set of constraints over clocks and parameters), or $\LConstraintXPD$ (\ie{} the set of constraints over clocks, parameters and discrete variables).
+In \imitator{}, we will consider constraints belonging to sets such as $\LConstraintXP$ (\ie{} the set of constraints over clocks and parameters), or $\LConstraintXPD$ (\ie{} the set of constraints over clocks, parameters and discrete rational-valued variables).
 
 
 
@@ -334,7 +432,7 @@ In \imitator{}, we will consider constraints belonging to sets such as $\LConstr
 \subsection{Arithmetic expressions}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 
-Let $\ArithExprD$ denote the set of arithmetic expressions over the discrete variables, \ie{} made of addition, subtraction, multiplication, and division over rational (or integer) constants and discrete variables.
+Let $\ArithExprR$ denote the set of arithmetic expressions over the numerical discrete rational variables, \ie{} made of addition, subtraction, multiplication, and division over rational (or integer) constants and discrete numerical variables.
 
 
 
@@ -345,6 +443,13 @@ Let $\ArithExprD$ denote the set of arithmetic expressions over the discrete var
 
 % \paragraph{\imitator{} Parametric Timed Automata}
 We can now give a formal definition of \IPTA{}.
+
+%------------------------------------------------------------
+\begin{remark}
+	In the subsequent formal definition, we rule out int-valued variables and Boolean variables, for sake of simplicity.
+	They can be used in a straightforward manner.
+\end{remark}
+%------------------------------------------------------------
 
 Let $\unobs$ denote the unobservable action.
 
@@ -359,14 +464,14 @@ Let $\unobs$ denote the unobservable action.
 		\item $\Clock$ is a set of clocks;
 		\item $\Param$ is a set of parameters;
 		\item $\invariant : \Loc \rightarrow \LConstraintXPD$ assigns to every location~$\loc$ a constraint over all variables, called the \emph{invariant} of~$\loc$;
-		\item $\flow : \Loc \times \Clock \rightarrow \grandq$ assigns to a every location and clock a given flow (or speed), \ie{} a rational number;
+		\item $\flow : \Loc \times \Clock \rightarrow \setQ$ assigns to a every location and clock a given flow (or speed), \ie{} a rational number;
 		\item $\steps$ is a set of edges $(\loc, \guard, \action, \Cupdates, \Dupdates, \loc')$, where
 		      $\loc, \loc' \in \Loc$ are the source and destination locations,
 		      $\guard \in \LConstraintXPD$ is a constraint over all variables (called \emph{guard} of the transition),
 		      $\action \in \Action \cup \{ \unobs \}$ is the action associated with the transition,
 		      $\Cupdates : \Clock \rightharpoonup \LTermXPD$ is the (possibly partial) update function for clocks, and
 		      % TODO: sure that we can update to anything??
-		      $\Dupdates : \DVar \rightharpoonup \ArithExprD$ is the (possibly partial) update function for discrete variables.
+		      $\Dupdates : \RVar \rightharpoonup \ArithExprR$ is the (possibly partial) update function for discrete rational variables.
 	\end{itemize}
 \end{definition}
 %------------------------------------------------------------
@@ -376,8 +481,8 @@ In the following, we explain this definition.
 \paragraph{Guards and invariants}
 Guards and invariants in \imitator{} are linear constraints over all variables.
 For example, the following expression can be used in a guard or an invariant:
-$$ \styleIMI{i1 + .5 x1 + 3 x2 >= 2 p1 - i2 \& p2 < 1/3} $$
-where \styleIMI{i1}, \styleIMI{i2} are discrete variables, \styleIMI{x1}, \styleIMI{x2} are clocks and \styleIMI{p1}, \styleIMI{p2} are parameters.
+$$ \styleIMI{r1 + .5 x1 + 3 x2 >= 2 p1 - r2 \& p2 < 1/3} $$
+where \styleIMI{r1}, \styleIMI{r2} are discrete rational variables, \styleIMI{x1}, \styleIMI{x2} are clocks and \styleIMI{p1}, \styleIMI{p2} are parameters.
 This syntax includes in particular diagonal constraints (\eg{} \styleIMI{x1 - x2 <= 2}), not always supported in other model-checking tools.
 
 \paragraph{Actions}
@@ -386,16 +491,17 @@ For the semantics of the synchronization model between various \IPTA{}, refer to
 A non-silent transition is said to be \emph{observable}; and it can be synchronized with other automata.
 
 \paragraph{Clock updates}
-Observe that clocks can be updated to any value, \ie{} a clock can be assigned not only to~0, but to any linear term over the other clocks, the parameters and the discrete variables.
+Observe that clocks can be updated to any value, \ie{} a clock can be assigned not only to~0, but to any linear term over the other clocks, the parameters and the discrete rational variables.
 This considerably extends the traditional syntax of PTAs defined in~\cite{AHV93}.
 In fact, the \imitator{} includes (more than just) the updatable timed automata of~\cite{BDFP04}, as well as the reset-to-parameter (parametric) timed automata of~\cite{ALR18PresetTA}.
 If clocks are always reset to constants (\ie{} not assigned to more complex linear terms), \imitator{} will apply some optimizations that (may) increase the analysis speed.
 % TODO: nice box with a ``tip'' title
 
 \paragraph{Discrete updates}
-Discrete variables can be assigned to arithmetic expressions over~$\DVar$.
-On the one hand, this is more restrictive than clock updates, because discrete variables cannot be assigned to a clock or to a parameter.
-On the other hand, arithmetic expressions are richer than linear constraints, as they allow multiplication or division of variables with each other.
+Discrete variables can be assigned to expressions compatible with their type.
+Notably, rational variables can be assigned to rational arithmetic expressions over~$\RVar$.
+On the one hand, this is more restrictive than clock updates, because discrete rational variables cannot be assigned to a clock or to a parameter.
+On the other hand, arithmetic expressions are richer than linear constraints, as they allow multiplication or division of rational variables with each other.
 
 Since version 2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
 
@@ -431,14 +537,14 @@ A stopwatch has flow~0.
 \begin{remark}
 	It is possible to defined ill-formed models where contradictory flows are defined for a given clock.
 	For example, in
-	
+
 	\styleIMI{stop \{ x \} flow \{x' = 2, y' = 0\}}
-	
+
 	\noindent
 	\styleIMI{x} is assigned both flow~0 (because it is defined as a stopped clock) and 2 (in the explicit flow definition).
-	
-	Alternatively, in a \NIPTA{}, it is possible to be in a global location such that, in one location of one of the automata a given clock is assigned a given flow, and in another location of another automata in parallel, the same clock is assigned another flow.
-	
+
+	Alternatively, in an \NIPTA{}, it is possible to be in a global location such that, in one location of one of the automata a given clock is assigned a given flow, and in another location of another automata in parallel, the same clock is assigned another flow.
+
 	In the case of such contradictory flows, \imitator{} will trigger a warning on-the-fly, and the result of the analysis is unspecified.
 \end{remark}
 %------------------------------------------------------------
@@ -461,7 +567,7 @@ Note however that ``in $0$-time'' does not necessarily mean immediately: that is
 
 %------------------------------------------------------------
 \begin{definition}[\NIPTA{}]
-	Given a set of \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \flow_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$,
+	Given a set of \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \flow_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \setN$,
 	a network of \IPTA{} (\emph{\NIPTA{}}) is a tuple
 	$\tuple{\Action, \DVar, \Clock, \Param, \{ \A_i \mid 1 \leq i \leq N \}, \Cinit}$, where:
 	\begin{itemize}
@@ -469,7 +575,7 @@ Note however that ``in $0$-time'' does not necessarily mean immediately: that is
 		\item $\DVar = \bigcup_{1 \leq i \leq N} \DVar_i$ is the set of all discrete variables;
 		\item $\Clock = \bigcup_{1 \leq i \leq N} \Clock_i$ is the set of all clocks;
 		\item $\Param = \bigcup_{1 \leq i \leq N} \Param_i$ is the set of all parameters;
-		\item $\Cinit \in \LConstraintXPD$ is the initial constraint over $\DVar$, $\Clock$ and $\Param$. % TODO
+		\item $\Cinit \in \LConstraintXPD$ is the initial constraint over $\RVar$, $\Clock$ and $\Param$. % TODO
 	\end{itemize}
 \end{definition}
 %------------------------------------------------------------
@@ -480,10 +586,10 @@ If a variable is required to be local to an \IPTA{}, then it should just not be 
 
 Different from many tools for (parametric) timed automata, clocks are not necessarily initially equal to~0 (this is similar to \hytech{}~\cite{HHW95} but different from \uppaal{}~\cite{LPY97}).
 The initial value of the clocks is defined by~$\Cinit$ (see \cref{section:init}).
-If nothing is defined in~$\Cinit$, then their value is supposed to be arbitrary (any real value greater or equal to~0).
+If nothing is defined in~$\Cinit$, then their value is supposed to be arbitrary (any real value).
 
 
-In a \NIPTA{}, a clock~$\clock$ is stopped in a location $(\loc_1, \dots, \loc_N)$ if it stopped in at least one of the locations~$\loc_i$, \ie{} $\clock \in \flow_i(\loc_i) = 0$ for some~$i \in \{ 1 , \dots , N \}$.
+In an \NIPTA{}, a clock~$\clock$ is stopped in a location $(\loc_1, \dots, \loc_N)$ if it stopped in at least one of the locations~$\loc_i$, \ie{} $\clock \in \flow_i(\loc_i) = 0$ for some~$i \in \{ 1 , \dots , N \}$.
 % TODO
 
 Note that parameters are not assumed to be positive; however, the behavior of \imitator{} has not been tested for negative parameters, and it is strongly advised to constrain them to be non-negative in $\Cinit$ (if it is not the case, a warning is issued by \imitator{}).
@@ -494,13 +600,13 @@ Finally, note that the number of \IPTA{}, locations, variables and actions that 
 
 \bigskip
 
-\imitator{} may use the determinism in (yet to come) algorithms; and the deterministic nature of a \NIPTA{} is detected by \imitator{}.
+\imitator{} may use the determinism in (yet to come) algorithms; and the deterministic nature of an \NIPTA{} is detected by \imitator{}.
 In our setting, the strong determinism denotes at most one transition going out from a location and labeled with a given observable (\ie{} non-silent) transition.
 Let us precisely define what it means:
 
 %------------------------------------------------------------
 \begin{definition}[strong determinism]
-	Let $\A$ be a \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \flow_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$.
+	Let $\A$ be an \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \flow_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \setN$.
 
 	$\A$ is \emph{strongly-deterministic} if
 	for all automaton $\A_i$,
@@ -512,30 +618,14 @@ Let us precisely define what it means:
 
 
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Discrete variables}\label{section:discrete}
+\section{Discrete variables updates}\label{section:discrete_boolean}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Discrete variables\footnote{%
-	The name ``discrete variable'' comes from \hytech{}.
-}
-are global rational-valued variables.
-Their value is global, in the sense that they are shared by all \IPTA{} of the model.
-They can be seen as syntactic sugar to represent a possibly unbounded number of locations.
-
-In \imitator{}, rationals are exact and unbounded, just as in maths (\ie{} they are \emph{not} represented using a limited number of bits, such as 32 or 64 bits).
-Hence, no overflow can occur, and the representation of the constraints is always exact.
-Note that floating-point numbers (``float'') are totally absent from the \imitator{} implementation (except for the generation of graphical outputs).
-
-Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
-if they are not, a warning is issued, and they are arbitrarily set to~0.
-
-Discrete variables can be tested in guards, and updated along transitions.
-They are first tested, then updated.
+Discrete variables are first tested, then updated.
 If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i := 2} while another one performs \styleIMI{i := 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
 If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Initial state and initialization of variables}\label{section:init}
@@ -553,8 +643,8 @@ That is, we can define initial constraints such as:
 \end{center}
 % TODO: style for sample piece of file
 
-However, discrete variables must be initialized to a \emph{constant rational}.
-Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i = ...} followed by a linear term in $\LTermD$, then \imitator{} will assume that \styleIMI{i} is initially set to~0, and will issue a warning.
+However, discrete variables must be initialized to a \emph{constant} compatible with their type.
+Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i := ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to~0 (or to $\BFalse$ for Boolean variables), and will issue a warning.
 
 
 
@@ -686,17 +776,17 @@ output the text description of all states (option \styleOption{-states-descripti
 	That is, one can define properties of the form:
 
 	\styleIMI{property := \#witness EF(accepting);}
-	
+
 	or even:
-	
+
 	\styleIMI{property := \#synth EF(loc[pta] = l1 | (accepting \& loc[pta] <> l2));}
-	
+
 	The semantics of the acceptance of a state is as follows: ``at least one of the locations is accepting (as specified by the \styleIMI{accepting} keyword in the model).''
-	
+
 % 	If one defines \styleIMI{accepting} locations in the model \emph{and} uses a \styleIMI{state\_predicate} in the property, \emph{both} acceptance conditions are considered at the same time.
 % 	In this case,
 % 	the semantics of the acceptance of a state is as follows: ``either at least one of the locations is accepting (thanks to the \styleIMI{accepting} keyword), \emph{or} the state matches the \styleIMI{state\_predicate} in the property.''
-% 	
+%
 % 	The presence of the \styleIMI{accepting} keyword can be seen as a ``hack'' to make property writing easier in some cases.
 \end{remark}
 %------------------------------------------------------------
@@ -704,13 +794,13 @@ output the text description of all states (option \styleOption{-states-descripti
 % %------------------------------------------------------------
 % \begin{becareful}
 % 	From \cref{remark:accepting}, one can see that
-% 	
+%
 % 	\styleIMI{property := \#synth EF(False);}
-% 	
+%
 % 	is absolutely equivalent to
-% 	
+%
 % 	\styleIMI{property := \#synth EF(accepting);}.
-% 	
+%
 % 	This might be seem counterintuitive; but remember that the \styleIMI{accepting} keyword can be seen as a ``hack'', and the acceptance condition should normally be defined in \emph{properties} only.
 % \end{becareful}
 % %------------------------------------------------------------
@@ -836,7 +926,7 @@ The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
 \section{Parametric deadlock-freeness checking}\label{ss:mode:PDFC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given a \NIPTA{}, \PDFC{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system is deadlock-free~\cite{Andre16}.
+Given an \NIPTA{}, \PDFC{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system is deadlock-free~\cite{Andre16}.
 
 The property syntax is as follows:
 
@@ -858,7 +948,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Accepting cycle synthesis}\label{ss:accepting-loop}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by location matching an accepting condition.
+Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by location matching an accepting condition.
 Such accepting conditions are given in the form of a state predicate, \ie{} a conjunction or disjunction of locations and values for discrete variables.
 
 \imitator{} implements two algorithms to this goal:
@@ -902,27 +992,27 @@ This (non-default) algorithm can be called using the following option syntax:
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 % BEGIN OLD VERSION
-% Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one accepting cycle.
+% Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one accepting cycle.
 % This algorithm differs from the one in \cref{sss:accepting-loop-BFS} in the sense that this algorithm performs a nested depth-first search (NDFS) exploration until a cycle is found~\cite{NPP18}.
 % In addition, this algorithm is (by default) not complete.
-% 
+%
 % The property syntax is as follows:
-% 
+%
 % \styleIMI{property := \#synth inf\_acc\_cycle;}
-% 
+%
 % However, there are two main differences with \cref{ss:loop,sss:accepting-loop-BFS}:
 % \begin{enumerate}
 % 	\item accepting locations must be specified using the keyword \styleIMI{accepting} (this keyword is not used by other algorithms\footnote{This comes from the fact that the developers of this algorithm are mainly Jaco Van~de~Pol and Laure~Petrucci, who used a different accepting location system.});
 % 	\item an exploration order may be specified as command line (see below).
 % \end{enumerate}
-% 
+%
 % The command is therefore:
-% 
+%
 % \styleCommand{\binimitator{} model.imi property.imiprop -expl-order NDFS}
-% 
+%
 % Several heuristics can be used, some of them synthesizing all parameter values for which a cycle can be found.
 % These are accessible via the \styleOption{-expl-order} option:
-% 
+%
 % \begin{description}
 % 	\item[\styleOption{-expl-order NDFS}]: use standard NDFS to find an accepting cycle;
 % 	\item[\styleOption{-expl-order NDFSsub}]: standard NDFS with subsumption;
@@ -1013,7 +1103,7 @@ to the user.
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 
-Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run. % TODO: ~\cite{AL17}
+Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run. % TODO: ~\cite{AL17}
 
 The property syntax is as follows:
 
@@ -1035,7 +1125,7 @@ This is syntactic sugar for the following property:
 \section{Parametric non-Zeno cycle synthesis}\label{ss:mode:Zeno}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, under the non-Zeno assumption~\cite{ANPS17}.
+Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, under the non-Zeno assumption~\cite{ANPS17}.
 That is, only parameter valuations yielding at least one non-Zeno cycle are synthesized.
 Parameter valuations yielding only Zeno-cycles or no cycles are ignored.
 
@@ -1066,10 +1156,11 @@ Two options are possible in \imitator{}:
 	In contrast to most other algorithms of \imitator{}, these two algorithms work on a slightly restricted syntax:
 	\begin{itemize}
 		\item in a guard or invariant, each clock must be used at most once;
-		\item the conditional updates (new since version 2.12) are not supported;
+		\item invariants should not contain discrete inequalities (\ie{} inequalities over discrete variables only);
 		\item the use of discrete variables was not tested (and may not be always working);
+		\item the conditional updates (new since version 2.12) are not supported;
 		\item the use of coefficients on parameters (different from 0 or~1) was not tested;
-		\item the use of stopwatches was not tested (but should be no problem).
+		\item the use of stopwatches or multi-rate was not tested.
 	\end{itemize}
 	Overall, this part of \imitator{} has been less tested and is probably less stable than the rest of the tool.
 \end{becareful}
@@ -1089,7 +1180,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 \section{Inverse method: Trace preservation and robustness}\label{ss:mode:IM}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given a \NIPTA{} and a reference parameter valuation, the inverse method~\IM{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
+Given an \NIPTA{} and a reference parameter valuation, the inverse method~\IM{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
 This problem is known as the trace-preservation synthesis, and formalized in~\cite{AM15}.
 The trace-preservation emptiness problem being undecidable~\cite{AM15}, the analysis is not guaranteed to terminate (although it often does in practice).
 
@@ -1128,7 +1219,7 @@ a result in an external text file (\stylePath{model.res}) and formatted using a 
 \section{Behavioral cartography}\label{ss:mode:BC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given a \NIPTA{} and a bounded parameter domain, the behavioral cartography~\BC{} synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
+Given an \NIPTA{} and a bounded parameter domain, the behavioral cartography~\BC{} synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
 The corresponding problem being undecidable, the analysis is not guaranteed to terminate; when it terminates, it may also leave ``holes'', \ie{} parameter domains not covered by any tile.
 % TODO: cite AM15
 
@@ -1626,7 +1717,7 @@ In addition, \uppaal{} only allows invariants of the form $\clock \leq c$ or $\c
 No checks are made when translating, and therefore \uppaal{} may not accept models translated from \imitator{} input models using these features.
 
 \paragraph{Discrete variables}
-Discrete variables in \imitator{} are rational-valued with an exact value.
+Discrete rational variables in \imitator{} are rational-valued with an exact value.
 In \uppaal{}, they are interpreted as (bounded) integers: overflows may occur and, if their value becomes non-integer, it seems \uppaal{} will just round them to the nearest integer, thus creating a difference in semantics.
 
 \paragraph{Strong broadcast synchronization}
@@ -1672,6 +1763,49 @@ To generate an equivalent \hytech{} model without performing any analysis, use:
 \imitator{} will generate a file \stylePath{model.hy}.
 Note that the translation of properties is not supported.
 % TODO
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Translation to \jani{}}\label{section:jani}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Since version 3.1, \imitator{} supports a translation of the model to the \href{https://jani-spec.org/}{\jani{} specification}~\cite{BDHHJT17}.
+To generate an equivalent \jani{} model without performing any analysis, use:
+
+\styleCommand{\binimitator{} model.imi -imi2Jani}
+
+\imitator{} will generate a file \stylePath{model.jani}.
+Note that the translation of properties is not supported.
+
+Due to the different semantics and features between \imitator{} and \jani{}, the translation is done in a ``best effort'' manner, but the semantics may differ.
+We review some points in the following.
+
+\paragraph{Updates}
+\imitator{} and \jani{} do not have exactly the same semantics in the case of \styleIMI{if}-\styleIMI{then}-\styleIMI{else} updates.
+In order to provide a similar behavior, the translation is performed as follow.
+
+\styleIMI{if (x=1) then (x:=2, y:=3) else (x:=4)}\\ is transformed (and, after, written in \jani{} format) into
+
+\styleIMI{
+\begin{tabular}{l l}
+	x := & (if (x=1) then 2 else x)\\
+	y := & (if (x=1) then 3 else y)\\
+	x := & (if (x=1) then x else 4)
+\end{tabular}
+}
+
+\paragraph{Stopwatches and multi-rate clocks}
+If no clock of the input model has a rate different from~1, then all of them are declared in the output \jani{} model with the \styleIMI{clock} type.
+
+Otherwise, if at least one rate uses a non-1 rate in the \imitator{} model, then \emph{all} of the clocks (including non multi-rate clocks) are declared with the \styleIMI{continuous} type and the corresponding derivative (1, if non specified in the \imitator{} input model) is explicitly specified in each location of the output model.
+
+\paragraph{Synchronization}
+\jani{} synchronization semantics is more permissive than the \imitator{} one, therefore the exact meaning can be kept.
+It is done by listing synchronization vectors in the \styleIMI{syncs} entry.
+
+\paragraph{Properties}
+Properties are so far not translated to \jani{}.
+The corresponding input in the \jani{} file exists but remains empty.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1766,6 +1900,59 @@ In short, a symbolic state in \imitator{} is made of the following elements:
 \end{itemize}
 In \imitator{}, all rationals (\ie{} the value of the discrete variables and the coefficients used in the constraints) are unbounded rationals (implemented using GMP).
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Type system}\label{section:type_system}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Since version 3.1 \imitator{} support typed discrete variables. Few common primitive types as integer, rational and boolean are available. They can be declared with the following keywords :
+
+\begin{itemize}
+\item Rational: \styleIMI{discrete} or \styleIMI{rational}
+\item Integer (32 bits): \styleIMI{int}
+\item Boolean: \styleIMI{bool}
+\end{itemize}
+
+Theses types are divided into two categories: numerical and boolean. Integer and rational types belong to numerical category, while boolean type belong to boolean category.
+
+\imitator{} models are statically typed in the sense of their variables and expressions types are resolved upstream of the algorithms execution.
+
+In this continuity, discrete variables are not latently typed. The types are associated with variables and not with values. In other terms, once a variable is declared with a defined type, it only accept this type.
+
+\subsection{Type checking}
+
+In order to verify the model type consistency, a step called type checking, is applied - during the semantic analysis - on all expressions of the model: declarations, assignments, updates, conditions (\styleIMI{if-then-else}), guards and invariants. Type checking step do the following :
+
+\begin{itemize}
+ \item It check type consistency within the expressions
+ \item It resolve the types of the expressions
+ \item It apply a numerical type to literal numbers according to the numerical type holding by their outer expression
+ \item It check consistency between an expression type and variable type, in case of assignment
+ \item It check consistency between an expression type and it's grammar rule
+\end{itemize}
+
+\subsection{Expression type solving}
+
+The expression tree is traversed (depth-first search) in order to deduce it's type. As soon as a variable, constant or literal is found, the expression take it's type. If the expression only contain literals numbers, it will be deduce as a rational arithmetic expression. 
+
+All variables, constants or literals types must be in accordance with each other. In other words, an expression doesn't support the mixing of different types because \imitator{} model language doesn't support implicit conversion.
+
+If an expression mix different types, a type error is raise
+
+
+\subsection{Literal number type inference}
+
+The types of literal numbers are automatically resolved during the semantic analysis and more precisely during the type checking step. Once an expression type is resolved, all literal numbers within are automatically typed as the numerical type holding by the expression. 
+
+For example, in the following update expression \styleIMI{b := True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1}  will be automatically typed as a \styleIMI{int}.
+
+\subsection{Type conversion}
+
+As said previously, there is no implicit conversion of variables, constants or literals from one type to another type. All expressions are holding exactly one type and cannot mix different types. However, it's possible to convert an expression to another type using built-in conversion functions:
+
+\begin{itemize}
+\item \styleIMI{rational\_of\_int}: convert an int expression to a rational one
+\end{itemize}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2083,12 +2270,6 @@ This framework remains relatively experimental.
 Keep file(s) used for generating graphical output (\eg{} state space, cartography); these files are otherwise deleted after the generation of the graphics.
 
 
-
-
-% %------------------------------------------------------------
-% \paragraph{\styleOption{-imi2GrML} (default: disabled)}
-% %------------------------------------------------------------
-% Translates the input model to a GrML format (used by \CosyVerif{} \cite{AHHKLLP13}), and exits.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-imi2HyTech} (default: disabled)}
@@ -2516,6 +2697,9 @@ We define each of those two components below.
 	$|$ & \styleIMI{clock}     \\
 	$|$ & \styleIMI{constant}  \\
 	$|$ & \styleIMI{discrete}  \\
+	$|$ & \styleIMI{rational}  \\
+	$|$ & \styleIMI{int}  \\
+	$|$ & \styleIMI{bool}  \\
 	$|$ & \styleIMI{parameter} \\
 \end{tabular}
 
@@ -2579,12 +2763,12 @@ We define each of those two components below.
 \regleGrammaire{location}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}                  \\
-	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}           \\
-	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}        \\
-	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
-	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
-	% 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{transitions} \\
+	\   & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}                  \\
+	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}           \\
+	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}        \\
+	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
+	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
+	% 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{nonlinear\_convex\_predicate} \nt{transitions} \\
 \end{tabular}
 
 % \smallskip
@@ -2668,7 +2852,7 @@ We define each of those two components below.
 \regleGrammaire{transition}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{when} \nt{convex\_predicate} \nt{update\_synchronization} \styleIMI{goto} \styleIMI{<name>} \styleIMI{;} \\
+	\  & \styleIMI{when} \nt{nonlinear\_convex\_predicate} \nt{update\_synchronization} \styleIMI{goto} \styleIMI{<name>} \styleIMI{;} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2744,10 +2928,19 @@ We define each of those two components below.
 \begin{tabular}{l l}
 	\   & \styleIMI{True}                                                    \\
 	$|$ & \styleIMI{False}                                                   \\
-	$|$ & \styleIMI{<>} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
+	$|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
 	$|$ & \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression}    \\
 	$|$ & \nt{boolean\_expression} \styleIMI{|} \nt{boolean\_expression}     \\
 	$|$ & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{discrete\_boolean\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
+	$|$ & \nt{arithmetic\_expression} \styleIMI{in} $[$ \nt{arithmetic\_expression} \styleIMI{,} \nt{arithmetic\_expression} $]$ \\
+	$|$ & \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2809,10 +3002,35 @@ We define each of those two components below.
 \end{tabular}
 
 %------------------------------------------------------------
+\regleGrammaire{nonlinear\_convex\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{\&} \nt{nonlinear\_convex\_predicate\_fol} \\
+	$|$ & \nt{nonlinear\_convex\_predicate\_fol}               \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{nonlinear\_convex\_predicate\_fol}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{nonlinear\_constraint} \styleIMI{\&} \nt{nonlinear\_convex\_predicate} \\
+	$|$ & \nt{nonlinear\_constraint}                                      \\
+\end{tabular}
+
+%------------------------------------------------------------
 \regleGrammaire{linear\_constraint}
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\   & \nt{linear\_expression} \nt{relop} \nt{linear\_expression} \\
+	$|$ & \styleIMI{True}                                            \\
+	$|$ & \styleIMI{False}                                           \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{nonlinear\_constraint}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{discrete\_boolean\_expression} \\
 	$|$ & \styleIMI{True}                                            \\
 	$|$ & \styleIMI{False}                                           \\
 \end{tabular}
@@ -2824,6 +3042,7 @@ We define each of those two components below.
 	\   & \styleIMI{<}  \\
 	$|$ & \styleIMI{<=} \\
 	$|$ & \styleIMI{=}  \\
+	$|$ & \styleIMI{<>}  \\
 	$|$ & \styleIMI{>=} \\
 	$|$ & \styleIMI{>}  \\
 	% 	$|$ & \styleIMI{<>} \\
@@ -3540,7 +3759,7 @@ This can be simulated using an initialization \IPTA{} that nondeterministically 
 \section{Complex updates for discrete variables}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-So far, discrete variables can only be set to arithmetic expressions in $\ArithExprD$;
+So far, discrete variables can only be set to arithmetic expressions in $\ArithExprR$;
 hence, assigning a discrete variable to a clock, or to a parameter, or to any more complex expression, is not allowed.
 A reason for this restriction is that the value of the discrete variables would not anymore be constant (recall that discrete variables are syntactic sugar for \emph{locations}).
 
@@ -3632,6 +3851,8 @@ The following people contributed to the development of \imitator{}.
 	Daphne Dussaud       & 2010 &    &      \\
 	Sami Evangelista     & 2014 &    &      \\
 	Ulrich Kühne         & 2010 & -- & 2011 \\
+	Benjamin Loillier    & 2021 & -- &      \\
+	Dylan Marinho        & 2021 & -- &      \\
 	Nguy\~{ê}n~Hoàng~Gia & 2014 & -- & 2018 \\
 	Laure Petrucci       & 2019 & -- &      \\
 	Jaco Van de Pol      & 2019 & -- &      \\

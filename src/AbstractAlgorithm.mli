@@ -6,9 +6,9 @@
  *
  * Module description: Mode and algorithms for IMITATOR
  *
- * File contributors : Étienne André
+ * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/18
- * Last modified     : 2020/09/23
+ * Last modified     : 2021/02/24
  *
  ************************************************************)
 
@@ -21,11 +21,13 @@
 type translation =
 	| HyTech
 	| IMI
+	| DOT
 	| JPG
 	| PDF
 	| PNG
 	| TikZ
 	| Uppaal
+  | JaniSpec
 
 
 (************************************************************)
@@ -143,10 +145,10 @@ type cycle_algorithm =
 type nz_method =
 	(** Method by checking whether the PTA is already a CUB-PTA for some valuation *)
 	| NZ_check
-	
+
 	(** Method by transforming the PTA into a CUB-PTA *)
 	| NZ_transform
-	
+
 	(** Method assuming the PTA is already a CUB-PTA *)
 	| NZ_already
 

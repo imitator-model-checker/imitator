@@ -1,0 +1,8 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Description      : Ask for the valuations for which the researcher infinitely often writes papers while drinking (at least) 3 coffees.
+ * Author           : Étienne André
+ ******************************************************************************)
+
+property := #synth CycleThrough(loc[researcher] = finished & nb>=3);

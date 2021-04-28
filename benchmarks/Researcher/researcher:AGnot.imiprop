@@ -1,0 +1,8 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Description      : Ask whether it is impossible to drink any coffee
+ * Author           : Étienne André
+ ******************************************************************************)
+
+property := #synth AGnot(loc[researcher] = coffeeing);

@@ -12,7 +12,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2020/01/08
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -60,13 +60,6 @@ let footer = "\n"
 (************************************************************)
 (** Variable declarations *)
 (************************************************************)
-
-(* Convert a var_type into a string *)
-let string_of_var_type = function
-	| Var_type_clock -> "clock"
-	| Var_type_discrete -> "discrete"
-	| Var_type_parameter -> "parameter"
-
 
 (* Collect all clocks that may be stopped in some location *)
 (*** NOTE: this could be done once for all and stored in the model ***)
@@ -161,7 +154,9 @@ let string_of_initially model automaton_index =
 let string_of_invariant model automaton_index location_index stopwatches clocks =
 	(* Invariant *)
 	"while "
-	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
+	(* TODO benjamin check with Etienne, is HyTech support arithmetic expression in invariant *)
+	(* or should we use only the continuous part ? *)
+	^ (ModelPrinter.string_of_guard model.variable_names (model.invariants automaton_index location_index))
 
 	(* Handle stopwatches *)
 	^
@@ -216,12 +211,12 @@ let string_of_clock_updates model = function
 (*** WARNING: calling string_of_arithmetic_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
 (*** TODO: fix or print warning ***)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, arithmetic_expression) ->
+	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, global_expression) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ "' = "
-		(* Convert the arithmetic_expression *)
-		^ (ModelPrinter.string_of_arithmetic_expression model.variable_names arithmetic_expression)
+		(* Convert the global_expression *)
+		^ (ModelPrinter.string_of_global_expression model.variable_names global_expression)
 	) updates)
 
 
@@ -241,7 +236,7 @@ let string_of_transition model automaton_index transition =
 	(* Clock updates *)
 	^ (string_of_clock_updates model clock_updates)
 	(* Add a coma in case of both clocks and discrete *)
-	^ (if clock_updates != No_update && discrete_updates != [] then ", " else "")
+	^ (if clock_updates <> No_update && discrete_updates <> [] then ", " else "")
 	(* Discrete updates *)
 	^ (string_of_discrete_updates model discrete_updates)
 	^ "} "
@@ -367,7 +362,7 @@ let string_of_initial_state () =
 		(* Finding the initial value for this discrete *)
 		let initial_value = Location.get_discrete_value inital_global_location discrete_index in
 		(* '& var = val' *)
-		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst initial_value)
+		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (DiscreteValue.string_of_value initial_value)
 	) model.discrete
 	in string_of_list_of_string initial_discrete
 

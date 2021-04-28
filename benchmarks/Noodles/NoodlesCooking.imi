@@ -1,20 +1,28 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * Small problem to cook noodles
- *
- * Description     : Toy example to cook noodles
- * Correctness     : The water must not boil over [in fact, no parameter valuation can prevent this, because the timer is not necessarily set from the beginning!]
- * Source          : "SITH" course final examination at Institut Galilée, Université Paris 13 (2013-2014)
- * Author          : Étienne André
- * Modeling        : Étienne André
- * Input by        : Étienne André
- *
- * Created         : 2014/03/21
- * Last modified   : 2020/08/13
- *
- * IMITATOR version: 3
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : NoodlesCooking
+ * Description      : Toy example to cook noodles
+ * Correctness      : The water must not boil over [in fact, no parameter valuation can prevent this, because the timer is not necessarily set from the beginning!]
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Education ; Toy
+ * Source           : "SITH" course final examination at Institut Galilée, Université Paris 13 (2013-2014)
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2014/03/21
+ * Last modified    : 2020/08/13
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 var 	xPot, xTimer
 		: clock;

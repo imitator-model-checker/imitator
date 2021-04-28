@@ -9,7 +9,7 @@
  *
  * File contributors : Laure Petrucci, Jaco van de Pol, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2020/11/11
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -443,7 +443,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 							not (table_test blue astate)
 				in
 				if ( options#no_green || List.exists is_green successors ||
-					(!pending != [] &&
+					(!pending <> [] &&
 						List.exists is_pending_not_blue successors))
 				then ( if options#recompute_green &&
 						(not (is_green thestate) ||
@@ -846,7 +846,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				| true, false ->
 					(* set up the dfs blue calls *)
 					add_pending init_state_index 0;
-					(try (while !pending != [] do
+					(try (while !pending <> [] do
 						match !pending with
 						| [] -> print_message Verbose_standard ("Impossible case");
 						| (thestate,thestate_depth)::body ->
@@ -973,7 +973,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				| true, true ->
 					(* set up the dfs blue calls *)
 					add_pending init_state_index 0;
-					(try (while !pending != [] do
+					(try (while !pending <> [] do
 						match !pending with
 						| [] -> print_message Verbose_standard ("Impossible case");
 						| (thestate,thestate_depth)::body ->

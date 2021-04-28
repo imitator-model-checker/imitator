@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2020/12/15
+ * Last modified     : 2021/04/21
  *
  ************************************************************)
  
@@ -232,7 +232,31 @@ let sublist minb maxb l =
 			if minb > 0 then tail else h :: tail
 	in sublist_rec minb maxb l
 
+(* Partition list by grouping elements by keys in a list of tuples *)
+let group_by keySelector l =
+    let keys = List.map keySelector l in
+    let uniq_keys = list_only_once keys in
+    let group_by_keys = List.map (fun key -> (key, List.filter (fun x -> keySelector x = key) l)) uniq_keys in
+    group_by_keys
 
+(* Partition list by grouping elements by keys in a list of tuples *)
+(* and map values associated by keys according to valueSelector function *)
+let group_by_and_map keySelector valueSelector l =
+    let keys = List.map keySelector l in
+    let uniq_keys = list_only_once keys in
+    let group_by_keys = List.map (fun key -> (key, List.map valueSelector (List.filter (fun x -> keySelector x = key) l))) uniq_keys in
+    group_by_keys
+
+(* Partition list by grouping elements by keys in a hashtable *)
+let hashtbl_group_by keySelector l =
+    let group_by_keys = group_by keySelector l in
+    let table = Hashtbl.create (List.length group_by_keys) in
+
+    for i = 0 to (List.length group_by_keys) - 1 do
+        let key, group = List.nth group_by_keys i in
+        Hashtbl.add table key group
+    done;
+    table
 
 (************************************************************)
 (** Useful functions on arrays *)
@@ -361,6 +385,11 @@ let string_of_list_of_int l =
 (*** WARNING: the behavior of this function is odd (when sep=";;" or "£"; bug hidden here? ***)
 let split sep = Str.split (Str.regexp ("[" ^ sep ^ "]"))
 
+(* Add \t identation of string according to the given level *)
+let indent_paragraph indent_level s =
+    let str_tabulations = string_n_times indent_level "\t" in
+    let lines = split "\n" s in
+    List.fold_left (fun the_string line -> the_string ^ str_tabulations ^ line) "" lines
 
 (** 's_of_int i' Return "s" if i > 1, "" otherwise *)
 let s_of_int i =
@@ -372,7 +401,7 @@ let waswere_of_int  i =
 	if i > 1 then "were" else "was"
 
 
-(** Escape \n & > for use in dot *)
+(** Escape \n & > & < for use in dot *)
 let escape_string_for_dot str =
 	(** BUG: cannot work with global replace *)
 (*		Str.global_substitute (Str.regexp ">\\|&") (fun s -> if s = ">" then "\\>" else if s = "&" then "\\&" else s)
@@ -381,7 +410,9 @@ let escape_string_for_dot str =
 	Str.global_replace (Str.regexp "\"") ("\\\"")
 		(Str.global_replace (Str.regexp "\n") (" \\n ")
 			(Str.global_replace (Str.regexp ">") ("\\>")
-				(Str.global_replace (Str.regexp "&") ("\\&") str)
+				(Str.global_replace (Str.regexp "<") ("\\<")
+					(Str.global_replace (Str.regexp "&") ("\\&") str)
+				)
 			)
 		)
 

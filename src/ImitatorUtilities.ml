@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2020/12/15
+ * Last modified     : 2021/04/27
  *
  ************************************************************)
 
@@ -368,6 +368,8 @@ let print_contributors()  =
 	print_string ("    * Daphne Dussaud      (2010)\n");
 	print_string ("    * Sami Evangelista    (2014)\n");
 	print_string ("    * Ulrich Kühne        (2010 - 2011)\n");
+	print_string ("    * Benjamin Loillier   (2021 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string ("    * Dylan Marinho       (2021 - " ^ (BuildInfo.build_year) ^ ")\n");
 	print_string ("    * Nguyễn Hoàng Gia    (2014 - 2016)\n");
 	print_string ("    * Laure Petrucci      (2019 - " ^ (BuildInfo.build_year) ^ ")\n");
 	print_string ("    * Jaco van de Pol     (2019 - " ^ (BuildInfo.build_year) ^ ")\n");

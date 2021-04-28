@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2021/01/19
+ * Last modified     : 2021/04/21
  *
  ************************************************************)
  
@@ -87,7 +87,7 @@ let run_graph command =
 	(* Actually execute it *)
 	let execution = Sys.command command in
 	
-	if execution != 0 then
+	if execution <> 0 then
 		(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility (from the 'plotutils' package in Debian)."););
 	
 	(* Print some information *)
@@ -804,10 +804,11 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 			);
 			(* Get value *)
 			let zero_value = match model.type_of_variables variable_index with
-				| Var_type_discrete ->
-					Location.get_discrete_value initial_state.global_location variable_index
-				| Var_type_clock ->
-					initial_state.px_valuation variable_index
+				| DiscreteValue.Var_type_discrete _ ->
+				    (* TODO check with étienne, seems to be variable that control the clock flow ? *)
+					Location.get_discrete_value initial_state.global_location variable_index (* TODO benjamin : not sure about Var_type_discrete _*)
+				| DiscreteValue.Var_type_clock ->
+					DiscreteValue.Rational_value (initial_state.px_valuation variable_index)
 				| _ -> raise (InternalError "Clock or discrete variable expected in draw_concrete_run")
 			in
 
@@ -823,11 +824,11 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time zero with value '" ^ (NumConst.string_of_numconst zero_value) ^  "'…");
+					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time zero with value '" ^ (DiscreteValue.string_of_value zero_value) ^  "'…");
 				);
 
 				(* Convert to the plotutils format *)
-				(draw_x_y NumConst.zero zero_value)
+				(draw_x_y NumConst.zero (DiscreteValue.numconst_value zero_value))
 			)
 			
 			::
@@ -852,7 +853,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 					match model.type_of_variables variable_index with
 					
 				(* If discrete: the previous value is still valid right before the current transition *)
-					| Var_type_discrete ->
+					| DiscreteValue.Var_type_discrete _ ->
 					
 						(* Get the discrete value *)
 						let value = Location.get_discrete_value step_target.global_location variable_index in
@@ -860,12 +861,12 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 						(* Print some information *)
 						if verbose_mode_greater Verbose_total then(
 							print_message Verbose_total ("About to perform comparison…");
-							print_message Verbose_total ("Previous value = " ^ (NumConst.string_of_numconst !previous_value ) ^ "");
-							print_message Verbose_total ("Current value = " ^ (NumConst.string_of_numconst value) ^ "");
+							print_message Verbose_total ("Previous value = " ^ (DiscreteValue.string_of_value !previous_value ) ^ "");
+							print_message Verbose_total ("Current value = " ^ (DiscreteValue.string_of_value value) ^ "");
 						);
 						
 						(* If same value as before, no need to add a new point *)
-						if NumConst.equal !previous_value value then(
+						if DiscreteValue.equal !previous_value value then(
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
 								print_message Verbose_total ("Discrete `" ^ (model.variable_names variable_index) ^  "` did not evolve: skip");
@@ -881,14 +882,14 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 							
 							(* Same value, current time *)
 							(* Convert to the plotutils format *)
-							(draw_x_y !absolute_time !previous_value)
+							(draw_x_y !absolute_time (DiscreteValue.numconst_value !previous_value))
 							(* Separator for next point *)
 							^ "\n"
 							,value
 						)
 
 				(* If clock: the previous value must be incremented by the timed elapsed since the last point *)
-					| Var_type_clock -> 
+					| DiscreteValue.Var_type_clock ->
 						
 						(* Get the clock value *)
 						let value = step_target.px_valuation variable_index in
@@ -898,7 +899,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 						(* If no time elapsed: no need to add a point *)
 						if NumConst.equal time_elapsed NumConst.zero then(
 							""
-							, value
+							, DiscreteValue.Rational_value value
 						)else(
 							(* Increment the value of the clock by the elapsed time *)
 							
@@ -912,14 +913,16 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 								(if *)
 							
 							(* Update the value of the clock using the flow *)
-							let clock_value_after_elapsing = NumConst.add !previous_value (NumConst.mul time_elapsed flow) in
+							(* Clock can only be updated by rationals so we use the numconst value of discrete variable *)
+							let previous_numconst_value = DiscreteValue.numconst_value !previous_value in
+							let clock_value_after_elapsing = NumConst.add previous_numconst_value (NumConst.mul time_elapsed flow) in
 							
 							(* Same value, current time *)
 							(* Convert to the plotutils format *)
 							(draw_x_y !absolute_time clock_value_after_elapsing)
 							(* Separator for next point *)
 							^ "\n"
-							, value
+							, DiscreteValue.Rational_value value
 						)
 					
 				(* Else error *)
@@ -935,14 +938,14 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (NumConst.string_of_numconst value) ^  "'…");
+					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (DiscreteValue.string_of_value value) ^  "'…");
 				);
 
 				(* First add "previous" point *)
 				previous_point_str
 				
 				(* Then add the current point (easy) in the plotutils format *)
-				^ (draw_x_y !absolute_time value)
+				^ (draw_x_y !absolute_time (DiscreteValue.numconst_value value))
 			) abstract_steps
 			)
 		) in
@@ -1649,7 +1652,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 								(* Equal *)
 								^ ")="
 								(* Variable value *)
-								^ (NumConst.string_of_numconst (Location.get_discrete_value global_location discrete_index))
+								^ (DiscreteValue.string_of_value (Location.get_discrete_value global_location discrete_index))
 							) model.discrete
 						))
 					) else ""
@@ -1756,13 +1759,19 @@ let dot dot_image_extension radical dot_source_file : (string option) =
 	
 	let dot_success =
 	try (
+		(* Prepare the command *)
+		let dot_command = Constants.dot_binary_name ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "" in
+		
+		(* Print some information *)
+		print_message Verbose_high ("About to execute the following command: " ^ dot_command);
+
 		(* Actually call dot *)
-		let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "") in
+		let command_result = Sys.command dot_command in
 		
 		(* Print some information *)
 		print_message Verbose_medium ("Result of the `dot` command: " ^ (string_of_int command_result));
 		
-		if command_result != 0 then(
+		if command_result <> 0 then(
 			print_error ("Something went wrong when calling `dot`. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the `dot` utility (from the `graphviz` package in Debian).");
 			(* Something went wrong *)
 			false

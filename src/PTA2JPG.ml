@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2012/08/24
- * Last modified     : 2021/01/19
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -77,7 +77,7 @@ let string_of_discrete_updates model discrete_updates =
 
 (** Converts a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
-	let wrap_if boolean_expr  = "if (" ^ (ModelPrinter.string_of_boolean model.variable_names boolean_expr) ^  ") then\\n" in
+	let wrap_if boolean_expr  = "if (" ^ (ModelPrinter.string_of_boolean_expression model.variable_names boolean_expr) ^  ") then\\n" in
 	let wrap_else = "\\nelse\\n" in
 	let wrap_end = "\\nend" in
 	let sep = "\\n" in
@@ -202,7 +202,7 @@ let string_of_location model automaton_index location_index =
 	(* Label: name *)
 	^ (model.location_names automaton_index location_index)
 	(* Label: invariant *)
-	^ "|{" ^ (escape_string_for_dot (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index)))
+	^ "|{" ^ (escape_string_for_dot (ModelPrinter.string_of_guard model.variable_names (model.invariants automaton_index location_index)))
 	(* Label: stopwatches *)
 	^ (if model.has_non_1rate_clocks then (
 		let stopwatches = model.stopwatches automaton_index location_index in
@@ -319,7 +319,7 @@ let string_of_automata model =
 	^ "\ngeneral_info[shape=record, label=\"" (*Model|{*)
 	^ "{" ^ (string_of_int (List.length model.clocks_without_special_reset_clock)) ^ " clock" ^ (s_of_int (List.length model.clocks_without_special_reset_clock)) ^ "|" ^ (vertical_string_of_list_of_variables model.clocks_without_special_reset_clock) ^ "}"
 		^ "|{" ^ (string_of_int (List.length model.parameters)) ^ " parameter" ^ (s_of_int (List.length model.parameters)) ^ "|" ^ (vertical_string_of_list_of_variables model.parameters) ^ "}"
-	^ (if model.discrete != [] then
+	^ (if model.discrete <> [] then
 		"|{" ^ (string_of_int (List.length model.discrete)) ^ " discrete|" ^ (vertical_string_of_list_of_variables model.discrete) ^ "}"
 		else "")
 	^ "|{Initial|" ^ (escape_string_for_dot (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)) ^ "}"

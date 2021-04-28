@@ -72,7 +72,7 @@
 \fancyhead[r]{%
 	\includegraphics[height=1em]{../logos/imitator-500.png}
 	\includegraphics[height=1em]{../logos/logo-3-300.png}
-% 	\includegraphics[height=1em]{../logos/logo-2-12-300.png}
+	\includegraphics[height=1em]{../logos/logo-3-1-300.png}
 }
 
 \renewcommand{\headrulewidth}{.1pt}
@@ -146,6 +146,9 @@
 \newcommand{\action}{a}
 \newcommand{\ArithExpr}{\mathcal{AE}} % (#1)% set of all constraints over some set
 \newcommand{\ArithExprD}{\ArithExpr(\DVar)}
+\newcommand{\ArithExprR}{\ArithExpr(\RVar)}
+\newcommand{\ArithExprI}{\ArithExpr(\IVar)}
+\newcommand{\ArithExprB}{\ArithExpr(\BVar)}
 \newcommand{\C}{C}
 \newcommand{\Cinit}{\C_\init} % initial constraint
 \newcommand{\Clock}{X} % set of clocks
@@ -158,19 +161,31 @@
 \newcommand{\DVar}{D} % set of discrete variables
 \newcommand{\dvar}{d} % discrete variable
 \newcommand{\DVarCard}{J} % cardinality of discrete variables
+\newcommand{\rval}{\ensuremath{\rho}} % rational variable
+\newcommand{\RVar}{R} % set of rational variables
+\newcommand{\rvar}{r} % rational variable
+\newcommand{\RVarCard}{J} % cardinality of rational variables
+\newcommand{\ival}{\ensuremath{\i}} % integer variable
+\newcommand{\IVar}{I} % set of integer variables
+\newcommand{\ivar}{i} % integer variable
+\newcommand{\IVarCard}{K} % cardinality of integer variables
+\newcommand{\bval}{\ensuremath{\beta}} % boolean variable
+\newcommand{\BVar}{B} % set of boolean variables
+\newcommand{\bvar}{b} % boolean variable
+\newcommand{\BVarCard}{L} % cardinality of boolean variables
 % \newcommand{\DVarinit}{\DVar_\init} % discrete variable
 \newcommand{\edge}{e}
 \newcommand{\flow}{\ensuremath{\mathit{flow}}}
 \newcommand{\guard}{g}
 \newcommand{\invariant}{I}
 \newcommand{\LConstraint}{\mathcal{LC}} % (#1)% set of all constraints over some set
-\newcommand{\LConstraintD}{\LConstraint(\DVar)}
+\newcommand{\LConstraintD}{\LConstraint(\RVar)}
 \newcommand{\LConstraintXP}{\LConstraint(\Clock \cup \Param)}
-\newcommand{\LConstraintXPD}{\LConstraint(\Clock \cup \Param \cup \DVar)}
+\newcommand{\LConstraintXPD}{\LConstraint(\Clock \cup \Param \cup \RVar)}
 \newcommand{\lterm}{\mathit{lt}}
 \newcommand{\LTerm}{\mathcal{LT}} % (#1)% set of all linear terms over some set
-\newcommand{\LTermD}{\LTerm(\DVar)}
-\newcommand{\LTermXPD}{\LTerm(\Clock \cup \Param \cup \DVar)}
+\newcommand{\LTermR}{\LTerm(\RVar)}
+\newcommand{\LTermXPD}{\LTerm(\Clock \cup \Param \cup \RVar)}
 \newcommand{\loc}{\ell} % location
 \newcommand{\locinit}{\loc_\init}
 \newcommand{\Loc}{L} % set of locations
@@ -187,44 +202,31 @@
 \newcommand{\var}{\mathit{z}} % variable
 \newcommand{\VarCard}{N} % cardinality of variables % TODO: conflict
 
-% Ensembles
-\newcommand{\grandb}{{\mathbb B}}
-\newcommand{\grandn}{{\mathbb N}}
-\newcommand{\grandq}{{\mathbb Q}}
-\newcommand{\grandqplus}{{\mathbb Q}_{\geq 0}}
-\newcommand{\grandr}{{\mathbb R}}
-\newcommand{\grandrplus}{\grandr_{\geq 0}}
-\newcommand{\grandz}{{\mathbb Z}}
+% Sets
+\newcommand{\setB}{\ensuremath{\mathbb B}}
+\newcommand{\setN}{\ensuremath{\mathbb N}}
+\newcommand{\setQ}{\ensuremath{\mathbb Q}}
+\newcommand{\setQplus}{\ensuremath{\mathbb Q}_{\geq 0}}
+\newcommand{\setR}{\ensuremath{\mathbb R}}
+\newcommand{\setRplus}{\ensuremath{\setR_{\geq 0}}}
+\newcommand{\setZ}{\ensuremath{\mathbb Z}}
 
-% Unites
+\newcommand{\BFalse}{\ensuremath{\mathbf{false}}}
+\newcommand{\BTrue}{\ensuremath{\mathbf{true}}}
+
+% Units
 \newcommand{\micros}{\mathit{\mu s}}
 \newcommand{\nanos}{ns}
 
 % Noms
-\newcommand{\tiling}{\mathit{Tiling}}
-% \newcommand{\true}{\mathbf{true}}
-\newcommand{\Ko}{K}
 \newcommand{\pio}{\pi_0}
-\newcommand{\piprime}{\pi}
-\newcommand{\To}{T_0}
-\newcommand{\Tprime}{T}
 
-% Symboles
+% Symbols
 \newcommand{\emptystring}{\ensuremath{\epsilon}}
 \newcommand{\fleche}[1]{\stackrel{#1}{\rightarrow}}
 \newcommand{\Fleche}[1]{\stackrel{#1}{\Rightarrow}}
 % \newcommand{\steps}[0]{ {\rightarrow} }
 
-% Booleens
-\newcommand{\false}{{\tt false}}
-\newcommand{\true}{{\tt true}}
-
-% PARAMETRES RCP
-\newcommand{\rcpFMax}{\mathit{rc\_fast\_max}}
-\newcommand{\rcpFMin}{\mathit{rc\_fast\_min}}
-\newcommand{\rcpSMax}{\mathit{rc\_slow\_max}}
-\newcommand{\rcpSMin}{\mathit{rc\_slow\_min}}
-\newcommand{\rcpD}{\mathit{delay}}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 % ALGORITHMES
@@ -260,13 +262,15 @@
 % \newcommand{\prism}{\textsc{Prism}}
 % \newcommand{\red}{RED}
 \newcommand{\uppaal}{\textsc{Uppaal}}
+% \newcommand{\jani}{\textsc{The Jani Specification}}
+\newcommand{\jani}{\textsc{Jani}}
 
 \newcommand{\binimitator}{./imitator}
 
 
 % Current version
-\newcommand{\imitatorversion}{3}
-\newcommand{\imitatorversionname}{Cheese}
+\newcommand{\imitatorversion}{3.1-beta}
+\newcommand{\imitatorversionname}{Cheese Artichoke}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -340,11 +344,11 @@
 	\fbox{
 		\begin{minipage}{0.95\textwidth}
 		\textbf{#1}
-		
+
 		#2
 		\end{minipage}
 	}
-	
+
 	\medskip
 }
 
@@ -354,11 +358,11 @@
 % 	\fcolorbox{red!50!black}{red!20}{
 % 		\begin{minipage}{0.95\textwidth}
 % 		\textbf{Warning: #1}
-% 		
+%
 % 		#2
 % 		\end{minipage}
 % 	}
-% 	
+%
 % 	\medskip
 % }
 
@@ -387,26 +391,26 @@
 
 \newcommand{\styleCommand}[1]{
 	\medskip
-	
+
 	% \mbox{}\hspace{.5cm}
 	\noindent\fcolorbox{white}{black!90}{
 		\textcolor{yellow!30}{\$\ \ \texttt{#1}}
 	}
-	
+
 	\medskip
 
 }
 
 \newcommand{\styleTerminalOutput}[1]{
 	\medskip
-	
+
 	% \mbox{}\hspace{.5cm}
 	\noindent\fcolorbox{white}{black!90}{
 	\begin{minipage}{.97\textwidth}
 		\textcolor{yellow!30}{\texttt{#1}}
 	\end{minipage}
 	}
-	
+
 	\medskip
 
 }
@@ -473,7 +477,7 @@
 
 \lstdefinelanguage{Imitator}{
 	morekeywords={
-		and, automaton, clock, constant, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, invariant, loc, locations, not, or, parameter, print, property, reach, region, unreachable, urgent, sync, synclabs, True, var, wait, when, while
+		and, automaton, clock, constant, continuous, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, invariant, loc, locations, not, or, parameter, print, property, rational, reach, region, unreachable, urgent, sync, synclabs, True, var, wait, when, while
 	},
 	sensitive=false,
 % 	morecomment=[l][\color{gray}]{--},

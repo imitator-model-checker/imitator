@@ -160,7 +160,7 @@ let dynamicSplitSubdomain (s : HyperRectangle.hyper_rectangle) pi0 n : HyperRect
 	let max_d_l = ref 0 in
 	let j = ref (HyperRectangle.get_dimensions()-1) in
 	let lst = ref [] in
-	while( !notFound (*&& (!j != -1)*) ) do
+	while( !notFound (*&& (!j <> -1)*) ) do
 	  begin
 	   (* if(!j = -1) then  print_message Verbose_medium ("\n all demensions of subdomain could not split" ); raise (InternalError (" there are only 1 pi0 left in subdomain, could not split! "));*)
 	    (*if current pi0 at max dimension j but the Min at demension j of subdomain is lower, split all the done pi0 below j*)

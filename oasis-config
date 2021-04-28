@@ -8,12 +8,12 @@
 #
 #  _oasis authors: Étienne André, Alban Linard
 #  Created:        2014/08/18
-#  Last modified:  2020/12/15
+#  Last modified:  2021/01/29
 ###############################################################
 
 OASISFormat: 0.3
 Name:        IMITATOR
-Version:     3.0
+Version:     3.1
 Synopsis:    shortdescription
 Authors:     Étienne André et al.
 License:     GPL-3.0
@@ -59,19 +59,19 @@ Test startingcomment
 
 Test tes1
   Command: echo "\n********** TEST 1 **********\n"; \
-      ./bin/imitator benchmarks/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+      ./bin/imitator tests/testcases/flipflop.imi -mode statespace -depth-limit 5
 
 Test test2
   Command: echo "\n********** TEST 2 **********\n"; \
-      ./bin/imitator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.pi0 -draw-statespace normal -states-description -statistics
+      ./bin/imitator tests/testcases/flipflop.imi tests/testcases/flipflop.pi0 -draw-statespace normal -states-description -statistics
 
 Test test3
   Command: echo "\n********** TEST 3 **********\n"; \
-      ./bin/imitator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -draw-cart
+      ./bin/imitator tests/testcases/flipflop.imi tests/testcases/flipflop-cover.imiprop -draw-cart
 
 Test test4
   Command: echo "\n********** TEST 4 **********\n"; \
-      ./bin/imitator benchmarks/Examples/JLR-TACAS13.imi benchmarks/Examples/JLR-TACAS13-PRPC.imiprop -draw-cart -depth-limit 10 -verbose warnings
+      ./bin/imitator tests/testcases/JLR-TACAS13.imi tests/testcases/JLR-TACAS13-PRPC.imiprop -draw-cart -depth-limit 10 -verbose warnings
 
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"

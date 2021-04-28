@@ -1,0 +1,1 @@
+property := #synth pattern(everytime restart then eventually done within 5);

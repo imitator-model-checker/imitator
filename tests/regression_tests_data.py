@@ -11,10 +11,10 @@
 #
 # File description  : non-regression tests data
 #
-# File contributors : Étienne André, Jaime Arias
+# File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/01/11
+# Last modified     : 2021/04/27
 #************************************************************
 
 
@@ -25,7 +25,106 @@
 tests = [
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-	# SYNTACTIC TESTS
+	# TEMPLATE
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	##------------------------------------------------------------
+	#{
+		## Test version             : 1
+		## Test since               : 2021/03/33
+		## Last modified            : 2021/03/33
+		## Test for IMITATOR version: 3
+		#'purpose'    : 'Test something',
+		#'input_files': ['somemodel.imi'],
+		#'options'    : '-mode checksyntax ',
+		#'expectations' : [
+			#{'file': 'somemodel.res' , 'content' : """
+#here the content to check
+		#"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+
+	#,
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# FILE NOT FOUND TESTS
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/01/22
+		# Last modified            : 2021/01/22
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test the absence of model',
+		'input_files': ['thisfiledoesnotexist.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'thisfiledoesnotexist.res' , 'content' : """
+Error                                   : model file not found
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/01/22
+		# Last modified            : 2021/01/22
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test the absence of property',
+		'input_files': ['testL.imi', 'thisfiledoesnotexist.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testL.res' , 'content' : """
+Error                                   : property file not found
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test casearithmetic_expressions
+	#------------------------------------------------------------
+
+	,
+	
+	# TODO: same + `-mode checksyntax`
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TESTS TO CHECK THE SYNTAX
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/02
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test syntax rejection: non-linear clock',
+		'input_files': ['testSyntaxNonLinearClock.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'testSyntaxNonLinearClock.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# SYNTACTIC TESTS (statistics on models)
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 	#------------------------------------------------------------
@@ -151,6 +250,49 @@ L/U subclass                            : L/U-PTA
 
 	,
 
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Last modified            : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (L-PTA with negative coefficients)',
+		'input_files': ['testLneg.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'testLneg.res' , 'content' : """
+L/U subclass                            : L-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	#{
+		## Test version             : 1
+		## Test since               : 2019/07/09
+		## Last modified            : 2019/07/09
+		## Test disabled            : 2021/04/27
+		## Test for IMITATOR version: 2.12
+		#'purpose'    : 'Test the L/U-nature (L-PTA with p > d)',
+		#'input_files': ['testLdiscrete.imi'],
+		#'options'    : '-mode checksyntax ',
+		#'expectations' : [
+			#{'file': 'testLdiscrete.res' , 'content' : """
+#L/U subclass                            : L-PTA
+		#"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+
+	#,
 
 	#------------------------------------------------------------
 	{
@@ -298,6 +440,119 @@ Is strongly deterministic?              : false
 
 	,
 
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TESTS ON UNSATISFIABLE INITIAL STATE
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test unsatisfiable initial state (clock constraint)',
+		'input_files': ['unsatisfiableInitStateClocks.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateClocks.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test unsatisfiable initial state (clock constraint + invariant)',
+		'input_files': ['unsatisfiableInitStateClocksInv.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateClocksInv.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test unsatisfiable initial state (discrete+clock constraint)',
+		'input_files': ['unsatisfiableInitStateDiscrete.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateDiscrete.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test unsatisfiable initial state (incompatible discrete invariant)',
+		'input_files': ['unsatisfiableInitStateDiscreteInv.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateDiscreteInv.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TESTS ON DISCRETE VARIABLES
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test division by 0',
+		'input_files': ['divisionby0.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'divisionby0.res' , 'content' : """
+Error                                   : division by 0
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	##------------------------------------------------------------
 	{
@@ -1301,9 +1556,1142 @@ DESCRIPTION OF THE TRANSITIONS
 		'expectations' : [
 			{'file': 'testUpdates-regenerated.imi' , 'content' : """
   urgent loc idle: invariant True
-	when True do {x := 1/2*p + x + -7*i + -1, y := y + 1, i := ((3 * i - 1)) / ((5 * i) * i)}  sync a goto idle;
+	when True do {x := 1/2*p + x + -7*i + -1, y := y + 1, i := (3 * i - 1) / (5 * i * i)}  sync a goto idle;
 		"""
 			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test updates and inequalities printing order (printing)',
+		'input_files': ['testUpdatesInequalitiesOrder.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'testUpdatesInequalitiesOrder-regenerated.imi' , 'content' : """
+	when  a > 0
+& b > 0
+& c > 0 do {a := 0, b := 0, c := 0}  sync a goto idle;
+	when True do {a := 2, b := 3 + 3, c := 0}  sync a goto idle;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in guards (linear D reachable)',
+		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-d-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in guards (linear PD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-pd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 > p1
+& p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in guards (linear XD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-xd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in guards (linear PXD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-pxd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in invariants (linear D reachable)',
+		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-d-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in invariants (linear PD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-pd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 > p1
+& p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in invariants (linear XD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-xd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in invariants (linear PXD reachable)',
+		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'linear-invariant-pxd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in guards (non-linear D reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-d-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in guards (non-linear PD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-pd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 > p1
+& p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in guards (non-linear XD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-xd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in guards (non-linear PXD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-pxd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in guards (non-linear PD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-pd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in guards (non-linear XD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-xd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in guards (non-linear PXD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-guard-pxd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in invariants (non-linear D reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-d-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in invariants (non-linear PD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-pd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 > p1
+& p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in invariants (non-linear XD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-xd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in invariants (non-linear PXD reachable)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-pxd-reachable.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 > 0
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in invariants (non-linear PD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-pd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in invariants (non-linear XD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-xd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test expression consistency in invariants (non-linear PXD semantic error)',
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'nonlinear-invariant-pxd-semantic-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test linear expression unary minus in guard (computing)',
+		'input_files': ['linear_expressions/unary-minus-linear-expression.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unary-minus-linear-expression.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test linear expression unary minus in guard (printing)',
+		'input_files': ['linear_expressions/unary-minus-linear-expression.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'unary-minus-linear-expression-regenerated.imi' , 'content' : """
+when  y + 7 > 2*x
+& x + y = 5 + i
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test arithmetic expression unary minus in guard (computing)',
+		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unary-minus-guard.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test arithmetic expression unary minus in guard (printing)',
+		'input_files': ['arithmetic_expressions/unary-minus-guard.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'unary-minus-guard-regenerated.imi' , 'content' : """
+when  -(i * 2) = -2 * i
+& -(i * -2) = 2 * i
+& -(i / 2) = (-i) / 2
+& -(i / -2) = i / 2
+& -(i + i) = -2 * i
+& -(i - i) = 0
+& -(2 * i - i) = -i
+& -(-(i)) = i
+& -(-(-(i))) = i do {}  sync a goto lend;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test arithmetic expression unary minus in update (printing)',
+		'input_files': ['arithmetic_expressions/unary-minus-update.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'unary-minus-update-regenerated.imi' , 'content' : """
+when  i = 0 do {i := -(i * 2), i := -2 * i, i := -(i * -2), i := -(i / 2), i := (-i) / 2, i := -(i / -2), i := -(i + i), i := -(i - i), i := -(2 * i - i), i := -(-(i)), i := -(-(-(i))), i := -1 + 1, i := -1 - 1}  sync a goto lend;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test arithmetic expression with parenthesis (printing)',
+		'input_files': ['arithmetic_expressions/arithmetic-expr-printing-1.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'arithmetic-expr-printing-1-regenerated.imi' , 'content' : """
+when  z * x / y > x do {}  sync a1 goto lend;
+        when  z / (x * y) > x do {}  sync a1 goto lend;
+        when  z / (x - y) > x do {}  sync a1 goto lend;
+        when  z / (x + y) > x do {}  sync a1 goto lend;
+        when  z * (x - y) > x do {}  sync a1 goto lend;
+        when  z * (x + y) > x do {}  sync a1 goto lend;
+        when  (x - y) / z > x do {}  sync a1 goto lend;
+        when  (x + y) / z > x do {}  sync a1 goto lend;
+        when  (x - y) * z > x do {}  sync a1 goto lend;
+        when  (x + y) * z > x do {}  sync a1 goto lend;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/02/10
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test arithmetic expression without parenthesis (printing)',
+		'input_files': ['arithmetic_expressions/arithmetic-expr-printing-2.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'arithmetic-expr-printing-2-regenerated.imi' , 'content' : """
+when  z * x / y > x do {}  sync a1 goto lend;
+        when  z / x * y > x do {}  sync a1 goto lend;
+        when  z / x - y > x do {}  sync a1 goto lend;
+        when  z / x + y > x do {}  sync a1 goto lend;
+        when  z * x - y > x do {}  sync a1 goto lend;
+        when  z * x + y > x do {}  sync a1 goto lend;
+        when  x - y / z > x do {}  sync a1 goto lend;
+        when  x + y / z > x do {}  sync a1 goto lend;
+        when  x - y * z > x do {}  sync a1 goto lend;
+        when  x + y * z > x do {}  sync a1 goto lend;
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+# 	#------------------------------------------------------------
+# 	{
+# 		'purpose'    : 'Test boolean True constant (computing)',
+# 		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'acceptingReachable.imiprop'],
+# 		'options'    : '',
+# 		'expectations' : [
+# 			{'file': 'bool-constant-reachable.res' , 'content' : """
+# BEGIN CONSTRAINT
+# True
+# END CONSTRAINT
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test boolean True constant (computing)',
+		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-constant-reachable.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+# 	#------------------------------------------------------------
+# 	{
+# 		'purpose'    : 'Test boolean False constant (computing)',
+# 		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'acceptingReachable.imiprop'],
+# 		'options'    : '',
+# 		'expectations' : [
+# 			{'file': 'bool-constant-unreachable.res' , 'content' : """
+# BEGIN CONSTRAINT
+# False
+# END CONSTRAINT
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test boolean False constant (computing)',
+		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-constant-unreachable.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test that a boolean variable is correctly updated (computing)',
+		'input_files': ['boolean_expressions/bool-discrete-var-update.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-discrete-var-update.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test boolean variable update conversion to Uppaal (printing)',
+		'input_files': ['boolean_expressions/bool-discrete-var-update.imi'],
+		'options'    : '-imi2Uppaal',
+		'expectations' : [
+			{'file': 'bool-discrete-var-update-uppaal.xml' , 'content' : """
+/* Discrete variables declarations (WARNING: these variables can be rational-valued in IMITATOR, but they become integer-valued in Uppaal) */
+bool b = true;
+
+/* Action declarations */
+
+
+
+	/*------------------------------------------------------------*/
+	/* Initial constraint (not interpreted by Uppaal)             */
+	/*------------------------------------------------------------*/
+	 /* true */
+</declaration>
+
+<template><name x="0" y="0">pta</name><declaration>// No local declaration for automaton 'pta'
+</declaration>
+ 
+<location id="id_pta0_loc0" x="0" y="0">
+	<name x="0" y="-40">l1</name>
+	<label kind="invariant" x="0" y="40"></label></location>
+ 
+<location id="id_pta0_loc1" x="200" y="0">
+	<name x="200" y="-40">l2</name>
+	<label kind="invariant" x="200" y="40"></label></location>
+ 
+<location id="id_pta0_loc2" x="400" y="0">
+	<name x="400" y="-40">lend</name>
+	<label kind="invariant" x="400" y="40"> b</label></location>
+ <init ref="id_pta0_loc0"/>
+ 
+	<transition>
+		<source ref="id_pta0_loc0"/>
+		<target ref="id_pta0_loc1"/>
+		<label kind="guard" x="100" y="40"> b</label>
+		<label kind="assignment" x="100" y="-40">b = false</label>
+	</transition>
+	<transition>
+		<source ref="id_pta0_loc1"/>
+		<target ref="id_pta0_loc2"/>
+		<label kind="guard" x="300" y="40"> (! (b))</label>
+		<label kind="assignment" x="300" y="-40">b = 1 &lt; 2</label>
+	</transition>
+ </template>
+<system>
+// List one or more processes to be composed into a system.
+
+system pta;
+</system></nta>
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test that a boolean constant is initialized with consistant type (type checking)',
+		'input_files': ['boolean_expressions/bool-constant-init-type-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-constant-init-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test that a boolean variable is initialized with consistant type (type checking)',
+		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-variable-init-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/11
+		## Last modified            : 2021/03/11
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a boolean variable is updated with a consistent typed expression (type checking)',
+		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-variable-update-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/04/14
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a constant is not initialized with a rational literal (type checking)',
+		'input_files': ['type_checking/constant-int-divide-type-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'constant-int-divide-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/04/14
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a variable is not initialized with a rational literal (type checking)',
+		'input_files': ['type_checking/variable-int-divide-type-error.imi'],
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'variable-int-divide-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/03/12
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in addition (type checking)',
+		'input_files': ['type_checking/expression-mixin-type-error-1.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'expression-mixin-type-error-1.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/03/12
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in multiplication (type checking)',
+		'input_files': ['type_checking/expression-mixin-type-error-2.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'expression-mixin-type-error-2.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/03/12
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in comparison (type checking)',
+		'input_files': ['type_checking/expression-mixin-type-error-3.imi'],
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'expression-mixin-type-error-3.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/03/12
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in "in" expression (type checking)',
+		'input_files': ['type_checking/expression-mixin-type-error-4.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'expression-mixin-type-error-4.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/02
+		## Last modified            : 2021/04/02
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a clock isn\'t updated with a bad type (type checking)',
+		'input_files': ['type_checking/clock-update-type-error.imi'],
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'clock-update-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/02
+		## Last modified            : 2021/04/02
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a clock isn\'t compared with a bad type (type checking)',
+		'input_files': ['type_checking/clock-comparison-type-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'clock-comparison-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/02
+		## Last modified            : 2021/04/02
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a parameter isn\'t compared with a bad type (type checking)',
+		'input_files': ['type_checking/parameter-comparison-type-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'parameter-comparison-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
 			,
 		] # end expectations
 	} # end test case
@@ -3344,9 +4732,323 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2021/04/01
+		# Last modified            : 2021/04/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EFexemplify on a toy example with only discrete',
+		'input_files': ['testEFexemplify-discrete.imi', 'testEFexemplify-discrete.imiprop'],
+		'options'    : '-no-merge -comparison none',
+		'expectations' : [
+			{'file': 'testEFexemplify-discrete.res' , 'content' : """
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  
+
+pta: l1, i = 0 ==> 
+global_time = 0
+ | 
+ | via d = 1/2
+ | followed by combined transition [PTA pta: guard{True} updates{i := 3}  (* sync nosync_1*)  Target l2] 
+ | 
+ v  pta: l2, i = 3 ==> 
+global_time = 1/2
+
+ | 
+ | via d = 1/2
+ | followed by combined transition [PTA pta: guard{True} updates{i := i + 1}  (* sync nosync_2*)  Target lTarget] 
+ | 
+ v  pta: lTarget, i = 4 ==> 
+global_time = 1
+(************************************************************)
+
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/04/01
+		# Last modified            : 2021/04/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock',
+		'input_files': ['testEFexemplify-1clock.imi', 'testEFexemplify-1clock.imiprop'],
+		'options'    : '-no-merge -comparison none',
+		'expectations' : [
+			{'file': 'testEFexemplify-1clock.res' , 'content' : """
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  
+
+pta: l1 ==> 
+x = 0 & global_time = 0
+ | 
+ | via d = 2
+ | followed by combined transition [PTA pta: guard{ x = 2} updates{x := 0}  (* sync nosync_1*)  Target l2] 
+ | 
+ v  pta: l2 ==> 
+x = 0 & global_time = 2
+
+ | 
+ | via d = 3
+ | followed by combined transition [PTA pta: guard{ x = 3} updates{x := x}  (* sync nosync_2*)  Target lTarget] 
+ | 
+ v  pta: lTarget ==> 
+x = 3 & global_time = 5
+(************************************************************)
+
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/04/01
+		# Last modified            : 2021/04/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock (+ non-1 flows, non-0 resets)',
+		'input_files': ['testEFexemplify-1complexclock.imi', 'testEFexemplify-1complexclock.imiprop'],
+		'options'    : '-no-merge -comparison none',
+		'expectations' : [
+			{'file': 'testEFexemplify-1complexclock.res' , 'content' : """
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  
+
+pta: l1 ==> 
+x = 0 & global_time = 0
+ | 
+ | via d = 2
+ | followed by combined transition [PTA pta: guard{ x = 2} updates{x := 5}  (* sync nosync_1*)  Target l2] 
+ | 
+ v  pta: l2 ==> 
+x = 5 & global_time = 2
+
+ | 
+ | via d = 1
+ | followed by combined transition [PTA pta: guard{ x = 8} updates{x := 2*x}  (* sync nosync_2*)  Target l3] 
+ | 
+ v  pta: l3 ==> 
+x = 16 & global_time = 3
+
+ | 
+ | via d = 10
+ | followed by combined transition [PTA pta: guard{ x = 6} updates{x := x + -3}  (* sync nosync_3*)  Target lTarget] 
+ | 
+ v  pta: lTarget ==> 
+x = 3 & global_time = 13
+(************************************************************)
+
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/04/01
+		# Last modified            : 2021/04/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EFexemplify on a toy example with 2 clocks (+ non-1 flows, non-0 resets)',
+		'input_files': ['testEFexemplify-2complexclocks.imi', 'testEFexemplify-2complexclocks.imiprop'],
+		'options'    : '-no-merge -comparison none',
+		'expectations' : [
+			{'file': 'testEFexemplify-2complexclocks.res' , 'content' : """
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  
+
+pta: l1 ==> 
+x = 0 & y = 0 & global_time = 0
+ | 
+ | via d = 2
+ | followed by combined transition [PTA pta: guard{ x = 2} updates{y := 5}  (* sync nosync_1*)  Target l2] 
+ | 
+ v  pta: l2 ==> 
+x = 2 & y = 5 & global_time = 2
+
+ | 
+ | via d = 1
+ | followed by combined transition [PTA pta: guard{ x = 5} updates{x := y, y := x}  (* sync nosync_2*)  Target l3] 
+ | 
+ v  pta: l3 ==> 
+x = 7 & y = 5 & global_time = 3
+
+ | 
+ | via d = 1/2
+ | followed by combined transition [PTA pta: guard{ x = 1} updates{y := -1*x + y}  (* sync nosync_3*)  Target lTarget] 
+ | 
+ v  pta: lTarget ==> 
+x = 1 & y = 9/2 & global_time = 7/2
+(************************************************************)
+
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/04/01
+		# Last modified            : 2021/04/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EFexemplify on a toy example with 1 clock and 2 bounded signals',
+		'input_files': ['testEFexemplify-2signals.imi', 'testEFexemplify-2signals.imiprop'],
+		'options'    : '-no-merge -comparison none',
+		'expectations' : [
+			# WARNING: there is a lot of non-determinism, so a failure on this test does not necessarily mean the algorithm is wrong! It should then be manually inspected
+			{'file': 'testEFexemplify-2signals.res' , 'content' : """
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  
+
+pta: l1, signal_1: increasing_slow, signal_2: increasing_slow ==> 
+x = 0 & s_1 = 37/4 & s_2 = 29/8 & global_time = 0
+ | 
+ | via d = 1
+ | followed by combined transition [PTA signal_1: guard{True} updates{}  sync stabilize_1 Target stabilized] 
+ | 
+ v  pta: l1, signal_1: stabilized, signal_2: increasing_slow ==> 
+x = 1 & s_1 = 41/4 & s_2 = 37/8 & global_time = 1
+
+ | 
+ | via d = 1
+ | followed by combined transition [PTA pta: guard{ s_1 > s_2
+& x = 2} updates{x := 0}  (* sync nosync_1*)  Target l2] 
+ | 
+ v  pta: l2, signal_1: stabilized, signal_2: increasing_slow ==> 
+x = 0 & s_1 = 41/4 & s_2 = 45/8 & global_time = 2
+
+ | 
+ | via d = 17/4
+ | followed by combined transition [PTA pta: guard{ x > 4
+& 10 > s_2} updates{}  (* sync nosync_2*)  Target l3] 
+ | 
+ v  pta: l3, signal_1: stabilized, signal_2: increasing_slow ==> 
+x = 17/4 & s_1 = 41/4 & s_2 = 79/8 & global_time = 25/4
+
+ | 
+ | via d = 83/8
+ | followed by combined transition [PTA pta: guard{ x > 20
+& s_1 > 10
+& s_1 + 10 = s_2} updates{}  (* sync nosync_3*)  Target lTarget] 
+ | 
+ v  pta: lTarget, signal_1: stabilized, signal_2: increasing_slow ==> 
+x = 25 & s_1 = 41/4 & s_2 = 81/4 & global_time = 133/8
+(************************************************************)
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EFexemplify on a toy example',
 		'input_files': ['testCounterExSimple-3.imi', 'testCounterExSimple-3.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-3.res' , 'content' : """
 BEGIN RESULT
@@ -3446,7 +5148,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (clock initially non-zero, strict constraints)',
 		'input_files': ['testCounterExSimple-4.imi', 'testCounterExSimple-4.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-4.res' , 'content' : """
 BEGIN RESULT
@@ -3548,7 +5250,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only in the initial state)',
 		'input_files': ['testCounterExSimple-5.imi', 'testCounterExSimple-5.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5.res' , 'content' : """
 BEGIN RESULT
@@ -3685,7 +5387,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at position 2)',
 		'input_files': ['testCounterExSimple-5b.imi', 'testCounterExSimple-5b.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5b.res' , 'content' : """
 BEGIN RESULT
@@ -3820,7 +5522,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at last position)',
 		'input_files': ['testCounterExSimple-5c.imi', 'testCounterExSimple-5c.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5c.res' , 'content' : """
 BEGIN RESULT
@@ -3954,7 +5656,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter valuation derived)',
 		'input_files': ['testCounterExSimple-6.imi', 'testCounterExSimple-6.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-6.res' , 'content' : """
 BEGIN RESULT
@@ -4051,7 +5753,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
 		'input_files': ['testCounterExSimple-7.imi', 'testCounterExSimple-7.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-7.res' , 'content' : """
 
@@ -4111,7 +5813,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
 		'input_files': ['testCounterExSimple-8.imi', 'testCounterExSimple-8.imiprop'],
-		'options'    : '-draw-cart',
+		'options'    : '-no-merge -comparison none -draw-cart',
 		'expectations' : [
 			{'file': 'testCounterExSimple-8.res' , 'content' : """
 
@@ -4265,7 +5967,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy monitoring-style example',
 		'input_files': ['testCounterExSimple-9.imi', 'testCounterExSimple-9.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-9.res' , 'content' : """
 
@@ -4362,7 +6064,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example without parameter',
 		'input_files': ['testCounterExSimple.imi', 'testCounterExSimple.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple.res' , 'content' : """
 
@@ -4401,7 +6103,7 @@ x = 0 & global_time = 4
 
  | 
  | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := (d2) / 2}  sync a Target l4] 
+ | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := d2 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/2, d2 = 25 ==> 
 x = 1 & global_time = 5
@@ -4448,7 +6150,7 @@ x = 0 & global_time = 4
 
  | 
  | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := (d2) / 2}  sync a Target l4] 
+ | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := d2 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/2, d2 = 25 ==> 
 x = 1 & global_time = 5
@@ -4475,7 +6177,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example with parameters and discrete variables',
 		'input_files': ['testCounterExSimple-2.imi', 'testCounterExSimple-2.imiprop'],
-		'options'    : '',
+		'options'    : '-no-merge -comparison none',
 		'expectations' : [
 			{'file': 'testCounterExSimple-2.res' , 'content' : """
 
@@ -4516,7 +6218,7 @@ p = 1/2 & x = 0 & global_time = 4
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ 1 > p
-& x = 1} updates{d1 := (d1) / 2}  sync a Target l4] 
+& x = 1} updates{d1 := d1 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/4 ==> 
 p = 1/2 & x = 1 & global_time = 5
@@ -4611,7 +6313,7 @@ p = 1/2 & x = 0 & global_time = 4
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ 1 > p
-& x = 1} updates{d1 := (d1) / 2}  sync a Target l4] 
+& x = 1} updates{d1 := d1 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/4 ==> 
 p = 1/2 & x = 1 & global_time = 5
@@ -4626,6 +6328,31 @@ END RESULT
 """
 			} # end result file
 			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: BlT09-fig1',
+		'input_files': ['BlT09-fig1.imi', 'BlT09-fig1.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'BlT09-fig1.res' , 'content' : """
+BEGIN CONSTRAINT
+ u + 2 > l
+& l >= 0
+& u > 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+"""
+			} #end result file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
@@ -5819,6 +7546,118 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test only `accepting` keyword: Loop',
 		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/03/12
+		# Last modified            : 2021/03/12
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: Loop [alias AccCycle]',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred-acccycle.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/03/12
+		# Last modified            : 2021/03/12
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: Loop [alias AcceptingCycle]',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred-acceptingcycle.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/03/12
+		# Last modified            : 2021/03/12
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: Loop [alias AccLoop]',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred-accloop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/03/12
+		# Last modified            : 2021/03/12
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: Loop [alias AcceptingLoop]',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred-acceptingloop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testEFaccepting.res' , 'content' : """
@@ -11661,6 +13500,236 @@ end
 	} # end test case
 	#------------------------------------------------------------
 	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/10
+		## Last modified            : 2021/03/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test init state printing - old state zone (printing)',
+		'input_files': ['init_state/old-init-state-printing.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'old-init-state-printing-regenerated.imi' , 'content' : """
+var 
+	i, j
+		: discrete;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ synclabs: ;
+ 
+loc l1: invariant True 
+	when  i = 0
+& j = 0 do {}  (* sync nosync_1*)  goto lend;
+ 
+accepting loc lend: invariant True 
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+ automaton pta2
+(************************************************************)
+ synclabs: ;
+ 
+loc l2: invariant True 
+	when  i = 0
+& j = 0 do {}  (* sync nosync_2*)  goto lend2;
+ 
+accepting loc lend2: invariant True 
+ end (* pta2 *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+	& loc[pta2] = l2
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& i = 1
+	& j = 2
+
+	(*------------------------------------------------------------*)
+	(* Initial constraint *)
+	(*------------------------------------------------------------*)
+	 & True
+
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/10
+		## Last modified            : 2021/03/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test init state printing - new init state (printing)',
+		'input_files': ['init_state/new-init-state-printing.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'new-init-state-printing-regenerated.imi' , 'content' : """
+var 
+	b
+		: bool;
+
+	k, l
+		: int;
+
+	i, j
+		: discrete;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ synclabs: ;
+ 
+loc l1: invariant True 
+	when  b
+& i = 0
+& j = 0
+& k = 0
+& l = 0 do {}  (* sync nosync_1*)  goto lend;
+ 
+accepting loc lend: invariant True 
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+ automaton pta2
+(************************************************************)
+ synclabs: ;
+ 
+loc l2: invariant True 
+	when  b
+& i = 0
+& j = 0
+& k = 0
+& l = 0 do {}  (* sync nosync_2*)  goto lend2;
+ 
+accepting loc lend2: invariant True 
+ end (* pta2 *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+	(*------------------------------------------------------------*)
+	(* Discretes *)
+	(*------------------------------------------------------------*)
+	discrete = 
+		(* Locations *)
+		loc[pta] := l1, 
+		loc[pta2] := l2,
+		(* Discretes *)
+		b := False, 
+		k := 0, 
+		l := 0, 
+		i := 1, 
+		j := 2
+	;
+
+	(*------------------------------------------------------------*)
+	(* Initial constraint *)
+	(*------------------------------------------------------------*)
+	continuous = 
+		& True
+	;
+
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/16
+		## Last modified            : 2021/04/16
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that init of a clock in discrete state section is forbidden - new init state (semantic)',
+		'input_files': ['init_state/init-clock-in-discrete-state-section-error.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'init-clock-in-discrete-state-section-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/16
+		## Last modified            : 2021/04/16
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that init of a parameter in discrete state section is forbidden - new init state (semantic)',
+		'input_files': ['init_state/init-parameter-in-discrete-state-section-error.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'init-parameter-in-discrete-state-section-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test the graphical state space generation (no details)',

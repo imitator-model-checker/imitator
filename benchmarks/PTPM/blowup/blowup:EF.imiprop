@@ -1,0 +1,24 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Parametric timed pattern matching benchmark: blowup (designed on purpose to test the limits of our algorithm)
+ *
+ * Description     : Template of a timed word alternating between a and c
+ * Correctness     : N/A
+ * Source          : Étienne André, Ichiro Husuo, Masaki Waga "Offline timed pattern matching under uncertainty" (ICECCS 2018)
+ * Author          : Étienne André and Masaki Waga
+ * Modeling        : Étienne André and Masaki Waga
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/18
+ * Last modified   : 2021/02/08
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth EF(loc[pta] = s3);

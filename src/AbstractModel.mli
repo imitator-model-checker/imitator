@@ -31,21 +31,12 @@ type v0 = HyperRectangle.hyper_rectangle
 (** Types *)
 (************************************************************)
 
-(** Type of variable in declarations *)
-type var_type =
-	| Var_type_clock
-	| Var_type_discrete
-	| Var_type_parameter
-
 (** Type of sync actions *)
 type action_type =
 	(* Observable action label (does not necessarily mean that it is "synchronized", as it can belong to a single automaton) *)
 	| Action_type_sync
 	(* Non-observable, silent action label (necessarily non-synchronized) *)
 	| Action_type_nosync
-
-
-type discrete_value = NumConst.t
 
 
 (************************************************************)
@@ -88,11 +79,13 @@ type clock_updates =
 
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
 
-type discrete_update = discrete_index * DiscreteExpressions.discrete_arithmetic_expression
+type discrete_update = discrete_index * DiscreteExpressions.global_expression
 
-(** Guard: a linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
 
-type discrete_guard = LinearConstraint.d_linear_constraint
+
+(** Guard: a non-linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
+
+type discrete_guard = NonlinearConstraint.nonlinear_constraint
 type continuous_guard = LinearConstraint.pxd_linear_constraint
 
 type discrete_continuous_guard = {
@@ -107,17 +100,10 @@ type guard =
 	| Discrete_continuous_guard of discrete_continuous_guard
 
 
-(** Invariant: linear constraint *)
-type invariant = LinearConstraint.pxd_linear_constraint
+(** Invariant: guard *)
+type invariant = guard
 
-(** Boolean expression *)
-type boolean_expression =
-	| True_bool (** True *)
-	| False_bool (** False *)
-	| Not_bool of boolean_expression (** Negation *)
-	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
-	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
-	| Discrete_boolean_expression of DiscreteExpressions.discrete_boolean_expression
+
 
 (** Updates *)
 type updates = {
@@ -126,7 +112,7 @@ type updates = {
   conditional: conditional_update list; (** List of conditional updates *)
 }
 (** Conditional updates *)
-and conditional_update = boolean_expression * updates * updates
+and conditional_update = DiscreteExpressions.boolean_expression * updates * updates
 
 (** Transition: guard, action, list of updates, destination location *)
 type transition = {
@@ -213,8 +199,10 @@ type abstract_model = {
 	parameters_and_clocks : variable_index list;
 	(* The function : variable_index -> variable name *)
 	variable_names : variable_index -> variable_name;
+	(* All discrete variable names group by types *)
+    discrete_names_by_type_group : (DiscreteValue.var_type * (variable_name list)) list;
 	(* The type of variables *)
-	type_of_variables : variable_index -> var_type;
+	type_of_variables : variable_index -> DiscreteValue.var_type;
 
 	(* The automata *)
 	automata : automaton_index list;

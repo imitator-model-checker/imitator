@@ -1,0 +1,73 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Unary minus in linear expression
+ * Description      : Model to test the correct behavior of linear expression involving minus factors
+ * Correctness      : Reachable
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Behavior, Printing
+ * Source           :
+ * bibkey           :
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/02/10
+ * Last modified    : 2021/02/10
+ * Model version    : 0.1
+ *
+ * IMITATOR version : > 3.0.0
+ ************************************************************)
+
+var
+
+(* Discrete *)
+    x, y
+        : clock;
+	i,
+		: discrete;
+
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+
+loc l1: invariant True
+	when
+	    -x + 2 - i > -2y &
+	    -5 - i + x = -y
+	goto lend;
+
+accepting loc lend: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+    & x = 1
+    & y = 5
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& i = 1
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

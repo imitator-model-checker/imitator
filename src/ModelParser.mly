@@ -8,9 +8,9 @@
  *
  * Module description: Parser for the input model
  *
- * File contributors : Étienne André, Jaime Arias, Laure Petrucci
+ * File contributors : Étienne André, Jaime Arias, Benjamin Loillier, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/17
+ * Last modified     : 2021/04/27
  *
  ************************************************************/
 
@@ -68,12 +68,12 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_DO
+	CT_DISCRETE CT_INT CT_BOOL CT_DO
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IN CT_INIT CT_INITIALLY CT_INVARIANT CT_IS
+	CT_IF CT_IN CT_INIT CT_CONTINUOUS CT_INITIALLY CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
@@ -85,9 +85,13 @@ let unzip l = List.fold_left
 	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
+        CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW
 
 
 %token EOF
+
+%right OP_ASSIGN
+%right OP_EQ
 
 %left PIPE CT_OR        /* lowest precedence */
 %left AMPERSAND CT_AND  /* medium precedence */
@@ -104,7 +108,8 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	declarations automata init_definition end_opt EOF
+	declarations automata init_definition_option
+	end_opt EOF
 	{
 		let declarations	= $1 in
 		let automata		= $2 in
@@ -176,10 +181,10 @@ decl_var_lists:
 
 decl_var_list:
 	| NAME comma_opt { [($1, None)] }
-	| NAME OP_EQ rational_linear_expression comma_opt { [($1, Some $3)] }
+	| NAME OP_EQ init_value_expression comma_opt { [($1, Some $3)] }
 
 	| NAME COMMA decl_var_list { ($1, None) :: $3 }
-	| NAME OP_EQ rational_linear_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
+	| NAME OP_EQ init_value_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
 
 /************************************************************/
@@ -187,8 +192,18 @@ decl_var_list:
 var_type:
 	| CT_CLOCK { Var_type_clock }
 	| CT_CONSTANT { Var_type_constant }
-	| CT_DISCRETE { Var_type_discrete }
 	| CT_PARAMETER { Var_type_parameter }
+	| var_type_discrete { Var_type_discrete $1 }
+;
+
+var_type_discrete:
+    | var_type_discrete_number { Var_type_discrete_number $1 }
+    | CT_BOOL { Var_type_discrete_bool }
+;
+
+var_type_discrete_number:
+    | CT_DISCRETE { Var_type_discrete_rational }
+    | CT_INT { Var_type_discrete_int }
 ;
 
 /************************************************************
@@ -282,7 +297,7 @@ while_or_invariant_or_nothing:
 ;
 
 location:
-	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing convex_predicate stopwatches_and_flow_opt wait_opt transitions {
+	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing nonlinear_convex_predicate stopwatches_and_flow_opt wait_opt transitions {
 		let urgency, accepting = $1 in
 		let name, cost = $2 in
 		let stopwatches, flow = $6 in
@@ -388,7 +403,7 @@ transitions:
 /************************************************************/
 
 transition:
-	| CT_WHEN convex_predicate update_synchronization CT_GOTO NAME SEMICOLON
+	| CT_WHEN nonlinear_convex_predicate update_synchronization CT_GOTO NAME SEMICOLON
 	{
 		let update_list, sync = $3 in
 			$2, update_list, sync, $5
@@ -433,23 +448,23 @@ update_nonempty_list:
 /** Normal updates */
 update:
 	/*** NOTE: deprecated syntax ***/
-	| NAME APOSTROPHE OP_EQ arithmetic_expression {
+	| NAME APOSTROPHE OP_EQ expression {
 		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
 		($1, $4)
 		}
 
 	/*** NOTE: deprecated syntax ***/
-	| NAME APOSTROPHE OP_ASSIGN arithmetic_expression {
+	| NAME APOSTROPHE OP_ASSIGN expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
 		($1, $4)
 	}
 	/*** NOTE: deprecated syntax ***/
-	| NAME OP_EQ arithmetic_expression {
+	| NAME OP_EQ expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
 		($1, $3)
 	}
 
-	| NAME OP_ASSIGN arithmetic_expression { ($1, $3) }
+	| NAME OP_ASSIGN expression { ($1, $3) }
 ;
 
 /** List containing only normal updates.
@@ -496,18 +511,24 @@ arithmetic_expression:
 arithmetic_term:
 	| arithmetic_factor { Parsed_DT_factor $1 }
 	/* Shortcut for syntax rational NAME without the multiplication operator */
-	| rational NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant $1), Parsed_DF_variable $2) }
+	| number NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant ($1)), Parsed_DF_variable $2) }
 	| arithmetic_term OP_MUL arithmetic_factor { Parsed_DT_mul ($1, $3) }
 	| arithmetic_term OP_DIV arithmetic_factor { Parsed_DT_div ($1, $3) }
-	| OP_MINUS arithmetic_term { Parsed_DT_mul($2, Parsed_DF_constant NumConst.minus_one) }
+	| OP_MINUS arithmetic_factor { Parsed_DT_factor(Parsed_DF_unary_min $2) }
 ;
 
 arithmetic_factor:
-	| rational { Parsed_DF_constant $1 }
+	| number { Parsed_DF_constant ($1) }
 	| NAME { Parsed_DF_variable $1 }
 	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+	| CT_BUILTIN_FUNC_RATIONAL_OF_INT LPAREN arithmetic_expression RPAREN { Parsed_rational_of_int_function $3 }
 ;
 
+number:
+	| integer { DiscreteValue.Number_value $1 }
+	| float { DiscreteValue.Number_value $1 }
+	| integer OP_DIV pos_integer { ( DiscreteValue.Rational_value (NumConst.div $1 $3)) }
+;
 
 /************************************************************/
 /** RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES */
@@ -523,10 +544,26 @@ convex_predicate_fol:
 	| linear_constraint { [$1] }
 ;
 
+/* We allow an optional "&" at the beginning of a convex predicate (sometimes useful) */
+nonlinear_convex_predicate:
+	| ampersand_opt nonlinear_convex_predicate_fol { $2 }
+;
+
+nonlinear_convex_predicate_fol:
+	| nonlinear_constraint AMPERSAND nonlinear_convex_predicate { $1 :: $3 }
+	| nonlinear_constraint { [$1] }
+;
+
 linear_constraint:
 	| linear_expression relop linear_expression { Parsed_linear_constraint ($1, $2, $3) }
 	| CT_TRUE { Parsed_true_constraint }
 	| CT_FALSE { Parsed_false_constraint }
+;
+
+nonlinear_constraint:
+	| discrete_boolean_expression { Parsed_nonlinear_constraint $1 }
+    | CT_TRUE { Parsed_true_nonlinear_constraint }
+    | CT_FALSE { Parsed_false_nonlinear_constraint }
 ;
 
 relop:
@@ -553,6 +590,17 @@ linear_term:
 	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
 	| NAME { Variable (NumConst.one, $1) }
 	| LPAREN linear_term RPAREN { $2 }
+;
+
+/* Init expression for variable */
+init_value_expression:
+    | expression { $1 }
+;
+
+/* Init bool expression, like rational_linear_expression it's solvable directly at parsing (at compile time) */
+init_bool_value_expression:
+    | CT_TRUE { true } 
+    | CT_FALSE { false }
 ;
 
 /* Linear expression over rationals only */
@@ -601,27 +649,35 @@ pos_float:
 /** BOOLEAN EXPRESSIONS */
 /************************************************************/
 boolean_expression:
-	| CT_TRUE { Parsed_True }
-	| CT_FALSE { Parsed_False }
-	| OP_NEQ LPAREN boolean_expression RPAREN { Parsed_Not $3 }
+	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
-	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
+	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
+	| CT_TRUE { Parsed_True }
+	| CT_FALSE { Parsed_False }
 ;
 
 discrete_boolean_expression:
+	| arithmetic_expression { Parsed_arithmetic_expression $1 }
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
 	| arithmetic_expression relop arithmetic_expression { Parsed_expression ($1, $2, $3) }
-
 	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	/* allowed for convenience */
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
+	/* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) */
+	| LPAREN boolean_expression RPAREN { Parsed_boolean_expression $2 }
 ;
 
 /************************************************************/
 /** INIT DEFINITION */
 /************************************************************/
+
+init_definition_option:
+    | init_definition { $1 }
+    | new_init_definition { $1 }
+    | { [ ] }
+;
 
 init_definition:
 	| CT_INIT OP_ASSIGN init_expression SEMICOLON { $3 }
@@ -644,7 +700,7 @@ init_expression_fol:
 /* Used in the init definition */
 init_state_predicate:
 	| init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
-	| linear_constraint { Parsed_linear_predicate $1 }
+    | linear_constraint { Parsed_linear_predicate $1 }
 ;
 
 init_loc_predicate:
@@ -653,6 +709,73 @@ init_loc_predicate:
 	/* my_pta IS IN my_loc */
 	| NAME CT_IS CT_IN NAME { ($1, $4) }
 ;
+
+new_init_loc_predicate:
+	/* loc[my_pta] = my_loc */
+	| CT_LOC LSQBRA NAME RSQBRA OP_ASSIGN NAME { ($3, $6) }
+	/* my_pta IS IN my_loc */
+	| NAME CT_IS CT_IN NAME { ($1, $4) }
+;
+
+/************************************************************/
+/** NEW INIT DEFINITION SECTION : SEPARATION OF DISCRETE AND CONTINUOUS */
+/************************************************************/
+
+new_init_definition:
+	| CT_INIT OP_ASSIGN LBRACE new_init_discrete_continuous_definition RBRACE { $4 }
+;
+
+new_init_discrete_continuous_definition:
+    | new_init_discrete_definition { $1 }
+    | new_init_continuous_definition { $1 }
+    | new_init_discrete_definition new_init_continuous_definition { $1 @ $2 }
+    | new_init_continuous_definition new_init_discrete_definition { $2 @ $1 }
+;
+
+new_init_discrete_definition:
+    | CT_DISCRETE OP_EQ new_init_discrete_expression SEMICOLON { $3 }
+;
+
+new_init_continuous_definition:
+    | CT_CONTINUOUS OP_EQ new_init_continuous_expression SEMICOLON { $3 }
+;
+
+
+new_init_discrete_expression:
+	| comma_opt init_discrete_expression_nonempty_list { $2 }
+	| { [ ] }
+;
+
+init_discrete_expression_nonempty_list :
+	| new_init_discrete_state_predicate COMMA init_discrete_expression_nonempty_list  { $1 :: $3 }
+	| new_init_discrete_state_predicate comma_opt { [ $1 ] }
+;
+
+new_init_discrete_state_predicate:
+	| new_init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
+	| LPAREN new_init_discrete_state_predicate  RPAREN { $2 }
+	| NAME OP_ASSIGN expression { Parsed_discrete_predicate ($1, $3) }
+;
+
+new_init_continuous_expression:
+	| ampersand_opt init_continuous_expression_nonempty_list { $2 }
+	| { [ ] }
+;
+
+init_continuous_expression_nonempty_list :
+	| new_init_continuous_state_predicate AMPERSAND init_continuous_expression_nonempty_list  { $1 :: $3 }
+	| new_init_continuous_state_predicate ampersand_opt { [ $1 ] }
+;
+
+new_init_continuous_state_predicate:
+    | LPAREN new_init_continuous_state_predicate RPAREN { $2 }
+    | linear_constraint { Parsed_linear_predicate $1 }
+;
+
+expression:
+    | boolean_expression { Parsed_global_expression $1 }
+;
+
 
 
 /************************************************************/

@@ -1,0 +1,76 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Unary minus guard consistency (computing / printing)
+ * Description      : Test unary minus guard consistency when computing and printing
+ * Correctness      : Reachable
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Computing, Printing
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/02/10
+ * Last modified    : 2021/02/10
+ * Model version    : 0.1
+ *
+ * IMITATOR version : > 3.0.0
+ ************************************************************)
+
+var
+
+(* Discrete *)
+	i,
+		: discrete;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant True
+	when 
+        -(i*2) = -2i &
+        -(i*-2) = 2i &
+        -(i/2) = -i / 2 &
+        -(i/-2) = i / 2 &
+        -(i + i) = -2i &
+        -(i - i) = 0 &
+        -(2i - i) = -i &
+        -(-(i)) = i &
+        -(-(-(i))) = i
+    sync a goto lend;
+
+accepting loc lend: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& i = 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

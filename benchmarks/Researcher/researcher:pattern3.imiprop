@@ -1,0 +1,8 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Description      : Ask for the valuations such that, every time the researcher completes an article, (s)he has drunk exactly one coffee.
+ * Author           : Étienne André
+ ******************************************************************************)
+
+property := #synth pattern(always sequence (drink, done));

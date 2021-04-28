@@ -1,0 +1,80 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : synthpNplusq
+ * Description      : Toy benchmark for which the result is "r = p*i+q | i \in N" but IMITATOR cannot find it because the accumulated constraints grow forever
+ * Correctness      : Reachability
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Academic ; Toy ; Unsolvable
+ * Source           : Parametric real-time reasoning.
+ * bibkey           : AHV93
+ * Author           : Rajeev Alur, Thomas A. Henzinger, Moshe Y. Vardi
+ * Modeling         : Dylan Marinho
+ * Input by         : Dylan Marinho
+ * License          : 
+ * 
+ * Created          : 2021/01/21
+ * Last modified    : 2021/02/08
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+		: clock;
+
+(* Parameters *)
+	p, q, r
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant True
+	when x = p do {x := 0} goto l1;
+	when x = q & y = r goto lGoal;
+
+
+accepting loc lGoal: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+  & q >= 0
+  & r >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -123,13 +123,28 @@ let footer = "\n"
 (** Variable declarations *)
 (************************************************************)
 
+(* Convert a var_type_discrete into a string *)
+let string_of_var_type_discrete = DiscreteValue.string_of_var_type_discrete
+
 (* Convert a var_type into a string *)
-let string_of_var_type = function
-	| Var_type_clock -> "clock"
-	| Var_type_discrete -> "discrete"
-	| Var_type_parameter -> "parameter"
+let string_of_var_type = DiscreteValue.string_of_var_type
 
+(* Convert discrete variable declarations group (by type) into a string *)
+let string_of_discrete_variables_by_type var_type variable_names =
+	if List.length variable_names > 0 then (
+	    (* Get string of all variable names of the group *)
+	    let string_of_variable_names = string_of_list_of_string_with_sep ", " variable_names in
+	    (* Get string of declaration group *)
+		("\n\t" ^ string_of_variable_names ^ "\n\t\t: " ^ (string_of_var_type var_type) ^ ";\n")
+    )
+    else ""
 
+(* Convert discrete variable declarations into a string *)
+let string_of_discrete_variables model =
+    (* Get string of each variable groups (by type) *)
+    let str = List.map (fun (var_type, variable_names) -> string_of_discrete_variables_by_type var_type variable_names) model.discrete_names_by_type_group in
+    (* Join all strings *)
+    string_of_list_of_string str
 
 (* Convert the initial variable declarations into a string *)
 let string_of_declarations model =
@@ -144,11 +159,18 @@ let string_of_declarations model =
 	(if model.nb_clocks > 0 then
 		("\n\t" ^ (string_of_variables model.clocks_without_special_reset_clock) ^ "\n\t\t: clock;\n") else "")
 	^
-	(if model.nb_discrete > 0 then
-		("\n\t" ^ (string_of_variables model.discrete) ^ "\n\t\t: discrete;\n") else "")
+	(string_of_discrete_variables model)
 	^
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
+
+(* Get string of a global expression *)
+let string_of_global_expression = DiscreteExpressions.string_of_global_expression
+(* Get string of an arithmetic expression *)
+let string_of_arithmetic_expression = DiscreteExpressions.string_of_arithmetic_expression
+(* Get string of non-linear constraint inequalities *)
+let string_of_nonlinear_constraint = NonlinearConstraint.string_of_nonlinear_constraint
+
 
 (************************************************************)
 (** Guard *)
@@ -160,10 +182,10 @@ let string_of_declarations model =
 let string_of_guard variable_names = function
 	| True_guard -> LinearConstraint.string_of_true
 	| False_guard -> LinearConstraint.string_of_false
-	| Discrete_guard discrete_guard -> LinearConstraint.string_of_d_linear_constraint variable_names discrete_guard
+	| Discrete_guard discrete_guard -> string_of_nonlinear_constraint variable_names discrete_guard
 	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard ->
-		(LinearConstraint.string_of_d_linear_constraint variable_names discrete_continuous_guard.discrete_guard)
+		(string_of_nonlinear_constraint variable_names discrete_continuous_guard.discrete_guard)
 		^ LinearConstraint.string_of_and ^
 		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
 
@@ -202,7 +224,7 @@ let string_of_invariant model automaton_index location_index =
 	
 	(* Invariant *)
 	"invariant "
-	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
+	^ (string_of_guard model.variable_names (model.invariants automaton_index location_index))
 
 	(* Handle stopwatches *)
 	^
@@ -253,120 +275,20 @@ let string_of_clock_updates model clock_updates =
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) in
 	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
 
-(* Convert an arithmetic expression into a string *)
-(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
-let string_of_arithmetic_expression variable_names =
-	let rec string_of_arithmetic_expression = function
-		(* Shortcut: Remove the "+0" / -"0" cases *)
-		| DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
-		| DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
-			string_of_arithmetic_expression discrete_arithmetic_expression
-
-		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
-			(string_of_arithmetic_expression discrete_arithmetic_expression)
-			^ " + "
-			^ (string_of_term discrete_term)
-
-		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
-			(string_of_arithmetic_expression discrete_arithmetic_expression)
-			^ " - "
-			^ (string_of_term discrete_term)
-
-		| DAE_term discrete_term -> string_of_term discrete_term
-
-	and string_of_term = function
-		(* Eliminate the '1' coefficient *)
-		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
-			string_of_factor discrete_factor
-		(* No parentheses for constant * variable *)
-		| DT_mul (DT_factor (DF_constant c), DF_variable v) ->
-			(string_of_factor (DF_constant c))
-			^ " * "
-			^ (string_of_factor (DF_variable v))
-		(*** TODO: No parentheses on the left for constant or variable * something ***)
-		(* Otherwise: parentheses on the left *)
-		| DT_mul (discrete_term, discrete_factor) ->
-			"(" ^ (string_of_term discrete_term) ^ ")"
-			^ " * "
-			^ (string_of_factor discrete_factor)
-
-		(*** TODO: No parentheses on the left for constant or variable / something ***)
-		(*** TODO: No parentheses on the left for something / constant or variable ***)
-		(* Otherwise: parentheses on the left *)
-		| DT_div (discrete_term, discrete_factor) ->
-			"(" ^ (string_of_term discrete_term) ^ ")"
-			^ " / "
-			^ (string_of_factor discrete_factor)
-
-		| DT_factor discrete_factor -> string_of_factor discrete_factor
-
-	and string_of_factor = function
-		| DF_variable discrete_index -> variable_names discrete_index
-		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
-		| DF_unary_min discrete_factor -> "-" ^ (string_of_factor discrete_factor)
-		| DF_expression discrete_arithmetic_expression ->
-			(*** TODO: simplify a bit? ***)
-			"(" ^ (string_of_arithmetic_expression discrete_arithmetic_expression) ^ ")"
-	(* Call top-level *)
-	in string_of_arithmetic_expression
 
 
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.map (fun (variable_index, arithmetic_expression) ->
+	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_index, arithmetic_expression) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ " := "
 		(* Convert the arithmetic_expression *)
-		^ (string_of_arithmetic_expression model.variable_names arithmetic_expression)
+		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
 	) updates)
 
-
-let string_of_boolean_operations = function
-	| OP_L		-> "<"
-	| OP_LEQ	-> "<="
-	| OP_EQ		-> "="
-	| OP_NEQ	-> "<>"
-	| OP_GEQ	-> ">="
-	| OP_G		-> ">"
-
-
-(** Convert a discrete_boolean_expression into a string *)
-let string_of_discrete_boolean_expression variable_names = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " "
-		^ (string_of_boolean_operations relop)
-		^ " "
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
-		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " in ["
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
-		^ " , "
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
-		^ "]"
-
-(** Convert a Boolean expression into a string *)
-let rec string_of_boolean variable_names = function
-	| True_bool -> string_of_true
-	| False_bool -> string_of_false
-	| Not_bool b -> "<> (" ^ (string_of_boolean variable_names b) ^ ")"
-	| And_bool (b1, b2) ->
-		(string_of_boolean variable_names b1)
-		^ " && "
-		^ (string_of_boolean variable_names b2)
-	| Or_bool (b1, b2) ->
-		(string_of_boolean variable_names b1)
-		^ " || "
-		^ (string_of_boolean variable_names b2)
-	| Discrete_boolean_expression discrete_boolean_expression ->
-		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
-
-
+let string_of_boolean_expression = DiscreteExpressions.string_of_boolean_expression
 
 (** Return if there is no clock updates *)
 let no_clock_updates clock_updates =
@@ -406,7 +328,7 @@ let string_of_conditional_updates_template model conditional_updates string_of_c
 
 (** Convert a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
-	let wrap_if boolean_expr  = "if (" ^ (string_of_boolean model.variable_names boolean_expr) ^  ") then " in
+	let wrap_if boolean_expr  = "if (" ^ (DiscreteExpressions.string_of_boolean_expression model.variable_names boolean_expr) ^  ") then " in
 	let wrap_else = " else " in
 	let wrap_end = " end" in
 	let sep = ", " in
@@ -573,13 +495,40 @@ let string_of_automata model =
 		List.map (fun automaton_index -> string_of_automaton model automaton_index
 	) model.automata)
 
+(* Convert initial state of locations to string *)
+let string_of_new_initial_locations ?indent_level:(i=1) model =
+	(*** WARNING: Do not print the observer ***)
+	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
+	in
 
+	(* Handle all (other) PTA *)
+	let inital_global_location  = model.initial_location in
+	let initial_automata = List.map
+	(fun automaton_index ->
+		(* Finding the initial location for this automaton *)
+		let initial_location = Location.get_location inital_global_location automaton_index in
+		(* '& loc[pta] = location' *)
+		let tabulations = string_n_times i "\t" in
+		tabulations ^ "loc[" ^ (model.automata_names automaton_index) ^ "] := " ^ (model.location_names automaton_index initial_location)
+	) pta_without_obs
+	in string_of_list_of_string_with_sep ", \n" initial_automata
 
+(* Convert initial state of discrete variables to string *)
+let string_of_new_initial_discretes ?indent_level:(i=1) model =
+	let initial_discrete = List.map
+	(fun discrete_index ->
+		(* Finding the initial value for this discrete *)
+		let initial_value = Location.get_discrete_value model.initial_location discrete_index in
+		(* '& var = val' *)
+		let tabulations = string_n_times i "\t" in
+		tabulations ^ (model.variable_names discrete_index) ^ " := " ^ (DiscreteValue.string_of_value initial_value)
+	) model.discrete
+	in string_of_list_of_string_with_sep ", \n" initial_discrete
 
 (************************************************************)
 (** Initial state *)
 (************************************************************)
-let string_of_initial_state model =
+let string_of_old_initial_state model =
 	(* Print some information *)
 (* 	print_message Verbose_total "Entering `ModelPrinter.string_of_initial_state`…"; *)
 
@@ -622,7 +571,7 @@ let string_of_initial_state model =
 		(* Finding the initial value for this discrete *)
 		let initial_value = Location.get_discrete_value inital_global_location discrete_index in
 		(* '& var = val' *)
-		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst initial_value)
+		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (DiscreteValue.string_of_value initial_value)
 	) model.discrete
 	in string_of_list_of_string initial_discrete
 
@@ -637,7 +586,51 @@ let string_of_initial_state model =
 	^ "\n" ^ ""
 	^ "\n" ^ ";"
 
+(************************************************************)
+(** New initial state *)
+(************************************************************)
+let string_of_new_initial_state model =
+	(* Header of initial state *)
+	"\n"
+	^ "\n" ^ "(************************************************************)"
+	^ "\n" ^ "(* Initial state *)"
+	^ "\n" ^ "(************************************************************)"
+	^ "\n" ^ ""
+	^ "\n" ^ "init := {"
+    ^ "\n"
+	(* Discrete zone *)
+	^ "\n" ^ "\t(*------------------------------------------------------------*)"
+	^ "\n" ^ "\t(* Discretes *)"
+	^ "\n" ^ "\t(*------------------------------------------------------------*)"
+    ^ "\n" ^ "\tdiscrete = "
+    ^ "\n" ^ "\t\t(* Locations *)"
+    ^ "\n"
+    ^ (string_of_new_initial_locations ~indent_level:2 model) ^ ","
+    ^ "\n" ^ "\t\t(* Discretes *)"
+    ^ "\n"
+    ^ (string_of_new_initial_discretes ~indent_level:2 model)
+    ^ "\n" ^ "\t;"
+    ^ "\n"
+	(* Continuous zone *)
+	^ "\n" ^ "\t(*------------------------------------------------------------*)"
+	^ "\n" ^ "\t(* Initial constraint *)"
+	^ "\n" ^ "\t(*------------------------------------------------------------*)"
 
+    ^ "\n" ^ "\tcontinuous = "
+    ^ "\n\t\t& " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)
+    ^ "\n" ^ "\t;"
+    ^ "\n"
+	^ "\n" ^ "}"
+
+(* Convert initial state to string *)
+(* Keep retro-compatibility between old init zone and new init zone *)
+let string_of_initial_state model =
+    (* If all variable are rational, we can print initial state as old model *)
+    if List.for_all (fun (var_type, _) -> DiscreteValue.is_rational_type var_type) model.discrete_names_by_type_group then
+        string_of_old_initial_state model
+    (* Else, we use the new init zone *)
+    else
+        string_of_new_initial_state model
 
 (************************************************************)
 (** Property *)
@@ -1024,3 +1017,5 @@ let debug_string_of_impossible_concrete_run model (impossible_concrete_run : Sta
 	(* Iterate on following impossible steps *)
 	^ (string_of_impossible_concrete_steps model impossible_concrete_run.impossible_steps)
 	
+
+

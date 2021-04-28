@@ -8,9 +8,9 @@
  *
  * Module description: Main file for IMITATOR
  *
- * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
+ * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2009/09/07
- * Last modified     : 2020/11/11
+ * Last modified     : 2021/02/24
  *
  ************************************************************)
 
@@ -195,10 +195,10 @@ begin match property_option, options#imitator_mode with
 		(* Update if not yet set *)
 		if not options#is_set_mergeq then (
 			let merge_needed = AlgorithmOptions.merge_needed property in
-			
+
 			(* Print some information *)
 			print_message Verbose_high ("Case option `-mergeq` not set");
-			
+
 			options#set_mergeq(false);
 
 			if not options#is_set_merge then(
@@ -306,11 +306,11 @@ begin match property_option, options#imitator_mode with
 		->
 		(* Update if not yet set *)
 		if not options#is_set_comparison_operator then(
-			
+
 			let default_state_comparison = AlgorithmOptions.default_state_comparison property in
-			
+
 			let overwritten_default_state_comparison =
-			
+
 (*			(*** HACK! Hard-code / force the default value for cycle algorithms ***)
 			match property.property with
 			| Cycle_through _ ->
@@ -319,11 +319,11 @@ begin match property_option, options#imitator_mode with
 					| NDFS -> Equality_check
 					| BFS  -> Including_check
 				in result
-			
+
 			| _ ->*)
 			(* Rely on default value *)
 				default_state_comparison
-				
+
 			in
 
 			(* Print some information *)
@@ -365,7 +365,7 @@ begin match property_option, options#imitator_mode with
 		if not options#is_set_layer then (
 			(* Print some information *)
 			print_message Verbose_high ("Case option `-layer` not set");
-			
+
 			match layer_needed with
 			| Some b -> options#set_layer (b);
 			| None -> ()
@@ -393,7 +393,7 @@ begin match property_option, options#imitator_mode with
 		if not options#is_set_subsumption then (
 			(* Print some information *)
 			print_message Verbose_high ("Case option `-subsumption` not set");
-			
+
 			match subsumption_needed with
 			| Some b -> options#set_subsumption (b);
 			| None -> ()
@@ -517,20 +517,18 @@ match options#imitator_mode with
 	(************************************************************)
 	(* Case no analysis *)
 	(************************************************************)
-	(* Generate directly the "empty" result for syntax check *)
-	ResultProcessor.process_result Syntax_check_result "syntax check" None;
-
 	(* If arrived here, syntax is correct *)
 	print_message Verbose_standard "Syntax is correct. Have fun!";
 
-	terminate_program()
+	(* Generate directly the "empty" result for syntax check *)
+	ResultProcessor.process_result_and_terminate Syntax_check_result "syntax check" None global_counter
 
 
 	(************************************************************)
 	(* Case translation *)
 	(************************************************************)
 	(* Translation to text language (IMITATOR, other model checker, TikZ) *)
-	| Translation IMI | Translation HyTech | Translation TikZ | Translation Uppaal ->
+	| Translation IMI | Translation HyTech | Translation TikZ | Translation Uppaal | Translation JaniSpec | Translation DOT ->
 
 		(*** NOTE: not super nice… ***)
 		let printer = match options#imitator_mode with
@@ -538,6 +536,8 @@ match options#imitator_mode with
 			| Translation HyTech	-> PTA2HyTech.string_of_model
 			| Translation TikZ		-> PTA2TikZ.tikz_string_of_model
 			| Translation Uppaal	-> PTA2Uppaal.string_of_model
+      | Translation JaniSpec	-> PTA2JaniSpec.string_of_model
+			| Translation DOT       -> PTA2JPG.string_of_model
 			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 
@@ -546,7 +546,9 @@ match options#imitator_mode with
 			| Translation IMI		-> "-regenerated" ^ Constants.model_extension
 			| Translation HyTech	-> ".hy"
 			| Translation TikZ		-> ".tex"
-			| Translation Uppaal	->  "-uppaal.xml"
+			| Translation Uppaal	-> "-uppaal.xml"
+      | Translation JaniSpec	-> ".jani"
+			| Translation DOT       -> ".dot"
 			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 
@@ -589,9 +591,7 @@ match options#imitator_mode with
 		end;
 
 		(* Create a file with some statistics on the original model if requested *)
-		ResultProcessor.process_result Translation_result "translation to graphics" None;
-
-		terminate_program()
+		ResultProcessor.process_result_and_terminate Translation_result "translation to graphics" None global_counter
 
 
 	(************************************************************)
@@ -610,10 +610,9 @@ match options#imitator_mode with
 		counter_algorithm_and_parsing#stop;
 		counter_main_algorithm#stop;
 
-		(* Process *)
-		ResultProcessor.process_result result concrete_algorithm#algorithm_name None;
+		(* Process and terminate *)
+		ResultProcessor.process_result_and_terminate result concrete_algorithm#algorithm_name None global_counter
 
-		()
 
 	(************************************************************)
 	(* Some algorithm *)
@@ -745,14 +744,14 @@ match options#imitator_mode with
 					| AbstractAlgorithm.NDFS -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS state_predicate in myalgo
 				in myalgo
 
-			
+
 			(** Infinite-run (cycle) with non-Zeno assumption *)
  			| NZ_Cycle ->
 				(* Important! Set the no-time-elapsing option *)
 				options#set_no_time_elapsing;
 
 				let algo =
-				
+
 				(* Branch depending on the NZ method *)
 				match options#nz_method with
 				(** Method by checking whether the PTA is already a CUB-PTA for some valuation *)
@@ -797,7 +796,7 @@ match options#imitator_mode with
 					);
 
 					let myalgo :> AlgoGeneric.algoGeneric = nz_algo in myalgo
-				
+
 				(** Method by transforming the PTA into a CUB-PTA *)
 				| NZ_transform ->
 					print_message Verbose_standard ("Generating the transformed model…");
@@ -852,12 +851,12 @@ match options#imitator_mode with
 					(* Call the NZ emptiness check *)
 					let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
 
-				
+
 				(** Method assuming the PTA is already a CUB-PTA *)
 				| NZ_already ->
 					(* Just call the NZ emptiness check *)
 					let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
-				
+
 				in algo
 
 
@@ -1117,27 +1116,71 @@ end;
 (************************************************************)
 ) with
 	e ->(
-	let error_message = match e with
-		| InternalError msg -> "Fatal internal error: " ^ msg ^ ""
-		| NotImplemented msg -> "A non-implemented feature has been called: " ^ msg ^ ""
-		| Division_by_0 msg -> "Division by 0! " ^ msg ^ ""
-		| Failure msg -> "'Failure' exception: '" ^ msg ^ "'"
-		| Invalid_argument msg -> "'Invalid_argument' exception: '" ^ msg ^ "'"
-		| SerializationError msg -> "Serialization error: " ^ msg ^ ""
-		| InterfacingError msg -> "Interfacing error: " ^ msg ^ ""
-		| Not_found -> "'Not_found' exception!"
-		| Random_generator_initialization_exception-> "A fatal error occurred during the random generator initialization."
-		| e -> "Fatal exception '" ^ (Printexc.to_string e) ^ "'."
+
+	(* Actions to perform for "bad" exceptions, i.e., that should NOT happen *)
+	let abort_with_bad_exception (error_message : string) =
+		(* Stop the main algorithm counters *)
+		counter_algorithm_and_parsing#stop;
+		counter_main_algorithm#stop;
+
+		print_error (error_message ^ "\nPlease (politely) insult the developers.");
+		Printexc.print_backtrace stderr;
+
+		abort_program ();
+		(* Safety *)
+		exit 1
 	in
 
-	(* Stop the main algorithm counters *)
-	counter_algorithm_and_parsing#stop;
-	counter_main_algorithm#stop;
+	(* Actions to perform for "good" exceptions, i.e., that depend on the user model *)
+	let abort_with_good_exception error_type error_message =
+		(* Stop the main algorithm counters *)
+		counter_algorithm_and_parsing#stop;
+		counter_main_algorithm#stop;
 
-	print_error (error_message ^ "\nPlease (politely) insult the developers.");
-	Printexc.print_backtrace stderr;
+		(* Print error *)
+		print_error (error_message);
 
-	abort_program ();
+		(* Force output result if not set *)
+		(*** NOTE: probably useless check ***)
+		let options = Input.get_options () in
+		if not options#is_set_output_result then(
+			options#set_output_result true;
+		);
+
+		(* Process result (including file export, if possible) and fail *)
+		ResultProcessor.process_result_and_abort error_type "unknown algorithm" (* because we lost this information somewhere… *) None global_counter;
+	in
+
+	begin match e with
+		(* "Good" (at least not bad) exceptions *)
+
+		| Division_by_0 msg -> abort_with_good_exception (Result.Division_by_zero msg) msg
+
+		| UnsatisfiableInitialState -> abort_with_good_exception (Result.Unsatisfiable_initial_state) "Unsatisfiable initial state"
+
+
+
+		(* "Bad" exceptions *)
+
+		| Failure msg -> abort_with_bad_exception ("`Failure` exception: `" ^ msg ^ "`")
+
+		| InterfacingError msg -> abort_with_bad_exception ("Interfacing error: " ^ msg ^ "")
+
+		| InternalError msg -> abort_with_bad_exception ("Fatal internal error: " ^ msg ^ "")
+
+		| Invalid_argument msg -> abort_with_bad_exception ("`Invalid_argument` exception: `" ^ msg ^ "`")
+
+		| Not_found -> abort_with_bad_exception ("`Not_found` exception!")
+
+		| NotImplemented msg -> abort_with_bad_exception ("A non-implemented feature has been called: " ^ msg ^ "")
+
+		| Random_generator_initialization_exception-> abort_with_bad_exception("A fatal error occurred during the random generator initialization.")
+
+		| SerializationError msg -> abort_with_bad_exception ("Serialization error: " ^ msg ^ "")
+
+		| _ -> abort_with_bad_exception ("Fatal exception `" ^ (Printexc.to_string e) ^ "`.")
+	end;
+
 	(* Safety *)
 	exit 1
 
@@ -1162,4 +1205,3 @@ if (try (Input.get_options())#statistics with _ -> false) || verbose_mode_greate
 (************************************************************)
 
 terminate_program()
-

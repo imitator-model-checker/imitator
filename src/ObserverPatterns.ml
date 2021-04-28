@@ -310,7 +310,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* Urgency *)
 		observer_location_urgency,
 		(* Array for invariants *)
-		Array.make nb_locations (truec ()),
+		Array.make nb_locations (True_guard),
 		(* Array for transitions *)
 		(let transitions = Array.make nb_locations (Array.make nb_actions []) in
 			(* Initialize transitions ! Otherwise pointers problems *)
@@ -455,7 +455,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* Update actions per location for the silent action *)
 		actions_per_location.(location_init) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(location_init) <- truec() (*ct_x_leq_d observer_clock_index d*) ;
+		invariants.(location_init) <- True_guard (*ct_x_leq_d observer_clock_index d*) ;
 		(* Compute transitions *)
 		transitions.(location_init).(a) <- untimedt a location_ok;
 		transitions.(location_init).(nosync_index) <-
@@ -672,7 +672,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* Update actions per location for the silent action *)
 		actions_per_location.(1) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(1) <-  truec() (*ct_x_leq_d observer_clock_index d *);
+		invariants.(1) <-  True_guard (*ct_x_leq_d observer_clock_index d *);
 		(* Compute transitions *)
 		transitions.(0).(a1) <-
 			[{
@@ -717,7 +717,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* Update actions per location for the silent action *)
 		actions_per_location.(1) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(1) <-  truec() (*ct_x_leq_d observer_clock_index d *);
+		invariants.(1) <-  True_guard (*ct_x_leq_d observer_clock_index d *);
 		(* Compute transitions *)
 		transitions.(0).(a1) <-
 			[{
@@ -762,7 +762,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* Update actions per location for the silent action *)
 		actions_per_location.(1) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(1) <-  truec() (*ct_x_leq_d observer_clock_index d *);
+		invariants.(1) <-  True_guard (*ct_x_leq_d observer_clock_index d *);
 		(* Compute transitions *)
 		transitions.(0).(a1) <-
 			[{

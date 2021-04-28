@@ -1,0 +1,94 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : Train1PTA
+ * Description      : Simple model with 1 PTA only
+ * Correctness      : "Crash" cannot happen
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Education ; Toy
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2012/03/13
+ * Last modified    : 2020/03/20
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	dApproach,  (* Time between the approach and the passing *)
+	dStartDown, (* Time between the approach and the gate starting to go down *)
+	dGetDown,   (* Time between the gate starts to lower, and the gate is closed *)
+		: parameter;
+
+
+
+(************************************************************)
+  automaton system
+(************************************************************)
+synclabs: approach, startDown, endDown, pass;
+
+loc Far: invariant True
+	when True sync approach do {x := 0} goto Approaching;
+
+loc Approaching: invariant x <= dApproach & x <= dStartDown
+	when x = dStartDown sync startDown do {y := 0} goto Lowering;
+	when x = dApproach sync pass goto Crash;
+
+loc Crash: invariant True
+
+loc Lowering: invariant x <= dApproach & y <= dGetDown
+	when x = dApproach sync pass goto Crash;
+	when y = dGetDown sync endDown goto Safe;
+
+loc Safe: invariant x <= dApproach
+	when x = dApproach sync pass do {x := 0, y := 0} goto Far;
+end (* system *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	  loc[system]      = Far
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& dApproach >= 0
+	& dStartDown >= 0
+	& dGetDown >= 0
+;
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

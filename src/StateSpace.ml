@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2020/11/11
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -721,8 +721,13 @@ let get_guard state_space state_index combined_transition state_index' =
 	(* Compute constraint for assigning a (constant) value to discrete variables *)
 	print_message Verbose_high ("Computing constraint for discrete variables");
 	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value location discrete_index)) model.discrete in
+	(* TODO benjamin check with étienne *)
+	(* Only use rational discrete values for preparing constraint *)
+	let only_discrete_rational_values = List.filter (fun (discrete_index, discrete_value) -> DiscreteValue.is_rational_value discrete_value) discrete_values in
+	let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, DiscreteValue.numconst_value discrete_value) only_discrete_rational_values in
+
 	(* Constraint of the form D_i = d_i *)
-	let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_values in
+	let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_rational_numconst_values in
 
 	(* Create the constraint guard ^ D_i = d_i *)
 	LinearConstraint.pxd_intersection (discrete_constraint :: continuous_guards)
@@ -926,7 +931,7 @@ let reconstruct_scc state_space source_state_index : scc option =
 				scc := w.state_index :: !scc;
 
 				if w = v then found_v := true
-			(* while (w != v) *)
+			(* while (w <> v) *)
 			done;
 
 			(* output the current strongly connected component *)
@@ -1201,7 +1206,7 @@ let new_location_index state_space location =
 	(* Add to Dyn Array *)
 	DynArray.add state_space.locations location;
 	(* Check length (COULD BE REMOVED) *)
-	(* if DynArray.length state_space.locations != Hashtbl.length state_space.index_of_locations then(
+	(* if DynArray.length state_space.locations <> Hashtbl.length state_space.index_of_locations then(
 		raise (InternalError "Locations and index_of_locations seem not to be consistent anymore."); *)
         new_index;
 	) in

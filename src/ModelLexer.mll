@@ -63,6 +63,9 @@ rule token = parse
 	| "clock"          { CT_CLOCK }
 	| "constant"       { CT_CONSTANT }
 	| "discrete"       { CT_DISCRETE }
+	| "rational"       { CT_DISCRETE }
+	| "int"            { CT_INT }
+	| "bool"           { CT_BOOL }
 	| "do"             { CT_DO }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
@@ -77,6 +80,7 @@ rule token = parse
 	| "in"             { CT_IN }
 	| "is"             { CT_IS }
 	| "init"           { CT_INIT }
+	| "continuous"     { CT_CONTINUOUS }
 	| "initially"      { CT_INITIALLY }
 	| "invariant"      { CT_INVARIANT }
 	| "loc"            { CT_LOC }
@@ -97,6 +101,8 @@ rule token = parse
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
 	| "within"         { CT_WITHIN }
+    | "rational_of_int"{ CT_BUILTIN_FUNC_RATIONAL_OF_INT }
+    | "pow"            { CT_POW }
 
 
 

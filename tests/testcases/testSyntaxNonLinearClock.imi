@@ -1,0 +1,65 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Non-linear clock constraint
+ * Description      : Non-linear clock constraint that shall trigger a syntax error
+ * Correctness      : Syntax error
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Toy; Test
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/02/02
+ * Last modified    : 2021/02/02
+ * Model version    : 0.1
+ *
+ * IMITATOR version :
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant True
+	when x * x = 1 sync a do {x := 0} goto l1;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

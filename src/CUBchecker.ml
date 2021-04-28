@@ -9,7 +9,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2020/12/04
+ * Last modified     : 2021/03/19
  *
  ************************************************************)
 
@@ -747,7 +747,7 @@ let get_all_clocks_ge_zero_comstraint model =
 let get_all_clocks_ge_zero_comstraint2 clock_index model = 
 	let ls = ref [] in
 	List.iter (fun clock_indx ->
-		if (clock_index != clock_indx)
+		if (clock_index <> clock_indx)
 		then
 			(
 			ls := !ls@[tuple2pxd_constraint (create_x_ge_zero clock_indx)];
@@ -826,7 +826,7 @@ let check_cub model =
 													| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
 
 
-	                			let (result, inequalities) = cub_check_2 model invariant1 (continuous_part_of_guard guard) invariant2 clock_updates in
+	                			let (result, inequalities) = cub_check_2 model (continuous_part_of_guard invariant1) (continuous_part_of_guard guard) (continuous_part_of_guard invariant2) clock_updates in
 	                			
 	                			inequalities_need_to_solve := !inequalities_need_to_solve@inequalities;
 	                			if result = false
@@ -894,11 +894,11 @@ let check_cub model =
 (************************************************************)
 
 (* [CUB-PTA TRANSFORMATION] THIS FUNCTION USED FOR REMOVING PROBLEMATIC TRANSITIONS *)
-let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clock_updates, parameters_constraints) = 	
+let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clock_updates, parameters_constraints) =
 	print_message Verbose_low ("\nCHECKING FOR REMOVING PROBLEMATIC TRANSITIONS!" ); 
-	let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
+	let inequalities_s0 = LinearConstraint.pxd_get_inequalities (continuous_part_of_guard invariant_s0) in
 	let inequalities_t 	= LinearConstraint.pxd_get_inequalities (continuous_part_of_guard guard_t) in
-	let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
+	let inequalities_s1 = LinearConstraint.pxd_get_inequalities (continuous_part_of_guard invariant_s1) in
 	let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
 	let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
 	let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
@@ -985,7 +985,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						*)
 
 						let constrCUB = make_CUB_constraint [ineq] in
-						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; continuous_part_of_guard guard_t] in
+						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); continuous_part_of_guard invariant_s0; continuous_part_of_guard guard_t] in
 			
 						if LinearConstraint.pxd_is_true constr
 						then
@@ -1053,7 +1053,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 							*)
 
 							let constrCUB = make_CUB_constraint [ineq] in
-							let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; invariant_s1] in
+							let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); continuous_part_of_guard invariant_s0; continuous_part_of_guard invariant_s1] in
 							if LinearConstraint.pxd_is_true constr
 							then 
 								(
@@ -1113,7 +1113,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						*)
 
 						let constrCUB = make_CUB_constraint [ineq] in
-						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; continuous_part_of_guard guard_t] in
+						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); continuous_part_of_guard invariant_s0; continuous_part_of_guard guard_t] in
 						if LinearConstraint.pxd_is_true constr
 						then 
 							(
@@ -1175,7 +1175,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						*)
 
 						let constrCUB = make_CUB_constraint [ineq1; ineq2] in
-						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; continuous_part_of_guard guard_t; invariant_s1] in
+						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); continuous_part_of_guard invariant_s0; continuous_part_of_guard guard_t; continuous_part_of_guard invariant_s1] in
 						if LinearConstraint.pxd_is_true constr
 						then 
 							(
@@ -1886,7 +1886,7 @@ let filter_inf model cons =
 	| _  -> 
 			(	
 			List.iter ( fun (clock_index, op, linear_term) -> 
-				if (op != LinearConstraint.Op_ge &&  linear_term != zero_term)
+				if (op <> LinearConstraint.Op_ge &&  linear_term <> zero_term)
 				then
 					(
 					ls_temp := !ls_temp@[(clock_index, op, linear_term )];
@@ -2050,7 +2050,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	let new_actions_per_location_array = Array.make (model.nb_automata) (Array.make 0 []) in
 	
 	(* Invariants: Array : automaton_index  -> (Array : location_index -> invariant) *)
-	let new_invariants_array : ( (LinearConstraint.pxd_linear_constraint array) array ) = Array.make (model.nb_automata) (Array.make 0 (LinearConstraint.pxd_true_constraint())) in
+	let new_invariants_array : ( (invariant array) array ) = Array.make (model.nb_automata) (Array.make 0 (True_guard)) in
 
 	(* Transition description *)
 	(*** NOTE (ÉA, 2019/05/30): in the original model, this used to be an array since we knew the static number of transitions; here due to the dynamic transformation, we use a DynArray ***)
@@ -2245,8 +2245,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				let guard_t = guard in
 				let invariant_s1 = Hashtbl.find locations target_location_index in
 
-
-
+                let continuous_part_invariant_s0, continuous_part_invariant_s1 =
+                    continuous_part_of_guard invariant_s0,
+                    continuous_part_of_guard invariant_s1
+                in
 				(*ppl*)
 				
 				(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
@@ -2255,9 +2257,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				print_message Verbose_low (" CUB transformation, Start:");
 				print_message Verbose_low ("\n");
 				(*transform constraints into inequality lists*)
-				let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
+				let inequalities_s0 = LinearConstraint.pxd_get_inequalities continuous_part_invariant_s0 in
 				let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
-				let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
+				let inequalities_s1 = LinearConstraint.pxd_get_inequalities continuous_part_invariant_s1 in
 				(*transform inequality list into tuple inequality list*)
 				(* print_message Verbose_low (" **Beginning state/location** :"); *)
 				let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
@@ -2289,7 +2291,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 				DynArray.add clocks_constraints (location_index, (LinearConstraint.pxd_true_constraint ()));
 
-				clocks_constraints_process model adding clocks_constraints loc_clocks_constraints location_index invariant_s0;
+				clocks_constraints_process model adding clocks_constraints loc_clocks_constraints location_index continuous_part_invariant_s0;
 
 				DynArray.clear clocks_constraints;
 
@@ -2309,7 +2311,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			print_message Verbose_low ("\n Transition No: " ^ (string_of_int !count_t) );
 			let (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) = transition in
 			let invariant_s0 = Hashtbl.find locations location_index in
-			print_message Verbose_low ("   invariant_s0: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant_s0 ) ) ;
+			let continuous_part_invariant_s0 = continuous_part_of_guard invariant_s0 in
+			print_message Verbose_low ("   continuous part of invariant_s0: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names continuous_part_invariant_s0 ) ) ;
 			let guard_t = guard in
 			
 			print_message Verbose_low ("   guard_t: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard_t ) ) ;
@@ -2317,7 +2320,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			print_message Verbose_low (" CUB transformation, Start:");
 			print_message Verbose_low ("\n");
 			(*transform constraints into inequality lists*)
-			let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
+			let inequalities_s0 = LinearConstraint.pxd_get_inequalities continuous_part_invariant_s0 in
 
 			let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
 
@@ -2375,7 +2378,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 					
 					DynArray.add clocks_constraints (location_index, (LinearConstraint.pxd_true_constraint ()));
 
-					clocks_constraints_process model adding clocks_constraints loc_clocks_constraints location_index invariant_s0;
+					clocks_constraints_process model adding clocks_constraints loc_clocks_constraints location_index continuous_part_invariant_s0;
 
 					DynArray.clear clocks_constraints;
 
@@ -2494,9 +2497,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let index = Hashtbl.create 0 in
 
 		DynArray.iter (fun (location, constr) ->
-			let locName = ( "cub"^ (string_of_int !count) ^ "_" ^ location  ) in 
+			let locName = ( "cub"^ (string_of_int !count) ^ "_" ^ location  ) in
+			let invariant = Hashtbl.find locations location in
+			let continuous_part_invariant = continuous_part_of_guard invariant in
 			(* Hashtbl.add locations locName constr; *)
-			Hashtbl.add locations locName (LinearConstraint.pxd_intersection [(Hashtbl.find locations location); constr]);
+			Hashtbl.add locations locName (Continuous_guard (LinearConstraint.pxd_intersection [continuous_part_invariant; constr]));
 			Hashtbl.add index location locName ;
 			count :=  !count + 1;
 
@@ -2748,7 +2753,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* FINAL MODEL LOCATIONS - Data structure: location_name -> invariant *)
 	let new_invariants_per_location_hashtbl =  Hashtbl.create 0 in
 	(* Adding the initial state *)
-	Hashtbl.add new_invariants_per_location_hashtbl new_initial_location_name (LinearConstraint.pxd_true_constraint ());
+	Hashtbl.add new_invariants_per_location_hashtbl new_initial_location_name (True_guard);
 	(* FINAL MODEL TRANSITIONS - Data structure: location_name -> invariant *)
 	let newtransitions = DynArray.make 0 in
 
@@ -2756,7 +2761,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		let new_sub_initial_location_name  = ("cub_pta_init_" ^ string_of_int (!submodel_index )) in
 		Hashtbl.add loc_naming_tbl new_sub_initial_location_name (Hashtbl.length loc_naming_tbl);
-		Hashtbl.add new_invariants_per_location_hashtbl new_sub_initial_location_name (LinearConstraint.pxd_true_constraint ());
+		Hashtbl.add new_invariants_per_location_hashtbl new_sub_initial_location_name (True_guard);
 		DynArray.add newtransitions (new_initial_location_name, new_sub_initial_location_name, (LinearConstraint.pxd_true_constraint ()), [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
 		
 		Hashtbl.iter (fun location_index cons -> 
@@ -2910,7 +2915,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* FINAL MODEL LOCATIONS - Data structure: location_name -> invariant *)
 		let new_invariants_per_location_hashtbl_2 =  Hashtbl.create 0 in
 		(* Adding the initial state *)
-		Hashtbl.add new_invariants_per_location_hashtbl_2 new_initial_location_name (LinearConstraint.pxd_true_constraint ());
+		Hashtbl.add new_invariants_per_location_hashtbl_2 new_initial_location_name (True_guard);
 		(* FINAL MODEL TRANSITIONS - Data structure: location_name -> invariant *)
 		let newtransitions_2 = DynArray.make 0 in
 		
@@ -3025,7 +3030,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Create the list of location_index for this PTA *)
 	let list_of_location_index_for_this_pta = (* list_of_interval 0 (new_nb_locations-1) in *)
 	let ls = ref [] in
-	if new_nb_locations != 0
+	if new_nb_locations <> 0
 	then
 		(
 		for i = 0 to new_nb_locations - 1 do
@@ -3063,7 +3068,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* Initialize the invariants for this PTA (initially all true) *)
 	(*** NOTE: would be better to first create to a dummy constraint, instead of creating a new p_true_constraint() for each cell, that will be overwritten anyway ***)
-	new_invariants_array.(automaton_index) <- Array.make new_nb_locations (LinearConstraint.pxd_true_constraint());
+	new_invariants_array.(automaton_index) <- Array.make new_nb_locations (True_guard);
 	
 	
 
@@ -3515,7 +3520,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ ":");
 			(* Iterate on locations for this automaton *)
 			Array.iteri(fun location_index invariant ->
-				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant));
+				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ (ModelPrinter.string_of_guard model.variable_names invariant));
 			) array_of_invariants;
 		) new_invariants_array;
 	
@@ -3629,6 +3634,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		parameters_and_clocks = model.parameters_and_clocks;
 		(* The function = variable_index -> variable name *)
 		variable_names = model.variable_names;
+		(* All discrete variable names group by types *)
+		discrete_names_by_type_group = [];
 		(* The type of variables *)
 		type_of_variables = model.type_of_variables;
 		

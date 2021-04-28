@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/09/14
+ * Last modified     : 2021/03/12
  *
  ************************************************************/
 
@@ -56,7 +56,7 @@ let resolve_property l =
 %token COLON COMMA DOUBLEDOT SEMICOLON SYMBOL_AND SYMBOL_OR
 
 %token
-	CT_ACCEPTING CT_AG CT_AGnot CT_ALWAYS
+	CT_ACCEPTING CT_ACCEPTINGCYCLE CT_AG CT_AGnot CT_ALWAYS
 	CT_BCBORDER CT_BCLEARN CT_BCRANDOM CT_BCRANDOMSEQ CT_BCSHUFFLE CT_BEFORE
 	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
@@ -64,7 +64,7 @@ let resolve_property l =
 	CT_FALSE
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN /* CT_INFACCCYCLE */ CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
-	CT_LOC CT_LOOP
+	CT_LOC
 	CT_NEXT CT_NOT CT_NZCYCLE
 	CT_ONCE
 	CT_PATTERN CT_PROJECTRESULT CT_PRP CT_PRPC
@@ -170,6 +170,9 @@ property:
 
 	/* Accepting infinite-run (cycle) through a state predicate */
 	| CT_INFCYCLETHROUGH state_predicate { Parsed_Cycle_Through $2 }
+
+	/* Accepting infinite-run (cycle) through accepting locations */
+	| CT_ACCEPTINGCYCLE { Parsed_Cycle_Through (Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_accepting))) }
 
 	/* Infinite-run (cycle) with non-Zeno assumption */
 	| CT_NZCYCLE { Parsed_NZ_Cycle }
@@ -344,7 +347,7 @@ discrete_term:
 
 discrete_factor:
 	| NAME { Parsed_DF_variable $1 }
-	| positive_rational { Parsed_DF_constant $1 }
+	| positive_rational { Parsed_DF_constant (DiscreteValue.Rational_value $1) }
 	| RPAREN discrete_expression LPAREN { Parsed_DF_expression $2 }
 	| OP_MINUS discrete_factor { Parsed_DF_unary_min $2 }
 ;

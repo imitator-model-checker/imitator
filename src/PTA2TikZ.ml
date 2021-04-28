@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2021/01/07
+ * Last modified     : 2021/03/19
  *
  ****************************************************************)
 
@@ -44,9 +44,9 @@ let variable_names_with_style variable_index =
 	let model = Input.get_model() in
 	let name = escape_latex (model.variable_names variable_index) in
 	match model.type_of_variables variable_index with
-	| Var_type_clock -> "\\styleclock{" ^ name ^ "}"
-	| Var_type_discrete -> "\\styledisc{" ^ name ^ "}"
-	| Var_type_parameter -> "\\styleparam{" ^ name ^ "}"
+	| DiscreteValue.Var_type_clock -> "\\styleclock{" ^ name ^ "}"
+	| DiscreteValue.Var_type_discrete _ -> "\\styledisc{" ^ name ^ "}"
+	| DiscreteValue.Var_type_parameter -> "\\styleparam{" ^ name ^ "}"
 
 
 (** Proper form for constraints *)
@@ -61,7 +61,7 @@ let tikz_string_of_lc_gen lc_fun lc =
 
 (** Proper form for constraints *)
 let tikz_string_of_linear_constraint =
-	tikz_string_of_lc_gen LinearConstraint.string_of_pxd_linear_constraint
+	tikz_string_of_lc_gen ModelPrinter.string_of_guard
 
 
 (** Proper form for constraints *)
@@ -103,13 +103,13 @@ let string_of_clock_updates model clock_updates =
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, arithmetic_expression) ->
+	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, global_expression) ->
 			"\n\t\t & $"
 			(* Convert the variable name *)
 			^ (variable_names_with_style variable_index)
 			^ ":="
 			(* Convert the arithmetic_expression *)
-			^ (ModelPrinter.string_of_arithmetic_expression variable_names_with_style arithmetic_expression)
+			^ (ModelPrinter.string_of_global_expression variable_names_with_style global_expression)
 			(*** HACK!!! without the "%", a strange "\n" that occurs immediately after leads to a LaTeX compiling error when strictly >= 2 updates ***)
 			^ "$\\\\% "
 	) updates)
@@ -124,25 +124,9 @@ let string_of_boolean_operations op =
 	| OP_G -> ">"
 
 
-(** Convert a discrete_boolean_expression into a string *)
-let string_of_discrete_boolean_expression variable_names = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " "
-		^ (string_of_boolean_operations relop)
-		^ " "
-		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
-		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " \\in ["
-		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
-		^ " , "
-		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
-		^ "]"
 
 
+(* TODO benjamin refactoriser avec ModelPrinter / DiscreteExpressions *)
 (** Convert a Boolean expression into a string *)
 let rec string_of_boolean variable_names = function
 	| True_bool -> string_of_true
@@ -158,9 +142,27 @@ let rec string_of_boolean variable_names = function
 		^ (string_of_boolean variable_names b2)
 	| Discrete_boolean_expression discrete_boolean_expression ->
 		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
-
-
-
+(** Convert a discrete_boolean_expression into a string *)
+and string_of_discrete_boolean_expression variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
+		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		^ " "
+		^ (string_of_boolean_operations relop)
+		^ " "
+		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
+		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		^ " \\in ["
+		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+		^ " , "
+		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
+		^ "]"
+    | Boolean_expression boolean_expression ->
+        "(" ^ string_of_boolean variable_names boolean_expression ^ ")"
+    | DB_variable discrete_index -> variable_names discrete_index
+    | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
 
 (** Convert a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
@@ -240,7 +242,18 @@ let string_of_location model automaton_index location_index =
 	let invariant = model.invariants automaton_index location_index in
 	let color_id = ((location_index) mod LatexHeader.nb_colors) + 1 in
 
-	let has_invariant = not (LinearConstraint.pxd_is_true invariant) in
+	let has_invariant = (
+        match invariant with
+            | True_guard -> false
+            | Continuous_guard continuous_invariant ->
+                (* Costly test! But inherent to the invariants structure *)
+                not (LinearConstraint.pxd_is_true continuous_invariant)
+            | Discrete_continuous_guard discrete_continuous_invariant ->
+                (* Costly test! But inherent to the invariants structure *)
+                not (LinearConstraint.pxd_is_true discrete_continuous_invariant.continuous_guard)
+            (* We assume that an exclusively discrete invariant does not count as an invariant *)
+            | _ -> true)
+    in
 	let has_non_1rate_clocks = model.has_non_1rate_clocks && (model.stopwatches automaton_index location_index <> [] || model.flow automaton_index location_index <> []) in
 
 	(*** TODO: better positioning! (from dot?) ***)
@@ -323,7 +336,7 @@ let string_of_automaton model automaton_index =
 	^ "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 
 	^ "\n\t\\begin{subfigure}[b]{\\ratio}"
-	^ "\n\t\\begin{tikzpicture}[scale=2, auto, ->, >=stealth']" (*, thin*)
+	^ "\n\t\\begin{tikzpicture}[pta, scale=2]" (*, thin*)
 
 	(* Handling locations *)
 	^ "\n " ^ (string_of_locations model automaton_index)
@@ -361,7 +374,7 @@ let string_of_automata model =
 	^ "\ngeneral_info[shape=record, label=\"" (*Model|{*)
 	^ "{Clocks|" ^ (vertical_string_of_list_of_variables model.clocks) ^ "}"
 	^ "|{Parameters|" ^ (vertical_string_of_list_of_variables model.parameters) ^ "}"
-	^ (if model.discrete != [] then
+	^ (if model.discrete <> [] then
 		"|{Discrete|" ^ (vertical_string_of_list_of_variables model.discrete) ^ "}"
 		else "")
 	^ "|{Initial|" ^ (escape_string_for_dot (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)) ^ "}"

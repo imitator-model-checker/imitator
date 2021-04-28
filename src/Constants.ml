@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2021/01/19
+ * Last modified     : 2021/04/27
  *
  ************************************************************)
 
@@ -23,9 +23,9 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "3.0"
+let version_string = "3.1-beta"
 
-let version_name = "Cheese"
+let version_name = "Cheese Artichoke"
 
 (* Path ending with "/" *)
 let path_to_program =
@@ -48,7 +48,7 @@ let path_to_program =
 (************************************************************)
 (************************************************************)
 
-let dot_command = "dot"
+let dot_binary_name = "dot"
 
 
 (************************************************************)
@@ -123,8 +123,6 @@ let observer_clock_name			= "automatically_generated_x_obs"
 let special_reset_clock_name	= "special_0_clock"
 
 
-
-
 (************************************************************)
 (************************************************************)
 (* Algorithms *)
@@ -133,3 +131,93 @@ let special_reset_clock_name	= "special_0_clock"
 
 (* Default step for the cartography algorithms *)
 let default_cartography_step	= NumConst.one
+
+(************************************************************)
+(************************************************************)
+(* Strings constants *)
+(************************************************************)
+(************************************************************)
+
+(** Data structure allowing for customizing string conversions of bool symbols *)
+type customized_boolean_string = {
+	true_string  : string;
+	false_string : string;
+	and_operator : string;
+	or_operator  : string;
+	l_operator   : string;
+	le_operator  : string;
+	eq_operator  : string;
+	neq_operator : string;
+	ge_operator  : string;
+	g_operator   : string;
+	not_operator : string;
+}
+
+(** Data structure allowing for customizing string conversions of arithmetic symbols *)
+type customized_arithmetic_string = {
+    plus_string : string;
+    minus_string : string;
+    mul_string : string;
+    div_string : string;
+    unary_min_string : string;
+}
+
+(** Data structure allowing for customizing string conversions of symbols *)
+type customized_string = {
+    arithmetic_string : customized_arithmetic_string;
+    boolean_string : customized_boolean_string;
+}
+
+(** Default string values of bool symbols *)
+let default_string = {
+	true_string   = "True";
+	false_string  = "False";
+	and_operator  = "\n& ";
+	or_operator   = " or ";
+	l_operator    = " < ";
+	le_operator   = " <= ";
+	eq_operator   = " = ";
+	neq_operator  = " <> ";
+	ge_operator   = " >= ";
+	g_operator    = " > ";
+	not_operator  = " not ";
+}
+
+(** Default string values of bool symbols without white spaces around operators *)
+let default_string_without_whitespace = {
+	true_string   = "True";
+	false_string  = "False";
+	and_operator  = "\n& ";
+	or_operator   = " or ";
+	l_operator    = "<";
+	le_operator   = "<=";
+	eq_operator   = "=";
+	neq_operator  = "<>";
+	ge_operator   = ">=";
+	g_operator    = ">";
+	not_operator  = " not ";
+}
+
+(** Default string values of arithmetic symbols *)
+let default_arithmetic_string = {
+    plus_string = " + ";
+    minus_string = " - ";
+    mul_string = " * ";
+    div_string = " / ";
+    unary_min_string = "-";
+}
+
+(** Default string values of arithmetic symbols without white spaces around operators *)
+let default_arithmetic_string_without_whitespace = {
+    plus_string = "+";
+    minus_string = "-";
+    mul_string = "*";
+    div_string = "/";
+    unary_min_string = "-";
+}
+
+(** Default string values of symbols *)
+let global_default_string = {
+    arithmetic_string = default_arithmetic_string;
+    boolean_string = default_string;
+}

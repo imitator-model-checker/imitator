@@ -16,13 +16,19 @@
 
 
 open AbstractModel
+open DiscreteExpressions
 
 (****************************************************************)
 (** Local printings *)
 (****************************************************************)
 (* Convert a var_type into a string *)
-val string_of_var_type : var_type -> string
+val string_of_var_type : DiscreteValue.var_type -> string
 
+(************************************************************)
+(** Arithmetic expression *)
+(************************************************************)
+(** Convert a AbstractModel.global_expression into a string *)
+val string_of_global_expression : (Automaton.variable_index -> Automaton.variable_name) -> DiscreteExpressions.global_expression -> string
 
 (************************************************************)
 (** Arithmetic expression *)
@@ -86,7 +92,7 @@ val string_of_clock_updates :  AbstractModel.abstract_model -> clock_updates -> 
 val string_of_boolean_template : (Automaton.variable_index -> Automaton.variable_name) -> boolean_expression -> (boolean_expression -> string) -> string*)
 
 (** Convert a boolean expression into a string *)
-val string_of_boolean :  (Automaton.discrete_index -> Automaton.variable_name) -> boolean_expression -> string
+val string_of_boolean_expression : (Automaton.discrete_index -> Automaton.variable_name) -> boolean_expression -> string
 
 (** Template to convert conditional updates into a string *)
 val string_of_conditional_updates_template : AbstractModel.abstract_model -> conditional_update list -> (abstract_model -> clock_updates -> string) -> (abstract_model -> discrete_update list -> string) -> (boolean_expression -> string) -> string -> string -> string -> string

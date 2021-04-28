@@ -1,20 +1,28 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * IEEE 1394 Root Contention Protocol
- *
- * Description     : Protocol described in "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX" Collomb-Annichini, Sighireanu (RTTOOLS 2001)
- * Correctness     : see paper
- * Source          : "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX"
- * Author          : Collomb-Annichini, Sighireanu
- * Modeling        : Collomb-Annichini, Sighireanu
- * Input by        : Étienne André
- *
- * Created         : 2015/07/31
- * Last modified   : 2020/08/18
- *
- * IMITATOR version: 3
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : RCP-CS01
+ * Description      : Protocol described in "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX" Collomb-Annichini, Sighireanu (RTTOOLS 2001)
+ * Correctness      : see paper
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Industrial ; Protocol ; RTS
+ * Source           : "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX"
+ * bibkey           : CS01
+ * Author           : Collomb-Annichini, Sighireanu
+ * Modeling         : Collomb-Annichini, Sighireanu
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2015/07/31
+ * Last modified    : 2020/08/18
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 
 var 	x1, x2, x12, y12, x21, y21
