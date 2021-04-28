@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2021/01/19
+ * Last modified: 2021/04/28
  *
  ************************************************************)
 
@@ -59,6 +59,8 @@ class imitator_options :
 		method is_set_exploration_order		: bool
 		method set_exploration_order		: AbstractAlgorithm.exploration_order -> unit
 		
+		method extrapolation				: NumConst.t option
+
 		method files_prefix					: string
 		method imitator_mode				: AbstractAlgorithm.imitator_mode
 

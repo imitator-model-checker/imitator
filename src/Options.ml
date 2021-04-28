@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/09/16
+ * Last modified     : 2021/04/28
  *
  ************************************************************)
 
@@ -145,6 +145,9 @@ class imitator_options =
 
 		(* Best worst-case clock value for EFsynthminpq *)
 (* 		val mutable best_worst_case = ref false *)
+
+		(* M-extrapolation *)
+		val mutable extrapolation : NumConst.t option = None
 
 
 		(* ANALYSIS OPTIONS *)
@@ -297,6 +300,8 @@ class imitator_options =
 		method exploration_order					= value_of_option "exploration_order" exploration_order
 		method is_set_exploration_order				= exploration_order <> None
 		method set_exploration_order new_exploration_order = exploration_order <- Some new_exploration_order
+
+		method extrapolation						= extrapolation
 
 		method files_prefix							= files_prefix
 		method imitator_mode						= imitator_mode
@@ -732,6 +737,9 @@ class imitator_options =
         Use `queueBFSRS`    for a queue-based breadth-first search with ranking system. [ANP17]
         Use `queueBFSPRIOR` for a priority-based BFS with ranking system. [ANP17]
         Default: layerBFS.
+				");
+
+				("-extrapolation", Int (fun n -> extrapolation <- Some (NumConst.numconst_of_int n) ), " Extrapolation [work in progress]. Default: none.
 				");
 
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
