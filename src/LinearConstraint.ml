@@ -2387,6 +2387,40 @@ let px_valuate_parameters (p_valuation : p_valuation) (px_linear_constraint : px
 
 
 (*------------------------------------------------------------*)
+(** M-extrapolation: returns (the constraint ^ x <= M) , (the constraint ^ x >= M) *)
+(*** TODO: improve this description ***)
+(*------------------------------------------------------------*)
+let px_extrapolation (m : NumConst.t) (x : variable) (px_linear_constraint : px_linear_constraint) : (px_linear_constraint * px_linear_constraint) =
+	(* Prepare `x <= M`, i.e. `x - M <= 0` *)
+	let px_linear_term : px_linear_term = make_px_linear_term [(NumConst.one, x)] (NumConst.neg m) in
+	let px_linear_inequality : px_linear_inequality = make_px_linear_inequality px_linear_term Op_le in
+	let x_leq_M : px_linear_constraint = make_px_constraint [px_linear_inequality] in
+
+	(* Intersect `x <= M` with the input constraint *)
+	px_intersection_assign x_leq_M [px_linear_constraint];
+	let px_linear_constraint1 = x_leq_M in
+
+	(* Prepare `x > M`, i.e., `x - M > 0` *)
+	let px_linear_term : px_linear_term = make_px_linear_term [(NumConst.one, x)] (NumConst.neg m) in
+	let px_linear_inequality : px_linear_inequality = make_px_linear_inequality px_linear_term Op_g in
+	let x_g_M : px_linear_constraint = make_px_constraint [px_linear_inequality] in
+
+	(* Intersect `x > M` with the input constraint *)
+	let px_linear_constraint_and_x_g_M = px_intersection [px_linear_constraint ; x_g_M] in
+
+	(* Cylindrify: Eliminate x by variable elimination *)
+	px_hide_assign [x] px_linear_constraint_and_x_g_M;
+
+	(* Intersect again with `x > M` *)
+	px_intersection_assign px_linear_constraint_and_x_g_M [x_g_M];
+	let px_linear_constraint2 = px_linear_constraint_and_x_g_M in
+
+	(* Return both constraints *)
+	px_linear_constraint1, px_linear_constraint2
+
+
+
+(*------------------------------------------------------------*)
 (* Adding and removing dimensions *)
 (*------------------------------------------------------------*)
 
@@ -2619,11 +2653,11 @@ let render_non_strict_p_linear_constraint k =
 let compute_bounds linear_constraint dimension : (((coef * bool) option) * ((coef * bool) option)) =
 	(* Create linear expression with just the dimension of interest *)
 	let linear_expression : Ppl.linear_expression = ppl_linear_expression_of_linear_term (make_linear_term [(NumConst.one, dimension)] NumConst.zero) in
-	
+
 	(* Compute the lower bound *)
 	(*** DOC: function signature is val ppl_Polyhedron_minimize : polyhedron -> linear_expression -> bool * Gmp.Z.t * Gmp.Z.t * bool ***)
 	let bounded_from_below, infimum_numerator, infimum_denominator, is_minimum = ippl_minimize linear_constraint linear_expression in
-	
+
 	(* Build the infimum *)
 	let infimum = NumConst.numconst_of_zfrac infimum_numerator infimum_denominator in
 
@@ -2633,10 +2667,10 @@ let compute_bounds linear_constraint dimension : (((coef * bool) option) * ((coe
 
 	(* Compute the upper bound *)
 	let bounded_from_above, supremum_numerator, supremum_denominator, is_maximum = ippl_maximize linear_constraint linear_expression in
-		
+
 	(* Build the supremum *)
 	let supremum = NumConst.numconst_of_zfrac supremum_numerator supremum_denominator in
-	
+
 	(* Build the pair *)
 	(if bounded_from_below then Some (infimum, is_minimum) else None)
 	,
