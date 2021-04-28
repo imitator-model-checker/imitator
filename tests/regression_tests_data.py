@@ -2291,6 +2291,25 @@ when  z * x / y > x do {}  sync a1 goto lend;
 
 	,
 
+# 	#------------------------------------------------------------
+# 	{
+# 		'purpose'    : 'Test boolean True constant (computing)',
+# 		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'acceptingReachable.imiprop'],
+# 		'options'    : '',
+# 		'expectations' : [
+# 			{'file': 'bool-constant-reachable.res' , 'content' : """
+# BEGIN CONSTRAINT
+# True
+# END CONSTRAINT
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test boolean True constant (computing)',
@@ -2298,9 +2317,7 @@ when  z * x / y > x do {}  sync a1 goto lend;
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-constant-reachable.res' , 'content' : """
-BEGIN CONSTRAINT
-True
-END CONSTRAINT
+Error                                   : invalid model
 		"""
 			 } # end result file
 			,
@@ -2310,6 +2327,25 @@ END CONSTRAINT
 
 	,
 
+# 	#------------------------------------------------------------
+# 	{
+# 		'purpose'    : 'Test boolean False constant (computing)',
+# 		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'acceptingReachable.imiprop'],
+# 		'options'    : '',
+# 		'expectations' : [
+# 			{'file': 'bool-constant-unreachable.res' , 'content' : """
+# BEGIN CONSTRAINT
+# False
+# END CONSTRAINT
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test boolean False constant (computing)',
@@ -2317,9 +2353,7 @@ END CONSTRAINT
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-constant-unreachable.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
+Error                                   : invalid model
 		"""
 			 } # end result file
 			,
