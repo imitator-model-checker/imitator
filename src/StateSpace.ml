@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2021/03/19
+ * Last modified     : 2021/04/28
  *
  ************************************************************)
 
@@ -1451,17 +1451,36 @@ let add_transition state_space (source_state_index, combined_transition, target_
 	print_message Verbose_total ("Entering StateSpace.add_transition");
 
 	(* check if it already exists *)
+	(* Get the list of (transition,state) successors of source_state_index *)
+	let transitions_and_states = get_successors_with_combined_transitions state_space source_state_index in
+	
+	if List.mem (combined_transition , target_state_index) transitions_and_states then(
+		print_message Verbose_total ("Transition belong to the list already");
+	)else(
+		(** Add to the data structure *)
+		Hashtbl.replace state_space.transitions_table source_state_index
+			(List.rev ((combined_transition , target_state_index) :: transitions_and_states))
+	);
+
+	(* Print some information *)
+	print_message Verbose_total ("Existence check done");
+
+
+
+	(*	(* check if it already exists *)
 	let transitions = get_transitions_of_state state_space source_state_index in
 
 	(* Print some information *)
 	print_message Verbose_total ("Existence check done");
 
-	(*** TODO: it seems that getting the list is doing twice here; optimization? ***)
-	if not (List.mem combined_transition transitions) then
+	(*** TODO: it seems that getting the list is done twice here; optimization? ***)
+	if not (List.mem combined_transition transitions) then(
 		(** Add to the data structure *)
 		Hashtbl.replace state_space.transitions_table source_state_index
 			(List.rev ((combined_transition , target_state_index) :: (get_successors_with_combined_transitions state_space source_state_index)))
-	;
+	)else(
+		print_message Verbose_total ("Transition belong to the list already");
+	);*)
 	(* Statistics *)
 	counter_add_transition#stop;
 
