@@ -1868,10 +1868,10 @@ let compute_transitions location constr action_index automata involved_automata_
 (* discrete_constr      : the source state D_i=d_i            *)
 (* combined_transition  : the combined transition             *)
 (*------------------------------------------------------------*)
-(* returns A *list* of states, possibly empty if the constraint is unsatisfiable    *)
+(* returns Some state, or None if the constraint is unsatisfiable    *)
 (*------------------------------------------------------------*)
 
-let post_from_one_state_via_one_transition (source_location : Location.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state list =
+let post_from_one_state_via_one_transition (source_location : Location.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
 
 	(* Compute the new location for the current combination of transitions *)
 	let target_location, (discrete_guards : NonlinearConstraint.nonlinear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
@@ -1887,7 +1887,7 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 		print_message Verbose_high ("\nThis combination of discrete guards is not satisfiable.");
 
 		(* Return *)
-		[]
+		None
 		
 	(* Else: the discrete part of guards is satisfied *)
 	)else(
@@ -1905,7 +1905,7 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
             print_message Verbose_high ("\nThis combination of discrete target invariants is not satisfiable.");
 
             (* Return *)
-            []
+            None
 
         (* Else: the discrete part of target invariant is satisfied *)
         )else(
@@ -1920,10 +1920,10 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 				counter_nb_unsatisfiable#increment;
 
 				(* Print some information *)
-				print_message Verbose_high ("\nThis constraint is not satisfiable ('[]').");
+				print_message Verbose_high ("\nThis constraint is not satisfiable (`None`).");
 				
 				(* Return *)
-				[]
+				None
 
 			| Some (final_constraint : LinearConstraint.px_linear_constraint) -> (
 				if not (LinearConstraint.px_is_satisfiable final_constraint) then(
@@ -1931,13 +1931,13 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 					counter_nb_unsatisfiable#increment;
 
 					(* Print some information *)
-					print_message Verbose_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
+					print_message Verbose_high ("\nThis constraint is not satisfiable (`None`).");
 					
 					(* Return *)
-					[]
+					None
 				) else (
 					(* Return the constraint *)
-					[{ global_location = target_location ; px_constraint = final_constraint }]
+					Some { global_location = target_location ; px_constraint = final_constraint }
 				); (* end if satisfiable *)
 			) (* end if Some constraint *)
 	    ) (* end discrete part of target invariant is satisfied *)
@@ -3110,6 +3110,23 @@ class virtual algoStateBased =
 	
 	
 	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Apply extrapolation to a state *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private apply_extrapolation (state : State.state) : State.state list =
+		(* Get the location and the cosntraint from the state *)
+		let the_location = state.global_location in
+		let the_constraint = state.px_constraint in
+		
+		(* Return (for now) exactly ONE state *)
+		
+		(*** TODO: apply some extrapolation to final_constraint ***)
+		[
+			{ global_location = the_location ; px_constraint = the_constraint } 
+		]
+		
+
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
@@ -3302,20 +3319,25 @@ class virtual algoStateBased =
 				end;*)
 				
 				(* Compute the successor constraint from the current state via this combined_transition *)
-				let successors = post_from_one_state_via_one_transition source_location (recompute_source_constraint ()) discrete_constr combined_transition in
+				let successor_option : State.state option = post_from_one_state_via_one_transition source_location (recompute_source_constraint ()) discrete_constr combined_transition in
+				
+				let successors = match successor_option with
+					| Some successor -> self#apply_extrapolation successor
+					| None -> []
+				in
 				
 				(* Iterate on the states *)
-				List.iter (fun successor_id -> 
+				List.iter (fun successor -> 
 					(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
 					StateSpace.increment_nb_gen_states state_space;
 
 					(* Print some information *)
 					if verbose_mode_greater Verbose_total then(
-						self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model successor_id));
+						self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model successor));
 					);
 
 					(* Try to add the state to the state space *)
-					let added : bool = self#add_a_new_state source_state_index combined_transition successor_id in
+					let added : bool = self#add_a_new_state source_state_index combined_transition successor in
 
 					(* Update *)
 					has_successors := !has_successors || added;
