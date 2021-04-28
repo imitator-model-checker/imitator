@@ -3081,18 +3081,57 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Apply extrapolation to a state *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private apply_extrapolation (state : State.state) : State.state list =
+	method private apply_extrapolation (m : NumConst.t) (state : State.state) : State.state list =
 		(* Get the location and the cosntraint from the state *)
 		let the_location = state.global_location in
 		let the_constraint = state.px_constraint in
 		
 		(* Return (for now) exactly ONE state *)
 		
-		(*** TODO: apply some extrapolation to final_constraint ***)
-		[
-			{ global_location = the_location ; px_constraint = the_constraint } 
-		]
+		(* Maintain a list of constraints to iteratively apply extrapolation for each dimension *)
+		let constraints = ref [the_constraint] in
 		
+		(*** NOTE: totally useless code ***)
+		List.iter (fun clock_id ->
+			
+			let new_constraints = ref [] in
+			
+			(* Iterate on the list of previously computed constraints *)
+			List.iter (fun px_linear_constraint ->
+				let (c1, c2) : (LinearConstraint.px_linear_constraint * LinearConstraint.px_linear_constraint) = LinearConstraint.px_extrapolation m clock_id px_linear_constraint in
+				
+				(* Test and add *)
+				if LinearConstraint.px_is_satisfiable c1 then(
+					new_constraints := c1 :: !new_constraints;
+				);
+				if LinearConstraint.px_is_satisfiable c2 then(
+					new_constraints := c2 :: !new_constraints;
+				);
+			
+			) !constraints;
+			
+			(* Update new constraints *)
+			constraints := !new_constraints;
+			
+(*			(* Print some information *)
+			(*** NOTE: totally useless code ***)
+			if LinearConstraint.px_is_satisfiable c1 then(
+				if verbose_mode_greater Verbose_high then(
+					print_message Verbose_high ("Hey! c1 is satisfaible!");
+					print_message Verbose_high (LinearConstraint.string_of_px_linear_constraint model.variable_names c1);
+				);
+			);*)
+		
+		) model.clocks;
+		
+		(* Return the pair (location, constraint) for each constraint from the extrapolation *)
+		List.map (fun px_linear_constraint -> 
+			{ global_location = the_location ; px_constraint = px_linear_constraint }
+		) !constraints
+(*		[
+			{ global_location = the_location ; px_constraint = the_constraint } 
+		]*)
+
 
 
 
@@ -3290,7 +3329,16 @@ class virtual algoStateBased =
 				let successor_option : State.state option = post_from_one_state_via_one_transition source_location (recompute_source_constraint ()) discrete_constr combined_transition in
 				
 				let successors = match successor_option with
-					| Some successor -> self#apply_extrapolation successor
+					| Some successor ->
+						let result =
+						(* Check if extrapolation is requested *)
+						match options#extrapolation with
+							(* No extrapolation: return a single state *)
+							| None -> [successor]
+							(* Extrapolation: call dedicated function *)
+							| Some m -> self#apply_extrapolation m successor
+						in result
+
 					| None -> []
 				in
 				
@@ -3367,7 +3415,7 @@ class virtual algoStateBased =
 				| StateSpace.State_already_present _ -> "Old state"
 				| StateSpace.State_replacing _ -> "BIGGER STATE than a former state"
 			 in
-			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "': ");
+			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action `" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "`: ");
 			print_message Verbose_high (ModelPrinter.string_of_state model new_target_state);
 		);
 
