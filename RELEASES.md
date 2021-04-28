@@ -7,6 +7,9 @@
 ### Result
 * IMITATOR now attempts to generate a result (`.res`) file even in the case of an error such as parsing error of the model or of the property
 
+### Export
+* New translation to the [JANI](https://jani-spec.org/) interchange format
+
 ### Bug fixing:
 * Fixed an issue met in v3 when a division by 0 is encountered.
 

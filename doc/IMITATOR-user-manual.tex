@@ -643,8 +643,8 @@ That is, we can define initial constraints such as:
 \end{center}
 % TODO: style for sample piece of file
 
-However, discrete variables must be initialized to a \emph{constant rational}.
-Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i = ...} followed by a linear term in $\LTermD$, then \imitator{} will assume that \styleIMI{i} is initially set to~0, and will issue a warning.
+However, discrete variables must be initialized to a \emph{constant} compatible with their type.
+Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i := ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to~0 (or to $\BFalse$ for Boolean variables), and will issue a warning.
 
 
 
@@ -1717,7 +1717,7 @@ In addition, \uppaal{} only allows invariants of the form $\clock \leq c$ or $\c
 No checks are made when translating, and therefore \uppaal{} may not accept models translated from \imitator{} input models using these features.
 
 \paragraph{Discrete variables}
-Discrete variables in \imitator{} are rational-valued with an exact value.
+Discrete rational variables in \imitator{} are rational-valued with an exact value.
 In \uppaal{}, they are interpreted as (bounded) integers: overflows may occur and, if their value becomes non-integer, it seems \uppaal{} will just round them to the nearest integer, thus creating a difference in semantics.
 
 \paragraph{Strong broadcast synchronization}
@@ -1768,7 +1768,7 @@ Note that the translation of properties is not supported.
 \section{Translation to \jani{}}\label{section:jani}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Since version ....., \imitator{} supports a translation of the model to \jani{} specification~\cite{BDHHJT17}.
+Since version 3.1, \imitator{} supports a translation of the model to the \href{https://jani-spec.org/}{\jani{} specification}~\cite{BDHHJT17}.
 To generate an equivalent \jani{} model without performing any analysis, use:
 
 \styleCommand{\binimitator{} model.imi -imi2Jani}
@@ -1779,10 +1779,11 @@ Note that the translation of properties is not supported.
 Due to the different semantics and features between \imitator{} and \jani{}, the translation is done in a ``best effort'' manner, but the semantics may differ.
 We review some points in the following.
 
-\paragraph{Assignments}
-\imitator{} and \jani{} do not have a same semantics to allow \styleIMI{if}-\styleIMI{then}-\styleIMI{else} assignments. In order to provide a same behavior, the translation is performed as follow.
+\paragraph{Updates}
+\imitator{} and \jani{} do not have exactly the same semantics in the case of \styleIMI{if}-\styleIMI{then}-\styleIMI{else} updates.
+In order to provide a similar behavior, the translation is performed as follow.
 
-\styleIMI{if (x=1) then (x:=2, y:=3) else (x=4)}\\ is transformed (and, after, written in \jani{} format) into
+\styleIMI{if (x=1) then (x:=2, y:=3) else (x:=4)}\\ is transformed (and, after, written in \jani{} format) into
 
 \styleIMI{
 \begin{tabular}{l l}
@@ -1792,16 +1793,20 @@ We review some points in the following.
 \end{tabular}
 }
 
-\paragraph{Stopwatched and multi-rate clocks}
-If neither clock has a multi-rate (\ie{} there is no mention to clock rates in the model), all of them are declared in \jani{} model with the \styleIMI{clock} type.
+\paragraph{Stopwatches and multi-rate clocks}
+If no clock of the input model has a rate different from~1, then all of them are declared in the output \jani{} model with the \styleIMI{clock} type.
 
-Otherwise, if one rate is mentionned in the \imitator{} model, all of the clocks (including non multi-rate ones) are declared with the \styleIMI{continuous} type and the corresponding derivative (1 if non specified) is explicitly specified in each location.
+Otherwise, if at least one rate uses a non-1 rate in the \imitator{} model, then \emph{all} of the clocks (including non multi-rate clocks) are declared with the \styleIMI{continuous} type and the corresponding derivative (1, if non specified in the \imitator{} input model) is explicitly specified in each location of the output model.
 
 \paragraph{Synchronization}
-\jani{} synchronization semantics is more permissive than the \imitator{} one, therefore the exact meaning can be kept. It is done by listing synchronization vectors in the \styleIMI{syncs} entry.
+\jani{} synchronization semantics is more permissive than the \imitator{} one, therefore the exact meaning can be kept.
+It is done by listing synchronization vectors in the \styleIMI{syncs} entry.
 
 \paragraph{Properties}
-Properties are so far not translated to \jani{}. The corresponding input in the \jani{} file exists but remains empty.
+Properties are so far not translated to \jani{}.
+The corresponding input in the \jani{} file exists but remains empty.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Export to graphics}

@@ -184,7 +184,7 @@
 \newcommand{\LConstraintXPD}{\LConstraint(\Clock \cup \Param \cup \RVar)}
 \newcommand{\lterm}{\mathit{lt}}
 \newcommand{\LTerm}{\mathcal{LT}} % (#1)% set of all linear terms over some set
-\newcommand{\LTermD}{\LTerm(\DVar)}
+\newcommand{\LTermR}{\LTerm(\RVar)}
 \newcommand{\LTermXPD}{\LTerm(\Clock \cup \Param \cup \RVar)}
 \newcommand{\loc}{\ell} % location
 \newcommand{\locinit}{\loc_\init}
@@ -203,16 +203,16 @@
 \newcommand{\VarCard}{N} % cardinality of variables % TODO: conflict
 
 % Sets
-\newcommand{\setB}{{\mathbb B}}
-\newcommand{\setN}{{\mathbb N}}
-\newcommand{\setQ}{{\mathbb Q}}
-\newcommand{\setQplus}{{\mathbb Q}_{\geq 0}}
-\newcommand{\setR}{{\mathbb R}}
-\newcommand{\setRplus}{\setR_{\geq 0}}
-\newcommand{\setZ}{{\mathbb Z}}
+\newcommand{\setB}{\ensuremath{\mathbb B}}
+\newcommand{\setN}{\ensuremath{\mathbb N}}
+\newcommand{\setQ}{\ensuremath{\mathbb Q}}
+\newcommand{\setQplus}{\ensuremath{\mathbb Q}_{\geq 0}}
+\newcommand{\setR}{\ensuremath{\mathbb R}}
+\newcommand{\setRplus}{\ensuremath{\setR_{\geq 0}}}
+\newcommand{\setZ}{\ensuremath{\mathbb Z}}
 
-\newcommand{\BFalse}{\mathbf{false}}
-\newcommand{\BTrue}{\mathbf{true}}
+\newcommand{\BFalse}{\ensuremath{\mathbf{false}}}
+\newcommand{\BTrue}{\ensuremath{\mathbf{true}}}
 
 % Units
 \newcommand{\micros}{\mathit{\mu s}}
@@ -262,7 +262,8 @@
 % \newcommand{\prism}{\textsc{Prism}}
 % \newcommand{\red}{RED}
 \newcommand{\uppaal}{\textsc{Uppaal}}
-\newcommand{\jani}{\textsc{The Jani Specification}}
+% \newcommand{\jani}{\textsc{The Jani Specification}}
+\newcommand{\jani}{\textsc{Jani}}
 
 \newcommand{\binimitator}{./imitator}
 
