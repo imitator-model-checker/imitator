@@ -1,5 +1,5 @@
 *******************************************************
-# FUTURE release 3.1 (202X-XX-XX) Cheese Artichoke
+# release 3.1.0-beta (2021-04-28) Cheese Artichoke
 
 ### Syntax changes in the property
 * `property := AcceptingCycle` now allowed as a shortcut for `property := CycleThrough(accepting)`
