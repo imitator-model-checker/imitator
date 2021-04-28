@@ -179,13 +179,13 @@
 \newcommand{\guard}{g}
 \newcommand{\invariant}{I}
 \newcommand{\LConstraint}{\mathcal{LC}} % (#1)% set of all constraints over some set
-\newcommand{\LConstraintD}{\LConstraint(\DVar)}
+\newcommand{\LConstraintD}{\LConstraint(\RVar)}
 \newcommand{\LConstraintXP}{\LConstraint(\Clock \cup \Param)}
-\newcommand{\LConstraintXPD}{\LConstraint(\Clock \cup \Param \cup \DVar)}
+\newcommand{\LConstraintXPD}{\LConstraint(\Clock \cup \Param \cup \RVar)}
 \newcommand{\lterm}{\mathit{lt}}
 \newcommand{\LTerm}{\mathcal{LT}} % (#1)% set of all linear terms over some set
 \newcommand{\LTermD}{\LTerm(\DVar)}
-\newcommand{\LTermXPD}{\LTerm(\Clock \cup \Param \cup \DVar)}
+\newcommand{\LTermXPD}{\LTerm(\Clock \cup \Param \cup \RVar)}
 \newcommand{\loc}{\ell} % location
 \newcommand{\locinit}{\loc_\init}
 \newcommand{\Loc}{L} % set of locations
@@ -202,44 +202,31 @@
 \newcommand{\var}{\mathit{z}} % variable
 \newcommand{\VarCard}{N} % cardinality of variables % TODO: conflict
 
-% Ensembles
-\newcommand{\grandb}{{\mathbb B}}
-\newcommand{\grandn}{{\mathbb N}}
-\newcommand{\grandq}{{\mathbb Q}}
-\newcommand{\grandqplus}{{\mathbb Q}_{\geq 0}}
-\newcommand{\grandr}{{\mathbb R}}
-\newcommand{\grandrplus}{\grandr_{\geq 0}}
-\newcommand{\grandz}{{\mathbb Z}}
+% Sets
+\newcommand{\setB}{{\mathbb B}}
+\newcommand{\setN}{{\mathbb N}}
+\newcommand{\setQ}{{\mathbb Q}}
+\newcommand{\setQplus}{{\mathbb Q}_{\geq 0}}
+\newcommand{\setR}{{\mathbb R}}
+\newcommand{\setRplus}{\setR_{\geq 0}}
+\newcommand{\setZ}{{\mathbb Z}}
 
-% Unites
+\newcommand{\BFalse}{\mathbf{false}}
+\newcommand{\BTrue}{\mathbf{true}}
+
+% Units
 \newcommand{\micros}{\mathit{\mu s}}
 \newcommand{\nanos}{ns}
 
 % Noms
-\newcommand{\tiling}{\mathit{Tiling}}
-% \newcommand{\true}{\mathbf{true}}
-\newcommand{\Ko}{K}
 \newcommand{\pio}{\pi_0}
-\newcommand{\piprime}{\pi}
-\newcommand{\To}{T_0}
-\newcommand{\Tprime}{T}
 
-% Symboles
+% Symbols
 \newcommand{\emptystring}{\ensuremath{\epsilon}}
 \newcommand{\fleche}[1]{\stackrel{#1}{\rightarrow}}
 \newcommand{\Fleche}[1]{\stackrel{#1}{\Rightarrow}}
 % \newcommand{\steps}[0]{ {\rightarrow} }
 
-% Booleens
-\newcommand{\false}{{\tt false}}
-\newcommand{\true}{{\tt true}}
-
-% PARAMETRES RCP
-\newcommand{\rcpFMax}{\mathit{rc\_fast\_max}}
-\newcommand{\rcpFMin}{\mathit{rc\_fast\_min}}
-\newcommand{\rcpSMax}{\mathit{rc\_slow\_max}}
-\newcommand{\rcpSMin}{\mathit{rc\_slow\_min}}
-\newcommand{\rcpD}{\mathit{delay}}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 % ALGORITHMES
