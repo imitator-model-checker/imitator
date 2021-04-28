@@ -1,4 +1,0 @@
-property := #synth IM(
-	delta = 3
-	Delta = 4
-);
