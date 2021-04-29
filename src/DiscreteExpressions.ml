@@ -622,7 +622,7 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
 		let expr1 =  (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression1) in
-		let relop =  (string_of_boolean_operations customized_string.boolean_string relop) in (*TODO check*)
+		let relop =  (string_of_boolean_operations customized_string.boolean_string relop) in
 		let expr2 =  (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression2) in
 		"{"
 		^ "\"op\": \"" ^ relop ^ "\", "
