@@ -2365,6 +2365,26 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test boolean negation (computing)',
+		'input_files': ['boolean_expressions/bool-negation.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-negation.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test that a boolean variable is correctly updated (computing)',
 		'input_files': ['boolean_expressions/bool-discrete-var-update.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
