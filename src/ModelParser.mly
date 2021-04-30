@@ -648,11 +648,11 @@ pos_float:
 /************************************************************/
 /** BOOLEAN EXPRESSIONS */
 /************************************************************/
+
 boolean_expression:
 	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
-	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
 	| CT_TRUE { Parsed_True }
 	| CT_FALSE { Parsed_False }
 ;
@@ -667,6 +667,7 @@ discrete_boolean_expression:
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	/* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) */
 	| LPAREN boolean_expression RPAREN { Parsed_boolean_expression $2 }
+	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
 ;
 
 /************************************************************/

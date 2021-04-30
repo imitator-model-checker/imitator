@@ -120,7 +120,6 @@ and eval_int_expression discrete_valuation (* expr *) =
 and is_boolean_expression_satisfied discrete_valuation = function
     | True_bool -> true
     | False_bool -> false
-    | Not_bool b -> not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
     | And_bool (b1, b2) -> (is_boolean_expression_satisfied discrete_valuation b1) && (is_boolean_expression_satisfied discrete_valuation b2) (* conjunction *)
     | Or_bool (b1, b2) -> (is_boolean_expression_satisfied discrete_valuation b1) || (is_boolean_expression_satisfied discrete_valuation b2) (* disjunction *)
     | Discrete_boolean_expression dbe -> check_discrete_boolean_expression discrete_valuation dbe
@@ -151,6 +150,8 @@ and check_discrete_boolean_expression discrete_valuation = function
             (eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_3)
     | Boolean_expression boolean_expression ->
         is_boolean_expression_satisfied discrete_valuation boolean_expression
+    | Not_bool b -> (* OK *)
+        not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
 
 and eval_discrete_relop relop value_1 value_2 : bool =
     match relop with

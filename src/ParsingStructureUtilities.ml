@@ -101,8 +101,6 @@ and string_of_parsed_boolean_expression parsed_model = function
             (string_of_parsed_boolean_expression parsed_model l_expr) ^
             " | " ^
             (string_of_parsed_boolean_expression parsed_model r_expr)
-    | Parsed_Not expr ->
-            "not (" ^ (string_of_parsed_boolean_expression parsed_model expr) ^ ")"
     | Parsed_Discrete_boolean_expression expr ->
         string_of_parsed_discrete_boolean_expression parsed_model expr
 
@@ -122,6 +120,8 @@ and string_of_parsed_discrete_boolean_expression parsed_model = function
         str_expr1 ^ " in [" ^ str_expr2 ^ ".." ^ str_expr3 ^ "]"
     | Parsed_boolean_expression expr ->
         string_of_parsed_boolean_expression parsed_model expr
+    | Parsed_Not expr -> (* OK *)
+            "not (" ^ (string_of_parsed_boolean_expression parsed_model expr) ^ ")"
 
 and string_of_parsed_relop relop value_1 value_2 =
         match relop with
@@ -194,9 +194,6 @@ let try_reduce_parsed_global_expression constants expr =
 	        DiscreteValue._or
                 (try_reduce_parsed_boolean_expression l_expr)
                 (try_reduce_parsed_boolean_expression r_expr)
-	    | Parsed_Not expr ->
-	        DiscreteValue.not
-	            (try_reduce_parsed_boolean_expression expr)
 	    | Parsed_Discrete_boolean_expression expr ->
 	        try_reduce_parsed_discrete_boolean_expression expr
 
@@ -218,6 +215,9 @@ let try_reduce_parsed_global_expression constants expr =
 			    (DiscreteValue.leq expr1_evaluated expr3_evaluated)
         | Parsed_boolean_expression expr ->
             try_reduce_parsed_boolean_expression expr
+	    | Parsed_Not expr -> (* OK *)
+	        DiscreteValue.not
+	            (try_reduce_parsed_boolean_expression expr)
 
     and eval_parsed_relop relop value_1 value_2 =
         	match relop with

@@ -87,7 +87,6 @@ type discrete_arithmetic_expression =
 type boolean_expression =
 	| True_bool (** True *)
 	| False_bool (** False *)
-	| Not_bool of boolean_expression (** Negation *)
 	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
 	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
 	| Discrete_boolean_expression of discrete_boolean_expression
@@ -99,6 +98,8 @@ and discrete_boolean_expression =
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression of boolean_expression
+	(** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | }*)
+	| Not_bool of boolean_expression (** Negation *)
 	(** Discrete variable *)
 	| DB_variable of Automaton.variable_index
 	(** Discrete constant *)
@@ -366,7 +367,6 @@ let string_of_boolean_operations customized_string = function
 let rec customized_string_of_boolean_expression customized_string variable_names = function
 	| True_bool -> customized_string.true_string
 	| False_bool -> customized_string.false_string
-	| Not_bool b -> customized_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
 	| And_bool (b1, b2) ->
 		(customized_string_of_boolean_expression customized_string variable_names b1)
 		^ " && "
@@ -396,6 +396,8 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 		^ "]"
     | Boolean_expression boolean_expression ->
         "(" ^ (customized_string_of_boolean_expression customized_string variable_names boolean_expression) ^ ")"
+	| Not_bool b -> (* OK *)
+	    customized_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
     | DB_variable discrete_index -> variable_names discrete_index
     | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
 
@@ -481,7 +483,6 @@ let rec customized_string_of_global_expression_for_jani customized_string variab
 and customized_string_of_boolean_expression_for_jani customized_string variable_names = function
 	| True_bool -> customized_string.boolean_string.true_string
 	| False_bool -> customized_string.boolean_string.false_string
-	| Not_bool b -> "{\"op\": \""^ customized_string.boolean_string.not_operator ^"\"" ^ jani_separator ^ "\"exp\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b) ^ "}"
 	| And_bool (b1, b2) ->
 		"{\"op\": \"" ^ customized_string.boolean_string.and_operator ^ "\"" ^ jani_separator
 		^ "\"left\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b1) ^ jani_separator
@@ -653,6 +654,8 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
 		^ "}"
     | Boolean_expression expr ->
         customized_string_of_boolean_expression_for_jani customized_string variable_names expr
+	| Not_bool b -> (* OK *)
+	    "{\"op\": \""^ customized_string.boolean_string.not_operator ^"\"" ^ jani_separator ^ "\"exp\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b) ^ "}"
     | DB_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
     | DB_constant value -> DiscreteValue.string_of_value value
 

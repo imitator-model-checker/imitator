@@ -151,7 +151,6 @@ and get_variables_in_parsed_boolean_expression variables_used_ref = function
 	| Parsed_Or (l_expr, r_expr) ->
 		get_variables_in_parsed_boolean_expression variables_used_ref l_expr;
 		get_variables_in_parsed_boolean_expression variables_used_ref r_expr;
-	| Parsed_Not expr -> get_variables_in_parsed_boolean_expression variables_used_ref expr
 	| Parsed_Discrete_boolean_expression expr -> get_variables_in_parsed_discrete_boolean_expression variables_used_ref expr
 
 and get_variables_in_parsed_discrete_boolean_expression variables_used_ref  = function
@@ -163,6 +162,8 @@ and get_variables_in_parsed_discrete_boolean_expression variables_used_ref  = fu
 		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr2;
 		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr3
 	| Parsed_boolean_expression expr ->
+	    get_variables_in_parsed_boolean_expression variables_used_ref expr
+	| Parsed_Not expr -> (* OK *)
 	    get_variables_in_parsed_boolean_expression variables_used_ref expr
     | Parsed_arithmetic_expression expr ->
         get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr
@@ -252,7 +253,6 @@ and check_f_in_parsed_update_arithmetic_expression f = function
 and check_f_in_parsed_update_boolean_expression f = function
     | Parsed_True
     | Parsed_False -> true
-    | Parsed_Not parsed_boolean_expression -> check_f_in_parsed_update_boolean_expression f parsed_boolean_expression
     | Parsed_And (l_expr, r_expr)
     | Parsed_Or (l_expr, r_expr) ->
         evaluate_and
@@ -277,6 +277,8 @@ and check_f_in_parsed_update_discrete_boolean_expression f = function
             )
             (check_f_in_parsed_update_arithmetic_expression f expr3)
     | Parsed_boolean_expression parsed_boolean_expression ->
+        check_f_in_parsed_update_boolean_expression f parsed_boolean_expression
+    | Parsed_Not parsed_boolean_expression -> (* OK *)
         check_f_in_parsed_update_boolean_expression f parsed_boolean_expression
 
 and check_f_in_parsed_global_expression f = function
@@ -316,7 +318,6 @@ and check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_o
 and check_f_in_parsed_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants = function
     | Parsed_True
     | Parsed_False -> true
-    | Parsed_Not parsed_boolean_expression -> check_f_in_parsed_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants parsed_boolean_expression
     | Parsed_And (l_expr, r_expr)
     | Parsed_Or (l_expr, r_expr) ->
         evaluate_and
@@ -341,6 +342,8 @@ and check_f_in_parsed_discrete_boolean_expression f visit_leaf_of_discrete_boole
             )
             (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr3)
     | Parsed_boolean_expression parsed_boolean_expression ->
+        check_f_in_parsed_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants parsed_boolean_expression
+    | Parsed_Not parsed_boolean_expression -> (* OK *)
         check_f_in_parsed_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants parsed_boolean_expression
 
 (*------------------------------------------------------------*)
@@ -541,7 +544,6 @@ let convert_parsed_relop = function
 let rec convert_bool_expr index_of_variables constants number_type = function
 	| Parsed_True -> True_bool
 	| Parsed_False -> False_bool
-	| Parsed_Not e -> Not_bool (convert_bool_expr index_of_variables constants number_type e)
 	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr index_of_variables constants number_type e1), (convert_bool_expr index_of_variables constants number_type e2))
 	| Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr index_of_variables constants number_type e1), (convert_bool_expr index_of_variables constants number_type e2))
 	| Parsed_Discrete_boolean_expression parsed_discrete_boolean_expression ->
@@ -564,6 +566,8 @@ and convert_discrete_bool_expr index_of_variables constants number_type = functi
 		)
     | Parsed_boolean_expression parsed_boolean_expression ->
         Boolean_expression (convert_bool_expr index_of_variables constants number_type parsed_boolean_expression)
+	| Parsed_Not e -> (* OK *)
+	    Not_bool (convert_bool_expr index_of_variables constants number_type e)
 
 and search_variable_of_discrete_arithmetic_expression index_of_variables constants expr =
     let rec search_variable_of_discrete_arithmetic_expression_rec = function
@@ -633,7 +637,8 @@ let convert_parsed_discrete_boolean_expression index_of_variables constants numb
 		)
 	| Parsed_boolean_expression boolean_expression ->
 	     Boolean_expression (convert_bool_expr index_of_variables constants number_type boolean_expression)
-
+    | Parsed_Not boolean_expression ->
+        Not_bool (convert_bool_expr index_of_variables constants number_type boolean_expression)
 
 (* Convert parsed_discrete_arithmetic_expression *)
 let rec convert_parsed_discrete_arithmetic_expression_with_model useful_parsing_model_information =
@@ -2152,7 +2157,7 @@ let try_convert_linear_expression_of_parsed_discrete_boolean_expression = functi
     (* Expression in used ! So it's impossible to make the conversion, we raise an exception*)
     | Parsed_expression_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
     | Parsed_boolean_expression _ -> raise (InvalidExpression "A non-convex predicate involve clock(s) / parameter(s)")
-
+    | Parsed_Not _ -> raise (InvalidExpression "A not expression involve clock(s) / parameter(s)")
 
 (* Convert nonlinear_constraint to linear_constraint if possible
    and check bad use of non-linear expressions when converting *)
@@ -3586,7 +3591,6 @@ let rec check_parsed_boolean_expression useful_parsing_model_information = funct
 	    evaluate_and
 	    (check_parsed_boolean_expression useful_parsing_model_information l_expr)
 	    (check_parsed_boolean_expression useful_parsing_model_information r_expr)
-	| Parsed_Not bool_expr -> check_parsed_boolean_expression useful_parsing_model_information bool_expr
 	| Parsed_Discrete_boolean_expression bool_expr -> check_parsed_discrete_boolean_expression useful_parsing_model_information bool_expr
 
 (* Check correct variable names in parsed_discrete_boolean_expression *)
@@ -3608,6 +3612,8 @@ and check_parsed_discrete_boolean_expression useful_parsing_model_information = 
     (** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
     | Parsed_boolean_expression parsed_boolean_expression ->
         check_parsed_boolean_expression useful_parsing_model_information parsed_boolean_expression
+    | Parsed_Not bool_expr -> (* OK *)
+        check_parsed_boolean_expression useful_parsing_model_information bool_expr
 
 		
 (*------------------------------------------------------------*)

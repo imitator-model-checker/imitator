@@ -93,7 +93,6 @@ type discrete_arithmetic_expression =
 type boolean_expression =
 	| True_bool (** True *)
 	| False_bool (** False *)
-	| Not_bool of boolean_expression (** Negation *)
 	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
 	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
 	| Discrete_boolean_expression of discrete_boolean_expression
@@ -105,6 +104,8 @@ and discrete_boolean_expression =
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression of boolean_expression
+	(** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
+	| Not_bool of boolean_expression (** Negation *)
 	(** discrete variable in boolean expression *)
 	| DB_variable of Automaton.variable_index
 	(** discrete constant in boolean expression *)
