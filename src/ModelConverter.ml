@@ -163,7 +163,7 @@ and get_variables_in_parsed_discrete_boolean_expression variables_used_ref  = fu
 		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr3
 	| Parsed_boolean_expression expr ->
 	    get_variables_in_parsed_boolean_expression variables_used_ref expr
-	| Parsed_Not expr -> (* OK *)
+	| Parsed_Not expr ->
 	    get_variables_in_parsed_boolean_expression variables_used_ref expr
     | Parsed_arithmetic_expression expr ->
         get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr
@@ -278,7 +278,7 @@ and check_f_in_parsed_update_discrete_boolean_expression f = function
             (check_f_in_parsed_update_arithmetic_expression f expr3)
     | Parsed_boolean_expression parsed_boolean_expression ->
         check_f_in_parsed_update_boolean_expression f parsed_boolean_expression
-    | Parsed_Not parsed_boolean_expression -> (* OK *)
+    | Parsed_Not parsed_boolean_expression ->
         check_f_in_parsed_update_boolean_expression f parsed_boolean_expression
 
 and check_f_in_parsed_global_expression f = function
@@ -343,7 +343,7 @@ and check_f_in_parsed_discrete_boolean_expression f visit_leaf_of_discrete_boole
             (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr3)
     | Parsed_boolean_expression parsed_boolean_expression ->
         check_f_in_parsed_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants parsed_boolean_expression
-    | Parsed_Not parsed_boolean_expression -> (* OK *)
+    | Parsed_Not parsed_boolean_expression ->
         check_f_in_parsed_boolean_expression f visit_leaf_of_discrete_boolean_expr index_of_variables type_of_variables constants parsed_boolean_expression
 
 (*------------------------------------------------------------*)
@@ -566,7 +566,7 @@ and convert_discrete_bool_expr index_of_variables constants number_type = functi
 		)
     | Parsed_boolean_expression parsed_boolean_expression ->
         Boolean_expression (convert_bool_expr index_of_variables constants number_type parsed_boolean_expression)
-	| Parsed_Not e -> (* OK *)
+	| Parsed_Not e ->
 	    Not_bool (convert_bool_expr index_of_variables constants number_type e)
 
 and search_variable_of_discrete_arithmetic_expression index_of_variables constants expr =
@@ -3612,7 +3612,7 @@ and check_parsed_discrete_boolean_expression useful_parsing_model_information = 
     (** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
     | Parsed_boolean_expression parsed_boolean_expression ->
         check_parsed_boolean_expression useful_parsing_model_information parsed_boolean_expression
-    | Parsed_Not bool_expr -> (* OK *)
+    | Parsed_Not bool_expr ->
         check_parsed_boolean_expression useful_parsing_model_information bool_expr
 
 		

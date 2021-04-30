@@ -396,7 +396,7 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 		^ "]"
     | Boolean_expression boolean_expression ->
         "(" ^ (customized_string_of_boolean_expression customized_string variable_names boolean_expression) ^ ")"
-	| Not_bool b -> (* OK *)
+	| Not_bool b ->
 	    customized_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
     | DB_variable discrete_index -> variable_names discrete_index
     | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
@@ -654,7 +654,7 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
 		^ "}"
     | Boolean_expression expr ->
         customized_string_of_boolean_expression_for_jani customized_string variable_names expr
-	| Not_bool b -> (* OK *)
+	| Not_bool b ->
 	    "{\"op\": \""^ customized_string.boolean_string.not_operator ^"\"" ^ jani_separator ^ "\"exp\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b) ^ "}"
     | DB_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
     | DB_constant value -> DiscreteValue.string_of_value value

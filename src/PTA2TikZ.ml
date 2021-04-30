@@ -160,7 +160,7 @@ and string_of_discrete_boolean_expression variable_names = function
 		^ "]"
     | Boolean_expression boolean_expression ->
         "(" ^ string_of_boolean variable_names boolean_expression ^ ")"
-	| Not_bool b -> (* OK *)
+	| Not_bool b ->
 	    "\\neg (" ^ (string_of_boolean variable_names b) ^ ")"
     | DB_variable discrete_index -> variable_names discrete_index
     | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value

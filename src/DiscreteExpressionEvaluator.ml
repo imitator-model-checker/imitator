@@ -150,7 +150,7 @@ and check_discrete_boolean_expression discrete_valuation = function
             (eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_3)
     | Boolean_expression boolean_expression ->
         is_boolean_expression_satisfied discrete_valuation boolean_expression
-    | Not_bool b -> (* OK *)
+    | Not_bool b ->
         not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
 
 and eval_discrete_relop relop value_1 value_2 : bool =

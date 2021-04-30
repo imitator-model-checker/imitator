@@ -97,7 +97,7 @@ and convert_literal_types_of_parsed_discrete_boolean_expression parsed_model tar
         Parsed_arithmetic_expression (convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr)
     | Parsed_boolean_expression expr ->
         Parsed_boolean_expression (convert_literal_types_of_parsed_boolean_expression parsed_model target_type expr)
-    | Parsed_Not expr -> (* OK *)
+    | Parsed_Not expr ->
         Parsed_Not (convert_literal_types_of_parsed_boolean_expression parsed_model target_type expr)
     | Parsed_expression (l_expr, relop, r_expr) ->
         let convert_l_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type l_expr in
@@ -197,7 +197,7 @@ and get_parsed_boolean_expression_discrete_type parsed_model = function
 
 and get_parsed_discrete_boolean_expression_discrete_type parsed_model = function
     | Parsed_arithmetic_expression expr -> get_parsed_discrete_arithmetic_expression_discrete_type parsed_model expr
-    | Parsed_Not expr (* OK *)
+    | Parsed_Not expr
     | Parsed_boolean_expression expr -> get_parsed_boolean_expression_discrete_type parsed_model expr
     | Parsed_expression (l_expr, relop, r_expr) as parsed_discrete_boolean_expression ->
 
@@ -368,7 +368,7 @@ and get_parsed_discrete_boolean_expression_type parsed_model = function
         (* Return typed expression *)
         DiscreteExpressions.Expression_type_discrete_bool discrete_type
 
-    | Parsed_Not expr (* OK *)
+    | Parsed_Not expr
     | Parsed_boolean_expression expr -> get_parsed_boolean_expression_type parsed_model expr
 
     | Parsed_arithmetic_expression expr ->
