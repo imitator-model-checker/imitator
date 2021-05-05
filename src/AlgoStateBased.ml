@@ -9,7 +9,7 @@
  * defines post-related function, i.e., to compute the successor states of ONE
  * state. That (still) represents a large list of functions.
  *
- * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
+ * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia, Dylan Marinho
  * Created           : 2015/12/02
  * Last modified     : 2021/11/02
  *
@@ -232,7 +232,7 @@ let counter_gcmajor = create_hybrid_counter_and_register "StateBased.gcmajor" St
 let predecessors_of_location_gen (automaton_index : Automaton.automaton_index) (location_index : Automaton.location_index) (action_index_option : Automaton.action_index option) : (Automaton.location_index list) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
-	
+
 	(* Iterate on locations *)
 	let predecessors =
 	List.fold_left (fun current_predecessors_for_all_locations source_location_index ->
@@ -748,10 +748,10 @@ let apply_updates_assign_gen (time_direction: time_direction) (linear_constraint
 			if verbose_mode_greater Verbose_total then(
 				print_constraint linear_constraint;
 			);
-			
+
 (*			(* Case 3b: without existential quantification, just intersect with updates *)
 			) else (
-			
+
 				(* Create constraints X_i = linear_term *)
 				let inequalities = List.map (fun (clock_id, linear_term) ->
 					(* Build linear_term - clock_id = 0 *)
@@ -765,7 +765,7 @@ let apply_updates_assign_gen (time_direction: time_direction) (linear_constraint
 								] NumConst.zero)
 					) LinearConstraint.Op_eq
 				) updates in
-				
+
 				(* Create the constraint *)
 				let inequalities = LinearConstraint.make_pxd_constraint inequalities in
 
@@ -777,14 +777,14 @@ let apply_updates_assign_gen (time_direction: time_direction) (linear_constraint
 
 				(* Apply intersection *)
 				LinearConstraint.pxd_intersection_assign linear_constraint [inequalities];
-				
+
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
 					print_message Verbose_total ("\nConstraint after intersection with update constraint…");
 					print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names inequalities);
 				);
 
-			
+
 			)*)
 
 			(*** TODO: check what about discrete variables ?!! ***)
@@ -891,13 +891,13 @@ let generate_polyhedron_time_elapsing_pta time_direction variables_elapse variab
 		(* Create the inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
 	) variables_elapse in
-	
+
 	(* Create the inequalities `var = 0`, for var in variables_constant *)
 	let inequalities_constant = pxd_create_inequalities_constant variables_constant in
-	
+
 	(* Print some information *)
 	print_message Verbose_total ("Creating linear constraint for standard time elapsing…");
-	
+
 	(* Convert both sets of inequalities to a constraint *)
 	LinearConstraint.make_pxd_constraint (List.rev_append inequalities_elapse inequalities_constant)
 
@@ -917,9 +917,9 @@ let pxd_compute_time_polyhedron (direction : time_direction) (location : Locatio
 
 	(* Print some information *)
 	print_message Verbose_high ("Computing list of explicit flows…");
-	
+
 	let flows = ModelPrinter.compute_flows location in
-	
+
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
 		let list_of_flows = List.map (fun (clock_id, flow_value) -> (model.variable_names clock_id) ^ "' = " ^ (NumConst.string_of_numconst flow_value)) flows in
@@ -938,19 +938,19 @@ let pxd_compute_time_polyhedron (direction : time_direction) (location : Locatio
 		(* Create the inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
 	) flows in
-	
+
 	(* Create the inequalities `var = 0`, for var in variables_constant *)
 	let inequalities_constant = pxd_create_inequalities_constant model.parameters_and_discrete in
 
 	(* Convert both sets of inequalities to a constraint *)
 	let time_polyhedron = LinearConstraint.make_pxd_constraint (List.rev_append inequalities_flows inequalities_constant) in
-	
+
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("Creating linear constraint for time elapsing with explicit flows…");
 		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_polyhedron);
 	);
-	
+
 	(* Return result *)
 	time_polyhedron
 
@@ -961,9 +961,9 @@ let px_compute_time_polyhedron (direction : time_direction) (location : Location
 
 	(* Print some information *)
 	print_message Verbose_high ("Computing list of explicit flows…");
-	
+
 	let flows = ModelPrinter.compute_flows location in
-	
+
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
 		let list_of_flows = List.map (fun (clock_id, flow_value) -> (model.variable_names clock_id) ^ "' = " ^ (NumConst.string_of_numconst flow_value)) flows in
@@ -982,19 +982,19 @@ let px_compute_time_polyhedron (direction : time_direction) (location : Location
 		(* Create the inequality *)
 		LinearConstraint.make_px_linear_inequality linear_term LinearConstraint.Op_eq
 	) flows in
-	
+
 	(* Create the inequalities `var = 0`, for var in variables_constant *)
 	let inequalities_constant = px_create_inequalities_constant model.parameters in
 
 	(* Convert both sets of inequalities to a constraint *)
 	let time_polyhedron = LinearConstraint.make_px_constraint (List.rev_append inequalities_flows inequalities_constant) in
-	
+
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("Creating linear constraint for time elapsing with explicit flows…");
 		print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names time_polyhedron);
 	);
-	
+
 	(* Return result *)
 	time_polyhedron
 
@@ -1023,22 +1023,22 @@ let apply_time_shift (direction : time_direction) (location : Location.global_lo
 				| Some polyedron -> polyedron
 				| None -> raise (InternalError "The static polyhedron for time elapsing should have been computed in function `apply_time_shift`.")
 			in
-			
+
 			(* Apply time elapsing *)
 			LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint;
-		
-		)else(			
+
+		)else(
 			(* Otherwise, compute dynamically the list of clocks with their respective flow *)
-			
+
 			(* Create the time polyhedron depending on the clocks *)
 			let time_polyhedron = pxd_compute_time_polyhedron direction location in
-			
+
 			(* Perform time elapsing *)
 			print_message Verbose_high ("Now applying time " ^ (string_of_time_direction direction) ^ "…");
-			
+
 			(* Apply time elapsing *)
 			LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint;
-			
+
 			(* Print some information *)
 			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
@@ -1078,7 +1078,7 @@ let apply_time_elapsing_to_concrete_valuation (location : Location.global_locati
 	else(
 		(* First, recreate a data structure *)
 		let valuation_array = Array.make (model.nb_parameters + model.nb_clocks) NumConst.zero in
-		
+
 		(* Copy parameters (unchanged) *)
 		(*** WARNING: depends on the internal representation of IMITATOR (first parameters, then clocks) ***)
 		for variable_index = 0 to model.nb_parameters - 1 do
@@ -1087,7 +1087,7 @@ let apply_time_elapsing_to_concrete_valuation (location : Location.global_locati
 
 		(* Compute the set of stopped and elapsing clocks in this location *)
 		let stopped_clocks, _ = compute_stopwatches location in
-		
+
 		(* Iterate on clocks *)
 		for variable_index = model.nb_parameters to model.nb_parameters + model.nb_clocks - 1 do
 			if List.mem variable_index stopped_clocks then(
@@ -1098,15 +1098,15 @@ let apply_time_elapsing_to_concrete_valuation (location : Location.global_locati
 				valuation_array.(variable_index) <- NumConst.add (px_valuation variable_index) time_elapsing;
 			);
 		done;
-		
+
 		(* Return a functional view *)
 		(fun variable_index -> valuation_array.(variable_index))
 	)
 
 
 
-	
-	
+
+
 (*------------------------------------------------------------*)
 (** Compute the initial state with the initial invariants and time elapsing *)
 (*------------------------------------------------------------*)
@@ -1220,7 +1220,7 @@ let compute_initial_state_or_abort () : state =
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
-	
+
 	(*** QUITE A HACK! Strange to have it here ***)
 	(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
 	if not model.has_non_1rate_clocks then(
@@ -1228,7 +1228,7 @@ let compute_initial_state_or_abort () : state =
 		let variables_constant		= model.parameters_and_discrete in
 		let time_el_polyhedron		= generate_polyhedron_time_elapsing_pta Forward variables_elapse variables_constant in
 		let time_pa_polyhedron		= generate_polyhedron_time_elapsing_pta Backward variables_elapse variables_constant in
-		
+
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
 			print_message Verbose_high "Computed the static time elapsing polyhedron:";
@@ -1238,11 +1238,11 @@ let compute_initial_state_or_abort () : state =
 			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
 			print_message Verbose_high "";
 		);
-		
+
 		(* Save them *)
 		time_elapsing_polyhedron	:= Some time_el_polyhedron;
 		time_past_polyhedron 		:= Some time_pa_polyhedron;
-	
+
 	);
 
 
@@ -1429,14 +1429,14 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 	let guards_and_updates = List.map (fun transition_index ->
 		(* Get the automaton concerned *)
 		let automaton_index = model.automaton_of_transition transition_index in
-		
+
 		(* Access the transition and get the components *)
 		let transition = model.transitions_description transition_index in
 		let guard, updates, target_index = transition.guard, transition.updates, transition.target in
 
 		(** Collecting the updates by evaluating the conditions, if there is any *)
 		let clock_updates, discrete_updates = get_updates source_location updates in
-      
+
 		(* Update discrete *)
 		List.iter (fun (discrete_variable_access, global_expression) ->
 
@@ -1492,10 +1492,10 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
         (guard, clock_updates)
 
 	) combined_transition in
-	
+
 	(* Split the list of guards and updates *)
 	let guards, clock_updates = List.split guards_and_updates in
-	
+
 	(* Compute pairs to update the discrete variables *)
 	let updated_discrete_pairs = ref [] in
 	Hashtbl.iter (fun discrete_index discrete_value ->
@@ -1838,7 +1838,7 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 
 		(* Return *)
 		None
-		
+
 	(* Else: the discrete part of guards is satisfied *)
 	)else(
 
@@ -1871,7 +1871,7 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 
 				(* Print some information *)
 				print_message Verbose_high ("\nThis constraint is not satisfiable ('None').");
-				
+
 				(* Return *)
 				None
 
@@ -1882,7 +1882,7 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 
 					(* Print some information *)
 					print_message Verbose_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
-					
+
 					(* Return *)
 					None
 				) else (
@@ -1904,13 +1904,13 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 (* Get the n-th state_index of a symbolic run; raises InternalError if not found *)
 let nth_state_index_of_symbolic_run (symbolic_run : StateSpace.symbolic_run) (n : int) : state_index =
 	let nb_states = List.length symbolic_run.symbolic_steps in
-	
+
 	(* Case n belonging to the states *)
 	if n < nb_states then (List.nth symbolic_run.symbolic_steps n).source
-	
+
 	(* Case n = nb + 1 => final state *)
 	else if n = nb_states then symbolic_run.final_state
-	
+
 	(* Otherwise: oops *)
 	else raise (InternalError ("Trying to access the " ^ (string_of_int n) ^ "-th state of a symbolic run of length " ^ (string_of_int nb_states) ^ "."))
 
@@ -2085,25 +2085,25 @@ let compute_admissible_valuations_after_transition
 let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) (concrete_target_px_valuation : LinearConstraint.px_valuation ) : StateSpace.concrete_run =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
-	
+
 	(*** BEGIN CODE THAT WON'T WORK DUE TO THE DIMENSION HANDLING IN LINEAR.CONSTRAINT ***)
 	(*
 	(* 1. we backup the model *)
 	let original_model = model in
-	
+
 	(* 2. We rebuild a model with one more clock *)
 	(*** HACK (quite!) ***)
 	let extra_clock = model.nb_variables in
-	
-	
+
+
 	let px_clocks_non_negative = LinearConstraint.px_constraint_of_nonnegative_variables (original_model.clocks @ [extra_clock]) in
-	
+
 	(* Add >= 0 to the initial constraint *)
 	let initial_constraint = LinearConstraint.px_intersection [original_model.initial_constraint ; TODO ] in
-	
+
 	let px_clocks_non_negative_and_initial_p_constraint = LinearConstraint.px_intersection [px_clocks_non_negative; (LinearConstraint.px_of_p_constraint original_model.initial_p_constraint)
-	
-	
+
+
 	let model_with_one_extra_clock =
 	{
 		(* Cardinality *)
@@ -2215,14 +2215,14 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		optimized_parameter = original_model.optimization;
 	}
 	in
-	
+
 	*)
 	(*** END CODE THAT WON'T WORK DUE TO THE DIMENSION HANDLING IN LINEAR.CONSTRAINT ***)
-	
+
 	(* Get the final state *)
 	let target_state_index = symbolic_run.final_state in
 	let target_state = StateSpace.get_state state_space target_state_index in
-	
+
 	(* Reminder: symbolic_run contains n steps, followed by a final state (called n+1 in the following) *)
 
 
@@ -2244,21 +2244,21 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	if verbose_mode_greater Verbose_medium then(
 		print_message Verbose_medium ("Location n+1: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_n_plus_1));
 	);
-	
+
 	(* Get the constraint at n+1 *)
 	let z_n_plus_1 = target_state.px_constraint in
 	(* Print some information *)
 	if verbose_mode_greater Verbose_medium then(
 		print_message Verbose_medium ("Z n+1: " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
 	);
-	
+
 	(* Get the "final" locations at n+1, i.e., the conversion into a polyhedron of the target point (after time elapsing) *)
 	let z_n_plus_1_final : LinearConstraint.px_linear_constraint = LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , concrete_target_px_valuation variable_index) model.parameters_and_clocks) in
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("Starting from target valuations after time elapsing:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1_final) ^ "");
 	);
-	
+
 
 	(* Step 1: compute the set of admissible initial valuations at n+1 *)
 
@@ -2274,14 +2274,14 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		model.initial_constraint
 	)else(
 	(* Case of a non-empty run: the initial admissible valuations are the predecessor constraint (location n) intersected with the guard from n to n+1, to which we apply updates from n to n+1, and then intersected with the constraint at location n+1 (mainly to have the invariant) *)
-	
+
 		let symbolic_step_n : StateSpace.symbolic_step 				= List.nth symbolic_run.symbolic_steps (List.length symbolic_run.symbolic_steps - 1) in
 		let transition_n_n_plus_1 : StateSpace.combined_transition	= symbolic_step_n.transition in
 		let state_n			: State.state							= StateSpace.get_state state_space symbolic_step_n.source in
 
 		(* Call dedicated function *)
 		let admissible_initial_valuations : LinearConstraint.px_linear_constraint = compute_admissible_valuations_after_transition state_n transition_n_n_plus_1 target_state in
-		
+
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("Intersected state n+1 with Z_n, and its incoming guard, and updated variables to n+1:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names admissible_initial_valuations) ^ "");
@@ -2297,7 +2297,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		print_message Verbose_high ("Admissible valuations:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names admissible_initial_valuations) ^ "");
 	);
 
-	
+
 	(* Step 2: cancelling time elapsing, i.e., compute continuous predecessors *)
 
 	let valuations_n_plus_1_before_time_elapsing : LinearConstraint.px_linear_constraint = continuous_predecessors location_n_plus_1 admissible_initial_valuations z_n_plus_1 z_n_plus_1_final in
@@ -2314,10 +2314,10 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	(*------------------------------------------------------------*)
 
 	(* To make things more human-friendly, we change the initial valuation only if it did not belong to the admissible "initial points" before time elapsing *)
-	
+
 	(* Print some information *)
 	print_message Verbose_high ("Trying to make the valuation more friendly…");
-	
+
 	let concrete_target_px_valuation_before_time_elapsing =
 		let recomputation_needed =
 		(* If some non-1 flow clocks: might be wrong the keep the valuation, so recompute it (2021/03/11) *)
@@ -2339,7 +2339,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			true
 			) else false
 		) in
-		
+
 		if recomputation_needed then(
 			(* Re-choose a valuation in this constraint *)
 			LinearConstraint.px_exhibit_point valuations_n_plus_1_before_time_elapsing
@@ -2351,56 +2351,56 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			concrete_target_px_valuation
 		)
 	in
-	
+
 	(* Print some information *)
 	if verbose_mode_greater Verbose_low then(
 		print_message Verbose_low ("New final valuation of the symbolic run before time elapsing:\n " ^ (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation_before_time_elapsing) ^ "");
 	);
-	
+
 
 	(*------------------------------------------------------------*)
 	(* Reconstruct concrete run *)
 	(*------------------------------------------------------------*)
 
 	(* We reconstruct a concrete run, for which we need absolute time *)
-	
+
 
 	(* Now construct valuations for the whole run, i.e. pair (time elapsed, valuation) *)
-	
+
 	print_message Verbose_low "\nBuilding concrete run:";
-	
+
 	(*** TODO: change this system one day, as it costs us one more clock in the ENTIRE analysis, although it would only be used in the run regeneration ***)
-	
+
 	(* Get the absolute time clock *)
 	let absolute_time_clock = match model.global_time_clock with
 		| Some clock_index -> clock_index
 		| None -> raise (InternalError ("No absolute time clock is defined in the model, which is (so far) necessary to reconstruct the counterexample."))
 	in
-	
+
 
 	(* Iterate starting from s_n and going backward *)
-	
+
 	(* Reminder: valuation_n_plus_1 is the initial valuation *after* the transition from the current state n *)
 	let valuation_n_plus_1 : LinearConstraint.px_valuation ref = ref concrete_target_px_valuation_before_time_elapsing in
 
 	(* List to maintain the valuations for the concrete run *)
 	let te_and_valuations = ref [] in
-	
+
 
 	(*------------------------------------------------------------*)
 	(* For n to length-1 to 0 *)
 	(*------------------------------------------------------------*)
 	for n = List.length symbolic_run.symbolic_steps - 1 downto 0 do
-	
+
 		print_message Verbose_low ("\n\nComputing concrete valuation in symbolic run at position " ^ (string_of_int n) ^ "…");
-		
+
 		(* Get the values *)
 
 		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps n in
-		
+
 		(* Get state n *)
 		let state_n : State.state = StateSpace.get_state state_space symbolic_step_n.source in
-		
+
 		(* Get the location and zone for state_n *)
 		let location_n	: Location.global_location				= state_n.global_location in
 		let z_n			: LinearConstraint.px_linear_constraint	= state_n.px_constraint in
@@ -2409,7 +2409,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(* Zn+1 is the *initial* valuation at n+1 (i.e., before time elapsing) *)
 
 		let z_n_plus_1 : LinearConstraint.px_linear_constraint = LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , !valuation_n_plus_1 variable_index) model.parameters_and_clocks) in
-		
+
 
 		(* Step 1: apply discrete predecessor from n+1 to n, i.e., compute the valuations just before the discrete step *)
 		let valuations_n_after_time_elapsing : LinearConstraint.px_linear_constraint = discrete_predecessors state_n symbolic_step_n.transition z_n_plus_1 in
@@ -2445,12 +2445,12 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		if verbose_mode_greater Verbose_high then(
 			print_message Verbose_high ("Admissible valuations:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names admissible_initial_valuations_at_n) ^ "");
 		);
-		
+
 
 		(* Step 3: apply continuous predecessor at state n *)
-		
+
 		let valuations_n_before_time_elapsing = continuous_predecessors location_n admissible_initial_valuations_at_n z_n valuations_n_after_time_elapsing in
-		
+
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
 			print_message Verbose_high ("Valuations before time elapsing:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names valuations_n_before_time_elapsing) ^ "");
@@ -2466,20 +2466,20 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 				raise (InternalError "Empty constraint found when picking a point in the predecessors of n+1!")
 			)
 		in
-		
+
 		(* Now compute the time spent between the previous and the new valuation *)
 
 		(* Compute the time elapsing *)
 		let time_elapsed_n = NumConst.sub (!valuation_n_plus_1 absolute_time_clock) (valuation_n absolute_time_clock) in
-		
+
 		(*** DEBUG: test that it is indeed a good valuation, belonging to n! ***)
 		(*** TODO ***)
-		
+
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
 			print_message Verbose_medium ("Valuation " ^ (string_of_int n) ^ " just computed:\n" ^ (ModelPrinter.string_of_px_valuation model valuation_n));
 		);
-		
+
 		(*** NOTE: we need a px AND d valuation, therefore a bit a hack here ***)
 		let pxd_valuation = fun variable_index ->
 			match model.type_of_variables variable_index with
@@ -2487,23 +2487,23 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			| DiscreteValue.Var_type_parameter -> valuation_n variable_index
 			| DiscreteValue.Var_type_discrete _ -> Location.get_discrete_rational_value location_n variable_index (* TODO benjamin : check with étienne, what is it ? is it computing of linear part ? *)
 		in
-		
+
 		(* Add the valuation to the list, and replace n+1 with n *)
 		te_and_valuations := (time_elapsed_n , symbolic_step_n.transition, location_n, pxd_valuation) :: !te_and_valuations;
 		valuation_n_plus_1 := valuation_n;
-		
+
 	(*------------------------------------------------------------*)
 	done;
 	(*------------------------------------------------------------*)
 
-	
+
 	(* Print some information *)
 	if verbose_mode_greater Verbose_medium then(
 		(* Print the list*)
-	
+
 		(* Dummy counter for printing *)
 		let i = ref 0 in
-		List.iter (fun (time_elapsed, _, _, valuation) -> 
+		List.iter (fun (time_elapsed, _, _, valuation) ->
 			incr i;
 			print_message Verbose_low ("Valuation " ^ (string_of_int !i) ^ ":");
 			print_message Verbose_low (ModelPrinter.string_of_px_valuation model valuation);
@@ -2512,8 +2512,8 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(* Print last one *)
 		print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation_before_time_elapsing);
 	);
-	
-	
+
+
 	(* We now reformat the !te_and_valuations into a proper run *)
 	(*** TODO: it might have been possible to do it from the first construction? ***)
 
@@ -2524,13 +2524,13 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(* If the list of steps is empty: pick the final state *)
 		| [] -> symbolic_run.final_state
 	in
-	
+
 	(* Build the initial state of the run *)
 	let run_initial_state : State.concrete_state = {
 		(* The global location is that of the symbolic initial state *)
 		global_location = (StateSpace.get_state state_space initial_state_index).global_location;
 		(* The discrete clock+discrete valuation is that of the concrete initial state computed above *)
-		px_valuation = 
+		px_valuation =
 			(* Case empty list: take from final state *)
 			if !te_and_valuations = [] then concrete_target_px_valuation_before_time_elapsing
 			else(
@@ -2551,12 +2551,12 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			transition	= combined_transition_i;
 			target		= {global_location = target_location; px_valuation = target_valuation};
 		} in
-		
+
 		(* Add *)
 		reversed_run_steps := concrete_step :: !reversed_run_steps
 	done;
-	
-	let run_steps = 
+
+	let run_steps =
 		(* Case empty list of steps *)
 		if !te_and_valuations = [] then []
 		else(
@@ -2567,12 +2567,12 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 				transition	= combined_transition_n;
 				target		= {global_location = target_state.global_location; px_valuation = concrete_target_px_valuation_before_time_elapsing};
 			} in
-			
+
 			(* Put the list in right order *)
 			List.rev (last_step :: !reversed_run_steps)
 		)
 	in
-	
+
 	(* (Re)create the PVal *)
 	let pval = PVal.pval_from_valuation_function concrete_target_px_valuation_before_time_elapsing in
 
@@ -2582,7 +2582,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		initial_state	= run_initial_state;
 		steps			= run_steps;
 	}
-	
+
 
 
 (************************************************************)
@@ -2591,55 +2591,55 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 let reconstruct_counterexample state_space (target_state_index : State.state_index) : StateSpace.concrete_run =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
-	
+
 	(* Print some information *)
 	print_message Verbose_medium "Counterexample found: reconstructing counterexample…";
-	
+
 	(* First build the predecessors table *)
 	let predecessors = StateSpace.compute_predecessors_with_combined_transitions state_space in
-	
+
 	(* Print some information *)
 	print_message Verbose_medium "Predecessor table built";
 
 	(* Also retrieve the initial state *)
 	let initial_state_index = StateSpace.get_initial_state_index state_space in
-	
+
 	(* Get the symbolic run, i.e., a list of a pair of a symbolic state *followed* by a combined transition *)
 	let symbolic_run : StateSpace.symbolic_run = StateSpace.backward_symbolic_run state_space target_state_index [] (* temporary *) initial_state_index (Some predecessors) in
-	
+
 	(* Print some information *)
 	if verbose_mode_greater Verbose_low then (
 		print_message Verbose_low "\nSymbolic run reconstructed:";
-		
+
 		(* Debug print *)
 		print_message Verbose_low (ModelPrinter.debug_string_of_symbolic_run model state_space symbolic_run);
 	);
-	
+
 	(* Get the final state *)
 	let target_state = StateSpace.get_state state_space target_state_index in
 
 	(* Exhibit a concrete clock+parameter valuation in the final state *)
 	let concrete_target_px_valuation : LinearConstraint.px_valuation = LinearConstraint.px_exhibit_point target_state.px_constraint in
-	
+
 	(* Print it *)
 	if verbose_mode_greater Verbose_low then(
 		print_message Verbose_low "Example of px-valuation:";
 		print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation);
 	);
-	
+
 	(* Exhibit a concrete parameter valuation in the final state *)
 (*	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
 	let concrete_p_valuation = LinearConstraint.p_exhibit_point p_constraint in*)
-	
-	
+
+
 	(* Print it *)
 	if verbose_mode_greater Verbose_standard then(
 		let pval = PVal.pval_from_valuation_function concrete_target_px_valuation in
-		
+
 		print_message Verbose_standard "Example of parameter valuation:";
 		print_message Verbose_standard (ModelPrinter.string_of_pval model pval);
 	);
-	
+
 	(* Exhibit a concrete run from the symbolic run *)
 	concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation
 
@@ -2733,7 +2733,7 @@ class waiting_list =
 	(* Class variables *)
 	(************************************************************)
 	val mutable waiting_list = []
-	
+
 
 	(************************************************************)
 	(* Class methods *)
@@ -2803,7 +2803,7 @@ class virtual algoStateBased =
 	(* Depth in the explored state space *)
 	(*** NOTE: private ***)
 	val mutable bfs_current_depth = 0
-	
+
 	(* The current new state indexes *)
 	val mutable new_states_indexes : State.state_index list = []
 
@@ -2811,28 +2811,27 @@ class virtual algoStateBased =
 	(*** NOTE: public only for AlgoEFoptQueue ***)
 	(*** TODO: merge with termination_status… ***)
 	val mutable limit_reached = Keep_going
-	
+
 	(* Variable to denote whether the analysis may continue, or whether the analysis should terminate; useful to terminate, e.g., when a witness is found (at least for BFS algorithms) *)
 	val mutable algorithm_keep_going = true
-	
-	
+
+
 	(* Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
 	val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
-		
+
 	(* Mini cache system: keep in memory the current p-constraint to save computation time (for selected algorithms such as EFsynth) *)
 	(*** WARNING: a bit dangerous, as its handling is not very very strictly controlled ***)
 	val mutable cached_p_constraint : LinearConstraint.p_linear_constraint option = None
-	
 
-	
+
 	(*** NOTE: only used for exemplification purpose ***)
 	(* Positive examples spotted (positive examples: concrete runs to the target state) *)
 	val mutable positive_examples : Result.valuation_and_concrete_run list = []
-	
+
 	(*** NOTE: only used for exemplification purpose ***)
 	(* Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
 	val mutable negative_examples : Result.valuation_and_concrete_run list = []
-	
+
 	(*** NOTE: only used for exemplification purpose ***)
 	val nb_POSITIVE_EXAMPLES_MAX : int = 6
 	val nb_NEGATIVE_EXAMPLES_MAX : int = 6
@@ -2862,14 +2861,14 @@ class virtual algoStateBased =
 	method initialize_variables =
 		statespace_nature <- StateSpace.Unknown;
 		unexplored_successors <- UnexSucc_undef;
-		
+
 (*		(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
 		if not model.has_non_1rate_clocks then(
 			let variables_elapse	= model.clocks in
 			let variables_constant	= model.parameters_and_discrete in
 			let time_el_polyhedron		= generate_polyhedron_time_elapsing_pta Forward variables_elapse variables_constant in
 			let time_pa_polyhedron		= generate_polyhedron_time_elapsing_pta Backward variables_elapse variables_constant in
-			
+
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
 				print_message Verbose_high "Computed the static time elapsing polyhedron:";
@@ -2879,11 +2878,11 @@ class virtual algoStateBased =
 				print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
 				print_message Verbose_high "";
 			);
-			
+
 			(* Save them *)
 			time_elapsing_polyhedron	:= Some time_el_polyhedron;
 			time_past_polyhedron 		:= Some time_pa_polyhedron;
-		
+
 		);*)
 
 		positive_examples <- [];
@@ -2909,7 +2908,7 @@ class virtual algoStateBased =
 		(* Statistics *)
 		counter_compute_p_constraint_with_cache#increment;
 		counter_compute_p_constraint_with_cache#start;
-		
+
 		let result =
 		match cached_p_constraint with
 		(* Cache empty: *)
@@ -2937,13 +2936,13 @@ class virtual algoStateBased =
 			(* Return the value in cache *)
 			p_constraint
 		in
-		
+
 		(* Statistics *)
 		counter_compute_p_constraint_with_cache#stop;
 
 		result
 
-	
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Reset the mini-cache *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2964,13 +2963,13 @@ class virtual algoStateBased =
 
 		(*** NOTE: here, we use the mini-cache system ***)
 		let p_constraint = self#compute_p_constraint_with_minicache px_linear_constraint in
-		
+
 		(* Print some information *)
 		self#print_algo_message Verbose_medium "Checking whether the new state is included into known synthesized valuations…";
 		if verbose_mode_greater Verbose_high then(
 			self#print_algo_message Verbose_high "\nNew constraint:";
 			print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-			
+
 			self#print_algo_message Verbose_high "\nCurrent synthesized constraint:";
 			print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
 		);
@@ -2979,7 +2978,7 @@ class virtual algoStateBased =
 		if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then(
 			(* Statistics *)
 			counter_cut_branch#increment;
-			
+
 			self#print_algo_message Verbose_medium "Yes! It is included.";
 			true
 		)else(
@@ -2994,7 +2993,7 @@ class virtual algoStateBased =
 	method update_statespace_nature (state : state) =
 		if Input.has_property() then(
 			let property = Input.get_property() in
-			
+
 			match property.property with
 				(* Reachability *)
 				| EF state_predicate
@@ -3010,20 +3009,20 @@ class virtual algoStateBased =
 					if State.match_state_predicate model.is_accepting state_predicate state then(
 						statespace_nature <- StateSpace.Bad;
 					);
-	
-				
+
+
 				| Cycle_through_generalized _
 
 				| NZ_Cycle
-				
+
 				| Deadlock_Freeness
-				
+
 				(* Inverse method *)
 				| IM _
 				| ConvexIM _
 				| IMK _
 				| IMunion _
-				
+
 				(* Cartography *)
 				| Cover_cartography _
 				| Learning_cartography _
@@ -3057,7 +3056,7 @@ class virtual algoStateBased =
 		(* Print some information *)
 		let nb_positive_examples = List.length positive_examples + 1 in
 		self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int nb_positive_examples) ^ " found!");
-		
+
 		(*------------------------------------------------------------*)
 		(* Call generic function *)
 		(*------------------------------------------------------------*)
@@ -3066,18 +3065,18 @@ class virtual algoStateBased =
 		(*------------------------------------------------------------*)
 		(* Update the lists *)
 		(*------------------------------------------------------------*)
-		
+
 		(* Update the positive counterexample processed *)
 		positive_examples <- positive_valuation_and_concrete_run :: positive_examples;
 
 		begin
-		match negative_valuation_and_concrete_run_option_otherpval with 
+		match negative_valuation_and_concrete_run_option_otherpval with
 		| None ->
 			print_message Verbose_standard "\n\nFound no parameter valuation allowing a negative counterexample for this run";
 		| Some negative_valuation_and_concrete_run ->
 				negative_examples <- negative_valuation_and_concrete_run :: negative_examples;
 		end;
-		
+
 		begin
 		match negative_valuation_and_concrete_run_option_samepval with
 		| None ->
@@ -3086,18 +3085,18 @@ class virtual algoStateBased =
 			(* Update the counterexamples processed *)
 			negative_examples <- valuation_and_concrete_run :: negative_examples;
 		end;
-		
+
 		(*------------------------------------------------------------*)
 		(* Check termination *)
 		(*------------------------------------------------------------*)
-		
+
 		(* If maximum number of counterexamples processed: stop *)
 		if List.length positive_examples >= nb_POSITIVE_EXAMPLES_MAX then(
 			(* Update termination status *)
 			self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int (List.length positive_examples)) ^ " is the maximum number sought. Terminating…");
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
 			termination_status <- Some Target_found;
-		
+
 			raise TerminateAnalysis;
 		)else(
 			(* Add the target state to the set of states to explore (a bit a hack); indeed, for exemplification, we may be interested in exploring beyond bad states, as we may find more! *)
@@ -3116,9 +3115,9 @@ class virtual algoStateBased =
 	(*** TODO: return the list of actually added states ***)
 	method virtual add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
 
-	
-	
-	
+
+
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
@@ -3239,7 +3238,7 @@ class virtual algoStateBased =
 			(* Loop on all the transition combinations *)
 			let more_combinations = ref legal_transitions_exist in
 			let debug_i = ref 0 in
-			
+
 			(* ------------------------------------------------------------ *)
 			while !more_combinations do
 			(* ------------------------------------------------------------ *)
@@ -3272,7 +3271,7 @@ class virtual algoStateBased =
 
 				(* Statistics *)
 				tcounter_compute_location_guards_discrete#start;
-				
+
 				(* Create the combined transition *)
 				let combined_transition = Array.to_list (Array.mapi (fun local_automaton_index real_automaton_index ->
 					(* Get the current location for this automaton *)
@@ -3292,7 +3291,7 @@ class virtual algoStateBased =
 				match post_from_one_state_via_one_transition source_location (recompute_source_constraint ()) discrete_constr combined_transition with
 				(* No result: constraint unsatisfiable: do nothing *)
 				| None -> ()
-				
+
 				(* Some state with its (satisfiable) constraint: *)
 				| Some new_state ->
 					(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
@@ -3347,7 +3346,7 @@ class virtual algoStateBased =
 
 		(* Print some information *)
 (*  		print_message Verbose_total ("About to update the state space…");  *)
- 		
+
 		(* Update state space *)
 		StateSpace.add_transition state_space (source_state_index, combined_transition, target_state_index);
 
@@ -3375,7 +3374,7 @@ class virtual algoStateBased =
 		()
 
 
-	
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create an arbitrary impossible concrete run from a symbolic run *)
 	(* The debug_offset variable is used for pretty-printing; it represents the offset between the actual position in the original list of symbolic steps, and the sublist provided here in symbolic_steps *)
@@ -3384,48 +3383,48 @@ class virtual algoStateBased =
 	method private impossible_concrete_steps_of_symbolic_steps (start_valuation : LinearConstraint.px_valuation) (debug_offset : int) (symbolic_steps : symbolic_step list) : impossible_concrete_step list =
 		(* Starting point: the last known existing valuation *)
 		let current_valuation = ref start_valuation in
-		
+
 		(* For debug purpose *)
 		let current_position = ref 0 in
-		
+
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
 			print_message Verbose_high ("Starting from valuation for position " ^ (string_of_int (!current_position + debug_offset)) ^ ":");
 			print_message Verbose_high (ModelPrinter.string_of_px_valuation model !current_valuation);
 		);
-		
+
 		List.map (fun symbolic_step ->
-		
+
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
 				print_message Verbose_high ("Valuation for position " ^ (string_of_int (!current_position + debug_offset)) ^ " before time elapsing:");
 				print_message Verbose_high (ModelPrinter.string_of_px_valuation model !current_valuation);
 			);
-			
+
 			(* Idea: keep everything, including the actions and discrete values, but increment (arbitrarily!) the time by 1 at each step *)
-			
+
 			(* Arbitrarily choose 1 *)
 			let chosen_time_elapsing = NumConst.one in
-			
+
 			(* Get the location *)
 			let current_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
-			
+
 			(* Apply time elapsing (let us not care about resets, because this transition does not exist; we could care about resets to be closer to the original automaton BUT the guards/invariants could not be satisfied, precisely because this parameter valuation does not allow to take this run!) *)
 			(*** NOTE: we still care about urgency and stopwatches though ***)
 			let valuation_after_elapsing : LinearConstraint.px_valuation = apply_time_elapsing_to_concrete_valuation current_location chosen_time_elapsing !current_valuation in
-			
+
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
 				print_message Verbose_medium ("Valuation for position " ^ (string_of_int (!current_position + debug_offset)) ^ " after time elapsing:");
 				print_message Verbose_medium (ModelPrinter.string_of_px_valuation model valuation_after_elapsing);
 			);
-			
+
 			(* Update the valuation for next step *)
 			current_valuation := valuation_after_elapsing;
-			
+
 			(* Update the position *)
 			incr current_position;
-			
+
 			(* Return the impossible_concrete_step *)
 			{
 				(* First let time elapse: arbitrarily take one *)
@@ -3447,28 +3446,28 @@ class virtual algoStateBased =
 	(* Create a positive concrete example *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private exhibit_positive_counterexample (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) (target_state : State.state) : Result.valuation_and_concrete_run =
-	
+
 		(* Exhibit a concrete clock+parameter valuation in the final state *)
 		let concrete_target_px_valuation : (Automaton.variable_index -> NumConst.t) = LinearConstraint.px_exhibit_point target_state.px_constraint in
-		
+
 		(* Print it *)
 		if verbose_mode_greater Verbose_low then(
 			print_message Verbose_low "Example of px-valuation:";
 			print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation);
 		);
-		
+
 		(* Convert to PVal *)
 		let pval_positive = PVal.pval_from_valuation_function concrete_target_px_valuation in
-		
+
 		(* Print some information *)
 		if verbose_mode_greater Verbose_standard then(
 			print_message Verbose_standard "Example of positive parameter valuation:";
 			print_message Verbose_standard (ModelPrinter.string_of_pval model pval_positive);
 		);
-		
+
 		(* Exhibit a concrete run from the symbolic run *)
 		let concrete_run = concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation in
-		
+
 		(* Project onto the parameters *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
 
@@ -3481,7 +3480,7 @@ class virtual algoStateBased =
 			(* The concrete run *)
 			concrete_run	= Result.Concrete_run concrete_run;
 		} in
-		
+
 		(* Return result *)
 		valuation_and_concrete_run
 
@@ -3495,7 +3494,7 @@ class virtual algoStateBased =
 		(* Retrieve global clock index *)
 		let global_time_clock = match model.global_time_clock with
 			| None -> raise (InternalError ("No absolute time clock detected in " ^ self#algorithm_name ^ " although this should have been checked before."));
-			
+
 			| Some global_time_clock -> global_time_clock
 		in
 
@@ -3506,7 +3505,7 @@ class virtual algoStateBased =
 		(* Part 2a: negative counterexample for a different parameter valuation*)
 		(*------------------------------------------------------------*)
 		(* Part 2.a: try to find a parameter valuation NOT going to the final state using this run *)
-		
+
 		(* Print some information *)
 		print_message Verbose_low "\n\n*** Looking for a negative counterexample using a different parameter valuation (case of deterministic system without silent actions)";
 
@@ -3516,17 +3515,17 @@ class virtual algoStateBased =
 		let i = ref ((List.length symbolic_run.symbolic_steps) - 1) in
 		(* Define the next valuation along the run, and reason backward *)
 		let pconstraint_i_plus_one : LinearConstraint.p_linear_constraint ref = ref target_p_constraint in
-		
+
 		(* Print some information *)
 		print_message Verbose_medium ("\nLooking for larger parameter valuations by exploring backwards from position " ^ (string_of_int !i) ^ "…");
-		
+
 		(* To store the counterexample when found *)
 		let negative_valuation_and_concrete_run_option_otherpval = ref None in
-		
+
 		while !i >= 0 && (!negative_valuation_and_concrete_run_option_otherpval = None) do
 			(* Print some information *)
 			print_message Verbose_high ("\nConsidering position " ^ (string_of_int !i) ^ "");
-			
+
 			(* Get the state index at position i *)
 			let state_index_i = nth_state_index_of_symbolic_run symbolic_run !i in
 			(* Get the p-constraint at position i *)
@@ -3534,7 +3533,7 @@ class virtual algoStateBased =
 			let pconstraint_i : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state_i.px_constraint in
 			(* Get the location at position i *)
 			let global_location_i = state_i.global_location in
-			
+
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
 				print_message Verbose_high ("\nAbout to compare parameter constraint at position " ^ (string_of_int !i) ^ ":");
@@ -3542,38 +3541,38 @@ class virtual algoStateBased =
 				print_message Verbose_high ("\n…with parameter constraint at position " ^ (string_of_int (!i+1)) ^ ":");
 				print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names (!pconstraint_i_plus_one));
 			);
-			
+
 			(* Check if difference is non-empty *)
 			(*** NOTE: we rather use p_is_le, even though we have to then compute the difference, if indeed smaller, for (presumably) efficiency reasons ***)
 			if LinearConstraint.p_is_le !pconstraint_i_plus_one pconstraint_i then(
 				(* Print some information *)
 				print_message Verbose_medium ("\nFound a shrinking of parameter constraint between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ":");
-				
+
 				(* Convert to a nnconvex_constraint *)
 				let difference = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint pconstraint_i in
 				(* Compute the difference K_i \ K_i+1 *)
 				LinearConstraint.p_nnconvex_difference_assign difference (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint !pconstraint_i_plus_one);
-				
+
 				(* Print some information *)
 				if verbose_mode_greater Verbose_high then(
 					print_message Verbose_high ("\nParameter valuations blocked between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ":");
 					print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names difference);
 				);
-				
+
 				(* Exhibit a point *)
 				let concrete_p_valuation = LinearConstraint.p_nnconvex_exhibit_point difference in
-				
+
 				(* Convert to PVal *)
 				let pval_negative = PVal.pval_from_valuation_function concrete_p_valuation in
-				
+
 				(* Print some information *)
 				if verbose_mode_greater Verbose_standard then(
 					print_message Verbose_standard "Example of \"negative\" parameter valuation, i.e., not allowing to reach target:";
 					print_message Verbose_standard (ModelPrinter.string_of_pval model pval_negative);
 				);
-				
+
 				(* Intersect with the px-constraint to then obtain px-valuation *)
-				
+
 				(* Get the px-constraint *)
 				let pxconstraint_i = (StateSpace.get_state state_space (nth_state_index_of_symbolic_run symbolic_run !i)).px_constraint in
 				(* Convert the p-valuation to a constraint *)
@@ -3582,29 +3581,29 @@ class virtual algoStateBased =
 				let concrete_p_valuation_px_constraint = LinearConstraint.px_of_p_constraint concrete_p_valuation_constraint in
 				(* Intersect *)
 				LinearConstraint.px_intersection_assign concrete_p_valuation_px_constraint [pxconstraint_i];
-				
+
 				(* Special case: if this is the initial state, then the constraint must contain global_time_clock = 0, to make sure we start from the initial position *)
 				if !i = 0 then(
 					print_message Verbose_medium "Borderline case with empty concrete run: intersect with constraint 'global_time_clock = 0'";
 					(* Intersect with 'global_time_clock = 0' *)
 					LinearConstraint.px_intersection_assign concrete_p_valuation_px_constraint [LinearConstraint.px_constraint_of_point [(global_time_clock, NumConst.zero)]];
 				);
-				
+
 				(* Exhibit a px-point in this constraint *)
 				let concrete_px_valuation_i = LinearConstraint.px_exhibit_point concrete_p_valuation_px_constraint in
-				
+
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					print_message Verbose_low ("Example of blocking point at position " ^ (string_of_int !i) ^ ":");
 					print_message Verbose_total ("(Location = " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display global_location_i) ^ ")");
 					print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation_i);
 				);
-				
+
 				(* Generate the concrete run up to this point *)
 				(*------------------------------------------------------------*)
 
 				(*** WARNING/BADPROG: the following few lines are duplicate code with below ***)
-				
+
 				(* Cut the symbolic run *)
 				let symbolic_run_prefix : StateSpace.symbolic_run = {
 					(* Take the sublist of steps from position 0 to the current position *)
@@ -3612,24 +3611,24 @@ class virtual algoStateBased =
 					(* Final state becomes the current state *)
 					final_state		= state_index_i;
 				} in
-				
+
 				(* Generate a concrete run for this cut symbolic run *)
 				let concrete_run_prefix = concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i in
-			
+
 				(* Print it *)
 				if verbose_mode_greater Verbose_medium then(
 					print_message Verbose_medium "Concrete run prefix:";
 					print_message Verbose_medium (ModelPrinter.string_of_concrete_run model concrete_run_prefix);
 				);
-				
+
 				(* Now create an impossible concrete run from this point to the accepting location *)
 				(*------------------------------------------------------------*)
-				
+
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					print_message Verbose_low ("Now generating the \"impossible\" concrete run for negative parameter valuation from position " ^ (string_of_int !i) ^ "…");
 				);
-				
+
 				(* First, retrieve the last point, i.e., the one in the last state of the prefix *)
 				(*** NOTE: 'concrete_px_valuation_i' is not suitable, as it may not be an "initial" point, i.e., it may be the subject of some time elapsing ***)
 				let last_concrete_valuation =
@@ -3638,21 +3637,21 @@ class virtual algoStateBased =
 					(* Non-empty list of steps: the last state is the last state of the steps *)
 					else (OCamlUtilities.list_last (concrete_run_prefix.steps)).target.px_valuation
 				in
-				
+
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(
 					print_message Verbose_medium ("Starting valuation for the impossible concrete run (at position " ^ (string_of_int !i) ^ "):");
 					print_message Verbose_medium (ModelPrinter.string_of_px_valuation model last_concrete_valuation);
 				);
-				
+
 				(* Print some information *)
 				if verbose_mode_greater Verbose_high then(
 					print_message Verbose_high ("Considering subset of symbolic run of length " ^ (string_of_int (List.length symbolic_run.symbolic_steps)) ^ " from position " ^ (string_of_int (!i)) ^ " to position " ^ (string_of_int ((List.length symbolic_run.symbolic_steps) - 1)) ^ "…");
 				);
-				
+
 				(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
 				let impossible_steps_suffix : StateSpace.impossible_concrete_step list = self#impossible_concrete_steps_of_symbolic_steps last_concrete_valuation (!i) (OCamlUtilities.sublist (!i) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps) in
-				
+
 				(* Now create the "impossible" concrete run *)
 				let impossible_concrete_run : StateSpace.impossible_concrete_run = {
 					(* The parameter valuation for which this run exists *)
@@ -3665,14 +3664,14 @@ class virtual algoStateBased =
 					impossible_steps= impossible_steps_suffix;
 				}
 				in
-				
+
 				(* Print some information *)
 				print_message Verbose_standard "Negative counterexample run constructed for a negative parameter valuation!";
 				if verbose_mode_greater Verbose_low then (
 					(* Debug print *)
 					print_message Verbose_low (ModelPrinter.string_of_impossible_concrete_run model impossible_concrete_run);
 				);
-				
+
 				(* Add the run to the list of results *)
 				let valuation_and_concrete_run = {
 					(* The parameter valuation for which this run exists *)
@@ -3688,19 +3687,19 @@ class virtual algoStateBased =
 
 				()
 			); (* end if found restrained constraint *)
-			
+
 			(* Move to previous step *)
 			pconstraint_i_plus_one := pconstraint_i;
 			decr i;
 		done; (* end while backward *)
-		
+
 		(*** NOTE: here, negative_valuation_and_concrete_run_option_otherpval contains a counterexample if it was found ***)
 
-		
+
 		(*------------------------------------------------------------*)
 		(* Part 2b: negative counterexample for the same parameter valuation *)
 		(*------------------------------------------------------------*)
-		
+
 		(* Print some information *)
 		print_message Verbose_low "\n\n*** Looking for a negative counterexample using the same parameter valuation (case of deterministic system without silent actions)";
 
@@ -3708,25 +3707,25 @@ class virtual algoStateBased =
 
 		(* Convert the positive valuation to a functional representation *)
 		let functional_pval_positive = fun parameter_index -> positive_valuation#get_value parameter_index in
-		
+
 		(* Define the next valuation along the run, and reason backward *)
-		
+
 		(* Start from the last but one state (as we compare i and i+1) *)
 		let i = ref ((List.length symbolic_run.symbolic_steps) - 1) in
-		
-		
+
+
 		let xconstraint_i_plus_one : LinearConstraint.x_linear_constraint ref = ref (LinearConstraint.px_valuate_parameters functional_pval_positive target_state.px_constraint) in
-		
+
 		(* Print some information *)
 		print_message Verbose_medium ("\nLooking for blocking clock valuations by exploring backwards from position " ^ (string_of_int !i) ^ "…");
-		
+
 		(* To store the counterexample when found *)
 		let negative_valuation_and_concrete_run_option_samepval = ref None in
-		
+
 		while !i >= 0 && (!negative_valuation_and_concrete_run_option_samepval = None) do
 			(* Print some information *)
 			print_message Verbose_high ("\nConsidering position " ^ (string_of_int !i) ^ "");
-			
+
 			(* Get the state index at position i *)
 			let state_index_i : state_index = nth_state_index_of_symbolic_run symbolic_run !i in
 			(* Get the x-constraint at position i *)
@@ -3742,35 +3741,35 @@ class virtual algoStateBased =
 				print_message Verbose_high ("\n…with clock constraint at position " ^ (string_of_int (!i+1)) ^ ":");
 				print_message Verbose_high (LinearConstraint.string_of_x_linear_constraint model.variable_names (!xconstraint_i_plus_one));
 			);
-			
+
 			(* Convert to a nnconvex_constraint *)
 			let difference = LinearConstraint.x_nnconvex_constraint_of_x_linear_constraint xconstraint_i in
 			(* Compute the difference K_i \ K_i+1 *)
 			LinearConstraint.x_nnconvex_difference_assign difference (LinearConstraint.x_nnconvex_constraint_of_x_linear_constraint !xconstraint_i_plus_one);
-			
+
 			(* Check if difference is non-empty *)
 			if not (LinearConstraint.x_nnconvex_constraint_is_false difference) then(
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					(* Get location i *)
 					let location_i : Location.global_location = (StateSpace.get_state state_space state_index_i).global_location in
-					
+
 					(* Get location i+1 *)
 					let state_index_i_plus_1 : state_index = nth_state_index_of_symbolic_run symbolic_run (!i+1) in
 					let location_i_plus_1 : Location.global_location = (StateSpace.get_state state_space state_index_i_plus_1).global_location in
-					
+
 					print_message Verbose_low ("\nFound a shrinking of clock constraint between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ", i.e., states `" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_i) ^ "` and `" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_i_plus_1) ^ "`:");
 				);
-				
+
 				(* Print some information *)
 				if verbose_mode_greater Verbose_high then(
 					print_message Verbose_high ("\nClock valuations blocked between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ":");
 					print_message Verbose_high (LinearConstraint.string_of_x_nnconvex_constraint model.variable_names difference);
 				);
-				
+
 				(* Exhibit a point *)
 				let concrete_x_valuation = LinearConstraint.x_nnconvex_exhibit_point difference in
-				
+
 				(* Construct the px-valuation *)
 				(*** NOTE: technically (internally), the concrete_x_valuation already contains the parameter valuations! but for type soundness, we pretend to take parameters from pval ***)
 				let concrete_px_valuation_i variable_index = match model.type_of_variables variable_index with
@@ -3783,17 +3782,17 @@ class virtual algoStateBased =
 				let concrete_p_valuation_constraint = LinearConstraint.p_constraint_of_point (List.map (fun parameter_index -> parameter_index , functional_pval_positive parameter_index) model.parameters ) in
 				let concrete_px_valuation_i = LinearConstraint.px_of_p_constraint concrete_p_valuation_constraint in
 				LinearConstraint.px_intersection_assign_x concrete_px_valuation_i [LinearConstraint.x_constraint_of_point (List.map (fun clock_index -> clock_index , concrete_x_valuation clock_index) model.clocks)];*)
-				
+
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					print_message Verbose_low ("Example of blocking point at position " ^ (string_of_int !i) ^ ":");
 					print_message Verbose_total ("(Location = " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display global_location_i) ^ ")");
 					print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation_i);
 				);
-				
+
 				(* Generate the concrete run up to this point *)
 				(*------------------------------------------------------------*)
-				
+
 				(*** WARNING/BADPROG: the following few lines are duplicate code with above ***)
 
 				(* Cut the symbolic run *)
@@ -3803,24 +3802,24 @@ class virtual algoStateBased =
 					(* Final state becomes the current state *)
 					final_state		= state_index_i;
 				} in
-				
+
 				(* Generate a concrete run for this cut symbolic run *)
 				let concrete_run_prefix = concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i in
-			
+
 				(* Print it *)
 				if verbose_mode_greater Verbose_medium then(
 					print_message Verbose_medium "Concrete run prefix:";
 					print_message Verbose_medium (ModelPrinter.string_of_concrete_run model concrete_run_prefix);
 				);
-				
+
 				(* Now create an impossible concrete run from this point to the accepting location *)
 				(*------------------------------------------------------------*)
-				
+
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					print_message Verbose_low ("Now generating the \"impossible\" concrete run for positive parameter valuation from position " ^ (string_of_int !i) ^ "…");
 				);
-				
+
 				(* First, retrieve the last point, i.e., the one in the last state of the prefix *)
 				(*** NOTE: 'concrete_px_valuation_i' is not suitable, as it may not be an "initial" point, i.e., it may be the subject of some time elapsing ***)
 				let last_concrete_valuation =
@@ -3829,21 +3828,21 @@ class virtual algoStateBased =
 					(* Non-empty list of steps: the last state is the last state of the steps *)
 					else (OCamlUtilities.list_last (concrete_run_prefix.steps)).target.px_valuation
 				in
-				
+
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(
 					print_message Verbose_medium ("Starting valuation for the impossible concrete run (at position " ^ (string_of_int !i) ^ "):");
 					print_message Verbose_medium (ModelPrinter.string_of_px_valuation model last_concrete_valuation);
 				);
-				
+
 				let impossible_step_i =
 				(* Special case: if the concrete run is empty (a single state), we need to be careful, as the chosen point may not be the initial point! (global_time_clock > 0) *)
 				if concrete_run_prefix.steps = [] then(
 					(* Get the initial global_time_clock value *)
 					let initial_time = concrete_run_prefix.initial_state.px_valuation global_time_clock in
-					
+
 					(* Let initial_time elapse, and remove initial_time time units from the initial valuation to get it back to 0 *)
-					
+
 					let state_i_plus_one : state_index = nth_state_index_of_symbolic_run symbolic_run (!i+1)
 (*									(* Careful! If run is too short, choose final state *)
 						if !i = List.length symbolic_run.symbolic_steps - 1 then symbolic_run.final_state
@@ -3861,11 +3860,11 @@ class virtual algoStateBased =
 							px_valuation   = apply_time_elapsing_to_concrete_valuation concrete_run_prefix.initial_state.global_location initial_time last_concrete_valuation
 						}
 					}
-				
+
 				)else(
-				
+
 					(*** NOTE: now, the only way to choose the NEXT point at position i+1 is to consider a 0-time transition from position i, because we know that the point exhibited at position i does not belong to the i+1 zone ***)
-					
+
 					let state_i_plus_one : state_index = nth_state_index_of_symbolic_run symbolic_run (!i+1)
 (*									(* Careful! If run is too short, choose final state *)
 						if !i = List.length symbolic_run.symbolic_steps - 1 then symbolic_run.final_state
@@ -3885,31 +3884,31 @@ class virtual algoStateBased =
 					}
 				)
 				in
-				
+
 				(* Now build the rest of the impossible run *)
 				print_message Verbose_medium ("Building suffix from step " ^ (string_of_int (!i+1)) ^ "…");
-				
+
 				(* First check whether there is any state to build *)
 				let impossible_steps_suffix =
 				if List.length symbolic_run.symbolic_steps = !i+1 then(
 					print_message Verbose_medium ("No suffix to generate as the symbolic run has length " ^ (string_of_int (!i+1)) ^ ".");
-					
+
 					(* Nothing to do *)
 					[]
-				
+
 				)else(
-				
+
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
 						print_message Verbose_high ("Considering subset of symbolic run of length " ^ (string_of_int (List.length symbolic_run.symbolic_steps)) ^ " from position " ^ (string_of_int (!i+1)) ^ " to position " ^ (string_of_int ((List.length symbolic_run.symbolic_steps) - 1)) ^ "…");
 					);
-					
+
 					(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
 					self#impossible_concrete_steps_of_symbolic_steps last_concrete_valuation (!i+1) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
 				)
 				in
-				
-				
+
+
 				(* Now create the "impossible" concrete run *)
 				let impossible_concrete_run : StateSpace.impossible_concrete_run = {
 					(* The parameter valuation for which this run exists *)
@@ -3922,7 +3921,7 @@ class virtual algoStateBased =
 					impossible_steps= impossible_step_i :: impossible_steps_suffix;
 				}
 				in
-				
+
 				(* Print some information *)
 				print_message Verbose_standard "Negative counterexample run constructed for the positive parameter valuation!";
 				if verbose_mode_greater Verbose_low then (
@@ -3943,14 +3942,14 @@ class virtual algoStateBased =
 
 				(* Store the counterexamples processed *)
 				negative_valuation_and_concrete_run_option_samepval := Some valuation_and_concrete_run;
-				
+
 			); (* end if found restrained constraint *)
-			
+
 			(* Move to previous step *)
 			xconstraint_i_plus_one := xconstraint_i;
 			decr i;
 		done; (* end while backward *)
-		
+
 		(*** NOTE: here, negative_valuation_and_concrete_run_option_samepval contains a counterexample if it was found ***)
 
 		(* Return both results (possibly None) *)
@@ -3971,7 +3970,7 @@ class virtual algoStateBased =
 		(*------------------------------------------------------------*)
 		(* First build the predecessors table *)
 		let predecessors : StateSpace.predecessors_table = StateSpace.compute_predecessors_with_combined_transitions state_space in
-		
+
 		(* Print some information *)
 		print_message Verbose_medium "Predecessor table built";
 
@@ -3981,46 +3980,46 @@ class virtual algoStateBased =
 		(*------------------------------------------------------------*)
 		(* Retrieve the initial state *)
 		let initial_state_index = StateSpace.get_initial_state_index state_space in
-		
+
 		(* Get the symbolic run, i.e., a list of a pair of a symbolic state *followed* by a combined transition *)
 		let symbolic_run : StateSpace.symbolic_run = StateSpace.backward_symbolic_run state_space target_state_index [] (* temporary *) initial_state_index (Some predecessors) in
-		
+
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then (
 			print_message Verbose_low "\nSymbolic run reconstructed:";
-			
+
 			(* Debug print *)
 			print_message Verbose_low (ModelPrinter.debug_string_of_symbolic_run model state_space symbolic_run);
 		);
-		
+
 		(* Get the final state *)
 		let target_state : State.state = StateSpace.get_state state_space target_state_index in
 
-		
-		
+
+
 		(*------------------------------------------------------------*)
 		(* Part 1: positive counterexample *)
 		(*------------------------------------------------------------*)
 
 		(* Call dedicated function *)
 		let positive_valuation_and_concrete_run = self#exhibit_positive_counterexample predecessors symbolic_run target_state in
-		
+
 		(* Print some information *)
 		print_message Verbose_standard "Positive concrete run constructed!";
 
-		
+
 		(*------------------------------------------------------------*)
 		(* Part 2: negative counterexample *)
 		(*------------------------------------------------------------*)
-		
+
 		(*** TODO: handle non-deterministic ***)
-		
+
 		if not model.strongly_deterministic then(
 			print_warning "Model is not strongly deterministic: skip negative counter-examples.";
-			
+
 			(* Return only the positive run *)
 			positive_valuation_and_concrete_run, None, None
-			
+
 		)else if model.has_silent_actions then(
 			print_warning "Model has silent actions: skip negative counter-examples.";
 
@@ -4033,7 +4032,7 @@ class virtual algoStateBased =
 
 			(* Reconstruct negative runs *)
 			let negative_valuation_and_concrete_run_option_otherpval, negative_valuation_and_concrete_run_option_samepval = self#exhibit_negative_counterexamples predecessors symbolic_run target_state positive_valuation in
-						
+
 			(* Return all three *)
 			positive_valuation_and_concrete_run, negative_valuation_and_concrete_run_option_otherpval, negative_valuation_and_concrete_run_option_samepval
 		) (* end if strongly deterministic without silent actions *)
@@ -4055,8 +4054,8 @@ class virtual algoStateBased =
 	(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual check_termination_at_post_n : bool
-	
-	
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Check whether the property is a #witness mode; if so, raise TerminateAnalysis *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4067,7 +4066,7 @@ class virtual algoStateBased =
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
 			self#print_algo_message Verbose_standard "Target state found! Terminating…";
 			termination_status <- Some Target_found;
-		
+
 			raise TerminateAnalysis;
 		)
 
@@ -4228,7 +4227,7 @@ class virtual algoStateBased =
 
 		(* Set the limit *)
 		limit_reached <- Keep_going;
-		
+
 		(* Flag modified by the algorithm to perhaps terminate earlier *)
 		algorithm_keep_going <- true;
 
@@ -4640,7 +4639,7 @@ class virtual algoStateBased =
 							let rank = Hashtbl.find rank_hashtable x in
 							match rank with
 							| Infinity -> x :: (addNonInfinityToPriorQueue state_index l)
-							| Int r -> 	
+							| Int r ->
 
 										let state = StateSpace.get_state state_space state_index in
 										let loc1, constr1 = state.global_location, state.px_constraint in
@@ -4828,7 +4827,7 @@ class virtual algoStateBased =
 
 
 			(* Merge states! *)
-			
+
 (*			(*** CASE mergeq ***)
 			if options#mergeq then(
 				queue := StateSpace.merge state_space !queue;
@@ -4847,9 +4846,9 @@ class virtual algoStateBased =
 				(* New version *)
 				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
-				
+
 				(match options#exploration_order with
-				
+
 				| Exploration_queue_BFS_RS -> List.iter ( fun state_index -> Hashtbl.remove rank_hashtable state_index;
 					) eaten_states;
 				| _ -> ();
@@ -4858,8 +4857,8 @@ class virtual algoStateBased =
 			(* Copy back the merged queue *)
 			queue := !new_states_after_merging;
 			);*)
-			
-			
+
+
 			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
 			if options#merge (*|| options#merge_before*) then (
 				queue := StateSpace.merge state_space !queue;
@@ -4870,7 +4869,19 @@ class virtual algoStateBased =
 				)
 			)
 			else if options#merge212 then(
-				raise (NotImplemented "merge v.2.12");
+				(*raise (NotImplemented "merge v.2.12");*)
+				let new_states_after_merging = queue in
+				let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
+				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
+
+				(match options#exploration_order with
+					| Exploration_queue_BFS_RS ->
+													List.iter ( fun state_index ->
+														Hashtbl.remove rank_hashtable state_index;
+
+													) eaten_states;
+					| _ -> ();
+				)
 			);
 			(*** END OLD MIXED VERSION (2020-09) ***)
 
@@ -4916,7 +4927,7 @@ class virtual algoStateBased =
 
 			(* Termination due to a number of explored states reached *)
 			| States_limit_reached -> termination_status <- Some (Result.States_limit nb_unexplored_successors)
-			
+
 			(* Termination because a witness has been found *)
 			(*** NOTE/TODO: add a new result termination type? ***)
 			| Witness_found -> termination_status <- Some (Result.Regular_termination)
@@ -5048,7 +5059,7 @@ class virtual algoStateBased =
 			(* Merge states! *)
 			let new_states_after_merging = ref post_n_plus_1 in
 			(*** HACK here! For #merge_before, we should ONLY merge here; but, in order not to change the full structure of the post computation, we first merge locally before the pi0-compatibility test, then again here ***)
-			
+
 (*			if options#mergeq then(
 				new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
 			) else if options#merge then (
@@ -5057,17 +5068,19 @@ class virtual algoStateBased =
 				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
 			);*)
-			
+
 			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
 
 			if options#merge (*|| options#merge_before*) then(
 				new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
 			)
 			else if options#merge212 then(
-				raise (NotImplemented "merge v.2.12");
+				(*raise (NotImplemented "merge v.2.12");*)
+				let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
+				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
 			);
 			(*** END OLD MIXED VERSION (2020-09) ***)
-				
+
 			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)
 			post_n := !new_states_after_merging;
 			(*------------------------------------------------------------*)
@@ -5197,7 +5210,7 @@ class virtual algoStateBased =
 
 			(* Termination due to a number of explored states reached *)
 			| States_limit_reached -> termination_status <- Some (Result.States_limit nb_unexplored_successors)
-			
+
 			(* Termination because a witness has been found *)
 			(*** NOTE/TODO: add a new result termination type? ***)
 			| Witness_found -> termination_status <- Some (Result.Regular_termination)
@@ -5247,7 +5260,7 @@ class virtual algoStateBased =
 
 		(* Compute initial state *)
 		let init_state = compute_initial_state_or_abort() in
-		
+
 		(* copy init state, as it might be destroyed later *)
 		(*** NOTE: this operation appears to be here totally useless ***)
 		let init_loc, init_constr = init_state.global_location, init_state.px_constraint in
