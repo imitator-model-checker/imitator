@@ -150,6 +150,12 @@ and string_of_discrete_boolean_expression variable_names = function
 		^ (string_of_boolean_operations relop)
 		^ " "
 		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+    | Boolean_comparison (l_expr, relop, r_expr) ->
+		(string_of_discrete_boolean_expression variable_names l_expr)
+		^ " "
+		^ (string_of_boolean_operations relop)
+		^ " "
+		^ (string_of_discrete_boolean_expression variable_names r_expr)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
 		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)

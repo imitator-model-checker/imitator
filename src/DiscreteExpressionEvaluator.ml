@@ -57,7 +57,7 @@ and eval_rational_expression discrete_valuation expr =
         | DF_expression expr ->
             eval_rational_expression_rec expr
         | DF_rational_of_int expr ->
-            (* TODO benjamin warning double conversion ! *)
+            (* TODO benjamin warning conversion from int32 to int ! *)
 (*            ImitatorUtilities.print_message Verbose_standard "Evaluate a int expression";*)
             NumConst.numconst_of_int (Int32.to_int (eval_int_expression discrete_valuation expr))
         | DF_unary_min factor ->
@@ -131,12 +131,17 @@ and check_discrete_boolean_expression discrete_valuation = function
     | DB_constant constant ->
         DiscreteValue.bool_value constant
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
-    | Expression (discrete_arithmetic_expression_1, relop, discrete_arithmetic_expression_2) ->
+    (* TODO benjamin WARNING here we compare discrete value with operator it's bad *)
+    | Expression (l_expr, relop, r_expr) ->
         eval_discrete_relop
             relop
-            (eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_1)
-            (eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_2)
-
+            (eval_discrete_arithmetic_expression discrete_valuation l_expr)
+            (eval_discrete_arithmetic_expression discrete_valuation r_expr)
+    | Boolean_comparison (l_expr, relop, r_expr) ->
+         eval_discrete_boolean_relop
+             relop
+             (check_discrete_boolean_expression discrete_valuation l_expr)
+             (check_discrete_boolean_expression discrete_valuation r_expr)
     (** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
     | Expression_in (discrete_arithmetic_expression_1, discrete_arithmetic_expression_2, discrete_arithmetic_expression_3) ->
         (* Compute the first one to avoid redundancy *)
@@ -154,6 +159,14 @@ and check_discrete_boolean_expression discrete_valuation = function
         not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
 
 and eval_discrete_relop relop value_1 value_2 : bool =
+    match relop with
+    | OP_L		-> value_1 <  value_2
+    | OP_LEQ	-> value_1 <= value_2
+    | OP_EQ		-> value_1 =  value_2
+    | OP_NEQ	-> value_1 <> value_2
+    | OP_GEQ	-> value_1 >= value_2
+    | OP_G		-> value_1 >  value_2
+and eval_discrete_boolean_relop relop value_1 value_2 : bool =
     match relop with
     | OP_L		-> value_1 <  value_2
     | OP_LEQ	-> value_1 <= value_2

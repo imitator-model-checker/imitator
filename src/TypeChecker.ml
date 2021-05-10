@@ -100,8 +100,8 @@ and convert_literal_types_of_parsed_discrete_boolean_expression parsed_model tar
     | Parsed_Not expr ->
         Parsed_Not (convert_literal_types_of_parsed_boolean_expression parsed_model target_type expr)
     | Parsed_expression (l_expr, relop, r_expr) ->
-        let convert_l_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type l_expr in
-        let convert_r_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type r_expr in
+        let convert_l_expr = convert_literal_types_of_parsed_discrete_boolean_expression parsed_model target_type l_expr in
+        let convert_r_expr = convert_literal_types_of_parsed_discrete_boolean_expression parsed_model target_type r_expr in
         Parsed_expression (convert_l_expr, relop, convert_r_expr)
     | Parsed_expression_in (expr, lower_expr, upper_expr) ->
         let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr in
@@ -201,8 +201,8 @@ and get_parsed_discrete_boolean_expression_discrete_type parsed_model = function
     | Parsed_boolean_expression expr -> get_parsed_boolean_expression_discrete_type parsed_model expr
     | Parsed_expression (l_expr, relop, r_expr) as parsed_discrete_boolean_expression ->
 
-        let l_type = get_parsed_discrete_arithmetic_expression_discrete_type parsed_model l_expr in
-        let r_type = get_parsed_discrete_arithmetic_expression_discrete_type parsed_model r_expr in
+        let l_type = get_parsed_discrete_boolean_expression_discrete_type parsed_model l_expr in
+        let r_type = get_parsed_discrete_boolean_expression_discrete_type parsed_model r_expr in
         (* Check if it's an ordered comparison *)
         let is_ordered_comparison = (match relop with | PARSED_OP_EQ | PARSED_OP_NEQ -> false | _ -> true) in
 
@@ -360,7 +360,12 @@ and get_parsed_boolean_expression_type parsed_model = function
 
 and get_parsed_discrete_boolean_expression_type parsed_model = function
 
-    | Parsed_expression (expr, _, _)
+    | Parsed_expression (expr, _, _) ->
+        (* Get var type of arithmetic expression *)
+        let discrete_type = get_parsed_discrete_boolean_expression_discrete_type parsed_model expr in
+        (* Return typed expression *)
+        DiscreteExpressions.Expression_type_discrete_bool discrete_type
+
     | Parsed_expression_in (expr, _, _) ->
 
         (* Get var type of arithmetic expression *)

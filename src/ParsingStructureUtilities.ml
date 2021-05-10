@@ -110,8 +110,8 @@ and string_of_parsed_discrete_boolean_expression parsed_model = function
     | Parsed_expression (l_expr, relop, r_expr) ->
         string_of_parsed_relop
             relop
-            (string_of_parsed_arithmetic_expression parsed_model l_expr)
-            (string_of_parsed_arithmetic_expression parsed_model r_expr)
+            (string_of_parsed_discrete_boolean_expression parsed_model l_expr)
+            (string_of_parsed_discrete_boolean_expression parsed_model r_expr)
     | Parsed_expression_in (expr1, expr2, expr3) ->
         (* Compute the first one to avoid redundancy *)
         let str_expr1 = string_of_parsed_arithmetic_expression parsed_model expr1 in
@@ -203,8 +203,8 @@ let try_reduce_parsed_global_expression constants expr =
         | Parsed_expression (l_expr, relop, r_expr) ->
             eval_parsed_relop
                 relop
-                (try_reduce_parsed_arithmetic_expression l_expr)
-                (try_reduce_parsed_arithmetic_expression r_expr)
+                (try_reduce_parsed_discrete_boolean_expression l_expr)
+                (try_reduce_parsed_discrete_boolean_expression r_expr)
         | Parsed_expression_in (expr1, expr2, expr3) ->
 		    (* Compute the first one to avoid redundancy *)
 		    let expr1_evaluated = try_reduce_parsed_arithmetic_expression expr1 in

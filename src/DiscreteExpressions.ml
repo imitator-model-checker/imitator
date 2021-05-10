@@ -94,6 +94,7 @@ type boolean_expression =
 and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
+	| Boolean_comparison of discrete_boolean_expression * relop * discrete_boolean_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
@@ -386,6 +387,10 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
 		^ (string_of_boolean_operations customized_string relop)
 		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)
+    | Boolean_comparison (l_expr, relop, r_expr) ->
+		(customized_string_of_discrete_boolean_expression customized_string variable_names l_expr)
+		^ (string_of_boolean_operations customized_string relop)
+		^ (customized_string_of_discrete_boolean_expression customized_string variable_names r_expr)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
 		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
@@ -625,6 +630,15 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
 		let expr1 =  (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression1) in
 		let relop =  (string_of_boolean_operations customized_string.boolean_string relop) in
 		let expr2 =  (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression2) in
+		"{"
+		^ "\"op\": \"" ^ relop ^ "\", "
+		^ "\"left\": " ^ expr1 ^ ", "
+		^ "\"right\": " ^ expr2
+		^ "}"
+    | Boolean_comparison (l_expr, relop, r_expr) ->
+		let expr1 =  (customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names l_expr) in
+		let relop =  (string_of_boolean_operations customized_string.boolean_string relop) in
+		let expr2 =  (customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names r_expr) in
 		"{"
 		^ "\"op\": \"" ^ relop ^ "\", "
 		^ "\"left\": " ^ expr1 ^ ", "
