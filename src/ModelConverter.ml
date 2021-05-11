@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2021/04/27
+ * Last modified     : 2021/05/11
  *
  ************************************************************)
 
@@ -5450,6 +5450,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			(* TODO benjamin duplicate in PTA2TikZ, maybe we should create general Guard module ? *)
 			match invariant with
 			    | True_guard -> false
+                | False_guard -> false
 			    | Continuous_guard continuous_invariant ->
                     (* Costly test! But inherent to the invariants structure *)
                     not (LinearConstraint.pxd_is_true continuous_invariant)
@@ -5457,7 +5458,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
                     (* Costly test! But inherent to the invariants structure *)
                     not (LinearConstraint.pxd_is_true discrete_continuous_invariant.continuous_guard)
                 (* We assume that an exclusively discrete invariant does not count as an invariant *)
-			    | _ -> true
+			    | Discrete_guard _ -> false
 		) locations_for_this_automaton
 	) automata in
 
