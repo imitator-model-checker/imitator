@@ -552,7 +552,8 @@ and convert_discrete_bool_expr parsed_model number_type = function
         (* Search boolean variables, constants in DF_variable, DF_constant *)
         search_variable_of_discrete_arithmetic_expression parsed_model expr
 
-	| Parsed_expression (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr) ->
+	| Parsed_expression (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr)
+	when (DiscreteValue.is_discrete_type_number_type number_type) ->
 
 	    Expression (
             (convert_parsed_discrete_arithmetic_expression parsed_model l_expr number_type),
@@ -635,7 +636,8 @@ let rec convert_parsed_discrete_boolean_expression parsed_model number_type = fu
         search_variable_of_discrete_arithmetic_expression parsed_model expr
 
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Parsed_expression (Parsed_arithmetic_expression l_expr , parsed_relop , Parsed_arithmetic_expression r_expr) ->
+	| Parsed_expression (Parsed_arithmetic_expression l_expr , parsed_relop , Parsed_arithmetic_expression r_expr)
+	when (DiscreteValue.is_discrete_type_number_type number_type) ->
 
 		Expression (
 			convert_parsed_discrete_arithmetic_expression parsed_model l_expr number_type,
@@ -688,7 +690,9 @@ let rec convert_parsed_global_expression useful_parsing_model_information = func
         | DiscreteExpressions.Expression_type_discrete_arithmetic DiscreteValue.Var_type_discrete_unknown_number
         | _ ->
             raise (InvalidModel)
+
 (* Get typed rational expression of global parsed expression *)
+(* Extract arithmetic expression from parsed_discrete_boolean_expression *)
 and rational_expression_of_parsed_expression useful_parsing_model_information (* expr *) =
 
     let rec rational_expression_of_parsed_expression = function
@@ -703,6 +707,7 @@ and rational_expression_of_parsed_expression useful_parsing_model_information (*
     rational_expression_of_parsed_expression (* expr *)
 
 (* Get typed int expression of global parsed expression *)
+(* Extract arithmetic expression from parsed_discrete_boolean_expression *)
 and int_expression_of_parsed_expression useful_parsing_model_information (* expr *) =
 
     let rec int_expression_of_parsed_expression = function
