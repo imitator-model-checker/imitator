@@ -61,3 +61,11 @@ val check_type_assignment : ParsingStructure.useful_parsing_model_information ->
 
 (* Check that constant declarations are well typed *)
 val check_constant_declarations : (variable_name * ParsingStructure.global_expression * DiscreteValue.discrete_value * DiscreteValue.var_type) list -> (variable_name * DiscreteValue.discrete_value) list
+
+
+val discrete_type_of_expression : ParsingStructure.useful_parsing_model_information -> ParsingStructure.global_expression -> DiscreteValue.var_type_discrete
+val discrete_type_of_parsed_boolean_expression : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_boolean_expression -> DiscreteValue.var_type_discrete
+val discrete_type_of_parsed_discrete_boolean_expression : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_discrete_boolean_expression -> DiscreteValue.var_type_discrete
+val discrete_type_of_parsed_discrete_arithmetic_expression : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_discrete_arithmetic_expression -> DiscreteValue.var_type_discrete
+val discrete_type_of_parsed_discrete_term : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_discrete_term -> DiscreteValue.var_type_discrete
+val discrete_type_of_parsed_discrete_factor : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_discrete_factor -> DiscreteValue.var_type_discrete

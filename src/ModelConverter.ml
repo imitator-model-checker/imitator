@@ -421,8 +421,9 @@ let check_only_discretes_in_parsed_global_expression index_of_variables type_of_
 (** Converting discrete arithmetic expressions *)
 (************************************************************)
 
-let rec convert_parsed_discrete_arithmetic_expression parsed_model expr = function
-(*    | DiscreteValue.Var_type_discrete_bool -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression index_of_variables constants expr)*)
+let rec convert_parsed_discrete_arithmetic_expression parsed_model expr =
+    let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_arithmetic_expression parsed_model expr in
+    match discrete_type with
     | DiscreteValue.Var_type_discrete_bool -> raise (InvalidExpression "Cannot compare boolean for the moment")
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational -> Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression parsed_model.index_of_variables parsed_model.constants expr)
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int -> Int_arithmetic_expression (convert_parsed_int_arithmetic_expression parsed_model.index_of_variables parsed_model.constants expr)
@@ -539,44 +540,44 @@ let convert_parsed_relop = function
 
 		
 (** Convert a boolean expression in its abstract model *)
-let rec convert_bool_expr parsed_model number_type = function
+let rec convert_bool_expr parsed_model = function
 	| Parsed_True -> True_bool
 	| Parsed_False -> False_bool
-	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr parsed_model number_type e1), (convert_bool_expr parsed_model number_type e2))
-	| Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr parsed_model number_type e1), (convert_bool_expr parsed_model number_type e2))
+	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr parsed_model e1), (convert_bool_expr parsed_model e2))
+	| Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr parsed_model e1), (convert_bool_expr parsed_model e2))
 	| Parsed_Discrete_boolean_expression parsed_discrete_boolean_expression ->
-		Discrete_boolean_expression (convert_discrete_bool_expr parsed_model number_type parsed_discrete_boolean_expression)
+		Discrete_boolean_expression (convert_discrete_bool_expr parsed_model parsed_discrete_boolean_expression)
 
-and convert_discrete_bool_expr parsed_model number_type = function
+and convert_discrete_bool_expr parsed_model = function
     | Parsed_arithmetic_expression expr ->
         (* Search boolean variables, constants in DF_variable, DF_constant *)
         search_variable_of_discrete_arithmetic_expression parsed_model expr
 
 	| Parsed_expression (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr)
-	when (DiscreteValue.is_discrete_type_number_type number_type) ->
+	when (DiscreteValue.is_discrete_type_number_type (TypeChecker.discrete_type_of_parsed_discrete_arithmetic_expression parsed_model l_expr)) ->
 
 	    Expression (
-            (convert_parsed_discrete_arithmetic_expression parsed_model l_expr number_type),
+            (convert_parsed_discrete_arithmetic_expression parsed_model l_expr),
             (convert_parsed_relop relop),
-            (convert_parsed_discrete_arithmetic_expression parsed_model r_expr number_type)
+            (convert_parsed_discrete_arithmetic_expression parsed_model r_expr)
 		)
 	(** Discrete boolean expression of the form Expr ~ Expr *)
 	| Parsed_expression (l_expr , parsed_relop , r_expr) ->
 
 		Boolean_comparison (
-			convert_discrete_bool_expr parsed_model number_type l_expr,
+			convert_discrete_bool_expr parsed_model l_expr,
 			convert_parsed_relop parsed_relop,
-			convert_discrete_bool_expr parsed_model number_type r_expr
+			convert_discrete_bool_expr parsed_model r_expr
 		)
 	| Parsed_expression_in (expr1, expr2, expr3) -> Expression_in (
-		(convert_parsed_discrete_arithmetic_expression parsed_model expr1 number_type),
-		(convert_parsed_discrete_arithmetic_expression parsed_model expr2 number_type),
-		(convert_parsed_discrete_arithmetic_expression parsed_model expr3 number_type)
+		(convert_parsed_discrete_arithmetic_expression parsed_model expr1),
+		(convert_parsed_discrete_arithmetic_expression parsed_model expr2),
+		(convert_parsed_discrete_arithmetic_expression parsed_model expr3)
 		)
     | Parsed_boolean_expression parsed_boolean_expression ->
-        Boolean_expression (convert_bool_expr parsed_model number_type parsed_boolean_expression)
+        Boolean_expression (convert_bool_expr parsed_model parsed_boolean_expression)
 	| Parsed_Not e ->
-	    Not_bool (convert_bool_expr parsed_model number_type e)
+	    Not_bool (convert_bool_expr parsed_model e)
 
 and search_variable_of_discrete_arithmetic_expression parsed_model expr =
 
@@ -624,46 +625,43 @@ let convert_parsed_int_arithmetic_expression_with_model  useful_parsing_model_in
 (*------------------------------------------------------------*)
 
 
-
-
-
 (* Convert parsed_discrete_boolean_expression *)
 (* It's a version without using useful_parsing_model_information *)
 (* TODO benjamin seems duplicate of convert_discrete_bool_expr*)
-let rec convert_parsed_discrete_boolean_expression parsed_model number_type = function
+let rec convert_parsed_discrete_boolean_expression parsed_model = function
     | Parsed_arithmetic_expression expr ->
         (* Search boolean variables, constants in DF_variable, DF_constant *)
         search_variable_of_discrete_arithmetic_expression parsed_model expr
 
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression (Parsed_arithmetic_expression l_expr , parsed_relop , Parsed_arithmetic_expression r_expr)
-	when (DiscreteValue.is_discrete_type_number_type number_type) ->
+	when (DiscreteValue.is_discrete_type_number_type (TypeChecker.discrete_type_of_parsed_discrete_arithmetic_expression parsed_model l_expr)) ->
 
 		Expression (
-			convert_parsed_discrete_arithmetic_expression parsed_model l_expr number_type,
+			convert_parsed_discrete_arithmetic_expression parsed_model l_expr,
 			convert_parsed_relop parsed_relop,
-			convert_parsed_discrete_arithmetic_expression parsed_model r_expr number_type
+			convert_parsed_discrete_arithmetic_expression parsed_model r_expr
 		)
 	(** Discrete boolean expression of the form Expr ~ Expr *)
 	| Parsed_expression (l_expr , parsed_relop , r_expr) ->
 
 		Boolean_comparison (
-			convert_parsed_discrete_boolean_expression parsed_model number_type l_expr,
+			convert_parsed_discrete_boolean_expression parsed_model l_expr,
 			convert_parsed_relop parsed_relop,
-			convert_parsed_discrete_boolean_expression parsed_model number_type r_expr
+			convert_parsed_discrete_boolean_expression parsed_model r_expr
 		)
 
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in (expr1 , expr2 , expr3) ->
 		Expression_in (
-			convert_parsed_discrete_arithmetic_expression parsed_model expr1 number_type,
-			convert_parsed_discrete_arithmetic_expression parsed_model expr2 number_type,
-			convert_parsed_discrete_arithmetic_expression parsed_model expr3 number_type
+			convert_parsed_discrete_arithmetic_expression parsed_model expr1,
+			convert_parsed_discrete_arithmetic_expression parsed_model expr2,
+			convert_parsed_discrete_arithmetic_expression parsed_model expr3
 		)
 	| Parsed_boolean_expression boolean_expression ->
-	     Boolean_expression (convert_bool_expr parsed_model number_type boolean_expression)
+	     Boolean_expression (convert_bool_expr parsed_model boolean_expression)
     | Parsed_Not boolean_expression ->
-        Not_bool (convert_bool_expr parsed_model number_type boolean_expression)
+        Not_bool (convert_bool_expr parsed_model boolean_expression)
 
 (* Convert parsed_discrete_arithmetic_expression *)
 let rec convert_parsed_discrete_arithmetic_expression_with_model useful_parsing_model_information =
@@ -724,7 +722,7 @@ and int_expression_of_parsed_expression useful_parsing_model_information (* expr
 (* discrete type is the inner type of the boolean expression, for example : *)
 (* if x + 1 > 0 then x else y with x : int, give a Bool_expression (expr, Var_type_discrete_int) *)
 and bool_expression_of_parsed_expression useful_parsing_model_information expr discrete_type =
-     Bool_expression (convert_bool_expr useful_parsing_model_information discrete_type expr)
+     Bool_expression (convert_bool_expr useful_parsing_model_information expr)
 
 
 
@@ -741,7 +739,7 @@ let convert_parsed_loc_predicate useful_parsing_model_information = function
 
 (* Convert parsed_simple_predicate *)
 let convert_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression_with_model useful_parsing_model_information (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational) parsed_discrete_boolean_expression)
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression_with_model useful_parsing_model_information parsed_discrete_boolean_expression)
 	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
 	| Parsed_state_predicate_true -> State_predicate_true
 	| Parsed_state_predicate_false -> State_predicate_false
@@ -1320,16 +1318,16 @@ let nonlinear_constraint_of_nonlinear_convex_predicate useful_parsing_model_info
         let nonlinear_inequalities = List.fold_left
         (fun nonlinear_inequalities nonlinear_inequality ->
 
-            (* TODO benjamin checking make here, so we should remove checking on guard level *)
+            (* TODO benjamin checking make here, so we should remove checking on guard level (when checking for linear is ok ) *)
             (* Get typed non-linear constraint inequality *)
-            let uniform_typed_nonlinear_inequality, discrete_type = TypeChecker.check_nonlinear_constraint useful_parsing_model_information nonlinear_inequality in
+            let uniform_typed_nonlinear_inequality, _ = TypeChecker.check_nonlinear_constraint useful_parsing_model_information nonlinear_inequality in
 
             match uniform_typed_nonlinear_inequality with
             | Parsed_true_nonlinear_constraint -> nonlinear_inequalities
             | Parsed_false_nonlinear_constraint -> raise False_exception
             | Parsed_nonlinear_constraint nonlinear_constraint  ->
                 (* Convert non-linear constraint to abstract model *)
-                let convert_nonlinear_constraint = convert_parsed_discrete_boolean_expression useful_parsing_model_information discrete_type nonlinear_constraint in
+                let convert_nonlinear_constraint = convert_parsed_discrete_boolean_expression useful_parsing_model_information nonlinear_constraint in
                 (* Add typed discrete boolean expression to inequality list *)
                 convert_nonlinear_constraint :: nonlinear_inequalities
 
@@ -2222,7 +2220,7 @@ let convert_guard useful_parsing_model_information guard_convex_predicate =
         useful_parsing_model_information.constants in
 
     (* TODO benjamin check here ? *)
-    let uniform_type_guards, guard_type = TypeChecker.check_guard useful_parsing_model_information guard_convex_predicate in
+    let uniform_type_guards, _ = TypeChecker.check_guard useful_parsing_model_information guard_convex_predicate in
 
     (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
 (*    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants guard_convex_predicate in*)
@@ -2818,7 +2816,7 @@ let convert_updates useful_parsing_model_information updates : updates =
         (* TYPE CHECK *)
         let uniformly_typed_bool_expr, discrete_type = TypeChecker.check_conditional useful_parsing_model_information boolean_value in
 
-        let convert_boolean_expr = convert_bool_expr_with_model useful_parsing_model_information discrete_type uniformly_typed_bool_expr in
+        let convert_boolean_expr = convert_bool_expr_with_model useful_parsing_model_information uniformly_typed_bool_expr in
         let convert_if_updates = convert_normal_updates useful_parsing_model_information if_updates in
         let convert_else_updates = convert_normal_updates useful_parsing_model_information else_updates in
         (convert_boolean_expr, convert_if_updates, convert_else_updates)
