@@ -2310,23 +2310,6 @@ END CONSTRAINT
 
 	,
 
-# 	#------------------------------------------------------------
-# 	{
-# 		'purpose'    : 'Test boolean True constant (computing)',
-# 		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'acceptingReachable.imiprop'],
-# 		'options'    : '',
-# 		'expectations' : [
-# 			{'file': 'bool-constant-reachable.res' , 'content' : """
-# Error                                   : invalid model
-# 		"""
-# 			 } # end result file
-# 			,
-# 		] # end expectations
-# 	} # end test case
-# 	#------------------------------------------------------------
-
-#	,
-
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test boolean False constant (computing)',
@@ -2345,23 +2328,6 @@ END CONSTRAINT
 	#------------------------------------------------------------
 
 	,
-
-# 	#------------------------------------------------------------
-# 	{
-# 		'purpose'    : 'Test boolean False constant (computing)',
-# 		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'acceptingReachable.imiprop'],
-# 		'options'    : '',
-# 		'expectations' : [
-# 			{'file': 'bool-constant-unreachable.res' , 'content' : """
-# Error                                   : invalid model
-# 		"""
-# 			 } # end result file
-# 			,
-# 		] # end expectations
-# 	} # end test case
-# 	#------------------------------------------------------------
-#
-# 	,
 
 	#------------------------------------------------------------
 	{
