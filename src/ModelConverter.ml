@@ -528,7 +528,7 @@ and convert_parsed_int_arithmetic_expression index_of_variables constants (* exp
         | Parsed_DF_constant var_value -> Int_constant (DiscreteValue.int_value var_value)
         | Parsed_DF_expression expr -> Int_expression (convert_parsed_int_arithmetic_expression_rec expr)
         | Parsed_DF_unary_min factor -> Int_unary_min (convert_parsed_int_factor factor)
-        | Parsed_rational_of_int_function _ -> raise (InvalidModel) (* TODO benjamin set a message *)
+        | Parsed_rational_of_int_function _ -> raise (InternalError "int expressus") (* TODO benjamin set a message *)
     in
     convert_parsed_int_arithmetic_expression_rec
 
@@ -2243,11 +2243,12 @@ let convert_guard useful_parsing_model_information guard_convex_predicate =
         useful_parsing_model_information.type_of_variables,
         useful_parsing_model_information.constants in
 
-    (* TODO benjamin check here ? *)
-    let uniform_type_guards, _ = TypeChecker.check_guard useful_parsing_model_information guard_convex_predicate in
+
 
     (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
 (*    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants guard_convex_predicate in*)
+    (* TODO benjamin check here ? *)
+    let uniform_type_guards, _ = TypeChecker.check_guard useful_parsing_model_information guard_convex_predicate in
     let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants uniform_type_guards in
 
     match discrete_guard_convex_predicate, continuous_guard_convex_predicate with
@@ -2838,7 +2839,7 @@ let convert_updates useful_parsing_model_information updates : updates =
         let boolean_value, if_updates, else_updates = get_conditional_update_value u in
 
         (* TYPE CHECK *)
-        let uniformly_typed_bool_expr, discrete_type = TypeChecker.check_conditional useful_parsing_model_information boolean_value in
+        let uniformly_typed_bool_expr, _ = TypeChecker.check_conditional useful_parsing_model_information boolean_value in
 
         let convert_boolean_expr = convert_bool_expr_with_model useful_parsing_model_information uniformly_typed_bool_expr in
         let convert_if_updates = convert_normal_updates useful_parsing_model_information if_updates in

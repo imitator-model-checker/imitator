@@ -99,6 +99,12 @@ let is_discrete_type_unknown_number_type = function
     | Var_type_discrete_number Var_type_discrete_unknown_number -> true
     | _ -> false
 
+(* Check if discrete type is not a Var_type_unknown_number *)
+let is_discrete_type_known_number_type = function
+    | Var_type_discrete_number Var_type_discrete_unknown_number -> false
+    | Var_type_discrete_number _ -> true
+    | _ -> false
+
 (* Check if discrete type is a Var_type_rational *)
 let is_rational_type = function
     | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational) -> true

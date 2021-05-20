@@ -37,7 +37,7 @@ val get_discrete_type_of_variable_by_name : ParsingStructure.useful_parsing_mode
 
 (* Try to resolve the specific type of an expression according to literals and variables used *)
 (* Doing type checking of the expression at the same time*)
-val resolve_expression_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.global_expression -> ParsingStructure.global_expression * DiscreteExpressions.expression_type
+(*val resolve_expression_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.global_expression -> ParsingStructure.global_expression * DiscreteExpressions.expression_type*)
 
 (** Type checking **)
 
