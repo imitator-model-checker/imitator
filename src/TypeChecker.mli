@@ -14,6 +14,8 @@
  *
  ************************************************************)
 
+open ParsingStructure
+
 (** Exceptions **)
 
 (* Type error exception *)
@@ -21,6 +23,15 @@ exception TypeError of string
 
 type variable_name = string
 type variable_index = int
+
+(*val checkus :*)
+(*    useful_parsing_model_information -> 'a -> 'b -> 'c*)
+(*    -> (useful_parsing_model_information -> 'a -> 'a * DiscreteValue.var_type_discrete)*)
+(*    -> (useful_parsing_model_information -> 'b -> 'b * DiscreteValue.var_type_discrete)*)
+(*    -> (useful_parsing_model_information -> DiscreteValue.var_type_discrete -> 'a -> 'a)*)
+(*    -> (useful_parsing_model_information -> DiscreteValue.var_type_discrete -> 'b -> 'b)*)
+(*    -> (useful_parsing_model_information -> 'c -> string)*)
+(*    -> ('a * 'b) * DiscreteValue.var_type_discrete*)
 
 (** Get variables types **)
 
