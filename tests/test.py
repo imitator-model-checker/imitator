@@ -24,6 +24,12 @@ import os
 import subprocess
 import sys
 from collections import namedtuple
+import argparse
+
+# Parse arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('--filter', help='Filter tests to execute', nargs='?', default='')
+args = parser.parse_args()
 
 # To output colored text
 Colors = namedtuple('Colors', 'ERROR, BOLD, GOOD, NORMAL, WARNING')
@@ -373,6 +379,10 @@ print_to_screen_and_log(now.strftime("%A %d. %B %Y %H:%M:%S %z"))
 
 # IMPORTING THE TESTS CONTENT
 from regression_tests_data import tests
+
+if args.filter:
+    k, v = tuple(args.filter.split('='))
+    tests = list(filter(lambda test: k in test and v in test[k], tests))
 
 test(BINARY_NAME, tests, logfile, LOGFILE)
 

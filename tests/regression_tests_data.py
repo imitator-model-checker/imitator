@@ -2685,6 +2685,287 @@ Error                                   : invalid model
 
 	,
 
+	# BEGIN : Type checking on guards tests
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a term doesn\'t compute on a bad type (type checking)',
+		'input_files': ['type_checking/guards/term-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'term-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a term is not a mixin of different types (type checking)',
+		'input_files': ['type_checking/guards/term-mixin-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'term-mixin-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a factor is not a mixin of different types (type checking)',
+		'input_files': ['type_checking/guards/factor-mixin-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'factor-mixin-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a factor doesn\'t compute on a bad type (type checking)',
+		'input_files': ['type_checking/guards/factor-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'factor-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a comparison doesn\'t compute on a bad type (type checking)',
+		'input_files': ['type_checking/guards/compare-operator-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'compare-operator-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a comparison doesn\'t mix different types (type checking)',
+		'input_files': ['type_checking/guards/compare-operator-mixin-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'compare-operator-mixin-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a "in" expression doesn\'t compute on a bad type (type checking)',
+		'input_files': ['type_checking/guards/in-operator-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'in-operator-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a "in" expression doesn\'t mix different types (type checking)',
+		'input_files': ['type_checking/guards/in-operator-mixin-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'in-operator-mixin-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a logical expression doesn\'t compute on a bad type (other than bool) (type checking)',
+		'input_files': ['type_checking/guards/logical-operator-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'logical-operator-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a "not" expression doesn\'t compute on a bad type (other than bool) (type checking)',
+		'input_files': ['type_checking/guards/not-operator-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'not-operator-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a "rational_of_int" function doesn\'t compute on a bad type (type checking)',
+		'input_files': ['type_checking/guards/rational-of-int-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'rational-of-int-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test that a "rational_of_int" function doesn\'t mix different types (type checking)',
+		'input_files': ['type_checking/guards/rational-of-int-mixin-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'rational-of-int-mixin-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	# END : Type checking on guards tests
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test updates (state space)',

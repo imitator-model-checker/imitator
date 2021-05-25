@@ -1,0 +1,63 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Mix term data types
+ * Description      : Mix term data types, should lead to a type error
+ * Correctness      : Type error
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic, Type Checking
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/05/19
+ * Last modified    : 2021/05/19
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.1.0
+ ************************************************************)
+var 
+    i
+        : int;
+    j
+    	: rational;
+
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when i + j = 10 goto lend;
+	
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        i := 5,
+        j := 5
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
