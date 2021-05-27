@@ -2612,6 +2612,8 @@ let p_grow_to_infinity_assign variables_elapse variables_constant linear_constra
 	(* The end *)
 	()
 
+let px_grow_to_infinity_assign = p_grow_to_infinity_assign
+
 
 (** Remove all lower bounds on the first variable list; the second list will remain constant *)
 (** WARNING: this function is certainly not optimized at all! *)
@@ -2626,6 +2628,7 @@ let p_grow_to_zero_assign variables_elapse variables_constant linear_constraint 
 	(* The end *)
 	()
 
+let px_grow_to_zero_assign = p_grow_to_zero_assign
 
 (*------------------------------------------------------------*)
 (* Strict to non-strict *)
