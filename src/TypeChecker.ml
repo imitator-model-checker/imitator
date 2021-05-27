@@ -823,7 +823,9 @@ let check_type_assignment parsed_model variable_name expr =
     (* Not consistent ? raise a type error with appropriate message*)
     if not (is_consistent) then (
         raise (TypeError (get_error_message variable_name variable_type expr_var_type_discrete infer_expr))
-    );;
+    )
+    else
+        infer_expr
 
 
 (* Check that constant declarations are well typed *)

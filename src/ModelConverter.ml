@@ -2065,9 +2065,9 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			    (* TODO benjamin move to TypeChecker *)
 			    (* TYPE CHECKING *)
 			    (* Check expression / variable type consistency *)
-                TypeChecker.check_type_assignment useful_parsing_model_information variable_name expr;
+                let infer_expr = TypeChecker.check_type_assignment useful_parsing_model_information variable_name expr in
 			    (* Try to reduce expression to a value *)
-			    let discrete_value = ParsingStructureUtilities.try_reduce_parsed_global_expression_with_model useful_parsing_model_information expr in
+			    let discrete_value = ParsingStructureUtilities.try_reduce_parsed_global_expression_with_model useful_parsing_model_information infer_expr in
 			    (* Check computed value type consistency *)
                 let discrete_value_type = DiscreteValue.discrete_type_of_value discrete_value in
                 (* Get variable type *)

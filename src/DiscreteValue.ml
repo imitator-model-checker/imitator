@@ -346,7 +346,13 @@ let equal a b =
     | Rational_value a, Rational_value b -> NumConst.equal a b
     | Bool_value a, Bool_value b -> a = b
     | Int_value a, Int_value b -> Int32.equal a b
-    | _ -> false
+    | lt, rt -> raise (
+        ComputingException (
+            (string_of_var_type_discrete (discrete_type_of_value lt))
+            ^ " = "
+            ^ (string_of_var_type_discrete (discrete_type_of_value rt))
+        )
+    )
 
 (* Check if a discrete value is not equal to another discrete value *)
 let neq a b =
