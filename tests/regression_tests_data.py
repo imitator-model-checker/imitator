@@ -2685,6 +2685,51 @@ Error                                   : invalid model
 
 	,
 
+	# BEGIN : Type checking complex tests
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/27
+		## Last modified            : 2021/05/27
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'purpose'    : 'Test type checking by making a lot of complex operations on multiple types (type checking)',
+		'input_files': ['type_checking/complex-type-checking.imi'],
+		'tags':'type checking',
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'complex-type-checking-statespace.states' , 'content' : """
+  INITIAL
+  STATE 0:
+  pta: l1, b1 = True, b2 = False, k = 0, j = 1, i = 0 ==> 
+& x >= 0
+& p >= 0
+
+  Projection onto the parameters:
+   p >= 0
+		"""
+			 } # end result file
+			,
+			{'file': 'complex-type-checking-statespace.states' , 'content' : """
+  STATE 23:
+  pta: l2, b1 = False, b2 = True, k = 10, j = 0, i = 1 ==> 
+& x >= 0
+& p > 10
+
+  Projection onto the parameters:
+   p > 10
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	# END : Type checking complex test
+
 	# BEGIN : Type checking on guards tests
 
 	#------------------------------------------------------------
