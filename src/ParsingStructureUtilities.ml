@@ -181,7 +181,8 @@ let try_reduce_parsed_global_expression constants expr =
         | Parsed_DF_unary_min factor ->
             DiscreteValue.neg (try_reduce_parsed_factor factor)
         | Parsed_rational_of_int_function expr ->
-            raise (InvalidExpression "Not implemented") (* TODO benjamin IMPORTANT implement this !!! *)
+            (* Convert with no problem because it's already type checked *)
+            DiscreteValue.convert_to_rational_value (try_reduce_parsed_arithmetic_expression expr)
 
     and try_reduce_parsed_boolean_expression = function
 	    | Parsed_True -> DiscreteValue.bool_value_true
