@@ -508,11 +508,13 @@ val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constr
 (*** WARNING: this function is certainly not optimized at all! ***)
 (*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
 val p_grow_to_infinity_assign : variable list -> variable list -> p_linear_constraint -> unit
+val px_grow_to_infinity_assign : variable list -> variable list -> px_linear_constraint -> unit
 
 (** Remove all lower bounds on the first variable list; the second list will remain constant *)
 (** WARNING: this function is certainly not optimized at all! *)
 (*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
 val p_grow_to_zero_assign : variable list -> variable list -> p_linear_constraint -> unit
+val px_grow_to_zero_assign : variable list -> variable list -> px_linear_constraint -> unit
 
 
 (** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
