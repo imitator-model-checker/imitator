@@ -2003,9 +2003,10 @@ let check_init useful_parsing_model_information init_definition observer_automat
 				(* Case constant *)
 				if (Hashtbl.mem constants variable_name) then false
 				else (
-				(* Otherwise: problem! *)
-				raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
-				))
+                    (* Otherwise: problem! *)
+                    raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
+                )
+            )
 			in is_discrete
 	    (* All parsed boolean predicate are for discrete variables, just check the init *)
         | Parsed_discrete_predicate (variable_name, _) ->
@@ -2036,9 +2037,13 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			(* Constant: OK *)
 			| (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
 				(* Get the value of  the variable *)
-				let value = Hashtbl.find constants variable_name in
-				let numconst_value = DiscreteValue.numconst_value value in
-				DiscreteValue.Rational_value (NumConst.mul coef numconst_value)
+                let value = Hashtbl.find constants variable_name in
+                (* TODO benjamin IMPORTANT maybe check that it's not a variable ? *)
+                (* TODO benjamin IMPORTANT maybe check that it's a rational only ! *)
+
+                let numconst_value = DiscreteValue.numconst_value value in
+                DiscreteValue.Rational_value (NumConst.mul coef numconst_value)
+
 			| _ -> print_error ("The initial value for discrete variable `" ^ discrete_name ^ "` must be given in the form `" ^ discrete_name ^ " = c`, where `c` is an integer, a rational or a constant.");
 				well_formed := false;
 				DiscreteValue.Rational_value NumConst.zero
@@ -2054,8 +2059,14 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			Hashtbl.add init_values_for_discrete discrete_index discrete_value;
 			);
         | Parsed_discrete_predicate (variable_name, expr) ->
+
+            (* Check that initialized variable of name 'variable_name' is not a constant *)
+            if Hashtbl.mem constants variable_name then
+                raise (InvalidExpression ("Initialize '" ^ variable_name ^ "' constant is forbidden"));
             (* Get the variable index *)
             let discrete_index = Hashtbl.find index_of_variables variable_name in
+
+
 			(* Check if it was already declared *)
 			if Hashtbl.mem init_values_for_discrete discrete_index then (
 			    print_error ("The discrete variable `" ^ variable_name ^ "` is given an initial value several times in the init definition.");
@@ -2102,7 +2113,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			print_warning ("The discrete variable '" ^ variable_name ^ "' was not given an initial value in the init definition: it will be assigned to " ^ DiscreteValue.string_of_value default_value ^ ".");
 			Hashtbl.add init_values_for_discrete discrete_index default_value
 		);
-		) discrete;
+    ) discrete;
 
 	(* Convert the Hashtbl to pairs (discrete_index, init_value) *)
 	let discrete_values_pairs =
@@ -3050,7 +3061,6 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		(* Create pairs of (index , value) for discrete variables *)
 		(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in *)
 
-        (* TODO check with étienne : visiblement c'est ok *)
         (* Get only rational discrete for constraint encoding *)
         let init_discrete_rational_pairs = List.filter (fun (discrete_index, discrete_value) -> DiscreteValue.is_rational_value discrete_value) init_discrete_pairs in
         (* map to num const *)
