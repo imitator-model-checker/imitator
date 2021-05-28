@@ -1,0 +1,64 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Init expression init bad type error 
+ * Description      : Init variable with a bad typed expression should lead to a type error
+ * Correctness      : Error
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic, Type checking
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/03/04
+ * Last modified    : 2021/05/27
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.1.0
+ ************************************************************)
+var 
+    x,
+        : clock;
+    b
+        : bool;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when b goto lend;
+	
+accepting loc lend: invariant b
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        b := 0 & 0 (* Set a boolean with a rational expression should lead to type error *) 
+    ;
+    continuous = 
+        & x >= 0
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
