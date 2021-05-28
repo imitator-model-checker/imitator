@@ -2495,7 +2495,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'purpose'    : 'Test that a constant is not initialized with a rational literal (type checking)',
-		'input_files': ['type_checking/constant-int-divide-type-error.imi'],
+		'input_files': ['type_checking/constants_declarations/constant-int-divide-type-error.imi'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'constant-int-divide-type-error.res' , 'content' : """
@@ -2517,7 +2517,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'purpose'    : 'Test that a variable is not initialized with a rational literal (type checking)',
-		'input_files': ['type_checking/variable-int-divide-type-error.imi'],
+		'input_files': ['type_checking/inits/variable-int-divide-type-error.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
 			{'file': 'variable-int-divide-type-error.res' , 'content' : """
@@ -2627,54 +2627,10 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'purpose'    : 'Test that a clock isn\'t updated with a bad type (type checking)',
-		'input_files': ['type_checking/clock-update-type-error.imi'],
+		'input_files': ['type_checking/updates/clock-update-type-error.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
 			{'file': 'clock-update-type-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/04/02
-		## Last modified            : 2021/04/02
-		## Test for IMITATOR version: > 3.0
-		## Author 					: lbinria
-		'purpose'    : 'Test that a clock isn\'t compared with a bad type (type checking)',
-		'input_files': ['type_checking/clock-comparison-type-error.imi'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'clock-comparison-type-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/04/02
-		## Last modified            : 2021/04/02
-		## Test for IMITATOR version: > 3.0
-		## Author 					: lbinria
-		'purpose'    : 'Test that a parameter isn\'t compared with a bad type (type checking)',
-		'input_files': ['type_checking/parameter-comparison-type-error.imi'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'parameter-comparison-type-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file
