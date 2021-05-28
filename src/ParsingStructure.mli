@@ -210,7 +210,7 @@ type parsed_automaton = automaton_name * sync_name list * parsed_location list
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
 	| Parsed_linear_predicate of linear_constraint
-	| Parsed_discrete_predicate of string *  global_expression
+	| Parsed_discrete_predicate of string * global_expression
 
 type init_definition = parsed_init_state_predicate list
 

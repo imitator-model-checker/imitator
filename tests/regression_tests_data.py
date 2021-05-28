@@ -2730,6 +2730,12 @@ Error                                   : invalid model
 
 	# END : Type checking complex test
 
+	# BEGIN : Type checking on variable initializations
+
+
+
+	# END : Type checking on variable initializations
+
 	# BEGIN : Type checking on guards tests
 
 	#------------------------------------------------------------

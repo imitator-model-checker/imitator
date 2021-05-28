@@ -132,6 +132,38 @@ and string_of_parsed_relop relop value_1 value_2 =
         | PARSED_OP_GEQ	    -> value_1 ^ " >= " ^ value_2
         | PARSED_OP_G		-> value_1 ^ " > " ^ value_2
 
+let rec string_of_parsed_linear_constraint parsed_model = function
+	| Parsed_true_constraint -> "True"
+	| Parsed_false_constraint -> "False"
+	| Parsed_linear_constraint (l_expr, relop, r_expr) ->
+	    string_of_parsed_relop
+            relop
+            (string_of_linear_expression parsed_model l_expr)
+            (string_of_linear_expression parsed_model r_expr)
+
+and string_of_linear_expression parsed_model = function
+	| Linear_term term -> string_of_linear_term parsed_model term
+	| Linear_plus_expression (expr, term) ->
+	    string_of_linear_expression parsed_model expr
+	    ^ " + "
+	    ^ string_of_linear_term parsed_model term
+	| Linear_minus_expression (expr, term) ->
+	    string_of_linear_expression parsed_model expr
+	    ^ " - "
+	    ^ string_of_linear_term parsed_model term
+
+and string_of_linear_term parsed_model = function
+	| Constant c -> NumConst.string_of_numconst c
+	| Variable (coef, variable_name) when NumConst.equal NumConst.one coef -> variable_name
+	| Variable (coef, variable_name) -> (NumConst.string_of_numconst coef)
+
+let string_of_parsed_init_state_predicate parsed_model = function
+	| Parsed_loc_assignment (automaton_name, location_name) -> "loc[" ^ automaton_name ^ "] = " ^ location_name
+	| Parsed_linear_predicate linear_constraint -> string_of_parsed_linear_constraint parsed_model linear_constraint
+	| Parsed_discrete_predicate (variable_name, expr) ->
+	    variable_name
+	    ^ " = "
+	    ^ string_of_parsed_global_expression parsed_model expr
 
 let string_of_parsed_nonlinear_constraint parsed_model = function
     | Parsed_true_nonlinear_constraint -> "True"

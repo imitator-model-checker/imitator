@@ -29,6 +29,12 @@ val string_of_parsed_term : useful_parsing_model_information -> parsed_discrete_
 val string_of_parsed_factor : useful_parsing_model_information -> parsed_discrete_factor -> string
 val string_of_parsed_relop : parsed_relop -> string -> string -> string
 
+(* Parsed linear constraint to string *)
+val string_of_parsed_linear_constraint : useful_parsing_model_information -> linear_constraint -> string
+val string_of_linear_expression : useful_parsing_model_information -> linear_expression -> string
+val string_of_linear_term : useful_parsing_model_information -> linear_term -> string
+val string_of_parsed_init_state_predicate : useful_parsing_model_information -> parsed_init_state_predicate -> string
+
 val string_of_parsed_nonlinear_constraint : useful_parsing_model_information -> nonlinear_constraint -> string
 
 val try_reduce_parsed_global_expression : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> global_expression -> DiscreteValue.discrete_value

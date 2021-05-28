@@ -2020,6 +2020,8 @@ let check_init useful_parsing_model_information init_definition observer_automat
 		| _ -> false
 		) filtered_init_inequalities in
 
+    (* Check init discrete section : discrete *)
+
 	(* Check that every discrete variable is given only one (rational) initial value *)
 	let init_values_for_discrete = Hashtbl.create (List.length discrete) in
 	List.iter (fun lp ->
@@ -2036,7 +2038,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			| (PARSED_OP_EQ, Linear_term (Constant c)) -> DiscreteValue.Rational_value c
 			(* Constant: OK *)
 			| (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
-				(* Get the value of  the variable *)
+				(* Get the value of the variable *)
                 let value = Hashtbl.find constants variable_name in
                 (* TODO benjamin IMPORTANT maybe check that it's not a variable ? *)
                 (* TODO benjamin IMPORTANT maybe check that it's a rational only ! *)
@@ -2122,8 +2124,53 @@ let check_init useful_parsing_model_information init_definition observer_automat
 		) discrete
 	in
 
-	(* Check that no discrete variable is used in other inequalities (warns if yes) *)
-	(*** TODO ***) (*use 'other_inequalities' *)
+    (* Check init constraints section : continuous *)
+
+	(* Check variable types in other_inequalities *)
+	(* As other_inequalities represent init constraints of clocks, parameters, or only rational discrete variables *)
+    (* we raise an exception if there is one discrete variable of another type than discrete rational *)
+
+    let continuous_init_error = ref false in
+	List.iter (fun lp ->
+
+        (* Search variables used in linear predicate *)
+	    let variable_names_ref = ref StringSet.empty in
+	    get_variables_in_init_state_predicate variable_names_ref lp;
+	    let variable_names = !variable_names_ref in
+
+        (* Gathering all variables that are non rational *)
+        let non_rational_variable_names = StringSet.filter (fun variable_name ->
+            if Hashtbl.mem index_of_variables variable_name then (
+                let variable_index =  Hashtbl.find index_of_variables variable_name in
+                let variable_type = DiscreteValue.discrete_type_of_var_type (type_of_variables variable_index) in
+                DiscreteValue.is_discrete_type_rational_type variable_type
+            )
+            else (
+                let value =  Hashtbl.find constants variable_name in
+                let variable_type = DiscreteValue.discrete_type_of_value value in
+                DiscreteValue.is_discrete_type_rational_type variable_type
+            )
+        ) variable_names
+        in
+
+        (* Print error message for all non rational variables *)
+        StringSet.iter(fun variable_name ->
+            print_error (
+                "Variable `"
+                ^ variable_name
+                ^ "` used in init constraint \""
+                ^ ParsingStructureUtilities.string_of_parsed_init_state_predicate useful_parsing_model_information lp
+                ^ "\" should be "
+                ^ DiscreteValue.string_of_var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
+            );
+            continuous_init_error := true;
+        ) non_rational_variable_names
+
+	) other_inequalities;
+
+    (* There are errors in the constraints init section *)
+    if !continuous_init_error then
+        raise (InvalidExpression ("There are errors in the constraints init section"));
 
 	(* Return whether the init declaration passed the tests *)
 	discrete_values_pairs, !well_formed

@@ -18,6 +18,7 @@ open ParsingStructure
 open ParsingStructureUtilities
 open ImitatorUtilities
 open OCamlUtilities
+open Exceptions
 
 (** Exceptions **)
 
