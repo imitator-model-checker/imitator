@@ -1593,6 +1593,7 @@ DESCRIPTION OF THE TRANSITIONS
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear D reachable)',
 		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1617,6 +1618,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear PD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1642,6 +1644,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear XD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1666,6 +1669,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear PXD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1690,6 +1694,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear D reachable)',
 		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1714,6 +1719,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear PD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1739,6 +1745,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear XD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1763,6 +1770,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear PXD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1787,6 +1795,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear D reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1811,6 +1820,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1836,6 +1846,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear XD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1860,6 +1871,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PXD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1884,6 +1896,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1906,6 +1919,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear XD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1928,6 +1942,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PXD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1950,6 +1965,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear D reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1974,6 +1990,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1999,6 +2016,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear XD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2023,6 +2041,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PXD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2047,6 +2066,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2069,6 +2089,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear XD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2091,6 +2112,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PXD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2113,6 +2135,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test linear expression unary minus in guard (computing)',
 		'input_files': ['linear_expressions/unary-minus-linear-expression.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2137,6 +2160,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test linear expression unary minus in guard (printing)',
 		'input_files': ['linear_expressions/unary-minus-linear-expression.imi'],
 		'options'    : '-imi2IMI',
@@ -2160,6 +2184,7 @@ when  y + 7 > 2*x
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression unary minus in guard (computing)',
 		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2184,6 +2209,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression unary minus in guard (printing)',
 		'input_files': ['arithmetic_expressions/unary-minus-guard.imi'],
 		'options'    : '-imi2IMI',
@@ -2214,6 +2240,7 @@ when  -(i * 2) = -2 * i
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression unary minus in update (printing)',
 		'input_files': ['arithmetic_expressions/unary-minus-update.imi'],
 		'options'    : '-imi2IMI',
@@ -2236,6 +2263,7 @@ when  i = 0 do {i := -(i * 2), i := -2 * i, i := -(i * -2), i := -(i / 2), i := 
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression with parenthesis (printing)',
 		'input_files': ['arithmetic_expressions/arithmetic-expr-printing-1.imi'],
 		'options'    : '-imi2IMI',
@@ -2267,6 +2295,7 @@ when  z * x / y > x do {}  sync a1 goto lend;
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression without parenthesis (printing)',
 		'input_files': ['arithmetic_expressions/arithmetic-expr-printing-2.imi'],
 		'options'    : '-imi2IMI',
@@ -2484,6 +2513,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/03/11
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a boolean variable is updated with a consistent typed expression (type checking)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'acceptingReachable.imiprop'],
@@ -2538,6 +2568,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/31
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test a complex boolean comparison (computing)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/complex-bool-comparison.imi'],
@@ -2577,6 +2608,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/31
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test logical operator priority (computing)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/logical-operator-priority.imi'],
@@ -2621,6 +2653,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/31
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a constant is not initialized with a rational literal (type checking)',
 		'tags' : 'type checking, semantic, constants, declarations',
 		'input_files': ['type_checking/constants_declarations/constant-int-divide-type-error.imi'],
@@ -2644,6 +2677,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/31
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that constant declaration is type checked (type checking)',
 		'tags' : 'type checking, semantic, constants, declarations',
 		'input_files': ['type_checking/constants_declarations/constant-declaration-bad-type-error.imi'],
@@ -2669,6 +2703,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/03/12
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that an update expression doesn\'t mix different types in addition (type checking)',
 		'input_files': ['type_checking/expression-mixin-type-error-1.imi'],
 		'options'    : '',
@@ -2691,6 +2726,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/03/12
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that an update expression doesn\'t mix different types in multiplication (type checking)',
 		'input_files': ['type_checking/expression-mixin-type-error-2.imi'],
 		'options'    : '',
@@ -2713,6 +2749,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/03/12
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that an update expression doesn\'t mix different types in comparison (type checking)',
 		'input_files': ['type_checking/expression-mixin-type-error-3.imi'],
 		'options'    : '-no-var-autoremove',
@@ -2735,6 +2772,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/03/12
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that an update expression doesn\'t mix different types in "in" expression (type checking)',
 		'input_files': ['type_checking/expression-mixin-type-error-4.imi'],
 		'options'    : '',
@@ -2757,6 +2795,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/04/02
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a clock isn\'t updated with a bad type (type checking)',
 		'input_files': ['type_checking/updates/clock-update-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -2781,6 +2820,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/27
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test type checking by making a lot of complex operations on multiple types (type checking)',
 		'input_files': ['type_checking/complex-type-checking.imi'],
 		'tags':'type checking',
@@ -2826,6 +2866,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/04/14
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a variable is not initialized with a rational literal (type checking)',
 		'tags': 'type checking, init',
 		'input_files': ['type_checking/inits/variable-int-divide-type-error.imi'],
@@ -2849,6 +2890,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/28
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a variable of type X cannot be initialized by an expression of type Y (type checking)',
 		'input_files': ['type_checking/inits/init-discrete-bad-type-error.imi'],
 		'tags': 'type checking, init',
@@ -2872,6 +2914,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/28
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a init expression cannot be ill-typed (type checking)',
 		'input_files': ['type_checking/inits/init-discrete-expression-bad-type-error.imi'],
 		'tags': 'type checking, init',
@@ -2895,6 +2938,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/28
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a init expression cannot mix different types (type checking)',
 		'input_files': ['type_checking/inits/init-discrete-expression-mixin-type-error.imi'],
 		'tags': 'type checking, init',
@@ -2918,6 +2962,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/28
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a init constraint on clock cannot use non rational valued variable(s) or constant(s) (type checking)',
 		'tags': 'type checking, init',
 		'input_files': ['type_checking/inits/init-continuous-clock-type-error.imi'],
@@ -2941,6 +2986,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/28
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a init constraint on parameter cannot use non rational valued variable(s) or constant(s) (type checking)',
 		'tags':'type checking, init',
 		'input_files': ['type_checking/inits/init-continuous-parameter-type-error.imi'],
@@ -2964,6 +3010,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/31
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test init a variable with a complex expression (type checking)',
 		'input_files': ['type_checking/inits/init-expression-complex.imi'],
 		'tags': 'type checking, init',
@@ -2996,6 +3043,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/25
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a term cannot compute on a bad type (type checking)',
 		'input_files': ['type_checking/guards/term-bad-type-error.imi'],
 		'tags':'type checking',
@@ -3019,6 +3067,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/25
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a term cannot mix of different types (type checking)',
 		'input_files': ['type_checking/guards/term-mixin-type-error.imi'],
 		'tags':'type checking',
@@ -3042,6 +3091,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/25
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a factor cannot mix of different types (type checking)',
 		'input_files': ['type_checking/guards/factor-mixin-type-error.imi'],
 		'tags':'type checking',
@@ -3065,6 +3115,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/25
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a factor cannot compute on a bad type (type checking)',
 		'input_files': ['type_checking/guards/factor-bad-type-error.imi'],
 		'tags':'type checking',
@@ -3088,6 +3139,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/25
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a comparison cannot compute on a bad type (type checking)',
 		'input_files': ['type_checking/guards/compare-operator-bad-type-error.imi'],
 		'tags':'type checking',
@@ -3111,6 +3163,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/25
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a comparison cannot mix different types (type checking)',
 		'input_files': ['type_checking/guards/compare-operator-mixin-type-error.imi'],
 		'tags':'type checking',
@@ -3134,6 +3187,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/25
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a "in" expression cannot compute on a bad type (type checking)',
 		'input_files': ['type_checking/guards/in-operator-bad-type-error.imi'],
 		'tags':'type checking',
@@ -3157,6 +3211,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/25
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a "in" expression cannot mix different types (type checking)',
 		'input_files': ['type_checking/guards/in-operator-mixin-type-error.imi'],
 		'tags':'type checking',
@@ -3180,6 +3235,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/25
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a logical expression cannot compute on a bad type (other than bool) (type checking)',
 		'input_files': ['type_checking/guards/logical-operator-bad-type-error.imi'],
 		'tags':'type checking',
@@ -3203,6 +3259,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/25
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a "not" expression cannot compute on a bad type (other than bool) (type checking)',
 		'input_files': ['type_checking/guards/not-operator-bad-type-error.imi'],
 		'tags':'type checking',
@@ -3226,6 +3283,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/25
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a "rational_of_int" function cannot compute on a bad type (type checking)',
 		'input_files': ['type_checking/guards/rational-of-int-bad-type-error.imi'],
 		'tags':'type checking',
@@ -3249,6 +3307,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/25
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that a "rational_of_int" function cannot mix different types (type checking)',
 		'input_files': ['type_checking/guards/rational-of-int-mixin-type-error.imi'],
 		'tags':'type checking',
@@ -14128,6 +14187,7 @@ end
 		## Last modified            : 2021/03/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test init state printing - old state zone (printing)',
 		'tags' : 'semantic, printing, init',
 		'input_files': ['init_state/old-init-state-printing.imi'],
@@ -14212,6 +14272,7 @@ end
 		## Last modified            : 2021/03/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test init state printing - new init state (printing)',
 		'tags' : 'semantic, printing, init',
 		'input_files': ['init_state/new-init-state-printing.imi'],
@@ -14312,8 +14373,9 @@ end
 		## Test version             : 1
 		## Test since               : 2021/04/16
 		## Last modified            : 2021/04/16
-		## Test for IMITATOR version: > 3.0
+		## Test for IMITATOR version: 3.0.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that init of a clock in discrete state section is forbidden - new init state (behavior)',
 		'tags' : 'semantic, behavior, init',
 		'input_files': ['init_state/init-clock-in-discrete-state-section-error.imi'],
@@ -14337,6 +14399,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/04/16
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that init of a parameter in discrete state section is forbidden - new init state (behavior)',
 		'tags' : 'semantic, behavior, init',
 		'input_files': ['init_state/init-parameter-in-discrete-state-section-error.imi'],
@@ -14360,6 +14423,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/31
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that init of a discrete variable in discrete and continuous section at the same time is forbidden - new init state (behavior)',
 		'tags' : 'semantic, behavior, init',
 		'input_files': ['init_state/init-variable-at-discrete-and-continuous.imi'],
@@ -14407,6 +14471,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/31
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that init of a variable with a constant is accepted - new init state (behavior)',
 		'tags' : 'semantic, behavior, init',
 		'input_files': ['init_state/init-variable-with-constant.imi'],
@@ -14435,6 +14500,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/05/31
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test that init of a variable with a variable is forbidden - new init state (behavior)',
 		'tags' : 'semantic, behavior, init',
 		'input_files': ['init_state/init-variable-with-variable.imi'],
