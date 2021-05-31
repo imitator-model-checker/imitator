@@ -4593,7 +4593,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		)*) action_names
 	) in
 
-
+    (* TODO benjamin, add to constants for being able to use constant in declaration of another constant *)
+    (* ex : i = 1, j = i + 1 *)
     (* Evaluate the constants init expressions *)
     let evaluated_constants = List.map (fun (name, expr, var_type) -> name, expr, ParsingStructureUtilities.try_reduce_parsed_global_expression (Hashtbl.create 0) expr, var_type) constants in
 

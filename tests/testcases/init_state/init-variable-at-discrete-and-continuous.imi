@@ -1,12 +1,12 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Test that a constant is not initialized with a rational
- * Description      : Init a constant with a rational number should lead to an error
- * Correctness      : Type error 
+ * Title            : Test that init of a discrete variable in discrete and continuous section at the same time is forbidden
+ * Description      : Multiple initialization of a discrete variable should lead to an error
+ * Correctness      : Error
  * Scalable         : No
  * Generated        : No
- * Categories       : Semantic
+ * Categories       : Semantic, Behavior, Init
  * Source           : 
  * bibkey           : 
  * Author           : Benjamin L.
@@ -14,18 +14,15 @@
  * Input by         : Benjamin L.
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created          : 2021/03/12
+ * Created          : 2021/03/09
  * Last modified    : 2021/05/31
  * Model version    : 1.0
  *
  * IMITATOR version : 3.1.0
  ************************************************************)
 var 
-    x = 0,
-        : clock;
-    i = 2 / 3 (* forbidden assignment, because of trying to assign a literal rational to an int variable *)
-    	: int;
-
+    i, 
+        : rational;
 
 
 (************************************************************)
@@ -33,7 +30,7 @@ var
 (************************************************************)
  
 loc l1: invariant True 
-	when True goto lend;
+	when i = 2 goto lend;
 	
 accepting loc lend: invariant True
  end (* pta *)
@@ -49,9 +46,11 @@ init := {
 
     discrete = 
         loc[pta] := l1,
+        i := 1
     ;
     continuous = 
-        & x >= 0
+        & True
+        & i = 1
     ;
     
 }

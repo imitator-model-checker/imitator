@@ -1,12 +1,12 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Test that a constant is not initialized with a rational
- * Description      : Init a constant with a rational number should lead to an error
- * Correctness      : Type error 
+ * Title            : Test logical operator priority
+ * Description      : Test logical operator priority between OR and AND with parenthesis
+ * Correctness      : False
  * Scalable         : No
  * Generated        : No
- * Categories       : Semantic
+ * Categories       : Boolean, Semantic, Computing
  * Source           : 
  * bibkey           : 
  * Author           : Benjamin L.
@@ -14,27 +14,35 @@
  * Input by         : Benjamin L.
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created          : 2021/03/12
+ * Created          : 2021/05/11
  * Last modified    : 2021/05/31
  * Model version    : 1.0
  *
  * IMITATOR version : 3.1.0
  ************************************************************)
 var 
-    x = 0,
+    x,
         : clock;
-    i = 2 / 3 (* forbidden assignment, because of trying to assign a literal rational to an int variable *)
-    	: int;
-
+    p
+        : parameter;
+    b1, b2
+        : bool;
 
 
 (************************************************************)
  automaton pta
 (************************************************************)
+ synclabs: a1;
  
-loc l1: invariant True 
-	when True goto lend;
-	
+loc l1: invariant True
+    (* Thanks to or, this expression is True *)
+	when (b1 = not(not(b2)) & b2 | b2) & x > 5 + p sync a1 do { } goto l2;
+
+
+loc l2: invariant True
+    (* Here we have parenthesis around or, so this expression is False *)
+    when b1 = not(not(b2)) & (b2 | b2) & x > 5 + p sync a1 do { } goto lend;
+
 accepting loc lend: invariant True
  end (* pta *)
 (************************************************************)
@@ -44,18 +52,20 @@ accepting loc lend: invariant True
 (* Initial state *)
 (************************************************************)
 
-
 init := {
 
     discrete = 
         loc[pta] := l1,
+        b1 := False,
+        b2 := True
     ;
     continuous = 
-        & x >= 0
+        & True
+        & x = 0
+        & p >= 0
     ;
     
 }
-
 
 
 (************************************************************)
