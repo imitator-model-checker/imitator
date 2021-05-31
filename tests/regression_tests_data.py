@@ -2472,7 +2472,7 @@ system pta;
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean constant is initialized with consistant type (type checking)',
+		'purpose'    : 'Test that a boolean constant is initialized with consistant type',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-constant-init-type-error.imi'],
 		'options'    : '',
@@ -2490,7 +2490,7 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean variable is initialized with consistant type (type checking)',
+		'purpose'    : 'Test that a boolean variable is initialized with consistant type',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2514,7 +2514,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a boolean variable is updated with a consistent typed expression (type checking)',
+		'purpose'    : 'Test that a boolean variable is updated with a consistent typed expression',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2654,7 +2654,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a constant is not initialized with a rational literal (type checking)',
+		'purpose'    : 'Test that a constant is not initialized with a rational literal',
 		'tags' : 'type checking, semantic, constants, declarations',
 		'input_files': ['type_checking/constants_declarations/constant-int-divide-type-error.imi'],
 		'options'    : '',
@@ -2678,7 +2678,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that constant declaration is type checked (type checking)',
+		'purpose'    : 'Test that constant declaration is type checked',
 		'tags' : 'type checking, semantic, constants, declarations',
 		'input_files': ['type_checking/constants_declarations/constant-declaration-bad-type-error.imi'],
 		'options'    : '',
@@ -2696,6 +2696,59 @@ Error                                   : invalid model
 
 	# END : Test type checking on constant declarations
 
+	# BEGIN : Test type checking on updates
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.0.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that update of an int variable by a literal rational is forbidden',
+		'tags': 'type checking, update',
+		'input_files': ['type_checking/updates/update-variable-bad-type-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'update-variable-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/02
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.0.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a clock isn\'t updated with a bad type',
+		'tags': 'type checking, update',
+		'input_files': ['type_checking/updates/clock-update-type-error.imi'],
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'clock-update-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	# END : Test type checking on updates
+
+
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
@@ -2704,7 +2757,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in addition (type checking)',
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in addition',
 		'input_files': ['type_checking/expression-mixin-type-error-1.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2727,7 +2780,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in multiplication (type checking)',
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in multiplication',
 		'input_files': ['type_checking/expression-mixin-type-error-2.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2750,7 +2803,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in comparison (type checking)',
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in comparison',
 		'input_files': ['type_checking/expression-mixin-type-error-3.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
@@ -2773,34 +2826,11 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in "in" expression (type checking)',
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in "in" expression',
 		'input_files': ['type_checking/expression-mixin-type-error-4.imi'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'expression-mixin-type-error-4.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/04/02
-		## Last modified            : 2021/04/02
-		## Test for IMITATOR version: > 3.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that a clock isn\'t updated with a bad type (type checking)',
-		'input_files': ['type_checking/updates/clock-update-type-error.imi'],
-		'options'    : '-no-var-autoremove',
-		'expectations' : [
-			{'file': 'clock-update-type-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file
@@ -2821,7 +2851,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test type checking by making a lot of complex operations on multiple types (type checking)',
+		'purpose'    : 'Test type checking by making a lot of complex operations on multiple types',
 		'input_files': ['type_checking/complex-type-checking.imi'],
 		'tags':'type checking',
 		'options'    : '-mode statespace -states-description',
@@ -2867,7 +2897,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a variable is not initialized with a rational literal (type checking)',
+		'purpose'    : 'Test that a variable is not initialized with a rational literal',
 		'tags': 'type checking, init',
 		'input_files': ['type_checking/inits/variable-int-divide-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -2891,7 +2921,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a variable of type X cannot be initialized by an expression of type Y (type checking)',
+		'purpose'    : 'Test that a variable of type X cannot be initialized by an expression of type Y',
 		'input_files': ['type_checking/inits/init-discrete-bad-type-error.imi'],
 		'tags': 'type checking, init',
 		'options'    : '',
@@ -2915,7 +2945,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a init expression cannot be ill-typed (type checking)',
+		'purpose'    : 'Test that a init expression cannot be ill-typed',
 		'input_files': ['type_checking/inits/init-discrete-expression-bad-type-error.imi'],
 		'tags': 'type checking, init',
 		'options'    : '',
@@ -2939,7 +2969,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a init expression cannot mix different types (type checking)',
+		'purpose'    : 'Test that a init expression cannot mix different types',
 		'input_files': ['type_checking/inits/init-discrete-expression-mixin-type-error.imi'],
 		'tags': 'type checking, init',
 		'options'    : '',
@@ -2963,7 +2993,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a init constraint on clock cannot use non rational valued variable(s) or constant(s) (type checking)',
+		'purpose'    : 'Test that a init constraint on clock cannot use non rational valued variable(s) or constant(s)',
 		'tags': 'type checking, init',
 		'input_files': ['type_checking/inits/init-continuous-clock-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -2987,7 +3017,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a init constraint on parameter cannot use non rational valued variable(s) or constant(s) (type checking)',
+		'purpose'    : 'Test that a init constraint on parameter cannot use non rational valued variable(s) or constant(s)',
 		'tags':'type checking, init',
 		'input_files': ['type_checking/inits/init-continuous-parameter-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -3011,7 +3041,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test init a variable with a complex expression (type checking)',
+		'purpose'    : 'Test init a variable with a complex expression',
 		'input_files': ['type_checking/inits/init-expression-complex.imi'],
 		'tags': 'type checking, init',
 		'options'    : '-mode statespace -states-description',
@@ -3034,6 +3064,34 @@ Error                                   : invalid model
 
 	# END : Type checking on variable initializations
 
+	# BEGIN : Type checking on conditional clauses
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that the use of a bad typed expression in conditional expression is forbidden',
+		'input_files': ['type_checking/conditionals/conditional-expression-bad-type-error.imi'],
+		'tags':'type checking, conditional',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'conditional-expression-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	# END : Type checking on conditional clauses
+
 	# BEGIN : Type checking on guards tests
 
 	#------------------------------------------------------------
@@ -3044,7 +3102,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a term cannot compute on a bad type (type checking)',
+		'purpose'    : 'Test that a term cannot compute on a bad type',
 		'input_files': ['type_checking/guards/term-bad-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -3068,7 +3126,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a term cannot mix of different types (type checking)',
+		'purpose'    : 'Test that a term cannot mix of different types',
 		'input_files': ['type_checking/guards/term-mixin-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -3092,7 +3150,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a factor cannot mix of different types (type checking)',
+		'purpose'    : 'Test that a factor cannot mix of different types',
 		'input_files': ['type_checking/guards/factor-mixin-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -3116,7 +3174,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a factor cannot compute on a bad type (type checking)',
+		'purpose'    : 'Test that a factor cannot compute on a bad type',
 		'input_files': ['type_checking/guards/factor-bad-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -3140,7 +3198,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a comparison cannot compute on a bad type (type checking)',
+		'purpose'    : 'Test that a comparison cannot compute on a bad type',
 		'input_files': ['type_checking/guards/compare-operator-bad-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -3164,7 +3222,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a comparison cannot mix different types (type checking)',
+		'purpose'    : 'Test that a comparison cannot mix different types',
 		'input_files': ['type_checking/guards/compare-operator-mixin-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -3188,7 +3246,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a "in" expression cannot compute on a bad type (type checking)',
+		'purpose'    : 'Test that a "in" expression cannot compute on a bad type',
 		'input_files': ['type_checking/guards/in-operator-bad-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -3212,7 +3270,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a "in" expression cannot mix different types (type checking)',
+		'purpose'    : 'Test that a "in" expression cannot mix different types',
 		'input_files': ['type_checking/guards/in-operator-mixin-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -3236,7 +3294,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a logical expression cannot compute on a bad type (other than bool) (type checking)',
+		'purpose'    : 'Test that a logical expression cannot compute on a bad type (other than bool)',
 		'input_files': ['type_checking/guards/logical-operator-bad-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -3260,7 +3318,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a "not" expression cannot compute on a bad type (other than bool) (type checking)',
+		'purpose'    : 'Test that a "not" expression cannot compute on a bad type (other than bool)',
 		'input_files': ['type_checking/guards/not-operator-bad-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -3284,7 +3342,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a "rational_of_int" function cannot compute on a bad type (type checking)',
+		'purpose'    : 'Test that a "rational_of_int" function cannot compute on a bad type',
 		'input_files': ['type_checking/guards/rational-of-int-bad-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -3308,7 +3366,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a "rational_of_int" function cannot mix different types (type checking)',
+		'purpose'    : 'Test that a "rational_of_int" function cannot mix different types',
 		'input_files': ['type_checking/guards/rational-of-int-mixin-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',

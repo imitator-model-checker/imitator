@@ -1,0 +1,60 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that update of an int variable by a literal rational is forbidden
+ * Description      : Trying to assign an int variable with a rational, should lead to a type error
+ * Correctness      : Type error 
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/03/12
+ * Last modified    : 2021/05/31
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.1.0
+ ************************************************************)
+var
+    i
+    	: int;
+
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when True do { i := 2 / 3 } goto lend;
+	
+accepting loc lend: invariant i = 1
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        i := 0
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
