@@ -184,8 +184,8 @@ def test(binary_name, tests, logfile, logfile_name):
         print_to_log(
             header_benchmark.format(benchmark_id=benchmark_id,
                                     purpose=test_case['purpose']))
-        print_to_screen(' Benchmark {}: {}..'.format(benchmark_id,
-                                                     test_case['purpose']))
+        print_to_screen(' Benchmark {}: {} {}..'.format(benchmark_id,
+                                                     test_case['purpose'], '- tags: [{}]'.format(test_case["tags"]) if "tags" in test_case else ""))
 
         # Add the path to all input files
         # TODO: test for existence of files (just in case)
@@ -381,8 +381,14 @@ print_to_screen_and_log(now.strftime("%A %d. %B %Y %H:%M:%S %z"))
 from regression_tests_data import tests
 
 if args.filter:
-    k, v = tuple(args.filter.split('='))
-    tests = list(filter(lambda test: k in test and v in test[k], tests))
+    # filter structure : --filter "key1=value1, key2=value2"
+    # Eventually split on many filters
+    all_filters = args.filter.split(',')
+    # Split key / value for each filter, obtain list of tuples that represent filters
+    tuples = [tuple(f.split('=')) for f in all_filters]
+    # Get tests that match with filters
+    tests = [t for t in tests if any(k.strip() in t and v.strip() in t[k.strip()] for k, v in tuples)]
+
 
 test(BINARY_NAME, tests, logfile, LOGFILE)
 
