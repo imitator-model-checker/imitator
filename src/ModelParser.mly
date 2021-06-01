@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Benjamin Loillier, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2021/04/27
+ * Last modified     : 2021/06/01
  *
  ************************************************************/
 
@@ -674,14 +674,14 @@ discrete_boolean_expression:
 /************************************************************/
 
 init_definition_option:
+    | old_init_definition { $1 }
     | init_definition { $1 }
-    | new_init_definition { $1 }
     | { [ ] }
 ;
 
-init_definition:
+/* Old init style (until 3.0), kept for backward-compatibility */
+old_init_definition:
 	| CT_INIT OP_ASSIGN init_expression SEMICOLON { $3 }
-	| { [ ] }
 ;
 
 
@@ -718,11 +718,11 @@ new_init_loc_predicate:
 ;
 
 /************************************************************/
-/** NEW INIT DEFINITION SECTION : SEPARATION OF DISCRETE AND CONTINUOUS */
+/** NEW INIT DEFINITION SECTION from 3.1: SEPARATION OF DISCRETE AND CONTINUOUS */
 /************************************************************/
 
-new_init_definition:
-	| CT_INIT OP_ASSIGN LBRACE new_init_discrete_continuous_definition RBRACE { $4 }
+init_definition:
+	| CT_INIT OP_ASSIGN LBRACE new_init_discrete_continuous_definition RBRACE semicolon_opt { $4 }
 ;
 
 new_init_discrete_continuous_definition:
@@ -787,12 +787,10 @@ comma_opt:
 	| { }
 ;
 
-/*
 semicolon_opt:
 	| SEMICOLON { }
 	| { }
 ;
-*/
 
 ampersand_opt:
 	| AMPERSAND { }
