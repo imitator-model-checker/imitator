@@ -230,7 +230,7 @@ let string_of_invariant model automaton_index location_index =
 	^
 	let stopped = model.stopwatches automaton_index location_index in
 	(* Case 1: no stopwatches *)
-	if stopped = [] then " "
+	if stopped = [] then ""
 	(* Case 2: some clocks stopped *)
 	else
 	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
@@ -240,7 +240,7 @@ let string_of_invariant model automaton_index location_index =
 	^
 	let flow = model.flow automaton_index location_index in
 	(* Case 1: no explicit flow *)
-	if flow = [] then " "
+	if flow = [] then ""
 	(* Case 2: some flow *)
 	else
 	let flow_str = string_of_list_of_string_with_sep "," (List.map (fun (variable_index, flow_value) -> (model.variable_names variable_index) ^ "' = " ^ (NumConst.string_of_numconst flow_value) ) flow) in
