@@ -52,7 +52,7 @@ val string_of_concrete_state : AbstractModel.abstract_model -> State.concrete_st
 (************************************************************)
 (** Convert a guard into a string *)
 val string_of_guard : (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
-
+val customized_string_of_guard : Constants.customized_boolean_string -> (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
 
 (************************************************************)
 (** Transitions *)

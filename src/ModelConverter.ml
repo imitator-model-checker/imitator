@@ -54,9 +54,6 @@ exception InvalidProperty
 (* This avoid the non exhaustive pattern matching warning *)
 exception InvalidLeaf
 
-(* TODO benjamin remove all references to TypeError in ModelConverter *)
-exception TypeError of string
-
 (************************************************************)
 (************************************************************)
 (** Type definition *)
@@ -528,7 +525,10 @@ and convert_parsed_int_arithmetic_expression index_of_variables constants (* exp
         | Parsed_DF_constant var_value -> Int_constant (DiscreteValue.int_value var_value)
         | Parsed_DF_expression expr -> Int_expression (convert_parsed_int_arithmetic_expression_rec expr)
         | Parsed_DF_unary_min factor -> Int_unary_min (convert_parsed_int_factor factor)
-        | Parsed_rational_of_int_function _ -> raise (InternalError "int expressus") (* TODO benjamin set a message *)
+        (* Should never happen, because it was checked by type checker before *)
+        | Parsed_rational_of_int_function _ -> raise (
+            InternalError "There is a call to `rational_of_int` function in an int expression, although it was checked before by type checking. Maybe something fail in type checking"
+        )
     in
     convert_parsed_int_arithmetic_expression_rec
 
@@ -676,26 +676,6 @@ let rec convert_parsed_discrete_arithmetic_expression_with_model useful_parsing_
 let convert_parsed_discrete_boolean_expression_with_model useful_parsing_model_information =
     convert_parsed_discrete_boolean_expression useful_parsing_model_information
 
-(* TODO benjamin remove comments *)
-(*
-(* Convert a parsed global expression to an abstract model expression *)
-let rec convert_parsed_global_expression useful_parsing_model_information = function
-    | Parsed_global_expression expr as global_expr ->
-        (* TYPE CHECK *)
-        let _, expr_type = TypeChecker.resolve_expression_type useful_parsing_model_information global_expr in
-
-        match expr_type with
-        | DiscreteExpressions.Expression_type_discrete_bool _ ->
-            bool_expression_of_parsed_expression useful_parsing_model_information expr
-        | DiscreteExpressions.Expression_type_discrete_arithmetic DiscreteValue.Var_type_discrete_rational ->
-            rational_expression_of_parsed_expression useful_parsing_model_information expr
-        | DiscreteExpressions.Expression_type_discrete_arithmetic DiscreteValue.Var_type_discrete_int ->
-            int_expression_of_parsed_expression useful_parsing_model_information expr
-        (* Should never happen it concern only  *)
-        | DiscreteExpressions.Expression_type_discrete_arithmetic DiscreteValue.Var_type_discrete_unknown_number
-        | _ ->
-            raise (InvalidModel)
-*)
 (* Convert a parsed global expression to an abstract model expression *)
 let rec convert_parsed_global_expression useful_parsing_model_information = function
     | Parsed_global_expression expr as global_expr ->
@@ -1051,7 +1031,7 @@ let rec check_f_in_linear_expression f index_of_variables type_of_variables cons
 (* Check that a linear expression contains only discrete variables and constants *)
 (*------------------------------------------------------------*)
 let only_discrete_in_linear_term index_of_variables type_of_variables constants = function
-  | Constant _ -> true (* TODO benjamin check here because constant are not only rational now !*)
+  | Constant _ -> true
   | Variable (_, variable_name) ->
     (* Constants are allowed *)
     (Hashtbl.mem constants variable_name)
@@ -2075,32 +2055,10 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			    well_formed := false;
 			) else (
 
-			    (* TODO benjamin move to TypeChecker *)
 			    (* TYPE CHECKING *)
-			    (* Check expression / variable type consistency *)
-                let infer_expr = TypeChecker.check_type_assignment useful_parsing_model_information variable_name expr in
-			    (* Try to reduce expression to a value *)
-			    let discrete_value = ParsingStructureUtilities.try_reduce_parsed_global_expression_with_model useful_parsing_model_information infer_expr in
-			    (* Check computed value type consistency *)
-                let discrete_value_type = DiscreteValue.discrete_type_of_value discrete_value in
-                (* Get variable type *)
-                let var_type = TypeChecker.get_type_of_variable useful_parsing_model_information discrete_index in
-                let variable_type = TypeChecker.get_discrete_type_of_variable useful_parsing_model_information discrete_index in
-                let is_clock_or_parameter = var_type == DiscreteValue.Var_type_clock || var_type == DiscreteValue.Var_type_parameter in
+			    let converted_value = TypeChecker.check_discrete_init useful_parsing_model_information variable_name expr in
+                Hashtbl.add init_values_for_discrete discrete_index converted_value;
 
-                if (is_clock_or_parameter) then (
-                    raise (TypeError ("Initialisation of a " ^ (DiscreteValue.string_of_var_type var_type) ^ " in discrete init state section is forbidden"))
-                );
-
-                if not (DiscreteValue.is_discrete_type_compatibles variable_type discrete_value_type) then
-                    raise (TypeError ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type_discrete variable_type) ^ " is not compatible with value \"" ^ (DiscreteValue.string_of_value discrete_value) ^ "\" of type " ^ (DiscreteValue.string_of_var_type_discrete discrete_value_type)))
-                else (
-                    (* As literal value is compatible with variable type,
-                    convert literal value to variable type *)
-                    let converted_value = DiscreteValue.convert_value_to_discrete_type discrete_value variable_type in
-			        (* Else add it *)
-			        Hashtbl.add init_values_for_discrete discrete_index converted_value;
-                )
 			);
 		| _ -> raise (InternalError ("Must have this form since it was checked before."))
 		) discrete_init;
@@ -2691,7 +2649,11 @@ let get_conditional_update_value = function
 
 (*** TODO (though really not critical): try to do some simplifications… ***)
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let linear_term_of_parsed_update_arithmetic_expression index_of_variables constants pdae =
+let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_information pdae =
+
+    let index_of_variables = useful_parsing_model_information.index_of_variables in
+    let constants = useful_parsing_model_information.constants in
+
 	(* Create an array of coef *)
 	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
 	(* Create a zero constant *)
@@ -2767,18 +2729,34 @@ let linear_term_of_parsed_update_arithmetic_expression index_of_variables consta
 	(* Create the linear term *)
 	linear_term_of_array array_of_coef !constant
 
-let linear_term_of_parsed_discrete_boolean_expression index_of_variables constants = function
-    | Parsed_arithmetic_expression expr -> linear_term_of_parsed_update_arithmetic_expression index_of_variables constants expr
-    (* TODO benjamin print expression for more infos *)
-    | _ -> raise (InvalidExpression "Impossible to convert a boolean expression to a linear expression")
+let linear_term_of_parsed_discrete_boolean_expression useful_parsing_model_information = function
+    | Parsed_arithmetic_expression expr -> linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_information expr
 
-let linear_term_of_parsed_boolean_expression index_of_variables constants = function
-    | Parsed_Discrete_boolean_expression expr -> linear_term_of_parsed_discrete_boolean_expression index_of_variables constants expr
-    (* TODO benjamin print expression for more infos *)
-    | _ -> raise (InvalidExpression "Impossible to convert a boolean expression to a linear expression")
+    | _ as expr ->
+        (* Should never happen because expression should was already type checked *)
+        raise (
+            InternalError (
+                "Impossible to convert boolean expression \""
+                ^ ParsingStructureUtilities.string_of_parsed_discrete_boolean_expression useful_parsing_model_information expr
+                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed"
+            )
+        )
 
-let linear_term_of_global_expression index_of_variables constants = function
-    | Parsed_global_expression expr -> linear_term_of_parsed_boolean_expression index_of_variables constants expr
+let linear_term_of_parsed_boolean_expression useful_parsing_model_information = function
+    | Parsed_Discrete_boolean_expression expr -> linear_term_of_parsed_discrete_boolean_expression useful_parsing_model_information expr
+
+    | _ as expr ->
+        (* Should never happen because expression should was already type checked *)
+        raise (
+            InternalError (
+                "Impossible to convert boolean expression \""
+                ^ ParsingStructureUtilities.string_of_parsed_boolean_expression useful_parsing_model_information expr
+                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed"
+            )
+        )
+
+let linear_term_of_global_expression useful_parsing_model_information = function
+    | Parsed_global_expression expr -> linear_term_of_parsed_boolean_expression useful_parsing_model_information expr
 
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filtered_updates removed_variable_names updates =
@@ -2804,12 +2782,12 @@ let to_abstract_discrete_update useful_parsing_model_information (variable_name,
     (variable_index, global_expression)
 
 (** Translate a parsed clock update into its abstract model *)
-let to_abstract_clock_update index_of_variables constants only_resets updates_list =
+let to_abstract_clock_update useful_parsing_model_information only_resets updates_list =
 
   (** Translate parsed clock update into the tuple clock_index, linear_term *)
   let to_intermediate_abstract_clock_update (variable_name, parsed_update_expression) =
-    let variable_index = Hashtbl.find index_of_variables variable_name in
-    let linear_term = linear_term_of_global_expression index_of_variables constants parsed_update_expression in
+    let variable_index = Hashtbl.find useful_parsing_model_information.index_of_variables variable_name in
+    let linear_term = linear_term_of_global_expression useful_parsing_model_information parsed_update_expression in
     (variable_index, linear_term)
   in
 
@@ -2873,7 +2851,7 @@ let convert_normal_updates useful_parsing_model_information updates_list =
 	let discrete_updates : discrete_update list = List.map (to_abstract_discrete_update useful_parsing_model_information) parsed_discrete_updates in
 
 	(* Convert the clock updates *)
-	let converted_clock_updates : clock_updates = to_abstract_clock_update index_of_variables constants only_resets parsed_clock_updates in
+	let converted_clock_updates : clock_updates = to_abstract_clock_update useful_parsing_model_information only_resets parsed_clock_updates in
 
 	(** update abstract model *)
 	{

@@ -39,6 +39,7 @@ let uppaal_strings : customized_boolean_string = {
 	ge_operator     = " &gt;= ";
 	g_operator      = " &gt; ";
 	not_operator    = "!";
+	in_operator     = " in ";
 }
 
 let all_uppaal_strings : customized_string = {

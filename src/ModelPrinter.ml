@@ -168,8 +168,10 @@ let string_of_declarations model =
 let string_of_global_expression = DiscreteExpressions.string_of_global_expression
 (* Get string of an arithmetic expression *)
 let string_of_arithmetic_expression = DiscreteExpressions.string_of_arithmetic_expression
-(* Get string of non-linear constraint inequalities *)
-let string_of_nonlinear_constraint = NonlinearConstraint.string_of_nonlinear_constraint
+(* Get string of a boolean expression *)
+let string_of_boolean_expression = DiscreteExpressions.string_of_boolean_expression
+(* Get string of a discrete boolean expression *)
+let string_of_discrete_boolean_expression = DiscreteExpressions.string_of_discrete_boolean_expression
 
 
 (************************************************************)
@@ -178,17 +180,29 @@ let string_of_nonlinear_constraint = NonlinearConstraint.string_of_nonlinear_con
 
 (*** NOTE: special handling as we have a discrete and a continuous guard that must be handled homogeneously ***)
 
-(** Convert a guard into a string *)
-let string_of_guard variable_names = function
+let customized_string_of_guard customized_boolean_string variable_names = function
 	| True_guard -> LinearConstraint.string_of_true
 	| False_guard -> LinearConstraint.string_of_false
-	| Discrete_guard discrete_guard -> string_of_nonlinear_constraint variable_names discrete_guard
+	| Discrete_guard discrete_guard -> NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard
 	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard ->
-		(string_of_nonlinear_constraint variable_names discrete_continuous_guard.discrete_guard)
+		(NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard)
 		^ LinearConstraint.string_of_and ^
 		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
 
+(** Convert a guard into a string *)
+let string_of_guard = customized_string_of_guard Constants.default_string
+(*
+let string_of_guard variable_names = function
+	| True_guard -> LinearConstraint.string_of_true
+	| False_guard -> LinearConstraint.string_of_false
+	| Discrete_guard discrete_guard -> NonlinearConstraint.string_of_nonlinear_constraint variable_names discrete_guard
+	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
+	| Discrete_continuous_guard discrete_continuous_guard ->
+		(NonlinearConstraint.string_of_nonlinear_constraint variable_names discrete_continuous_guard.discrete_guard)
+		^ LinearConstraint.string_of_and ^
+		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
+*)
 
 
 
@@ -287,8 +301,6 @@ let string_of_discrete_updates ?(sep=", ") model updates =
 		(* Convert the arithmetic_expression *)
 		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
 	) updates)
-
-let string_of_boolean_expression = DiscreteExpressions.string_of_boolean_expression
 
 (** Return if there is no clock updates *)
 let no_clock_updates clock_updates =

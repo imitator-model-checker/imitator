@@ -12,11 +12,6 @@
  *
  ************************************************************)
 
-(* Expression type *)
-type expression_type =
-    | Expression_type_discrete_bool of DiscreteValue.var_type_discrete
-    | Expression_type_discrete_arithmetic of DiscreteValue.var_type_discrete_number
-
 (************************************************************)
 (************************************************************)
 (** Operators *)
@@ -119,19 +114,6 @@ type global_expression =
     (* A typed expression *)
     | Arithmetic_expression of discrete_arithmetic_expression
     | Bool_expression of boolean_expression
-
-
-val string_of_expression_type : expression_type -> string
-(* Check if a variable type is compatible with an expression type *)
-val is_var_type_discrete_compatible_with_expr_type : DiscreteValue.var_type_discrete -> expression_type -> bool
-(* Check if a variable type is compatible with an expression type *)
-val is_var_type_compatible_with_expr_type : DiscreteValue.var_type -> expression_type -> bool
-(* Check if expression type is a boolean expression type *)
-val is_bool_expression_type : expression_type -> bool
-(* Check if expression type is a unknown number type *)
-val is_unknown_number_expression_type : expression_type -> bool
-(* Check if expression type is a bool of unknown number type *)
-val is_bool_of_unknown_number_expression_type : expression_type -> bool
 
 (* String *)
 val customized_string_of_global_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string

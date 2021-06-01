@@ -45,6 +45,7 @@ let jani_boolean_strings : customized_boolean_string = {
 	ge_operator   = ">";
 	g_operator    = "≥";
 	not_operator  = "¬";
+	in_operator   = ""; (* useless *)
 }
 
 let jani_strings = {

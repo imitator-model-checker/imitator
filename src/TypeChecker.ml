@@ -20,12 +20,6 @@ open ImitatorUtilities
 open OCamlUtilities
 open Exceptions
 
-(** Exceptions **)
-
-(* Type error exception *)
-exception TypeError of string
-exception InternalError of string
-
 type variable_name = string
 type variable_index = int
 
@@ -863,3 +857,37 @@ let check_constant_declarations evaluated_constants =
 
 
     constant_tuples
+
+(* Check that a discrete variable initialization is well typed *)
+let check_discrete_init parsed_model variable_name expr =
+
+    (* Get the variable index *)
+    let discrete_index = Hashtbl.find parsed_model.index_of_variables variable_name in
+    (* Get variable type *)
+    let var_type = get_type_of_variable parsed_model discrete_index in
+
+    (* Check whether variable is clock or parameter *)
+    let is_clock_or_parameter = var_type == DiscreteValue.Var_type_clock || var_type == DiscreteValue.Var_type_parameter in
+
+    (* Check if variable is clock or parameter, it's forbidden to init clock or parameter in discrete section *)
+    if (is_clock_or_parameter) then (
+        raise (TypeError ("Initialisation of a " ^ (DiscreteValue.string_of_var_type var_type) ^ " in discrete init state section is forbidden"))
+    );
+
+    (* Check expression / variable type consistency *)
+    let infer_expr = check_type_assignment parsed_model variable_name expr in
+    (* Try to reduce expression to a value *)
+    let discrete_value = ParsingStructureUtilities.try_reduce_parsed_global_expression_with_model parsed_model infer_expr in
+
+    (* Check computed value type consistency *)
+    let discrete_value_type = DiscreteValue.discrete_type_of_value discrete_value in
+    (* Get variable discrete type *)
+    let variable_type = get_discrete_type_of_variable parsed_model discrete_index in
+
+    if not (DiscreteValue.is_discrete_type_compatibles variable_type discrete_value_type) then
+        raise (TypeError ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type_discrete variable_type) ^ " is not compatible with value \"" ^ (DiscreteValue.string_of_value discrete_value) ^ "\" of type " ^ (DiscreteValue.string_of_var_type_discrete discrete_value_type)))
+    else (
+        (* As literal value is compatible with variable type,
+        convert literal value to variable type *)
+        DiscreteValue.convert_value_to_discrete_type discrete_value variable_type
+    )
