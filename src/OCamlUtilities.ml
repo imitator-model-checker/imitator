@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2021/04/21
+ * Last modified     : 2021/06/01
  *
  ************************************************************)
  
@@ -373,9 +373,12 @@ let string_of_array_of_string_with_sep sep a =
 		!the_string ^ a.(length - 1)
 	)
 
-(** Convert a list of string into a string with separators (uses an internal conversion to array) *)
-let string_of_list_of_string_with_sep sep l =
-	string_of_array_of_string_with_sep sep (Array.of_list l)
+(** Convert a list of string into a string with separators *)
+let rec string_of_list_of_string_with_sep sep = function
+	| [] -> ""
+	| [elem] -> elem
+	| head :: tail -> head ^ sep ^ (string_of_list_of_string_with_sep sep tail)
+
 
 (** Convert a list of int into a string with , separator *)
 let string_of_list_of_int l =
