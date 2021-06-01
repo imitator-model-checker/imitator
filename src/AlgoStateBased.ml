@@ -1,3 +1,4 @@
+
 (************************************************************
  *
  *                       IMITATOR
@@ -3123,7 +3124,7 @@ class virtual algoStateBased =
 		(* Maintain a list of constraints to iteratively apply extrapolation for each dimension *)
 		let constraints = ref [the_constraint] in
 		
-		(*** NOTE: totally useless code ***)
+		(* Iterate on clocks*)
 		List.iter (fun clock_id ->
 			
 			let new_constraints = ref [] in
