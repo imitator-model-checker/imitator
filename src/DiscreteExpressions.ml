@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/10
- * Last modified     : 2021/03/05
+ * Last modified     : 2021/06/02
  *
  ************************************************************)
 
@@ -423,7 +423,7 @@ and customized_string_of_boolean_expression_for_jani customized_string variable_
 		^ "\"left\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b1) ^ jani_separator
 		^ "\"right\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b2) ^"}"
 	| Discrete_boolean_expression discrete_boolean_expression ->
-		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
+		customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names discrete_boolean_expression
 
 (** Convert a discrete_boolean_expression into a string *)
 and customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names = function
