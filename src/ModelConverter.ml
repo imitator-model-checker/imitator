@@ -124,6 +124,8 @@ let numconst_value_or_fail = function
         in
         raise (InvalidExpression  error_msg)
 
+let is_variable_or_constant_declared index_of_variables constants variable_name =
+    Hashtbl.mem index_of_variables variable_name || Hashtbl.mem constants variable_name
 
 (*------------------------------------------------------------*)
 (* Gather all variable names used in expressions              *)
@@ -348,10 +350,10 @@ and check_f_in_parsed_discrete_boolean_expression f visit_leaf_of_discrete_boole
 (*------------------------------------------------------------*)
 let all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants =
   check_f_in_parsed_update_arithmetic_expression (fun variable_name ->
-      if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
+      if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then (
         print_error ("The variable `" ^ variable_name ^ "` used in an arithmetic expression was not declared."); false
       ) else true
-    )
+  )
 
 (*------------------------------------------------------------*)
 (* Check that all variables are defined in a discrete boolean expression *)
@@ -359,25 +361,29 @@ let all_variables_defined_in_parsed_update_arithmetic_expression variable_names 
 let all_variables_defined_in_parsed_discrete_boolean_expression variable_names constants =
   check_f_in_parsed_update_discrete_boolean_expression (fun variable_name ->
       if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
-        print_error ("The variable `" ^ variable_name ^ "` used in an discrete boolean expression was not declared."); false
+        print_error ("The variable `" ^ variable_name ^ "` used in a boolean expression was not declared."); false
       ) else true
     )
 
 (*------------------------------------------------------------*)
 (* Check that all variables are defined in a boolean expression *)
 (*------------------------------------------------------------*)
-let all_variables_defined_in_parsed_boolean_expression variable_names constants =
-  check_f_in_parsed_update_boolean_expression (fun variable_name ->
+let all_variables_defined_in_parsed_boolean_expression useful_parsing_model_information expr =
+
+    let variable_names = useful_parsing_model_information.variable_names in
+    let constants = useful_parsing_model_information.constants in
+
+    check_f_in_parsed_update_boolean_expression (fun variable_name ->
       if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
-        print_error ("The variable `" ^ variable_name ^ "` used in an boolean expression was not declared."); false
+        print_error ("The variable `" ^ variable_name ^ "` used in a boolean expression was not declared."); false
       ) else true
-    )
+    ) expr
 
 (*------------------------------------------------------------*)
 (* Check that all variables are defined in a parsed global expression *)
 (*------------------------------------------------------------*)
-let all_variables_defined_in_parsed_global_expression variable_names constants = function
-    | Parsed_global_expression expr -> all_variables_defined_in_parsed_boolean_expression variable_names constants expr
+let all_variables_defined_in_parsed_global_expression useful_parsing_model_information = function
+    | Parsed_global_expression expr -> all_variables_defined_in_parsed_boolean_expression useful_parsing_model_information expr
 
 
 (*------------------------------------------------------------*)
@@ -1618,7 +1624,7 @@ let check_update useful_parsing_model_information automaton_name update =
 			(* Type clock: allow any linear term in updates: so just check that variables have been declared *)
 			| DiscreteValue.Var_type_clock ->
 			print_message Verbose_total ("                A clock!");
-			all_variables_defined_in_parsed_global_expression variable_names constants global_expression
+			all_variables_defined_in_parsed_global_expression useful_parsing_model_information global_expression
 
 			(* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
 			| DiscreteValue.Var_type_discrete var_type_discrete ->
@@ -1892,17 +1898,33 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			begin
 			(*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
 			match linear_constraint with
-			| Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) when List.mem variable_name removed_variable_names ->
+			| Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when List.mem variable_name removed_variable_names ->
 				print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
 				(* Still check the second term *)
-				if not (all_variables_defined_in_linear_expression variable_names constants linear_expression) then well_formed := false;
+				if not (all_variables_defined_in_linear_expression variable_names constants linear_expression) then (
+                    print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint useful_parsing_model_information linear_constraint ^ "\" use undeclared variable(s)");
+				    well_formed := false;
+                )
 				(* General case: check *)
-			| _ -> if not (all_variables_defined_in_linear_constraint variable_names constants linear_constraint) then well_formed := false;
+			| Parsed_linear_constraint _ as linear_constraint ->
+			    if not (all_variables_defined_in_linear_constraint variable_names constants linear_constraint) then (
+                    print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint useful_parsing_model_information linear_constraint ^ "\" use undeclared variable(s)");
+			        well_formed := false;
+                )
+            | _ -> ()
 			end
         | Parsed_discrete_predicate (variable_name, expr) ->
             begin
-                let variable_names_in_assignment = variable_name :: variable_names in
-                if not (all_variables_defined_in_parsed_global_expression variable_names_in_assignment constants expr) then well_formed := false;
+                (* Check that l-value variable exist *)
+                if not (is_variable_or_constant_declared index_of_variables constants variable_name) then (
+                    print_error ("Variable `" ^ variable_name ^ "` in discrete init is not declared");
+                    well_formed := false;
+                );
+                (* And that all variables in expr are defined *)
+                if not (all_variables_defined_in_parsed_global_expression useful_parsing_model_information expr) then (
+                    print_error ("Expression \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression useful_parsing_model_information expr ^ "\" use undeclared variable(s)");
+                    well_formed := false;
+                );
             end
 		) init_definition;
 
@@ -1938,6 +1960,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			Hashtbl.add init_locations_for_automata automaton_name location_name;
 		);
 		) initial_locations;
+
 	(* Check that every automaton is given at least one initial location *)
 	List.iter (fun automaton_index ->
 		let is_observer i = match observer_automaton_index_option with
@@ -1968,6 +1991,10 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			true
 		) init_inequalities
 	in
+
+    (* Here if not well formed we can raise an error *)
+    if not(!well_formed) then
+        raise InvalidModel;
 
 	(* Partition the init inequalities between the discrete init assignments, and other inequalities *)
 	let discrete_init, other_inequalities = List.partition (function
@@ -2001,9 +2028,9 @@ let check_init useful_parsing_model_information init_definition observer_automat
 		) filtered_init_inequalities in
 
     (* Check init discrete section : discrete *)
-
 	(* Check that every discrete variable is given only one (rational) initial value *)
 	let init_values_for_discrete = Hashtbl.create (List.length discrete) in
+
 	List.iter (fun lp ->
 		match lp with
 		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, discrete_name)), op , expression)) ->
@@ -2011,6 +2038,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			print_error ("The discrete variable `" ^ discrete_name ^ "` must have a coeff 1 in the init definition.");
 			well_formed := false;
 			);
+
 			(* Check if the assignment is well formed, and keep the discrete value *)
 			let discrete_value =
 			match (op, expression) with
@@ -2018,8 +2046,10 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			| (PARSED_OP_EQ, Linear_term (Constant c)) -> DiscreteValue.Rational_value c
 			(* Constant: OK *)
 			| (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
+
 				(* Get the value of the variable *)
                 let value = Hashtbl.find constants variable_name in
+
                 (* TODO benjamin IMPORTANT maybe check that it's not a variable ? *)
                 (* TODO benjamin IMPORTANT maybe check that it's a rational only ! *)
 
@@ -2030,8 +2060,10 @@ let check_init useful_parsing_model_information init_definition observer_automat
 				well_formed := false;
 				DiscreteValue.Rational_value NumConst.zero
 			in
+
 			(* Get the variable index *)
 			let discrete_index =  Hashtbl.find index_of_variables discrete_name in
+
 			(* Check if it was already declared *)
 			if Hashtbl.mem init_values_for_discrete discrete_index then(
 			print_error ("The discrete variable `" ^ discrete_name ^ "` is given an initial value several times in the init definition.");
@@ -2099,14 +2131,18 @@ let check_init useful_parsing_model_information init_definition observer_automat
         (* Gathering all variables that are non rational *)
         let non_rational_variable_names = StringSet.filter (fun variable_name ->
             if Hashtbl.mem index_of_variables variable_name then (
-                let variable_index =  Hashtbl.find index_of_variables variable_name in
+                let variable_index = Hashtbl.find index_of_variables variable_name in
                 let variable_type = DiscreteValue.discrete_type_of_var_type (type_of_variables variable_index) in
-                DiscreteValue.is_discrete_type_rational_type variable_type
+                not (DiscreteValue.is_discrete_type_rational_type variable_type)
             )
-            else (
+            else if Hashtbl.mem constants variable_name then (
                 let value =  Hashtbl.find constants variable_name in
                 let variable_type = DiscreteValue.discrete_type_of_value value in
-                DiscreteValue.is_discrete_type_rational_type variable_type
+                not (DiscreteValue.is_discrete_type_rational_type variable_type)
+            )
+            else (
+                (* Otherwise problem ! *)
+				raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
             )
         ) variable_names
         in

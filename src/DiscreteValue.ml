@@ -112,7 +112,7 @@ let is_rational_type = function
 
 (* Check if discrete type is a Var_type_discrete_rational *)
 let is_discrete_type_rational_type = function
-    | Var_type_discrete_number Var_type_discrete_int -> true
+    | Var_type_discrete_number Var_type_discrete_rational -> true
     | _ -> false
 
 (* Check if discrete type is a Var_type_discrete_int *)
