@@ -2754,7 +2754,9 @@ let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_info
 		| Parsed_DF_unary_min parsed_discrete_factor ->
 			update_coef_array_in_parsed_update_factor mult_factor parsed_discrete_factor
 		| Parsed_DF_expression parsed_update_arithmetic_expression
-	    (* TODO benjamin see if correct ? *)
+		(* Treat Parsed_rational_of_int_function case, *)
+		(* even if it was checked before in try_convert_linear_term_of_parsed_discrete_factor *)
+		(* as a forbidden expression in linear expression *)
 		| Parsed_rational_of_int_function parsed_update_arithmetic_expression ->
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
 	in

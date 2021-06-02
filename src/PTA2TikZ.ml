@@ -18,6 +18,7 @@ open Exceptions
 open AbstractModel
 open AbstractProperty
 open DiscreteExpressions
+open Constants
 
 
 
@@ -26,7 +27,7 @@ open DiscreteExpressions
 (** Constants *)
 (************************************************************)
 
-let tikz_string = { Constants.default_string with
+let tikz_string = { default_string with
     and_operator = " \\land ";
     or_operator = " \\lor ";
     not_operator = "\\neg";

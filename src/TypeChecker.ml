@@ -635,7 +635,6 @@ and infer_parsed_discrete_factor parsed_model = function
 
     | Parsed_DF_unary_min factor ->
         let infer_factor, factor_type = infer_parsed_discrete_factor parsed_model factor in
-        (* TODO benjamin check is arithmetic *)
         Parsed_DF_unary_min infer_factor, factor_type
 
 (* Type checking and infer literal numbers of non-linear constraint *)
