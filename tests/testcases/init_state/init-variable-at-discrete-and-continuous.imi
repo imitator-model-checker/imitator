@@ -1,12 +1,12 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Clock compare type error
- * Description      : Compare a clock to a boolean variable should lead to an error
- * Correctness      : Type error
+ * Title            : Test that init of a discrete variable in discrete and continuous section at the same time is forbidden
+ * Description      : Multiple initialization of a discrete variable should lead to an error
+ * Correctness      : Error
  * Scalable         : No
  * Generated        : No
- * Categories       : Semantic
+ * Categories       : Semantic, Behavior, Init
  * Source           : 
  * bibkey           : 
  * Author           : Benjamin L.
@@ -14,24 +14,23 @@
  * Input by         : Benjamin L.
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created          : 2021/04/02
- * Last modified    : 2021/04/02
+ * Created          : 2021/03/09
+ * Last modified    : 2021/05/31
  * Model version    : 1.0
  *
- * IMITATOR version : > 3.0.0
+ * IMITATOR version : 3.1.0
  ************************************************************)
 var 
-    x,
-        : clock;
-    b,
-    	: bool;
+    i, 
+        : rational;
+
 
 (************************************************************)
  automaton pta
 (************************************************************)
  
 loc l1: invariant True 
-	when x = b goto lend;
+	when i = 2 goto lend;
 	
 accepting loc lend: invariant True
  end (* pta *)
@@ -47,9 +46,11 @@ init := {
 
     discrete = 
         loc[pta] := l1,
+        i := 1
     ;
     continuous = 
-        & x >= 0
+        & True
+        & i = 1
     ;
     
 }

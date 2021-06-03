@@ -327,7 +327,7 @@ loc_predicate:
 discrete_boolean_predicate:
 /************************************************************/
 	/* expr ~ expr */
-	| discrete_expression op_bool discrete_expression { Parsed_expression ($1, $2, $3) }
+	| discrete_expression op_bool discrete_expression { Parsed_expression (Parsed_arithmetic_expression $1, $2, Parsed_arithmetic_expression $3) }
 	/* expr in [expr .. expr] */
 	| discrete_expression CT_IN LSQBRA discrete_expression COMMA discrete_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	| discrete_expression CT_IN LSQBRA discrete_expression DOUBLEDOT discrete_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }

@@ -1,0 +1,62 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Not operator
+ * Description      : Test "not" operator
+ * Correctness      : True
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Boolean, Semantic, Computing
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/05/12
+ * Last modified    : 2021/05/31
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.1.0
+ ************************************************************)
+var 
+    b1, b2 
+        : bool;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ synclabs: a1;
+ 
+loc l1: invariant True 
+	when b1 = not(not(not(b2))) goto lend;
+ 
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        b1 := False,
+        b2 := True
+    ;
+    continuous = 
+        & True
+    ;
+    
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

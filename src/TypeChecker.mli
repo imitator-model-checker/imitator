@@ -14,13 +14,20 @@
  *
  ************************************************************)
 
-(** Exceptions **)
+open ParsingStructure
 
-(* Type error exception *)
-exception TypeError of string
 
 type variable_name = string
 type variable_index = int
+
+(*val checkus :*)
+(*    useful_parsing_model_information -> 'a -> 'b -> 'c*)
+(*    -> (useful_parsing_model_information -> 'a -> 'a * DiscreteValue.var_type_discrete)*)
+(*    -> (useful_parsing_model_information -> 'b -> 'b * DiscreteValue.var_type_discrete)*)
+(*    -> (useful_parsing_model_information -> DiscreteValue.var_type_discrete -> 'a -> 'a)*)
+(*    -> (useful_parsing_model_information -> DiscreteValue.var_type_discrete -> 'b -> 'b)*)
+(*    -> (useful_parsing_model_information -> 'c -> string)*)
+(*    -> ('a * 'b) * DiscreteValue.var_type_discrete*)
 
 (** Get variables types **)
 
@@ -37,7 +44,7 @@ val get_discrete_type_of_variable_by_name : ParsingStructure.useful_parsing_mode
 
 (* Try to resolve the specific type of an expression according to literals and variables used *)
 (* Doing type checking of the expression at the same time*)
-val resolve_expression_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.global_expression -> ParsingStructure.global_expression * DiscreteExpressions.expression_type
+(*val resolve_expression_type : ParsingStructure.useful_parsing_model_information -> ParsingStructure.global_expression -> ParsingStructure.global_expression * DiscreteExpressions.expression_type*)
 
 (** Type checking **)
 
@@ -57,7 +64,17 @@ val check_conditional : ParsingStructure.useful_parsing_model_information -> Par
 
 (* Check that an expression assigned to a variable is of the same type *)
 (* If not, raise a TypeError exception with an error message *)
-val check_type_assignment : ParsingStructure.useful_parsing_model_information -> variable_name -> ParsingStructure.global_expression -> unit
+val check_type_assignment : ParsingStructure.useful_parsing_model_information -> variable_name -> ParsingStructure.global_expression -> ParsingStructure.global_expression
 
 (* Check that constant declarations are well typed *)
 val check_constant_declarations : (variable_name * ParsingStructure.global_expression * DiscreteValue.discrete_value * DiscreteValue.var_type) list -> (variable_name * DiscreteValue.discrete_value) list
+
+(* Check that a discrete variable initialization is well typed *)
+val check_discrete_init : ParsingStructure.useful_parsing_model_information -> variable_name -> ParsingStructure.global_expression -> DiscreteValue.discrete_value
+
+val discrete_type_of_expression : ParsingStructure.useful_parsing_model_information -> ParsingStructure.global_expression -> DiscreteValue.var_type_discrete
+val discrete_type_of_parsed_boolean_expression : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_boolean_expression -> DiscreteValue.var_type_discrete
+val discrete_type_of_parsed_discrete_boolean_expression : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_discrete_boolean_expression -> DiscreteValue.var_type_discrete
+val discrete_type_of_parsed_discrete_arithmetic_expression : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_discrete_arithmetic_expression -> DiscreteValue.var_type_discrete
+val discrete_type_of_parsed_discrete_term : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_discrete_term -> DiscreteValue.var_type_discrete
+val discrete_type_of_parsed_discrete_factor : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_discrete_factor -> DiscreteValue.var_type_discrete

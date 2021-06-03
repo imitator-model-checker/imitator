@@ -72,6 +72,8 @@ val is_discrete_type_number_type : var_type_discrete -> bool
 
 (* Check if discrete type is a Var_type_unknown_number *)
 val is_discrete_type_unknown_number_type : var_type_discrete -> bool
+(* Check if discrete type is not a Var_type_unknown_number *)
+val is_discrete_type_known_number_type : var_type_discrete -> bool
 (* Check if discrete type is a Var_type_rational *)
 val is_rational_type : var_type -> bool
 

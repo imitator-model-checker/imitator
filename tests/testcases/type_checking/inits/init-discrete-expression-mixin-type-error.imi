@@ -1,0 +1,67 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Init expression mixin type error
+ * Description      : Mix of different types in init expression, should lead to a type error
+ * Correctness      : Type error 
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/03/12
+ * Last modified    : 2021/05/27
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.1.0
+ ************************************************************)
+var 
+    x,
+        : clock;
+    j = 1
+        : rational;
+    i = 2, k
+        : int;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when k = 3 goto lend;
+	
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        (* Init expression involve two different type with i as rational and j as int *)
+        k := i + j
+    ;
+    continuous = 
+        & x >= 0
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

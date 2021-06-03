@@ -1602,6 +1602,7 @@ DESCRIPTION OF THE TRANSITIONS
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear D reachable)',
 		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1626,6 +1627,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear PD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1651,6 +1653,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear XD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1675,6 +1678,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear PXD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1699,6 +1703,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear D reachable)',
 		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1723,6 +1728,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear PD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1748,6 +1754,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear XD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1772,6 +1779,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear PXD reachable)',
 		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1796,6 +1804,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear D reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1820,6 +1829,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1845,6 +1855,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear XD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1869,6 +1880,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PXD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1893,6 +1905,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1915,6 +1928,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear XD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1937,6 +1951,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PXD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1959,6 +1974,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear D reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -1983,6 +1999,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2008,6 +2025,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear XD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2032,6 +2050,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PXD reachable)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2056,6 +2075,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2078,6 +2098,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear XD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2100,6 +2121,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PXD semantic error)',
 		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2122,6 +2144,7 @@ Error                                   : invalid model
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test linear expression unary minus in guard (computing)',
 		'input_files': ['linear_expressions/unary-minus-linear-expression.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2146,6 +2169,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test linear expression unary minus in guard (printing)',
 		'input_files': ['linear_expressions/unary-minus-linear-expression.imi'],
 		'options'    : '-imi2IMI',
@@ -2169,6 +2193,7 @@ when  y + 7 > 2*x
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression unary minus in guard (computing)',
 		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2193,6 +2218,7 @@ END CONSTRAINT
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression unary minus in guard (printing)',
 		'input_files': ['arithmetic_expressions/unary-minus-guard.imi'],
 		'options'    : '-imi2IMI',
@@ -2223,6 +2249,7 @@ when  -(i * 2) = -2 * i
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression unary minus in update (printing)',
 		'input_files': ['arithmetic_expressions/unary-minus-update.imi'],
 		'options'    : '-imi2IMI',
@@ -2245,6 +2272,7 @@ when  i = 0 do {i := -(i * 2), i := -2 * i, i := -(i * -2), i := -(i / 2), i := 
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression with parenthesis (printing)',
 		'input_files': ['arithmetic_expressions/arithmetic-expr-printing-1.imi'],
 		'options'    : '-imi2IMI',
@@ -2276,6 +2304,7 @@ when  z * x / y > x do {}  sync a1 goto lend;
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
+		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression without parenthesis (printing)',
 		'input_files': ['arithmetic_expressions/arithmetic-expr-printing-2.imi'],
 		'options'    : '-imi2IMI',
@@ -2300,33 +2329,21 @@ when  z * x / y > x do {}  sync a1 goto lend;
 
 	,
 
-# 	#------------------------------------------------------------
-# 	{
-# 		'purpose'    : 'Test boolean True constant (computing)',
-# 		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'acceptingReachable.imiprop'],
-# 		'options'    : '',
-# 		'expectations' : [
-# 			{'file': 'bool-constant-reachable.res' , 'content' : """
-# BEGIN CONSTRAINT
-# True
-# END CONSTRAINT
-# 		"""
-# 			 } # end result file
-# 			,
-# 		] # end expectations
-# 	} # end test case
-# 	#------------------------------------------------------------
-#
-# 	,
+	#------------------------------------------------------------
+	# BEGIN : Test boolean expressions
+	#------------------------------------------------------------
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test boolean True constant (computing)',
+		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-constant-reachable.res' , 'content' : """
-Error                                   : invalid model
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
 		"""
 			 } # end result file
 			,
@@ -2335,34 +2352,18 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 
 	,
-
-# 	#------------------------------------------------------------
-# 	{
-# 		'purpose'    : 'Test boolean False constant (computing)',
-# 		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'acceptingReachable.imiprop'],
-# 		'options'    : '',
-# 		'expectations' : [
-# 			{'file': 'bool-constant-unreachable.res' , 'content' : """
-# BEGIN CONSTRAINT
-# False
-# END CONSTRAINT
-# 		"""
-# 			 } # end result file
-# 			,
-# 		] # end expectations
-# 	} # end test case
-# 	#------------------------------------------------------------
-#
-# 	,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test boolean False constant (computing)',
+		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-constant-unreachable.res' , 'content' : """
-Error                                   : invalid model
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
 		"""
 			 } # end result file
 			,
@@ -2374,7 +2375,30 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test boolean negation (computing)',
+		'tags':'boolean, computing, semantic',
+		'tags':'boolean, computing, semantic',
+		'input_files': ['boolean_expressions/bool-negation.imi', 'acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-negation.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test that a boolean variable is correctly updated (computing)',
+		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-discrete-var-update.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -2394,6 +2418,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test boolean variable update conversion to Uppaal (printing)',
+		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-discrete-var-update.imi'],
 		'options'    : '-imi2Uppaal',
 		'expectations' : [
@@ -2456,7 +2481,8 @@ system pta;
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean constant is initialized with consistant type (type checking)',
+		'purpose'    : 'Test that a boolean constant is initialized with consistant type',
+		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-constant-init-type-error.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2473,7 +2499,8 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean variable is initialized with consistant type (type checking)',
+		'purpose'    : 'Test that a boolean variable is initialized with consistant type',
+		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -2495,7 +2522,9 @@ Error                                   : invalid model
 		## Last modified            : 2021/03/11
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
-		'purpose'    : 'Test that a boolean variable is updated with a consistent typed expression (type checking)',
+		'author': 'lbinria',
+		'purpose'    : 'Test that a boolean variable is updated with a consistent typed expression',
+		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -2510,15 +2539,133 @@ Error                                   : invalid model
 
 	,
 
+    #------------------------------------------------------------
+    {
+        ## Test version             : 1
+        ## Test since               : 2021/05/12
+        ## Last modified            : 2021/05/31
+        ## Test for IMITATOR version: 3.1.0
+        ## Author 					: lbinria
+        'purpose'    : 'Test that "not" boolean operator is effective and correct (computing)',
+		'tags':'boolean, computing, semantic',
+        'input_files': ['boolean_expressions/not-operator.imi'],
+        'options'    : '-mode statespace -states-description',
+        'expectations' : [
+            {'file': 'not-operator-statespace.states' , 'content' : """
+  /************************************************************/
+  STATE 1:
+  pta: lend, b1 = False, b2 = True ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+		"""
+             } # end result file
+            ,
+        ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/31
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test a complex boolean comparison (computing)',
+		'tags':'boolean, computing, semantic',
+		'input_files': ['boolean_expressions/complex-bool-comparison.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'complex-bool-comparison-statespace.states' , 'content' : """
+  /************************************************************/
+  STATE 1:
+  pta: l1, b1 = True, b2 = False ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 2:
+  pta: lend, b1 = True, b2 = False ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/31
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test logical operator priority (computing)',
+		'tags':'boolean, computing, semantic',
+		'input_files': ['boolean_expressions/logical-operator-priority.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'logical-operator-priority-statespace.states' , 'content' : """
+  /************************************************************/
+  STATE 1:
+  pta: l2, b1 = False, b2 = True ==> 
+& x > 5 + p
+& p >= 0
+
+  Projection onto the parameters:
+   p >= 0
+
+  /************************************************************/
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1 via "a1"
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test boolean expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test type checking
+	#------------------------------------------------------------
+
+	# BEGIN : Test type checking on constant declarations
+
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
 		## Test since               : 2021/03/12
-		## Last modified            : 2021/04/14
-		## Test for IMITATOR version: > 3.0
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
-		'purpose'    : 'Test that a constant is not initialized with a rational literal (type checking)',
-		'input_files': ['type_checking/constant-int-divide-type-error.imi'],
+		'author': 'lbinria',
+		'purpose'    : 'Test that a constant is not initialized with a rational literal',
+		'tags' : 'type checking, semantic, constants, declarations',
+		'input_files': ['type_checking/constants_declarations/constant-int-divide-type-error.imi'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'constant-int-divide-type-error.res' , 'content' : """
@@ -2536,14 +2683,44 @@ Error                                   : invalid model
 	{
 		## Test version             : 1
 		## Test since               : 2021/03/12
-		## Last modified            : 2021/04/14
-		## Test for IMITATOR version: > 3.0
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
-		'purpose'    : 'Test that a variable is not initialized with a rational literal (type checking)',
-		'input_files': ['type_checking/variable-int-divide-type-error.imi'],
-		'options'    : '-no-var-autoremove',
+		'author': 'lbinria',
+		'purpose'    : 'Test that constant declaration is type checked',
+		'tags' : 'type checking, semantic, constants, declarations',
+		'input_files': ['type_checking/constants_declarations/constant-declaration-bad-type-error.imi'],
+		'options'    : '',
 		'expectations' : [
-			{'file': 'variable-int-divide-type-error.res' , 'content' : """
+			{'file': 'constant-declaration-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	# END : Test type checking on constant declarations
+
+	# BEGIN : Test type checking on updates
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.0.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that update of an int variable by a literal rational is forbidden',
+		'tags': 'type checking, update',
+		'input_files': ['type_checking/updates/update-variable-bad-type-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'update-variable-bad-type-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file
@@ -2557,11 +2734,39 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
+		## Test since               : 2021/04/02
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.0.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a clock isn\'t updated with a bad type',
+		'tags': 'type checking, update',
+		'input_files': ['type_checking/updates/clock-update-type-error.imi'],
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'clock-update-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	# END : Test type checking on updates
+
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
 		## Test since               : 2021/03/12
 		## Last modified            : 2021/03/12
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in addition (type checking)',
+		'author': 'lbinria',
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in addition',
 		'input_files': ['type_checking/expression-mixin-type-error-1.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2583,7 +2788,8 @@ Error                                   : invalid model
 		## Last modified            : 2021/03/12
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in multiplication (type checking)',
+		'author': 'lbinria',
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in multiplication',
 		'input_files': ['type_checking/expression-mixin-type-error-2.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2605,7 +2811,8 @@ Error                                   : invalid model
 		## Last modified            : 2021/03/12
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in comparison (type checking)',
+		'author': 'lbinria',
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in comparison',
 		'input_files': ['type_checking/expression-mixin-type-error-3.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
@@ -2627,7 +2834,8 @@ Error                                   : invalid model
 		## Last modified            : 2021/03/12
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in "in" expression (type checking)',
+		'author': 'lbinria',
+		'purpose'    : 'Test that an update expression doesn\'t mix different types in "in" expression',
 		'input_files': ['type_checking/expression-mixin-type-error-4.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2642,18 +2850,68 @@ Error                                   : invalid model
 
 	,
 
+	# BEGIN : Type checking complex tests
+
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
-		## Test since               : 2021/04/02
-		## Last modified            : 2021/04/02
-		## Test for IMITATOR version: > 3.0
+		## Test since               : 2021/05/27
+		## Last modified            : 2021/05/27
+		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
-		'purpose'    : 'Test that a clock isn\'t updated with a bad type (type checking)',
-		'input_files': ['type_checking/clock-update-type-error.imi'],
+		'author': 'lbinria',
+		'purpose'    : 'Test type checking by making a lot of complex operations on multiple types',
+		'input_files': ['type_checking/complex-type-checking.imi'],
+		'tags':'type checking',
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'complex-type-checking-statespace.states' , 'content' : """
+  INITIAL
+  STATE 0:
+  pta: l1, b1 = True, b2 = False, k = 0, j = 1, i = 0 ==> 
+& x >= 0
+& p >= 0
+
+  Projection onto the parameters:
+   p >= 0
+		"""
+			 } # end result file
+			,
+			{'file': 'complex-type-checking-statespace.states' , 'content' : """
+  STATE 23:
+  pta: l2, b1 = False, b2 = True, k = 10, j = 0, i = 1 ==> 
+& x >= 0
+& p > 10
+
+  Projection onto the parameters:
+   p > 10
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	# END : Type checking complex test
+
+	# BEGIN : Type checking on variable initializations
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/04/14
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a variable is not initialized with a rational literal',
+		'tags': 'type checking, init',
+		'input_files': ['type_checking/inits/variable-int-divide-type-error.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
-			{'file': 'clock-update-type-error.res' , 'content' : """
+			{'file': 'variable-int-divide-type-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file
@@ -2667,15 +2925,17 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
-		## Test since               : 2021/04/02
-		## Last modified            : 2021/04/02
-		## Test for IMITATOR version: > 3.0
+		## Test since               : 2021/05/28
+		## Last modified            : 2021/05/28
+		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
-		'purpose'    : 'Test that a clock isn\'t compared with a bad type (type checking)',
-		'input_files': ['type_checking/clock-comparison-type-error.imi'],
+		'author': 'lbinria',
+		'purpose'    : 'Test that a variable of type X cannot be initialized by an expression of type Y',
+		'input_files': ['type_checking/inits/init-discrete-bad-type-error.imi'],
+		'tags': 'type checking, init',
 		'options'    : '',
 		'expectations' : [
-			{'file': 'clock-comparison-type-error.res' , 'content' : """
+			{'file': 'init-discrete-bad-type-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file
@@ -2689,15 +2949,17 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
-		## Test since               : 2021/04/02
-		## Last modified            : 2021/04/02
-		## Test for IMITATOR version: > 3.0
+		## Test since               : 2021/05/28
+		## Last modified            : 2021/05/28
+		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
-		'purpose'    : 'Test that a parameter isn\'t compared with a bad type (type checking)',
-		'input_files': ['type_checking/parameter-comparison-type-error.imi'],
+		'author': 'lbinria',
+		'purpose'    : 'Test that a init expression cannot be ill-typed',
+		'input_files': ['type_checking/inits/init-discrete-expression-bad-type-error.imi'],
+		'tags': 'type checking, init',
 		'options'    : '',
 		'expectations' : [
-			{'file': 'parameter-comparison-type-error.res' , 'content' : """
+			{'file': 'init-discrete-expression-bad-type-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file
@@ -2707,6 +2969,433 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/28
+		## Last modified            : 2021/05/28
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a init expression cannot mix different types',
+		'input_files': ['type_checking/inits/init-discrete-expression-mixin-type-error.imi'],
+		'tags': 'type checking, init',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'init-discrete-expression-mixin-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/28
+		## Last modified            : 2021/05/28
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a init constraint on clock cannot use non rational valued variable(s) or constant(s)',
+		'tags': 'type checking, init',
+		'input_files': ['type_checking/inits/init-continuous-clock-type-error.imi'],
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'init-continuous-clock-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/28
+		## Last modified            : 2021/05/28
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a init constraint on parameter cannot use non rational valued variable(s) or constant(s)',
+		'tags':'type checking, init',
+		'input_files': ['type_checking/inits/init-continuous-parameter-type-error.imi'],
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'init-continuous-parameter-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/27
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test init a variable with a complex expression',
+		'input_files': ['type_checking/inits/init-expression-complex.imi'],
+		'tags': 'type checking, init',
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'init-expression-complex-statespace.states' , 'content' : """
+  STATE 1:
+  pta: lend, b = True, r2 = 7/3 ==> 
+& 3*p > 7
+
+  Projection onto the parameters:
+   3*p > 7
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	# END : Type checking on variable initializations
+
+	# BEGIN : Type checking on conditional clauses
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/12
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that the use of a bad typed expression in conditional expression is forbidden',
+		'input_files': ['type_checking/conditionals/conditional-expression-bad-type-error.imi'],
+		'tags':'type checking, conditional',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'conditional-expression-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	# END : Type checking on conditional clauses
+
+	# BEGIN : Type checking on guards tests
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a term cannot compute on a bad type',
+		'input_files': ['type_checking/guards/term-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'term-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a term cannot mix of different types',
+		'input_files': ['type_checking/guards/term-mixin-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'term-mixin-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a factor cannot mix of different types',
+		'input_files': ['type_checking/guards/factor-mixin-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'factor-mixin-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a factor cannot compute on a bad type',
+		'input_files': ['type_checking/guards/factor-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'factor-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a comparison cannot compute on a bad type',
+		'input_files': ['type_checking/guards/compare-operator-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'compare-operator-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a comparison cannot mix different types',
+		'input_files': ['type_checking/guards/compare-operator-mixin-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'compare-operator-mixin-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a "in" expression cannot compute on a bad type',
+		'input_files': ['type_checking/guards/in-operator-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'in-operator-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a "in" expression cannot mix different types',
+		'input_files': ['type_checking/guards/in-operator-mixin-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'in-operator-mixin-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a logical expression cannot compute on a bad type (other than bool)',
+		'input_files': ['type_checking/guards/logical-operator-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'logical-operator-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a "not" expression cannot compute on a bad type (other than bool)',
+		'input_files': ['type_checking/guards/not-operator-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'not-operator-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a "rational_of_int" function cannot compute on a bad type',
+		'input_files': ['type_checking/guards/rational-of-int-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'rational-of-int-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/25
+		## Last modified            : 2021/05/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that a "rational_of_int" function cannot mix different types',
+		'input_files': ['type_checking/guards/rational-of-int-mixin-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'rational-of-int-mixin-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	# END : Type checking on guards tests
+
+	#------------------------------------------------------------
+	# END : Test type checking
+	#------------------------------------------------------------
 
 	#------------------------------------------------------------
 	{
@@ -3537,6 +4226,50 @@ OR
 END CONSTRAINT
 """
 			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with complex safety property on coffee drinker with int',
+		'input_files': ['coffeeDrinker-int.imi', 'coffeeDrinker.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'coffeeDrinker-int.res' , 'content' : """
+BEGIN CONSTRAINT
+ p_add_sugar > 0
+& 2*p_button > p_add_sugar
+& p_add_sugar + p_coffee > 2*p_button
+& 15 > 2*p_button
+OR
+  p_add_sugar >= 2*p_button
+& p_add_sugar + p_coffee > 3*p_button
+& 3*p_button > p_add_sugar
+& 5 > p_button
+OR
+  p_add_sugar > 0
+& 2*p_button >= 15
+& p_add_sugar + p_coffee > 15
+& 15 > p_button
+& p_button > p_add_sugar
+OR
+  2*p_button >= p_add_sugar + p_coffee
+& p_add_sugar > 0
+& p_add_sugar + p_coffee > p_button
+& p_button > p_add_sugar
+& 15 >= p_add_sugar + p_coffee
+OR
+  15 > p_add_sugar + p_coffee
+& p_coffee > 0
+& p_button > 0
+& 5 > p_button
+& p_add_sugar >= 3*p_button
+END CONSTRAINT
+"""
+			 } #end result file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
@@ -13513,98 +14246,106 @@ end
 	#------------------------------------------------------------
 	,
 
-	##------------------------------------------------------------
-	#{
-		### Test version             : 1
-		### Test since               : 2021/03/10
-		### Last modified            : 2021/03/10
-		### Test disabled            : 2021/06/01
-		### Test for IMITATOR version: > 3.0
-		### Author 					: lbinria
-		#'purpose'    : 'Test init state printing - old state zone (printing)',
-		#'input_files': ['init_state/old-init-state-printing.imi'],
-		#'options'    : '-imi2IMI',
-		#'expectations' : [
-			#{'file': 'old-init-state-printing-regenerated.imi' , 'content' : """
-#var 
-	#i, j
-		#: discrete;
-
-
-#(************************************************************)
- #automaton pta
-#(************************************************************)
- #synclabs: ;
- 
-#loc l1: invariant True 
-	#when  i = 0
-#& j = 0 do {}  (* sync nosync_1*)  goto lend;
- 
-#accepting loc lend: invariant True 
- #end (* pta *)
-#(************************************************************)
-
-
-#(************************************************************)
- #automaton pta2
-#(************************************************************)
- #synclabs: ;
- 
-#loc l2: invariant True 
-	#when  i = 0
-#& j = 0 do {}  (* sync nosync_2*)  goto lend2;
- 
-#accepting loc lend2: invariant True 
- #end (* pta2 *)
-#(************************************************************)
-
-
-#(************************************************************)
-#(* Initial state *)
-#(************************************************************)
-
-#init := True
-	#(*------------------------------------------------------------*)
-	#(* Initial location *)
-	#(*------------------------------------------------------------*)
-	#& loc[pta] = l1
-	#& loc[pta2] = l2
-
-	#(*------------------------------------------------------------*)
-	#(* Initial discrete assignments *)
-	#(*------------------------------------------------------------*)
-	#& i = 1
-	#& j = 2
-
-	#(*------------------------------------------------------------*)
-	#(* Initial constraint *)
-	#(*------------------------------------------------------------*)
-	 #& True
-
-#;
-
-
-#(************************************************************)
-#(* The end *)
-#(************************************************************)
-#end
-		#"""
-			 #} # end result file
-			#,
-		#] # end expectations
-	#} # end test case
-	##------------------------------------------------------------
-
-	#,
+	#------------------------------------------------------------
+	# BEGIN : Test new init state section
+	#------------------------------------------------------------
 
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
 		## Test since               : 2021/03/10
-		## Last modified            : 2021/06/01
+		## Last modified            : 2021/03/10
+		## Test disabled            : 2021/06/01
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
-		'purpose'    : 'Test imi2IMI for initial state v3.1 (printing)',
+		'author': 'lbinria',
+		'purpose'    : 'Test init state printing - old state zone (printing)',
+		'tags' : 'semantic, printing, init',
+		'input_files': ['init_state/old-init-state-printing.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'old-init-state-printing-regenerated.imi' , 'content' : """
+var 
+	i, j
+		: discrete;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ synclabs: ;
+ 
+loc l1: invariant True 
+	when  i = 0
+& j = 0 do {}  (* sync nosync_1*)  goto lend;
+ 
+accepting loc lend: invariant True 
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+ automaton pta2
+(************************************************************)
+ synclabs: ;
+ 
+loc l2: invariant True 
+	when  i = 0
+& j = 0 do {}  (* sync nosync_2*)  goto lend2;
+ 
+accepting loc lend2: invariant True 
+ end (* pta2 *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+	& loc[pta2] = l2
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& i = 1
+	& j = 2
+
+	(*------------------------------------------------------------*)
+	(* Initial constraint *)
+	(*------------------------------------------------------------*)
+	 & True
+
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/10
+		## Last modified            : 2021/03/10
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test init state printing - new init state (printing)',
+		'tags' : 'semantic, printing, init',
 		'input_files': ['init_state/new-init-state-printing.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
@@ -13704,9 +14445,11 @@ end
 		## Test version             : 1
 		## Test since               : 2021/04/16
 		## Last modified            : 2021/04/16
-		## Test for IMITATOR version: > 3.0
+		## Test for IMITATOR version: 3.0.0
 		## Author 					: lbinria
-		'purpose'    : 'Test that init of a clock in discrete state section is forbidden - new init state (semantic)',
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a clock in discrete state section is forbidden - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
 		'input_files': ['init_state/init-clock-in-discrete-state-section-error.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
@@ -13728,7 +14471,9 @@ Error                                   : invalid model
 		## Last modified            : 2021/04/16
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
-		'purpose'    : 'Test that init of a parameter in discrete state section is forbidden - new init state (semantic)',
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a parameter in discrete state section is forbidden - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
 		'input_files': ['init_state/init-parameter-in-discrete-state-section-error.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
@@ -13742,6 +14487,111 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/09
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a discrete variable in discrete and continuous section at the same time is forbidden - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-variable-at-discrete-and-continuous.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'init-variable-at-discrete-and-continuous.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+# 	#------------------------------------------------------------
+# 	{
+# 		## Test version             : 1
+# 		## Test since               : 2021/03/04
+# 		## Last modified            : 2021/05/31
+# 		## Test for IMITATOR version: 3.1.0
+# 		## Author 					: lbinria
+# 		'purpose'    : 'Test that init of an undeclared variable is forbidden - new init state (behavior)',
+# 		'tags' : 'semantic, behavior, init',
+# 		'input_files': ['init_state/init-discrete-section-not-declared-error.imi'],
+# 		'options'    : '',
+# 		'expectations' : [
+# 			{'file': 'init-discrete-section-not-declared-error.res' , 'content' : """
+# Error                                   : invalid model
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
+
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/04
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a variable with a constant is accepted - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-variable-with-constant.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'init-variable-with-constant-statespace.states' , 'content' : """
+  STATE 1:
+  pta: lend, b = True ==> 
+&True
+
+  Projection onto the parameters:
+  True
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/27
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a variable with a variable is forbidden - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-variable-with-variable.imi'],
+		'options'    : '-no-var-autoremove -mode statespace -states-description',
+		'expectations' : [
+			{'file': 'init-variable-with-variable.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test new init state section
+	#------------------------------------------------------------
 
 
 	#------------------------------------------------------------

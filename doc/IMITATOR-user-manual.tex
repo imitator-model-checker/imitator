@@ -2911,7 +2911,7 @@ We define each of those two components below.
 \regleGrammaire{update}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{<name>} \styleIMI{:=} \nt{arithmetic\_expression} \\
+	\  & \styleIMI{<name>} \styleIMI{:=} \nt{global\_expression} \\
 \end{tabular}
 
 % \smallskip
@@ -2939,15 +2939,23 @@ We define each of those two components below.
 \end{tabular}
 
 %------------------------------------------------------------
+\regleGrammaire{global\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{boolean\_expression} \\
+	$|$ & \nt{arithmetic\_expression} \\
+\end{tabular}
+
+%------------------------------------------------------------
 \regleGrammaire{boolean\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\   & \styleIMI{True}                                                    \\
 	$|$ & \styleIMI{False}                                                   \\
-	$|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
 	$|$ & \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression}    \\
 	$|$ & \nt{boolean\_expression} \styleIMI{|} \nt{boolean\_expression}     \\
 	$|$ & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
+	$|$ & \nt{discrete\_boolean\_expression}                                 \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2957,6 +2965,7 @@ We define each of those two components below.
 	\   & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
 	$|$ & \nt{arithmetic\_expression} \styleIMI{in} $[$ \nt{arithmetic\_expression} \styleIMI{,} \nt{arithmetic\_expression} $]$ \\
 	$|$ & \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \\
+    $|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2996,6 +3005,7 @@ We define each of those two components below.
 	\   & \nt{rational}                                         \\
 	$|$ & \styleIMI{<name>}                                     \\
 	$|$ & \styleIMI{(} \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{rational\_of\_int(} \nt{arithmetic\_expression} \styleIMI{)} \\
 \end{tabular}
 
 
@@ -3137,11 +3147,79 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	 & \nt{init\_definition} \styleIMI{end} \\
+	 $|$ & \nt{old\_init\_definition} \styleIMI{end} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_definition}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{init} \styleIMI{:= \{} \nt{init\_discrete\_continuous\_definition} \styleIMI{\}} \\
+	$|$ & \emptystring                                                       \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_discrete\_continuous\_definition}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\ & \nt{init\_discrete\_definition} \nt{init\_continuous\_definition} \\
+    $|$ & \nt{init\_continuous\_definition} \nt{init\_discrete\_definition} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_discrete\_definition}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{discrete} \styleIMI{=} \nt{init\_discrete\_expression} \styleIMI{;} \\
+	$|$ & \emptystring                                                       \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_discrete\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{,}  \nt{init\_discrete\_expression\_nonempty\_list} \\
+	$|$ &  \nt{init\_discrete\_expression\_nonempty\_list} \\
+	$|$ & \emptystring                                                       \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_discrete\_expression\_nonempty\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{init\_discrete\_state\_predicate} \styleIMI{,}  \nt{init\_discrete\_expression\_nonempty\_list} \\
+	$|$ & \nt{init\_discrete\_state\_predicate} \\
+	$|$ & \nt{init\_discrete\_state\_predicate} \styleIMI{,} \\                                                       \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_discrete\_state\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{<name> :=} \nt{global\_expression} \\
+	$|$ & \nt{init\_discrete\_loc\_predicate} \\
+	$|$ & \styleIMI{(}                                                      \nt{init\_discrete\_state\_predicate} \styleIMI{)}                                                      \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_discrete\_loc\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{loc[ <name> ] := <name>} \\
+	$|$ & \styleIMI{<name> is in <name>} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_continuous\_definition}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{continuous} \styleIMI{=} \nt{region\_expression} \styleIMI{;} \\
+	$|$ & \emptystring                                                       \\
 \end{tabular}
 
 
 %------------------------------------------------------------
-\regleGrammaire{init\_definition}
+\regleGrammaire{old\_init\_definition}
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\   & \styleIMI{init} \styleIMI{:=} \nt{region\_expression} \styleIMI{;} \\

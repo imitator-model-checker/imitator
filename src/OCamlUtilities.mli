@@ -89,6 +89,9 @@ val list_delete_at : int -> 'a list -> 'a list
 (** Replace the ith element of a list *)
 val list_set_nth : int -> 'a -> 'a list -> 'a list
 
+(** Get combination of two list **)
+val list_combination : 'a list -> 'a list -> ('a * 'a) list
+
 (** Select the sublist of a list from position i to position j *)
 val sublist : int -> int -> 'a list -> 'a list
 

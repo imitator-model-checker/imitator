@@ -721,8 +721,8 @@ let get_guard state_space state_index combined_transition state_index' =
 	(* Compute constraint for assigning a (constant) value to discrete variables *)
 	print_message Verbose_high ("Computing constraint for discrete variables");
 	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value location discrete_index)) model.discrete in
-	(* TODO benjamin check with étienne *)
-	(* Only use rational discrete values for preparing constraint *)
+
+	(* Only use rational discrete values for preparing constraint, this behavior was checked with Etienne A. *)
 	let only_discrete_rational_values = List.filter (fun (discrete_index, discrete_value) -> DiscreteValue.is_rational_value discrete_value) discrete_values in
 	let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, DiscreteValue.numconst_value discrete_value) only_discrete_rational_values in
 

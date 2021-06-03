@@ -18,6 +18,7 @@ open Exceptions
 open AbstractModel
 open AbstractProperty
 open DiscreteExpressions
+open Constants
 
 
 
@@ -25,10 +26,16 @@ open DiscreteExpressions
 (************************************************************)
 (** Constants *)
 (************************************************************)
-let string_of_true	= "True"
-let string_of_false	= "False"
 
-
+let tikz_string = { default_string with
+    and_operator = " \\land ";
+    or_operator = " \\lor ";
+    not_operator = "\\neg";
+    in_operator = " \\in ";
+	le_operator   = "\\leq";
+	neq_operator  = "\\neq";
+	ge_operator   = "\\geq";
+}
 
 (************************************************************
  Functions
@@ -61,12 +68,12 @@ let tikz_string_of_lc_gen lc_fun lc =
 
 (** Proper form for constraints *)
 let tikz_string_of_linear_constraint =
-	tikz_string_of_lc_gen ModelPrinter.string_of_guard
+	tikz_string_of_lc_gen (ModelPrinter.customized_string_of_guard { Constants.default_string with or_operator = " || " })
 
 
 (** Proper form for constraints *)
 let tikz_string_of_guard =
-	tikz_string_of_lc_gen ModelPrinter.string_of_guard
+	tikz_string_of_lc_gen (ModelPrinter.customized_string_of_guard { Constants.default_string with or_operator = " || " })
 
 
 
@@ -114,59 +121,9 @@ let string_of_discrete_updates model updates =
 			^ "$\\\\% "
 	) updates)
 
-let string_of_boolean_operations op =
-	match op with
-	| OP_L -> "<"
-	| OP_LEQ -> "\\leq"
-	| OP_EQ -> "="
-	| OP_NEQ -> "\\neq"
-	| OP_GEQ -> "\\geq"
-	| OP_G -> ">"
-
-
-
-
-(* TODO benjamin refactoriser avec ModelPrinter / DiscreteExpressions *)
-(** Convert a Boolean expression into a string *)
-let rec string_of_boolean variable_names = function
-	| True_bool -> string_of_true
-	| False_bool -> string_of_false
-	| Not_bool b -> "\\neg (" ^ (string_of_boolean variable_names b) ^ ")"
-	| And_bool (b1, b2) ->
-		(string_of_boolean variable_names b1)
-		^ " \\land "
-		^ (string_of_boolean variable_names b2)
-	| Or_bool (b1, b2) ->
-		(string_of_boolean variable_names b1)
-		^ " \\lor "
-		^ (string_of_boolean variable_names b2)
-	| Discrete_boolean_expression discrete_boolean_expression ->
-		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
-(** Convert a discrete_boolean_expression into a string *)
-and string_of_discrete_boolean_expression variable_names = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " "
-		^ (string_of_boolean_operations relop)
-		^ " "
-		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
-		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " \\in ["
-		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
-		^ " , "
-		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
-		^ "]"
-    | Boolean_expression boolean_expression ->
-        "(" ^ string_of_boolean variable_names boolean_expression ^ ")"
-    | DB_variable discrete_index -> variable_names discrete_index
-    | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
-
 (** Convert a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
-	let wrap_if boolean_expr  = "\n\t\t\\multicolumn{2}{l}{if ($" ^ (string_of_boolean variable_names_with_style boolean_expr) ^ "$) then}\\\\%" in
+	let wrap_if boolean_expr  = "\n\t\t\\multicolumn{2}{l}{if ($" ^ (customized_string_of_boolean_expression tikz_string variable_names_with_style boolean_expr) ^ "$) then}\\\\%" in
 	let wrap_else = "\n\t\t\\multicolumn{2}{l}{else}\\\\%" in
 	let wrap_end = "\n\t\t\\multicolumn{2}{l}{end}%" in
 	let sep = "" in

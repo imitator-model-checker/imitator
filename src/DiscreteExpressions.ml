@@ -8,17 +8,11 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/10
- * Last modified     : 2021/03/05
+ * Last modified     : 2021/06/02
  *
  ************************************************************)
 
 open Constants
-
-
-(* Expression type *)
-type expression_type =
-    | Expression_type_discrete_bool of DiscreteValue.var_type_discrete
-    | Expression_type_discrete_arithmetic of DiscreteValue.var_type_discrete_number
 
 (****************************************************************)
 (** Operators *)
@@ -87,7 +81,6 @@ type discrete_arithmetic_expression =
 type boolean_expression =
 	| True_bool (** True *)
 	| False_bool (** False *)
-	| Not_bool of boolean_expression (** Negation *)
 	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
 	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
 	| Discrete_boolean_expression of discrete_boolean_expression
@@ -95,10 +88,13 @@ type boolean_expression =
 and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
+	| Boolean_comparison of discrete_boolean_expression * relop * discrete_boolean_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression of boolean_expression
+	(** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | }*)
+	| Not_bool of boolean_expression (** Negation *)
 	(** Discrete variable *)
 	| DB_variable of Automaton.variable_index
 	(** Discrete constant *)
@@ -116,9 +112,6 @@ type global_expression =
 (****************************************************************)
 (** Strings *)
 (****************************************************************)
-let string_of_expression_type = function
-    | Expression_type_discrete_arithmetic x -> "arithmetic of " ^ (DiscreteValue.string_of_var_type_discrete_number x)
-    | Expression_type_discrete_bool x -> "boolean of " ^ (DiscreteValue.string_of_var_type_discrete x)
 
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_discrete_factor_has_parenthesis = function
@@ -219,10 +212,13 @@ let add_parenthesis_to_unary_minus_int str = function
 
 
 
+let rec customized_string_of_global_expression customized_string variable_names = function
+    | Arithmetic_expression expr -> customized_string_of_arithmetic_expression customized_string.boolean_string variable_names expr
+    | Bool_expression expr -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
 
 (* Convert an arithmetic expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
-let rec customized_string_of_arithmetic_expression customized_string variable_names = function
+and customized_string_of_arithmetic_expression customized_string variable_names = function
     | Rational_arithmetic_expression expr -> customized_string_of_rational_arithmetic_expression customized_string variable_names expr
     | Int_arithmetic_expression expr -> customized_string_of_int_arithmetic_expression customized_string variable_names expr
 
@@ -349,11 +345,49 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 
-let string_of_arithmetic_expression = customized_string_of_arithmetic_expression Constants.default_string
-let string_of_int_arithmetic_expression = customized_string_of_int_arithmetic_expression Constants.default_string
+(** Convert a Boolean expression into a string *)
+and customized_string_of_boolean_expression customized_string variable_names = function
+	| True_bool -> customized_string.true_string
+	| False_bool -> customized_string.false_string
+	| And_bool (b1, b2) ->
+		(customized_string_of_boolean_expression customized_string variable_names b1)
+		^ customized_string.and_operator
+		^ (customized_string_of_boolean_expression customized_string variable_names b2)
+	| Or_bool (b1, b2) ->
+		(customized_string_of_boolean_expression customized_string variable_names b1)
+		^ customized_string.or_operator
+		^ (customized_string_of_boolean_expression customized_string variable_names b2)
+	| Discrete_boolean_expression discrete_boolean_expression ->
+		customized_string_of_discrete_boolean_expression customized_string variable_names discrete_boolean_expression
 
-(* TODO benjamin ref in ModelPrinter *)
-let string_of_boolean_operations customized_string = function
+(** Convert a discrete_boolean_expression into a string *)
+and customized_string_of_discrete_boolean_expression customized_string variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
+		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
+		^ (customized_string_of_boolean_operations customized_string relop)
+		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)
+    | Boolean_comparison (l_expr, relop, r_expr) ->
+		(customized_string_of_discrete_boolean_expression customized_string variable_names l_expr)
+		^ (customized_string_of_boolean_operations customized_string relop)
+		^ (customized_string_of_discrete_boolean_expression customized_string variable_names r_expr)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
+		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
+		^ customized_string.in_operator
+		^ "["
+		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)
+		^ " , "
+		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression3)
+		^ "]"
+    | Boolean_expression boolean_expression ->
+        "(" ^ (customized_string_of_boolean_expression customized_string variable_names boolean_expression) ^ ")"
+	| Not_bool b ->
+	    customized_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
+    | DB_variable discrete_index -> variable_names discrete_index
+    | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
+
+and customized_string_of_boolean_operations customized_string = function
 	| OP_L		-> customized_string.l_operator
 	| OP_LEQ	-> customized_string.le_operator
 	| OP_EQ		-> customized_string.eq_operator
@@ -361,113 +395,12 @@ let string_of_boolean_operations customized_string = function
 	| OP_GEQ	-> customized_string.ge_operator
 	| OP_G		-> customized_string.g_operator
 
-(* TODO benjamin ref in ModelPrinter *)
-(** Convert a Boolean expression into a string *)
-let rec customized_string_of_boolean_expression customized_string variable_names = function
-	| True_bool -> customized_string.true_string
-	| False_bool -> customized_string.false_string
-	| Not_bool b -> customized_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
-	| And_bool (b1, b2) ->
-		(customized_string_of_boolean_expression customized_string variable_names b1)
-		^ " && "
-		^ (customized_string_of_boolean_expression customized_string variable_names b2)
-	| Or_bool (b1, b2) ->
-		(customized_string_of_boolean_expression customized_string variable_names b1)
-		^ " || "
-		^ (customized_string_of_boolean_expression customized_string variable_names b2)
-	| Discrete_boolean_expression discrete_boolean_expression ->
-		customized_string_of_discrete_boolean_expression customized_string variable_names discrete_boolean_expression
-
-(* TODO benjamin ref in ModelPrinter *)
-(** Convert a discrete_boolean_expression into a string *)
-and customized_string_of_discrete_boolean_expression customized_string variable_names = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
-		^ (string_of_boolean_operations customized_string relop)
-		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
-		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
-		^ " in ["
-		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)
-		^ " , "
-		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression3)
-		^ "]"
-    | Boolean_expression boolean_expression ->
-        "(" ^ (customized_string_of_boolean_expression customized_string variable_names boolean_expression) ^ ")"
-    | DB_variable discrete_index -> variable_names discrete_index
-    | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
-
+let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
+let string_of_arithmetic_expression = customized_string_of_arithmetic_expression Constants.default_string
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.default_string
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.default_string
 
-
-let customized_string_of_global_expression customized_string variable_names = function
-    | Arithmetic_expression expr -> customized_string_of_arithmetic_expression customized_string.boolean_string variable_names expr
-    | Bool_expression expr -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
-
-let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
-
 (* JANI *)
-
-(* TODO benjamin uncomment on merge with Dylan *)
-(*
-
-
-
-
-let string_of_global_expression_for_jani = customized_string_of_global_expression_for_jani Constants.global_default_string
-*)
-
-(************************************************************)
-(** General functions on expression types *)
-(************************************************************)
-
-(* Check if an expression is a boolean expression *)
-let is_bool_expression_type = function
-    | Expression_type_discrete_bool _ -> true
-    | _ -> false
-
-(* Check if expression type is a unknown number type *)
-let is_unknown_number_expression_type = function
-    | Expression_type_discrete_arithmetic DiscreteValue.Var_type_discrete_unknown_number -> true
-    | _ -> false
-
-(* Check if expression type is a bool of unknown number type *)
-let is_bool_of_unknown_number_expression_type = function
-    | Expression_type_discrete_bool (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number) -> true
-    | _ -> false
-
-(* Check if a variable type is compatible with an expression type *)
-let is_var_type_discrete_compatible_with_expr_type var_type_discrete expr_type =
-    match var_type_discrete, expr_type with
-    (* Booleans are compatible with any boolean expression *)
-    | DiscreteValue.Var_type_discrete_bool,  Expression_type_discrete_bool _ -> true
-    (* All number types are compatible with unknown number typed expression *)
-    | DiscreteValue.Var_type_discrete_number _, Expression_type_discrete_arithmetic DiscreteValue.Var_type_discrete_unknown_number -> true
-    (* Number type is compatible with an arithmetic expression of the same type *)
-    | DiscreteValue.Var_type_discrete_number var_type, Expression_type_discrete_arithmetic expr_type when var_type = expr_type -> true
-    | _ -> false
-
-(* Check if a variable type is compatible with an expression type *)
-let is_var_type_compatible_with_expr_type var_type expr_type =
-    match var_type, expr_type with
-    (*
-    (* Clocks are rationals *)
-    | Var_type_clock, Expression_type_discrete_arithmetic Var_type_discrete_rational
-    (* Parameters are rationals *)
-    | Var_type_parameter, Expression_type_discrete_arithmetic Var_type_discrete_rational
-    *)
-    (* Booleans are compatible with any boolean expression *)
-    | DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_bool,  Expression_type_discrete_bool _ -> true
-    (* All number types are compatible with unknown number typed expression *)
-    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number _), Expression_type_discrete_arithmetic DiscreteValue.Var_type_discrete_unknown_number -> true
-    (* Number type is compatible with an arithmetic expression of the same type *)
-    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number var_type), Expression_type_discrete_arithmetic expr_type when var_type = expr_type -> true
-    | _ -> false
-
-
 
 (************** Jani translation **************)
 (* Convert an arithmetic expression into a string *)
@@ -481,7 +414,6 @@ let rec customized_string_of_global_expression_for_jani customized_string variab
 and customized_string_of_boolean_expression_for_jani customized_string variable_names = function
 	| True_bool -> customized_string.boolean_string.true_string
 	| False_bool -> customized_string.boolean_string.false_string
-	| Not_bool b -> "{\"op\": \""^ customized_string.boolean_string.not_operator ^"\"" ^ jani_separator ^ "\"exp\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b) ^ "}"
 	| And_bool (b1, b2) ->
 		"{\"op\": \"" ^ customized_string.boolean_string.and_operator ^ "\"" ^ jani_separator
 		^ "\"left\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b1) ^ jani_separator
@@ -491,7 +423,57 @@ and customized_string_of_boolean_expression_for_jani customized_string variable_
 		^ "\"left\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b1) ^ jani_separator
 		^ "\"right\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b2) ^"}"
 	| Discrete_boolean_expression discrete_boolean_expression ->
-		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
+		customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names discrete_boolean_expression
+
+(** Convert a discrete_boolean_expression into a string *)
+and customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
+		let expr1 =  (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression1) in
+		let relop =  (customized_string_of_boolean_operations customized_string.boolean_string relop) in
+		let expr2 =  (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression2) in
+		"{"
+		^ "\"op\": \"" ^ relop ^ "\", "
+		^ "\"left\": " ^ expr1 ^ ", "
+		^ "\"right\": " ^ expr2
+		^ "}"
+    | Boolean_comparison (l_expr, relop, r_expr) ->
+		let expr1 =  (customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names l_expr) in
+		let relop =  (customized_string_of_boolean_operations customized_string.boolean_string relop) in
+		let expr2 =  (customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names r_expr) in
+		"{"
+		^ "\"op\": \"" ^ relop ^ "\", "
+		^ "\"left\": " ^ expr1 ^ ", "
+		^ "\"right\": " ^ expr2
+		^ "}"
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	(*Done for jani, but without test*)
+	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
+		let expr1 = (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression1) in
+		let expr2 = (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression2) in
+		let expr3 = (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression3) in
+		  "{\"op\": \"" ^ customized_string.boolean_string.and_operator ^ "\", "
+		(* expr2 <= expr1 *)
+		^ "\"left\": "
+			^ "{"
+			^ "\"op\": \"" ^ customized_string.boolean_string.le_operator ^ "\", "
+			^ "\"left\": " ^ expr2 ^ ", "
+			^ "\"right\": " ^ expr1
+			^ "}"
+		(* expr1 <= expr3 *)
+		^ "\"right\": "
+			^ "{"
+			^ "\"op\": \"" ^ customized_string.boolean_string.le_operator ^ "\", "
+			^ "\"left\": " ^ expr1 ^ ", "
+			^ "\"right\": " ^ expr3
+			^ "}"
+		^ "}"
+    | Boolean_expression expr ->
+        customized_string_of_boolean_expression_for_jani customized_string variable_names expr
+	| Not_bool b ->
+	    "{\"op\": \""^ customized_string.boolean_string.not_operator ^"\"" ^ jani_separator ^ "\"exp\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b) ^ "}"
+    | DB_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
+    | DB_constant value -> DiscreteValue.string_of_value value
 
 and customized_string_of_arithmetic_expression_for_jani customized_string variable_names = function
     | Rational_arithmetic_expression expr -> customized_string_of_rational_arithmetic_expression_for_jani customized_string variable_names expr
@@ -617,47 +599,6 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 
-(** Convert a discrete_boolean_expression into a string *)
-and customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		let expr1 =  (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression1) in
-		let relop =  (string_of_boolean_operations customized_string.boolean_string relop) in
-		let expr2 =  (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression2) in
-		"{"
-		^ "\"op\": \"" ^ relop ^ "\", "
-		^ "\"left\": " ^ expr1 ^ ", "
-		^ "\"right\": " ^ expr2
-		^ "}"
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	(*Done for jani, but without test*)
-	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
-		let expr1 = (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression1) in
-		let expr2 = (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression2) in
-		let expr3 = (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression3) in
-		  "{\"op\": \"" ^ customized_string.boolean_string.and_operator ^ "\", "
-		(* expr2 <= expr1 *)
-		^ "\"left\": "
-			^ "{"
-			^ "\"op\": \"" ^ customized_string.boolean_string.le_operator ^ "\", "
-			^ "\"left\": " ^ expr2 ^ ", "
-			^ "\"right\": " ^ expr1
-			^ "}"
-		(* expr1 <= expr3 *)
-		^ "\"right\": "
-			^ "{"
-			^ "\"op\": \"" ^ customized_string.boolean_string.le_operator ^ "\", "
-			^ "\"left\": " ^ expr1 ^ ", "
-			^ "\"right\": " ^ expr3
-			^ "}"
-		^ "}"
-    | Boolean_expression expr ->
-        customized_string_of_boolean_expression_for_jani customized_string variable_names expr
-    | DB_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
-    | DB_constant value -> DiscreteValue.string_of_value value
-
 
 let string_of_arithmetic_expression_for_jani = customized_string_of_arithmetic_expression_for_jani Constants.global_default_string
-
-(* TODO benjamin ref in ModelPrinter *)
 let string_of_discrete_boolean_expression_for_jani = customized_string_of_discrete_boolean_expression_for_jani Constants.global_default_string

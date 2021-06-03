@@ -45,6 +45,7 @@ let jani_boolean_strings : customized_boolean_string = {
 	ge_operator   = ">";
 	g_operator    = "≥";
 	not_operator  = "¬";
+	in_operator   = ""; (* useless *)
 }
 
 let jani_strings = {
@@ -414,7 +415,6 @@ let string_of_discrete_boolean_expression variable_names =
 let rec string_of_boolean variable_names = function
 	| True_bool -> string_of_true
 	| False_bool -> string_of_false
-	| Not_bool b -> "{\"op\": \""^ jani_boolean_strings.not_operator ^"\"" ^ jani_separator ^ "\"exp\": " ^ (string_of_boolean variable_names b) ^ "}"
 	| And_bool (b1, b2) ->
 		"{\"op\": \"" ^ jani_boolean_strings.and_operator ^ "\"" ^ jani_separator
 		^ "\"left\": " ^ (string_of_boolean variable_names b1) ^ jani_separator

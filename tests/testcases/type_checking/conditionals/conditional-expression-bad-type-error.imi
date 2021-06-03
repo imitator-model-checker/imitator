@@ -1,0 +1,62 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that the use of a bad typed expression in conditional expression is forbidden
+ * Description      : Use different expression type expression than a boolean one in conditional clause, should lead to a type error
+ * Correctness      : Type error 
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/03/12
+ * Last modified    : 2021/05/31
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.1.0
+ ************************************************************)
+var 
+    j
+        : rational;
+    i
+        : int;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when True do { if 5 * 5 then (i := 0) else (i := 1) end } goto lend;
+	
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        i := 2,
+        j := 1
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

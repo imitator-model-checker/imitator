@@ -101,8 +101,6 @@ and string_of_parsed_boolean_expression parsed_model = function
             (string_of_parsed_boolean_expression parsed_model l_expr) ^
             " | " ^
             (string_of_parsed_boolean_expression parsed_model r_expr)
-    | Parsed_Not expr ->
-            "not (" ^ (string_of_parsed_boolean_expression parsed_model expr) ^ ")"
     | Parsed_Discrete_boolean_expression expr ->
         string_of_parsed_discrete_boolean_expression parsed_model expr
 
@@ -112,8 +110,8 @@ and string_of_parsed_discrete_boolean_expression parsed_model = function
     | Parsed_expression (l_expr, relop, r_expr) ->
         string_of_parsed_relop
             relop
-            (string_of_parsed_arithmetic_expression parsed_model l_expr)
-            (string_of_parsed_arithmetic_expression parsed_model r_expr)
+            (string_of_parsed_discrete_boolean_expression parsed_model l_expr)
+            (string_of_parsed_discrete_boolean_expression parsed_model r_expr)
     | Parsed_expression_in (expr1, expr2, expr3) ->
         (* Compute the first one to avoid redundancy *)
         let str_expr1 = string_of_parsed_arithmetic_expression parsed_model expr1 in
@@ -122,6 +120,8 @@ and string_of_parsed_discrete_boolean_expression parsed_model = function
         str_expr1 ^ " in [" ^ str_expr2 ^ ".." ^ str_expr3 ^ "]"
     | Parsed_boolean_expression expr ->
         string_of_parsed_boolean_expression parsed_model expr
+    | Parsed_Not expr ->
+            "not (" ^ (string_of_parsed_boolean_expression parsed_model expr) ^ ")"
 
 and string_of_parsed_relop relop value_1 value_2 =
         match relop with
@@ -132,6 +132,38 @@ and string_of_parsed_relop relop value_1 value_2 =
         | PARSED_OP_GEQ	    -> value_1 ^ " >= " ^ value_2
         | PARSED_OP_G		-> value_1 ^ " > " ^ value_2
 
+let rec string_of_parsed_linear_constraint parsed_model = function
+	| Parsed_true_constraint -> "True"
+	| Parsed_false_constraint -> "False"
+	| Parsed_linear_constraint (l_expr, relop, r_expr) ->
+	    string_of_parsed_relop
+            relop
+            (string_of_linear_expression parsed_model l_expr)
+            (string_of_linear_expression parsed_model r_expr)
+
+and string_of_linear_expression parsed_model = function
+	| Linear_term term -> string_of_linear_term parsed_model term
+	| Linear_plus_expression (expr, term) ->
+	    string_of_linear_expression parsed_model expr
+	    ^ " + "
+	    ^ string_of_linear_term parsed_model term
+	| Linear_minus_expression (expr, term) ->
+	    string_of_linear_expression parsed_model expr
+	    ^ " - "
+	    ^ string_of_linear_term parsed_model term
+
+and string_of_linear_term parsed_model = function
+	| Constant c -> NumConst.string_of_numconst c
+	| Variable (coef, variable_name) when NumConst.equal NumConst.one coef -> variable_name
+	| Variable (coef, variable_name) -> (NumConst.string_of_numconst coef)
+
+let string_of_parsed_init_state_predicate parsed_model = function
+	| Parsed_loc_assignment (automaton_name, location_name) -> "loc[" ^ automaton_name ^ "] = " ^ location_name
+	| Parsed_linear_predicate linear_constraint -> string_of_parsed_linear_constraint parsed_model linear_constraint
+	| Parsed_discrete_predicate (variable_name, expr) ->
+	    variable_name
+	    ^ " = "
+	    ^ string_of_parsed_global_expression parsed_model expr
 
 let string_of_parsed_nonlinear_constraint parsed_model = function
     | Parsed_true_nonlinear_constraint -> "True"
@@ -181,7 +213,8 @@ let try_reduce_parsed_global_expression constants expr =
         | Parsed_DF_unary_min factor ->
             DiscreteValue.neg (try_reduce_parsed_factor factor)
         | Parsed_rational_of_int_function expr ->
-            raise (InvalidExpression "Not implemented") (* TODO benjamin IMPORTANT implement this !!! *)
+            (* Convert with no problem because it's already type checked *)
+            DiscreteValue.convert_to_rational_value (try_reduce_parsed_arithmetic_expression expr)
 
     and try_reduce_parsed_boolean_expression = function
 	    | Parsed_True -> DiscreteValue.bool_value_true
@@ -194,9 +227,6 @@ let try_reduce_parsed_global_expression constants expr =
 	        DiscreteValue._or
                 (try_reduce_parsed_boolean_expression l_expr)
                 (try_reduce_parsed_boolean_expression r_expr)
-	    | Parsed_Not expr ->
-	        DiscreteValue.not
-	            (try_reduce_parsed_boolean_expression expr)
 	    | Parsed_Discrete_boolean_expression expr ->
 	        try_reduce_parsed_discrete_boolean_expression expr
 
@@ -206,8 +236,8 @@ let try_reduce_parsed_global_expression constants expr =
         | Parsed_expression (l_expr, relop, r_expr) ->
             eval_parsed_relop
                 relop
-                (try_reduce_parsed_arithmetic_expression l_expr)
-                (try_reduce_parsed_arithmetic_expression r_expr)
+                (try_reduce_parsed_discrete_boolean_expression l_expr)
+                (try_reduce_parsed_discrete_boolean_expression r_expr)
         | Parsed_expression_in (expr1, expr2, expr3) ->
 		    (* Compute the first one to avoid redundancy *)
 		    let expr1_evaluated = try_reduce_parsed_arithmetic_expression expr1 in
@@ -218,6 +248,9 @@ let try_reduce_parsed_global_expression constants expr =
 			    (DiscreteValue.leq expr1_evaluated expr3_evaluated)
         | Parsed_boolean_expression expr ->
             try_reduce_parsed_boolean_expression expr
+	    | Parsed_Not expr ->
+	        DiscreteValue.not
+	            (try_reduce_parsed_boolean_expression expr)
 
     and eval_parsed_relop relop value_1 value_2 =
         	match relop with

@@ -81,17 +81,18 @@ and parsed_discrete_factor =
 type parsed_discrete_boolean_expression =
     | Parsed_arithmetic_expression of parsed_discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Parsed_expression of parsed_discrete_arithmetic_expression * parsed_relop * parsed_discrete_arithmetic_expression
+	| Parsed_expression of parsed_discrete_boolean_expression * parsed_relop * parsed_discrete_boolean_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Parsed_boolean_expression of parsed_boolean_expression
+    (** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
+	| Parsed_Not of parsed_boolean_expression (** Negation *)
 
 
 and parsed_boolean_expression =
 	| Parsed_True (** True *)
 	| Parsed_False (** False *)
-	| Parsed_Not of parsed_boolean_expression (** Negation *)
 	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
 	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
 	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
@@ -209,7 +210,7 @@ type parsed_automaton = automaton_name * sync_name list * parsed_location list
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
 	| Parsed_linear_predicate of linear_constraint
-	| Parsed_discrete_predicate of string *  global_expression
+	| Parsed_discrete_predicate of string * global_expression
 
 type init_definition = parsed_init_state_predicate list
 

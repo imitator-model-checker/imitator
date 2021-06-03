@@ -648,11 +648,11 @@ pos_float:
 /************************************************************/
 /** BOOLEAN EXPRESSIONS */
 /************************************************************/
+
 boolean_expression:
 	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
-	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
 	| CT_TRUE { Parsed_True }
 	| CT_FALSE { Parsed_False }
 ;
@@ -660,13 +660,14 @@ boolean_expression:
 discrete_boolean_expression:
 	| arithmetic_expression { Parsed_arithmetic_expression $1 }
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
-	| arithmetic_expression relop arithmetic_expression { Parsed_expression ($1, $2, $3) }
+	| discrete_boolean_expression relop discrete_boolean_expression { Parsed_expression ($1, $2, $3) }
 	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	/* allowed for convenience */
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	/* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) */
 	| LPAREN boolean_expression RPAREN { Parsed_boolean_expression $2 }
+	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
 ;
 
 /************************************************************/

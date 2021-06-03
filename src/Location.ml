@@ -306,7 +306,6 @@ let string_of_location automata_names location_names discrete_names rational_dis
 			(* Convert to float? *)
 			match rational_display with
 			| Exact_display -> ""
-			(* TODO benjamin, warning this return bool and int as float *)
 			| Float_display -> " (~ " ^ (string_of_float (DiscreteValue.float_value value)) ^ ")"
 		)
 	) discrete in

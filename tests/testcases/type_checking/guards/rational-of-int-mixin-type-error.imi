@@ -1,12 +1,12 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Parameter compare type error
- * Description      : Compare a parameter to a boolean variable should lead to an error
+ * Title            : Mix of different types in expression using "rational_of_int"
+ * Description      : Mix of different types in expression using "rational_of_int", should lead to a type error
  * Correctness      : Type error
  * Scalable         : No
  * Generated        : No
- * Categories       : Semantic
+ * Categories       : Semantic, Type Checking
  * Source           : 
  * bibkey           : 
  * Author           : Benjamin L.
@@ -14,24 +14,25 @@
  * Input by         : Benjamin L.
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created          : 2021/04/02
- * Last modified    : 2021/04/02
+ * Created          : 2021/05/19
+ * Last modified    : 2021/05/19
  * Model version    : 1.0
  *
- * IMITATOR version : > 3.0.0
+ * IMITATOR version : 3.1.0
  ************************************************************)
 var 
-    p,
-        : parameter;
-    b,
-    	: bool;
+    i,
+        : int;
+    j
+        : rational;
+
 
 (************************************************************)
  automaton pta
 (************************************************************)
  
 loc l1: invariant True 
-	when p = b goto lend;
+	when rational_of_int(i) + i = 10 goto lend;
 	
 accepting loc lend: invariant True
  end (* pta *)
@@ -47,9 +48,8 @@ init := {
 
     discrete = 
         loc[pta] := l1,
-    ;
-    continuous = 
-        & p >= 0
+        i := 5,
+        j := 5
     ;
     
 }

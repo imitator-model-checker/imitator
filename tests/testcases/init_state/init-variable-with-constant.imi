@@ -1,12 +1,12 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Test that a constant is not initialized with a rational
- * Description      : Init a constant with a rational number should lead to an error
- * Correctness      : Type error 
+ * Title            : Init discrete variable with constants 
+ * Description      : Init a boolean discrete variable with two constants in new init zone
+ * Correctness      : True
  * Scalable         : No
  * Generated        : No
- * Categories       : Semantic
+ * Categories       : Semantic, Behavior, Init
  * Source           : 
  * bibkey           : 
  * Author           : Benjamin L.
@@ -14,18 +14,17 @@
  * Input by         : Benjamin L.
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created          : 2021/03/12
- * Last modified    : 2021/04/14
- * Model version    : 0.1
+ * Created          : 2021/03/09
+ * Last modified    : 2021/05/31
+ * Model version    : 1.0
  *
- * IMITATOR version : > 3.0.0
+ * IMITATOR version : 3.1.0
  ************************************************************)
 var 
-    x = 0,
-        : clock;
-    i = 2 / 3 (* forbidden assignment *)
-    	: int;
-
+    i = 1, j = 1
+        : rational;
+    b
+        : bool;
 
 
 (************************************************************)
@@ -33,7 +32,7 @@ var
 (************************************************************)
  
 loc l1: invariant True 
-	when True goto lend;
+	when b goto lend;
 	
 accepting loc lend: invariant True
  end (* pta *)
@@ -49,9 +48,10 @@ init := {
 
     discrete = 
         loc[pta] := l1,
+        b := j - 1 < i + 1 (* Init a boolean with constants *)
     ;
     continuous = 
-        & x >= 0
+        & True
     ;
     
 }

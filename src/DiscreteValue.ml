@@ -99,6 +99,12 @@ let is_discrete_type_unknown_number_type = function
     | Var_type_discrete_number Var_type_discrete_unknown_number -> true
     | _ -> false
 
+(* Check if discrete type is not a Var_type_unknown_number *)
+let is_discrete_type_known_number_type = function
+    | Var_type_discrete_number Var_type_discrete_unknown_number -> false
+    | Var_type_discrete_number _ -> true
+    | _ -> false
+
 (* Check if discrete type is a Var_type_rational *)
 let is_rational_type = function
     | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational) -> true
@@ -106,7 +112,7 @@ let is_rational_type = function
 
 (* Check if discrete type is a Var_type_discrete_rational *)
 let is_discrete_type_rational_type = function
-    | Var_type_discrete_number Var_type_discrete_int -> true
+    | Var_type_discrete_number Var_type_discrete_rational -> true
     | _ -> false
 
 (* Check if discrete type is a Var_type_discrete_int *)
@@ -139,22 +145,15 @@ let discrete_type_of_var_type = function
     | Var_type_discrete x -> x
 
 (* Check if two discrete types are compatible *)
-let is_discrete_type_compatibles type_a type_b =
-    match type_a, type_b with
-    | Var_type_discrete_number _, Var_type_discrete_bool
-    | Var_type_discrete_bool, Var_type_discrete_number _ -> false
-    | _, _ -> true
-
-(* Check if two discrete types are compatible *)
-(* Taking account of the direction of assignment *)
-(* as type_a x = value : type_b *)
-(* So int x = 4 / 3 is forbidden, but rational x = 4 is authorized *)
-let is_discrete_type_compatibles type_a type_b =
-    match type_a, type_b with
-    | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_rational
-    | Var_type_discrete_number _, Var_type_discrete_bool
-    | Var_type_discrete_bool, Var_type_discrete_number _ -> false
-    | _, _ -> true
+let is_discrete_type_compatibles var_type expr_type =
+    match var_type, expr_type with
+    (* any number type with literal number *)
+    | Var_type_discrete_number _, Var_type_discrete_number Var_type_discrete_unknown_number
+    | Var_type_discrete_number Var_type_discrete_unknown_number, Var_type_discrete_number _ -> true
+    (* any equals types *)
+    | ta, tb when ta = tb -> true
+    (* other are not compatibles *)
+    | _, _ -> false
 
 (* Check if a value is compatible with given type *)
 let check_value_compatible_with_type value var_type =
@@ -324,7 +323,13 @@ let equal a b =
     | Rational_value a, Rational_value b -> NumConst.equal a b
     | Bool_value a, Bool_value b -> a = b
     | Int_value a, Int_value b -> Int32.equal a b
-    | _ -> false
+    | lt, rt -> raise (
+        ComputingException (
+            (string_of_var_type_discrete (discrete_type_of_value lt))
+            ^ " = "
+            ^ (string_of_var_type_discrete (discrete_type_of_value rt))
+        )
+    )
 
 (* Check if a discrete value is not equal to another discrete value *)
 let neq a b =

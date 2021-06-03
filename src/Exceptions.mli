@@ -57,3 +57,6 @@ exception UnsatisfiableInitialState
 
 (* Used when an expression is not well formed *)
 exception InvalidExpression of string
+
+(* Used when an expression is ill-typed formed or when computing on not compatible types *)
+exception TypeError of string
