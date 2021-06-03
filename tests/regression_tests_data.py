@@ -14250,101 +14250,101 @@ end
 	# BEGIN : Test new init state section
 	#------------------------------------------------------------
 
+# 	#------------------------------------------------------------
+# 	{
+# 		## Test version             : 1
+# 		## Test since               : 2021/03/10
+# 		## Last modified            : 2021/03/10
+# 		## Test disabled            : 2021/06/01
+# 		## Test for IMITATOR version: > 3.0
+# 		## Author 					: lbinria
+# 		'author': 'lbinria',
+# 		'purpose'    : 'Test init state printing - old state zone (printing)',
+# 		'tags' : 'semantic, printing, init',
+# 		'input_files': ['init_state/old-init-state-printing.imi'],
+# 		'options'    : '-imi2IMI',
+# 		'expectations' : [
+# 			{'file': 'old-init-state-printing-regenerated.imi' , 'content' : """
+# var
+# 	i, j
+# 		: discrete;
+#
+#
+# (************************************************************)
+#  automaton pta
+# (************************************************************)
+#  synclabs: ;
+#
+# loc l1: invariant True
+# 	when  i = 0
+# & j = 0 do {}  (* sync nosync_1*)  goto lend;
+#
+# accepting loc lend: invariant True
+#  end (* pta *)
+# (************************************************************)
+#
+#
+# (************************************************************)
+#  automaton pta2
+# (************************************************************)
+#  synclabs: ;
+#
+# loc l2: invariant True
+# 	when  i = 0
+# & j = 0 do {}  (* sync nosync_2*)  goto lend2;
+#
+# accepting loc lend2: invariant True
+#  end (* pta2 *)
+# (************************************************************)
+#
+#
+# (************************************************************)
+# (* Initial state *)
+# (************************************************************)
+#
+# init := True
+# 	(*------------------------------------------------------------*)
+# 	(* Initial location *)
+# 	(*------------------------------------------------------------*)
+# 	& loc[pta] = l1
+# 	& loc[pta2] = l2
+#
+# 	(*------------------------------------------------------------*)
+# 	(* Initial discrete assignments *)
+# 	(*------------------------------------------------------------*)
+# 	& i = 1
+# 	& j = 2
+#
+# 	(*------------------------------------------------------------*)
+# 	(* Initial constraint *)
+# 	(*------------------------------------------------------------*)
+# 	 & True
+#
+# ;
+#
+#
+# (************************************************************)
+# (* The end *)
+# (************************************************************)
+# end
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
+
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
 		## Test since               : 2021/03/10
-		## Last modified            : 2021/03/10
-		## Test disabled            : 2021/06/01
+		## Last modified            : 2021/06/01
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test init state printing - old state zone (printing)',
-		'tags' : 'semantic, printing, init',
-		'input_files': ['init_state/old-init-state-printing.imi'],
-		'options'    : '-imi2IMI',
-		'expectations' : [
-			{'file': 'old-init-state-printing-regenerated.imi' , 'content' : """
-var 
-	i, j
-		: discrete;
-
-
-(************************************************************)
- automaton pta
-(************************************************************)
- synclabs: ;
- 
-loc l1: invariant True 
-	when  i = 0
-& j = 0 do {}  (* sync nosync_1*)  goto lend;
- 
-accepting loc lend: invariant True 
- end (* pta *)
-(************************************************************)
-
-
-(************************************************************)
- automaton pta2
-(************************************************************)
- synclabs: ;
- 
-loc l2: invariant True 
-	when  i = 0
-& j = 0 do {}  (* sync nosync_2*)  goto lend2;
- 
-accepting loc lend2: invariant True 
- end (* pta2 *)
-(************************************************************)
-
-
-(************************************************************)
-(* Initial state *)
-(************************************************************)
-
-init := True
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[pta] = l1
-	& loc[pta2] = l2
-
-	(*------------------------------------------------------------*)
-	(* Initial discrete assignments *)
-	(*------------------------------------------------------------*)
-	& i = 1
-	& j = 2
-
-	(*------------------------------------------------------------*)
-	(* Initial constraint *)
-	(*------------------------------------------------------------*)
-	 & True
-
-;
-
-
-(************************************************************)
-(* The end *)
-(************************************************************)
-end
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/03/10
-		## Last modified            : 2021/03/10
-		## Test for IMITATOR version: > 3.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test init state printing - new init state (printing)',
+		'purpose'    : 'Test imi2IMI for initial state v3.1',
 		'tags' : 'semantic, printing, init',
 		'input_files': ['init_state/new-init-state-printing.imi'],
 		'options'    : '-imi2IMI',
