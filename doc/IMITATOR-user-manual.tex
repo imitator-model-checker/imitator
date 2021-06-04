@@ -667,7 +667,7 @@ If an \IPTA{} declares an action \styleIMI{a} that is never used in this \IPTA{}
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Constants}
+\section{Global constants}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} supports global constants, \ie{} a variable the value of which is known once for all.
@@ -677,9 +677,16 @@ The syntax is the following one:
 \end{center}
 Then, any occurrence of \styleIMI{c} in the model is replaced with \styleIMI{1}.
 
-Constants are (unbounded, exact) rationals.
+By default, constants are (unbounded, exact) rationals.
+It is possible to define constants of another type by making their type explicit:
 
-Limited linear expressions over rationals can be used in the definition of a constant; however no other constant can be used in a definition, \ie{} one cannot (yet) write \styleIMI{c1 = c2 + 1: constant;}.
+\begin{center}
+	\styleIMI{c = 1: int;}
+\end{center}
+
+In this case, \styleIMI{c} is a constant of type \styleIMI{int}.
+
+Limited linear expressions over rationals can be used in the definition of a (rational) constant; however no other constant can be used in a definition, \ie{} one cannot (yet) write \styleIMI{c1 = c2 + 1: constant;}.
 
 
 %------------------------------------------------------------
