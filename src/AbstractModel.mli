@@ -131,7 +131,8 @@ type transition_index = int
 (************************************************************)
 type bound =
 	| Unbounded
-	| Bounded of NumConst.t
+	(* A finite bound is a pair NumConst.t and a Boolean true iff it is closed (i.e., closed inequality, and not strict) *)
+	| Bounded of NumConst.t * bool
 
 type bounds = {
 	lower	: bound;
