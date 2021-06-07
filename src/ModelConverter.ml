@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2021/05/11
+ * Last modified     : 2021/06/07
  *
  ************************************************************)
 
@@ -5636,6 +5636,19 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		print_message Verbose_medium ("Constraint X >= 0 ^ K0:");
 		print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint variable_names px_clocks_non_negative_and_initial_p_constraint);
 	);
+
+
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Detect bounded parameters *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Create an array parameter_index -> bounds *)
+	let parameter_bounds : AbstractModel.bounds array = Array.make nb_parameters {upper = Unbounded; lower = Unbounded} in
+	(* Fill it *)
+	List.iter (fun parameter_index ->
+		(*** TODO ***)
+		()
+	) parameters;
+
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
