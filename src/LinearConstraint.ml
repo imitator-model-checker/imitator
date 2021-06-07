@@ -1857,6 +1857,16 @@ let px_contains_integer_point = ippl_contains_integer_point
 (** {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+(* Get the list of dimensions of a constraint *)
+(*** WARNING: to enhance the speed, we do NOT use the PPL function but directly the ad-hoc dimensions encoding! ***)
+let p_get_dimensions_list _ =
+	OCamlUtilities.list_of_interval 0 (!p_dim - 1)
+let px_get_dimensions_list _ =
+	OCamlUtilities.list_of_interval 0 (!px_dim - 1)
+let pxd_get_dimensions_list _ =
+	OCamlUtilities.list_of_interval 0 (!pxd_dim - 1)
+
+
 (** Get the number of inequalities of a constraint *)
 let p_nb_inequalities linear_constraint = 
 	(* First check if true *)
@@ -2417,30 +2427,30 @@ let px_extrapolation (m : NumConst.t) (x : variable) (px_linear_constraint : px_
 
 	(* Return both constraints *)
 	px_linear_constraint1, px_linear_constraint2
-	
-	
+
+
 (*------------------------------------------------------------*)
 (** LU-extrapolation: returns (the constraint ^ x <= smaller bound) , (the constraint ^ x > smaller bound ^ x <= greater bound) , (the constraint ^ x > greater bound) *)
 (*** TODO: improve this description ***)
 (*------------------------------------------------------------*)
-	
+
 let px_extrapolation2 (l : NumConst.t) (u : NumConst.t) (x : variable) (px_linear_constraint : px_linear_constraint) : (px_linear_constraint * px_linear_constraint * px_linear_constraint) =
 
 		(* Prepare `x <= L`, i.e. `x - L <= 0` *)
 		let px_linear_term : px_linear_term = make_px_linear_term [(NumConst.one, x)] (NumConst.neg l) in
 		let px_linear_inequality : px_linear_inequality = make_px_linear_inequality px_linear_term Op_le in
 		let x_leq_L : px_linear_constraint = make_px_constraint [px_linear_inequality] in
-	
+
 		(* Prepare `x > L`, i.e., `x - L > 0` *)
 		let px_linear_term : px_linear_term = make_px_linear_term [(NumConst.one, x)] (NumConst.neg l) in
 		let px_linear_inequality : px_linear_inequality = make_px_linear_inequality px_linear_term Op_g in
 		let x_g_L : px_linear_constraint = make_px_constraint [px_linear_inequality] in
-	
+
 		(* Prepare `x <= U`, i.e. `x - U <= 0` *)
 		let px_linear_term : px_linear_term = make_px_linear_term [(NumConst.one, x)] (NumConst.neg u) in
 		let px_linear_inequality : px_linear_inequality = make_px_linear_inequality px_linear_term Op_le in
 		let x_leq_U : px_linear_constraint = make_px_constraint [px_linear_inequality] in
-	
+
 		(* Prepare `x > U`, i.e., `x - U > 0` *)
 		let px_linear_term : px_linear_term = make_px_linear_term [(NumConst.one, x)] (NumConst.neg u) in
 		let px_linear_inequality : px_linear_inequality = make_px_linear_inequality px_linear_term Op_g in
@@ -2449,28 +2459,28 @@ let px_extrapolation2 (l : NumConst.t) (u : NumConst.t) (x : variable) (px_linea
 		(* Intersect `x <= L` with the input constraint *)
 		px_intersection_assign x_leq_L [px_linear_constraint];
 		let px_linear_constraint1 = x_leq_L in
-	
-	
+
+
 		(* Intersect `x > L` and `x <= U` with the input constraint *)
 		let x_g_L_and_x_leq_U  = px_intersection [x_g_L ; x_leq_U] in
 		let px_linear_constraint_and_x_g_L_and_x_leq_U = px_intersection [px_linear_constraint ; x_g_L_and_x_leq_U] in
-	
+
 		(* Upper cylindrification: Eliminate all upper bounds on x *)
 		p_grow_to_infinity_assign [x] px_linear_constraint_and_x_g_L_and_x_leq_U;
 		let px_linear_constraint2 = px_linear_constraint_and_x_g_L_and_x_leq_U in
-	
-	
+
+
 		(* Intersect `x > U` with the input constraint *)
 		let px_linear_constraint_and_x_g_U = px_intersection [px_linear_constraint ; x_g_U] in
-	
+
 		(* Cylindrify: Eliminate x by variable elimination *)
 		px_hide_assign [x] px_linear_constraint_and_x_g_U;
-	
+
 		(* Intersect again with `x > U` *)
 		px_intersection_assign px_linear_constraint_and_x_g_U [x_g_U];
 		let px_linear_constraint3 = px_linear_constraint_and_x_g_U in
-	
-	
+
+
 		(* Return all constraints *)
 		px_linear_constraint1, px_linear_constraint2, px_linear_constraint3
 
