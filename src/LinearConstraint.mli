@@ -364,11 +364,11 @@ val px_is_zero_in : variable -> px_linear_constraint -> bool
 val pxd_is_zero_in : variable -> pxd_linear_constraint -> bool
 
 (** Check if a variable is bounded from above in a constraint *)
-(*** WARNING: in an equality x <= p, x is NOT considered to be bounded (when p is not itself) ***)
+(*** WARNING: in an equality x <= p, x is NOT considered to be bounded (when p is not itself bounded) ***)
 val px_is_bounded_from_above_in : variable -> px_linear_constraint -> bool
 
 (** Check if a variable is bounded from above in a constraint *)
-(*** WARNING: in an equality x <= p, x is NOT considered to be bounded (when p is not itself) ***)
+(*** WARNING: in an equality x <= p, x is NOT considered to be bounded (when p is not itself bounded) ***)
 val pxd_is_bounded_from_above_in : variable -> pxd_linear_constraint -> bool
 
 (*------------------------------------------------------------*)
