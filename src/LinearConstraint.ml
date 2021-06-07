@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/03/19
+ * Last modified     : 2021/06/07
  *
  ************************************************************)
 
@@ -2619,9 +2619,45 @@ let render_non_strict_p_linear_constraint k =
 
 
 	
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Operations without modification} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+
+(*------------------------------------------------------------*)
+(* Bounds on variables *)
+(*------------------------------------------------------------*)
+
+(** Given a linear constraint and a variable (dimension), return the pair of bounds, i.e., the infimum and supremum. If the dimension is not bounded, return None. Otherwise return a pair Some (NumConst.t, minimum) (resp. maximum), which is true if the bound is closed (i.e., a minimum (resp. maximum), as opposed to an infimum (resp. supremum)). *)
+let compute_bounds linear_constraint dimension : (((NumConst.t * bool) option) * ((NumConst.t * bool) option)) =
+	(* Create linear expression with just the dimension of interest *)
+	let linear_expression : Ppl.linear_expression = ppl_linear_expression_of_linear_term (make_linear_term [(NumConst.one, dimension)] NumConst.zero) in
+	
+	(* Compute the lower bound *)
+	(*** DOC: function signature is val ppl_Polyhedron_minimize : polyhedron -> linear_expression -> bool * Gmp.Z.t * Gmp.Z.t * bool ***)
+	let bounded_from_below, infimum_numerator, infimum_denominator, is_minimum = ippl_minimize linear_constraint linear_expression in
+	
+	(* Build the infimum *)
+	let infimum = NumConst.numconst_of_zfrac infimum_numerator infimum_denominator in
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then
+		print_message Verbose_high ("Infimum of dimension " ^ (string_of_int dimension) ^ " is " ^ (NumConst.string_of_numconst infimum) ^ ". Is it a minimum? " ^ (string_of_bool is_minimum));
+
+	(* Compute the upper bound *)
+	let bounded_from_above, supremum_numerator, supremum_denominator, is_maximum = ippl_maximize linear_constraint linear_expression in
+		
+	(* Build the supremum *)
+	let supremum = NumConst.numconst_of_zfrac supremum_numerator supremum_denominator in
+	
+	(* Build the pair *)
+	(if bounded_from_below then Some (infimum, is_minimum) else None)
+	,
+	(if bounded_from_above then Some (supremum, is_maximum) else None)
+
+
+let p_compute_bounds = compute_bounds
+
 
 (*------------------------------------------------------------*)
 (* Point exhibition *)
@@ -4186,9 +4222,10 @@ let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Operations without modification} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
 
 (*------------------------------------------------------------*)
 (* Point exhibition *)
