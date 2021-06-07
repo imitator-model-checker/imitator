@@ -1912,6 +1912,24 @@ In short, a symbolic state in \imitator{} is made of the following elements:
 \end{itemize}
 In \imitator{}, all rationals (\ie{} the value of the discrete variables and the coefficients used in the constraints) are unbounded rationals (implemented using GMP).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Built-in functions}\label{section:builtin-functions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\imitator{} 3.1 and higher comes with some built-in functions:
+
+\subsection{Arithmetic functions}
+
+\begin{itemize}
+    \item \styleIMI{pow(x : 'a, e : int) : 'a with 'a : [rational | int]}
+\end{itemize}
+
+\subsection{Conversion functions}
+
+\begin{itemize}
+    \item \styleIMI{rational\_of\_int(x : int) : rational}
+\end{itemize}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Type system}\label{section:type_system}
@@ -3013,6 +3031,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{<name>}                                     \\
 	$|$ & \styleIMI{(} \nt{arithmetic\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{rational\_of\_int(} \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{pow(} \nt{arithmetic\_expression}, \nt{arithmetic\_expression} \styleIMI{)} \\
 \end{tabular}
 
 
