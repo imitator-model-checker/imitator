@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2020/12/04
+ * Last modified     : 2021/06/07
  *
  ************************************************************)
 
@@ -125,6 +125,18 @@ type transition = {
 type transition_index = int
 
 
+
+(************************************************************)
+(** Bounds for the parameters *)
+(************************************************************)
+type bound =
+	| Unbounded
+	| Bounded of NumConst.t
+
+type bounds = {
+	lower	: bound;
+	upper	: bound;
+}
 
 
 (************************************************************)
