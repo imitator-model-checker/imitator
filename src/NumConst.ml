@@ -64,6 +64,13 @@ let mul = ( */ )
 let div = ( // )
 (*	arithmetic_gen Gmp.Q.div*)
 
+(* pow of x by e *)
+let pow x e =
+    let rec pow_rec r = function
+        | e when Int32.equal e Int32.one -> r
+        | e -> pow_rec (mul x r) (Int32.sub e Int32.one)
+    in pow_rec x e
+
 let neg a = Gmp.Q.neg a
 (*	let a = get_mpq a in           *)
 (*	let result = Gmp.Q.create () in*)

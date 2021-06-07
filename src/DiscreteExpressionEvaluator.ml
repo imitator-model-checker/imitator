@@ -60,6 +60,8 @@ and eval_rational_expression discrete_valuation expr =
             (* TODO benjamin WARNING conversion from int32 to int ! *)
 (*            ImitatorUtilities.print_message Verbose_standard "Evaluate a int expression";*)
             NumConst.numconst_of_int (Int32.to_int (eval_int_expression discrete_valuation expr))
+        | DF_pow (expr, exp) ->
+            NumConst.pow (eval_rational_expression_rec expr) (eval_int_expression discrete_valuation exp)
         | DF_unary_min factor ->
             NumConst.neg (eval_rational_factor factor)
     in
@@ -109,7 +111,8 @@ and eval_int_expression discrete_valuation (* expr *) =
             eval_int_expression_rec expr
         | Int_unary_min factor ->
             Int32.neg (eval_int_factor factor)
-
+        | Int_pow (expr, exp) ->
+            OCamlUtilities.pow (eval_int_expression_rec expr) (eval_int_expression_rec exp)
     in
     eval_int_expression_rec
 

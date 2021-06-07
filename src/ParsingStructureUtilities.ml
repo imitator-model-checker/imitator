@@ -88,7 +88,13 @@ and string_of_parsed_factor parsed_model = function
     | Parsed_DF_unary_min factor ->
         "-(" ^ (string_of_parsed_factor parsed_model factor) ^ ")"
     | Parsed_rational_of_int_function arithmetic_expr ->
-        "rational_of_int(" ^ (string_of_parsed_arithmetic_expression parsed_model arithmetic_expr) ^ ")"
+        "rational_of_int(" ^ string_of_parsed_arithmetic_expression parsed_model arithmetic_expr ^ ")"
+    | Parsed_pow_function (expr, exp_expr) ->
+        "pow("
+        ^ string_of_parsed_arithmetic_expression parsed_model expr
+        ^ ","
+        ^ string_of_parsed_arithmetic_expression parsed_model exp_expr
+        ^ ")"
 
 and string_of_parsed_boolean_expression parsed_model = function
     | Parsed_True -> "True"
@@ -201,6 +207,7 @@ let try_reduce_parsed_global_expression constants expr =
                 (try_reduce_parsed_factor factor)
         | Parsed_DT_factor factor ->
             try_reduce_parsed_factor factor
+
     and try_reduce_parsed_factor = function
         | Parsed_DF_variable variable_name ->
             if (Hashtbl.mem constants variable_name) then (
@@ -215,6 +222,28 @@ let try_reduce_parsed_global_expression constants expr =
         | Parsed_rational_of_int_function expr ->
             (* Convert with no problem because it's already type checked *)
             DiscreteValue.convert_to_rational_value (try_reduce_parsed_arithmetic_expression expr)
+        | Parsed_pow_function (expr, exp) ->
+
+            let reduced_expr = try_reduce_parsed_arithmetic_expression expr in
+            let reduced_exp = try_reduce_parsed_arithmetic_expression exp in
+            (* we have to know type of expr *)
+            let value_type = DiscreteValue.discrete_type_of_value reduced_expr in
+            match value_type with
+            | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
+                let numconst_expr = DiscreteValue.numconst_value reduced_expr in
+                let int_exp = DiscreteValue.int_value reduced_exp in
+                let numconst_result = NumConst.pow numconst_expr int_exp in
+                DiscreteValue.of_numconst numconst_result
+            | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
+                let int_expr = DiscreteValue.int_value reduced_expr in
+                let int_exp = DiscreteValue.int_value reduced_exp in
+                let int_result = OCamlUtilities.pow int_expr int_exp in
+                DiscreteValue.of_int int_result
+            (* Should never happen *)
+            | DiscreteValue.Var_type_discrete_bool ->
+                raise (InternalError "Try to reduce a pow function on a boolean expression, altough it was checked before by the type checker. Maybe type checking has failed before")
+            | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
+                raise (InternalError "Try to reduce a pow function on an unknown number, altough it was checked before by the type checker. Maybe type checking has failed before")
 
     and try_reduce_parsed_boolean_expression = function
 	    | Parsed_True -> DiscreteValue.bool_value_true

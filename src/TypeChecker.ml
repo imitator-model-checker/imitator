@@ -164,6 +164,11 @@ and convert_literal_types_of_parsed_discrete_factor parsed_model target_type = f
         (* As it was already type checked, we can convert inner expression literal numbers of the function to int *)
         let inner_target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
         Parsed_rational_of_int_function (convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model inner_target_type expr)
+    | Parsed_pow_function (expr, exp_expr) ->
+        Parsed_pow_function (
+            convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr,
+            convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type exp_expr
+        )
     | Parsed_DF_unary_min factor ->
         Parsed_DF_unary_min (convert_literal_types_of_parsed_discrete_factor parsed_model target_type factor)
 
@@ -316,7 +321,7 @@ and infer_parsed_discrete_boolean_expression parsed_model = function
         let get_infer_expr_message = get_infer_message (string_of_parsed_discrete_boolean_expression parsed_model expr) in
 
         print_message Verbose_high (
-            "\tInfer expression type \""
+            "\tInfer expression type of \""
             ^ string_of_parsed_discrete_boolean_expression parsed_model expr
             ^ "\" as "
             ^ DiscreteValue.string_of_var_type_discrete DiscreteValue.Var_type_discrete_bool
@@ -613,7 +618,7 @@ and infer_parsed_discrete_factor parsed_model = function
             let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
 
             print_message Verbose_high (
-                "\tInfer expression type \""
+                "\tInfer expression type of \""
                 ^ string_of_parsed_factor parsed_model int_expr
                 ^ "\" as "
                 ^ DiscreteValue.string_of_var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
@@ -632,6 +637,60 @@ and infer_parsed_discrete_factor parsed_model = function
             (* Return converted expression and it's type *)
             Parsed_rational_of_int_function convert_expr, DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational
         )
+
+    | Parsed_pow_function (expr, exp) as pow_expr ->
+        let infer_expr, l_type = infer_parsed_discrete_arithmetic_expression parsed_model expr in
+        let infer_exp, r_type = infer_parsed_discrete_arithmetic_expression parsed_model exp in
+
+        (* Check that two expression are arithmetic *)
+        if not (DiscreteValue.is_discrete_type_number_type l_type && DiscreteValue.is_discrete_type_number_type r_type) then (
+            raise (TypeError (
+                "The left or right expression contained \""
+                ^ (string_of_parsed_factor parsed_model pow_expr)
+                ^ "\" is not an arithmetic expression: "
+                ^ (DiscreteValue.string_of_var_type_discrete l_type)
+                ^ ", "
+                ^ (DiscreteValue.string_of_var_type_discrete r_type)
+            ));
+        )
+        (* Check that right expression (exponent) is int, otherwise raise an error *)
+        else if not (DiscreteValue.is_discrete_type_unknown_number_type r_type || DiscreteValue.is_discrete_type_int_type r_type) then (
+            raise (TypeError (
+                    "Exponent of expression \""
+                    ^ ParsingStructureUtilities.string_of_parsed_factor parsed_model pow_expr
+                    ^ "\" is not an integer"
+                )
+            );
+        );
+
+        (* If right expression unknown convert auto to int *)
+        let converted_exp = if DiscreteValue.is_discrete_type_unknown_number_type r_type then (
+            (* convert *)
+            let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
+            convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type exp
+        ) else
+            infer_exp
+        in
+        (* If left expression unknown convert auto to rational *)
+        (* Moreover result type depend on the type of left expression: *)
+        (* it has the same number type as left expression type *)
+        let converted_expr, result_type = if DiscreteValue.is_discrete_type_unknown_number_type l_type then (
+            (* convert *)
+            let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational in
+            convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr, target_type
+        ) else
+            infer_expr, l_type
+        in
+
+        print_message Verbose_high (
+            "\tInfer expression type of \""
+            ^ (string_of_parsed_factor parsed_model pow_expr)
+            ^ "\" as "
+            ^ (DiscreteValue.string_of_var_type_discrete result_type)
+        );
+
+        (* Return converted expression and it's type *)
+        Parsed_pow_function (converted_expr, converted_exp), result_type
 
     | Parsed_DF_unary_min factor ->
         let infer_factor, factor_type = infer_parsed_discrete_factor parsed_model factor in
@@ -693,6 +752,9 @@ and discrete_type_of_parsed_discrete_factor parsed_model = function
 	| Parsed_DF_expression expr
 	| Parsed_rational_of_int_function expr ->
 	    DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational
+    | Parsed_pow_function (expr, exp) ->
+        (* Pow function result type depends of the left member type *)
+        discrete_type_of_parsed_discrete_arithmetic_expression parsed_model expr
 
 (** Checking functions **)
 

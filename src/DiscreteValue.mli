@@ -159,6 +159,14 @@ val bool_value : discrete_value -> bool
 (* Get float value of discrete value *)
 val float_value : discrete_value -> float
 
+(* Get discrete value from NumConst.t *)
+val of_numconst : NumConst.t -> discrete_value
+(* Get discrete value from Int32.t *)
+val of_int : Int32.t -> discrete_value
+(* Get discrete value from bool *)
+val of_bool : bool -> discrete_value
+
+
 (*(* Convert discrete value to another var type *)*)
 (*val convert_value : discrete_value -> var_type -> discrete_value*)
 (* Convert discrete value to another discrete type *)

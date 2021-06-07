@@ -48,6 +48,8 @@ and rational_factor =
 	| DF_expression of rational_arithmetic_expression
 	| DF_rational_of_int of int_arithmetic_expression
 	| DF_unary_min of rational_factor
+    | DF_pow of rational_arithmetic_expression * int_arithmetic_expression
+
 
 (************************************************************)
 (** Int arithmetic expressions for discrete variables *)
@@ -68,6 +70,7 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
+    | Int_pow of int_arithmetic_expression * int_arithmetic_expression
 
 type discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
@@ -275,8 +278,14 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 		    ) discrete_factor
 		| DF_rational_of_int discrete_arithmetic_expression ->
 		    "rational_of_int("
-		    ^ (customized_string_of_int_arithmetic_expression customized_string variable_names discrete_arithmetic_expression)
+		    ^ customized_string_of_int_arithmetic_expression customized_string variable_names discrete_arithmetic_expression
 		    ^ ")"
+        | DF_pow (expr, exp) ->
+            "pow("
+            ^ string_of_arithmetic_expression customized_string expr
+            ^ ", "
+            ^ customized_string_of_int_arithmetic_expression customized_string variable_names exp
+            ^ ")"
 		| DF_expression discrete_arithmetic_expression ->
 			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 	(* Call top-level *)
@@ -342,6 +351,12 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 		    ) factor
 		| Int_expression expr ->
 			string_of_int_arithmetic_expression customized_string expr
+        | Int_pow (expr, exp) ->
+            "pow("
+            ^ string_of_int_arithmetic_expression customized_string expr
+            ^ ", "
+            ^ string_of_int_arithmetic_expression customized_string exp
+            ^ ")"
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 
@@ -537,6 +552,12 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
 			string_of_arithmetic_expression customized_string expr
 		| DF_rational_of_int expr ->
 		    customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
+        | DF_pow (expr, exp) ->
+            "{\"op\": \"pow\", \"left\":"
+            ^ string_of_arithmetic_expression customized_string expr
+            ^ ", \"right\":"
+            ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names exp
+            ^ "}"
 	(* Call top-level *)
 	in string_of_arithmetic_expression customized_string
 
@@ -596,6 +617,12 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 		| Int_expression discrete_arithmetic_expression ->
 			(*** TODO: simplify a bit? ***)
 			string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression
+        | Int_pow (expr, exp) ->
+            "{\"op\": \"pow\", \"left\":"
+            ^ string_of_int_arithmetic_expression customized_string expr
+            ^ ", \"right\":"
+            ^ string_of_int_arithmetic_expression customized_string exp
+            ^ "}"
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 
