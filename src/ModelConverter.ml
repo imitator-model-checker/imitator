@@ -5645,8 +5645,16 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let parameter_bounds : AbstractModel.bounds array = Array.make nb_parameters {upper = Unbounded; lower = Unbounded} in
 	(* Fill it *)
 	List.iter (fun parameter_index ->
-		(*** TODO ***)
-		()
+		let lower_bound, upper_bound = LinearConstraint.p_compute_bounds initial_p_constraint parameter_index in
+		let bounds : AbstractModel.bounds =
+		{
+			lower	= (match lower_bound with None -> Unbounded | Some (bound, is_strict) -> Bounded (bound, is_strict));
+			upper	= (match upper_bound with None -> Unbounded | Some (bound, is_strict) -> Bounded (bound, is_strict));
+		}
+		in
+		(* Update array *)
+		parameter_bounds.(parameter_index) <- bounds;
+
 	) parameters;
 
 
