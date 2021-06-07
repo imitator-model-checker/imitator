@@ -1,0 +1,62 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that use of a rational expression as exponent in "pow" raise an error
+ * Description      : Use a rational expression as exponent in "pow", should lead to a type error
+ * Correctness      : Type error
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic, Type Checking
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/06/07
+ * Last modified    : 2021/06/07
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.1.0
+ ************************************************************)
+var 
+    i,
+        : int;
+    j
+        : rational;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when pow(i, j) = 81 goto lend;
+	
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        i := 3,
+        j := 4
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

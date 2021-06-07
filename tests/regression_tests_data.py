@@ -3391,10 +3391,99 @@ Error                                   : invalid model
 
 	,
 
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/06/07
+		## Last modified            : 2021/06/07
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that use of a rational expression as exponent in "pow" function raise an error',
+		'input_files': ['type_checking/guards/pow-exponent-bad-type-error.imi'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'pow-exponent-bad-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	# END : Type checking on guards tests
 
 	#------------------------------------------------------------
 	# END : Test type checking
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test custom function
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/06/07
+		## Last modified            : 2021/06/07
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : '',
+		'input_files': ['functions/pow.imi'],
+		'tags': 'semantic, behavior, function',
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'pow-statespace.states' , 'content' : """
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1, r1 = 3, r2 = 4, projected_result_1 = 0, projected_result_2 = 0, n = 0, i = 3, j = 4 ==> 
+& p1 >= 0
+
+  Projection onto the parameters:
+   p1 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l1, r1 = 3, r2 = 4, projected_result_1 = 82, projected_result_2 = 65, n = 1, i = 3, j = 4 ==> 
+& p1 >= 0
+
+  Projection onto the parameters:
+   p1 >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: l1, r1 = 3, r2 = 4, projected_result_1 = 82, projected_result_2 = 65, n = 2, i = 3, j = 4 ==> 
+& p1 >= 0
+
+  Projection onto the parameters:
+   p1 >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: lend, r1 = 3, r2 = 4, projected_result_1 = 82, projected_result_2 = 65, n = 3, i = 3, j = 4 ==> 
+& p1 = 82
+& p2 = 65
+
+  Projection onto the parameters:
+   p1 = 82
+& p2 = 65
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test custom function
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
