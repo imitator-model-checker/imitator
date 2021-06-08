@@ -5854,6 +5854,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Does the model contain any transition labeled by a silent, non-observable action? *)
 	has_silent_actions = has_silent_actions;
 
+	(* Are all parameters bounded in the initial state? *)
+	bounded_parameters = not unbounded_parameters;
+	(* Function returning the bounds of each parameter *)
+	parameters_bounds = parameter_bounds;
 
 	(* The observer *)
 	observer_pta = observer_automaton_index_option;

@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2021/06/07
+ * Last modified     : 2021/06/08
  *
  ************************************************************)
 
@@ -182,6 +182,11 @@ type abstract_model = {
 	strongly_deterministic : bool;
 	(* Does the model contain any transition labeled by a silent, non-observable action? *)
 	has_silent_actions : bool;
+	
+	(* Are all parameters bounded in the initial state? *)
+	bounded_parameters : bool;
+	(* Function returning the bounds of each parameter *)
+	parameters_bounds : parameter_index -> bounds;
 
 	(** Content of the PTA **)
 	(* The observer *)

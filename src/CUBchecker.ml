@@ -9,7 +9,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2021/03/19
+ * Last modified     : 2021/06/08
  *
  ************************************************************)
 
@@ -3602,6 +3602,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Does the model contain any transition labeled by a silent, non-observable action? *)
 		has_silent_actions = List.exists (fun action_index -> new_action_types action_index = Action_type_nosync) new_actions;
 
+		(* Are all parameters bounded in the initial state? *)
+		bounded_parameters = model.bounded_parameters;
+		(* Function returning the bounds of each parameter *)
+		parameters_bounds = model.parameters_bounds;
+
+		
 		(** Content of the PTA **)
 		(* The observer *)
 	
