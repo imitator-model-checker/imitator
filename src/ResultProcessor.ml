@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2021/02/05
+ * Last modified     : 2021/06/08
  *
  ************************************************************)
 
@@ -278,6 +278,7 @@ let model_statistics () =
 	^ "\nHas invariants?                         : " ^ (string_of_bool model.has_invariants)
 	^ "\nHas clocks with rate <>1?               : " ^ (string_of_bool model.has_non_1rate_clocks)
 	^ "\nL/U subclass                            : " ^ (string_of_lu_status model.lu_status)
+	^ "\nBounded parameters?                     : " ^ (string_of_bool model.bounded_parameters)
 	^ "\nHas silent actions?                     : " ^ (string_of_bool model.has_silent_actions)
 	^ "\nIs strongly deterministic?              : " ^ (string_of_bool model.strongly_deterministic)
 	^ "\nNumber of parameters                    : " ^ (string_of_int model.nb_parameters)
