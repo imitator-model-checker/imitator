@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2021/06/07
+ * Last modified     : 2021/06/08
  *
  ************************************************************)
 
@@ -5642,20 +5642,30 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Detect bounded parameters *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create an array parameter_index -> bounds *)
-	let parameter_bounds : AbstractModel.bounds array = Array.make nb_parameters {upper = Unbounded; lower = Unbounded} in
+	let parameter_bounds_array : AbstractModel.bounds array = Array.make nb_parameters {upper = Unbounded; lower = Unbounded} in
 	(* Fill it *)
 	List.iter (fun parameter_index ->
 		let lower_bound, upper_bound = LinearConstraint.p_compute_bounds initial_p_constraint parameter_index in
 		let bounds : AbstractModel.bounds =
 		{
-			lower	= (match lower_bound with None -> Unbounded | Some (bound, is_strict) -> Bounded (bound, is_strict));
-			upper	= (match upper_bound with None -> Unbounded | Some (bound, is_strict) -> Bounded (bound, is_strict));
+			lower	= (match lower_bound with None -> Unbounded | Some (bound, is_closed) -> Bounded (bound, is_closed));
+			upper	= (match upper_bound with None -> Unbounded | Some (bound, is_closed) -> Bounded (bound, is_closed));
 		}
 		in
 		(* Update array *)
-		parameter_bounds.(parameter_index) <- bounds;
+		parameter_bounds_array.(parameter_index) <- bounds;
 
 	) parameters;
+	
+	(* Detect unbounded model, i.e., at least one parameter is unbounded in at least one direction *)
+	let unbounded_parameters = List.exists (fun parameter_index ->
+		let lower_bound = parameter_bounds_array.(parameter_index).lower in
+		let upper_bound = parameter_bounds_array.(parameter_index).upper in
+		lower_bound = Unbounded || upper_bound = Unbounded
+	) parameters in
+	
+	(* Build functional view *)
+	let parameter_bounds parameter_index = parameter_bounds_array.(parameter_index) in
 
 
 
@@ -5774,6 +5784,25 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		print_message Verbose_standard ("This model is a U-PTA.");
 
 	end;
+
+	(* Debug print: bounded parameters *)
+	if nb_parameters > 0 then(
+		if unbounded_parameters then
+			print_message Verbose_low ("Parameters are not (all) bounded.")
+		else
+			print_message Verbose_standard ("Parameters are all bounded.")
+		;
+	);
+	if verbose_mode_greater Verbose_low then(
+		List.iter (fun parameter_index ->
+			let bounds = parameter_bounds parameter_index in
+			print_message Verbose_low ("Bounds for parameter " ^ (variable_names parameter_index) ^ ": "
+				^ (match bounds.lower with Unbounded -> "(-infinity" | Bounded (bound, is_closed) -> (if is_closed then "[" else "(") ^ (NumConst.string_of_numconst bound))
+				^ ", "
+				^ (match bounds.upper with Unbounded -> "+infinity)" | Bounded (bound, is_closed) -> (NumConst.string_of_numconst bound) ^ (if is_closed then "]" else ")"))
+				^ "");
+		) parameters;
+	);
 
 	(* Debug print: special global clock *)
 	begin
