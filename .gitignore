@@ -52,7 +52,6 @@ benchmarks/**/*.states
 benchmarks/**/*.pdf
 benchmarks/**/*.xml
 benchmarks/**/*.jani
-benchmarks/**/*.hy
 
 *_cart.png
 *_cart_bounds.txt
