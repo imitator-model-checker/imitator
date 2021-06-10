@@ -881,7 +881,7 @@ let check_type_assignment parsed_model variable_name expr =
         raise (TypeError (get_error_message variable_name variable_type expr_var_type_discrete infer_expr))
     )
     else
-        infer_expr
+        infer_expr, expr_var_type_discrete
 
 
 (* Check that constant declarations are well typed *)
@@ -926,6 +926,7 @@ let check_discrete_init parsed_model variable_name expr =
     let discrete_index = Hashtbl.find parsed_model.index_of_variables variable_name in
     (* Get variable type *)
     let var_type = get_type_of_variable parsed_model discrete_index in
+    let var_discrete_type = DiscreteValue.discrete_type_of_var_type var_type in
 
     (* Check whether variable is clock or parameter *)
     let is_clock_or_parameter = var_type == DiscreteValue.Var_type_clock || var_type == DiscreteValue.Var_type_parameter in
@@ -936,19 +937,23 @@ let check_discrete_init parsed_model variable_name expr =
     );
 
     (* Check expression / variable type consistency *)
-    let infer_expr = check_type_assignment parsed_model variable_name expr in
+    let infer_expr, expr_type = check_type_assignment parsed_model variable_name expr in
+
+    (* If expression type was unknown number, *)
+    (* and as we had already check the compatibility of variable type and expression type above *)
+    (* we should convert expression type to variable type *)
+    let converted_expr =
+        if DiscreteValue.is_discrete_type_unknown_number_type expr_type then (
+            print_message Verbose_high (
+                "\tInfer expression type of \""
+                ^ ParsingStructureUtilities.string_of_parsed_global_expression parsed_model infer_expr
+                ^ "\" as the same as assigned variable type: " ^ DiscreteValue.string_of_var_type_discrete var_discrete_type
+            );
+            convert_literal_types_of_expression parsed_model var_discrete_type infer_expr
+        )
+        else
+            infer_expr
+    in
+
     (* Try to reduce expression to a value *)
-    let discrete_value = ParsingStructureUtilities.try_reduce_parsed_global_expression_with_model parsed_model infer_expr in
-
-    (* Check computed value type consistency *)
-    let discrete_value_type = DiscreteValue.discrete_type_of_value discrete_value in
-    (* Get variable discrete type *)
-    let variable_type = get_discrete_type_of_variable parsed_model discrete_index in
-
-    if not (DiscreteValue.is_discrete_type_compatibles variable_type discrete_value_type) then
-        raise (TypeError ("Variable " ^ variable_name ^ " of type " ^ (DiscreteValue.string_of_var_type_discrete variable_type) ^ " is not compatible with value \"" ^ (DiscreteValue.string_of_value discrete_value) ^ "\" of type " ^ (DiscreteValue.string_of_var_type_discrete discrete_value_type)))
-    else (
-        (* As literal value is compatible with variable type,
-        convert literal value to variable type *)
-        DiscreteValue.convert_value_to_discrete_type discrete_value variable_type
-    )
+    ParsingStructureUtilities.try_reduce_parsed_global_expression_with_model parsed_model converted_expr

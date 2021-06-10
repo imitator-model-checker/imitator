@@ -64,7 +64,7 @@ val check_conditional : ParsingStructure.useful_parsing_model_information -> Par
 
 (* Check that an expression assigned to a variable is of the same type *)
 (* If not, raise a TypeError exception with an error message *)
-val check_type_assignment : ParsingStructure.useful_parsing_model_information -> variable_name -> ParsingStructure.global_expression -> ParsingStructure.global_expression
+val check_type_assignment : ParsingStructure.useful_parsing_model_information -> variable_name -> ParsingStructure.global_expression -> ParsingStructure.global_expression * DiscreteValue.var_type_discrete
 
 (* Check that constant declarations are well typed *)
 val check_constant_declarations : (variable_name * ParsingStructure.global_expression * DiscreteValue.discrete_value * DiscreteValue.var_type) list -> (variable_name * DiscreteValue.discrete_value) list
