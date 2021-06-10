@@ -195,7 +195,9 @@ and get_variables_in_parsed_discrete_factor variables_used_ref = function
     | Parsed_rational_of_int_function expr
 	| Parsed_DF_expression expr ->
 		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr
-
+	| Parsed_pow_function (expr, exp_expr) ->
+		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr;
+		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref exp_expr;
 	| Parsed_DF_unary_min factor -> get_variables_in_parsed_discrete_factor variables_used_ref factor
 
 
@@ -222,7 +224,10 @@ let rec check_f_in_parsed_update_factor f = function
     | Parsed_rational_of_int_function parsed_update_arithmetic_expression
 	| Parsed_DF_expression parsed_update_arithmetic_expression ->
 		check_f_in_parsed_update_arithmetic_expression f parsed_update_arithmetic_expression
-	
+	| Parsed_pow_function (expr, exp_expr) ->
+        evaluate_and
+            (check_f_in_parsed_update_arithmetic_expression f expr)
+            (check_f_in_parsed_update_arithmetic_expression f exp_expr)
 	| Parsed_DF_unary_min parsed_discrete_factor ->
 		check_f_in_parsed_update_factor f parsed_discrete_factor
 
@@ -293,6 +298,10 @@ let rec check_f_in_parsed_discrete_factor f index_of_variables type_of_variables
 	| Parsed_rational_of_int_function parsed_update_arithmetic_expression
 	| Parsed_DF_expression parsed_update_arithmetic_expression ->
 		check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants parsed_update_arithmetic_expression
+	| Parsed_pow_function (expr, exp_expr) ->
+        evaluate_and
+            (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr)
+            (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants exp_expr)
 	| Parsed_DF_unary_min parsed_discrete_factor ->
 		check_f_in_parsed_discrete_factor f index_of_variables type_of_variables constants parsed_discrete_factor
 
@@ -483,6 +492,7 @@ and convert_parsed_rational_arithmetic_expression index_of_variables constants (
         | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.numconst_value var_value)
         | Parsed_DF_expression expr -> DF_expression (convert_parsed_rational_arithmetic_expression_rec expr)
         | Parsed_rational_of_int_function expr -> DF_rational_of_int (convert_parsed_int_arithmetic_expression index_of_variables constants expr)
+        | Parsed_pow_function (expr, exp) -> DF_pow (convert_parsed_rational_arithmetic_expression_rec expr, convert_parsed_int_arithmetic_expression index_of_variables constants exp)
         | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_rational_factor factor)
     in
     convert_parsed_rational_arithmetic_expression_rec
@@ -530,6 +540,8 @@ and convert_parsed_int_arithmetic_expression index_of_variables constants (* exp
 
         | Parsed_DF_constant var_value -> Int_constant (DiscreteValue.int_value var_value)
         | Parsed_DF_expression expr -> Int_expression (convert_parsed_int_arithmetic_expression_rec expr)
+        | Parsed_pow_function (expr, exp) -> Int_pow (convert_parsed_int_arithmetic_expression_rec expr, convert_parsed_int_arithmetic_expression_rec exp)
+
         | Parsed_DF_unary_min factor -> Int_unary_min (convert_parsed_int_factor factor)
         (* Should never happen, because it was checked by type checker before *)
         | Parsed_rational_of_int_function _ -> raise (
@@ -598,18 +610,17 @@ and search_variable_of_discrete_arithmetic_expression parsed_model expr =
 
     let rec search_variable_of_discrete_arithmetic_expression_rec = function
         | Parsed_DAE_plus _
-        | Parsed_DAE_minus _ -> raise (InvalidModel)
+        | Parsed_DAE_minus _ -> raise (InvalidModel) (* TODO benjamin change to InternalError because it mean that type check has failed *)
         | Parsed_DAE_term term -> search_variable_of_discrete_term term
 
     and search_variable_of_discrete_term = function
         | Parsed_DT_mul _
-        | Parsed_DT_div _ -> raise (InvalidModel)
+        | Parsed_DT_div _ -> raise (InvalidModel)  (* TODO benjamin change to InternalError because it mean that type check has failed *)
         | Parsed_DT_factor factor -> search_variable_of_discrete_factor factor
 
     and search_variable_of_discrete_factor = function
-        | Parsed_rational_of_int_function expr
         | Parsed_DF_expression expr -> search_variable_of_discrete_arithmetic_expression_rec expr
-        | Parsed_DF_unary_min _ -> raise (InvalidModel)
+        | Parsed_DF_unary_min _ -> raise (InvalidModel)  (* TODO benjamin change to InternalError because it mean that type check has failed *)
         | Parsed_DF_variable variable_name ->
             (* First check whether this is a constant *)
             if Hashtbl.mem constants variable_name then
@@ -619,6 +630,8 @@ and search_variable_of_discrete_arithmetic_expression parsed_model expr =
                 DB_variable (Hashtbl.find index_of_variables variable_name)
         | Parsed_DF_constant var_value ->
             DB_constant var_value
+        | Parsed_rational_of_int_function _
+        | Parsed_pow_function _ -> raise (InvalidModel) (* TODO benjamin change to InternalError because it mean that type check has failed *)
     in
     search_variable_of_discrete_arithmetic_expression_rec expr
 
@@ -2238,6 +2251,8 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
             raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
         | Parsed_rational_of_int_function expr ->
             raise (InvalidExpression "Use of \"rational_of_int\" function is forbidden in an expression involving clock(s) or parameter(s)")
+        | Parsed_pow_function (expr, exp_expr) ->
+            raise (InvalidExpression "Use of \"pow\" function is forbidden in an expression involving clock(s) or parameter(s)")
 
 let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
     | Parsed_arithmetic_expression _ ->
@@ -2759,6 +2774,11 @@ let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_info
 		(* as a forbidden expression in linear expression *)
 		| Parsed_rational_of_int_function parsed_update_arithmetic_expression ->
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
+        (* Same comment for case above *)
+        | Parsed_pow_function (expr, exp_expr) ->
+		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor expr;
+		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor exp_expr
+
 	in
 
 	(* Call the recursive function updating the coefficients *)
@@ -3694,11 +3714,15 @@ and check_parsed_discrete_factor useful_parsing_model_information = function
 			true
 		)
 	| Parsed_DF_constant _ -> true
-	| Parsed_rational_of_int_function parsed_discrete_arithmetic_expression
-	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
-		check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min parsed_discrete_factor ->
 		check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression
+	| Parsed_rational_of_int_function parsed_discrete_arithmetic_expression ->
+		check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression
+    | Parsed_pow_function (expr, exp_expr) ->
+        evaluate_and
+            (check_parsed_discrete_arithmetic_expression useful_parsing_model_information expr)
+            (check_parsed_discrete_arithmetic_expression useful_parsing_model_information exp_expr)
 
 (* Check correct variable names in parsed_boolean_expression *)
 let rec check_parsed_boolean_expression useful_parsing_model_information = function

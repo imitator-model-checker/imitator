@@ -272,6 +272,13 @@ let float_value = function
     | Bool_value x -> if x then 0.0 else 0.0
     | Int_value x -> Int32.to_float x
 
+(* Get discrete value from NumConst.t *)
+let of_numconst x = Rational_value x
+(* Get discrete value from Int32.t *)
+let of_int x = Int_value x
+(* Get discrete value from bool *)
+let of_bool x = Bool_value x
+
 (* Convert any discrete value to a Rational_value *)
 let convert_to_rational_value value =
     Rational_value (numconst_value value)

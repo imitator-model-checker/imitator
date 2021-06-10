@@ -571,3 +571,9 @@ let write_to_file file_name file_content =
 	close_out oc;
 	()
 
+(* pow of x by e *)
+let pow x e =
+    let rec pow_rec r = function
+        | e when Int32.equal e Int32.one -> r
+        | e -> pow_rec (Int32.mul x r) (Int32.sub e Int32.one)
+    in pow_rec x e

@@ -225,3 +225,5 @@ val read_from_file : string -> string
 (** `write_to_file file_name file_content` will create a file `file_name` with content `file_content` *)
 val write_to_file : string -> string -> unit
 
+(* pow of x by e *)
+val pow : Int32.t -> Int32.t -> Int32.t

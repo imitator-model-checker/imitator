@@ -52,6 +52,7 @@ and rational_factor =
 	| DF_expression of rational_arithmetic_expression
 	| DF_rational_of_int of int_arithmetic_expression
 	| DF_unary_min of rational_factor
+	| DF_pow of rational_arithmetic_expression * int_arithmetic_expression
 
 (************************************************************)
 (** Int arithmetic expressions for discrete variables *)
@@ -72,6 +73,8 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
+    | Int_pow of int_arithmetic_expression * int_arithmetic_expression
+
 
 type discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
