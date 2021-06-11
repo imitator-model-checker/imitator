@@ -86,6 +86,7 @@ let convert_var_type_discrete_number = function
 let convert_var_type_discrete = function
     | ParsingStructure.Var_type_discrete_number x -> DiscreteValue.Var_type_discrete_number (convert_var_type_discrete_number x)
     | ParsingStructure.Var_type_discrete_bool -> DiscreteValue.Var_type_discrete_bool
+    | ParsingStructure.Var_type_discrete_binary_word l -> DiscreteValue.Var_type_discrete_binary_word l
 
 (* Convert var type from parsing structure to abstract model *)
 let convert_var_type = function
@@ -94,6 +95,8 @@ let convert_var_type = function
     | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteValue.Var_type_discrete (convert_var_type_discrete var_type_discrete)
     | ParsingStructure.Var_type_parameter -> DiscreteValue.Var_type_parameter
 
+(* TODO benjamin CLEAN remove comments *)
+(*
 let string_of_discrete_number_type = function
     | DiscreteValue.Var_type_discrete_unknown_number -> "num"
     | DiscreteValue.Var_type_discrete_rational -> "rat"
@@ -108,6 +111,8 @@ let string_of_type = function
     | DiscreteValue.Var_type_clock -> "clock"
     | DiscreteValue.Var_type_parameter -> "parameter"
     | DiscreteValue.Var_type_discrete x -> string_of_discrete_type x
+*)
+
 
 let numconst_value_or_fail = function
     | DiscreteValue.Number_value x

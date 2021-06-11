@@ -66,6 +66,7 @@ rule token = parse
 	| "rational"       { CT_DISCRETE }
 	| "int"            { CT_INT }
 	| "bool"           { CT_BOOL }
+	| "binary"         { CT_BINARY_WORD }
 	| "do"             { CT_DO }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
@@ -109,6 +110,7 @@ rule token = parse
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
 	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm }
 	| ['0'-'9']+ as lxm { INT(NumConst.numconst_of_string lxm) }
+        | "0b"['0'-'9']+ as lxm { BINARYWORD lxm }
 (*	| '"' [^'"']* '"' as lxm { STRING lxm } *) (* a string between double quotes *)
 
 	| "<="             { OP_LEQ }

@@ -30,6 +30,7 @@ type var_type_discrete_number =
 type var_type_discrete =
     | Var_type_discrete_bool
     | Var_type_discrete_number of var_type_discrete_number
+    | Var_type_discrete_binary_word of int
 
 (* Type of variable in declarations *)
 type var_type =
@@ -49,6 +50,7 @@ type discrete_value =
     | Rational_value of NumConst.t
     | Int_value of Int32.t
     | Bool_value of bool
+    | Binary_word_value of BinaryWord.t
 
 (************************************************************)
 (** Type functions  *)
@@ -81,8 +83,10 @@ val is_rational_type : var_type -> bool
 val is_discrete_type_rational_type : var_type_discrete -> bool
 (* Check if discrete type is a Var_type_discrete_int *)
 val is_discrete_type_int_type : var_type_discrete -> bool
-(* Check if discrete type is a Var_type_bool *)
+(* Check if discrete type is a Var_type_discrete_bool *)
 val is_discrete_type_bool_type : var_type_discrete -> bool
+(* Check if discrete type is a Var_type_discrete_binary_word *)
+val is_discrete_type_binary_word_type : var_type_discrete -> bool
 
 (* Check if two discrete types are compatible *)
 val is_discrete_type_compatibles : var_type_discrete -> var_type_discrete -> bool
@@ -124,6 +128,8 @@ val is_rational_value : discrete_value -> bool
 val is_int_value : discrete_value -> bool
 (* Check whether the value is boolean *)
 val is_bool_value : discrete_value -> bool
+(* Check whether the value is binary word *)
+val is_binary_word_value : discrete_value -> bool
 
 (** Default values  **)
 
@@ -133,6 +139,8 @@ val numconst_default_value : NumConst.t
 val int_default_value : Int32.t
 (* Get default bool value *)
 val bool_default_value : bool
+(* Get default binary word value *)
+val binary_word_default_value : int -> BinaryWord.t
 (* Get default discrete value *)
 val default_value : var_type -> discrete_value
 

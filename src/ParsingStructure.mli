@@ -44,6 +44,7 @@ type var_type_discrete_number =
 type var_type_discrete =
     | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_bool
+    | Var_type_discrete_binary_word of int
 
 (* Type of variable in declarations *)
 type var_type =
