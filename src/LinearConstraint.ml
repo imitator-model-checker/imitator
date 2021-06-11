@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/06/07
+ * Last modified     : 2021/06/11
  *
  ************************************************************)
 
@@ -39,8 +39,11 @@ open Constants
 (* Exceptions *)
 (************************************************************)
 (************************************************************)
-(* Raised when a linear_term is not a clock guard, i.e., of the form x ~ plterm *)
+(* Raised when a linear_inequality is not a clock guard, i.e., of the form `x ~ plterm` *)
 exception Not_a_clock_guard
+
+(* Raised when a linear_inequality is an equality, i.e., `pxd_linear_term = pxd_linear_term` *)
+exception Not_an_inequality
 
 (* Raised when a linear_term is not a one-dimensional single parameter constraint, i.e., of the form p ~ c *)
 exception Not_a_1d_parameter_constraint
@@ -1321,13 +1324,13 @@ let negate_wrt_pi0 pi0 linear_inequality =
 			)
 
 
-(** Negate an inequality ('=' is disallowed); raises InternalError if "=" is used *)
+(** Negate an inequality (`=` is disallowed); raises Not_an_inequality if `=` is used *)
 let negate_inequality = function
 	| Less_Than (lterm, rterm) -> Greater_Or_Equal (lterm, rterm)
 	| Less_Or_Equal (lterm, rterm) -> Greater_Than (lterm, rterm)
 	| Greater_Than (lterm, rterm) -> Less_Or_Equal (lterm, rterm)
 	| Greater_Or_Equal (lterm, rterm) -> Less_Than (lterm, rterm)
-	| Equal (lterm, rterm) -> raise (InternalError "Trying to negate an equality in negate_inequality")
+	| Equal (lterm, rterm) -> raise Not_an_inequality
 
 
 
@@ -2228,13 +2231,14 @@ let px_hull_assign_if_exact = ippl_hull_assign_if_exact
 (*------------------------------------------------------------*)
 (* Convex negation *)
 (*------------------------------------------------------------*)
-(** Assuming p_linear_constraint contains a single inequality, this function returns the negation of this inequality (in the form of a p_constraint). Raises InternalError if more than one inequality. *)
+(** Assuming p_linear_constraint contains a single inequality, this function returns the negation of this inequality (in the form of a p_constraint). Raises Not_an_inequality if more than one inequality, or if an equality is found. *)
 let negate_single_inequality_p_constraint p_linear_constraint =
 	(* Retrieve the inequalities *)
 	let inequalities = p_get_inequalities p_linear_constraint in
 	(* Check *)
 	if List.length inequalities <> 1 then(
-		raise (InternalError("Exactly one inequality should be contained in negate_single_inequality_p_constraint"))
+		print_error "Exactly one inequality should be contained in negate_single_inequality_p_constraint";
+		raise Not_an_inequality
 	);
 	(* Get the (only) inequality *)
 	let inequality = List.nth inequalities 0 in
@@ -2244,7 +2248,7 @@ let negate_single_inequality_p_constraint p_linear_constraint =
 	make_p_constraint [negated_inequality]
 
 
-(** Negates a constraint made either of a single inequality, or made of 2 inequalities, one of which is p >= 0, for a given p *)
+(** Negates a constraint made either of a single inequality, or made of 2 inequalities, one of which is `p >= 0`, for a given `p`. Raises Not_an_inequality if more than two inequalities, or if an equality is found. *)
 (*** HACK: a very ad-hoc function, needed for EFmax ***)
 (** NOTE: We kind of need to 'reimplement' the negate_single_inequality_p_constraint function, because there may be some p >= 0 inequality, that we do not need to negate ***)
 let negate_single_inequality_nonnegative_p_constraint parameter_index p_linear_constraint =
@@ -2256,7 +2260,8 @@ let negate_single_inequality_nonnegative_p_constraint parameter_index p_linear_c
 	
 	(* 2 or more inequality or 0 inequality: problem *)
 	if nb_inequalities < 1 || nb_inequalities > 2 then(
-		raise (InternalError("Exactly one or two inequalities should be contained in negate_inequality"))
+		print_error "Exactly one or two inequalities should be contained in negate_single_inequality_nonnegative_p_constraint";
+		raise Not_an_inequality
 	);
 	
 	(* Easy case: only one inequality *)

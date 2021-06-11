@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2020/10/15
+ * Last modified     : 2021/06/11
  *
  ************************************************************)
 
@@ -176,7 +176,10 @@ class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (pa
 		(* Update the min *)
 		current_optimum <- Some projected_constraint;
 		
-		let new_negated_optimum = self#negate_inequality projected_constraint in
+		let new_negated_optimum =
+			try self#negate_inequality projected_constraint
+			with LinearConstraint.Not_an_inequality -> raise (InternalError ("Error when trying to negate an inequality: equality found! The constraint was: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint)))
+		in
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
