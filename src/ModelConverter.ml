@@ -394,30 +394,6 @@ let all_variables_defined_in_parsed_boolean_expression useful_parsing_model_info
 let all_variables_defined_in_parsed_global_expression useful_parsing_model_information = function
     | Parsed_global_expression expr -> all_variables_defined_in_parsed_boolean_expression useful_parsing_model_information expr
 
-
-(*------------------------------------------------------------*)
-(* Check that only discrete variables are used in a discrete update *)
-(*------------------------------------------------------------*)
-let check_only_discretes_in_parsed_update_arithmetic_expression index_of_variables type_of_variables constants =
-  check_f_in_parsed_update_arithmetic_expression (fun variable_name ->
-      (* Case constant: no problem *)
-      if Hashtbl.mem constants variable_name then true
-      else (
-        (* Get the type of the variable *)
-        try(
-          let variable_index =
-            Hashtbl.find index_of_variables variable_name
-          in
-          DiscreteValue.is_discrete_type (type_of_variables variable_index)
-        ) with Not_found -> (
-            (* Variable not found! *)
-            (*** TODO: why is this checked here…? It should have been checked before ***)
-            print_error ("The variable `" ^ variable_name ^ "` used in an update was not declared.");
-            false
-          )
-      )
-    )
-
 let check_only_discretes_in_parsed_global_expression index_of_variables type_of_variables constants =
     check_f_in_parsed_global_expression (fun variable_name ->
         (* Case constant: no problem *)
@@ -1608,67 +1584,81 @@ let check_update useful_parsing_model_information automaton_name update =
         useful_parsing_model_information.constants
     in
 
-	let check_update_normal (variable_name, global_expression) =
-		(* Check whether this variable is to be removed because unused elswhere than in resets *)
-		let to_be_removed = List.mem variable_name removed_variable_names in
+    let check_update_normal (variable_name, global_expression) =
 
-		(* Get the index of the variable *)
-		let index, declared = try (Hashtbl.find index_of_variables variable_name, true)
-		with Not_found -> (
-			if to_be_removed then 0, true else (
-				print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); 0, false
-			)
-			)
-		in
+        (* Check whether this variable is to be removed because unused elswhere than in resets *)
+        let to_be_removed = List.mem variable_name removed_variable_names in
 
-		if not declared then false else (
-		(* Only check the rest if the variable is not to be removed *)
-		if to_be_removed then true else (
-			(* Get the type of the variable *)
-			print_message Verbose_total ("                Getting the type of the variable`" ^ variable_name ^ "`");
 
-			let type_of_variable = try (type_of_variables index)
-			with Invalid_argument comment -> (
-				raise (InternalError ("The variable `" ^ variable_name ^ "` was not found in `" ^ automaton_name ^ "`, although this has been checked before. OCaml says: " ^ comment ^ "."))
-				) in
+        if to_be_removed then
+            true
+        else (
+            (* Get variable type, if possible *)
+            let variable_type =
+                if List.mem variable_name variable_names then (
+                    let index = Hashtbl.find index_of_variables variable_name in
+                    Some (type_of_variables index)
+                ) else if Hashtbl.mem constants variable_name then (
+                    let value = Hashtbl.find constants variable_name in
+                    Some (DiscreteValue.var_type_of_value value)
+                ) else
+                    None
+            in
 
-			print_message Verbose_total ("                Checking the type of the variable `" ^ variable_name ^ "`");
-			match type_of_variable with
+			match variable_type with
 			(* Type clock: allow any linear term in updates: so just check that variables have been declared *)
-			| DiscreteValue.Var_type_clock ->
-			print_message Verbose_total ("                A clock!");
-			all_variables_defined_in_parsed_global_expression useful_parsing_model_information global_expression
+			| Some DiscreteValue.Var_type_clock ->
+			    print_message Verbose_total ("                A clock!");
+			    all_variables_defined_in_parsed_global_expression useful_parsing_model_information global_expression
 
 			(* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
-			| DiscreteValue.Var_type_discrete var_type_discrete ->
-			let string_of_var_type = DiscreteValue.string_of_var_type_discrete var_type_discrete in
-			print_message Verbose_total ("                A " ^ string_of_var_type ^ "!");
-			let result = check_only_discretes_in_parsed_global_expression index_of_variables type_of_variables constants global_expression in
-			if not result then
-				(print_error ("The variable `" ^ variable_name ^ "` is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton `" ^ automaton_name ^ "`."); false)
-			else (
-				print_message Verbose_total ("                Check passed.");
-				true
-			)
+			| Some DiscreteValue.Var_type_discrete var_type_discrete ->
+			    let string_of_var_type = DiscreteValue.string_of_var_type_discrete var_type_discrete in
+			    print_message Verbose_total ("                A " ^ string_of_var_type ^ "!");
+
+			    let all_defined = all_variables_defined_in_parsed_global_expression useful_parsing_model_information global_expression in
+
+			    if not all_defined then
+			        false
+                else (
+                    let result = check_only_discretes_in_parsed_global_expression index_of_variables type_of_variables constants global_expression in
+                    if not result then (
+                        print_error ("The variable `" ^ variable_name ^ "` is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton `" ^ automaton_name ^ "`."); false
+                    )
+                    else (
+                        print_message Verbose_total ("                Check passed.");
+                        true
+                    )
+			    )
 			(* Case of a parameter: forbidden! *)
-			| DiscreteValue.Var_type_parameter -> print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
-		)
-		)
-	in
+			| Some DiscreteValue.Var_type_parameter ->
+			    print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
+            | None ->
+                print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); false
+        )
+    in
 
     (* Function that check the condition of the conditional update *)
 	let check_update_condition_elements variable_name =
-        if not (List.mem variable_name variable_names) then (
-            print_error ("Variable " ^ variable_name ^ " in the condition of a conditional update is not declared.");
-            false
-        ) else (
-            let index = Hashtbl.find index_of_variables variable_name in
-            let type_of_variable = type_of_variables index in
-            match type_of_variable with
-            | DiscreteValue.Var_type_clock -> print_error ("The variable " ^ variable_name ^ " is a clock and cannot be used in the condition of a conditional update."); false
-            | DiscreteValue.Var_type_parameter -> print_error ("The variable " ^ variable_name ^ " is a parameter and cannot be used in the condition of a conditional update."); false
-            | _ -> print_message Verbose_total ("                Check passed."); true
-        )
+
+        (* Get variable type, if possible *)
+        let variable_type =
+            if List.mem variable_name variable_names then (
+                let index = Hashtbl.find index_of_variables variable_name in
+                Some (type_of_variables index)
+            ) else if Hashtbl.mem constants variable_name then (
+                let value = Hashtbl.find constants variable_name in
+                Some (DiscreteValue.var_type_of_value value)
+            ) else
+                None
+        in
+        match variable_type with
+        | None -> print_error ("Variable or constant \"" ^ variable_name ^ "\" in the condition of a conditional update is not declared."); false
+        | Some DiscreteValue.Var_type_clock -> print_error ("The variable " ^ variable_name ^ " is a clock and cannot be used in the condition of a conditional update."); false
+        | Some DiscreteValue.Var_type_parameter -> print_error ("The variable " ^ variable_name ^ " is a parameter and cannot be used in the condition of a conditional update."); false
+        | _ -> print_message Verbose_total ("                Check passed."); true
+
+
     in
 	(* Print some information *)
 	print_message Verbose_total ("              Checking one update");
@@ -1686,9 +1676,9 @@ let check_update useful_parsing_model_information automaton_name update =
         (* If condition not well formed display specific message *)
         if not (is_well_formed_condition) then (
             print_error (
-                "Condition "
+                "Condition \""
                 ^ (ParsingStructureUtilities.string_of_parsed_boolean_expression useful_parsing_model_information update)
-                ^ " is ill-formed"
+                ^ "\" is ill-formed"
             );
             false
         )
