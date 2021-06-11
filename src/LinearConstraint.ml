@@ -720,7 +720,7 @@ let rec variable_in_linear_term v = function
 		if Gmp.Z.equal coeff (Gmp.Z.zero) then false
 		else (match rterm with
 			| Variable variable -> v = variable
-			| _ -> raise (InternalError ("In function 'variable_in_linear_term', pattern 'Times' was expected to be only used for coeff * variable."))
+			| _ -> raise (InternalError ("In function `variable_in_linear_term`, pattern `Times` was expected to be only used for coeff * variable."))
 		)
 
 (*------------------------------------------------------------*)
@@ -752,7 +752,7 @@ let rec get_variable_coef_in_linear_term_rec nb_times_ref coeff_option minus_fla
 				let coef = NumConst.numconst_of_mpz coeff in
 				coeff_option := Some (if minus_flag then NumConst.neg coef else coef);
 			)
-			| _ -> raise (InternalError ("In function 'get_variable_coef_in_linear_term_rec', pattern 'Times' was expected to be only used for coeff * variable."))
+			| _ -> raise (InternalError ("In function `get_variable_coef_in_linear_term_rec`, pattern `Times` was expected to be only used for coeff * variable."))
 		)
 
 let get_variable_coef_in_linear_term v linear_term =
@@ -764,11 +764,11 @@ let get_variable_coef_in_linear_term v linear_term =
 	if !nb_times_ref = 0 then None else(
 		(* If more than one occurrence: InternalError *)
 		if !nb_times_ref > 1 then(
-			raise (InternalError ("Variable found several times in a linear_term in 'get_variable_coef_in_linear_term'; that was assumed not to happen."));
+			raise (InternalError ("Variable found several times in a linear_term in `get_variable_coef_in_linear_term`; that was assumed not to happen."));
 		);
 		(* Else: return the coefficient (and do a safety check that everything happened as expected...) *)
 		match !coeff_option with
-			| None -> raise (InternalError ("Impossible situation in 'get_variable_coef_in_linear_term': a coefficient was found > 0 times, but the coefficient was not saved."));
+			| None -> raise (InternalError ("Impossible situation in `get_variable_coef_in_linear_term`: a coefficient was found > 0 times, but the coefficient was not saved."));
 			| Some c -> Some c
 	)
 
@@ -797,7 +797,7 @@ let rec get_coefficient_in_linear_term_rec minus_flag = function
 		if Gmp.Z.equal coeff (Gmp.Z.zero) then ()
 		else (match rterm with
 			| Variable variable -> ()
-			| _ -> raise (InternalError ("In function 'get_coefficient_in_linear_term_rec', pattern 'Times' was expected to be only used for coeff * variable."))
+			| _ -> raise (InternalError ("In function `get_coefficient_in_linear_term_rec`, pattern `Times` was expected to be only used for coeff * variable."))
 		)
 
 let get_coefficient_in_linear_term linear_term =
@@ -1986,7 +1986,7 @@ let partition_lu variables linear_constraints =
 					update_variable
 						(xor (coeff <! Gmp.Z.zero) lower_side)
 						variable
-				| _ -> raise (InternalError ("In function 'check_linear_term', pattern 'Times' was expected to be only used for coeff * variable."))
+				| _ -> raise (InternalError ("In function `check_linear_term`, pattern `Times` was expected to be only used for coeff * variable."))
 			)
 	in
 	
@@ -1998,7 +1998,7 @@ let partition_lu variables linear_constraints =
 		
 		(* FOR ALL INEQUALITIES IN THAT CONSTRAINT *)
 		List.iter (function
-			(* Case 1: equality --> check if any variable in 'variables' appears in it *)
+			(* Case 1: equality --> check if any variable in `variables` appears in it *)
 			| Equal (lterm, rterm) -> 
 				List.iter (fun variable -> 
 					if variable_in_linear_term variable lterm || variable_in_linear_term variable rterm then raise Not_LU
@@ -2498,7 +2498,7 @@ let pxd_time_elapse_assign_wrt_polyhedron = time_elapse_assign_wrt_polyhedron
 
 
 (* Generic time elapsing function *)
-(* 'reverse_direction' should be minus_one for growing, one for decreasing *)
+(* `reverse_direction` should be minus_one for growing, one for decreasing *)
 let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse variables_constant linear_constraint =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
@@ -4710,7 +4710,7 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 														() 
 														)
 								| Ti (c1, rterm) -> ()
-								(*| _ -> raise (InternalError("Detection error 'get_coef' function"))*)
+								(*| _ -> raise (InternalError("Detection error `get_coef` function"))*)
 								end;
 								!b
 

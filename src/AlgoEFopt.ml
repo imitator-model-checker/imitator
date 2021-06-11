@@ -108,7 +108,7 @@ class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (pa
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Set the 'synthesize_valuations' flag (must be done right after creating the algorithm object!) *)
+	(* Set the `synthesize_valuations` flag (must be done right after creating the algorithm object!) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method set_synthesize_valuations flag =
 		synthesize_valuations <- Some flag
@@ -120,12 +120,12 @@ class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (pa
 	method private get_synthesize_valuations =
 		match synthesize_valuations with
 		| Some flag -> flag
-		| None -> raise (InternalError "Variable 'synthesize_valuations' not initialized in AlgoEFopt although it should have been at this point")
+		| None -> raise (InternalError "Variable `synthesize_valuations` not initialized in AlgoEFopt although it should have been at this point")
 		
 	method private get_current_optimum =
 		match current_optimum with
 		| Some optimum -> optimum
-		| None -> raise (InternalError "Variable 'current_optimum' not initialized in AlgoEFopt although it should have been at this point")
+		| None -> raise (InternalError "Variable `current_optimum` not initialized in AlgoEFopt although it should have been at this point")
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -221,7 +221,7 @@ class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (pa
 			if verbose_mode_greater Verbose_low then(
 				self#print_algo_message_newline Verbose_low ("New " ^ self#str_optimum ^ " constraint after addition: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names current_optimum_valuations));
 			);
-		| None -> raise (InternalError "Variable 'current_optimum_valuations' not initialized in AlgoEFopt although it should have been at this point")
+		| None -> raise (InternalError "Variable `current_optimum_valuations` not initialized in AlgoEFopt although it should have been at this point")
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Update the current optimum by replacing it *)
