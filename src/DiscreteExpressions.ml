@@ -402,6 +402,10 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 		(customized_string_of_discrete_boolean_expression customized_string variable_names l_expr)
 		^ (customized_string_of_boolean_operations customized_string relop)
 		^ (customized_string_of_discrete_boolean_expression customized_string variable_names r_expr)
+    | Binary_comparison (l_expr, relop, r_expr) ->
+		(customized_string_of_binary_word_expression customized_string variable_names l_expr)
+		^ (customized_string_of_boolean_operations customized_string relop)
+		^ (customized_string_of_binary_word_expression customized_string variable_names r_expr)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
 		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
@@ -431,6 +435,7 @@ and customized_string_of_binary_word_expression customized_string variable_names
     | Logical_shift_left (expr, i) -> "shift_left(" ^ customized_string_of_binary_word_expression customized_string variable_names expr ^ ", " ^ string_of_int i ^ ")"
     | Logical_shift_right (expr, i) -> "shift_right(" ^ customized_string_of_binary_word_expression customized_string variable_names expr ^ ", " ^ string_of_int i ^ ")"
     | Binary_word_constant value -> BinaryWord.string_of_binaryword value
+    | Binary_word_variable variable_index -> variable_names variable_index
 
 
 let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
@@ -480,6 +485,15 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
 		let expr1 =  (customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names l_expr) in
 		let relop =  (customized_string_of_boolean_operations customized_string.boolean_string relop) in
 		let expr2 =  (customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names r_expr) in
+		"{"
+		^ "\"op\": \"" ^ relop ^ "\", "
+		^ "\"left\": " ^ expr1 ^ ", "
+		^ "\"right\": " ^ expr2
+		^ "}"
+    | Binary_comparison (l_expr, relop, r_expr) ->
+		let expr1 =  (customized_string_of_binary_word_expression_for_jani customized_string variable_names l_expr) in
+		let relop =  (customized_string_of_boolean_operations customized_string.boolean_string relop) in
+		let expr2 =  (customized_string_of_binary_word_expression_for_jani customized_string variable_names r_expr) in
 		"{"
 		^ "\"op\": \"" ^ relop ^ "\", "
 		^ "\"left\": " ^ expr1 ^ ", "
@@ -664,6 +678,7 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
         ^ string_of_int i
         ^ "}"
     | Binary_word_constant value -> BinaryWord.string_of_binaryword value
+    | Binary_word_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
 
 let string_of_arithmetic_expression_for_jani = customized_string_of_arithmetic_expression_for_jani Constants.global_default_string
 let string_of_discrete_boolean_expression_for_jani = customized_string_of_discrete_boolean_expression_for_jani Constants.global_default_string

@@ -517,8 +517,9 @@ and convert_parsed_discrete_arithmetic_expression parsed_model expr =
         Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression parsed_model.index_of_variables parsed_model.constants expr)
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
         Int_arithmetic_expression (convert_parsed_int_arithmetic_expression parsed_model.index_of_variables parsed_model.constants expr)
-    | DiscreteValue.Var_type_discrete_bool ->
-        raise (InternalError "An arithmetic expression was deduced as bool expression")
+    | DiscreteValue.Var_type_discrete_bool
+    | DiscreteValue.Var_type_discrete_binary_word _ as t ->
+        raise (InternalError ("An arithmetic expression was deduced as " ^ DiscreteValue.string_of_var_type_discrete t ^ " expression"))
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
         raise (InternalError "An arithmetic expression still contains unknown literal number after type checking")
 
