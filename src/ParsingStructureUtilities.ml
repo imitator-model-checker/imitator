@@ -240,10 +240,14 @@ let try_reduce_parsed_global_expression constants expr =
                 let int_result = OCamlUtilities.pow int_expr int_exp in
                 DiscreteValue.of_int int_result
             (* Should never happen *)
-            | DiscreteValue.Var_type_discrete_bool ->
-                raise (InternalError "Try to reduce a pow function on a boolean expression, altough it was checked before by the type checker. Maybe type checking has failed before")
-            | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
-                raise (InternalError "Try to reduce a pow function on an unknown number, altough it was checked before by the type checker. Maybe type checking has failed before")
+            | DiscreteValue.Var_type_discrete_bool
+            | DiscreteValue.Var_type_discrete_binary_word _
+            | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number as t ->
+                raise (InternalError (
+                    "Try to reduce a pow function on a "
+                    ^ DiscreteValue.string_of_var_type_discrete t
+                    ^ " expression, altough it was checked before by the type checker. Maybe type checking has failed before"
+                ))
 
     and try_reduce_parsed_boolean_expression = function
 	    | Parsed_True -> DiscreteValue.bool_value_true

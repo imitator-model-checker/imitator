@@ -83,6 +83,21 @@ type discrete_arithmetic_expression =
 (************************************************************)
 (************************************************************)
 (************************************************************)
+(** Binary word expressions for discrete variables *)
+(************************************************************)
+(************************************************************)
+
+(** Binary word expression *)
+type binary_word_expression =
+    | Logical_shift_left of binary_word_expression * int
+    | Logical_shift_right of binary_word_expression * int
+    | Binary_word_constant of BinaryWord.t
+    | Binary_word_variable of Automaton.variable_index
+
+
+(************************************************************)
+(************************************************************)
+(************************************************************)
 (** Boolean expressions for discrete variables *)
 (************************************************************)
 (************************************************************)
@@ -99,6 +114,7 @@ and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
     | Boolean_comparison of discrete_boolean_expression * relop * discrete_boolean_expression
+    | Binary_comparison of binary_word_expression * relop * binary_word_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
@@ -110,6 +126,8 @@ and discrete_boolean_expression =
 	(** discrete constant in boolean expression *)
 	| DB_constant of DiscreteValue.discrete_value
 
+
+
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
@@ -117,6 +135,7 @@ type global_expression =
     (* A typed expression *)
     | Arithmetic_expression of discrete_arithmetic_expression
     | Bool_expression of boolean_expression
+    | Binary_word_expression of binary_word_expression
 
 (* String *)
 val customized_string_of_global_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string

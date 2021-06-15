@@ -166,6 +166,8 @@ val int_value : discrete_value -> Int32.t
 val bool_value : discrete_value -> bool
 (* Get float value of discrete value *)
 val float_value : discrete_value -> float
+(* Get binary word value of discrete value *)
+val binary_word_value : discrete_value -> BinaryWord.t
 
 (* Get discrete value from NumConst.t *)
 val of_numconst : NumConst.t -> discrete_value

@@ -35,12 +35,23 @@ let hash (_, b) =
     let remap = Array.mapi (fun i x -> i + 1, if x then 1 else 0) b in
     Array.fold_left (fun a (i, s) -> a + i * s) 0 remap
 
-let equal a b =
-    hash a = hash b
+let compare op a b =
+    op (hash a) (hash b)
+
+let l = compare (<)
+let leq = compare (<=)
+let g = compare (>)
+let geq = compare (>=)
+let equal a b = a = b
 
 let neq a b =
     not (equal a b)
 
 let (=) = equal
-let (!=) = neq
+let (<>) = neq
+let (<) = l
+let (<=) = leq
+let (>) = g
+let (>=) = geq
+
 

@@ -5,6 +5,7 @@ open DiscreteExpressions
 let rec eval_global_expression discrete_valuation = function
     | Arithmetic_expression expr -> eval_discrete_arithmetic_expression discrete_valuation expr
     | Bool_expression expr -> DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
+    | Binary_word_expression expr -> DiscreteValue.Binary_word_value (eval_discrete_binary_word_expression discrete_valuation expr)
 
 and eval_discrete_arithmetic_expression discrete_valuation = function
     | Rational_arithmetic_expression expr ->
@@ -130,8 +131,10 @@ and is_boolean_expression_satisfied discrete_valuation = function
 (** Check if a discrete boolean expression is satisfied *)
 and check_discrete_boolean_expression discrete_valuation = function
     | DB_variable variable_index ->
+        (* TODO benjamin here, we unwrap from discrete, ..., bad ! we have to remove discrete value in abstract model *)
         DiscreteValue.bool_value (discrete_valuation variable_index)
     | DB_constant constant ->
+        (* TODO benjamin here, we unwrap from discrete, ..., bad ! we have to remove discrete value in abstract model *)
         DiscreteValue.bool_value constant
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
     (* TODO benjamin WARNING here we compare discrete value with operator it's bad *)
@@ -145,6 +148,11 @@ and check_discrete_boolean_expression discrete_valuation = function
              relop
              (check_discrete_boolean_expression discrete_valuation l_expr)
              (check_discrete_boolean_expression discrete_valuation r_expr)
+    | Binary_comparison (l_expr, relop, r_expr) ->
+        eval_discrete_binary_relop
+            relop
+            (eval_discrete_binary_word_expression discrete_valuation l_expr)
+            (eval_discrete_binary_word_expression discrete_valuation r_expr)
     (** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
     | Expression_in (discrete_arithmetic_expression_1, discrete_arithmetic_expression_2, discrete_arithmetic_expression_3) ->
         (* Compute the first one to avoid redundancy *)
@@ -160,7 +168,7 @@ and check_discrete_boolean_expression discrete_valuation = function
         is_boolean_expression_satisfied discrete_valuation boolean_expression
     | Not_bool b ->
         not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
-
+(* TODO benjamin refactor here ! *)
 and eval_discrete_relop relop value_1 value_2 : bool =
     match relop with
     | OP_L		-> value_1 <  value_2
@@ -177,3 +185,20 @@ and eval_discrete_boolean_relop relop value_1 value_2 : bool =
     | OP_NEQ	-> value_1 <> value_2
     | OP_GEQ	-> value_1 >= value_2
     | OP_G		-> value_1 >  value_2
+and eval_discrete_binary_relop relop value_1 value_2 : bool =
+    match relop with
+    | OP_L		-> value_1 <  value_2
+    | OP_LEQ	-> value_1 <= value_2
+    | OP_EQ		-> value_1 =  value_2
+    | OP_NEQ	-> value_1 <> value_2
+    | OP_GEQ	-> value_1 >= value_2
+    | OP_G		-> value_1 >  value_2
+
+
+and eval_discrete_binary_word_expression discrete_valuation = function
+    | Logical_shift_left (expr, i) -> BinaryWord.shift_left (eval_discrete_binary_word_expression discrete_valuation expr) i
+    | Logical_shift_right (expr, i) -> BinaryWord.shift_right (eval_discrete_binary_word_expression discrete_valuation expr) i
+    | Binary_word_constant value -> value
+    | Binary_word_variable variable_index ->
+        (* TODO benjamin here, we unwrap from discrete, ..., bad ! we have to remove discrete value in abstract model *)
+        DiscreteValue.binary_word_value (discrete_valuation variable_index)

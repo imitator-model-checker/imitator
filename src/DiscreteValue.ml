@@ -260,7 +260,8 @@ let one_of = function
     | _ -> raise (ComputingException "one_of")
 
 (** Convert values  **)
-
+(* TODO benjamin for functions below, maybe we had to raise an exception if conversion is an implicit conversion *)
+(* TODO benjamin warning to this use for display graph *)
 (* Get NumConst.t value of discrete value *)
 let numconst_value = function
     | Number_value x
@@ -268,6 +269,7 @@ let numconst_value = function
     | Bool_value x -> if x then NumConst.one else NumConst.zero
     (* Warning, a bit is lost when converting on 32 bit platform !*)
     | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
+    | Binary_word_value x -> NumConst.numconst_of_int (BinaryWord.hash x)
 
 (* Get Int32.t value of discrete value *)
 let int_value = function
@@ -277,13 +279,17 @@ let int_value = function
     | Bool_value x -> if x then Int32.one else Int32.zero
     (* Warning, a bit is lost when converting on 32 bit platform !*)
     | Int_value x -> x
+    | Binary_word_value x -> Int32.of_int (BinaryWord.hash x)
+
 
 (* Get bool value of discrete value *)
 let bool_value = function
     | Number_value x
-    | Rational_value x -> if NumConst.equal x NumConst.one then true else false
+    | Rational_value x -> if NumConst.equal x NumConst.zero then false else true
     | Bool_value x -> x
-    | Int_value x -> if Int32.equal x Int32.one then true else false
+    | Int_value x -> if Int32.equal x Int32.zero then false else true
+    | Binary_word_value x -> if BinaryWord.hash x = 0 then false else true
+
 
 (* Get float value of discrete value *)
 let float_value = function
@@ -291,6 +297,12 @@ let float_value = function
     | Rational_value x -> (NumConst.to_float x)
     | Bool_value x -> if x then 0.0 else 0.0
     | Int_value x -> Int32.to_float x
+    | Binary_word_value x -> float_of_int (BinaryWord.hash x)
+
+(* Get binary word value of discrete value *)
+let binary_word_value = function
+    | Binary_word_value x -> x
+    | _ -> raise (ComputingException "unable to get binary word value of non binary word")
 
 (* Get discrete value from NumConst.t *)
 let of_numconst x = Rational_value x
