@@ -448,8 +448,11 @@ val px_valuate_parameters : p_valuation -> px_linear_constraint -> x_linear_cons
 
 (** M-extrapolation: returns (the constraint ^ x <= M) , (the constraint ^ x >= M) *)
 (*** TODO: improve this description ***)
-val px_extrapolation : NumConst.t -> variable -> px_linear_constraint -> (px_linear_constraint * px_linear_constraint)
+val px_m_extrapolation : NumConst.t -> variable -> px_linear_constraint -> px_linear_constraint list
 
+(** LU-extrapolation: returns (the constraint ^ x <= smaller bound) , (the constraint ^ x > smaller bound ^ x <= greater bound) , (the constraint ^ x > greater bound) *)
+(*** TODO: improve this description ***)
+val px_lu_extrapolation : NumConst.t -> NumConst.t -> variable -> px_linear_constraint -> px_linear_constraint list
 
 (*------------------------------------------------------------*)
 (* Convex negation *)
