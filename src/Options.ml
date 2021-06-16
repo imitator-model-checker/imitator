@@ -737,11 +737,13 @@ class imitator_options =
         Use `queueBFSRS`    for a queue-based breadth-first search with ranking system. [ANP17]
         Use `queueBFSPRIOR` for a priority-based BFS with ranking system. [ANP17]
         Default: layerBFS.
-				");
-
+				");			
+				
+				
 				("-extrapolation", Int (fun n -> extrapolation <- Some (NumConst.numconst_of_int n) ), " Extrapolation [work in progress]. Default: none.
 				");
 
+				
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
 				");
 
