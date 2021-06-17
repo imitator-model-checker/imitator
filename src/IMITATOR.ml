@@ -503,6 +503,13 @@ if options#dynamic_clock_elimination then (
 	ClocksElimination.prepare_clocks_elimination ()
 );
 
+(************************************************************)
+(* Extrapolation *)
+(************************************************************)
+if options#extrapolation <> None then (
+	print_message Verbose_low "Preparing clock extrapolation…";
+	Extrapolation.prepare_extrapolation ()
+);
 
 
 (************************************************************)

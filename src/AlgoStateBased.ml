@@ -12,7 +12,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2021/04/28
+ * Last modified     : 2021/06/17
  *
  ************************************************************)
 
@@ -3130,6 +3130,11 @@ class virtual algoStateBased =
 			
 			(* Iterate on the list of previously computed constraints *)
 			List.iter (fun px_linear_constraint ->
+			
+			
+				(*** TODO: dummy call to ensure dependency ***)
+				let _ = Extrapolation.px_lu_extrapolation clock_id px_linear_constraint in
+			
 				let c_list : LinearConstraint.px_linear_constraint list = LinearConstraint.px_m_extrapolation m.(clock_id-base_indice) clock_id px_linear_constraint in
 				(* Test and add *)
 				List.iter (fun c ->
