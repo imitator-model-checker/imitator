@@ -2708,8 +2708,8 @@ let px_lu_extrapolation (l : NumConst.t) (u : NumConst.t) (x : variable) (px_lin
 		let px_linear_constraint_and_x_g_L_and_x_leq_U = px_intersection [px_linear_constraint ; x_g_L_and_x_leq_U] in
 
 		(* Upper cylindrification: Eliminate all upper bounds on x *)
-(**		let other_dimensions = list_diff (px_get_dimensions_list px_linear_constraint) [x] in
-		p_grow_to_infinity_assign other_dimensions [x] px_linear_constraint_and_x_g_L_and_x_leq_U;**)
+		let other_dimensions = list_diff (px_get_dimensions_list px_linear_constraint) [x] in
+		p_grow_to_infinity_assign [x] other_dimensions px_linear_constraint_and_x_g_L_and_x_leq_U;
 		let px_linear_constraint2 = px_linear_constraint_and_x_g_L_and_x_leq_U in
 
 
@@ -2761,8 +2761,8 @@ let px_lu_extrapolation (l : NumConst.t) (u : NumConst.t) (x : variable) (px_lin
 		let px_linear_constraint_and_x_g_U_and_x_leq_L = px_intersection [px_linear_constraint ; x_g_U_and_x_leq_L] in
 
 		(* Lower cylindrification: Eliminate all lower bounds on x *)
-(**		let other_dimensions = list_diff (px_get_dimensions_list px_linear_constraint) [x] in
-		p_grow_to_zero_assign other_dimensions [x] px_linear_constraint_and_x_g_U_and_x_leq_L;**)
+		let other_dimensions = list_diff (px_get_dimensions_list px_linear_constraint) [x] in
+		p_grow_to_zero_assign [x] other_dimensions px_linear_constraint_and_x_g_U_and_x_leq_L;
 	
 		(* Intersect again with `x > U` *)
 		px_intersection_assign px_linear_constraint_and_x_g_U_and_x_leq_L [x_g_U];
