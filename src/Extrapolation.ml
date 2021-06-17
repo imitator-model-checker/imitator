@@ -275,7 +275,33 @@ let prepare_extrapolation () : unit =
 	let model = Input.get_model() in
 	
 	let nb_parameters = model.nb_parameters in
-
+	
+	begin
+	(* Get the L/U nature *)
+	match model.lu_status with
+	(* General PTA *)
+	| PTA_notLU -> raise (NotImplemented "prepare_extrapolation")
+	(* L/U-PTA with parameters partitioned into L- and U-parameters *)
+	| PTA_LU (l_parameters, u_parameters) -> raise (NotImplemented "prepare_extrapolation")
+	(* L-PTA *)
+	| PTA_L -> raise (NotImplemented "prepare_extrapolation")
+	(* U-PTA *)
+	| PTA_U -> raise (NotImplemented "prepare_extrapolation")
+	end;
+	
+	let all_parameters_bounded = model.bounded_parameters in
+	
+	(*** DUMMY bound ***)
+	let dummy_parameter = 0 in
+	let p_bounds = model.parameters_bounds dummy_parameter in
+	
+	begin
+	(* Check if unbounded below *)
+	match p_bounds.lower with
+	| Unbounded -> raise (NotImplemented "prepare_extrapolation")
+	(* A finite bound is a pair NumConst.t and a Boolean true iff it is closed (i.e., closed inequality, and not strict) *)
+	| Bounded (bound, is_closed) -> raise (NotImplemented "prepare_extrapolation")
+	end;
 
 	raise (NotImplemented "prepare_extrapolation")
 
