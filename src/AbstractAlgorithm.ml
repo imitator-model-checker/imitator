@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/18
- * Last modified     : 2021/02/24
+ * Last modified     : 2021/06/17
  *
  ************************************************************)
 
@@ -155,6 +155,15 @@ type nz_method =
 
 	(** Method assuming the PTA is already a CUB-PTA *)
 	| NZ_already
+
+
+(* Type of extrapolation *)
+type extrapolation =
+	| No_extrapolation
+	| M
+	| Mglobal
+	| LU
+	| LUglobal
 
 
 (************************************************************)
