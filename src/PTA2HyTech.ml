@@ -320,7 +320,7 @@ let string_of_initial_state () =
 	let model = Input.get_model () in
 
 	(* Print some information *)
-	print_message Verbose_low "Translating the initial state...";
+	print_message Verbose_low "Translating the initial state…";
 
 	(* Header of initial state *)
 	"\n"
