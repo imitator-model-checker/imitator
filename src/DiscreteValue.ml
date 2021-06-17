@@ -473,3 +473,11 @@ let geq a b =
         | Rational_value a, Rational_value b -> Bool_value (NumConst.ge a b)
         | Int_value a, Int_value  b -> Bool_value  (a >= b)
         | _ -> raise (ComputingException "geq")
+
+let shift_left i = function
+    | Binary_word_value x -> Binary_word_value (BinaryWord.shift_left x i)
+    | _ -> raise (ComputingException "shift_left")
+
+let shift_right i = function
+    | Binary_word_value x -> Binary_word_value (BinaryWord.shift_right x i)
+    | _ -> raise (ComputingException "shift_right")

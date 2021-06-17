@@ -73,6 +73,8 @@ and parsed_discrete_factor =
 	| Parsed_DF_unary_min of parsed_discrete_factor
 	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
 	| Parsed_pow_function of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
+	| Parsed_shift_left of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_shift_right of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 
 
 (****************************************************************)

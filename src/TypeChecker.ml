@@ -169,6 +169,16 @@ and convert_literal_types_of_parsed_discrete_factor parsed_model target_type = f
             convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr,
             convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type exp_expr
         )
+    | Parsed_shift_left (factor, expr) ->
+        Parsed_shift_left (
+            convert_literal_types_of_parsed_discrete_factor parsed_model target_type factor,
+            convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr
+        )
+    | Parsed_shift_right (factor, expr) ->
+        Parsed_shift_right (
+            convert_literal_types_of_parsed_discrete_factor parsed_model target_type factor,
+            convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr
+        )
     | Parsed_DF_unary_min factor ->
         Parsed_DF_unary_min (convert_literal_types_of_parsed_discrete_factor parsed_model target_type factor)
 
@@ -692,6 +702,60 @@ and infer_parsed_discrete_factor parsed_model = function
         (* Return converted expression and it's type *)
         Parsed_pow_function (converted_expr, converted_exp), result_type
 
+    | Parsed_shift_left (factor, expr)
+    | Parsed_shift_right (factor, expr) as shift ->
+
+        let infer_factor, l_type = infer_parsed_discrete_factor parsed_model factor in
+        let infer_expr, r_type = infer_parsed_discrete_arithmetic_expression parsed_model expr in
+
+
+        (* factor should be binary word *)
+        (* expr should be int *)
+
+        if not (DiscreteValue.is_discrete_type_binary_word_type l_type) then (
+            raise (TypeError (
+                (* TODO benjamin complete error message *)
+                "left should be binary"
+            ))
+        );
+
+        if not (DiscreteValue.is_discrete_type_unknown_number_type r_type || DiscreteValue.is_discrete_type_int_type r_type) then (
+            raise (TypeError (
+                (* TODO benjamin complete error message *)
+                "right should be int"
+            ))
+        );
+
+        (* If right expression unknown convert auto to int *)
+        let converted_expr = if DiscreteValue.is_discrete_type_unknown_number_type r_type then (
+            (* convert *)
+            let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
+
+            print_message Verbose_high (
+                "\tInfer expression \""
+                ^ (string_of_parsed_arithmetic_expression parsed_model expr)
+                ^ "\" as "
+                ^ (DiscreteValue.string_of_var_type_discrete target_type)
+            );
+
+            convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr
+        ) else
+            infer_expr
+        in
+
+        print_message Verbose_high (
+            "\tInfer expression \""
+            ^ (string_of_parsed_factor parsed_model shift)
+            ^ "\" as "
+            ^ (DiscreteValue.string_of_var_type_discrete l_type)
+        );
+
+        (match shift with
+        | Parsed_shift_left _ ->
+            Parsed_shift_left (infer_factor, converted_expr), l_type
+        | Parsed_shift_right _ ->
+            Parsed_shift_right (infer_factor, converted_expr), l_type
+        )
     | Parsed_DF_unary_min factor ->
         let infer_factor, factor_type = infer_parsed_discrete_factor parsed_model factor in
         Parsed_DF_unary_min infer_factor, factor_type
@@ -755,6 +819,10 @@ and discrete_type_of_parsed_discrete_factor parsed_model = function
     | Parsed_pow_function (expr, exp) ->
         (* Pow function result type depends of the left member type *)
         discrete_type_of_parsed_discrete_arithmetic_expression parsed_model expr
+    | Parsed_shift_left (factor, _)
+    | Parsed_shift_right (factor, _) ->
+        (* Shift result type is a binary word of length depending on the left member length *)
+        discrete_type_of_parsed_discrete_factor parsed_model factor
 
 (** Checking functions **)
 
@@ -955,5 +1023,6 @@ let check_discrete_init parsed_model variable_name expr =
             infer_expr
     in
 
+    (* TODO benjamin should be moved into ModelConverter I think... It's not the role of type checker *)
     (* Try to reduce expression to a value *)
     ParsingStructureUtilities.try_reduce_parsed_global_expression_with_model parsed_model converted_expr

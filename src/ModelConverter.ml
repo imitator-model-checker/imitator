@@ -203,6 +203,10 @@ and get_variables_in_parsed_discrete_factor variables_used_ref = function
 	| Parsed_pow_function (expr, exp_expr) ->
 		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr;
 		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref exp_expr;
+    | Parsed_shift_left (factor, expr)
+    | Parsed_shift_right (factor, expr) ->
+        get_variables_in_parsed_discrete_factor variables_used_ref factor;
+        get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr;
 	| Parsed_DF_unary_min factor -> get_variables_in_parsed_discrete_factor variables_used_ref factor
 
 
@@ -233,6 +237,11 @@ let rec check_f_in_parsed_update_factor f = function
         evaluate_and
             (check_f_in_parsed_update_arithmetic_expression f expr)
             (check_f_in_parsed_update_arithmetic_expression f exp_expr)
+    | Parsed_shift_left (factor, expr)
+    | Parsed_shift_right (factor, expr) ->
+        evaluate_and
+            (check_f_in_parsed_update_factor f factor)
+            (check_f_in_parsed_update_arithmetic_expression f expr)
 	| Parsed_DF_unary_min parsed_discrete_factor ->
 		check_f_in_parsed_update_factor f parsed_discrete_factor
 
@@ -307,6 +316,11 @@ let rec check_f_in_parsed_discrete_factor f index_of_variables type_of_variables
         evaluate_and
             (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr)
             (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants exp_expr)
+    | Parsed_shift_left (factor, expr)
+    | Parsed_shift_right (factor, expr) ->
+        evaluate_and
+            (check_f_in_parsed_discrete_factor f index_of_variables type_of_variables constants factor)
+            (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr)
 	| Parsed_DF_unary_min parsed_discrete_factor ->
 		check_f_in_parsed_discrete_factor f index_of_variables type_of_variables constants parsed_discrete_factor
 
@@ -492,7 +506,10 @@ and search_variable_of_discrete_arithmetic_expression parsed_model expr =
         | Parsed_DF_constant var_value ->
             DB_constant var_value
         | Parsed_rational_of_int_function _
-        | Parsed_pow_function _ -> raise (InvalidModel) (* TODO benjamin change to InternalError because it mean that type check has failed *)
+        | Parsed_pow_function _
+        | Parsed_shift_left _
+        | Parsed_shift_right _ ->
+            raise (InvalidModel) (* TODO benjamin change to InternalError because it mean that type check has failed *)
     in
     search_variable_of_discrete_arithmetic_expression_rec expr
 
@@ -2317,10 +2334,14 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
         (* Nested expression used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
         | Parsed_DF_expression expr ->
             raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
+        (* TODO benjamin refactor below by making a string function for factor *)
         | Parsed_rational_of_int_function expr ->
             raise (InvalidExpression "Use of \"rational_of_int\" function is forbidden in an expression involving clock(s) or parameter(s)")
         | Parsed_pow_function (expr, exp_expr) ->
             raise (InvalidExpression "Use of \"pow\" function is forbidden in an expression involving clock(s) or parameter(s)")
+        | Parsed_shift_left (factor, expr)
+        | Parsed_shift_right (factor, expr) ->
+            raise (InvalidExpression "Use of \"shift\" function is forbidden in an expression involving clock(s) or parameter(s)")
 
 let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
     | Parsed_arithmetic_expression _ ->
@@ -2846,7 +2867,11 @@ let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_info
         | Parsed_pow_function (expr, exp_expr) ->
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor expr;
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor exp_expr
-
+        (* Same comment for case above *)
+        | Parsed_shift_left (factor, expr)
+        | Parsed_shift_right (factor, expr) ->
+		    update_coef_array_in_parsed_update_factor mult_factor factor;
+		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor expr
 	in
 
 	(* Call the recursive function updating the coefficients *)
@@ -3791,6 +3816,11 @@ and check_parsed_discrete_factor useful_parsing_model_information = function
         evaluate_and
             (check_parsed_discrete_arithmetic_expression useful_parsing_model_information expr)
             (check_parsed_discrete_arithmetic_expression useful_parsing_model_information exp_expr)
+    | Parsed_shift_left (factor, expr)
+    | Parsed_shift_right (factor, expr) ->
+        evaluate_and
+            (check_parsed_discrete_factor useful_parsing_model_information factor)
+            (check_parsed_discrete_arithmetic_expression useful_parsing_model_information expr)
 
 (* Check correct variable names in parsed_boolean_expression *)
 let rec check_parsed_boolean_expression useful_parsing_model_information = function

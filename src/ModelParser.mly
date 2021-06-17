@@ -86,7 +86,7 @@ let unzip l = List.fold_left
 	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
-        CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW
+        CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT
 
 
 %token EOF
@@ -527,6 +527,8 @@ arithmetic_factor:
 	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
 	| CT_BUILTIN_FUNC_RATIONAL_OF_INT LPAREN arithmetic_expression RPAREN { Parsed_rational_of_int_function $3 }
 	| CT_POW LPAREN arithmetic_expression COMMA arithmetic_expression RPAREN { Parsed_pow_function ($3, $5) }
+	| CT_SHIFT_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_left ($3, $5) }
+	| CT_SHIFT_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_right ($3, $5) }
 ;
 
 number:

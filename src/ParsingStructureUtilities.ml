@@ -95,6 +95,19 @@ and string_of_parsed_factor parsed_model = function
         ^ ","
         ^ string_of_parsed_arithmetic_expression parsed_model exp_expr
         ^ ")"
+    (* TODO benjamin refactor by using string function on discrete factor *)
+    | Parsed_shift_left (factor, expr) ->
+        "shift_left("
+        ^ string_of_parsed_factor parsed_model factor
+        ^ ","
+        ^ string_of_parsed_arithmetic_expression parsed_model expr
+        ^ ")"
+    | Parsed_shift_right (factor, expr) ->
+        "shift_right("
+        ^ string_of_parsed_factor parsed_model factor
+        ^ ","
+        ^ string_of_parsed_arithmetic_expression parsed_model expr
+        ^ ")"
 
 and string_of_parsed_boolean_expression parsed_model = function
     | Parsed_True -> "True"
@@ -228,7 +241,7 @@ let try_reduce_parsed_global_expression constants expr =
             let reduced_exp = try_reduce_parsed_arithmetic_expression exp in
             (* we have to know type of expr *)
             let value_type = DiscreteValue.discrete_type_of_value reduced_expr in
-            match value_type with
+            (match value_type with
             | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
                 let numconst_expr = DiscreteValue.numconst_value reduced_expr in
                 let int_exp = DiscreteValue.int_value reduced_exp in
@@ -248,6 +261,20 @@ let try_reduce_parsed_global_expression constants expr =
                     ^ DiscreteValue.string_of_var_type_discrete t
                     ^ " expression, altough it was checked before by the type checker. Maybe type checking has failed before"
                 ))
+            )
+        | Parsed_shift_left (factor, expr) ->
+            let reduced_factor = try_reduce_parsed_factor factor in
+            let reduced_expr = try_reduce_parsed_arithmetic_expression expr in
+
+            DiscreteValue.shift_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
+        | Parsed_shift_right (factor, expr) ->
+
+            let reduced_factor = try_reduce_parsed_factor factor in
+            let reduced_expr = try_reduce_parsed_arithmetic_expression expr in
+
+            DiscreteValue.shift_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
+
+
 
     and try_reduce_parsed_boolean_expression = function
 	    | Parsed_True -> DiscreteValue.bool_value_true

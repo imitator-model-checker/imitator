@@ -104,6 +104,8 @@ rule token = parse
 	| "within"         { CT_WITHIN }
     | "rational_of_int"{ CT_BUILTIN_FUNC_RATIONAL_OF_INT }
     | "pow"            { CT_POW }
+    | "shift_left"            { CT_SHIFT_LEFT }
+    | "shift_right"            { CT_SHIFT_RIGHT }
 
 
 

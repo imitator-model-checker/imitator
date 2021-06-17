@@ -225,3 +225,6 @@ val leq : discrete_value -> discrete_value -> discrete_value
 val g : discrete_value -> discrete_value -> discrete_value
 (* Comparison, greater or equal between two discrete value *)
 val geq : discrete_value -> discrete_value -> discrete_value
+
+val shift_left : int -> discrete_value -> discrete_value
+val shift_right : int -> discrete_value -> discrete_value
