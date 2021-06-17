@@ -78,19 +78,12 @@ and string_of_parsed_factor parsed_model = function
         ^ ","
         ^ string_of_parsed_arithmetic_expression parsed_model exp_expr
         ^ ")"
-    (* TODO benjamin refactor by using string function on discrete factor *)
-    | Parsed_shift_left (factor, expr) as shift ->
-        string_of_parsed_factor_constructor shift
-        ^ "("
-        ^ string_of_parsed_factor parsed_model factor
-        ^ ","
-        ^ string_of_parsed_arithmetic_expression parsed_model expr
-        ^ ")"
+    | Parsed_shift_left (factor, expr)
     | Parsed_shift_right (factor, expr) as shift ->
         string_of_parsed_factor_constructor shift
         ^ "("
         ^ string_of_parsed_factor parsed_model factor
-        ^ ","
+        ^ ", "
         ^ string_of_parsed_arithmetic_expression parsed_model expr
         ^ ")"
 

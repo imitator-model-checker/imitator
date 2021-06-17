@@ -65,7 +65,7 @@ let string_of_var_type_discrete_number = function
 let string_of_var_type_discrete = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ -> "binaryword" (* TODO benjamin maybe not supported, raise an exception ? *)
+    | DiscreteValue.Var_type_discrete_binary_word _ -> "binaryword" (* TODO benjamin should convert as bool array ! *)
 
 (* Customized string of var_type *)
 let string_of_var_type = function

@@ -4759,10 +4759,22 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		)*) action_names
 	) in
 
-    (* TODO benjamin, add to constants for being able to use constant in declaration of another constant *)
-    (* ex : i = 1, j = i + 1 *)
+    (* Create an hash table that will contain previously initialized constants *)
+    (* It allow to initialize a constant with an other one, previously defined *)
+    let initialized_constants = (Hashtbl.create 0) in
     (* Evaluate the constants init expressions *)
-    let evaluated_constants = List.map (fun (name, expr, var_type) -> name, expr, ParsingStructureUtilities.try_reduce_parsed_global_expression (Hashtbl.create 0) expr, var_type) constants in
+    let evaluated_constants = List.map (fun (name, expr, var_type) ->
+        (* TODO benjamin type checking here *)
+
+        (* Try to get the value *)
+        let value = ParsingStructureUtilities.try_reduce_parsed_global_expression initialized_constants expr in
+        (* Create evaluated constant tuple *)
+        let evaluated_constant = name, expr, value, var_type in
+        (* Add evaluated constant to hash table *)
+        Hashtbl.add initialized_constants name value;
+        (* Return *)
+        evaluated_constant
+    ) (List.rev constants) in
 
     (* TYPE CHECKING : CONSTANTS IN DECLARATION *)
     (* Check type consistency between constant type and value *)
