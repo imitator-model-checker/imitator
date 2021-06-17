@@ -531,9 +531,9 @@ and convert_parsed_discrete_arithmetic_expression parsed_model expr =
 
     match discrete_type with
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
-        Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression parsed_model.index_of_variables parsed_model.constants expr)
+        Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression parsed_model expr)
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
-        Int_arithmetic_expression (convert_parsed_int_arithmetic_expression parsed_model.index_of_variables parsed_model.constants expr)
+        Int_arithmetic_expression (convert_parsed_int_arithmetic_expression parsed_model expr)
     | DiscreteValue.Var_type_discrete_bool
     | DiscreteValue.Var_type_discrete_binary_word _ as t ->
         raise (InternalError ("An arithmetic expression was deduced as " ^ DiscreteValue.string_of_var_type_discrete t ^ " expression"))
@@ -542,7 +542,7 @@ and convert_parsed_discrete_arithmetic_expression parsed_model expr =
 
 (* Convert a parsed discrete arithmetic expression *)
 (* It's a version without using useful_parsing_model_information *)
-and convert_parsed_rational_arithmetic_expression index_of_variables constants (* expr *) =
+and convert_parsed_rational_arithmetic_expression parsed_model (* expr *) =
     let rec convert_parsed_rational_arithmetic_expression_rec = function
         | Parsed_DAE_plus (expr , term) ->
             DAE_plus (
@@ -574,24 +574,32 @@ and convert_parsed_rational_arithmetic_expression index_of_variables constants (
     and convert_parsed_rational_factor = function
         | Parsed_DF_variable variable_name ->
             (* First check whether this is a constant *)
-            if Hashtbl.mem constants variable_name then (
-                let value = Hashtbl.find constants variable_name in
+            if Hashtbl.mem parsed_model.constants variable_name then (
+                let value = Hashtbl.find parsed_model.constants variable_name in
                 let numconst_value = DiscreteValue.numconst_value value in
                 DF_constant numconst_value
             )
             (* Otherwise: a variable *)
             else
-                DF_variable (Hashtbl.find index_of_variables variable_name)
+                DF_variable (Hashtbl.find parsed_model.index_of_variables variable_name)
 
         | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.numconst_value var_value)
         | Parsed_DF_expression expr -> DF_expression (convert_parsed_rational_arithmetic_expression_rec expr)
-        | Parsed_rational_of_int_function expr -> DF_rational_of_int (convert_parsed_int_arithmetic_expression index_of_variables constants expr)
-        | Parsed_pow_function (expr, exp) -> DF_pow (convert_parsed_rational_arithmetic_expression_rec expr, convert_parsed_int_arithmetic_expression index_of_variables constants exp)
+        | Parsed_rational_of_int_function expr -> DF_rational_of_int (convert_parsed_int_arithmetic_expression parsed_model expr)
+        | Parsed_pow_function (expr, exp) -> DF_pow (convert_parsed_rational_arithmetic_expression_rec expr, convert_parsed_int_arithmetic_expression parsed_model exp)
         | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_rational_factor factor)
+        (* Should never happen, because it was checked by type checker before *)
+        | Parsed_shift_left _
+        | Parsed_shift_right _ as factor ->
+            raise (InternalError (
+                "There is a call to \""
+                ^ ParsingStructureUtilities.string_of_parsed_factor parsed_model factor
+                ^ "\" in an rational expression, although it was checked before by type checking. Maybe something fail in type checking"
+            ))
     in
     convert_parsed_rational_arithmetic_expression_rec
 
-and convert_parsed_int_arithmetic_expression index_of_variables constants (* expr *) =
+and convert_parsed_int_arithmetic_expression parsed_model (* expr *) =
     let rec convert_parsed_int_arithmetic_expression_rec = function
         | Parsed_DAE_plus (expr , term) ->
             Int_plus (
@@ -623,24 +631,30 @@ and convert_parsed_int_arithmetic_expression index_of_variables constants (* exp
     and convert_parsed_int_factor = function
         | Parsed_DF_variable variable_name ->
             (* First check whether this is a constant *)
-            if Hashtbl.mem constants variable_name then (
-                let value = Hashtbl.find constants variable_name in
+            if Hashtbl.mem parsed_model.constants variable_name then (
+                let value = Hashtbl.find parsed_model.constants variable_name in
                 let int_value = DiscreteValue.int_value value in
                 Int_constant int_value
             )
             (* Otherwise: a variable *)
             else
-                Int_variable (Hashtbl.find index_of_variables variable_name)
+                Int_variable (Hashtbl.find parsed_model.index_of_variables variable_name)
 
         | Parsed_DF_constant var_value -> Int_constant (DiscreteValue.int_value var_value)
         | Parsed_DF_expression expr -> Int_expression (convert_parsed_int_arithmetic_expression_rec expr)
         | Parsed_pow_function (expr, exp) -> Int_pow (convert_parsed_int_arithmetic_expression_rec expr, convert_parsed_int_arithmetic_expression_rec exp)
 
         | Parsed_DF_unary_min factor -> Int_unary_min (convert_parsed_int_factor factor)
+
         (* Should never happen, because it was checked by type checker before *)
-        | Parsed_rational_of_int_function _ -> raise (
-            InternalError "There is a call to `rational_of_int` function in an int expression, although it was checked before by type checking. Maybe something fail in type checking"
-        )
+        | Parsed_rational_of_int_function _
+        | Parsed_shift_left _
+        | Parsed_shift_right _ as factor ->
+            raise (InternalError (
+                "There is a call to \""
+                ^ ParsingStructureUtilities.string_of_parsed_factor parsed_model factor
+                ^ "\" in an int expression, although it was checked before by type checking. Maybe something fail in type checking"
+            ))
     in
     convert_parsed_int_arithmetic_expression_rec
 
@@ -688,12 +702,26 @@ and binary_word_expression_of_parsed_factor useful_parsing_model_information = f
     | Parsed_DF_constant value ->
         let binary_word_value = DiscreteValue.binary_word_value value in
         Binary_word_constant binary_word_value
+    | Parsed_shift_left (factor, expr) ->
+        Logical_shift_left (
+            binary_word_expression_of_parsed_factor useful_parsing_model_information factor,
+            convert_parsed_int_arithmetic_expression useful_parsing_model_information expr
+        )
+    | Parsed_shift_right (factor, expr) ->
+        Logical_shift_right (
+            binary_word_expression_of_parsed_factor useful_parsing_model_information factor,
+            convert_parsed_int_arithmetic_expression useful_parsing_model_information expr
+        )
 
     | Parsed_DF_expression _
     | Parsed_DF_unary_min _
     | Parsed_rational_of_int_function _
-    | Parsed_pow_function _ ->
-        raise (InvalidModel)
+    | Parsed_pow_function _ as factor ->
+        raise (InternalError (
+            "There is a call to \""
+            ^ ParsingStructureUtilities.string_of_parsed_factor useful_parsing_model_information factor
+            ^ "\" in a binary expression, although it was checked before by type checking. Maybe something fail in type checking"
+        ))
 
 
 
@@ -702,10 +730,10 @@ let convert_bool_expr_with_model useful_parsing_model_information =
     convert_bool_expr useful_parsing_model_information
 
 let convert_parsed_rational_arithmetic_expression_with_model useful_parsing_model_information =
-    convert_parsed_rational_arithmetic_expression useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
+    convert_parsed_rational_arithmetic_expression useful_parsing_model_information
 
 let convert_parsed_int_arithmetic_expression_with_model  useful_parsing_model_information =
-    convert_parsed_int_arithmetic_expression useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants
+    convert_parsed_int_arithmetic_expression useful_parsing_model_information
 
 
 (*------------------------------------------------------------*)
@@ -716,7 +744,7 @@ let convert_parsed_int_arithmetic_expression_with_model  useful_parsing_model_in
 (*
 (* Convert parsed_discrete_boolean_expression *)
 (* It's a version without using useful_parsing_model_information *)
-(* TODO benjamin seems duplicate of convert_discrete_bool_expr*)
+
 let rec convert_parsed_discrete_boolean_expression parsed_model = function
     | Parsed_arithmetic_expression expr ->
         (* Search boolean variables, constants in DF_variable, DF_constant *)
@@ -2335,13 +2363,13 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
         | Parsed_DF_expression expr ->
             raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
         (* TODO benjamin refactor below by making a string function for factor *)
-        | Parsed_rational_of_int_function expr ->
-            raise (InvalidExpression "Use of \"rational_of_int\" function is forbidden in an expression involving clock(s) or parameter(s)")
-        | Parsed_pow_function (expr, exp_expr) ->
-            raise (InvalidExpression "Use of \"pow\" function is forbidden in an expression involving clock(s) or parameter(s)")
+        | Parsed_rational_of_int_function expr as factor ->
+            raise (InvalidExpression ("Use of \"" ^ ParsingStructureUtilities.string_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
+        | Parsed_pow_function (expr, exp_expr) as factor ->
+            raise (InvalidExpression ("Use of \"" ^ ParsingStructureUtilities.string_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
         | Parsed_shift_left (factor, expr)
-        | Parsed_shift_right (factor, expr) ->
-            raise (InvalidExpression "Use of \"shift\" function is forbidden in an expression involving clock(s) or parameter(s)")
+        | Parsed_shift_right (factor, expr) as shift ->
+            raise (InvalidExpression ("Use of \"" ^ ParsingStructureUtilities.string_of_parsed_factor_constructor shift ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
 
 let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
     | Parsed_arithmetic_expression _ ->

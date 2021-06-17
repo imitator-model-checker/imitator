@@ -15,34 +15,15 @@
 open Exceptions
 open ParsingStructure
 
-(*
-(* Map the leafs of an arithmetic expression according to map_function *)
-(* Leafs are Parsed_DF_variable, Parsed_DF_constant *)
-let map_parsed_arithmetic_expression_leafs map_function arithmetic_expr =
-
-    let rec map_parsed_arithmetic_expression_leafs_rec = function
-        | Parsed_DAE_plus (arithmetic_expression, term)
-        | Parsed_DAE_minus (arithmetic_expression, term) ->
-            List.rev_append (map_parsed_arithmetic_expression_leafs_rec arithmetic_expression) (map_parsed_term_leafs term)
-        | Parsed_DAE_term term ->
-            map_parsed_term_leafs term
-
-    and map_parsed_term_leafs = function
-        | Parsed_DT_mul (term, factor)
-        | Parsed_DT_div (term, factor) ->
-            List.rev_append (map_parsed_term_leafs term) (map_parsed_factor_leafs factor)
-        | Parsed_DT_factor factor ->
-            map_parsed_factor_leafs factor
-
-    and map_parsed_factor_leafs = function
-        | Parsed_DF_variable _
-        | Parsed_DF_constant _ as leaf -> [map_function leaf]
-        | Parsed_DF_unary_min factor -> map_parsed_factor_leafs factor
-        | Parsed_DF_expression arithmetic_expr -> map_parsed_arithmetic_expression_leafs_rec arithmetic_expr
-    in
-
-    map_parsed_arithmetic_expression_leafs_rec arithmetic_expr
-*)
+let string_of_parsed_factor_constructor = function
+	| Parsed_DF_variable _ -> "variable"
+	| Parsed_DF_constant _ -> "constant"
+	| Parsed_DF_expression _ -> "expression"
+	| Parsed_DF_unary_min _ -> "minus"
+	| Parsed_rational_of_int_function _ -> "rational_of_int"
+	| Parsed_pow_function _ -> "pow"
+	| Parsed_shift_left _ -> "shift_left"
+	| Parsed_shift_right _ -> "shift_right"
 
 (* String of a parsed expression *)
 (* Used for error message on type checking *)
@@ -87,23 +68,27 @@ and string_of_parsed_factor parsed_model = function
     | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression parsed_model arithmetic_expr
     | Parsed_DF_unary_min factor ->
         "-(" ^ (string_of_parsed_factor parsed_model factor) ^ ")"
-    | Parsed_rational_of_int_function arithmetic_expr ->
-        "rational_of_int(" ^ string_of_parsed_arithmetic_expression parsed_model arithmetic_expr ^ ")"
-    | Parsed_pow_function (expr, exp_expr) ->
-        "pow("
+    | Parsed_rational_of_int_function arithmetic_expr as factor ->
+        string_of_parsed_factor_constructor factor
+        ^ "(" ^ string_of_parsed_arithmetic_expression parsed_model arithmetic_expr ^ ")"
+    | Parsed_pow_function (expr, exp_expr) as factor ->
+        string_of_parsed_factor_constructor factor
+        ^ "("
         ^ string_of_parsed_arithmetic_expression parsed_model expr
         ^ ","
         ^ string_of_parsed_arithmetic_expression parsed_model exp_expr
         ^ ")"
     (* TODO benjamin refactor by using string function on discrete factor *)
-    | Parsed_shift_left (factor, expr) ->
-        "shift_left("
+    | Parsed_shift_left (factor, expr) as shift ->
+        string_of_parsed_factor_constructor shift
+        ^ "("
         ^ string_of_parsed_factor parsed_model factor
         ^ ","
         ^ string_of_parsed_arithmetic_expression parsed_model expr
         ^ ")"
-    | Parsed_shift_right (factor, expr) ->
-        "shift_right("
+    | Parsed_shift_right (factor, expr) as shift ->
+        string_of_parsed_factor_constructor shift
+        ^ "("
         ^ string_of_parsed_factor parsed_model factor
         ^ ","
         ^ string_of_parsed_arithmetic_expression parsed_model expr

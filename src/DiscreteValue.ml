@@ -72,7 +72,7 @@ let string_of_var_type_discrete_number = function
 let string_of_var_type_discrete = function
     | Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | Var_type_discrete_bool -> "bool"
-    | Var_type_discrete_binary_word l -> "binary_word(" ^ string_of_int l ^ ")"
+    | Var_type_discrete_binary_word l -> "binary(" ^ string_of_int l ^ ")"
 
 (* String of var type *)
 let string_of_var_type = function

@@ -89,8 +89,8 @@ type discrete_arithmetic_expression =
 
 (** Binary word expression *)
 type binary_word_expression =
-    | Logical_shift_left of binary_word_expression * int
-    | Logical_shift_right of binary_word_expression * int
+    | Logical_shift_left of binary_word_expression * int_arithmetic_expression
+    | Logical_shift_right of binary_word_expression * int_arithmetic_expression
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index
 
@@ -138,6 +138,14 @@ type global_expression =
     | Binary_word_expression of binary_word_expression
 
 (* String *)
+
+(* Constructors strings *)
+val string_of_rational_factor_constructor : rational_factor -> string
+val string_of_int_factor_constructor : int_factor -> string
+val string_of_binary_word_expression_constructor : binary_word_expression -> string
+
+(* Expressions strings *)
+
 val customized_string_of_global_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string
 val string_of_global_expression : (Automaton.variable_index -> string) -> global_expression -> string
 

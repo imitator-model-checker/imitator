@@ -714,15 +714,17 @@ and infer_parsed_discrete_factor parsed_model = function
 
         if not (DiscreteValue.is_discrete_type_binary_word_type l_type) then (
             raise (TypeError (
-                (* TODO benjamin complete error message *)
-                "left should be binary"
+                "Left member of expression \""
+                ^ ParsingStructureUtilities.string_of_parsed_factor parsed_model shift
+                ^ "\" is not a binary word"
             ))
         );
 
         if not (DiscreteValue.is_discrete_type_unknown_number_type r_type || DiscreteValue.is_discrete_type_int_type r_type) then (
             raise (TypeError (
-                (* TODO benjamin complete error message *)
-                "right should be int"
+                "Right member of expression \""
+                ^ ParsingStructureUtilities.string_of_parsed_factor parsed_model shift
+                ^ "\" is not an int expression"
             ))
         );
 
