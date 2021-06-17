@@ -506,7 +506,7 @@ if options#dynamic_clock_elimination then (
 (************************************************************)
 (* Extrapolation *)
 (************************************************************)
-if options#extrapolation <> None then (
+if options#extrapolation <> No_extrapolation then (
 	print_message Verbose_low "Preparing clock extrapolation…";
 	Extrapolation.prepare_extrapolation ()
 );

@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/04/28
+ * Last modified     : 2021/06/17
  *
  ************************************************************)
 
@@ -147,7 +147,7 @@ class imitator_options =
 (* 		val mutable best_worst_case = ref false *)
 
 		(* M-extrapolation *)
-		val mutable extrapolation : NumConst.t option = None
+		val mutable extrapolation : extrapolation = No_extrapolation
 
 
 		(* ANALYSIS OPTIONS *)
@@ -482,7 +482,7 @@ class imitator_options =
 				)
 
 			and set_exploration_order order =
-				(*  *)
+				(* Switch input string *)
 				if order = "layerBFS" then
 					exploration_order <- Some Exploration_layer_BFS
 				else if order = "queueBFS" then
@@ -493,6 +493,26 @@ class imitator_options =
 					exploration_order <- Some Exploration_queue_BFS_PRIOR
 				else(
 					print_error ("The exploration order `" ^ order ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
+
+			and set_extrapolation extrapolation_str =
+				(* Switch input string *)
+				if extrapolation_str = "none" then
+					extrapolation <- No_extrapolation
+				else if extrapolation_str = "M" then
+					extrapolation <- M
+				else if extrapolation_str = "Mglobal" then
+					extrapolation <- Mglobal
+				else if extrapolation_str = "LU" then
+					extrapolation <- LU
+				else if extrapolation_str = "LUglobal" then
+					extrapolation <- LUglobal
+				else(
+					print_error ("The exploration `" ^ extrapolation_str ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
@@ -740,7 +760,12 @@ class imitator_options =
 				");			
 				
 				
-				("-extrapolation", Int (fun n -> extrapolation <- Some (NumConst.numconst_of_int n) ), " Extrapolation [work in progress]. Default: none.
+				("-extrapolation", String set_extrapolation, " Extrapolation [work in progress].
+        Use `M`             for M-extrapolation.
+        Use `Mglobal`       for a single bound M-extrapolation.
+        Use `LU`            for LU-extrapolation.
+        Use `LUglobal`      for a single bound LU-extrapolation.
+        Default: none.
 				");
 
 				
@@ -1230,6 +1255,16 @@ class imitator_options =
 				| Some exploration_order -> print_message Verbose_experiments ("Exploration order: " ^ AbstractAlgorithm.string_of_exploration_order exploration_order)
 
 				| None -> print_message Verbose_low ("No exploration order set.")
+			end;
+
+			(* Extrapolation *)
+			begin
+			match extrapolation with
+				| No_extrapolation	-> print_message Verbose_experiments ("No extrapolation")
+				| M					-> print_message Verbose_standard ("Extrapolation: M-extrapolation")
+				| Mglobal			-> print_message Verbose_standard ("Extrapolation: global bound M-extrapolation")
+				| LU				-> print_message Verbose_standard ("Extrapolation: L/U-extrapolation")
+				| LUglobal			-> print_message Verbose_standard ("Extrapolation: global bound L/U-extrapolation")
 			end;
 
             (* Merge heuristic *)

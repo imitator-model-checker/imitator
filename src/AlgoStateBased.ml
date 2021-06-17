@@ -3401,10 +3401,10 @@ class virtual algoStateBased =
 						(* Check if extrapolation is requested *)
 						match options#extrapolation with
 							(* No extrapolation: return a single state *)
-							| None -> [successor]
+							| No_extrapolation -> [successor]
 							(* Extrapolation: call dedicated function *)
 (**							| Some m -> self#apply_m_extrapolation [|NumConst.numconst_of_int 1;NumConst.numconst_of_int 67|] successor
-**)							| Some m -> self#apply_lu_extrapolation [|NumConst.numconst_of_int 1;NumConst.numconst_of_int 67|] [|NumConst.numconst_of_int 1;NumConst.numconst_of_int (-1)|] successor
+**)							| _ -> self#apply_lu_extrapolation [|NumConst.numconst_of_int 1;NumConst.numconst_of_int 67|] [|NumConst.numconst_of_int 1;NumConst.numconst_of_int (-1)|] successor
 							
 						in result
 
