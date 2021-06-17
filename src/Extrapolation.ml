@@ -284,7 +284,7 @@ let prepare_extrapolation () : unit =
 (*------------------------------------------------------------*)
 (* Apply extrapolation *)
 (*------------------------------------------------------------*)
-let px_lu_extrapolation (x : Automaton.clock_index) (px_linear_constraint : LinearConstraint.px_linear_constraint) : LinearConstraint.px_linear_constraint list =
+let px_lu_extrapolation (px_linear_constraint : LinearConstraint.px_linear_constraint) : LinearConstraint.px_linear_constraint list =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
