@@ -22,5 +22,5 @@ val prepare_extrapolation : unit -> unit
 (*------------------------------------------------------------*)
 (* Apply extrapolation *)
 (*------------------------------------------------------------*)
-val px_lu_extrapolation : Automaton.clock_index -> LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint list
+val px_lu_extrapolation : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint list
 

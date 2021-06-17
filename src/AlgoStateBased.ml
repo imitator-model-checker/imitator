@@ -3124,16 +3124,16 @@ class virtual algoStateBased =
 		(* Maintain a list of constraints to iteratively apply M-extrapolation for each dimension *)
 		let constraints = ref [the_constraint] in
 		
+			
+		(*** TODO: dummy call to ensure dependency ***)
+(* 		let _ = Extrapolation.px_lu_extrapolation px_linear_constraint in *)
+
 		(* Iterate on clocks*)
 		List.iter (fun clock_id ->
 			let new_constraints = ref [] in
 			
 			(* Iterate on the list of previously computed constraints *)
 			List.iter (fun px_linear_constraint ->
-			
-			
-				(*** TODO: dummy call to ensure dependency ***)
-				let _ = Extrapolation.px_lu_extrapolation clock_id px_linear_constraint in
 			
 				let c_list : LinearConstraint.px_linear_constraint list = LinearConstraint.px_m_extrapolation m.(clock_id-base_indice) clock_id px_linear_constraint in
 				(* Test and add *)
