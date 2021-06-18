@@ -457,7 +457,6 @@ and customized_string_of_boolean_operations customized_string = function
 	| OP_G		-> customized_string.g_operator
 
 and customized_string_of_binary_word_expression customized_string variable_names = function
-    (* TODO benjamin refactor not hard-coded string of constructor *)
     | Logical_shift_left (binary_word, expr) as binary_word_expression ->
         string_of_binary_word_expression_constructor binary_word_expression
         ^ "("

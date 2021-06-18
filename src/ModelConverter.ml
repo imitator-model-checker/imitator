@@ -95,24 +95,6 @@ let convert_var_type = function
     | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteValue.Var_type_discrete (convert_var_type_discrete var_type_discrete)
     | ParsingStructure.Var_type_parameter -> DiscreteValue.Var_type_parameter
 
-(* TODO benjamin CLEAN remove comments *)
-(*
-let string_of_discrete_number_type = function
-    | DiscreteValue.Var_type_discrete_unknown_number -> "num"
-    | DiscreteValue.Var_type_discrete_rational -> "rat"
-    | DiscreteValue.Var_type_discrete_int -> "int"
-
-
-let string_of_discrete_type = function
-    | DiscreteValue.Var_type_discrete_number x -> string_of_discrete_number_type x
-    | DiscreteValue.Var_type_discrete_bool -> "bool"
-
-let string_of_type = function
-    | DiscreteValue.Var_type_clock -> "clock"
-    | DiscreteValue.Var_type_parameter -> "parameter"
-    | DiscreteValue.Var_type_discrete x -> string_of_discrete_type x
-*)
-
 
 let numconst_value_or_fail = function
     | DiscreteValue.Number_value x
@@ -477,6 +459,7 @@ and convert_discrete_bool_expr parsed_model = function
 	| Parsed_Not e ->
 	    Not_bool (convert_bool_expr parsed_model e)
 
+(* Search of boolean variables / constants in parsed discrete arithmetic expression *)
 and search_variable_of_discrete_arithmetic_expression parsed_model expr =
 
     (* Extract values from parsed model *)
@@ -485,17 +468,29 @@ and search_variable_of_discrete_arithmetic_expression parsed_model expr =
 
     let rec search_variable_of_discrete_arithmetic_expression_rec = function
         | Parsed_DAE_plus _
-        | Parsed_DAE_minus _ -> raise (InvalidModel) (* TODO benjamin change to InternalError because it mean that type check has failed *)
+        | Parsed_DAE_minus _ ->
+            raise (InternalError (
+                "Search of boolean variable in arithmetic expression, something failed.
+                Maybe an arithmetic expression was resolved as boolean expression before"
+            ))
         | Parsed_DAE_term term -> search_variable_of_discrete_term term
 
     and search_variable_of_discrete_term = function
         | Parsed_DT_mul _
-        | Parsed_DT_div _ -> raise (InvalidModel)  (* TODO benjamin change to InternalError because it mean that type check has failed *)
+        | Parsed_DT_div _ ->
+            raise (InternalError (
+                "Search of boolean variable in arithmetic expression, something failed.
+                Maybe an arithmetic expression was resolved as boolean expression before"
+            ))
         | Parsed_DT_factor factor -> search_variable_of_discrete_factor factor
 
     and search_variable_of_discrete_factor = function
         | Parsed_DF_expression expr -> search_variable_of_discrete_arithmetic_expression_rec expr
-        | Parsed_DF_unary_min _ -> raise (InvalidModel)  (* TODO benjamin change to InternalError because it mean that type check has failed *)
+        | Parsed_DF_unary_min _ ->
+            raise (InternalError (
+                "Search of boolean variable in arithmetic expression, something failed.
+                Maybe an arithmetic expression was resolved as boolean expression before"
+            ))
         | Parsed_DF_variable variable_name ->
             (* First check whether this is a constant *)
             if Hashtbl.mem constants variable_name then
@@ -509,7 +504,10 @@ and search_variable_of_discrete_arithmetic_expression parsed_model expr =
         | Parsed_pow_function _
         | Parsed_shift_left _
         | Parsed_shift_right _ ->
-            raise (InvalidModel) (* TODO benjamin change to InternalError because it mean that type check has failed *)
+            raise (InternalError (
+                "Search of boolean variable in binary word expression, something failed.
+                Maybe an arithmetic expression was resolved as binary expression before"
+            ))
     in
     search_variable_of_discrete_arithmetic_expression_rec expr
 
@@ -2143,8 +2141,8 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			in is_discrete
 	    (* All parsed boolean predicate are for discrete variables, just check the init *)
         | Parsed_discrete_predicate (variable_name, _) ->
-            (* TODO benjamin : refactor into a function *)
-            if not ((Hashtbl.mem index_of_variables variable_name) || (Hashtbl.mem constants variable_name))  then (
+
+            if not (is_variable_or_constant_declared index_of_variables constants variable_name)  then (
 				(* Otherwise: problem! *)
 				raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
             )
@@ -2448,7 +2446,7 @@ let convert_guard useful_parsing_model_information guard_convex_predicate =
       let discrete_guard = nonlinear_constraint_of_nonlinear_convex_predicate useful_parsing_model_information discrete_guard_convex_predicate in
       let continuous_guard = linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate in
 
-      (* TODO benjamin is possible to make this optimisation with separation of discretes and other types of vars ? *)
+      (* TODO maybe it's possible to make this optimisation with non linear discrete guard ? *)
       (*** NOTE: try to simplify a bit if possible (costly, but would save a lot of time later if checks are successful) ***)
 (*      let intersection = LinearConstraint.pxd_intersection_with_d continuous_guard discrete_guard in*)
 
@@ -5183,7 +5181,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		) automata;
 	);
 
-
+    (* TODO benjamin move constant checking here *)
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)

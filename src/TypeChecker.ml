@@ -757,6 +757,8 @@ and infer_parsed_discrete_factor parsed_model = function
             Parsed_shift_left (infer_factor, converted_expr), l_type
         | Parsed_shift_right _ ->
             Parsed_shift_right (infer_factor, converted_expr), l_type
+        | _ ->
+            raise (InternalError "Never happen !")
         )
     | Parsed_DF_unary_min factor ->
         let infer_factor, factor_type = infer_parsed_discrete_factor parsed_model factor in

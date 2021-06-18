@@ -58,8 +58,10 @@ and eval_rational_expression discrete_valuation expr =
         | DF_expression expr ->
             eval_rational_expression_rec expr
         | DF_rational_of_int expr ->
-            (* TODO benjamin WARNING conversion from int32 to int ! *)
 (*            ImitatorUtilities.print_message Verbose_standard "Evaluate a int expression";*)
+            ImitatorUtilities.print_warning
+                "Conversion of an int expression to a rational expression
+                may cause overflow if your platform doesn't manage `int` as an exact 32 bits integer";
             NumConst.numconst_of_int (Int32.to_int (eval_int_expression discrete_valuation expr))
         | DF_pow (expr, exp) ->
             NumConst.pow (eval_rational_expression_rec expr) (eval_int_expression discrete_valuation exp)
