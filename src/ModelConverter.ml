@@ -1919,7 +1919,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
         | Parsed_discrete_predicate (variable_name, expr) ->
             begin
                 (* Check that l-value variable exist *)
-                if not (is_variable_or_constant_declared index_of_variables constants variable_name) then (
+                if not (is_variable_or_constant_declared index_of_variables constants variable_name || List.mem variable_name removed_variable_names) then (
                     print_error ("Variable `" ^ variable_name ^ "` in discrete init is not declared");
                     well_formed := false;
                 );
