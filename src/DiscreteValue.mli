@@ -156,7 +156,7 @@ val zero_of : discrete_value -> discrete_value
 (* Get a one discrete value according to given discrete value type *)
 val one_of : discrete_value -> discrete_value
 
-(** Convert values  **)
+(** Get / Convert values  **)
 
 (* Get NumConst.t value of discrete value *)
 val numconst_value : discrete_value -> NumConst.t
@@ -164,10 +164,16 @@ val numconst_value : discrete_value -> NumConst.t
 val int_value : discrete_value -> Int32.t
 (* Get bool value of discrete value *)
 val bool_value : discrete_value -> bool
-(* Get float value of discrete value *)
-val float_value : discrete_value -> float
 (* Get binary word value of discrete value *)
 val binary_word_value : discrete_value -> BinaryWord.t
+
+(* Convert any discrete value to NumConst.t value, if possible *)
+val to_numconst_value : discrete_value -> NumConst.t
+(* Convert any discrete value to Int32 value, if possible *)
+val to_int_value : discrete_value -> Int32.t
+(* Convert any discrete value to float value, if possible *)
+val to_float_value : discrete_value -> float
+
 
 (* Get discrete value from NumConst.t *)
 val of_numconst : NumConst.t -> discrete_value

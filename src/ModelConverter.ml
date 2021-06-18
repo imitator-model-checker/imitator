@@ -574,14 +574,14 @@ and convert_parsed_rational_arithmetic_expression parsed_model (* expr *) =
             (* First check whether this is a constant *)
             if Hashtbl.mem parsed_model.constants variable_name then (
                 let value = Hashtbl.find parsed_model.constants variable_name in
-                let numconst_value = DiscreteValue.numconst_value value in
+                let numconst_value = DiscreteValue.to_numconst_value value in
                 DF_constant numconst_value
             )
             (* Otherwise: a variable *)
             else
                 DF_variable (Hashtbl.find parsed_model.index_of_variables variable_name)
 
-        | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.numconst_value var_value)
+        | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.to_numconst_value var_value)
         | Parsed_DF_expression expr -> DF_expression (convert_parsed_rational_arithmetic_expression_rec expr)
         | Parsed_rational_of_int_function expr -> DF_rational_of_int (convert_parsed_int_arithmetic_expression parsed_model expr)
         | Parsed_pow_function (expr, exp) -> DF_pow (convert_parsed_rational_arithmetic_expression_rec expr, convert_parsed_int_arithmetic_expression parsed_model exp)
@@ -2158,10 +2158,28 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	List.iter (fun lp ->
 		match lp with
 		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, discrete_name)), op , expression)) ->
+
 			if NumConst.neq coeff NumConst.one then (
-			print_error ("The discrete variable `" ^ discrete_name ^ "` must have a coeff 1 in the init definition.");
-			well_formed := false;
+			    print_error ("The discrete variable `" ^ discrete_name ^ "` must have a coeff 1 in the init definition.");
+			    well_formed := false;
 			);
+
+            (* Get assigned variable type *)
+			let discrete_variable_index = Hashtbl.find index_of_variables discrete_name in
+			let l_value_type = type_of_variables discrete_variable_index in
+			let l_value_discrete_type = DiscreteValue.discrete_type_of_var_type l_value_type in
+
+            (* Check if assigned variable type is rational in continuous init section *)
+            if not (DiscreteValue.is_discrete_type_rational_type l_value_discrete_type) then (
+                print_error (
+                    "Variable "
+                    ^ discrete_name
+                    ^ " of type "
+                    ^ (DiscreteValue.string_of_var_type l_value_type)
+                    ^ " cannot be used in continuous init part"
+                );
+                well_formed := false;
+            );
 
 			(* Check if the assignment is well formed, and keep the discrete value *)
 			let discrete_value =
@@ -2174,8 +2192,16 @@ let check_init useful_parsing_model_information init_definition observer_automat
 				(* Get the value of the variable *)
                 let value = Hashtbl.find constants variable_name in
 
-                (* TODO benjamin IMPORTANT maybe check that it's not a variable ? *)
-                (* TODO benjamin IMPORTANT maybe check that it's a rational only ! *)
+                (* TODO benjamin IMPORTANT check if it's a variable ?, else not Found error *)
+                if not (DiscreteValue.is_rational_value value) then
+                    raise (InvalidExpression (
+                        "Constant "
+                        ^ variable_name
+                        ^ " of type "
+                        ^ (DiscreteValue.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value value))
+                        ^ " cannot be used in continuous init part"
+                    ));
+
 
                 let numconst_value = DiscreteValue.numconst_value value in
                 DiscreteValue.Rational_value (NumConst.mul coef numconst_value)

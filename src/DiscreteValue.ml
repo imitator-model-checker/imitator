@@ -15,6 +15,7 @@
  ************************************************************)
 
 open Constants
+open Exceptions
 
 (* Should never happen, if correctly checked before in ModelConverter *)
 exception ComputingException of string
@@ -261,9 +262,25 @@ let one_of = function
 
 (** Convert values  **)
 (* TODO benjamin for functions below, maybe we had to raise an exception if conversion is an implicit conversion *)
-(* TODO benjamin warning to this use for display graph *)
-(* Get NumConst.t value of discrete value *)
+
+(* Get NumConst.t value of rational discrete value *)
 let numconst_value = function
+    | Rational_value x -> x
+    | value -> raise (InternalError ("Unable to get rational value of non-rational discrete value: " ^ string_of_value value))
+
+
+(* Get Int32.t value of int32 discrete value *)
+let int_value = function
+    | Int_value x -> x
+    | _ -> raise (InternalError "Unable to get int value of non-int discrete value")
+
+(* Get bool value of bool discrete value *)
+let bool_value = function
+    | Bool_value x -> x
+    | _ -> raise (InternalError "Unable to get bool value of non-bool discrete value")
+
+(* Convert any discrete value to NumConst.t value, if possible *)
+let to_numconst_value = function
     | Number_value x
     | Rational_value x -> x
     | Bool_value x -> if x then NumConst.one else NumConst.zero
@@ -271,8 +288,8 @@ let numconst_value = function
     | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
     | Binary_word_value x -> NumConst.numconst_of_int (BinaryWord.hash x)
 
-(* Get Int32.t value of discrete value *)
-let int_value = function
+(* Convert any discrete value to Int32 value, if possible *)
+let to_int_value = function
     (* Warning !!!! conversion to int should be dependant of the platform ! *)
     | Number_value x
     | Rational_value x -> Int32.of_int (NumConst.to_int x)
@@ -281,18 +298,8 @@ let int_value = function
     | Int_value x -> x
     | Binary_word_value x -> Int32.of_int (BinaryWord.hash x)
 
-
-(* Get bool value of discrete value *)
-let bool_value = function
-    | Number_value x
-    | Rational_value x -> if NumConst.equal x NumConst.zero then false else true
-    | Bool_value x -> x
-    | Int_value x -> if Int32.equal x Int32.zero then false else true
-    | Binary_word_value x -> if BinaryWord.hash x = 0 then false else true
-
-
-(* Get float value of discrete value *)
-let float_value = function
+(* Convert any discrete value to float value, if possible *)
+let to_float_value = function
     | Number_value x
     | Rational_value x -> (NumConst.to_float x)
     | Bool_value x -> if x then 0.0 else 0.0
@@ -313,11 +320,7 @@ let of_bool x = Bool_value x
 
 (* Convert any discrete value to a Rational_value *)
 let convert_to_rational_value value =
-    Rational_value (numconst_value value)
-
-(* Convert any discrete value to a Int_value *)
-let convert_to_int_value value =
-    Int_value (int_value value)
+    Rational_value (to_numconst_value value)
 
 (* TODO benjamin LOOK really necessary ? *)
 (* Convert discrete value to another discrete type *)
@@ -334,12 +337,12 @@ let convert_value_to_discrete_type value target_type =
     | Number_value _, Var_type_discrete_number Var_type_discrete_rational
     (* Int_value to Rational_value *)
     | Int_value _, Var_type_discrete_number Var_type_discrete_rational ->
-        convert_to_rational_value value
+        Rational_value (to_numconst_value value)
     (* Number_value to Int_value *)
     | Number_value _, Var_type_discrete_number Var_type_discrete_int
     (* Rational_value to Int_value *)
     | Rational_value _, Var_type_discrete_number Var_type_discrete_int ->
-        convert_to_int_value value
+        Int_value (to_int_value value)
     (* Other are not supported *)
     | x, t -> failwith (
         "Conversion of value "
