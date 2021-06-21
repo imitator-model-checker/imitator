@@ -116,7 +116,7 @@ and discrete_boolean_expression =
 	(** Discrete variable *)
 	| DB_variable of Automaton.variable_index
 	(** Discrete constant *)
-	| DB_constant of DiscreteValue.discrete_value
+	| DB_constant of bool
 
 (****************************************************************)
 (** Global expression *)
@@ -446,7 +446,7 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 	| Not_bool b ->
 	    customized_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
     | DB_variable discrete_index -> variable_names discrete_index
-    | DB_constant discrete_value -> DiscreteValue.string_of_value discrete_value
+    | DB_constant value -> customized_string_of_bool_value customized_string value
 
 and customized_string_of_boolean_operations customized_string = function
 	| OP_L		-> customized_string.l_operator
@@ -455,6 +455,10 @@ and customized_string_of_boolean_operations customized_string = function
 	| OP_NEQ	-> customized_string.neq_operator
 	| OP_GEQ	-> customized_string.ge_operator
 	| OP_G		-> customized_string.g_operator
+
+and customized_string_of_bool_value customized_string = function
+    | true -> customized_string.true_string
+    | false -> customized_string.false_string
 
 and customized_string_of_binary_word_expression customized_string variable_names = function
     | Logical_shift_left (binary_word, expr) as binary_word_expression ->
@@ -563,7 +567,7 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
 	| Not_bool b ->
 	    "{\"op\": \""^ customized_string.boolean_string.not_operator ^"\"" ^ jani_separator ^ "\"exp\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b) ^ "}"
     | DB_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
-    | DB_constant value -> DiscreteValue.string_of_value value
+    | DB_constant value -> customized_string_of_bool_value customized_string.boolean_string value
 
 and customized_string_of_arithmetic_expression_for_jani customized_string variable_names = function
     | Rational_arithmetic_expression expr -> customized_string_of_rational_arithmetic_expression_for_jani customized_string variable_names expr

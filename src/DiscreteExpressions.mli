@@ -124,7 +124,7 @@ and discrete_boolean_expression =
 	(** discrete variable in boolean expression *)
 	| DB_variable of Automaton.variable_index
 	(** discrete constant in boolean expression *)
-	| DB_constant of DiscreteValue.discrete_value
+	| DB_constant of bool
 
 
 

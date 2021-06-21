@@ -134,9 +134,8 @@ and is_boolean_expression_satisfied discrete_valuation = function
 and check_discrete_boolean_expression discrete_valuation = function
     | DB_variable variable_index ->
         DiscreteValue.bool_value (discrete_valuation variable_index)
-    | DB_constant constant ->
-        (* TODO benjamin here, we unwrap from discrete, ..., bad ! we have to remove discrete value for constant in abstract model *)
-        DiscreteValue.bool_value constant
+    | DB_constant value ->
+        value
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
     (* TODO benjamin WARNING here we compare discrete value with operator it's bad *)
     | Expression (l_expr, relop, r_expr) ->

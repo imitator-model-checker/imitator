@@ -1027,6 +1027,4 @@ let check_discrete_init parsed_model variable_name expr =
             infer_expr
     in
 
-    (* TODO benjamin should be moved into ModelConverter I think... It's not the role of type checker *)
-    (* Try to reduce expression to a value *)
-    ParsingStructureUtilities.try_reduce_parsed_global_expression_with_model parsed_model converted_expr
+    converted_expr
