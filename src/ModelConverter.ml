@@ -1395,21 +1395,6 @@ let linear_inequality_of_linear_constraint index_of_variables constants (linexpr
   | PARSED_OP_NEQ ->
     raise (InternalError("Inequality <> not yet supported"))
 
-
-
-(* TODO benjamin remove when nonlinear_constraint equal to discrete_boolean_expression *)
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.nonlinear_constraint into a NonlinearConstraint.nonlinear_inequality *)
-(*------------------------------------------------------------*)
-(*
-let nonlinear_inequality_of_nonlinear_constraint index_of_variables constants (expr1, relop, expr2) =
-  let convert_relop = convert_parsed_relop relop
-  in
-    let nl_inequality : NonlinearConstraint.nonlinear_inequality = (convert_parsed_discrete_arithmetic_expression index_of_variables constants expr1, convert_relop, convert_parsed_discrete_arithmetic_expression index_of_variables constants expr2)
-    in nl_inequality
-*)
-
-
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.convex_predicate into a Constraint.linear_constraint *)
 (*------------------------------------------------------------*)
@@ -2172,9 +2157,9 @@ let check_init useful_parsing_model_information init_definition observer_automat
             (* Check if assigned variable type is rational in continuous init section *)
             if not (DiscreteValue.is_discrete_type_rational_type l_value_discrete_type) then (
                 print_error (
-                    "Variable "
+                    "Variable \""
                     ^ discrete_name
-                    ^ " of type "
+                    ^ "\" of type "
                     ^ (DiscreteValue.string_of_var_type l_value_type)
                     ^ " cannot be used in continuous init part"
                 );
@@ -2189,23 +2174,39 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			(* Constant: OK *)
 			| (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
 
-				(* Get the value of the variable *)
-                let value = Hashtbl.find constants variable_name in
-
-                (* TODO benjamin IMPORTANT check if it's a variable ?, else not Found error *)
-                if not (DiscreteValue.is_rational_value value) then
-                    raise (InvalidExpression (
-                        "Constant "
+                (* If trying to assign a variable with another variable *)
+                if Hashtbl.mem index_of_variables variable_name then (
+                    print_error (
+                        "Init variable \""
+                        ^ discrete_name
+                        ^ "\" with another variable \""
                         ^ variable_name
-                        ^ " of type "
-                        ^ (DiscreteValue.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value value))
-                        ^ " cannot be used in continuous init part"
-                    ));
+                        ^ "\" is forbidden. \""
+                        ^ variable_name
+                        ^ "\" should be a constant"
+                    );
+                    well_formed := false;
+                    DiscreteValue.Rational_value NumConst.zero
+                ) else (
 
+                    (* Get the value of the constant *)
+                    let value = Hashtbl.find constants variable_name in
 
-                let numconst_value = DiscreteValue.numconst_value value in
-                DiscreteValue.Rational_value (NumConst.mul coef numconst_value)
-
+                    if not (DiscreteValue.is_rational_value value) then (
+                        print_error (
+                            "Constant \""
+                            ^ variable_name
+                            ^ "\" of type "
+                            ^ (DiscreteValue.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value value))
+                            ^ " cannot be used in continuous init part"
+                        );
+                        well_formed := false;
+                        DiscreteValue.Rational_value NumConst.zero
+                    ) else (
+                        let numconst_value = DiscreteValue.numconst_value value in
+                        DiscreteValue.Rational_value (NumConst.mul coef numconst_value)
+                    )
+                )
 			| _ -> print_error ("The initial value for discrete variable `" ^ discrete_name ^ "` must be given in the form `" ^ discrete_name ^ " = c`, where `c` is an integer, a rational or a constant.");
 				well_formed := false;
 				DiscreteValue.Rational_value NumConst.zero

@@ -3113,6 +3113,30 @@ Error                                   : invalid model
 
 	,
 
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/06/21
+		## Last modified            : 2021/06/21
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of non rational valued discrete variables in continuous init section raise an error',
+		'input_files': ['type_checking/inits/init-non-rational-discrete-in-continuous-error.imi'],
+		'tags': 'type checking, init',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'init-non-rational-discrete-in-continuous-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	# END : Type checking on variable initializations
 
 	# BEGIN : Type checking on conditional clauses
@@ -14691,12 +14715,36 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that init of a variable with a variable is forbidden - new init state (behavior)',
+		'purpose'    : 'Test that init of a variable with a variable is forbidden - new init state',
 		'tags' : 'semantic, behavior, init',
 		'input_files': ['init_state/init-variable-with-variable.imi'],
 		'options'    : '-no-var-autoremove -mode statespace -states-description',
 		'expectations' : [
 			{'file': 'init-variable-with-variable.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/06/21
+		## Last modified            : 2021/06/21
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init a variable with another variable in continuous init section is forbidden',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-using-variable-in-continuous-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'init-using-variable-in-continuous-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file

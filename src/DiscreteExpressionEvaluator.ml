@@ -133,10 +133,9 @@ and is_boolean_expression_satisfied discrete_valuation = function
 (** Check if a discrete boolean expression is satisfied *)
 and check_discrete_boolean_expression discrete_valuation = function
     | DB_variable variable_index ->
-        (* TODO benjamin here, we unwrap from discrete, ..., bad ! we have to remove discrete value in abstract model *)
         DiscreteValue.bool_value (discrete_valuation variable_index)
     | DB_constant constant ->
-        (* TODO benjamin here, we unwrap from discrete, ..., bad ! we have to remove discrete value in abstract model *)
+        (* TODO benjamin here, we unwrap from discrete, ..., bad ! we have to remove discrete value for constant in abstract model *)
         DiscreteValue.bool_value constant
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
     (* TODO benjamin WARNING here we compare discrete value with operator it's bad *)
@@ -202,5 +201,4 @@ and eval_discrete_binary_word_expression discrete_valuation = function
     | Logical_shift_right (binary_word, expr) -> BinaryWord.shift_right (eval_discrete_binary_word_expression discrete_valuation binary_word) (Int32.to_int (eval_int_expression discrete_valuation expr))
     | Binary_word_constant value -> value
     | Binary_word_variable variable_index ->
-        (* TODO benjamin here, we unwrap from discrete, ..., bad ! we have to remove discrete value in abstract model *)
         DiscreteValue.binary_word_value (discrete_valuation variable_index)
