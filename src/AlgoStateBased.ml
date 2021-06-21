@@ -3109,97 +3109,28 @@ class virtual algoStateBased =
 	method virtual add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
 
 	
-	
-	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Apply M-extrapolation to a state *)
+	(* Apply extrapolation to a state *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private apply_m_extrapolation (m : NumConst.t array) (state : State.state) : State.state list =
+	method private apply_extrapolation (extrapolation : extrapolation) (state : State.state) : State.state list =
 		(* Get the location and the constraint from the state *)
 		let the_location = state.global_location in
 		let the_constraint = state.px_constraint in
-		let base_indice = model.nb_parameters in
-		(* Return (for now) exactly ONE state *)
-		
-		(* Maintain a list of constraints to iteratively apply M-extrapolation for each dimension *)
-		let constraints = ref [the_constraint] in
-		
-			
-		(*** TODO: dummy call to ensure dependency ***)
-(* 		let _ = Extrapolation.px_lu_extrapolation px_linear_constraint in *)
 
-		(* Iterate on clocks*)
-		List.iter (fun clock_id ->
-			let new_constraints = ref [] in
-			
-			(* Iterate on the list of previously computed constraints *)
-			List.iter (fun px_linear_constraint ->
-			
-				let c_list : LinearConstraint.px_linear_constraint list = LinearConstraint.px_m_extrapolation m.(clock_id-base_indice) clock_id px_linear_constraint in
-				(* Test and add *)
-				List.iter (fun c ->
-					if LinearConstraint.px_is_satisfiable c then(
-					new_constraints := c :: !new_constraints;
-				);
-				) c_list;
-			
-			) !constraints;
-			
-			(* Update new constraints *)
-			constraints := !new_constraints;
-		
-		) model.clocks;
-		
-		(* Return the pair (location, constraint) for each constraint from the M-extrapolation *)
+		(* Call the asked extrapolation of the constraint *)
+		let constraints = 
+		match extrapolation with
+		| M -> Extrapolation.px_m_extrapolation the_constraint
+		| Mglobal -> raise (InternalError "Not implemented")
+		| LU -> Extrapolation.px_lu_extrapolation the_constraint
+		| LUglobal -> raise (InternalError "Not implemented")
+		| _ -> raise (InternalError "Option not recognized")
+		in
+
+		(* Return the pair (location, constraint) for each constraint from the extrapolation *)
 		List.map (fun px_linear_constraint -> 
 			{ global_location = the_location ; px_constraint = px_linear_constraint }
-		) !constraints
-(*		[
-			{ global_location = the_location ; px_constraint = the_constraint } 
-		]*)
-	
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Apply LU-extrapolation to a state *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private apply_lu_extrapolation (l : NumConst.t array) (u : NumConst.t array) (state : State.state) : State.state list =
-		(* Get the location and the constraint from the state *)
-		let the_location = state.global_location in
-		let the_constraint = state.px_constraint in
-		let base_indice = model.nb_parameters in
-		(* Return (for now) exactly ONE state *)
-		
-		(* Maintain a list of constraints to iteratively apply M-extrapolation for each dimension *)
-		let constraints = ref [the_constraint] in
-		
-		(* Iterate on clocks*)
-		List.iter (fun clock_id ->
-			let new_constraints = ref [] in
-			
-			(* Iterate on the list of previously computed constraints *)
-			List.iter (fun px_linear_constraint ->
-				let c_list : LinearConstraint.px_linear_constraint list = LinearConstraint.px_lu_extrapolation l.(clock_id-base_indice) u.(clock_id-base_indice) clock_id px_linear_constraint in
-				(* Test and add *)
-				List.iter (fun c ->
-					if LinearConstraint.px_is_satisfiable c then(
-					new_constraints := c :: !new_constraints;
-				);
-				) c_list;
-			
-			) !constraints;
-			
-			(* Update new constraints *)
-			constraints := !new_constraints;
-		
-		) model.clocks;
-		
-		(* Return the pair (location, constraint) for each constraint from the LU-extrapolation *)
-		List.map (fun px_linear_constraint -> 
-			{ global_location = the_location ; px_constraint = px_linear_constraint }
-		) !constraints
-(*		[
-			{ global_location = the_location ; px_constraint = the_constraint } 
-		]*)
+		) constraints
 			
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3403,8 +3334,7 @@ class virtual algoStateBased =
 							(* No extrapolation: return a single state *)
 							| No_extrapolation -> [successor]
 							(* Extrapolation: call dedicated function *)
-(**							| Some m -> self#apply_m_extrapolation [|NumConst.numconst_of_int 1;NumConst.numconst_of_int 67|] successor
-**)							| _ -> self#apply_lu_extrapolation [|NumConst.numconst_of_int 1;NumConst.numconst_of_int 67|] [|NumConst.numconst_of_int 1;NumConst.numconst_of_int (-1)|] successor
+							| _ -> self#apply_extrapolation options#extrapolation successor
 							
 						in result
 
