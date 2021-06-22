@@ -35,13 +35,70 @@ type numconst_or_infinity =
 	| Infinity
 	(* Minus-infinity *)
 	| Minus_infinity
+	
+let neg_inf (a : numconst_or_infinity) =
+	match a with
+	| Infinity -> Minus_infinity
+	| Minus_infinity -> Infinity
+	| Finite a ->  Finite (NumConst.neg a )
 
 let add_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	match a, b with
 	| Infinity, Infinity -> Infinity
+	| Infinity, Finite b -> Infinity
+	| Finite a, Infinity -> Infinity
 	| Minus_infinity, Minus_infinity -> Minus_infinity
-	| Finite a, Finite b-> Finite (NumConst.add a b)
-	| _ -> raise (InternalError "Case addition infinity/-infinity")
+	| Minus_infinity, Finite b -> Minus_infinity
+	| Finite a, Minus_infinity -> Minus_infinity
+	| Finite a, Finite b -> Finite (NumConst.add a b)
+	| _ -> raise (InternalError "Case infinity-infinity")
+	
+let sub_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	add_inf a (neg_inf b)
+	
+let mul_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	match a, b with
+	| Infinity, Infinity -> Infinity
+	| Minus_infinity, Minus_infinity -> Infinity
+	| Infinity, Finite b -> Infinity
+	| Finite a, Infinity -> Infinity
+	| Infinity, Minus_infinity -> Minus_infinity
+	| Minus_infinity, Infinity -> Minus_infinity
+	| Minus_infinity, Finite b -> Minus_infinity
+	| Finite a, Minus_infinity -> Minus_infinity
+	| Finite a, Finite b -> Finite (NumConst.mul a b)
+	
+let inv_inf (a : numconst_or_infinity) =
+	match a with
+	| Finite a -> Finite (NumConst.div (NumConst.numconst_of_int 1) a )
+	| _ -> Finite (NumConst.numconst_of_int 0)
+
+let div_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	mul_inf a (inv_inf b)
+	
+let lesser_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	match a, b with
+	| Infinity, _ -> false
+	| _, Minus_infinity -> false
+	| Minus_infinity, Infinity -> true
+	| Minus_infinity, Finite b -> true
+	| Finite a, Infinity -> true
+	| Finite a, Finite b -> a < b
+	
+let leq_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	a = b || (lesser_inf a b)
+
+let greater_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	lesser_inf b a
+
+let geq_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	leq_inf b a
+
+let min_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	if greater_inf a b then b else a
+
+let max_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	if lesser_inf a b then b else a
 
 
 (************************************************************
@@ -82,14 +139,14 @@ let rec power base exponent =
 	else power base (exponent-1) * base
 	
 	
-(* Returns the maximum value in an array of floats (intersected with 0) *)	
+(* Returns the maximum value in an array of numconst_or_infinity (intersected with 0) *)	
 (* Input = a : float array *)
 (* Output = float *)
 
 let max_array a =
-	let m = ref(0.) in
+	let m = ref(Finite (NumConst.numconst_of_int 0)) in
 	for i=0 to (Array.length a)-1 do 
-		m := max !m a.(i)
+		m := max_inf !m a.(i)
 	done;
 	!m
 	
@@ -103,19 +160,20 @@ let max_array a =
 (* Input = guards : (int, string, float array) list, bounds : (float,float) array *)
 (* Output = (int, string, float array) list *)
 
-let hide_bounded guards bounds =
+
+let hide_bounded (guards : (int * string * numconst_or_infinity array) list) (bounds : (numconst_or_infinity * numconst_or_infinity) array) =
 	let f (clock, operator, factors) = 
-		let k = Array.length factors -1 in
+		let k = (Array.length factors) - 1 in
 		for i = 0 to k-1 do
 			let (min,max) = bounds.(i) in
-			if max != infinity then begin
-				if factors.(i) > 0. then begin
-					factors.(k) <- factors.(k) +. factors.(i)*.max;
-					factors.(i) <- 0.;
+			if max != Infinity && min != Minus_infinity then begin
+				if greater_inf factors.(i) (Finite (NumConst.numconst_of_int 0)) then begin
+					factors.(k) <- add_inf factors.(k) (mul_inf factors.(i) max);
+					factors.(i) <- (Finite (NumConst.numconst_of_int 0));
 				end
 				else begin
-					factors.(k) <- factors.(k) +. factors.(i)*.min;
-					factors.(i) <- 0.;
+					factors.(k) <- add_inf factors.(k) (mul_inf factors.(i) min);
+					factors.(i) <- (Finite (NumConst.numconst_of_int 0));
 				end
 			end
 		done;
@@ -130,11 +188,10 @@ let hide_bounded guards bounds =
 let compute_parametric_clocks_array guards h =
 	let parametric_clocks_array = Array.make h true in
 	let f (clock, operator, factors) =
-		let k = Array.length factors -1 in
+		let k = (Array.length factors) - 1 in
 		if parametric_clocks_array.(clock) then
 		for i = 0 to k-1 do
-			if factors.(i) != 0. then
-				parametric_clocks_array.(clock) <- false;
+			if factors.(i) != Finite (NumConst.numconst_of_int 0) then parametric_clocks_array.(clock) <- false;
 		done
 	in
 	List.iter f guards;
@@ -156,7 +213,7 @@ let compute_parametric_clocks_number parametric_clocks_array =
 
 let set_bounds bounds n =
 	let f (min,max) = 
-		if max < n then (min,max)
+		if lesser_inf max n then (min,max)
 		else (min,n);
 	in
 	Array.map f bounds
@@ -167,12 +224,12 @@ let set_bounds bounds n =
 (* Output = float *)
 
 let compute_gmax (clock, operator, factors) bounds =
-	let k = Array.length factors - 1 in
+	let k = (Array.length factors) - 1 in
 	let gmax = ref(factors.(k)) in
 	for i = 0 to k-1 do
 		let (min,max) = bounds.(i) in
-		if factors.(i) > 0. then gmax := !gmax +. factors.(i)*.max
-		else gmax := !gmax +. factors.(i)*.min;
+		if greater_inf factors.(i) (Finite (NumConst.numconst_of_int 0)) then gmax := add_inf !gmax (mul_inf factors.(i) max)
+		else gmax := add_inf !gmax (mul_inf factors.(i) min);
 	done;
 	!gmax
 	
@@ -182,9 +239,9 @@ let compute_gmax (clock, operator, factors) bounds =
 (* Output = float array *)
 
 let compute_greatest_nonparametric_constants guards h=
-	let greatest_const = Array.make h 0. in
+	let greatest_const = Array.make h (Finite (NumConst.numconst_of_int 0)) in
 	let f (clock, operator, factors) =
-		greatest_const.(clock) <- max factors.(Array.length factors - 1) greatest_const.(clock);
+		greatest_const.(clock) <- max_inf factors.((Array.length factors) - 1) greatest_const.(clock);
 	in
 	List.iter f guards;
 	greatest_const
@@ -195,8 +252,18 @@ let compute_greatest_nonparametric_constants guards h=
 (* Output = float *)
 
 let compute_regions_upper_bound greatest_nonparametric_constants h =
-	let regions_upper_bound = ref(float_of_int((factorial h) * (power 2 h))) in
-	Array.iter (fun z -> regions_upper_bound := !regions_upper_bound*.(2.*.z+.2.)) greatest_nonparametric_constants;
+	let regions_upper_bound = ref(Finite (NumConst.numconst_of_int ((factorial h) * (power 2 h)))) in
+	Array.iter (fun z -> regions_upper_bound := 
+		mul_inf 
+			!regions_upper_bound 
+			(add_inf 
+				(mul_inf 
+					(Finite (NumConst.numconst_of_int 2)) 
+					z
+				) 
+				(Finite (NumConst.numconst_of_int 2))
+			)
+	) greatest_nonparametric_constants;
 	!regions_upper_bound
 	
 		
@@ -206,9 +273,18 @@ let compute_regions_upper_bound greatest_nonparametric_constants h =
 
 let compute_n pta_type guards parametric_clocks_number h =
 	let gnc = compute_greatest_nonparametric_constants guards h in
-	let n = ref(float_of_int(parametric_clocks_number)*.((compute_regions_upper_bound gnc h)+.1.)) in
-	if pta_type = "U" then n := !n*.8.;
-	!n +. max_array gnc +. 1.
+	let n = ref(
+		mul_inf 
+			(Finite 
+				(NumConst.numconst_of_int (parametric_clocks_number))
+			)
+			(add_inf 
+				(compute_regions_upper_bound gnc h) 
+				(Finite (NumConst.numconst_of_int 1))
+			)
+	) in
+	if pta_type = "U" then n := mul_inf !n (Finite (NumConst.numconst_of_int 8));
+	add_inf !n (add_inf (max_array gnc) (Finite (NumConst.numconst_of_int 1)))
 	
 	
 (************************************************************)
@@ -219,8 +295,7 @@ let compute_n pta_type guards parametric_clocks_number h =
 (* Input = pta_type : string, bounds : (float,float) array, guards : (int, string, float array) list, h : int *)
 (* Output = (float array, float array) *)
 
-	
-let compute_maximal_constants pta_type bounds guards h =
+let compute_maximal_constants (pta_type : string) (bounds : (numconst_or_infinity * numconst_or_infinity) array) (guards : (int * string * numconst_or_infinity array) list) (h : int) =
 	let hide = 
 		if pta_type = "L/U-U_bounded" then (hide_bounded guards bounds , "L" )
 		else if pta_type = "L/U-L_bounded" then (hide_bounded guards bounds , "U" )
@@ -243,14 +318,14 @@ let compute_maximal_constants pta_type bounds guards h =
 			)
 		else bounds
 	in
-	let max_const_L = Array.make h (-.infinity) in
-	let max_const_U = Array.make h (-.infinity) in
+	let max_const_L = Array.make h Minus_infinity in
+	let max_const_U = Array.make h Minus_infinity in
 	List.iter (
 	fun (clock, operator, factors) -> 
-		if operator = ">" || operator = ">=" then max_const_L.(clock) <- max (compute_gmax (clock, operator, factors) set) max_const_L.(clock) 
-		else if operator = "<" || operator = "<=" then max_const_U.(clock) <- max (compute_gmax (clock, operator, factors) set) max_const_U.(clock)
-		else begin max_const_L.(clock) <- max (compute_gmax (clock, operator, factors) set) max_const_L.(clock);
-		max_const_U.(clock) <- max (compute_gmax (clock, operator, factors) set) max_const_L.(clock);
+		if operator = ">" || operator = ">=" then max_const_L.(clock) <- max_inf (compute_gmax (clock, operator, factors) set) max_const_L.(clock) 
+		else if operator = "<" || operator = "<=" then max_const_U.(clock) <- max_inf (compute_gmax (clock, operator, factors) set) max_const_U.(clock)
+		else begin max_const_L.(clock) <- max_inf (compute_gmax (clock, operator, factors) set) max_const_L.(clock);
+		max_const_U.(clock) <- max_inf (compute_gmax (clock, operator, factors) set) max_const_L.(clock);
 		end
 		
 	) guards;
@@ -264,9 +339,9 @@ let lower_constants = ref [||]
 let upper_constants = ref [||]
 
 let greatest_constants = ref [||]
-let max_lower_const = ref(NumConst.numconst_of_int (-1)) (**TODO: Minus_infinity**)
-let max_upper_const = ref(NumConst.numconst_of_int (-1)) (**TODO: Minus_infinity**)
-let max_greatest_const = ref(NumConst.numconst_of_int (-1)) (**TODO: Minus_infinity**)
+let max_lower_const = ref(Minus_infinity)
+let max_upper_const = ref(Minus_infinity)
+let max_greatest_const = ref(Minus_infinity)
 
 let nb_parameters = ref 0
 let clocks = ref []
@@ -303,17 +378,17 @@ let p_bounds_to_float p_bounds =
 	| Bounded (bound, is_closed) -> Finite bound
 	in (min,max)
 	
-let set_maximums l u nb_clocks : unit = 
+(*let set_maximums l u nb_clocks : unit = 
 	let g_c = l in
 	for i=0 to nb_clocks-1 do 
-		g_c.(i) <- max l.(i) u.(i);
-		max_lower_const := max !max_lower_const l.(i);
-		max_upper_const := max !max_upper_const u.(i);
+		g_c.(i) <- max_inf l.(i) u.(i);
+		max_lower_const := max_inf !max_lower_const l.(i);
+		max_upper_const := max_inf !max_upper_const u.(i);
 	done;
 	begin
 	greatest_constants := g_c;
-	max_greatest_const := max !max_lower_const !max_upper_const;
-	end
+	max_greatest_const := max_inf !max_lower_const !max_upper_const;
+	end*)
 
 let prepare_extrapolation () : unit =
 	(* Retrieve the model *)
@@ -322,9 +397,9 @@ let prepare_extrapolation () : unit =
 	let parameters = model.parameters in
 	
 (**	let p_bounds = List.iter (fun p -> (p_bounds_to_float model.parameters_bounds p)) parameters in**)
-	let p_bounds = [|(0.,infinity)|] in
+	let p_bounds = [|((Finite (NumConst.numconst_of_int 0)),Infinity)|] in
 	
-	let guards = [(0,"=",[|0.;1.|]);(0,"<=",[|0.;1.|]);(0,"=",[|0.;0.|]);(1,">=",[|1.;0.|])] in
+	let guards = [(0,"=",[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 1))|]);(0,"<=",[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 1))|]);(0,"=",[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 0))|]);(1,">=",[|(Finite (NumConst.numconst_of_int 1));(Finite (NumConst.numconst_of_int 0))|])] in
 	
 	let nb_clocks = model.nb_clocks in
 	
@@ -337,7 +412,10 @@ let prepare_extrapolation () : unit =
 		
 		lower_constants := [|NumConst.numconst_of_int 1;NumConst.numconst_of_int 67|];
 		upper_constants := [|NumConst.numconst_of_int 1;NumConst.numconst_of_int (-1)|] ;
-		set_maximums !lower_constants !upper_constants nb_clocks; (** TODO : l u **)
+		
+		(*set_maximums !lower_constants !upper_constants nb_clocks;(* TODO : l u *)*)
+		greatest_constants := [|NumConst.numconst_of_int 1;NumConst.numconst_of_int 67|];
+	
 		nb_parameters := model.nb_parameters;
 		clocks := model.clocks;
 	end
