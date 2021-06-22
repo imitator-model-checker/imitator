@@ -87,6 +87,10 @@ type discrete_arithmetic_expression =
 type binary_word_expression =
     | Logical_shift_left of binary_word_expression * int_arithmetic_expression
     | Logical_shift_right of binary_word_expression * int_arithmetic_expression
+    | Logical_and of binary_word_expression * binary_word_expression
+    | Logical_or of binary_word_expression * binary_word_expression
+    | Logical_xor of binary_word_expression * binary_word_expression
+    | Logical_not of binary_word_expression
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index
 
@@ -248,6 +252,10 @@ let string_of_int_factor_constructor = function
 let string_of_binary_word_expression_constructor = function
     | Logical_shift_left _ -> "shift_left"
     | Logical_shift_right _ -> "shift_right"
+    | Logical_and _ -> "log_and"
+    | Logical_or _ -> "log_or"
+    | Logical_xor _ -> "log_xor"
+    | Logical_not _ -> "log_not"
     | Binary_word_constant _ -> "binary word constant"
     | Binary_word_variable _ -> "binary word variable"
 
@@ -474,6 +482,20 @@ and customized_string_of_binary_word_expression customized_string variable_names
         ^ customized_string_of_binary_word_expression customized_string variable_names binary_word
         ^ ", "
         ^ customized_string_of_int_arithmetic_expression customized_string variable_names expr
+        ^ ")"
+    | Logical_and (l_binary_word, r_binary_word)
+    | Logical_or (l_binary_word, r_binary_word)
+    | Logical_xor (l_binary_word, r_binary_word) as binary_word_expression ->
+        string_of_binary_word_expression_constructor binary_word_expression
+        ^ "("
+        ^ customized_string_of_binary_word_expression customized_string variable_names l_binary_word
+        ^ ", "
+        ^ customized_string_of_binary_word_expression customized_string variable_names r_binary_word
+        ^ ")"
+    | Logical_not binary_word as binary_word_expression ->
+        string_of_binary_word_expression_constructor binary_word_expression
+        ^ "("
+        ^ customized_string_of_binary_word_expression customized_string variable_names binary_word
         ^ ")"
     | Binary_word_constant value -> BinaryWord.string_of_binaryword value
     | Binary_word_variable variable_index -> variable_names variable_index
@@ -726,6 +748,23 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
         ^ ", \"right\":"
         ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
         ^ "}"
+    | Logical_and (l_binary_word, r_binary_word)
+    | Logical_or (l_binary_word, r_binary_word)
+    | Logical_xor (l_binary_word, r_binary_word) as binary_word_expression ->
+        "{\"op\": \""
+        ^ string_of_binary_word_expression_constructor binary_word_expression
+        ^ "\", \"left\":"
+        ^ customized_string_of_binary_word_expression_for_jani customized_string variable_names l_binary_word
+        ^ ", \"right\":"
+        ^ customized_string_of_binary_word_expression_for_jani customized_string variable_names r_binary_word
+        ^ "}"
+    | Logical_not binary_word as binary_word_expression ->
+	    "{\"op\": \""
+	    ^ string_of_binary_word_expression_constructor binary_word_expression
+	    ^ "\""
+	    ^ jani_separator
+	    ^ "\"exp\": "
+	    ^ (customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word) ^ "}"
     | Binary_word_constant value -> BinaryWord.string_of_binaryword value
     | Binary_word_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
 

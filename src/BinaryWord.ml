@@ -29,7 +29,24 @@ let shift_left (l, b) i =
 let shift_right (l, b) i =
     l, Array.append (Array.make i false) (Array.sub b 0 ((Array.length b) - i))
 
-let bitwise_lnot (l, b) = l, Array.map not b
+let log_not (l, b) = l, Array.map not b
+
+let bitwise op (l1, b1) (l2, b2) =
+    l1, Array.mapi (fun i a -> op (Array.get b1 i) (Array.get b2 i)) b1
+
+let log_and = bitwise (&&)
+let log_or = bitwise (||)
+
+let bool_lxor a b =
+    match a, b with
+    | false, false -> false
+    | true, false -> true
+    | false, true -> true
+    | true, true -> false
+
+let log_xor = bitwise (bool_lxor)
+
+
 
 let hash (_, b) =
     let remap = Array.mapi (fun i x -> i + 1, if x then 1 else 0) b in

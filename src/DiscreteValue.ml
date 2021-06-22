@@ -436,7 +436,6 @@ let _or a b =
 (* Logical not on a discrete value *)
 let not = function
     | Bool_value a -> Bool_value (not (a))
-    | Binary_word_value b -> Binary_word_value (BinaryWord.bitwise_lnot b)
     | _ -> raise (ComputingException "not")
 
 (* Logical equality on two discrete value *)
@@ -484,3 +483,22 @@ let shift_left i = function
 let shift_right i = function
     | Binary_word_value x -> Binary_word_value (BinaryWord.shift_right x i)
     | _ -> raise (ComputingException "shift_right")
+
+let log_and x y =
+    match x, y with
+    | Binary_word_value b1, Binary_word_value b2 -> Binary_word_value (BinaryWord.log_and b1 b2)
+    | _ -> raise (ComputingException "log_and")
+
+let log_or x y =
+    match x, y with
+    | Binary_word_value b1, Binary_word_value b2 -> Binary_word_value (BinaryWord.log_or b1 b2)
+    | _ -> raise (ComputingException "log_or")
+
+let log_xor x y =
+    match x, y with
+    | Binary_word_value b1, Binary_word_value b2 -> Binary_word_value (BinaryWord.log_xor b1 b2)
+    | _ -> raise (ComputingException "log_xor")
+
+let log_not = function
+    | Binary_word_value b -> Binary_word_value (BinaryWord.log_not b)
+    | _ -> raise (ComputingException "log_not")

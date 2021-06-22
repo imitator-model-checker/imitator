@@ -234,3 +234,7 @@ val geq : discrete_value -> discrete_value -> discrete_value
 
 val shift_left : int -> discrete_value -> discrete_value
 val shift_right : int -> discrete_value -> discrete_value
+val log_and : discrete_value -> discrete_value -> discrete_value
+val log_or : discrete_value -> discrete_value -> discrete_value
+val log_xor : discrete_value -> discrete_value -> discrete_value
+val log_not : discrete_value -> discrete_value

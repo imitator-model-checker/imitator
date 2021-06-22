@@ -189,6 +189,15 @@ and get_variables_in_parsed_discrete_factor variables_used_ref = function
     | Parsed_shift_right (factor, expr) ->
         get_variables_in_parsed_discrete_factor variables_used_ref factor;
         get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr;
+    | Parsed_log_and (l_factor, r_factor)
+    | Parsed_log_or (l_factor, r_factor)
+    | Parsed_log_xor (l_factor, r_factor) ->
+        get_variables_in_parsed_discrete_factor variables_used_ref l_factor;
+        get_variables_in_parsed_discrete_factor variables_used_ref r_factor;
+    | Parsed_log_not factor ->
+        get_variables_in_parsed_discrete_factor variables_used_ref factor;
+
+
 	| Parsed_DF_unary_min factor -> get_variables_in_parsed_discrete_factor variables_used_ref factor
 
 
@@ -224,6 +233,14 @@ let rec check_f_in_parsed_update_factor f = function
         evaluate_and
             (check_f_in_parsed_update_factor f factor)
             (check_f_in_parsed_update_arithmetic_expression f expr)
+    | Parsed_log_and (l_factor, r_factor)
+    | Parsed_log_or (l_factor, r_factor)
+    | Parsed_log_xor (l_factor, r_factor) ->
+        evaluate_and
+            (check_f_in_parsed_update_factor f l_factor)
+            (check_f_in_parsed_update_factor f r_factor)
+    | Parsed_log_not factor ->
+        check_f_in_parsed_update_factor f factor
 	| Parsed_DF_unary_min parsed_discrete_factor ->
 		check_f_in_parsed_update_factor f parsed_discrete_factor
 
@@ -303,6 +320,14 @@ let rec check_f_in_parsed_discrete_factor f index_of_variables type_of_variables
         evaluate_and
             (check_f_in_parsed_discrete_factor f index_of_variables type_of_variables constants factor)
             (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr)
+    | Parsed_log_and (l_factor, r_factor)
+    | Parsed_log_or (l_factor, r_factor)
+    | Parsed_log_xor (l_factor, r_factor) ->
+        evaluate_and
+            (check_f_in_parsed_discrete_factor f index_of_variables type_of_variables constants l_factor)
+            (check_f_in_parsed_discrete_factor f index_of_variables type_of_variables constants r_factor)
+    | Parsed_log_not factor ->
+        check_f_in_parsed_discrete_factor f index_of_variables type_of_variables constants factor
 	| Parsed_DF_unary_min parsed_discrete_factor ->
 		check_f_in_parsed_discrete_factor f index_of_variables type_of_variables constants parsed_discrete_factor
 
@@ -506,7 +531,11 @@ and search_variable_of_discrete_arithmetic_expression parsed_model expr =
         | Parsed_rational_of_int_function _
         | Parsed_pow_function _
         | Parsed_shift_left _
-        | Parsed_shift_right _ ->
+        | Parsed_shift_right _
+        | Parsed_log_and _
+        | Parsed_log_or _
+        | Parsed_log_xor _
+        | Parsed_log_not _ ->
             raise (InternalError (
                 "Search of boolean variable in binary word expression, something failed.
                 Maybe an arithmetic expression was resolved as binary expression before"
@@ -591,7 +620,11 @@ and convert_parsed_rational_arithmetic_expression parsed_model (* expr *) =
         | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_rational_factor factor)
         (* Should never happen, because it was checked by type checker before *)
         | Parsed_shift_left _
-        | Parsed_shift_right _ as factor ->
+        | Parsed_shift_right _
+        | Parsed_log_and _
+        | Parsed_log_or _
+        | Parsed_log_xor _
+        | Parsed_log_not _ as factor ->
             raise (InternalError (
                 "There is a call to \""
                 ^ ParsingStructureUtilities.string_of_parsed_factor parsed_model factor
@@ -650,7 +683,11 @@ and convert_parsed_int_arithmetic_expression parsed_model (* expr *) =
         (* Should never happen, because it was checked by type checker before *)
         | Parsed_rational_of_int_function _
         | Parsed_shift_left _
-        | Parsed_shift_right _ as factor ->
+        | Parsed_shift_right _
+        | Parsed_log_and _
+        | Parsed_log_or _
+        | Parsed_log_xor _
+        | Parsed_log_not _ as factor ->
             raise (InternalError (
                 "There is a call to \""
                 ^ ParsingStructureUtilities.string_of_parsed_factor parsed_model factor
@@ -713,7 +750,25 @@ and binary_word_expression_of_parsed_factor useful_parsing_model_information = f
             binary_word_expression_of_parsed_factor useful_parsing_model_information factor,
             convert_parsed_int_arithmetic_expression useful_parsing_model_information expr
         )
-
+    | Parsed_log_and (l_factor, r_factor) ->
+        Logical_and (
+            binary_word_expression_of_parsed_factor useful_parsing_model_information l_factor,
+            binary_word_expression_of_parsed_factor useful_parsing_model_information r_factor
+        )
+    | Parsed_log_or (l_factor, r_factor) ->
+        Logical_or (
+            binary_word_expression_of_parsed_factor useful_parsing_model_information l_factor,
+            binary_word_expression_of_parsed_factor useful_parsing_model_information r_factor
+        )
+    | Parsed_log_xor (l_factor, r_factor) ->
+        Logical_xor (
+            binary_word_expression_of_parsed_factor useful_parsing_model_information l_factor,
+            binary_word_expression_of_parsed_factor useful_parsing_model_information r_factor
+        )
+    | Parsed_log_not factor ->
+        Logical_not (
+            binary_word_expression_of_parsed_factor useful_parsing_model_information factor
+        )
     | Parsed_DF_expression _
     | Parsed_DF_unary_min _
     | Parsed_rational_of_int_function _
@@ -2341,7 +2396,11 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
         | Parsed_rational_of_int_function _
         | Parsed_pow_function _
         | Parsed_shift_left _
-        | Parsed_shift_right _ as factor ->
+        | Parsed_shift_right _
+        | Parsed_log_and _
+        | Parsed_log_or _
+        | Parsed_log_xor _
+        | Parsed_log_not _ as factor ->
             raise (InvalidExpression ("Use of \"" ^ ParsingStructureUtilities.string_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
 
 let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
@@ -2838,6 +2897,14 @@ let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_info
         | Parsed_shift_right (factor, expr) ->
 		    update_coef_array_in_parsed_update_factor mult_factor factor;
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor expr
+        | Parsed_log_and (l_factor, r_factor)
+        | Parsed_log_or (l_factor, r_factor)
+        | Parsed_log_xor (l_factor, r_factor) ->
+            update_coef_array_in_parsed_update_factor mult_factor l_factor;
+            update_coef_array_in_parsed_update_factor mult_factor r_factor
+        | Parsed_log_not factor ->
+            update_coef_array_in_parsed_update_factor mult_factor factor
+
 	in
 
 	(* Call the recursive function updating the coefficients *)
@@ -3787,6 +3854,14 @@ and check_parsed_discrete_factor useful_parsing_model_information = function
         evaluate_and
             (check_parsed_discrete_factor useful_parsing_model_information factor)
             (check_parsed_discrete_arithmetic_expression useful_parsing_model_information expr)
+    | Parsed_log_and (l_factor, r_factor)
+    | Parsed_log_or (l_factor, r_factor)
+    | Parsed_log_xor (l_factor, r_factor) ->
+        evaluate_and
+            (check_parsed_discrete_factor useful_parsing_model_information l_factor)
+            (check_parsed_discrete_factor useful_parsing_model_information r_factor)
+    | Parsed_log_not factor ->
+        check_parsed_discrete_factor useful_parsing_model_information factor
 
 (* Check correct variable names in parsed_boolean_expression *)
 let rec check_parsed_boolean_expression useful_parsing_model_information = function

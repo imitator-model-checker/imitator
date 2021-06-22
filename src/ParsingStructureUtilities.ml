@@ -24,6 +24,10 @@ let string_of_parsed_factor_constructor = function
 	| Parsed_pow_function _ -> "pow"
 	| Parsed_shift_left _ -> "shift_left"
 	| Parsed_shift_right _ -> "shift_right"
+    | Parsed_log_and _ -> "log_and"
+    | Parsed_log_or _ -> "log_or"
+    | Parsed_log_xor _ -> "log_xor"
+    | Parsed_log_not _ -> "log_not"
 
 (* String of a parsed expression *)
 (* Used for error message on type checking *)
@@ -85,6 +89,20 @@ and string_of_parsed_factor parsed_model = function
         ^ string_of_parsed_factor parsed_model factor
         ^ ", "
         ^ string_of_parsed_arithmetic_expression parsed_model expr
+        ^ ")"
+    | Parsed_log_and (l_factor, r_factor)
+    | Parsed_log_or (l_factor, r_factor)
+    | Parsed_log_xor (l_factor, r_factor) as log_op ->
+        string_of_parsed_factor_constructor log_op
+        ^ "("
+        ^ string_of_parsed_factor parsed_model l_factor
+        ^ ", "
+        ^ string_of_parsed_factor parsed_model r_factor
+        ^ ")"
+    | Parsed_log_not factor as log_op ->
+        string_of_parsed_factor_constructor log_op
+        ^ "("
+        ^ string_of_parsed_factor parsed_model factor
         ^ ")"
 
 and string_of_parsed_boolean_expression parsed_model = function
@@ -245,14 +263,35 @@ let try_reduce_parsed_global_expression constants expr =
             let reduced_expr = try_reduce_parsed_arithmetic_expression expr in
 
             DiscreteValue.shift_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
+
         | Parsed_shift_right (factor, expr) ->
 
             let reduced_factor = try_reduce_parsed_factor factor in
             let reduced_expr = try_reduce_parsed_arithmetic_expression expr in
-
             DiscreteValue.shift_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
 
+        | Parsed_log_and (l_factor, r_factor) ->
 
+            let reduced_l_factor = try_reduce_parsed_factor l_factor in
+            let reduced_r_factor = try_reduce_parsed_factor r_factor in
+            DiscreteValue.log_and reduced_l_factor reduced_r_factor
+
+        | Parsed_log_or (l_factor, r_factor) ->
+
+            let reduced_l_factor = try_reduce_parsed_factor l_factor in
+            let reduced_r_factor = try_reduce_parsed_factor r_factor in
+            DiscreteValue.log_or reduced_l_factor reduced_r_factor
+
+        | Parsed_log_xor (l_factor, r_factor) ->
+
+            let reduced_l_factor = try_reduce_parsed_factor l_factor in
+            let reduced_r_factor = try_reduce_parsed_factor r_factor in
+            DiscreteValue.log_xor reduced_l_factor reduced_r_factor
+
+        | Parsed_log_not factor ->
+
+            let reduced_factor = try_reduce_parsed_factor factor in
+            DiscreteValue.log_not reduced_factor
 
     and try_reduce_parsed_boolean_expression = function
 	    | Parsed_True -> DiscreteValue.bool_value_true

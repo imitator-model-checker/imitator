@@ -91,6 +91,10 @@ type discrete_arithmetic_expression =
 type binary_word_expression =
     | Logical_shift_left of binary_word_expression * int_arithmetic_expression
     | Logical_shift_right of binary_word_expression * int_arithmetic_expression
+    | Logical_and of binary_word_expression * binary_word_expression
+    | Logical_or of binary_word_expression * binary_word_expression
+    | Logical_xor of binary_word_expression * binary_word_expression
+    | Logical_not of binary_word_expression
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index
 

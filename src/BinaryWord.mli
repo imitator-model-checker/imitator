@@ -11,7 +11,10 @@ val to_string : t -> string
 
 val shift_left : t -> int -> t
 val shift_right : t -> int -> t
-val bitwise_lnot : t -> t
+val log_not : t -> t
+val log_and : t -> t -> t
+val log_or : t -> t -> t
+val log_xor : t -> t -> t
 
 val l : t -> t -> bool
 val leq : t -> t -> bool

@@ -179,6 +179,25 @@ and convert_literal_types_of_parsed_discrete_factor parsed_model target_type = f
             convert_literal_types_of_parsed_discrete_factor parsed_model target_type factor,
             convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr
         )
+    | Parsed_log_and (l_factor, r_factor) ->
+        Parsed_log_and (
+            convert_literal_types_of_parsed_discrete_factor parsed_model target_type l_factor,
+            convert_literal_types_of_parsed_discrete_factor parsed_model target_type r_factor
+        )
+    | Parsed_log_or (l_factor, r_factor) ->
+        Parsed_log_or (
+            convert_literal_types_of_parsed_discrete_factor parsed_model target_type l_factor,
+            convert_literal_types_of_parsed_discrete_factor parsed_model target_type r_factor
+        )
+    | Parsed_log_xor (l_factor, r_factor) ->
+        Parsed_log_xor (
+            convert_literal_types_of_parsed_discrete_factor parsed_model target_type l_factor,
+            convert_literal_types_of_parsed_discrete_factor parsed_model target_type r_factor
+        )
+    | Parsed_log_not factor ->
+        Parsed_log_not
+            (convert_literal_types_of_parsed_discrete_factor parsed_model target_type factor)
+
     | Parsed_DF_unary_min factor ->
         Parsed_DF_unary_min (convert_literal_types_of_parsed_discrete_factor parsed_model target_type factor)
 
@@ -708,10 +727,7 @@ and infer_parsed_discrete_factor parsed_model = function
         let infer_factor, l_type = infer_parsed_discrete_factor parsed_model factor in
         let infer_expr, r_type = infer_parsed_discrete_arithmetic_expression parsed_model expr in
 
-
         (* factor should be binary word *)
-        (* expr should be int *)
-
         if not (DiscreteValue.is_discrete_type_binary_word_type l_type) then (
             raise (TypeError (
                 "Left member of expression \""
@@ -720,6 +736,7 @@ and infer_parsed_discrete_factor parsed_model = function
             ))
         );
 
+        (* expr should be int *)
         if not (DiscreteValue.is_discrete_type_unknown_number_type r_type || DiscreteValue.is_discrete_type_int_type r_type) then (
             raise (TypeError (
                 "Right member of expression \""
@@ -759,6 +776,68 @@ and infer_parsed_discrete_factor parsed_model = function
             Parsed_shift_right (infer_factor, converted_expr), l_type
         | _ ->
             raise (InternalError "Never happen !")
+        )
+
+    | Parsed_log_and (l_factor, r_factor)
+    | Parsed_log_or (l_factor, r_factor)
+    | Parsed_log_xor (l_factor, r_factor) as log_op ->
+
+        let infer_l_factor, l_type = infer_parsed_discrete_factor parsed_model l_factor in
+        let infer_r_factor, r_type = infer_parsed_discrete_factor parsed_model r_factor in
+
+        (* factors should be binary words of the same length *)
+        if not (DiscreteValue.is_discrete_type_binary_word_type l_type && DiscreteValue.is_discrete_type_binary_word_type r_type) then (
+            raise (TypeError (
+                "Left or right member of expression \""
+                ^ ParsingStructureUtilities.string_of_parsed_factor parsed_model log_op
+                ^ "\" is not a binary word: "
+                ^ DiscreteValue.string_of_var_type_discrete l_type
+                ^ ", "
+                ^ DiscreteValue.string_of_var_type_discrete r_type
+            ))
+        );
+
+        if l_type <> r_type then (
+            raise (TypeError (
+                "Expression \""
+                ^ ParsingStructureUtilities.string_of_parsed_factor parsed_model log_op
+                ^ "\" mix different types: "
+                ^ DiscreteValue.string_of_var_type_discrete l_type
+                ^ ", "
+                ^ DiscreteValue.string_of_var_type_discrete r_type
+            ))
+        );
+
+        print_message Verbose_high (
+            "\tInfer expression \""
+            ^ (string_of_parsed_factor parsed_model log_op)
+            ^ "\" as "
+            ^ (DiscreteValue.string_of_var_type_discrete l_type)
+        );
+
+        (match log_op with
+        | Parsed_log_and _ ->
+            Parsed_log_and (infer_l_factor, infer_r_factor), l_type
+        | Parsed_log_or _ ->
+            Parsed_log_or (infer_l_factor, infer_r_factor), l_type
+        | Parsed_log_xor _ ->
+            Parsed_log_xor (infer_l_factor, infer_r_factor), l_type
+        | _ ->
+            raise (InternalError "Never happen !")
+        )
+    | Parsed_log_not factor as log_op ->
+        let infer_factor, discrete_type = infer_parsed_discrete_factor parsed_model factor in
+
+        (* factors should be binary words of the same length *)
+        if not (DiscreteValue.is_discrete_type_binary_word_type discrete_type) then (
+            raise (TypeError (
+                "Member of expression \""
+                ^ ParsingStructureUtilities.string_of_parsed_factor parsed_model log_op
+                ^ "\" is not a binary word: "
+                ^ DiscreteValue.string_of_var_type_discrete discrete_type
+            ))
+        ) else (
+            Parsed_log_not infer_factor, discrete_type
         )
     | Parsed_DF_unary_min factor ->
         let infer_factor, factor_type = infer_parsed_discrete_factor parsed_model factor in
@@ -824,9 +903,15 @@ and discrete_type_of_parsed_discrete_factor parsed_model = function
         (* Pow function result type depends of the left member type *)
         discrete_type_of_parsed_discrete_arithmetic_expression parsed_model expr
     | Parsed_shift_left (factor, _)
-    | Parsed_shift_right (factor, _) ->
+    | Parsed_shift_right (factor, _)
+    | Parsed_log_and (factor, _)
+    | Parsed_log_or (factor, _)
+    | Parsed_log_xor (factor, _)
+    | Parsed_log_not factor ->
         (* Shift result type is a binary word of length depending on the left member length *)
+        (* Logical and, or, xor, not depend on one member length (arbitrary, because already type checked !) *)
         discrete_type_of_parsed_discrete_factor parsed_model factor
+
 
 (** Checking functions **)
 
