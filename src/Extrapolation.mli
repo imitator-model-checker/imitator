@@ -26,7 +26,19 @@ val px_m_extrapolation : LinearConstraint.px_linear_constraint -> LinearConstrai
 
 
 (*------------------------------------------------------------*)
+(* Apply Mglobal extrapolation *)
+(*------------------------------------------------------------*)
+val px_mglobal_extrapolation : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint list
+
+
+(*------------------------------------------------------------*)
 (* Apply LU extrapolation *)
 (*------------------------------------------------------------*)
 val px_lu_extrapolation : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint list
+
+
+(*------------------------------------------------------------*)
+(* Apply LU extrapolation *)
+(*------------------------------------------------------------*)
+val px_luglobal_extrapolation : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint list
 

@@ -3089,9 +3089,9 @@ class virtual algoStateBased =
 		let constraints = 
 		match extrapolation with
 		| M -> Extrapolation.px_m_extrapolation the_constraint
-		| Mglobal -> raise (InternalError "Not implemented")
+		| Mglobal -> Extrapolation.px_mglobal_extrapolation the_constraint
 		| LU -> Extrapolation.px_lu_extrapolation the_constraint
-		| LUglobal -> raise (InternalError "Not implemented")
+		| LUglobal -> Extrapolation.px_luglobal_extrapolation the_constraint
 		| _ -> raise (InternalError "Option not recognized")
 		in
 
