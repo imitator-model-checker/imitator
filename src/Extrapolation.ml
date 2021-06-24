@@ -100,13 +100,19 @@ let min_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 let max_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	if lesser_inf a b then b else a
 
+let eq_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	match a, b with
+	| Infinity, Infinity -> true
+	| Minus_infinity, Minus_infinity -> true
+	| Finite a, Finite b when (a = b) -> true
+	| _ -> false
 
 (************************************************************
  *
  *Computation of the maximal constants for each clocks of a PTA with non-diagonal constraints (only one clock per constraint)
  *
  *Information is encoded as follows :
- *pta_type is a string that can either be "L", "U", "L/U-U_bounded", "L/U-L_bounded", "other" and indicates if the PTA is in one of those sub-classes.
+ *pta_type is a string that can either be "L", "U", "LU_Ubounded", "LU_Lbounded", "other" and indicates if the PTA is in one of those sub-classes.
  *bounds is an array of couple of float such that the couple (f1,f2) at index i indicates that the i-th parameter takes f1 as its lower bound and f2 as its upper bound.
  *guards is a list of all linear constraints present in guards and invariants, each of the form (clock, operator, factors), where a clock is identified by an integer, operator is a string that can either be "<", "<=", ">", ">=", "=", and factors denotes the factor of each parameter in the linear constraint and takes the form of an array of float of size k+1 with k the number of parameter (the float at index k+1 is in fact the constant part of the constraint).
  *h is an integer denoting the number of clocks.
@@ -138,7 +144,28 @@ let rec power base exponent =
 	if exponent = 0 then 1
 	else power base (exponent-1) * base
 	
-	
+(* Returns true if elem is not in set *)	
+(* Input = elem : 'a , set : a' list*)
+(* Output = bool*)
+
+let not_in elem set =
+	let result = ref(true) in
+	begin
+		List.iter (fun e -> if elem = e then result := false) set;
+		!result
+	end
+
+(* Returns true if l1 is included in l2*)	
+(* Input = l1: 'a list , l2 : a' list*)
+(* Output = bool*)
+
+let includes l1 l2 =
+	let result = ref(true) in
+	begin
+		List.iter (fun e -> if not_in e l2 then result := false) l1;
+		!result
+	end
+		
 (* Returns the maximum value in an array of numconst_or_infinity (intersected with 0) *)	
 (* Input = a : float array *)
 (* Output = float *)
@@ -166,7 +193,7 @@ let hide_bounded (guards : (int * string * numconst_or_infinity array) list) (bo
 		let k = (Array.length factors) - 1 in
 		for i = 0 to k-1 do
 			let (min,max) = bounds.(i) in
-			if max != Infinity && min != Minus_infinity then begin
+			if (not (eq_inf max Infinity)) && (not (eq_inf min Minus_infinity)) then begin
 				if greater_inf factors.(i) (Finite (NumConst.numconst_of_int 0)) then begin
 					factors.(k) <- add_inf factors.(k) (mul_inf factors.(i) max);
 					factors.(i) <- (Finite (NumConst.numconst_of_int 0));
@@ -186,12 +213,11 @@ let hide_bounded (guards : (int * string * numconst_or_infinity array) list) (bo
 (* Output = bool array *)
 
 let compute_parametric_clocks_array guards h =
-	let parametric_clocks_array = Array.make h true in
+	let parametric_clocks_array = Array.make h false in
 	let f (clock, operator, factors) =
 		let k = (Array.length factors) - 1 in
-		if parametric_clocks_array.(clock) then
 		for i = 0 to k-1 do
-			if factors.(i) != Finite (NumConst.numconst_of_int 0) then parametric_clocks_array.(clock) <- false;
+			if not (eq_inf factors.(i) (Finite (NumConst.numconst_of_int 0))) then parametric_clocks_array.(clock) <- true;
 		done
 	in
 	List.iter f guards;
@@ -297,8 +323,8 @@ let compute_n pta_type guards parametric_clocks_number h =
 
 let compute_maximal_constants (pta_type : string) (bounds : (numconst_or_infinity * numconst_or_infinity) array) (guards : (int * string * numconst_or_infinity array) list) (h : int) =
 	let hide = 
-		if pta_type = "L/U-U_bounded" then (hide_bounded guards bounds , "L" )
-		else if pta_type = "L/U-L_bounded" then (hide_bounded guards bounds , "U" )
+		if pta_type = "LU_Ubounded" then (hide_bounded guards bounds , "L" )
+		else if pta_type = "LU_Lbounded" then (hide_bounded guards bounds , "U" )
 		else (guards, pta_type)
 	in
 	let set =
@@ -330,7 +356,9 @@ let compute_maximal_constants (pta_type : string) (bounds : (numconst_or_infinit
 		
 	) guards;
 	(max_const_L,max_const_U)
-		
+	
+
+	
 (************************************************************)
 (* Global variables *)
 (************************************************************)
@@ -349,20 +377,8 @@ let clocks = ref []
 (*------------------------------------------------------------*)
 (* Functions for preparing data structures for extrapolation *)
 (*------------------------------------------------------------*)
-let get_pta_type pta_type =
-	(* Get the L/U nature *)
-	match pta_type with
-	(* General PTA *)
-	| PTA_notLU -> "other"
-	(* L/U-PTA with parameters partitioned into L- and U-parameters *)
-	(**TODO**)
-	| PTA_LU (l_parameters, u_parameters) -> "other"
-	(* L-PTA *)
-	| PTA_L -> "L"
-	(* U-PTA *)
-	| PTA_U -> "U"
 	
-let p_bounds_to_float p_bounds =
+let get_p_bounds p_bounds =
 	let min = 
 	(* Check if unbounded below *)
 	match p_bounds.lower with
@@ -372,11 +388,36 @@ let p_bounds_to_float p_bounds =
 	in
 	let max = 
 	(* Check if unbounded above *)
-	match p_bounds.lower with
+	match p_bounds.upper with
 	| Unbounded -> Infinity
 	(* A finite bound is a pair NumConst.t and a Boolean true iff it is closed (i.e., closed inequality, and not strict) *)
 	| Bounded (bound, is_closed) -> Finite bound
 	in (min,max)
+	
+let get_bounded p_bounds =
+	let bounded_parameters = ref [] in
+	for i=0 to (Array.length p_bounds)-1 do 
+		let (min,max) = p_bounds.(i) in
+		if (greater_inf min Minus_infinity) && (lesser_inf max Infinity) then bounded_parameters := List.append !bounded_parameters [i];
+	done;
+	!bounded_parameters
+
+
+let get_pta_type pta_type bounded_parameters =
+	(* Get the L/U nature *)
+	match pta_type with
+	(* General PTA *)
+	| PTA_notLU -> "other"
+	(* L/U-PTA with parameters partitioned into L- and U-parameters *)
+	| PTA_LU (l_parameters, u_parameters) -> 
+		if includes l_parameters bounded_parameters then "LU_Lbounded"
+		else if includes u_parameters bounded_parameters then "LU_Ubounded"
+		else "other"
+			
+	(* L-PTA *)
+	| PTA_L -> "L"
+	(* U-PTA *)
+	| PTA_U -> "U"
 	
 let set_maximums l u nb_clocks : unit = 
 	let g_c = l in
@@ -393,36 +434,34 @@ let set_maximums l u nb_clocks : unit =
 let prepare_extrapolation () : unit =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
-	
-(*	let all_parameters_bounded = model.bounded_parameters in*)
-	
-(*	let parameters = model.parameters in*)
 
-	let pta_type = get_pta_type model.lu_status in
-	
-(*	let p_bounds = List.iter (fun p -> (p_bounds_to_float model.parameters_bounds p)) parameters in*)
-	let p_bounds = [|((Finite (NumConst.numconst_of_int 0)),Infinity)|] in
+	let p_bounds = Array.make model.nb_parameters (Minus_infinity,Infinity) in
 	
 	let guards = [(0,"=",[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 1))|]);(0,"<=",[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 1))|]);(0,"=",[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 0))|]);(1,">=",[|(Finite (NumConst.numconst_of_int 1));(Finite (NumConst.numconst_of_int 0))|])] in
 	
 	let nb_clocks = model.nb_clocks in
 
-	let (l,u) = compute_maximal_constants pta_type p_bounds guards nb_clocks in
 	begin
-		(*lower_constants := l;
-		upper_constants := u;*)
+		List.iter (fun (p) -> p_bounds.(p) <- get_p_bounds (model.parameters_bounds p) ) model.parameters;
 		
-		lower_constants := [|Finite(NumConst.numconst_of_int 1);Finite(NumConst.numconst_of_int 67)|];
-		upper_constants := [|Finite(NumConst.numconst_of_int 1);Minus_infinity|];
+		let pta_type = get_pta_type model.lu_status (get_bounded p_bounds) in
 		
-(**	Test	
-if get_pta_type model.lu_status = pta_type then raise (InternalError "gg") else raise (InternalError "noob");
-**)
+		let (l,u) = compute_maximal_constants pta_type p_bounds guards nb_clocks in
+		
+		begin
+			lower_constants := l;
+			upper_constants := u;
+			
+(**Test			
+			lower_constants := [|Finite(NumConst.numconst_of_int 1);Finite(NumConst.numconst_of_int 67)|];
+			upper_constants := [|Finite(NumConst.numconst_of_int 1);Minus_infinity|];		
+if l = !lower_constants && u = !upper_constants then raise (InternalError "good :)") else raise (InternalError "bad :(");**)
 	
-		set_maximums !lower_constants !upper_constants nb_clocks;(* TODO : l u *)
+			set_maximums l u nb_clocks;
 	
-		nb_parameters := model.nb_parameters;
-		clocks := model.clocks;
+			nb_parameters := model.nb_parameters;
+			clocks := model.clocks;
+		end
 	end
 
 
