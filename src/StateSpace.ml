@@ -229,13 +229,7 @@ let counter_nb_states = create_hybrid_counter_and_register "StateSpace.nb_states
 let counter_nb_transitions = create_hybrid_counter_and_register "StateSpace.nb_transitions" States_counter Verbose_experiments
 let counter_empty_states_for_comparison = create_hybrid_counter_and_register "StateSpace.empty_states_for_comparison" States_counter Verbose_experiments
 
-(*
-	(* Statistics *)
-	counter_xx#increment;
-	counter_xx#start;
-	(* Statistics *)
-	counter_xx#stop;
-*)
+let data_recorder_merging = create_data_recorder_and_register "StateSpace.merging_sequences" Algorithm_counter Verbose_experiments
 
 
 (************************************************************)
@@ -1563,12 +1557,18 @@ let merge state_space queue =
 
 (* Check if two states can be merged *)
 (*** NOTE: with side-effects! ***)
-let are_mergeable s s' =
+let are_mergeable s s' : bool =
 	(* Statistics *)
 	nb_merging_attempts#increment;
 
 	(* Call dedicated function *)
-	LinearConstraint.px_hull_assign_if_exact s s'
+	let merged = LinearConstraint.px_hull_assign_if_exact s s' in
+
+	(* Statistics *)
+	data_recorder_merging#add_data (if merged then "Y" else "N");
+
+	(* Return result *)
+	merged
 in
 
 (* Get states sharing the same location and discrete values from hash_table, excluding s *)
