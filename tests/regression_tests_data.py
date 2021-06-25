@@ -9234,7 +9234,7 @@ OR
 END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation <good|bad> possible under-approximation
+Constraint soundness          : possible under-approximation <good|bad> possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
 Constraint nature             : good/bad
 ------------------------------------------------------------
@@ -9289,7 +9289,7 @@ BEGIN CONSTRAINT
 END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation <good|bad> possible under-approximation
+Constraint soundness          : possible under-approximation <good|bad> possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
 Constraint nature             : good/bad
 ------------------------------------------------------------
@@ -9313,7 +9313,7 @@ BEGIN CONSTRAINT
 END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation <good|bad> possible under-approximation
+Constraint soundness          : possible under-approximation <good|bad> possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
 Constraint nature             : good/bad
 ------------------------------------------------------------
