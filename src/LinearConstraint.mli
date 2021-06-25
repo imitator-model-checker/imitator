@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Common definitions for linear terms and constraints (interface to PPL)
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/06/11
+ * Last modified     : 2021/06/25
  *
  ************************************************************)
 
@@ -287,6 +288,13 @@ val pxd_constraint_of_nonnegative_variables : variable list -> pxd_linear_constr
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(* Get the list of dimensions of a constraint *)
+(*** WARNING: to enhance the speed, we do NOT use the PPL function but directly the ad-hoc dimensions encoding! ***)
+val p_get_dimensions_list : p_linear_constraint -> variable list
+val px_get_dimensions_list : px_linear_constraint -> variable list
+val pxd_get_dimensions_list : pxd_linear_constraint -> variable list
+
 
 (** Get the number of inequalities of a constraint *)
 val p_nb_inequalities : p_linear_constraint -> int
