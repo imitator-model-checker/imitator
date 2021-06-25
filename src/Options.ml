@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/02/24
+ * Last modified     : 2021/06/25
  *
  ************************************************************)
 
@@ -957,6 +957,16 @@ class imitator_options =
 				);
 			);
 
+			(*------------------------------------------------------------*)
+			(* Disable property if syntax check! *)
+			(*------------------------------------------------------------*)
+			if imitator_mode = Syntax_check && property_file_name <> None then(
+				(* Warn *)
+				print_warning "Syntax check mode: property is ignored!";
+				(* Delete property file *)
+				property_file_name <- None;
+			);
+
 
 
 
@@ -979,7 +989,10 @@ class imitator_options =
 			print_message Verbose_low ("Command: `" ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv) ^ "`" );
 
 
+			
+			(*------------------------------------------------------------*)
 			(* Print mode or property *)
+			(*------------------------------------------------------------*)
 			begin
 			match imitator_mode with
 			| Algorithm ->
@@ -1057,6 +1070,7 @@ class imitator_options =
 				| None -> false
 				| Some property -> AlgorithmOptions.is_cartography property
 			in
+			
 
 			(*------------------------------------------------------------*)
 			(* Check if #witness is supported for this algorithm *)
