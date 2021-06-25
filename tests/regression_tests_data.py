@@ -151,6 +151,27 @@ L/U subclass                            : L-PTA
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test since               : 2021/06/25
+		# Last modified            : 2021/06/25
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test model syntax check even when a (wrong) property is passed',
+		'input_files': ['testL.imi', 'nonexistingfile.imiprop'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'testL.res' , 'content' : """
+L/U subclass                            : L-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2019/07/09
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the L/U-nature (U-PTA)',
