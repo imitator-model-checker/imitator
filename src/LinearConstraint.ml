@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Common definitions for linear terms and constraints (interface to PPL)
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/06/11
+ * Last modified     : 2021/06/25
  *
  ************************************************************)
 
@@ -243,27 +244,29 @@ type coef = NumConst.t
 (* the linear_term is a generalization of the corresponding  *)
 (* PPL data structure Ppl.linear_expression, using rationals *)
 (* instead of integers. *)
-(*** WARNING: probably useless construction (by Ulrich Kuehne, around 2010) ***)
-type linear_term =
-	| Var of variable
-	| Coef of coef
-	| Pl of linear_term * linear_term
-	| Mi of linear_term * linear_term
-	| Ti of coef * linear_term
+(*** Internal construction by Ulrich Kuehne (around 2010) ***)
+type internal_linear_term =
+	| IR_Var of variable
+	| IR_Coef of coef
+	| IR_Plus of internal_linear_term * internal_linear_term
+	| IR_Minus of internal_linear_term * internal_linear_term
+	| IR_Times of coef * internal_linear_term
 
-type p_linear_term = linear_term
-type px_linear_term = linear_term
-type pxd_linear_term = linear_term
+type p_linear_term = internal_linear_term
+type px_linear_term = internal_linear_term
+type pxd_linear_term = internal_linear_term
 
 
-(*** WARNING: probably useless construction (by Ulrich) ***)
-(*** NOTE (2021): not that useless (encapsulation of PPL concepts) ***)
+(*** Internal construction by Ulrich Kuehne (around 2010) (encapsulation of PPL concepts) ***)
 type op =
 	| Op_g
 	| Op_ge
 	| Op_eq
 	| Op_le
 	| Op_l
+(* Shortcut *)
+(*** TODO: rename one of both?! ***)
+type internal_op = op
 
 (** Reverse an operator: <= becomes >= and conversely. < becomes > and conversely. = remains =. *)
 let reverse_op = function 
@@ -274,7 +277,7 @@ let reverse_op = function
 	| Op_l		-> Op_g
 
 
-(* Convert an op to string *)
+(* Convert an internal_op to string *)
 let string_of_op = function
 	| Op_g  -> ">"
 	| Op_ge -> ">="
@@ -665,10 +668,10 @@ let make_linear_term members coef =
 	List.fold_left (fun term head ->
 		let (c, v) = head in 
 			if c = NumConst.one then
-				Pl (Var v, term)
+				IR_Plus (IR_Var v, term)
 			else
-				Pl ((Ti (c, Var v), term))
-	)	(Coef coef) members
+				IR_Plus ((IR_Times (c, IR_Var v), term))
+	)	(IR_Coef coef) members
 
 
 let make_p_linear_term = make_linear_term
@@ -683,14 +686,14 @@ let make_pxd_linear_term = make_linear_term
 
 (** Add two linear terms *)
 let add_linear_terms lt1 lt2 =
-	Pl (lt1, lt2)
+	IR_Plus (lt1, lt2)
 
 let add_pxd_linear_terms = add_linear_terms
 
 
 (** Substract two linear terms *)
 let sub_linear_terms lt1 lt2 =
-	Mi (lt1, lt2)
+	IR_Minus (lt1, lt2)
 
 
 let sub_p_linear_terms = sub_linear_terms
@@ -800,7 +803,7 @@ let rec get_coefficient_in_linear_term_rec minus_flag = function
 			| _ -> raise (InternalError ("In function `get_coefficient_in_linear_term_rec`, pattern `Times` was expected to be only used for coeff * variable."))
 		)
 
-let get_coefficient_in_linear_term linear_term =
+let get_coefficient_in_linear_term (linear_term : ppl_linear_term) =
 	try(
 		get_coefficient_in_linear_term_rec false linear_term;
 		(* If exception not raised: return 0 *)
@@ -809,34 +812,32 @@ let get_coefficient_in_linear_term linear_term =
 
 
 
-
-
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Renaming linear terms} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* `rename_linear_term variable_pairs linear_term` renames variables within linear_term as follows: v is replaced with v' for any pair `(v,v')` in variable_pairs *)
-let rename_linear_term (variable_pairs : (variable * variable) list) (linear_term : linear_term) : linear_term =
+let rename_linear_term (variable_pairs : (variable * variable) list) (linear_term : internal_linear_term) : internal_linear_term =
 	(* Recursive subfunction *)
 	let rec rename_linear_term_rec linear_term = match linear_term with
 		(* Variable: Try to rename *)
-		| Var v -> let replaced_v = try(
+		| IR_Var v -> let replaced_v = try(
 				(* Try to find the correspondence of v within the list of pairs *)
 				List.assoc v variable_pairs
 			)with
 				(* Not found: no replacement => keep v *)
 				Not_found -> v
-			in Var replaced_v
+			in IR_Var replaced_v
 		
-		(* Coef: unchanged *)
-		| Coef c -> Coef c
+		(* IR_Coef: unchanged *)
+		| IR_Coef c -> IR_Coef c
 		
 		(* Recursive calls *)
-		| Pl (linear_term1, linear_term2) ->
-			Pl (rename_linear_term_rec linear_term1, rename_linear_term_rec linear_term2)
-		| Mi (linear_term1, linear_term2) ->
-			Mi (rename_linear_term_rec linear_term1, rename_linear_term_rec linear_term2)
-		| Ti (coef, linear_term) -> Ti (coef, rename_linear_term_rec linear_term)
+		| IR_Plus (linear_term1, linear_term2) ->
+			IR_Plus (rename_linear_term_rec linear_term1, rename_linear_term_rec linear_term2)
+		| IR_Minus (linear_term1, linear_term2) ->
+			IR_Minus (rename_linear_term_rec linear_term1, rename_linear_term_rec linear_term2)
+		| IR_Times (coef, linear_term) -> IR_Times (coef, rename_linear_term_rec linear_term)
 	in
 	(* Call it with the initial linear_term *)
 	rename_linear_term_rec linear_term
@@ -848,31 +849,50 @@ let rename_pxd_linear_term = rename_linear_term
 (** {3 Evaluation functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Evaluate a linear term with a function assigning a value to each variable. *)
-let rec evaluate_linear_term valuation_function linear_term =
+(*------------------------------------------------------------*)
+(** Evaluate an internal_linear_term with a function assigning a value to each variable. *)
+(*------------------------------------------------------------*)
+let evaluate_linear_term_gen (keep_coeff : bool) valuation_function (linear_term : internal_linear_term) =
+	let rec evaluate_linear_term_gen_rec (linear_term : internal_linear_term) =
 	match linear_term with
-		| Coef c -> c
-		| Var v -> (
+		(* Only keep constant coefficient if asked *)
+		| IR_Coef c -> if keep_coeff then c else NumConst.zero
+		| IR_Var v -> (
 			  try valuation_function v 
 			  with _ -> raise(InternalError ("No value was found for variable " ^ (string_of_int v) ^ ", while trying to evaluate a linear term; this variable was probably not defined.")))
-		| Pl (lterm, rterm) -> ( 
-				let lval = evaluate_linear_term valuation_function rterm in
-				let rval = evaluate_linear_term valuation_function lterm in
+		| IR_Plus (lterm, rterm) -> ( 
+				let lval = evaluate_linear_term_gen_rec rterm in
+				let rval = evaluate_linear_term_gen_rec lterm in
 				NumConst.add lval rval)
-		| Mi (lterm, rterm) -> (
-				let lval = evaluate_linear_term valuation_function rterm in
-				let rval = evaluate_linear_term valuation_function lterm in
+		| IR_Minus (lterm, rterm) -> (
+				let lval = evaluate_linear_term_gen_rec rterm in
+				let rval = evaluate_linear_term_gen_rec lterm in
 				NumConst.sub lval rval)
-		| Ti (fac, rterm) -> ( 
-				let rval = evaluate_linear_term valuation_function rterm in
+		| IR_Times (fac, rterm) -> ( 
+				let rval = evaluate_linear_term_gen_rec rterm in
 				NumConst.mul fac rval)
+	in evaluate_linear_term_gen_rec linear_term
+
+(* Call dedicated function, and keep the constant coefficient *)
+let evaluate_linear_term = evaluate_linear_term_gen true
 
 let evaluate_p_linear_term = evaluate_linear_term
 let evaluate_pxd_linear_term = evaluate_linear_term
 
 
+(*------------------------------------------------------------*)
+(* Get the coefficient of one particular variable in an internal_linear_term *)
+(*------------------------------------------------------------*)
+let get_variable_coefficient_in_internal_linear_term (variable : variable) (linear_term : internal_linear_term) =
+	(* Call dedicated function, and do NOT keep the constant coefficient *)
+	evaluate_linear_term_gen false (fun variable_index -> if variable_index = variable then NumConst.one else NumConst.zero) linear_term
+	
+let p_get_variable_coefficient_in_internal_linear_term = get_variable_coefficient_in_internal_linear_term
 
+
+(*------------------------------------------------------------*)
 (** Evaluate a linear term (PPL) with a function assigning a value to each variable. *)
+(*------------------------------------------------------------*)
 let rec evaluate_linear_term_ppl valuation_function linear_term =
 	match linear_term with
 		| Coefficient z -> NumConst.numconst_of_mpz z
@@ -904,34 +924,34 @@ let string_of_constant = NumConst.string_of_numconst
 let jani_string_of_coef = NumConst.jani_string_of_numconst
 
 (** Convert a linear term into a string *)	
-let rec string_of_linear_term (names : (variable -> string)) (linear_term : linear_term) =
+let rec string_of_linear_term (names : (variable -> string)) (linear_term : internal_linear_term) =
 	match linear_term with
-		| Coef c -> string_of_coef c
+		| IR_Coef c -> string_of_coef c
 		
-		| Var v -> names v
+		| IR_Var v -> names v
 		
 		(* Some simplification *)
-		| Pl (lterm, Coef z)
-		| Mi (lterm, Coef z)
+		| IR_Plus (lterm, IR_Coef z)
+		| IR_Minus (lterm, IR_Coef z)
 			when NumConst.equal z (NumConst.zero) ->
 			  string_of_linear_term names lterm
 
-		| Pl (lterm, rterm) -> (
+		| IR_Plus (lterm, rterm) -> (
 			  let lstr = string_of_linear_term names lterm in
 				let rstr = string_of_linear_term names rterm in
 				lstr ^ " + " ^ rstr )
 		
-		| Mi (lterm, rterm) -> (
+		| IR_Minus (lterm, rterm) -> (
 			  let lstr = string_of_linear_term names lterm in
 				let rstr = string_of_linear_term names rterm in
 				lstr ^ " - (" ^ rstr ^ ")" )
 		
-		| Ti (fac, rterm) -> (
+		| IR_Times (fac, rterm) -> (
 				let fstr = string_of_coef fac in
 				let tstr = string_of_linear_term names rterm in
 				match rterm with
-					| Coef _ -> fstr ^ "*" ^ tstr
-					| Var  _ -> fstr ^ "*" ^ tstr
+					| IR_Coef _ -> fstr ^ "*" ^ tstr
+					| IR_Var  _ -> fstr ^ "*" ^ tstr
 					| _ -> fstr ^ " * (" ^ tstr ^ ")" )
 
 let string_of_p_linear_term = string_of_linear_term 
@@ -1014,28 +1034,28 @@ let rec jani_string_of_ppl_linear_term (names : (variable -> string)) (linear_te
 				let fstr = jani_string_of_coef (NumConst.numconst_of_string (Gmp.Z.string_from z)) in
 				"{\"op\": \"*\", \"left\":" ^ fstr ^ ", \"right\":" ^ tstr ^ "}")
 
-let pxd_linear_term_is_unary (linear_term : linear_term) =
+let pxd_linear_term_is_unary (linear_term : internal_linear_term) =
 	match linear_term with
-		| Coef z -> true
-		| Var v -> true
-		| Pl (t,u) -> false
-		| Mi (t,u) -> false
-		| Ti (t,u) -> false
+		| IR_Coef z -> true
+		| IR_Var v -> true
+		| IR_Plus (t,u) -> false
+		| IR_Minus (t,u) -> false
+		| IR_Times (t,u) -> false
 
-let op_term_of_pxd_linear_term (linear_term : linear_term) =
+let op_term_of_pxd_linear_term (linear_term : internal_linear_term) =
 	match linear_term with
-		| Coef z -> "" 
-		| Var v ->  "" 
-		| Pl (t,u) -> "+"
-		| Mi (t,u) -> "-"
-		| Ti (t,u) -> "*"
+		| IR_Coef z -> "" 
+		| IR_Var v ->  "" 
+		| IR_Plus (t,u) -> "+"
+		| IR_Minus (t,u) -> "-"
+		| IR_Times (t,u) -> "*"
 
-let rec left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : linear_term) = 
+let rec left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : internal_linear_term) = 
 	match linear_term with
 	(*  * linear_term to hack return type *)
-		| Coef z -> "Coefficient", jani_string_of_coef z, linear_term
+		| IR_Coef z -> "Coefficient", jani_string_of_coef z, linear_term
 		
-		| Var v -> "Variable", (names v), linear_term
+		| IR_Var v -> "Variable", (names v), linear_term
 		
 (*		| Unary_Plus t -> "Unary", (string_of_ppl_linear_term names t), linear_term
 		
@@ -1046,23 +1066,23 @@ let rec left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term
 				, linear_term*)
 				 
 		(* Some simplification *)
-(*		| Pl (lterm, Coef z)
-		| Mi (lterm, Coef z)
+(*		| IR_Plus (lterm, IR_Coef z)
+		| IR_Minus (lterm, IR_Coef z)
 			when Gmp.Z.equal z (Gmp.Z.zero) ->
 			  left_term_of_pxd_linear_term names lterm*)
 
-		| Pl (lterm, rterm) -> "Duary", "", lterm
+		| IR_Plus (lterm, rterm) -> "Duary", "", lterm
 				
-		| Mi (lterm, rterm) -> "Duary", "", lterm
+		| IR_Minus (lterm, rterm) -> "Duary", "", lterm
 				
-		| Ti (z, rterm) -> "Unary", (jani_string_of_coef z), linear_term
+		| IR_Times (z, rterm) -> "Unary", (jani_string_of_coef z), linear_term
 
-let rec right_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : linear_term) = 
+let rec right_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : internal_linear_term) = 
 	match linear_term with
 	(*  * linear_term to hack return type *)
-		| Coef z -> "Coefficient", jani_string_of_coef z, linear_term
+		| IR_Coef z -> "Coefficient", jani_string_of_coef z, linear_term
 		
-		| Var v -> "Variable", (names v), linear_term
+		| IR_Var v -> "Variable", (names v), linear_term
 		
 (*		| Unary_Plus t -> "Unary", (string_of_ppl_linear_term names t), linear_term
 		
@@ -1073,16 +1093,16 @@ let rec right_term_of_pxd_linear_term (names : (variable -> string)) (linear_ter
 				 , linear_term*)
 				
 		(* Some simplification *)
-(*		| Pl (lterm, Coef z)
-		| Mi (lterm, Coef z)
+(*		| IR_Plus (lterm, IR_Coef z)
+		| IR_Minus (lterm, IR_Coef z)
 			when Gmp.Z.equal z (Gmp.Z.zero) ->
 			  right_term_of_pxd_linear_term names lterm*)
 
-		| Pl (lterm, rterm) -> "Duary", "", rterm
+		| IR_Plus (lterm, rterm) -> "Duary", "", rterm
 				
-		| Mi (lterm, rterm) -> "Duary", "", rterm
+		| IR_Minus (lterm, rterm) -> "Duary", "", rterm
 				
-		| Ti (z, rterm) -> "Duary", "", rterm
+		| IR_Times (z, rterm) -> "Duary", "", rterm
 
 let rec string_of_linear_term_for_jani variable_names linear_term = 
 	(*TODO DYLAN Update called funcitons and here with a new type insteed of tuple*)
@@ -1114,7 +1134,7 @@ let string_of_pxd_linear_term_for_jani = string_of_linear_term_for_jani
 (* to the corresponding PPL data structure, it is normalized such *)
 (* that the only non-rational coefficient is outside the term:    *)
 (* p/q * ( ax + by + c ) *)
-let normalize_linear_term (lt : linear_term) : (Ppl.linear_expression * NumConst.t) =
+let normalize_linear_term (lt : internal_linear_term) : (Ppl.linear_expression * NumConst.t) =
 	(* Increment discrete counter *)
 	ppl_tcounter_normalize_linear_term#increment;
 	
@@ -1128,12 +1148,12 @@ let normalize_linear_term (lt : linear_term) : (Ppl.linear_expression * NumConst
 
 		let result =
 		match lt with
-			| Var v -> Variable v, NumConst.one
-			| Coef c -> (
+			| IR_Var v -> Variable v, NumConst.one
+			| IR_Coef c -> (
 					let p = NumConst.get_num c in
 					let q = NumConst.get_den c in
 					Coefficient p, NumConst.numconst_of_zfrac Gmp.Z.one q )
-			| Pl (lterm, rterm) -> (
+			| IR_Plus (lterm, rterm) -> (
 					let lterm_norm, fl = normalize_linear_term_rec lterm in
 					let rterm_norm, fr = normalize_linear_term_rec rterm in
 					let pl = NumConst.get_num fl in
@@ -1142,7 +1162,7 @@ let normalize_linear_term (lt : linear_term) : (Ppl.linear_expression * NumConst
 					let qr = NumConst.get_den fr in
 					(Plus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
 					NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
-			| Mi (lterm, rterm) -> (
+			| IR_Minus (lterm, rterm) -> (
 					let lterm_norm, fl = normalize_linear_term_rec lterm in
 					let rterm_norm, fr = normalize_linear_term_rec rterm in
 					let pl = NumConst.get_num fl in
@@ -1151,7 +1171,7 @@ let normalize_linear_term (lt : linear_term) : (Ppl.linear_expression * NumConst
 					let qr = NumConst.get_den fr in
 					(Minus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
 					NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
-			| Ti (fac, term) -> (
+			| IR_Times (fac, term) -> (
 					let term_norm, r = normalize_linear_term_rec term in
 					let p = NumConst.get_num fac in
 					let q = NumConst.get_den fac in
@@ -1196,7 +1216,7 @@ let ppl_linear_expression_of_linear_term linear_term : Ppl.linear_expression =
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-let ppl_linear_expression_of_linear_term (linear_term : linear_term) : Ppl.linear_expression =
+let ppl_linear_expression_of_linear_term (linear_term : internal_linear_term) : Ppl.linear_expression =
 	let ppl_term, r = normalize_linear_term linear_term in
 	let p = NumConst.get_num r in
 	Times (p, ppl_term)
@@ -1249,7 +1269,7 @@ let op_of_ppl_op = function
 
 
 (* Get the `op` operator of a linear inequality *)
-let op_of_linear_inequality	(linear_inequality : linear_inequality) : op =
+let op_of_linear_inequality	(linear_inequality : linear_inequality) : internal_op =
 	op_of_ppl_op (ppl_op_of_linear_inequality linear_inequality)
 
 let op_of_pxd_linear_inequality = op_of_linear_inequality
@@ -1578,7 +1598,7 @@ let clock_guard_of_linear_inequality linear_inequality =
 	(*check this small code again*)
 	
 	let parametric_linear_term = if !positive_clock_option = Some true
-		then Mi ((make_linear_term [] NumConst.zero) , parametric_linear_term)
+		then IR_Minus ((make_linear_term [] NumConst.zero) , parametric_linear_term)
 		else parametric_linear_term 
 	in
 	
@@ -1730,7 +1750,7 @@ let pxd_constraint_of_discrete_values = pxd_constraint_of_point
 
 
 (** "linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with "x" a clock, "~" in {>, >=, =}, "d" a PConstraint.linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (e.g., "x > p1 true" generates "x > p1" whereas "x >= p1+p2 false" generates "p1+p2 >= x" *)
-let linear_constraint_of_clock_and_parameters nb_dimensions (x : variable) (op : op) (d : linear_term) (direction : bool) =
+let linear_constraint_of_clock_and_parameters nb_dimensions (x : variable) (op : internal_op) (d : internal_linear_term) (direction : bool) =
 	(* Create a linear term made of x *)
 	let lt_x = make_linear_term [NumConst.one, x] NumConst.zero in
 	(* Handle order *)
@@ -3545,7 +3565,7 @@ let pdbm_sub_linear_terms eij1 eij2 = match (eij1, eij2) with
 
 
 (* Update a clock i to a p_linear_term b ("i := b" as in [HRSV02]) *)
-let pdbm_update i (b:linear_term) pdbm =
+let pdbm_update i (b:internal_linear_term) pdbm =
 	(* Number of regular clocks (excluding the 0-clock) *)
 	let nb_clocks = Array.length pdbm - 1 in
 	let zeroclock = nb_clocks in
@@ -4678,7 +4698,7 @@ let unserialize_p_convex_or_nonconvex_constraint p_convex_or_nonconvex_constrain
 (*Begin - Needed functions for part 1*)
 
 (*get string of operators*)
-let operator2string op = match op with
+let operator2string (op : internal_op) = match op with
 	| Op_g  -> ">"
 	| Op_ge -> ">="
 	| Op_eq -> "="
@@ -4708,20 +4728,20 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 								let b = ref false in
 								begin
 								match linear_term with
-								| Coef c -> ()
-								| Var v -> ()
-								| Pl (lterm, rterm) -> 	(
+								| IR_Coef c -> ()
+								| IR_Var v -> ()
+								| IR_Plus (lterm, rterm) -> 	(
 													(*** TODO: problem here?? (ÉA, 2017/02/08) ***)
 			  											(* isMinus lterm;
 														isMinus rterm; *)
 														b := (isMinus lterm || isMinus rterm);
 														()
 														)
-								| Mi (lterm, rterm) -> 	( 
+								| IR_Minus (lterm, rterm) -> 	( 
 														b := true; 
 														() 
 														)
-								| Ti (c1, rterm) -> ()
+								| IR_Times (c1, rterm) -> ()
 								(*| _ -> raise (InternalError("Detection error `get_coef` function"))*)
 								end;
 								!b
@@ -4730,19 +4750,19 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 (*for linear term*)
 let rec get_coefs_vars linear_term =	let coefs_vars = ref [] in
 										let _ = match linear_term with
-										| Coef c -> coefs_vars := !coefs_vars@[(9999, c)]
-										| Var v -> coefs_vars := !coefs_vars@[(v, NumConst.one)] (*()*)
-										| Pl (lterm, rterm) -> (
+										| IR_Coef c -> coefs_vars := !coefs_vars@[(9999, c)]
+										| IR_Var v -> coefs_vars := !coefs_vars@[(v, NumConst.one)] (*()*)
+										| IR_Plus (lterm, rterm) -> (
 			  								coefs_vars := !coefs_vars@get_coefs_vars lterm;
 											coefs_vars := !coefs_vars@get_coefs_vars rterm;
 											() )
-										| Mi (lterm, rterm) -> (
+										| IR_Minus (lterm, rterm) -> (
 			  								coefs_vars := !coefs_vars@get_coefs_vars lterm;
 											coefs_vars := !coefs_vars@get_coefs_vars rterm;
 											() )
-										| Ti (c1, rterm) -> (
+										| IR_Times (c1, rterm) -> (
 															match rterm with
-															| Var  v1 -> coefs_vars := !coefs_vars@[(v1, c1)]
+															| IR_Var  v1 -> coefs_vars := !coefs_vars@[(v1, c1)]
 															| _ -> raise (InternalError("Could not detect RightTerm in Time*RightTerm error `get_coefs_vars` function")) 
 															)
 										in 

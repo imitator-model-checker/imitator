@@ -81,6 +81,16 @@ val make_pxd_linear_term : (coef * variable) list -> coef -> pxd_linear_term
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Access functions} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(*------------------------------------------------------------*)
+(* Get the coefficient of one particular variable in a p_linear_term *)
+(*------------------------------------------------------------*)
+val p_get_variable_coefficient_in_internal_linear_term : variable -> p_linear_term -> coef
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
