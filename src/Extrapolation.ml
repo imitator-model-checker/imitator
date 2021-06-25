@@ -321,7 +321,7 @@ let compute_n pta_type guards parametric_clocks_number h =
 (* Input = pta_type : string, bounds : (float,float) array, guards : (int, string, float array) list, h : int *)
 (* Output = (float array, float array) *)
 
-let compute_maximal_constants (pta_type : string) (bounds : (numconst_or_infinity * numconst_or_infinity) array) (guards : (int * string * numconst_or_infinity array) list) (h : int) =
+let compute_maximal_constants (pta_type : string) (bounds : (numconst_or_infinity * numconst_or_infinity) array) (guards : (int * string * numconst_or_infinity array) list) (h : int) : (numconst_or_infinity array * numconst_or_infinity array) =
 	let hide = 
 		if pta_type = "LU_Ubounded" then (hide_bounded guards bounds , "L" )
 		else if pta_type = "LU_Lbounded" then (hide_bounded guards bounds , "U" )
@@ -402,9 +402,26 @@ let get_bounded p_bounds =
 	done;
 	!bounded_parameters
 	
+(*pseudo code for the generation of guards*)
 (*let get_guards invariants transitions =
-	TODO
-	*)
+
+	let guards = []
+
+	raw_guards = union of invariants with t.guard foreach t in transitions
+	
+	let inequalities = []
+	for each r_g in raw_guards
+	match r_g with
+	|Continuous_guard of g -> append (pxd_get_inequalities g) to inequalities
+	|Discrete_continuous_guard of g -> append (pxd_get_inequalities g.continous_guard) to inequalities
+	|_ -> do nothing 
+	
+	for each i in inequalities 
+		let (clock,op,linear_term) = clock_guard_of_linear_inequality i 
+		add (clock,op,???) to guards
+	
+	return guards
+*)
 
 
 let get_pta_type pta_type bounded_parameters =
