@@ -4,11 +4,11 @@
  *
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
- * Module description: General fonctions for map, filter, traverse parsing structure tree
+ * Module description: General fonctions for map, filter, traverse, evaluating, etc. parsing structure tree
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/05
- * Last modified     : 2021/03/05
+ * Last modified     : 2021/06/25
  *
  ************************************************************)
 
@@ -34,7 +34,7 @@ val string_of_parsed_init_state_predicate : useful_parsing_model_information -> 
 val string_of_parsed_nonlinear_constraint : useful_parsing_model_information -> nonlinear_constraint -> string
 
 val try_reduce_parsed_global_expression : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> global_expression -> DiscreteValue.discrete_value
-val try_reduce_parsed_global_expression_with_model : useful_parsing_model_information -> global_expression -> DiscreteValue.discrete_value
+val try_reduce_parsed_arithmetic_expression : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> parsed_discrete_arithmetic_expression -> DiscreteValue.discrete_value
 
 val try_reduce_parsed_term : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> parsed_discrete_term -> DiscreteValue.discrete_value
 val try_reduce_parsed_factor : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> parsed_discrete_factor -> DiscreteValue.discrete_value

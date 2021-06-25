@@ -196,8 +196,22 @@ and eval_discrete_binary_relop relop value_1 value_2 : bool =
 
 
 and eval_discrete_binary_word_expression discrete_valuation = function
-    | Logical_shift_left (binary_word, expr) -> BinaryWord.shift_left (eval_discrete_binary_word_expression discrete_valuation binary_word) (Int32.to_int (eval_int_expression discrete_valuation expr))
-    | Logical_shift_right (binary_word, expr) -> BinaryWord.shift_right (eval_discrete_binary_word_expression discrete_valuation binary_word) (Int32.to_int (eval_int_expression discrete_valuation expr))
+    | Logical_shift_left (binary_word, expr) ->
+        BinaryWord.shift_left
+            (eval_discrete_binary_word_expression discrete_valuation binary_word)
+            (Int32.to_int (eval_int_expression discrete_valuation expr))
+    | Logical_shift_right (binary_word, expr) ->
+        BinaryWord.shift_right
+            (eval_discrete_binary_word_expression discrete_valuation binary_word)
+            (Int32.to_int (eval_int_expression discrete_valuation expr))
+    | Logical_fill_left (binary_word, expr) ->
+        BinaryWord.fill_left
+            (eval_discrete_binary_word_expression discrete_valuation binary_word)
+            (Int32.to_int (eval_int_expression discrete_valuation expr))
+    | Logical_fill_right (binary_word, expr) ->
+        BinaryWord.fill_right
+            (eval_discrete_binary_word_expression discrete_valuation binary_word)
+            (Int32.to_int (eval_int_expression discrete_valuation expr))
     | Logical_and (l_binary_word, r_binary_word) ->
         BinaryWord.log_and
             (eval_discrete_binary_word_expression discrete_valuation l_binary_word)

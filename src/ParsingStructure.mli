@@ -75,11 +75,13 @@ and parsed_discrete_factor =
 	| Parsed_pow_function of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
 	| Parsed_shift_left of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_shift_right of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_fill_left of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_fill_right of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_log_and of parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_log_or of parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_log_xor of parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_log_not of parsed_discrete_factor
-
+(*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
 
 (****************************************************************)
 (** Boolean expressions *)

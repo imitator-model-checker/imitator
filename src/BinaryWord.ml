@@ -29,6 +29,12 @@ let shift_left (l, b) i =
 let shift_right (l, b) i =
     l, Array.append (Array.make i false) (Array.sub b 0 ((Array.length b) - i))
 
+let fill_left (l, b) i =
+    l + i, Array.append b (Array.make i false)
+
+let fill_right (l, b) i =
+    l + i, Array.append (Array.make i false) b
+
 let log_not (l, b) = l, Array.map not b
 
 let bitwise op (l1, b1) (l2, b2) =

@@ -186,7 +186,9 @@ and get_variables_in_parsed_discrete_factor variables_used_ref = function
 		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr;
 		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref exp_expr;
     | Parsed_shift_left (factor, expr)
-    | Parsed_shift_right (factor, expr) ->
+    | Parsed_shift_right (factor, expr)
+    | Parsed_fill_left (factor, expr)
+    | Parsed_fill_right (factor, expr) ->
         get_variables_in_parsed_discrete_factor variables_used_ref factor;
         get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr;
     | Parsed_log_and (l_factor, r_factor)
@@ -229,7 +231,9 @@ let rec check_f_in_parsed_update_factor f = function
             (check_f_in_parsed_update_arithmetic_expression f expr)
             (check_f_in_parsed_update_arithmetic_expression f exp_expr)
     | Parsed_shift_left (factor, expr)
-    | Parsed_shift_right (factor, expr) ->
+    | Parsed_shift_right (factor, expr)
+    | Parsed_fill_left (factor, expr)
+    | Parsed_fill_right (factor, expr) ->
         evaluate_and
             (check_f_in_parsed_update_factor f factor)
             (check_f_in_parsed_update_arithmetic_expression f expr)
@@ -316,7 +320,9 @@ let rec check_f_in_parsed_discrete_factor f index_of_variables type_of_variables
             (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr)
             (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants exp_expr)
     | Parsed_shift_left (factor, expr)
-    | Parsed_shift_right (factor, expr) ->
+    | Parsed_shift_right (factor, expr)
+    | Parsed_fill_left (factor, expr)
+    | Parsed_fill_right (factor, expr) ->
         evaluate_and
             (check_f_in_parsed_discrete_factor f index_of_variables type_of_variables constants factor)
             (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr)
@@ -532,6 +538,8 @@ and search_variable_of_discrete_arithmetic_expression parsed_model expr =
         | Parsed_pow_function _
         | Parsed_shift_left _
         | Parsed_shift_right _
+        | Parsed_fill_left _
+        | Parsed_fill_right _
         | Parsed_log_and _
         | Parsed_log_or _
         | Parsed_log_xor _
@@ -621,6 +629,8 @@ and convert_parsed_rational_arithmetic_expression parsed_model (* expr *) =
         (* Should never happen, because it was checked by type checker before *)
         | Parsed_shift_left _
         | Parsed_shift_right _
+        | Parsed_fill_left _
+        | Parsed_fill_right _
         | Parsed_log_and _
         | Parsed_log_or _
         | Parsed_log_xor _
@@ -684,6 +694,8 @@ and convert_parsed_int_arithmetic_expression parsed_model (* expr *) =
         | Parsed_rational_of_int_function _
         | Parsed_shift_left _
         | Parsed_shift_right _
+        | Parsed_fill_left _
+        | Parsed_fill_right _
         | Parsed_log_and _
         | Parsed_log_or _
         | Parsed_log_xor _
@@ -747,6 +759,16 @@ and binary_word_expression_of_parsed_factor useful_parsing_model_information = f
         )
     | Parsed_shift_right (factor, expr) ->
         Logical_shift_right (
+            binary_word_expression_of_parsed_factor useful_parsing_model_information factor,
+            convert_parsed_int_arithmetic_expression useful_parsing_model_information expr
+        )
+    | Parsed_fill_left (factor, expr) ->
+        Logical_fill_left (
+            binary_word_expression_of_parsed_factor useful_parsing_model_information factor,
+            convert_parsed_int_arithmetic_expression useful_parsing_model_information expr
+        )
+    | Parsed_fill_right (factor, expr) ->
+        Logical_fill_right (
             binary_word_expression_of_parsed_factor useful_parsing_model_information factor,
             convert_parsed_int_arithmetic_expression useful_parsing_model_information expr
         )
@@ -2244,7 +2266,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			    (* TYPE CHECKING *)
 			    let converted_expr = TypeChecker.check_discrete_init useful_parsing_model_information variable_name expr in
 			    (* Try to reduce expression to a value *)
-                let value = ParsingStructureUtilities.try_reduce_parsed_global_expression_with_model useful_parsing_model_information converted_expr in
+                let value = ParsingStructureUtilities.try_reduce_parsed_global_expression useful_parsing_model_information.constants converted_expr in
                 Hashtbl.add init_values_for_discrete discrete_index value;
 
 			);
@@ -2397,6 +2419,8 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
         | Parsed_pow_function _
         | Parsed_shift_left _
         | Parsed_shift_right _
+        | Parsed_fill_left _
+        | Parsed_fill_right _
         | Parsed_log_and _
         | Parsed_log_or _
         | Parsed_log_xor _
@@ -2894,7 +2918,9 @@ let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_info
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor exp_expr
         (* Same comment for case above *)
         | Parsed_shift_left (factor, expr)
-        | Parsed_shift_right (factor, expr) ->
+        | Parsed_shift_right (factor, expr)
+        | Parsed_fill_left (factor, expr)
+        | Parsed_fill_right (factor, expr) ->
 		    update_coef_array_in_parsed_update_factor mult_factor factor;
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor expr
         | Parsed_log_and (l_factor, r_factor)
@@ -3850,7 +3876,9 @@ and check_parsed_discrete_factor useful_parsing_model_information = function
             (check_parsed_discrete_arithmetic_expression useful_parsing_model_information expr)
             (check_parsed_discrete_arithmetic_expression useful_parsing_model_information exp_expr)
     | Parsed_shift_left (factor, expr)
-    | Parsed_shift_right (factor, expr) ->
+    | Parsed_shift_right (factor, expr)
+    | Parsed_fill_left (factor, expr)
+    | Parsed_fill_right (factor, expr) ->
         evaluate_and
             (check_parsed_discrete_factor useful_parsing_model_information factor)
             (check_parsed_discrete_arithmetic_expression useful_parsing_model_information expr)

@@ -179,6 +179,16 @@ and convert_literal_types_of_parsed_discrete_factor parsed_model target_type = f
             convert_literal_types_of_parsed_discrete_factor parsed_model target_type factor,
             convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr
         )
+    | Parsed_fill_left (factor, expr) ->
+        Parsed_fill_left (
+            convert_literal_types_of_parsed_discrete_factor parsed_model target_type factor,
+            convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr
+        )
+    | Parsed_fill_right (factor, expr) ->
+        Parsed_fill_right (
+            convert_literal_types_of_parsed_discrete_factor parsed_model target_type factor,
+            convert_literal_types_of_parsed_discrete_arithmetic_expression parsed_model target_type expr
+        )
     | Parsed_log_and (l_factor, r_factor) ->
         Parsed_log_and (
             convert_literal_types_of_parsed_discrete_factor parsed_model target_type l_factor,
@@ -722,7 +732,9 @@ and infer_parsed_discrete_factor parsed_model = function
         Parsed_pow_function (converted_expr, converted_exp), result_type
 
     | Parsed_shift_left (factor, expr)
-    | Parsed_shift_right (factor, expr) as shift ->
+    | Parsed_shift_right (factor, expr)
+    | Parsed_fill_left (factor, expr)
+    | Parsed_fill_right (factor, expr) as shift ->
 
         let infer_factor, l_type = infer_parsed_discrete_factor parsed_model factor in
         let infer_expr, r_type = infer_parsed_discrete_arithmetic_expression parsed_model expr in
@@ -762,21 +774,45 @@ and infer_parsed_discrete_factor parsed_model = function
             infer_expr
         in
 
-        print_message Verbose_high (
-            "\tInfer expression \""
-            ^ (string_of_parsed_factor parsed_model shift)
-            ^ "\" as "
-            ^ (DiscreteValue.string_of_var_type_discrete l_type)
-        );
 
+
+        let typed_shift =
         (match shift with
         | Parsed_shift_left _ ->
             Parsed_shift_left (infer_factor, converted_expr), l_type
         | Parsed_shift_right _ ->
             Parsed_shift_right (infer_factor, converted_expr), l_type
+        (* TODO benjamin REFACTOR ugly copy / paste *)
+        | Parsed_fill_left _ ->
+            (* As we have to deduce length of binary word according to it's shifting value, *)
+            (* only constant expression can be use as value of shifting *)
+            (* TODO benjamin here set a real message if expression is not constant *)
+            let shift_value = ParsingStructureUtilities.try_reduce_parsed_arithmetic_expression parsed_model.constants converted_expr in
+            let base_length = (match l_type with DiscreteValue.Var_type_discrete_binary_word l -> l | _ -> raise (InternalError "never happen")) in
+            let length = base_length + Int32.to_int (DiscreteValue.int_value shift_value) in
+            Parsed_fill_left (infer_factor, converted_expr), DiscreteValue.Var_type_discrete_binary_word length
+        | Parsed_fill_right _ ->
+            (* As we have to deduce length of binary word according to it's shifting value, *)
+            (* only constant expression can be use as value of shifting *)
+            (* TODO benjamin here set a real message if expression is not constant *)
+            let shift_value = ParsingStructureUtilities.try_reduce_parsed_arithmetic_expression parsed_model.constants converted_expr in
+            let base_length = (match l_type with DiscreteValue.Var_type_discrete_binary_word l -> l | _ -> raise (InternalError "never happen")) in
+            let length = base_length + Int32.to_int (DiscreteValue.int_value shift_value) in
+            Parsed_fill_right (infer_factor, converted_expr), DiscreteValue.Var_type_discrete_binary_word length
         | _ ->
             raise (InternalError "Never happen !")
         )
+        in
+
+        let _, t = typed_shift in
+        print_message Verbose_high (
+            "\tInfer expression \""
+            ^ (string_of_parsed_factor parsed_model shift)
+            ^ "\" as "
+            ^ (DiscreteValue.string_of_var_type_discrete t)
+        );
+
+        typed_shift
 
     | Parsed_log_and (l_factor, r_factor)
     | Parsed_log_or (l_factor, r_factor)
@@ -904,6 +940,8 @@ and discrete_type_of_parsed_discrete_factor parsed_model = function
         discrete_type_of_parsed_discrete_arithmetic_expression parsed_model expr
     | Parsed_shift_left (factor, _)
     | Parsed_shift_right (factor, _)
+    | Parsed_fill_left (factor, _)
+    | Parsed_fill_right (factor, _)
     | Parsed_log_and (factor, _)
     | Parsed_log_or (factor, _)
     | Parsed_log_xor (factor, _)

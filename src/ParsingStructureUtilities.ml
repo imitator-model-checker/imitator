@@ -4,11 +4,11 @@
  *
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
- * Module description: General fonctions for map, filter, traverse parsing structure tree
+ * Module description: General fonctions for map, filter, traverse, evaluating, etc. parsing structure tree
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/05
- * Last modified     : 2021/03/05
+ * Last modified     : 2021/06/25
  *
  ************************************************************)
 
@@ -24,6 +24,8 @@ let string_of_parsed_factor_constructor = function
 	| Parsed_pow_function _ -> "pow"
 	| Parsed_shift_left _ -> "shift_left"
 	| Parsed_shift_right _ -> "shift_right"
+	| Parsed_fill_left _ -> "fill_left"
+	| Parsed_fill_right _ -> "fill_right"
     | Parsed_log_and _ -> "log_and"
     | Parsed_log_or _ -> "log_or"
     | Parsed_log_xor _ -> "log_xor"
@@ -83,7 +85,9 @@ and string_of_parsed_factor parsed_model = function
         ^ string_of_parsed_arithmetic_expression parsed_model exp_expr
         ^ ")"
     | Parsed_shift_left (factor, expr)
-    | Parsed_shift_right (factor, expr) as shift ->
+    | Parsed_shift_right (factor, expr)
+    | Parsed_fill_left (factor, expr)
+    | Parsed_fill_right (factor, expr) as shift ->
         string_of_parsed_factor_constructor shift
         ^ "("
         ^ string_of_parsed_factor parsed_model factor
@@ -188,19 +192,69 @@ let string_of_parsed_nonlinear_constraint parsed_model = function
 
 (* Try to reduce a parsed global expression, cannot take into account variables ! *)
 (* This function is used for computing constant values *)
-let try_reduce_parsed_global_expression constants expr =
+let rec try_reduce_parsed_global_expression constants expr =
 
     let rec try_reduce_parsed_global_expression_rec = function
         | Parsed_global_expression expr -> try_reduce_parsed_boolean_expression expr
 
-    and try_reduce_parsed_arithmetic_expression = function
+    and try_reduce_parsed_boolean_expression = function
+	    | Parsed_True -> DiscreteValue.bool_value_true
+	    | Parsed_False -> DiscreteValue.bool_value_false
+	    | Parsed_And (l_expr, r_expr) ->
+	        DiscreteValue._and
+                (try_reduce_parsed_boolean_expression l_expr)
+                (try_reduce_parsed_boolean_expression r_expr)
+	    | Parsed_Or (l_expr, r_expr) ->
+	        DiscreteValue._or
+                (try_reduce_parsed_boolean_expression l_expr)
+                (try_reduce_parsed_boolean_expression r_expr)
+	    | Parsed_Discrete_boolean_expression expr ->
+	        try_reduce_parsed_discrete_boolean_expression expr
+
+    and try_reduce_parsed_discrete_boolean_expression = function
+        | Parsed_arithmetic_expression expr ->
+            try_reduce_parsed_arithmetic_expression constants expr
+        | Parsed_expression (l_expr, relop, r_expr) ->
+            eval_parsed_relop
+                relop
+                (try_reduce_parsed_discrete_boolean_expression l_expr)
+                (try_reduce_parsed_discrete_boolean_expression r_expr)
+        | Parsed_expression_in (expr1, expr2, expr3) ->
+		    (* Compute the first one to avoid redundancy *)
+		    let expr1_evaluated = try_reduce_parsed_arithmetic_expression constants expr1 in
+		    let expr2_evaluated = try_reduce_parsed_arithmetic_expression constants expr2 in
+		    let expr3_evaluated = try_reduce_parsed_arithmetic_expression constants expr3 in
+		    DiscreteValue._and
+			    (DiscreteValue.leq expr2_evaluated expr1_evaluated)
+			    (DiscreteValue.leq expr1_evaluated expr3_evaluated)
+        | Parsed_boolean_expression expr ->
+            try_reduce_parsed_boolean_expression expr
+	    | Parsed_Not expr ->
+	        DiscreteValue.not
+	            (try_reduce_parsed_boolean_expression expr)
+
+    and eval_parsed_relop relop value_1 value_2 =
+        	match relop with
+        	| PARSED_OP_L		-> DiscreteValue.l value_1 value_2
+        	| PARSED_OP_LEQ	    -> DiscreteValue.leq value_1 value_2
+        	| PARSED_OP_EQ		-> DiscreteValue.bool_equal value_1  value_2
+        	| PARSED_OP_NEQ	    -> DiscreteValue.bool_neq value_1 value_2
+        	| PARSED_OP_GEQ	    -> DiscreteValue.geq value_1 value_2
+        	| PARSED_OP_G		-> DiscreteValue.g value_1  value_2
+
+    in
+    try_reduce_parsed_global_expression_rec expr
+
+and try_reduce_parsed_arithmetic_expression constants expr =
+
+    let rec try_reduce_parsed_arithmetic_expression_rec = function
         | Parsed_DAE_plus (arithmetic_expr, term) ->
             DiscreteValue.add
-                (try_reduce_parsed_arithmetic_expression arithmetic_expr)
+                (try_reduce_parsed_arithmetic_expression_rec arithmetic_expr)
                 (try_reduce_parsed_term term)
         | Parsed_DAE_minus (arithmetic_expr, term) ->
             DiscreteValue.sub
-                (try_reduce_parsed_arithmetic_expression arithmetic_expr)
+                (try_reduce_parsed_arithmetic_expression_rec arithmetic_expr)
                 (try_reduce_parsed_term term)
         | Parsed_DAE_term term ->
             try_reduce_parsed_term term
@@ -225,16 +279,16 @@ let try_reduce_parsed_global_expression constants expr =
             ) else
                 raise (InvalidExpression ("Use of variable " ^ variable_name ^ " in assignment is forbidden"))
         | Parsed_DF_constant value -> value
-        | Parsed_DF_expression arithmetic_expr -> try_reduce_parsed_arithmetic_expression arithmetic_expr
+        | Parsed_DF_expression arithmetic_expr -> try_reduce_parsed_arithmetic_expression_rec arithmetic_expr
         | Parsed_DF_unary_min factor ->
             DiscreteValue.neg (try_reduce_parsed_factor factor)
         | Parsed_rational_of_int_function expr ->
             (* Convert with no problem because it's already type checked *)
-            DiscreteValue.convert_to_rational_value (try_reduce_parsed_arithmetic_expression expr)
+            DiscreteValue.convert_to_rational_value (try_reduce_parsed_arithmetic_expression_rec expr)
         | Parsed_pow_function (expr, exp) ->
 
-            let reduced_expr = try_reduce_parsed_arithmetic_expression expr in
-            let reduced_exp = try_reduce_parsed_arithmetic_expression exp in
+            let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
+            let reduced_exp = try_reduce_parsed_arithmetic_expression_rec exp in
             (* we have to know type of expr *)
             let value_type = DiscreteValue.discrete_type_of_value reduced_expr in
             (match value_type with
@@ -259,16 +313,28 @@ let try_reduce_parsed_global_expression constants expr =
                 ))
             )
         | Parsed_shift_left (factor, expr) ->
-            let reduced_factor = try_reduce_parsed_factor factor in
-            let reduced_expr = try_reduce_parsed_arithmetic_expression expr in
 
+            let reduced_factor = try_reduce_parsed_factor factor in
+            let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
             DiscreteValue.shift_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
 
         | Parsed_shift_right (factor, expr) ->
 
             let reduced_factor = try_reduce_parsed_factor factor in
-            let reduced_expr = try_reduce_parsed_arithmetic_expression expr in
+            let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
             DiscreteValue.shift_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
+
+        | Parsed_fill_left (factor, expr) ->
+
+            let reduced_factor = try_reduce_parsed_factor factor in
+            let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
+            DiscreteValue.fill_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
+
+        | Parsed_fill_right (factor, expr) ->
+
+            let reduced_factor = try_reduce_parsed_factor factor in
+            let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
+            DiscreteValue.fill_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
 
         | Parsed_log_and (l_factor, r_factor) ->
 
@@ -292,54 +358,8 @@ let try_reduce_parsed_global_expression constants expr =
 
             let reduced_factor = try_reduce_parsed_factor factor in
             DiscreteValue.log_not reduced_factor
-
-    and try_reduce_parsed_boolean_expression = function
-	    | Parsed_True -> DiscreteValue.bool_value_true
-	    | Parsed_False -> DiscreteValue.bool_value_false
-	    | Parsed_And (l_expr, r_expr) ->
-	        DiscreteValue._and
-                (try_reduce_parsed_boolean_expression l_expr)
-                (try_reduce_parsed_boolean_expression r_expr)
-	    | Parsed_Or (l_expr, r_expr) ->
-	        DiscreteValue._or
-                (try_reduce_parsed_boolean_expression l_expr)
-                (try_reduce_parsed_boolean_expression r_expr)
-	    | Parsed_Discrete_boolean_expression expr ->
-	        try_reduce_parsed_discrete_boolean_expression expr
-
-    and try_reduce_parsed_discrete_boolean_expression = function
-        | Parsed_arithmetic_expression expr ->
-            try_reduce_parsed_arithmetic_expression expr
-        | Parsed_expression (l_expr, relop, r_expr) ->
-            eval_parsed_relop
-                relop
-                (try_reduce_parsed_discrete_boolean_expression l_expr)
-                (try_reduce_parsed_discrete_boolean_expression r_expr)
-        | Parsed_expression_in (expr1, expr2, expr3) ->
-		    (* Compute the first one to avoid redundancy *)
-		    let expr1_evaluated = try_reduce_parsed_arithmetic_expression expr1 in
-		    let expr2_evaluated = try_reduce_parsed_arithmetic_expression expr2 in
-		    let expr3_evaluated = try_reduce_parsed_arithmetic_expression expr3 in
-		    DiscreteValue._and
-			    (DiscreteValue.leq expr2_evaluated expr1_evaluated)
-			    (DiscreteValue.leq expr1_evaluated expr3_evaluated)
-        | Parsed_boolean_expression expr ->
-            try_reduce_parsed_boolean_expression expr
-	    | Parsed_Not expr ->
-	        DiscreteValue.not
-	            (try_reduce_parsed_boolean_expression expr)
-
-    and eval_parsed_relop relop value_1 value_2 =
-        	match relop with
-        	| PARSED_OP_L		-> DiscreteValue.l value_1 value_2
-        	| PARSED_OP_LEQ	    -> DiscreteValue.leq value_1 value_2
-        	| PARSED_OP_EQ		-> DiscreteValue.bool_equal value_1  value_2
-        	| PARSED_OP_NEQ	    -> DiscreteValue.bool_neq value_1 value_2
-        	| PARSED_OP_GEQ	    -> DiscreteValue.geq value_1 value_2
-        	| PARSED_OP_G		-> DiscreteValue.g value_1  value_2
-
     in
-    try_reduce_parsed_global_expression_rec expr
+    try_reduce_parsed_arithmetic_expression_rec expr
 
 let try_reduce_parsed_term constants term =
     let expr = Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term term))) in
@@ -349,9 +369,3 @@ let try_reduce_parsed_factor constants factor =
     let expr = Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor factor)))) in
     try_reduce_parsed_global_expression constants expr
 
-(* Try to reduce a parsed global expression, cannot take into account variables ! *)
-(* This function is used for computing constant values *)
-let try_reduce_parsed_global_expression_with_model useful_parsing_model_information (* expr *) =
-    (* Get constants *)
-    let constants = useful_parsing_model_information.constants in
-    try_reduce_parsed_global_expression constants

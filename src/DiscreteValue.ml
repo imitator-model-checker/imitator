@@ -484,6 +484,14 @@ let shift_right i = function
     | Binary_word_value x -> Binary_word_value (BinaryWord.shift_right x i)
     | _ -> raise (ComputingException "shift_right")
 
+let fill_left i = function
+    | Binary_word_value x -> Binary_word_value (BinaryWord.fill_left x i)
+    | _ -> raise (ComputingException "fill_left")
+
+let fill_right i = function
+    | Binary_word_value x -> Binary_word_value (BinaryWord.fill_right x i)
+    | _ -> raise (ComputingException "fill_right")
+
 let log_and x y =
     match x, y with
     | Binary_word_value b1, Binary_word_value b2 -> Binary_word_value (BinaryWord.log_and b1 b2)

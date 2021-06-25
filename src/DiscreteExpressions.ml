@@ -87,6 +87,8 @@ type discrete_arithmetic_expression =
 type binary_word_expression =
     | Logical_shift_left of binary_word_expression * int_arithmetic_expression
     | Logical_shift_right of binary_word_expression * int_arithmetic_expression
+    | Logical_fill_left of binary_word_expression * int_arithmetic_expression
+    | Logical_fill_right of binary_word_expression * int_arithmetic_expression
     | Logical_and of binary_word_expression * binary_word_expression
     | Logical_or of binary_word_expression * binary_word_expression
     | Logical_xor of binary_word_expression * binary_word_expression
@@ -252,6 +254,8 @@ let string_of_int_factor_constructor = function
 let string_of_binary_word_expression_constructor = function
     | Logical_shift_left _ -> "shift_left"
     | Logical_shift_right _ -> "shift_right"
+    | Logical_fill_left _ -> "fill_left"
+    | Logical_fill_right _ -> "fill_right"
     | Logical_and _ -> "log_and"
     | Logical_or _ -> "log_or"
     | Logical_xor _ -> "log_xor"
@@ -469,14 +473,10 @@ and customized_string_of_bool_value customized_string = function
     | false -> customized_string.false_string
 
 and customized_string_of_binary_word_expression customized_string variable_names = function
-    | Logical_shift_left (binary_word, expr) as binary_word_expression ->
-        string_of_binary_word_expression_constructor binary_word_expression
-        ^ "("
-        ^ customized_string_of_binary_word_expression customized_string variable_names binary_word
-        ^ ", "
-        ^ customized_string_of_int_arithmetic_expression customized_string variable_names expr
-        ^ ")"
-    | Logical_shift_right (binary_word, expr) as binary_word_expression ->
+    | Logical_shift_left (binary_word, expr)
+    | Logical_shift_right (binary_word, expr)
+    | Logical_fill_left (binary_word, expr)
+    | Logical_fill_right (binary_word, expr) as binary_word_expression ->
         string_of_binary_word_expression_constructor binary_word_expression
         ^ "("
         ^ customized_string_of_binary_word_expression customized_string variable_names binary_word

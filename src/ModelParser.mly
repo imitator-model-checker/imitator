@@ -86,7 +86,7 @@ let unzip l = List.fold_left
 	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
-    CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT
+    CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT    
 
 
@@ -526,10 +526,16 @@ arithmetic_factor:
     | binary_word { Parsed_DF_constant $1 }
 	| NAME { Parsed_DF_variable $1 }
 	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+	| function_call { $1 }
+;
+
+function_call:
 	| CT_BUILTIN_FUNC_RATIONAL_OF_INT LPAREN arithmetic_expression RPAREN { Parsed_rational_of_int_function $3 }
 	| CT_POW LPAREN arithmetic_expression COMMA arithmetic_expression RPAREN { Parsed_pow_function ($3, $5) }
 	| CT_SHIFT_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_left ($3, $5) }
 	| CT_SHIFT_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_right ($3, $5) }
+	| CT_FILL_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_fill_left ($3, $5) }
+	| CT_FILL_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_fill_right ($3, $5) }
 	| CT_LOG_AND LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_and ($3, $5) }
 	| CT_LOG_OR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_or ($3, $5) }
 	| CT_LOG_XOR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_xor ($3, $5) }

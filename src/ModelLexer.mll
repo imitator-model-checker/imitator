@@ -106,6 +106,8 @@ rule token = parse
     | "pow"            { CT_POW }
     | "shift_left"     { CT_SHIFT_LEFT }
     | "shift_right"    { CT_SHIFT_RIGHT }
+    | "fill_left"      { CT_FILL_LEFT }
+    | "fill_right"     { CT_FILL_RIGHT }
     | "logand"         { CT_LOG_AND }
     | "logor"          { CT_LOG_OR }
     | "logxor"         { CT_LOG_XOR }
