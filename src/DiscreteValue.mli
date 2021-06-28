@@ -65,6 +65,8 @@ val string_of_var_type_discrete : var_type_discrete -> string
 (* String of number var type *)
 val string_of_var_type_discrete_number : var_type_discrete_number -> string
 
+val string_of_var_type_constructor : var_type -> string
+
 (** Check types **)
 
 val is_discrete_type : var_type -> bool

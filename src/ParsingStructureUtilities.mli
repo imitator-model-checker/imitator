@@ -14,6 +14,58 @@
 
 open ParsingStructure
 
+(* Leaf of parsing structure *)
+type parsing_structure_leaf =
+    | Leaf_variable of string
+    | Leaf_constant of DiscreteValue.discrete_value
+
+(* Leaf of linear expression *)
+type linear_expression_leaf =
+    | Leaf_linear_constant of NumConst.t
+    | Leaf_linear_variable of NumConst.t * variable_name
+
+(** Check if all leaf of a parsing structure satisfy the predicate **)
+
+val for_all_in_parsed_global_expression : (parsing_structure_leaf -> bool) -> useful_parsing_model_information -> global_expression -> bool
+val for_all_in_parsed_boolean_expression : (parsing_structure_leaf -> bool) -> useful_parsing_model_information -> parsed_boolean_expression -> bool
+val for_all_in_parsed_discrete_boolean_expression : (parsing_structure_leaf -> bool) -> useful_parsing_model_information -> parsed_discrete_boolean_expression -> bool
+val for_all_in_parsed_discrete_arithmetic_expression : (parsing_structure_leaf -> bool) -> useful_parsing_model_information -> parsed_discrete_arithmetic_expression -> bool
+val for_all_in_parsed_discrete_term : (parsing_structure_leaf -> bool) -> useful_parsing_model_information -> parsed_discrete_term -> bool
+val for_all_in_parsed_discrete_factor : (parsing_structure_leaf -> bool) -> useful_parsing_model_information -> parsed_discrete_factor -> bool
+
+(** Check if any leaf of a parsing structure satisfy the predicate **)
+
+val exists_in_parsed_global_expression : (parsing_structure_leaf -> bool) -> useful_parsing_model_information -> global_expression -> bool
+val exists_in_parsed_boolean_expression : (parsing_structure_leaf -> bool) -> useful_parsing_model_information -> parsed_boolean_expression -> bool
+val exists_in_parsed_discrete_boolean_expression : (parsing_structure_leaf -> bool) -> useful_parsing_model_information -> parsed_discrete_boolean_expression -> bool
+val exists_in_parsed_discrete_arithmetic_expression : (parsing_structure_leaf -> bool) -> useful_parsing_model_information -> parsed_discrete_arithmetic_expression -> bool
+val exists_in_parsed_discrete_term : (parsing_structure_leaf -> bool) -> useful_parsing_model_information -> parsed_discrete_term -> bool
+val exists_in_parsed_discrete_factor : (parsing_structure_leaf -> bool) -> useful_parsing_model_information -> parsed_discrete_factor -> bool
+
+(** Apply units over leaf of a parsing structure **)
+
+val iterate_parsed_global_expression : (parsing_structure_leaf -> unit) -> useful_parsing_model_information -> global_expression -> unit
+val iterate_parsed_boolean_expression : (parsing_structure_leaf -> unit) -> useful_parsing_model_information -> parsed_boolean_expression -> unit
+val iterate_parsed_discrete_boolean_expression : (parsing_structure_leaf -> unit) -> useful_parsing_model_information -> parsed_discrete_boolean_expression -> unit
+val iterate_parsed_discrete_arithmetic_expression : (parsing_structure_leaf -> unit) -> useful_parsing_model_information -> parsed_discrete_arithmetic_expression -> unit
+val iterate_parsed_discrete_term : (parsing_structure_leaf -> unit) -> useful_parsing_model_information -> parsed_discrete_term -> unit
+val iterate_parsed_discrete_factor : (parsing_structure_leaf -> unit) -> useful_parsing_model_information -> parsed_discrete_factor -> unit
+
+
+(** Check if all leaf of a linear expression satisfy the predicate **)
+val for_all_in_parsed_linear_expression : (linear_expression_leaf -> bool) -> useful_parsing_model_information -> linear_expression -> bool
+(** Check if all leaf of a linear term satisfy the predicate **)
+val for_all_in_parsed_linear_term : (linear_expression_leaf -> bool) -> useful_parsing_model_information -> linear_term -> bool
+(** Check if any leaf of a linear expression the predicate **)
+val exists_in_parsed_linear_expression : (linear_expression_leaf -> bool) -> useful_parsing_model_information -> linear_expression -> bool
+(** Check if any leaf of a linear term the predicate **)
+val exists_in_parsed_linear_term : (linear_expression_leaf -> bool) -> useful_parsing_model_information -> linear_term -> bool
+(** Iterate over a linear expression applying a unit function **)
+val iterate_parsed_linear_expression : (linear_expression_leaf -> unit) -> useful_parsing_model_information -> linear_expression -> unit
+(** Iterate over a linear term applying a unit function **)
+val iterate_parsed_linear_term : (linear_expression_leaf -> unit) -> useful_parsing_model_information -> linear_term -> unit
+
+
 val string_of_parsed_factor_constructor : parsed_discrete_factor -> string
 
 (* Parsed expression to string *)
@@ -38,3 +90,9 @@ val try_reduce_parsed_arithmetic_expression : (variable_name, DiscreteValue.disc
 
 val try_reduce_parsed_term : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> parsed_discrete_term -> DiscreteValue.discrete_value
 val try_reduce_parsed_factor : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> parsed_discrete_factor -> DiscreteValue.discrete_value
+
+(** Utils **)
+val is_parsed_global_expression_constant : useful_parsing_model_information -> global_expression -> bool
+val all_variables_defined_in_parsed_global_expression : useful_parsing_model_information -> global_expression -> bool
+val all_variables_defined_in_parsed_boolean_expression : useful_parsing_model_information -> parsed_boolean_expression -> bool
+val only_discrete_in_nonlinear_term : useful_parsing_model_information -> parsed_discrete_boolean_expression -> bool

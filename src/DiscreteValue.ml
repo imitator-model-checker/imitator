@@ -81,6 +81,11 @@ let string_of_var_type = function
 	| Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
 	| Var_type_parameter -> "parameter"
 
+let string_of_var_type_constructor = function
+    | Var_type_clock
+    | Var_type_parameter as var_type -> string_of_var_type var_type
+    | Var_type_discrete _ -> "variable"
+
 (** Check types **)
 
 (* Check if a Var_type is a Var_type_discrete of anything *)

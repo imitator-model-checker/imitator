@@ -15,6 +15,155 @@
 open Exceptions
 open ParsingStructure
 
+type variable_name = string
+
+(* Leaf of parsing structure *)
+type parsing_structure_leaf =
+    | Leaf_variable of variable_name
+    | Leaf_constant of DiscreteValue.discrete_value
+
+(* Leaf of linear expression *)
+type linear_expression_leaf =
+    | Leaf_linear_constant of NumConst.t
+    | Leaf_linear_variable of NumConst.t * variable_name
+
+(** Fold a parsing structure using operator applying custom function on leafs **)
+
+let rec fold_parsed_global_expression (operator : 'a -> 'a -> 'a) leaf_fun parsed_model = function
+     | Parsed_global_expression expr -> fold_parsed_boolean_expression operator leaf_fun parsed_model expr
+
+and fold_parsed_boolean_expression operator leaf_fun parsed_model = function
+	| Parsed_True -> leaf_fun (Leaf_constant (DiscreteValue.Bool_value true))
+	| Parsed_False -> leaf_fun (Leaf_constant (DiscreteValue.Bool_value false))
+	| Parsed_And (l_expr, r_expr)
+	| Parsed_Or (l_expr, r_expr) ->
+	    operator
+	        (fold_parsed_boolean_expression operator leaf_fun parsed_model l_expr)
+	        (fold_parsed_boolean_expression operator leaf_fun parsed_model r_expr)
+	| Parsed_Discrete_boolean_expression expr ->
+	    fold_parsed_discrete_boolean_expression operator leaf_fun parsed_model expr
+
+and fold_parsed_discrete_boolean_expression operator leaf_fun parsed_model = function
+    | Parsed_arithmetic_expression expr ->
+        fold_parsed_discrete_arithmetic_expression operator leaf_fun parsed_model expr
+	| Parsed_expression (l_expr, _, r_expr) ->
+	    operator
+	        (fold_parsed_discrete_boolean_expression operator leaf_fun parsed_model l_expr)
+	        (fold_parsed_discrete_boolean_expression operator leaf_fun parsed_model r_expr)
+	| Parsed_expression_in (lower_expr, expr, upper_expr) ->
+	    operator
+	        (fold_parsed_discrete_arithmetic_expression operator leaf_fun parsed_model expr)
+            (operator
+                (fold_parsed_discrete_arithmetic_expression operator leaf_fun parsed_model lower_expr)
+                (fold_parsed_discrete_arithmetic_expression operator leaf_fun parsed_model upper_expr))
+	| Parsed_boolean_expression expr
+	| Parsed_Not expr ->
+        fold_parsed_boolean_expression operator leaf_fun parsed_model expr
+
+and fold_parsed_discrete_arithmetic_expression operator leaf_fun parsed_model = function
+	| Parsed_DAE_plus (expr, term)
+	| Parsed_DAE_minus (expr, term) ->
+        operator
+            (fold_parsed_discrete_arithmetic_expression operator leaf_fun parsed_model expr)
+            (fold_parsed_discrete_term operator leaf_fun parsed_model term)
+	| Parsed_DAE_term term ->
+        fold_parsed_discrete_term operator leaf_fun parsed_model term
+
+and fold_parsed_discrete_term operator leaf_fun parsed_model = function
+	| Parsed_DT_mul (term, factor)
+	| Parsed_DT_div (term, factor) ->
+	    operator
+	        (fold_parsed_discrete_term operator leaf_fun parsed_model term)
+	        (fold_parsed_discrete_factor operator leaf_fun parsed_model factor)
+	| Parsed_DT_factor factor ->
+        fold_parsed_discrete_factor operator leaf_fun parsed_model factor
+
+and fold_parsed_discrete_factor operator leaf_fun parsed_model = function
+	| Parsed_DF_variable variable_name -> leaf_fun (Leaf_variable variable_name)
+	| Parsed_DF_constant value -> leaf_fun (Leaf_constant value)
+	| Parsed_DF_expression expr
+	| Parsed_rational_of_int_function expr ->
+        fold_parsed_discrete_arithmetic_expression operator leaf_fun parsed_model expr
+	| Parsed_pow_function (expr_0, expr_1) ->
+        operator
+            (fold_parsed_discrete_arithmetic_expression operator leaf_fun parsed_model expr_0)
+            (fold_parsed_discrete_arithmetic_expression operator leaf_fun parsed_model expr_1)
+	| Parsed_shift_left (factor, expr)
+	| Parsed_shift_right (factor, expr)
+	| Parsed_fill_left (factor, expr)
+	| Parsed_fill_right (factor, expr) ->
+        operator
+            (fold_parsed_discrete_factor operator leaf_fun parsed_model factor)
+            (fold_parsed_discrete_arithmetic_expression operator leaf_fun parsed_model expr)
+	| Parsed_log_and (factor_0, factor_1)
+	| Parsed_log_or (factor_0, factor_1)
+	| Parsed_log_xor (factor_0, factor_1) ->
+        operator
+            (fold_parsed_discrete_factor operator leaf_fun parsed_model factor_0)
+            (fold_parsed_discrete_factor operator leaf_fun parsed_model factor_1)
+	| Parsed_log_not factor
+	| Parsed_DF_unary_min factor ->
+	    fold_parsed_discrete_factor operator leaf_fun parsed_model factor
+
+
+(** Fold a parsed linear expression using operator applying custom function on leafs **)
+
+let rec fold_parsed_linear_expression operator leaf_fun parsed_model = function
+    | Linear_term term ->
+        fold_parsed_linear_term operator leaf_fun parsed_model term
+    | Linear_plus_expression (expr, term)
+    | Linear_minus_expression (expr, term) ->
+        operator
+            (fold_parsed_linear_expression operator leaf_fun parsed_model expr)
+            (fold_parsed_linear_term operator leaf_fun parsed_model term)
+
+and fold_parsed_linear_term operator leaf_fun parsed_model = function
+    | Constant value -> leaf_fun (Leaf_linear_constant value)
+    | Variable (value, variable_name) -> leaf_fun (Leaf_linear_variable (value, variable_name))
+
+(** Check if all leaf of a parsing structure satisfy the predicate **)
+
+let for_all_in_parsed_global_expression = fold_parsed_global_expression (&&)
+let for_all_in_parsed_boolean_expression = fold_parsed_boolean_expression (&&)
+let for_all_in_parsed_discrete_boolean_expression = fold_parsed_discrete_boolean_expression (&&)
+let for_all_in_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithmetic_expression (&&)
+let for_all_in_parsed_discrete_term = fold_parsed_discrete_term (&&)
+let for_all_in_parsed_discrete_factor = fold_parsed_discrete_factor (&&)
+
+(** Check if any leaf of a parsing structure satisfy the predicate **)
+
+let exists_in_parsed_global_expression = fold_parsed_global_expression (||)
+let exists_in_parsed_boolean_expression = fold_parsed_boolean_expression (||)
+let exists_in_parsed_discrete_boolean_expression = fold_parsed_discrete_boolean_expression (||)
+let exists_in_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithmetic_expression (||)
+let exists_in_parsed_discrete_term = fold_parsed_discrete_term (||)
+let exists_in_parsed_discrete_factor = fold_parsed_discrete_factor (||)
+
+(** Iterate over a parsing structure **)
+
+let binunit (a : unit) (b : unit) = a; b; ()
+let iterate_parsed_global_expression = fold_parsed_global_expression binunit
+let iterate_parsed_boolean_expression = fold_parsed_boolean_expression binunit
+let iterate_parsed_discrete_boolean_expression = fold_parsed_discrete_boolean_expression binunit
+let iterate_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithmetic_expression binunit
+let iterate_parsed_discrete_term  = fold_parsed_discrete_term binunit
+let iterate_parsed_discrete_factor = fold_parsed_discrete_factor binunit
+
+(** Check if all leaf of a linear expression satisfy the predicate **)
+let for_all_in_parsed_linear_expression = fold_parsed_linear_expression (&&)
+(** Check if all leaf of a linear term satisfy the predicate **)
+let for_all_in_parsed_linear_term = fold_parsed_linear_term (&&)
+
+(** Check if any leaf of a linear expression the predicate **)
+let exists_in_parsed_linear_expression = fold_parsed_linear_expression (||)
+(** Check if any leaf of a linear term the predicate **)
+let exists_in_parsed_linear_term = fold_parsed_linear_term (||)
+
+(** Iterate over a linear expression **)
+let iterate_parsed_linear_expression = fold_parsed_linear_expression binunit
+(** Iterate over a linear term **)
+let iterate_parsed_linear_term = fold_parsed_linear_term binunit
+
 let string_of_parsed_factor_constructor = function
 	| Parsed_DF_variable _ -> "variable"
 	| Parsed_DF_constant _ -> "constant"
@@ -277,7 +426,7 @@ and try_reduce_parsed_arithmetic_expression constants expr =
                 (* Retrieve the value of the global constant *)
                 Hashtbl.find constants variable_name
             ) else
-                raise (InvalidExpression ("Use of variable " ^ variable_name ^ " in assignment is forbidden"))
+                raise (InternalError ("Unable to reduce a non-constant expression. " ^ variable_name ^ " found. It should be checked before."))
         | Parsed_DF_constant value -> value
         | Parsed_DF_expression arithmetic_expr -> try_reduce_parsed_arithmetic_expression_rec arithmetic_expr
         | Parsed_DF_unary_min factor ->
@@ -369,3 +518,65 @@ let try_reduce_parsed_factor constants factor =
     let expr = Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor factor)))) in
     try_reduce_parsed_global_expression constants expr
 
+
+
+(** Utils **)
+
+let is_parsed_global_expression_constant parsed_model =
+    for_all_in_parsed_global_expression (function
+        | Leaf_variable variable_name -> Hashtbl.mem parsed_model.constants variable_name
+        | Leaf_constant _ -> true
+    ) parsed_model
+
+let is_variable_defined parsed_model expr = function
+    | Leaf_variable variable_name ->
+        if not (List.mem variable_name parsed_model.variable_names) && not (Hashtbl.mem parsed_model.constants variable_name) then(
+            (* TODO benjamin message or not message ? *)
+            (* ImitatorUtilities.print_error (
+                "The variable \"" ^ variable_name ^ "\" used in expression \""
+                ^ string_of_parsed_boolean_expression parsed_model expr
+                ^ "\" was not declared."
+            ); *)
+            false
+        )
+        else
+            true
+    | Leaf_constant _ -> true
+
+let is_only_discrete parsed_model = function
+    | Leaf_constant _ -> true
+    | Leaf_variable variable_name ->
+        (* Constants are allowed *)
+        (Hashtbl.mem parsed_model.constants variable_name)
+        (* Or discrete *)
+        ||
+        try(
+            let variable_index = Hashtbl.find parsed_model.index_of_variables variable_name in
+            DiscreteValue.is_discrete_type (parsed_model.type_of_variables variable_index)
+        ) with Not_found -> (
+            (* Variable not found! *)
+            (*** TODO: why is this checked here…? It should have been checked before ***)
+            ImitatorUtilities.print_error ("The variable `" ^ variable_name ^ "` used in an update was not declared.");
+            false
+        )
+
+(* Check that all variables in a parsed global expression are effectivily be defined *)
+let all_variables_defined_in_parsed_global_expression parsed_model expr =
+    for_all_in_parsed_global_expression (is_variable_defined parsed_model expr) parsed_model expr
+
+(* Check that all variables in a parsed parsed boolean expression are effectivily be defined *)
+let all_variables_defined_in_parsed_boolean_expression parsed_model expr =
+    for_all_in_parsed_boolean_expression (is_variable_defined parsed_model expr) parsed_model expr
+
+(* Check that there is only discrete variables in a parsed parsed discrete boolean expression *)
+let only_discrete_in_nonlinear_term parsed_model expr =
+    for_all_in_parsed_discrete_boolean_expression (is_only_discrete parsed_model) parsed_model expr
+
+(* TODO benjamin CLEAN *)
+(*
+let test_iterate parsed_model =
+    iterate_parsed_global_expression (function
+        | Leaf_variable variable_name -> ()
+        | Leaf_constant _ -> ()
+    ) parsed_model
+*)
