@@ -1608,6 +1608,35 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 			get_variables_in_linear_constraint all_variables_used linear_constraint
 	) init_definition;*)
 
+
+    (* If init expression right-hand contain variable, we had to consider that the variable as used *)
+	List.iter (function
+		(* `loc[automaton] = location`: no variable => nothing to do *)
+		| Parsed_loc_assignment _
+        (* Linear predicate are true or false constraint => nothing to do*)
+		| Parsed_linear_predicate Parsed_true_constraint
+        | Parsed_linear_predicate Parsed_false_constraint
+        (* Allow only constant-expression, so no variables to get *)
+        | Parsed_discrete_predicate _ -> ()
+		(* Linear constraint: get variables *)
+		| Parsed_linear_predicate (Parsed_linear_constraint (l_expr, _, r_expr)) ->
+            (** Gather all left-hand and right-hand variables *)
+            let left_hand_variables = ref StringSet.empty in
+            let right_hand_variables = ref StringSet.empty in
+            get_variables_in_linear_expression left_hand_variables l_expr;
+            get_variables_in_linear_expression right_hand_variables r_expr;
+
+            (* Right-hand variables are used if left-hand variables are used *)
+            let all = StringSet.for_all (fun variable_name -> StringSet.mem variable_name !all_variables_used) !left_hand_variables in
+            if all then (
+                StringSet.iter (fun variable_name ->
+                    all_variables_used := StringSet.add variable_name !all_variables_used
+                ) !right_hand_variables
+            )
+
+	) parsed_model.init_definition;
+
+
 	(* Return the set of variables actually used *)
 	!all_variables_used
 
@@ -2010,6 +2039,8 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	let variable_names			= useful_parsing_model_information.variable_names in
 	let removed_variable_names	= useful_parsing_model_information.removed_variable_names in
 
+    let variable_names_with_removed = List.rev_append removed_variable_names variable_names in
+
 	let well_formed = ref true in
 	(* Check that (automaton / location / variable) names exist in each predicate *)
 	List.iter (function
@@ -2028,14 +2059,14 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			| Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when List.mem variable_name removed_variable_names ->
 				print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
 				(* Still check the second term *)
-				if not (all_variables_defined_in_linear_expression variable_names constants linear_expression) then (
+				if not (all_variables_defined_in_linear_expression variable_names_with_removed constants linear_expression) then (
                     print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint useful_parsing_model_information linear_constraint ^ "\" use undeclared variable(s)");
 				    well_formed := false;
                 )
 			(* General case: check *)
 			| Parsed_linear_constraint _ as linear_constraint ->
-			    if not (all_variables_defined_in_linear_constraint variable_names constants linear_constraint) then (
-                    print_error ("Linear constrainta \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint useful_parsing_model_information linear_constraint ^ "\" use undeclared variable(s)");
+			    if not (all_variables_defined_in_linear_constraint variable_names_with_removed constants linear_constraint) then (
+                    print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint useful_parsing_model_information linear_constraint ^ "\" use undeclared variable(s)");
 			        well_formed := false;
                 )
             | _ -> ()

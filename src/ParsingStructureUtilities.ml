@@ -164,6 +164,38 @@ let iterate_parsed_linear_expression = fold_parsed_linear_expression binunit
 (** Iterate over a linear term **)
 let iterate_parsed_linear_term = fold_parsed_linear_term binunit
 
+
+type ('t_parsed_boolean_expression, 't_parsed_discrete_boolean_expression) parsing_structure_map_leaf =
+    | Map_global_expression of 't_parsed_boolean_expression
+    | Map_true
+    | Map_false
+    | Map_and of 't_parsed_boolean_expression * 't_parsed_boolean_expression
+    | Map_or of 't_parsed_boolean_expression * 't_parsed_boolean_expression
+    | Map_discrete_boolean_expression of 't_parsed_discrete_boolean_expression
+
+let rec map_parsed_global_expression map_leaf_fun parsed_model = function
+     | Parsed_global_expression expr ->
+        map_leaf_fun (Map_global_expression (map_parsed_boolean_expression map_leaf_fun parsed_model expr))
+
+and map_parsed_boolean_expression map_leaf_fun parsed_model = function
+	| Parsed_True -> map_leaf_fun Map_true
+	| Parsed_False -> map_leaf_fun Map_false
+	| Parsed_And (l_expr, r_expr) ->
+	    map_leaf_fun (Map_and (
+            (map_parsed_boolean_expression map_leaf_fun parsed_model l_expr),
+            (map_parsed_boolean_expression map_leaf_fun parsed_model r_expr)
+        ))
+	| Parsed_Or (l_expr, r_expr) ->
+	    map_leaf_fun (Map_or (
+            (map_parsed_boolean_expression map_leaf_fun parsed_model l_expr),
+            (map_parsed_boolean_expression map_leaf_fun parsed_model r_expr)
+        ))
+	| Parsed_Discrete_boolean_expression expr ->
+	    raise (InvalidExpression "not implemented")
+
+
+
+
 let string_of_parsed_factor_constructor = function
 	| Parsed_DF_variable _ -> "variable"
 	| Parsed_DF_constant _ -> "constant"
@@ -579,4 +611,17 @@ let test_iterate parsed_model =
         | Leaf_variable variable_name -> ()
         | Leaf_constant _ -> ()
     ) parsed_model
+*)
+
+(*
+let test_map parsed_model expr =
+    map_parsed_global_expression (function
+        | Map_global_expression expr -> Parsed_global_expression expr
+        | Map_true -> Parsed_True
+        | Map_false -> Parsed_False
+        | Map_and (l_expr, r_expr) -> Parsed_And (l_expr, r_expr)
+        | Map_or (l_expr, r_expr) -> Parsed_Or (l_expr, r_expr)
+        | Map_discrete_boolean_expression expr -> Parsed_Discrete_boolean_expression expr
+
+    ) parsed_model expr
 *)
