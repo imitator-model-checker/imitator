@@ -732,6 +732,7 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 	in string_of_int_arithmetic_expression customized_string
 
 and customized_string_of_binary_word_expression_for_jani customized_string variable_names = function
+    | Logical_fill_left (binary_word, expr)
     | Logical_shift_left (binary_word, expr) as binary_word_expression ->
         "{\"op\": \""
         ^ string_of_binary_word_expression_constructor binary_word_expression
@@ -740,6 +741,7 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
         ^ ", \"right\":"
         ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
         ^ "}"
+    | Logical_fill_right (binary_word, expr)
     | Logical_shift_right (binary_word, expr) as binary_word_expression ->
         "{\"op\": \""
         ^ string_of_binary_word_expression_constructor binary_word_expression

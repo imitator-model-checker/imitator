@@ -93,6 +93,7 @@ val try_reduce_parsed_factor : (variable_name, DiscreteValue.discrete_value) Has
 
 (** Utils **)
 val is_parsed_global_expression_constant : useful_parsing_model_information -> global_expression -> bool
+val is_parsed_arithmetic_expression_constant : useful_parsing_model_information -> parsed_discrete_arithmetic_expression -> bool
 val all_variables_defined_in_parsed_global_expression : useful_parsing_model_information -> global_expression -> bool
 val all_variables_defined_in_parsed_boolean_expression : useful_parsing_model_information -> parsed_boolean_expression -> bool
 val only_discrete_in_nonlinear_term : useful_parsing_model_information -> parsed_discrete_boolean_expression -> bool

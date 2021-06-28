@@ -786,7 +786,17 @@ and infer_parsed_discrete_factor parsed_model = function
         | Parsed_fill_left _ ->
             (* As we have to deduce length of binary word according to it's shifting value, *)
             (* only constant expression can be use as value of shifting *)
-            (* TODO benjamin here set a real message if expression is not constant *)
+
+            if not (ParsingStructureUtilities.is_parsed_arithmetic_expression_constant parsed_model converted_expr) then
+                raise (TypeError (
+                    "Shift parameter of "
+                    ^ string_of_parsed_factor_constructor shift
+                    ^ " function should be a constant expression."
+                    ^ " Expression \""
+                    ^ ParsingStructureUtilities.string_of_parsed_arithmetic_expression parsed_model converted_expr
+                    ^ "\" is not constant."
+                ));
+
             let shift_value = ParsingStructureUtilities.try_reduce_parsed_arithmetic_expression parsed_model.constants converted_expr in
             let base_length = (match l_type with DiscreteValue.Var_type_discrete_binary_word l -> l | _ -> raise (InternalError "never happen")) in
             let length = base_length + Int32.to_int (DiscreteValue.int_value shift_value) in
@@ -794,7 +804,17 @@ and infer_parsed_discrete_factor parsed_model = function
         | Parsed_fill_right _ ->
             (* As we have to deduce length of binary word according to it's shifting value, *)
             (* only constant expression can be use as value of shifting *)
-            (* TODO benjamin here set a real message if expression is not constant *)
+
+            if not (ParsingStructureUtilities.is_parsed_arithmetic_expression_constant parsed_model converted_expr) then
+                raise (TypeError (
+                    "Shift parameter of "
+                    ^ string_of_parsed_factor_constructor shift
+                    ^ " should be a constant expression."
+                    ^ " Expression \""
+                    ^ ParsingStructureUtilities.string_of_parsed_arithmetic_expression parsed_model converted_expr
+                    ^ "\" is not constant."
+                ));
+
             let shift_value = ParsingStructureUtilities.try_reduce_parsed_arithmetic_expression parsed_model.constants converted_expr in
             let base_length = (match l_type with DiscreteValue.Var_type_discrete_binary_word l -> l | _ -> raise (InternalError "never happen")) in
             let length = base_length + Int32.to_int (DiscreteValue.int_value shift_value) in

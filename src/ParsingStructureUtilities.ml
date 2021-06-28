@@ -458,7 +458,7 @@ and try_reduce_parsed_arithmetic_expression constants expr =
                 (* Retrieve the value of the global constant *)
                 Hashtbl.find constants variable_name
             ) else
-                raise (InternalError ("Unable to reduce a non-constant expression. " ^ variable_name ^ " found. It should be checked before."))
+                raise (InternalError ("Unable to reduce a non-constant expression: " ^ variable_name ^ " found. It should be checked before."))
         | Parsed_DF_constant value -> value
         | Parsed_DF_expression arithmetic_expr -> try_reduce_parsed_arithmetic_expression_rec arithmetic_expr
         | Parsed_DF_unary_min factor ->
@@ -554,11 +554,9 @@ let try_reduce_parsed_factor constants factor =
 
 (** Utils **)
 
-let is_parsed_global_expression_constant parsed_model =
-    for_all_in_parsed_global_expression (function
-        | Leaf_variable variable_name -> Hashtbl.mem parsed_model.constants variable_name
-        | Leaf_constant _ -> true
-    ) parsed_model
+let is_constant parsed_model = function
+    | Leaf_variable variable_name -> Hashtbl.mem parsed_model.constants variable_name
+    | Leaf_constant _ -> true
 
 let is_variable_defined parsed_model expr = function
     | Leaf_variable variable_name ->
@@ -591,6 +589,12 @@ let is_only_discrete parsed_model = function
             ImitatorUtilities.print_error ("The variable `" ^ variable_name ^ "` used in an update was not declared.");
             false
         )
+
+let is_parsed_global_expression_constant parsed_model =
+    for_all_in_parsed_global_expression (is_constant parsed_model) parsed_model
+
+let is_parsed_arithmetic_expression_constant parsed_model =
+    for_all_in_parsed_discrete_arithmetic_expression (is_constant parsed_model) parsed_model
 
 (* Check that all variables in a parsed global expression are effectivily be defined *)
 let all_variables_defined_in_parsed_global_expression parsed_model expr =
