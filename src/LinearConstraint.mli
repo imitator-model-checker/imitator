@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/06/25
+ * Last modified     : 2021/06/29
  *
  ************************************************************)
 
@@ -83,6 +83,11 @@ val make_pxd_linear_term : (coef * variable) list -> coef -> pxd_linear_term
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Access functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(*------------------------------------------------------------*)
+(* Get the constant coefficient of a p_linear_term *)
+(*------------------------------------------------------------*)
+val p_get_coefficient_in_linear_term : p_linear_term -> coef
 
 (*------------------------------------------------------------*)
 (* Get the coefficient of one particular variable in a p_linear_term *)
