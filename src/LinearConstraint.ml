@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/06/25
+ * Last modified     : 2021/06/29
  *
  ************************************************************)
 
@@ -878,6 +878,16 @@ let evaluate_linear_term = evaluate_linear_term_gen true
 
 let evaluate_p_linear_term = evaluate_linear_term
 let evaluate_pxd_linear_term = evaluate_linear_term
+
+
+(*------------------------------------------------------------*)
+(* Get the constant coefficient of an internal_linear_term *)
+(*------------------------------------------------------------*)
+let get_coefficient_in_internal_linear_term (linear_term : internal_linear_term) =
+	(* Call dedicated function, and keep only the constant coefficient *)
+	evaluate_linear_term_gen true (fun _ -> NumConst.zero) linear_term
+
+let p_get_coefficient_in_linear_term = get_coefficient_in_internal_linear_term
 
 
 (*------------------------------------------------------------*)
