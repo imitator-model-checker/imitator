@@ -449,19 +449,26 @@ let get_inequalities model =
 	!inequalities
 	
 let linear_term_to_coef_array linear_term nb_parameters =
-	let coef_array = Array.make (nb_parameters+1) (Finite (NumConst.numconst_of_int 0)) in
+	let coef_array = Array.make (nb_parameters+1) (Finite (p_get_coefficient_in_linear_term linear_term)) in
 	for i=0 to nb_parameters-1 do 
 		coef_array.(i) <- Finite (p_get_variable_coefficient_in_internal_linear_term i linear_term)
 	done;
-	(**TODO: The constant**)
-	(*coef_array.(nb_parameters) <- ???)*)
+	coef_array
+	
+let revert_coef_array coef_array =
+	for i=0 to (Array.length coef_array - 1) do 
+		coef_array.(i) <- neg_inf coef_array.(i)
+	done;
 	coef_array
 	
 let get_guards model =
 	let guards = ref [] in
 	let f (i) =
 		let (clock,op,linear_term) = clock_guard_of_linear_inequality i in
-		guards := List.append [(clock,op,(linear_term_to_coef_array linear_term model.nb_parameters))] !guards	
+		let coef_array = linear_term_to_coef_array linear_term model.nb_parameters in
+		if op = Op_l || op = Op_le 
+		then guards := List.append [(clock-model.nb_parameters,op,coef_array)] !guards
+		else guards := List.append [(clock-model.nb_parameters,op,(revert_coef_array coef_array))] !guards
 	in 
 	List.iter f (get_inequalities model);
 	!guards
@@ -505,6 +512,8 @@ let set_maximums l u nb_clocks : unit =
 	greatest_constants := g_c;
 	max_greatest_const := max_inf !max_lower_const !max_upper_const;
 	end
+	
+	
 
 let prepare_extrapolation () : unit =
 	(* Retrieve the model *)
@@ -512,9 +521,7 @@ let prepare_extrapolation () : unit =
 
 	let p_bounds = Array.make model.nb_parameters (Minus_infinity,Infinity) in
 	
-	(*let guards = get_guards model in*)
-	
-	let guards = [(0,Op_eq,[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 1))|]);(0,Op_le,[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 1))|]);(0,Op_eq,[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 0))|]);(1,Op_ge,[|(Finite (NumConst.numconst_of_int 1));(Finite (NumConst.numconst_of_int 0))|])] in
+	let guards = get_guards model in
 	
 	let nb_clocks = model.nb_clocks in
 
@@ -528,9 +535,15 @@ let prepare_extrapolation () : unit =
 		begin
 			lower_constants := l;
 			upper_constants := u;
-			
-(**Test guards		
-			if not_in (1,Op_ge,[|(Finite (NumConst.numconst_of_int 1));(Finite (NumConst.numconst_of_int 0))|]) guards then raise (InternalError "bad :(") else raise (InternalError "good :)");**)
+
+(**Test guards		if guards =
+[
+(1,Op_ge,[|(Finite (NumConst.numconst_of_int 1));(Finite (NumConst.numconst_of_int 0))|]);
+(0,Op_eq,[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 0))|]);
+(0,Op_eq,[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 1))|]);
+(0,Op_le,[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 1))|])
+] 
+then raise (InternalError "good :)") else raise (InternalError "bad :(");**)
 			
 (**Test (l,u)		lower_constants := [|Finite(NumConst.numconst_of_int 1);Finite(NumConst.numconst_of_int 67)|];
 			upper_constants := [|Finite(NumConst.numconst_of_int 1);Minus_infinity|];		
