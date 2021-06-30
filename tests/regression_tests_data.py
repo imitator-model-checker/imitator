@@ -3499,7 +3499,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : '',
+		'purpose'    : 'Test that behavior of pow function is correct',
 		'input_files': ['functions/pow.imi'],
 		'tags': 'semantic, behavior, function',
 		'options'    : '-mode statespace -states-description',
@@ -3539,6 +3539,103 @@ Error                                   : invalid model
   Projection onto the parameters:
    p1 = 82
 & p2 = 65
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/06/30
+		## Last modified            : 2021/06/30
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that behaviors of all possible functions on binary word are correct ',
+		'input_files': ['functions/binary-word.imi'],
+		'tags': 'semantic, behavior, function',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'binary-word-statespace.states' , 'content' : """
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: loc_init, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00000 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  pta: loc_land, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10100 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 2:
+  pta: loc_lor, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10111 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 3:
+  pta: loc_lxor, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00011 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 4:
+  pta: loc_lnot, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b01010 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 5:
+  pta: loc_shift_left, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10100 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 6:
+  pta: loc_shift_right, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 7:
+  pta: loc_fill_left, r = 0, i = 0, j = 0, bin_result2 = 0b10101000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 8:
+  pta: loc_fill_right, r = 0, i = 0, j = 0, bin_result2 = 0b00010101, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
 		"""
 			 } # end result file
 			,
