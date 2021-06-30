@@ -1,0 +1,76 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : exU_noloop
+ * Description      : U-PTA for which there exists a loop in the trace set of p=infinity, but not for any actual parameter valuation. NOTE: principle similar to `infinite:infeasiblePath.imi`
+ * Correctness      : 
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Academic ; Toy ; Unsolvable
+ * Source           : Didier Lime
+ * bibkey           : 
+ * Author           : Didier Lime
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : 2015/09/30
+ * Last modified    : 2020/08/14
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant y <= p
+	when x = 1 do {x := 0} goto l1;
+	when y <= p goto l2;
+
+loc l2: invariant True
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

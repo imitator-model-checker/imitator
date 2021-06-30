@@ -1,0 +1,180 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : Pipeline_KP12_2_5
+ * Description      : The network presented in Figure 2 models the system consisting of the Producer feeding the Consumer with data sent through a sequence of nodes with additional processing capabilities. The model is scalable with respect to the number n of the processing nodes and the length m of each processing node and it contains three lower (a,c,e) and three upper (b,d,f) parameters. Note: the clocks were renamed (w.r.t. to [KP12]) for sake of simplicity.
+ * Correctness      : φ2 = ConsWaiting ∧ ProdReady ∧ xtotal ≥ 5
+ * Scalable         : yes
+ * Generated        : 
+ * Categories       : Academic ; ProdCons
+ * Source           : SMT-based Parameter Synthesis for L/U Automata, Michał Knapik and Wojciech Penczek
+ * bibkey           : KP12
+ * Author           : Michał Knapik and Wojciech Penczek
+ * Modeling         : Michał Knapik and Wojciech Penczek
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2015/09/23
+ * Last modified    : 2020/08/18
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
+
+var
+
+(* Clocks *)
+ 	xprod, xnode1, xnode2, xcons,
+		xtotal,
+		: clock;
+
+(* Parameters *)
+	a, b, c, d, e, f
+		: parameter;
+
+
+
+(************************************************************)
+  automaton Producer
+(************************************************************)
+synclabs: ProdReset, Feed2;
+
+loc prodReady: invariant xprod <= d
+	when xprod >= c sync Feed2 do {xprod := 0} goto prodWaiting;
+
+loc prodWaiting: invariant xprod <= b
+	when xprod >= a sync ProdReset do {xprod := 0} goto prodReady;
+
+end (* Producer *)
+
+
+
+(************************************************************)
+  automaton Consumer
+(************************************************************)
+synclabs: ConsReset, Feed4;
+
+loc consReady: invariant xcons <= d
+	when xcons >= c sync Feed4 do {xcons := 0} goto consWaiting;
+
+loc consWaiting: invariant xcons <= b
+	when xcons >= a sync ConsReset do {xcons := 0} goto consReady;
+
+end (* Consumer *)
+
+
+
+(************************************************************)
+  automaton Node1
+(************************************************************)
+synclabs: Node1Process1, Node1Process2, Node1Process3, Node1Process4, Node1Process5, Feed2, Feed3;
+
+loc node1Ready: invariant xnode1 <= d
+	when xnode1 >= c sync Feed2 do {xnode1 := 0} goto intermediate1;
+
+loc intermediate1: invariant xnode1 <= f
+	when xnode1 >= e sync Node1Process1 do {xnode1 := 0} goto intermediate2;
+
+loc intermediate2: invariant xnode1 <= f
+	when xnode1 >= e sync Node1Process2 do {xnode1 := 0} goto intermediate3;
+
+loc intermediate3: invariant xnode1 <= f
+	when xnode1 >= e sync Node1Process3 do {xnode1 := 0} goto intermediate4;
+
+loc intermediate4: invariant xnode1 <= f
+	when xnode1 >= e sync Node1Process4 do {xnode1 := 0} goto intermediate5;
+
+loc intermediate5: invariant xnode1 <= f
+	when xnode1 >= e sync Node1Process5 do {xnode1 := 0} goto send;
+
+loc send: invariant xnode1 <= d
+	when xnode1 >= c sync Feed3 do {xnode1 := 0} goto node1Ready;
+
+end (* Node1 *)
+
+
+(************************************************************)
+  automaton Node2
+(************************************************************)
+synclabs: Node2Process1, Node2Process2, Node2Process3, Node2Process4, Node2Process5, Feed3, Feed4;
+
+loc node2Ready: invariant xnode2 <= d
+	when xnode2 >= c sync Feed3 do {xnode2 := 0} goto intermediate1;
+
+loc intermediate1: invariant xnode2 <= f
+	when xnode2 >= e sync Node2Process1 do {xnode2 := 0} goto intermediate2;
+
+loc intermediate2: invariant xnode2 <= f
+	when xnode2 >= e sync Node2Process2 do {xnode2 := 0} goto intermediate3;
+
+loc intermediate3: invariant xnode2 <= f
+	when xnode2 >= e sync Node2Process3 do {xnode2 := 0} goto intermediate4;
+
+loc intermediate4: invariant xnode2 <= f
+	when xnode2 >= e sync Node2Process4 do {xnode2 := 0} goto intermediate5;
+
+loc intermediate5: invariant xnode2 <= f
+	when xnode2 >= e sync Node2Process5 do {xnode2 := 0} goto send;
+
+loc send: invariant xnode2 <= d
+	when xnode2 >= c sync Feed4 do {xnode2 := 0} goto node2Ready;
+
+end (* Node2 *)
+
+
+(************************************************************)
+  automaton observer
+(************************************************************)
+
+(*** NOTE: as of version 2.10, IMITATOR cannot use clocks in the property; therefore we use an observer to encode the x >= 5 part of the property ***)
+loc waiting: invariant xtotal <= 5
+	when xtotal = 5 goto finished;
+
+loc finished: invariant True
+
+end (* observer *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[Producer]	= prodReady
+	& loc[Consumer]	= consReady
+	& loc[Node1]	= node1Ready
+	& loc[Node2]	= node2Ready
+	& loc[observer]	= waiting
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& xprod = 0
+	& xnode1 = 0
+	& xnode2 = 0
+	& xcons = 0
+	& xtotal = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& a >= 0
+	& b >= 0
+	& c >= 0
+	& d >= 0
+	& e >= 0
+	& f >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

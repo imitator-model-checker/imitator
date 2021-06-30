@@ -1,0 +1,167 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : fischerHRSV02_3
+ * Description      : Fischer's mutual exclusion protocol. Version with 3 processes.
+ * Correctness      : No two processes in the mutual exclusion
+ * Scalable         : in the number of processes
+ * Generated        : no
+ * Categories       : Academic ; Protocol ; RTS
+ * Source           : From "Linear Parametric Model Checking of Timed Automata" Hune, Romijn, Stoelinga, Vaandrager, 2002
+ * bibkey           : HRSV02
+ * Author           : Hune, Romijn, Stoelinga, Vaandrager
+ * Modeling         : Hune, Romijn, Stoelinga, Vaandrager
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2013/12/10
+ * Last modified    : 2020/08/14
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
+
+var 
+	
+	x_1, (*P1's clock*)
+	x_2, (*P2's clock*)
+	x_3, (*P3's clock*)
+		:clock;
+	
+
+	lock
+		: discrete;
+
+	min_rw, max_rw,
+	min_delay, max_delay,
+		: parameter;
+
+
+(************************************************************)
+automaton process_1
+(************************************************************)
+synclabs: ;
+
+loc start_1: invariant x_1 <= max_rw
+	(* Actually lock <> 0 (but no <> in IMITATOR, and <> 0 is equivalent to > 0 *)
+	when lock > 0 & x_1 > min_rw do {x_1 := 0} goto start_1;
+
+	when lock = 0 & x_1 > min_rw do {x_1 := 0} goto set_1;
+
+loc set_1: invariant x_1 <= max_rw
+	(* Actually lock := i *)
+	when x_1 > min_rw do {lock := 1, x_1 := 0} goto tryenter_1;
+
+loc tryenter_1: invariant x_1 <= max_delay
+	(* Actually lock := i *)
+	when x_1 > min_delay & lock = 1 goto cs_1;
+	(* Actually lock <> i *)
+	when x_1 > min_delay & lock > 1 do {x_1 := 0} goto start_1;
+	when x_1 > min_delay & lock < 1 do {x_1 := 0} goto start_1;
+
+loc cs_1: invariant True
+	when True do {x_1 := 0, lock := 0} goto start_1;
+
+end (*process_1*)
+
+
+
+(************************************************************)
+automaton process_2
+(************************************************************)
+synclabs: ;
+
+loc start_2: invariant x_2 <= max_rw
+	(* Actually lock <> 0 (but no <> in IMITATOR, and <> 0 is equivalent to > 0 *)
+	when lock > 0 & x_2 > min_rw do {x_2 := 0} goto start_2;
+
+	when lock = 0 & x_2 > min_rw do {x_2 := 0} goto set_2;
+
+loc set_2: invariant x_2 <= max_rw
+	(* Actually lock := i *)
+	when x_2 > min_rw do {lock := 2, x_2 := 0} goto tryenter_2;
+
+loc tryenter_2: invariant x_2 <= max_delay
+	(* Actually lock = i *)
+	when x_2 > min_delay & lock = 2 goto cs_2;
+	(* Actually lock <> i *)
+	when x_2 > min_delay & lock > 2 do {x_2 := 0} goto start_2;
+	when x_2 > min_delay & lock < 2 do {x_2 := 0} goto start_2;
+
+loc cs_2: invariant True
+	when True do {x_2 := 0, lock := 0} goto start_2;
+
+end (*process_2*)
+
+
+
+(************************************************************)
+automaton process_3
+(************************************************************)
+synclabs: ;
+
+loc start_3: invariant x_3 <= max_rw
+	(* Actually lock <> 0 (but no <> in IMITATOR, and <> 0 is equivalent to > 0 *)
+	when lock > 0 & x_3 > min_rw do {x_3 := 0} goto start_3;
+
+	when lock = 0 & x_3 > min_rw do {x_3 := 0} goto set_3;
+
+loc set_3: invariant x_3 <= max_rw
+	(* Actually lock := i *)
+	when x_3 > min_rw do {lock := 3, x_3 := 0} goto tryenter_3;
+
+loc tryenter_3: invariant x_3 <= max_delay
+	(* Actually lock = i *)
+	when x_3 > min_delay & lock = 3 goto cs_3;
+	(* Actually lock <> i *)
+	when x_3 > min_delay & lock > 3 do {x_3 := 0} goto start_3;
+	when x_3 > min_delay & lock < 3 do {x_3 := 0} goto start_3;
+
+loc cs_3: invariant True
+	when True do {x_3 := 0, lock := 0} goto start_3;
+
+end (*process_3*)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[process_1] = start_1
+	& loc[process_2] = start_2
+	& loc[process_3] = start_3
+	
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& lock = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x_1 = 0
+	& x_2 = 0
+	& x_3 = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& 0 <= min_rw
+	& min_rw < max_rw
+	& 0 <= min_delay
+	& min_delay < max_delay
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

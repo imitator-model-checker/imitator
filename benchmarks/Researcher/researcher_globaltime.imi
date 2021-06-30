@@ -1,0 +1,105 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : researcher_globaltime
+ * Description      : Researcher writing papers and drinking coffee; version with global_time clock
+ * Correctness      : Depends on the property
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Toy ; Education
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : 2021/01/26
+ * Last modified    : 2021/02/01
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, t, global_time,
+		: clock;
+
+(* Discrete *)
+	nb,
+		: discrete;
+
+(* Parameters *)
+	pTotal, pNeed, MAXBREAK, pCoffee,
+		: parameter;
+
+(* Constants *)
+	MINNEED = 1,
+		: constant;
+
+
+(************************************************************)
+  automaton researcher
+(************************************************************)
+synclabs: done, drink, drunk, restart;
+
+loc working: invariant x <= pTotal
+	when x >= 0.8 pTotal goto workingFast;
+	when x = pTotal sync done do {x := 0, t := 0} goto finished;
+	when t >= pNeed & nb <= MAXBREAK - 1 sync drink do {t := 0, nb := nb + 1} goto coffeeing;
+
+loc workingFast: invariant x <= pTotal flow{x' = 2}
+	when True goto working;
+	when x = pTotal sync done do {x := 0, t := 0} goto finished;
+	when t >= 0.6 * pNeed & nb <= MAXBREAK - 1 sync drink do {t := 0, nb := nb + 1} goto coffeeing;
+
+loc coffeeing: invariant t <= pCoffee stop{x}
+	when t = pCoffee sync drunk do {t := 0} goto working;
+	when t = pCoffee & x >= 0.8 pTotal sync drunk do {t := 0} goto workingFast;
+
+loc finished: invariant True stop{x, t}
+	when True sync restart do {x := 0, t := 0.5 pNeed, nb := 0} goto working;
+
+end (* researcher *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[researcher] = working
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& nb = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& t = 0
+	& global_time = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& pTotal >= 0
+	& pNeed >= MINNEED
+	& pCoffee >= 0
+	
+	& MAXBREAK >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
