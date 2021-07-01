@@ -8,9 +8,9 @@
  *
  * Module description: Convert a parsing structure into an abstract model
  *
- * File contributors : Étienne André, Jaime Arias, Laure Petrucci
+ * File contributors : Étienne André, Jaime Arias, Laure Petrucci, Benjamin Loillier
  * Created           : 2009/09/09
- * Last modified     : 2021/06/08
+ * Last modified     : 2021/07/01
  *
  ************************************************************)
 
@@ -1613,11 +1613,18 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 	List.iter (function
 		(* `loc[automaton] = location`: no variable => nothing to do *)
 		| Parsed_loc_assignment _
+        
         (* Linear predicate are true or false constraint => nothing to do*)
 		| Parsed_linear_predicate Parsed_true_constraint
         | Parsed_linear_predicate Parsed_false_constraint
+        
         (* Allow only constant-expression, so no variables to get *)
         | Parsed_discrete_predicate _ -> ()
+        
+		(* Special form `variable ~ constant` => in this case we assume NOT used *)
+		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable _), _, Linear_term (Constant _))) ->
+			()
+		
 		(* Linear constraint: get variables *)
 		| Parsed_linear_predicate (Parsed_linear_constraint (l_expr, _, r_expr)) ->
             (** Gather all left-hand and right-hand variables *)
