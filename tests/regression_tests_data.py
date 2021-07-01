@@ -486,7 +486,7 @@ Error                                   : unsatisfiable initial state
 	#------------------------------------------------------------
 
 	,
-	
+
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -900,6 +900,92 @@ end
 	##------------------------------------------------------------]
 
 	,
+
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# AUTOMATIC VARIABLES REMOVAL
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test discrete variable automatic removal',
+		'input_files': ['testVarElim.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
+			{'file': 'testVarElim-statespace.states' , 'content' : """
+  STATE 1:
+  pta: l1, i = 0, j = 0 ==>
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test absence of discrete variable automatic removal',
+		'input_files': ['testVarElim.imi'],
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
+			{'file': 'testVarElim-statespace.states' , 'content' : """
+  STATE 1:
+  pta: l1, i = 0, j = 0, k = 0, l = 0 ==>
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/01
+		# Last modified            : 2021/07/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test no clock removal for x=y with x used in the model but not y',
+		'input_files': ['test_var_remove.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'test_var_remove.res' , 'content' : """
+Number of clocks                        : 2
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/01
+		# Last modified            : 2021/07/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test correct variable removal for more complex dependencies',
+		'input_files': ['test_var_remove_2.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'test_var_remove_2.res' , 'content' : """
+Number of clocks                        : 3
+		""" # TODO: add check for rational and parameter too, etc., perhaps using a -mode statespace -states-description -depth-limit 2
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# STATE SPACE GENERATION
@@ -2781,7 +2867,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.0.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a clock isn\'t updated with a bad type',
+		'purpose'    : 'Test that a clock isn’t updated with a bad type',
 		'tags': 'type checking, update',
 		'input_files': ['type_checking/updates/clock-update-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -2808,7 +2894,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in addition',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in addition',
 		'input_files': ['type_checking/expression-mixin-type-error-1.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2831,7 +2917,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in multiplication',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in multiplication',
 		'input_files': ['type_checking/expression-mixin-type-error-2.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2854,7 +2940,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in comparison',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in comparison',
 		'input_files': ['type_checking/expression-mixin-type-error-3.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
@@ -2877,7 +2963,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in "in" expression',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in "in" expression',
 		'input_files': ['type_checking/expression-mixin-type-error-4.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -3794,44 +3880,6 @@ Constraint nature                       : good
 DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1
   s_1 -> s_1 via "a"
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test discrete variable automatic elimination',
-		'input_files': ['testVarElim.imi'],
-		'options'    : '-mode statespace -states-description',
-		'expectations' : [
-			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
-			{'file': 'testVarElim-statespace.states' , 'content' : """
-  STATE 1:
-  pta: l1, i = 0, j = 0 ==>
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test absence of discrete variable automatic elimination',
-		'input_files': ['testVarElim.imi'],
-		'options'    : '-mode statespace -states-description -no-var-autoremove',
-		'expectations' : [
-			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
-			{'file': 'testVarElim-statespace.states' , 'content' : """
-  STATE 1:
-  pta: l1, i = 0, j = 0, k = 0, l = 0 ==>
 		"""
 			} # end result file
 			,
