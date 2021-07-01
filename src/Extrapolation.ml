@@ -125,19 +125,7 @@ type modified_pta_type =
 	| Other 
 
 (************************************************************
- *
  *Computation of the maximal constants for each clocks of a PTA with non-diagonal constraints (only one clock per constraint)
- *
- *Information is encoded as follows :
- *pta_type is a string that can either be "L", "U", "LU_Ubounded", "LU_Lbounded", "other" and indicates if the PTA is in one of those sub-classes.
- *bounds is an array of couple of float such that the couple (f1,f2) at index i indicates that the i-th parameter takes f1 as its lower bound and f2 as its upper bound.
- *guards is a list of all linear constraints present in guards and invariants, each of the form (clock, operator, factors), where a clock is identified by an integer, operator is a string that can either be "<", "<=", ">", ">=", "=", and factors denotes the factor of each parameter in the linear constraint and takes the form of an array of float of size k+1 with k the number of parameter (the float at index k+1 is in fact the constant part of the constraint).
- *h is an integer denoting the number of clocks.
- *
- *Here are some examples of valid input :
- *compute_maximal_constants "L" [|(0.,infinity)|] [(0,"=",[|0.;1.|]);(0,"<=",[|0.;1.|]);(0,"=",[|0.;0.|]);(1,">=",[|1.;0.|])] 2
- *compute_maximal_constants "L/U-U_bounded" [|(0.,infinity);(0.,5.)|] [(0,">",[|0.;1.;-3.|]);(1,"<",[|2.;0.;1.|]);(0,">=",[|0.;-1.;0.|]);(1,"<=",[|0.;0.;4.|])] 2
- *
  ************************************************************)
  
  
@@ -184,8 +172,6 @@ let includes l1 l2 =
 	end
 		
 (* Returns the maximum value in an array of numconst_or_infinity (intersected with 0) *)	
-(* Input = a : float array *)
-(* Output = float *)
 
 let max_array a =
 	let m = ref(Finite (NumConst.numconst_of_int 0)) in
@@ -201,11 +187,9 @@ let max_array a =
 
 
 (* Hide all bounded parameters in a list of guards by replacing them by their bounds *)	
-(* Input = guards : (int, string, float array) list, bounds : (float,float) array *)
-(* Output = (int, string, float array) list *)
-
 
 let hide_bounded (guards : (int * op * numconst_or_infinity array) list) (bounds : (numconst_or_infinity * numconst_or_infinity) array) =
+	let new_guards = guards in
 	let f (clock, operator, factors) = 
 		let k = (Array.length factors) - 1 in
 		for i = 0 to k-1 do
@@ -222,12 +206,10 @@ let hide_bounded (guards : (int * op * numconst_or_infinity array) list) (bounds
 			end
 		done;
 	(clock, operator, factors)
-	in List.map f guards
+	in List.map f new_guards
 	
 
 (* Returns a boolean array indicating for each clock if it is a parametric one *)	
-(* Input = guards : (int, string, float array) list, h : int *)
-(* Output = bool array *)
 
 let compute_parametric_clocks_array guards h =
 	let parametric_clocks_array = Array.make h false in
@@ -242,8 +224,6 @@ let compute_parametric_clocks_array guards h =
 	
 	
 (* Counts the number of true values in a boolean array *)	
-(* Input = parametric_clocks_array : bool array *)
-(* Output = int *)
 
 let compute_parametric_clocks_number parametric_clocks_array =
 	let parametric_clocks_number = ref(0) in	
@@ -251,20 +231,17 @@ let compute_parametric_clocks_number parametric_clocks_array =
 	!parametric_clocks_number	
 	
 (* Bounds all parameters with n if their current bound is greater than n *)	
-(* Input = bounds : (float,float) array, n : float *)
-(* Output = (float,float) array *)
 
 let set_bounds bounds n =
+	let new_bounds = bounds in
 	let f (min,max) = 
 		if lesser_inf max n then (min,max)
 		else (min,n);
 	in
-	Array.map f bounds
+	Array.map f new_bounds
 	
 	
 (* Computes the maximal value (cf. "g_max" paper) of a guard *)	
-(* Input = clock : int, operator : string ,factors : float array, bounds : (float,float) array *)
-(* Output = float *)
 
 let compute_gmax (clock, operator, factors) bounds =
 	let k = (Array.length factors) - 1 in
@@ -278,8 +255,6 @@ let compute_gmax (clock, operator, factors) bounds =
 	
 		
 (* Returns an array with the greatest non parametric constants compared to each clock (cf. "c_x" paper) *)	
-(* Input = guards : (int, string, float array) list, h : int *)
-(* Output = float array *)
 
 let compute_greatest_nonparametric_constants guards h=
 	let greatest_const = Array.make h (Finite (NumConst.numconst_of_int 0)) in
@@ -291,8 +266,6 @@ let compute_greatest_nonparametric_constants guards h=
 		
 		
 (* Compute the upper bound of the number of clock regions (cf. "R" paper) *)	
-(* Input = greatest_nonparametric_constants : float array, h : int *)
-(* Output = float *)
 
 let compute_regions_upper_bound greatest_nonparametric_constants h =
 	let regions_upper_bound = ref(Finite (NumConst.numconst_of_int ((factorial h) * (power 2 h)))) in
@@ -311,8 +284,6 @@ let compute_regions_upper_bound greatest_nonparametric_constants h =
 	
 		
 (* Compute the parameter valuation to use as an upper bound (cf. "N" paper) *)	
-(* Input = pta_type : string, guards : (int, string, float array) list, parametric_clocks_number : float, h : int *)
-(* Output = float *)
 
 let compute_n pta_type guards parametric_clocks_number h =
 	let gnc = compute_greatest_nonparametric_constants guards h in
@@ -335,8 +306,6 @@ let compute_n pta_type guards parametric_clocks_number h =
 (************************************************************)
 
 (* Return for each clock x the value to use for the LU-extrapolation of x (cf. "vec{LU}" paper) *)	
-(* Input = pta_type : string, bounds : (float,float) array, guards : (int, string, float array) list, h : int *)
-(* Output = (float array, float array) *)
 
 let get_max_bounds bounds guards h =
 	let max_const_L = Array.make h Minus_infinity in
@@ -512,8 +481,7 @@ let set_maximums l u nb_clocks : unit =
 	greatest_constants := g_c;
 	max_greatest_const := max_inf !max_lower_const !max_upper_const;
 	end
-	
-	
+
 
 let prepare_extrapolation () : unit =
 	(* Retrieve the model *)
@@ -536,21 +504,8 @@ let prepare_extrapolation () : unit =
 			lower_constants := l;
 			upper_constants := u;
 
-(**Test guards		if guards =
-[
-(1,Op_ge,[|(Finite (NumConst.numconst_of_int 1));(Finite (NumConst.numconst_of_int 0))|]);
-(0,Op_eq,[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 0))|]);
-(0,Op_eq,[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 1))|]);
-(0,Op_le,[|(Finite (NumConst.numconst_of_int 0));(Finite (NumConst.numconst_of_int 1))|])
-] 
-then raise (InternalError "good :)") else raise (InternalError "bad :(");**)
-			
-(**Test (l,u)		lower_constants := [|Finite(NumConst.numconst_of_int 1);Finite(NumConst.numconst_of_int 67)|];
-			upper_constants := [|Finite(NumConst.numconst_of_int 1);Minus_infinity|];		
-if l = !lower_constants && u = !upper_constants then raise (InternalError "good :)") else raise (InternalError "bad :(");**)
-	
 			set_maximums l u nb_clocks;
-	
+
 			nb_parameters := model.nb_parameters;
 			clocks := model.clocks;
 		end
