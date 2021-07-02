@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/06/29
+ * Last modified     : 2021/07/02
  *
  ************************************************************)
 
@@ -105,8 +105,6 @@ val add_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
 
 
 (** Perform linear_term1 - linear_term2 *)
-(* val sub_linear_terms : linear_term -> linear_term -> linear_term *)
-
 val sub_p_linear_terms : p_linear_term -> p_linear_term -> p_linear_term
 (*val sub_px_linear_terms : px_linear_term -> px_linear_term -> px_linear_term*)
 val sub_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
