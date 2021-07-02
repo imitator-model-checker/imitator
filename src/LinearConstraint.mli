@@ -494,11 +494,7 @@ val pxd_add_dimensions : int -> pxd_linear_constraint -> unit
 (* val remove_dimensions : int -> linear_constraint -> unit *)
 val pxd_remove_dimensions : int -> pxd_linear_constraint -> unit
 
-(** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
-(* val rename_variables : (variable * variable) list -> linear_constraint -> linear_constraint *)
-(* val rename_variables : (variable * variable) list -> pxd_linear_constraint -> pxd_linear_constraint *)
-
-(** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new), with side effects *)
+(** `rename_variables renaming_couples c` renames all variables according to the couples of the form (old, new), with side effects *)
 (* val rename_variables_assign : (variable * variable) list -> linear_constraint -> unit *)
 val pxd_rename_variables_assign : (variable * variable) list -> pxd_linear_constraint -> unit
 
@@ -511,7 +507,7 @@ val px_time_elapse_assign_wrt_polyhedron : px_linear_constraint -> px_linear_con
 val pxd_time_elapse_assign_wrt_polyhedron : pxd_linear_constraint -> pxd_linear_constraint -> unit
 
 
-(** 'time_elapse_assign variables_elapse variables_constant linear_constraint' performs time elapsing on a set of variables variables_elapse; other variables remain constant; version with side effects; behavior is unspecified if some variables within linear_constraint do not appear in any set of variables *)
+(** `time_elapse_assign variables_elapse variables_constant linear_constraint` performs time elapsing on a set of variables variables_elapse; other variables remain constant; version with side effects; behavior is unspecified if some variables within linear_constraint do not appear in any set of variables *)
 (* val time_elapse_assign : variable list -> variable list -> linear_constraint -> unit *)
 val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constraint -> unit
 
@@ -601,18 +597,6 @@ val string_of_true : string
 
 (** String for the intersection symbol *)
 val string_of_and : string
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion to GrML} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(*(** Convert a linear term into a string for GML *)
-val grml_of_pxd_linear_term : (variable -> string) -> int -> pxd_linear_term -> string
-
-(** Convert a linear constraint into a string for GML *)
-val grml_of_px_linear_constraint : (variable -> string) -> int -> px_linear_constraint -> string
-val grml_of_pxd_linear_constraint : (variable -> string) -> int -> pxd_linear_constraint -> string*)
-
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -771,20 +755,11 @@ val string_of_p_convex_or_nonconvex_constraint : (variable -> string) -> p_conve
 val serialize_variable : variable -> string
 val unserialize_variable : string -> variable
 
-(*val serialize_p_linear_constraint : p_linear_constraint -> string
-val unserialize_p_linear_constraint : string -> p_linear_constraint*)
-
 val serialize_p_nnconvex_constraint : p_nnconvex_constraint -> string
 val unserialize_p_nnconvex_constraint : string -> p_nnconvex_constraint
 
 val serialize_p_convex_or_nonconvex_constraint : p_convex_or_nonconvex_constraint -> string
 val unserialize_p_convex_or_nonconvex_constraint : string -> p_convex_or_nonconvex_constraint
-
-
-(************************************************************)
-(** {2 Statistics on performances} *)
-(************************************************************)
-(* val get_statistics : float -> string *)
 
 
 (************************************************************)
