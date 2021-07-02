@@ -558,6 +558,10 @@ let is_constant variable_infos = function
     | Leaf_variable variable_name -> Hashtbl.mem variable_infos.constants variable_name
     | Leaf_constant _ -> true
 
+let is_linear_constant variable_infos = function
+    | Leaf_linear_variable (_, variable_name) -> Hashtbl.mem variable_infos.constants variable_name
+    | Leaf_linear_constant _ -> true
+
 let is_variable_defined variable_infos expr = function
     | Leaf_variable variable_name ->
         if not (List.mem variable_name variable_infos.variable_names) && not (Hashtbl.mem variable_infos.constants variable_name) then(
@@ -608,6 +612,9 @@ let all_variables_defined_in_parsed_boolean_expression variable_infos expr =
 let only_discrete_in_nonlinear_term variable_infos expr =
     for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos) variable_infos expr
 
+let is_parsed_linear_expression_constant variable_infos expr =
+    for_all_in_parsed_linear_expression (is_linear_constant variable_infos) variable_infos expr
+
 (* TODO benjamin CLEAN *)
 (*
 let test_iterate variable_infos =
@@ -636,4 +643,6 @@ let variable_infos_of_parsed_model (parsed_model : useful_parsing_model_informat
         variable_names = parsed_model.variable_names;
         index_of_variables = parsed_model.index_of_variables;
         type_of_variables = parsed_model.type_of_variables;
+        removed_variable_names = parsed_model.removed_variable_names;
+        only_used_in_init_variable_names = parsed_model.only_used_in_init_variable_names;
     }

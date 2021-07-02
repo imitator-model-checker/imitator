@@ -1532,7 +1532,13 @@ let get_declared_automata_names =
 let get_declared_synclabs_names =
   List.fold_left (fun action_names (_, synclabs, _) -> list_union action_names synclabs) []
 
-
+(* Get all variables that are ONLY used in init definition *)
+let get_all_variables_used_only_in_init_definition init_definition all_variables_used =
+    (* Get all variable used in init definition *)
+    let all_variables_used_in_init = ref StringSet.empty in
+    List.iter (get_variables_in_init_state_predicate all_variables_used_in_init) init_definition;
+    let only_used_in_init_variable_names_set = StringSet.diff !all_variables_used_in_init all_variables_used in
+    only_used_in_init_variable_names_set
 
 (* Get the set of all variable names used in the parsed model *)
 let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_model) =
@@ -1608,7 +1614,8 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 			get_variables_in_linear_constraint all_variables_used linear_constraint
 	) init_definition;*)
 
-
+    (* TODO benjamin CLEAN remove comments *)
+    (*
     (* If init expression right-hand contain variable, we had to consider that the variable as used *)
 	List.iter (function
 		(* `loc[automaton] = location`: no variable => nothing to do *)
@@ -1634,15 +1641,17 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
             get_variables_in_linear_expression right_hand_variables r_expr;
 
             (* Right-hand variables are used if left-hand variables are used *)
-            let all = StringSet.for_all (fun variable_name -> StringSet.mem variable_name !all_variables_used) !left_hand_variables in
-            if all then (
+            let at_least_one_variable_used = StringSet.exists (fun variable_name -> StringSet.mem variable_name !all_variables_used) !left_hand_variables in
+            if at_least_one_variable_used then (
                 StringSet.iter (fun variable_name ->
-                    all_variables_used := StringSet.add variable_name !all_variables_used
+                    if not (StringSet.mem variable_name !all_variables_used) then
+                        all_variables_used := StringSet.add variable_name !all_variables_used;
+
                 ) !right_hand_variables
             )
 
 	) parsed_model.init_definition;
-
+    *)
 
 	(* Return the set of variables actually used *)
 	!all_variables_used
@@ -2032,139 +2041,58 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 	(* Return whether the automata passed the tests *)
 	!well_formed
 
-let check_variables_init variable_infos init_definition =
-	(* Check that (automaton / location / variable) names exist in each predicate *)
-	let well_formed = List.for_all (function
+(* CHECK INIT *)
 
-        | Parsed_discrete_predicate (variable_name, expr) ->
-            let all_variables_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos expr in
-            let variable_defined = is_variable_or_constant_declared variable_infos.index_of_variables variable_infos.constants variable_name in
-
-            (* Check that l-value variable exist *)
-            if not variable_defined then
-                print_error ("Variable `" ^ variable_name ^ "` in discrete init is not declared");
-
-            (* And that all variables in expr are defined *)
-            if not all_variables_defined then
-                print_error ("Expression \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr ^ "\" use undeclared variable(s)");
-
-            variable_defined && all_variables_defined
-		| Parsed_linear_predicate (Parsed_linear_constraint _ as linear_constraint) ->
-			(* General case: check *)
-			    let all_variables_defined = all_variables_defined_in_linear_constraint variable_infos.variable_names variable_infos.constants linear_constraint in
-
-			    if not (all_variables_defined) then
-                    print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s)");
-
-			    all_variables_defined
-        | Parsed_linear_predicate _
-        | Parsed_loc_assignment _ -> true
-
-
-    ) init_definition in
-
-    well_formed
-
-(*------------------------------------------------------------*)
-(* Check that the init_definition are well-formed *)
-(*------------------------------------------------------------*)
-(* TODO benjamin REFACTOR with check_variables_init *)
-let check_init useful_parsing_model_information init_definition observer_automaton_index_option =
-	let array_of_location_names	= useful_parsing_model_information.array_of_location_names in
-	let automata				= useful_parsing_model_information.automata in
-	let automata_names			= useful_parsing_model_information.automata_names in
-	let constants				= useful_parsing_model_information.constants in
-	let discrete				= useful_parsing_model_information.discrete in
-	let index_of_automata		= useful_parsing_model_information.index_of_automata in
-	let index_of_variables		= useful_parsing_model_information.index_of_variables in
-	let type_of_variables		= useful_parsing_model_information.type_of_variables in
-	let variable_names			= useful_parsing_model_information.variable_names in
-	let removed_variable_names	= useful_parsing_model_information.removed_variable_names in
-
-    let variable_names_with_removed = List.rev_append removed_variable_names variable_names in
-
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
-
-	let well_formed = ref true in
-	(* Check that (automaton / location / variable) names exist in each predicate *)
-	List.iter (function
-		| Parsed_loc_assignment (automaton_name, location_name) ->
-			(* Check that the automaton_name exists *)
-			let index, exists = try (Hashtbl.find index_of_automata automaton_name, true) with
-				Not_found -> (print_error ("The automaton `" ^ automaton_name ^ "` mentioned in the init definition does not exist."); well_formed := false; 0, false) in
-			(* Check that the location_name exists (only if the automaton_name exists) *)
-			if exists && not (in_array location_name array_of_location_names.(index)) then (
-			print_error ("The location `" ^ location_name ^ "` mentioned in the init definition does not exist in automaton `" ^ automaton_name ^ "`."); well_formed := false
-			)
-		| Parsed_linear_predicate linear_constraint ->
-			begin
-			(*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
-			match linear_constraint with
-			| Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when List.mem variable_name removed_variable_names ->
-				print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
-				(* Still check the second term *)
-				if not (all_variables_defined_in_linear_expression variable_names_with_removed constants linear_expression) then (
-                    print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s)");
-				    well_formed := false;
-                )
-			(* General case: check *)
-			| Parsed_linear_constraint _ as linear_constraint ->
-			    if not (all_variables_defined_in_linear_constraint variable_names_with_removed constants linear_constraint) then (
-                    print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s)");
-			        well_formed := false;
-                )
-            | _ -> ()
-			end
-        | Parsed_discrete_predicate (variable_name, expr) ->
-            begin
-                (* Check that l-value variable exist *)
-                if not (is_variable_or_constant_declared index_of_variables constants variable_name || List.mem variable_name removed_variable_names) then (
-                    print_error ("Variable `" ^ variable_name ^ "` in discrete init is not declared");
-                    well_formed := false;
-                );
-                (* And that all variables in expr are defined *)
-                if not (ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos expr) then (
-                    print_error ("Expression \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr ^ "\" use undeclared variable(s)");
-                    well_formed := false;
-                );
-            end
-		) init_definition;
-
+(* Partition between initial localisations and initial inequalities *)
+let partition_loc_init_and_variable_inits init_definition =
 	(* Get all the Parsed_loc_assignment *)
 	let loc_assignments, init_inequalities = List.partition (function
 		| Parsed_loc_assignment _ -> true
 		| Parsed_linear_predicate _
 		| Parsed_discrete_predicate _ -> false
-		) init_definition in
+    ) init_definition
+    in
+
 	(* Make pairs (automaton_name, location_name) *)
 	let initial_locations = List.map (function
 		| Parsed_loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
 		| _ -> raise (InternalError "Something else than a Parsed_loc_assignment was found in a Parsed_loc_assignment list")
-		) loc_assignments in
+    ) loc_assignments
+    in
+
+    (* Return initial locations, initial inequalities *)
+    initial_locations, init_inequalities
+
+(* Check wether an automaton has exactly one initial location *)
+let has_one_loc_per_automaton initial_locations parsed_model observer_automaton_index_option =
 
 	(* Check that every automaton is given at most one initial location *)
-	let init_locations_for_automata = Hashtbl.create (List.length automata) in
-	List.iter (fun (automaton_name, location_name) ->
+	let init_locations_for_automata = Hashtbl.create (List.length parsed_model.automata) in
+
+	let at_most_one_loc_per_automaton = List.for_all (fun (automaton_name, location_name) ->
 		(* Check if this automaton was already given an initial location before *)
-		if Hashtbl.mem init_locations_for_automata automaton_name then(
+		if Hashtbl.mem init_locations_for_automata automaton_name then (
 			(* Get the initial location already declared previously *)
 			let previous_location = Hashtbl.find init_locations_for_automata automaton_name in
 			(* If identical : only warns *)
 			if location_name = previous_location then (
-			print_warning ("The automaton `" ^ automaton_name ^ "` is assigned twice the initial location `" ^ location_name ^ "` in the init definition.");
-			(* If different : error *)
+                print_warning ("The automaton `" ^ automaton_name ^ "` is assigned twice the initial location `" ^ location_name ^ "` in the init definition.");
+                (* If different : error *)
+                true
 			) else (
-			print_error ("The automaton `" ^ automaton_name ^ "` is assigned several different locations in the init definition.");
-			well_formed := false;
-			);
+                print_error ("The automaton `" ^ automaton_name ^ "` is assigned several different locations in the init definition.");
+                false
+			)
 			(* If not already given : add it *)
 		) else (
 			Hashtbl.add init_locations_for_automata automaton_name location_name;
-		);
-		) initial_locations;
+			true
+		)
+    ) initial_locations
+    in
 
 	(* Check that every automaton is given at least one initial location *)
-	List.iter (fun automaton_index ->
+	let at_least_one_loc_per_automaton = List.for_all (fun automaton_index ->
 		let is_observer i = match observer_automaton_index_option with
 			| None -> false
 			| Some observer_id -> i = observer_id
@@ -2172,185 +2100,326 @@ let check_init useful_parsing_model_information init_definition observer_automat
 		(* No check for the observer (will be added later) *)
 		if not (is_observer automaton_index) then (
 			(* Get the name *)
-			let automaton_name = automata_names automaton_index in
+			let automaton_name = parsed_model.automata_names automaton_index in
 			(* Look for it in the hash table *)
 			if not (Hashtbl.mem init_locations_for_automata automaton_name) then (
-			(* Error *)
-			print_error ("The automaton `" ^ automaton_name ^ "` is not given any initial location in the init definition.");
-			well_formed := false;
-			);
-		);
-		) automata;
+                (* Error *)
+                print_error ("The automaton `" ^ automaton_name ^ "` is not given any initial location in the init definition.");
+                false
+			)
+			else
+			    true
+		)
+		else
+		    true
+
+    ) parsed_model.automata
+    in
+
+    at_most_one_loc_per_automaton && at_least_one_loc_per_automaton
+
+
+let rec replace_unused_discrete_variable_by_constant variable_infos init_values_for_discrete = function
+    | Parsed_discrete_predicate _
+    | Parsed_loc_assignment _ as x -> x
+    | Parsed_linear_predicate x ->
+        Parsed_linear_predicate
+            (replace_in_linear_constraint variable_infos init_values_for_discrete x)
+
+and replace_in_linear_constraint variable_infos init_values_for_discrete = function
+	| Parsed_true_constraint
+	| Parsed_false_constraint as x -> x
+	| Parsed_linear_constraint (l_expr, relop, r_expr) ->
+	    Parsed_linear_constraint (
+	        replace_in_linear_expression variable_infos init_values_for_discrete l_expr,
+	        relop,
+	        replace_in_linear_expression variable_infos init_values_for_discrete r_expr
+	    )
+
+and replace_in_linear_expression variable_infos init_values_for_discrete = function
+	| Linear_term term ->
+	    Linear_term
+	        (replace_in_linear_term variable_infos init_values_for_discrete term)
+	| Linear_plus_expression (expr, term) ->
+	    Linear_plus_expression (
+	        replace_in_linear_expression variable_infos init_values_for_discrete expr,
+	        replace_in_linear_term variable_infos init_values_for_discrete term
+	    )
+	| Linear_minus_expression (expr, term) ->
+	    Linear_minus_expression (
+	        replace_in_linear_expression variable_infos init_values_for_discrete expr,
+	        replace_in_linear_term variable_infos init_values_for_discrete term
+	    )
+
+and replace_in_linear_term variable_infos init_values_for_discrete = function
+	| Constant _ as x -> x
+	| Variable (coef, variable_name) ->
+	    if List.mem variable_name variable_infos.only_used_in_init_variable_names then (
+	        if List.mem variable_name variable_infos.variable_names then (
+	            (* TODO benjamin Get previous computed value *)
+                let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+	            let discrete_value = Hashtbl.find init_values_for_discrete discrete_index in
+	            print_warning (variable_name ^ " is not used in model, is therefore converted to constant and removed.");
+	            Constant (DiscreteValue.numconst_value discrete_value)
+	        ) else (
+	            (* TODO benjamin default value print warning *)
+                print_warning (variable_name ^ " is not used in model, is therefore converted to constant and removed.");
+                Constant NumConst.zero
+	        )
+        )
+        else
+            Variable (coef, variable_name)
+
+let check_init_definition parsed_model =
+
+    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model parsed_model in
+    let variable_names_with_removed = List.rev_append variable_infos.removed_variable_names variable_infos.variable_names in
+
+    let rec check_init_predicate = function
+        | Parsed_discrete_predicate (variable_name, expr) ->
+            (* Check that l-value variable exist *)
+            if not (is_variable_or_constant_declared variable_infos.index_of_variables variable_infos.constants variable_name || List.mem variable_name variable_infos.removed_variable_names) then (
+                print_error ("Variable `" ^ variable_name ^ "` in discrete init is not declared");
+                false
+            )
+            (* And that all variables in expr are defined *)
+            else if not (ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos expr) then (
+                print_error ("Expression \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr ^ "\" use undeclared variable(s)");
+                false
+            )
+            else
+                true
+		| Parsed_linear_predicate linear_constraint -> check_init_constraint linear_constraint
+		| Parsed_loc_assignment (automaton_name, location_name) ->
+			(* Check that the automaton_name exists *)
+			let index, exists = try (Hashtbl.find parsed_model.index_of_automata automaton_name, true) with
+				Not_found -> (print_error ("The automaton `" ^ automaton_name ^ "` mentioned in the init definition does not exist."); 0, false) in
+
+			if not exists then
+                false
+			(* Check that the location_name exists (only if the automaton_name exists) *)
+			else if not (in_array location_name parsed_model.array_of_location_names.(index)) then (
+			    print_error ("The location `" ^ location_name ^ "` mentioned in the init definition does not exist in automaton `" ^ automaton_name ^ "`.");
+			    false
+			)
+			else
+                true
+
+    and check_init_constraint = function
+        (*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
+        | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when List.mem variable_name variable_infos.removed_variable_names ->
+            print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
+            (* Still check the second term *)
+            if not (all_variables_defined_in_linear_expression variable_names_with_removed variable_infos.constants linear_expression) then (
+                print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s)");
+                false
+            )
+            else
+                true
+        (* General case: check *)
+        | Parsed_linear_constraint _ as linear_constraint ->
+            if not (all_variables_defined_in_linear_constraint variable_names_with_removed variable_infos.constants linear_constraint) then (
+                print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s)");
+                false
+            )
+            else
+                true
+        | _ -> true
+    in
+    check_init_predicate
+
+let is_inequality_has_left_hand_removed_variable removed_variable_names only_used_in_init_variable_names = function
+    | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _))
+    | Parsed_discrete_predicate (variable_name, _) ->
+        (* Filter out if the left-hand is in the removed variable names *)
+        List.mem variable_name removed_variable_names
+    (* Any other combination is OK *)
+    | _ ->
+        false
+
+let is_inequality_has_left_hand_removed_variable_used_in_init removed_variable_names only_used_in_init_variable_names = function
+    | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _))
+    | Parsed_discrete_predicate (variable_name, _) ->
+        (* Filter out if the left-hand is in the removed variable names *)
+        List.mem variable_name removed_variable_names
+        &&
+        not (List.mem variable_name only_used_in_init_variable_names)
+    (* Any other combination is OK *)
+    | _ ->
+        false
+
+
+let partition_discrete_continuous variable_infos filtered_init_inequalities =
+    List.partition (function
+		(* Check if the left part is only a variable name *)
+		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
+			let is_discrete =
+			(* Try to get the variable index *)
+			if (Hashtbl.mem variable_infos.index_of_variables variable_name) then (
+				let variable_index =  Hashtbl.find variable_infos.index_of_variables variable_name in
+				(* Keep if this is a discrete *)
+				DiscreteValue.is_discrete_type (variable_infos.type_of_variables variable_index)
+			) else if (Hashtbl.mem variable_infos.constants variable_name) then
+			    false
+            else (
+                (* Otherwise: problem! *)
+                raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
+            )
+			in is_discrete
+	    (* All parsed boolean predicate are for discrete variables *)
+        | Parsed_discrete_predicate _ -> true
+		(* Otherwise false *)
+		| _ -> false
+    ) filtered_init_inequalities
+
+(* Convert discrete linear constraint predicate to discrete predicate, more simple *)
+let discrete_predicate_of_discrete_linear_predicate = function
+    | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, discrete_name)), op , expression)) ->
+
+        (* Check *)
+        if NumConst.neq coeff NumConst.one then (
+            print_error ("The discrete variable `" ^ discrete_name ^ "` must have a coeff 1 in the init definition.");
+            None
+        )
+        else (
+
+            match (op, expression) with
+            (* Simple constant: OK *)
+            | (PARSED_OP_EQ, Linear_term (Constant c)) ->
+                let rational_value = DiscreteValue.Rational_value c in
+                let discrete_predicate = Parsed_discrete_predicate (
+                    discrete_name,
+                    Parsed_global_expression (
+                    Parsed_Discrete_boolean_expression (
+                    Parsed_arithmetic_expression (
+                    Parsed_DAE_term (
+                    Parsed_DT_factor (
+                    Parsed_DF_constant rational_value)))))
+                )
+                in
+                Some discrete_predicate
+            (* Constant: OK *)
+            | (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
+                let coef_rational_value = DiscreteValue.Rational_value coef in
+                let discrete_predicate = Parsed_discrete_predicate (
+                    discrete_name,
+                    Parsed_global_expression (
+                    Parsed_Discrete_boolean_expression (
+                    Parsed_arithmetic_expression (
+                    Parsed_DAE_term (
+                    Parsed_DT_mul (
+                    Parsed_DT_factor (Parsed_DF_constant coef_rational_value),
+                    Parsed_DF_variable variable_name)))))
+                )
+                in
+                Some discrete_predicate
+            | _ ->
+                print_error ("The initial value for discrete variable `" ^ discrete_name ^ "` must be given in the form `" ^ discrete_name ^ " = c`, where `c` is an integer, a rational or a constant.");
+                None
+        )
+    | Parsed_discrete_predicate _ as discrete_predicate -> Some discrete_predicate
+    | _ ->
+        raise (InternalError "Trying to convert a non discrete linear constraint to discrete predicate")
+
+let check_discrete_predicate_and_init variable_infos init_values_for_discrete = function
+    | Parsed_discrete_predicate (variable_name, expr) ->
+
+        (* Check that initialized variable of name 'variable_name' is not a constant *)
+        if Hashtbl.mem variable_infos.constants variable_name then (
+            print_error ("Initialize '" ^ variable_name ^ "' constant is forbidden");
+            false
+        )
+        else (
+            (* Get the variable index *)
+            let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+            (* TYPE CHECKING *)
+            let converted_expr = TypeChecker.check_discrete_init variable_infos variable_name expr in
+
+            (* Check if it was already declared *)
+            if Hashtbl.mem init_values_for_discrete discrete_index then (
+                print_error (
+                    "The discrete variable `"
+                    ^ variable_name
+                    ^ "` is given an initial value several times in the init definition."
+                );
+                false
+            )
+            (* Try to reduce expression to a value *)
+            else if not (ParsingStructureUtilities.is_parsed_global_expression_constant variable_infos converted_expr) then (
+                print_error (
+                    "Init variable \""
+                    ^ variable_name
+                    ^ "\" with a non constant expression \""
+                    ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos converted_expr
+                    ^ "\" is forbidden."
+                );
+                false
+            ) else (
+                let value = ParsingStructureUtilities.try_reduce_parsed_global_expression variable_infos.constants converted_expr in
+                Hashtbl.add init_values_for_discrete discrete_index value;
+                true
+            )
+        )
+
+    | _ -> raise (InternalError ("Must have this form since it was checked before."))
+
+
+(*------------------------------------------------------------*)
+(* Check that the init_definition are well-formed *)
+(*------------------------------------------------------------*)
+(* TODO benjamin REFACTOR with check_variables_init *)
+let check_init (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
+
+	let constants				= useful_parsing_model_information.constants in
+	let discrete				= useful_parsing_model_information.discrete in
+	let index_of_variables		= useful_parsing_model_information.index_of_variables in
+	let type_of_variables		= useful_parsing_model_information.type_of_variables in
+	let variable_names			= useful_parsing_model_information.variable_names in
+
+
+    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
+
+	let well_formed = ref true in
+
+    (* Partition init predicates between initial location and inequalities *)
+    let initial_locations, init_inequalities = partition_loc_init_and_variable_inits init_definition in
+
+    (* For all definitions : *)
+    (* Check that automaton names and location names exist *)
+    (* Check that continuous variables used in continuous init exist *)
+    (* Check that discrete variables used in discrete init exist *)
+    let definitions_well_formed = List.for_all (check_init_definition useful_parsing_model_information) init_definition in
+
+    (* Check there is only one initial location per automaton *)
+    let one_loc_per_automaton = has_one_loc_per_automaton initial_locations useful_parsing_model_information observer_automaton_index_option in
 
 	(* Remove the inequalities of which the left-hand term is a removed variable *)
-	let filtered_init_inequalities = List.filter (function
-		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _))
-		| Parsed_discrete_predicate (variable_name, _) ->
-			(* Filter out if the left-hand is in the removed variable names *)
-			not (List.mem variable_name removed_variable_names)
-		(* Any other combination is OK *)
-		| _ ->
-			true
-		) init_inequalities
-	in
+	let filtered_init_inequalities = List.filter (fun x -> not (is_inequality_has_left_hand_removed_variable variable_infos.removed_variable_names variable_infos.only_used_in_init_variable_names x)) init_inequalities in
+
+	(* Partition the init inequalities between the discrete init assignments, and other inequalities *)
+	let discrete_init, other_inequalities = partition_discrete_continuous variable_infos filtered_init_inequalities in
+
+    (* Convert discrete linear constraint to discrete predicate *)
+    let some_discrete_predicates = List.map discrete_predicate_of_discrete_linear_predicate discrete_init in
+
+    let discrete_predicate_well_formed = List.for_all (function | None -> false | _ -> true) some_discrete_predicates in
+
+    well_formed := definitions_well_formed && one_loc_per_automaton && discrete_predicate_well_formed;
 
     (* Here if not well formed we can raise an error *)
     if not(!well_formed) then
         raise InvalidModel;
 
-	(* Partition the init inequalities between the discrete init assignments, and other inequalities *)
-	let discrete_init, other_inequalities = List.partition (function
-		(* Check if the left part is only a variable name *)
-		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
-			let is_discrete =
-			(* Try to get the variable index *)
-			if (Hashtbl.mem index_of_variables variable_name) then (
-				let variable_index =  Hashtbl.find index_of_variables variable_name in
-				(* Keep if this is a discrete *)
-				DiscreteValue.is_discrete_type (type_of_variables variable_index)
-			) else (
-				(* Case constant *)
-				if (Hashtbl.mem constants variable_name) then false
-				else (
-                    (* Otherwise: problem! *)
-                    raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
-                )
-            )
-			in is_discrete
-	    (* All parsed boolean predicate are for discrete variables, just check the init *)
-        | Parsed_discrete_predicate (variable_name, _) ->
-
-            if not (is_variable_or_constant_declared index_of_variables constants variable_name)  then (
-				(* Otherwise: problem! *)
-				raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
-            )
-            else true
-		(* Otherwise false *)
-		| _ -> false
-		) filtered_init_inequalities in
+    let discrete_predicates = List.map (function | Some x -> x | None -> raise (InternalError "impossible")) some_discrete_predicates in
 
     (* Check init discrete section : discrete *)
 	(* Check that every discrete variable is given only one (rational) initial value *)
 	let init_values_for_discrete = Hashtbl.create (List.length discrete) in
 
-	List.iter (fun lp ->
-		match lp with
-		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, discrete_name)), op , expression)) ->
-
-			if NumConst.neq coeff NumConst.one then (
-			    print_error ("The discrete variable `" ^ discrete_name ^ "` must have a coeff 1 in the init definition.");
-			    well_formed := false;
-			);
-
-            (* Get assigned variable type *)
-			let discrete_variable_index = Hashtbl.find index_of_variables discrete_name in
-			let l_value_type = type_of_variables discrete_variable_index in
-			let l_value_discrete_type = DiscreteValue.discrete_type_of_var_type l_value_type in
-
-            (* Check if assigned variable type is rational in continuous init section *)
-            if not (DiscreteValue.is_discrete_type_rational_type l_value_discrete_type) then (
-                print_error (
-                    "Variable \""
-                    ^ discrete_name
-                    ^ "\" of type "
-                    ^ (DiscreteValue.string_of_var_type l_value_type)
-                    ^ " cannot be used in continuous init part"
-                );
-                well_formed := false;
-            );
-
-			(* Check if the assignment is well formed, and keep the discrete value *)
-			let discrete_value =
-			match (op, expression) with
-			(* Simple constant: OK *)
-			| (PARSED_OP_EQ, Linear_term (Constant c)) -> DiscreteValue.Rational_value c
-			(* Constant: OK *)
-			| (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
-
-                (* If trying to assign a variable with another variable, clock or parameter *)
-                if Hashtbl.mem index_of_variables variable_name then (
-                    print_error (
-                        "Init variable \""
-                        ^ discrete_name
-                        ^ "\" with a non constant expression \""
-                        ^ variable_name
-                        ^ "\" is forbidden. \""
-                        ^ variable_name
-                        ^ "\" should be a constant"
-                    );
-                    well_formed := false;
-                    DiscreteValue.Rational_value NumConst.zero
-                ) else (
-
-                    (* Get the value of the constant *)
-                    let value = Hashtbl.find constants variable_name in
-
-                    if not (DiscreteValue.is_rational_value value) then (
-                        print_error (
-                            "Constant \""
-                            ^ variable_name
-                            ^ "\" of type "
-                            ^ (DiscreteValue.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value value))
-                            ^ " cannot be used in continuous init part"
-                        );
-                        well_formed := false;
-                        DiscreteValue.Rational_value NumConst.zero
-                    ) else (
-                        let numconst_value = DiscreteValue.numconst_value value in
-                        DiscreteValue.Rational_value (NumConst.mul coef numconst_value)
-                    )
-                )
-			| _ -> print_error ("The initial value for discrete variable `" ^ discrete_name ^ "` must be given in the form `" ^ discrete_name ^ " = c`, where `c` is an integer, a rational or a constant.");
-				well_formed := false;
-				DiscreteValue.Rational_value NumConst.zero
-			in
-
-			(* Get the variable index *)
-			let discrete_index =  Hashtbl.find index_of_variables discrete_name in
-
-			(* Check if it was already declared *)
-			if Hashtbl.mem init_values_for_discrete discrete_index then(
-			print_error ("The discrete variable `" ^ discrete_name ^ "` is given an initial value several times in the init definition.");
-			well_formed := false;
-			) else (
-			(* Else add it *)
-			Hashtbl.add init_values_for_discrete discrete_index discrete_value;
-			);
-        | Parsed_discrete_predicate (variable_name, expr) ->
-
-            (* Check that initialized variable of name 'variable_name' is not a constant *)
-            if Hashtbl.mem constants variable_name then
-                raise (InvalidExpression ("Initialize '" ^ variable_name ^ "' constant is forbidden"));
-            (* Get the variable index *)
-            let discrete_index = Hashtbl.find index_of_variables variable_name in
-
-
-			(* Check if it was already declared *)
-			if Hashtbl.mem init_values_for_discrete discrete_index then (
-			    print_error ("The discrete variable `" ^ variable_name ^ "` is given an initial value several times in the init definition.");
-			    well_formed := false;
-			) else (
-
-			    (* TYPE CHECKING *)
-			    let converted_expr = TypeChecker.check_discrete_init variable_infos variable_name expr in
-
-			    (* Try to reduce expression to a value *)
-			    if not (ParsingStructureUtilities.is_parsed_global_expression_constant variable_infos converted_expr) then (
-                    print_error (
-                        "Init variable \""
-                        ^ variable_name
-                        ^ "\" with a non constant expression \""
-                        ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos converted_expr
-                        ^ "\" is forbidden."
-                    );
-                    well_formed := false;
-			    ) else (
-                    let value = ParsingStructureUtilities.try_reduce_parsed_global_expression variable_infos.constants converted_expr in
-                    Hashtbl.add init_values_for_discrete discrete_index value;
-                )
-			);
-		| _ -> raise (InternalError ("Must have this form since it was checked before."))
-		) discrete_init;
+    (* Compute discrete init values and add to init hash table *)
+    let discrete_initialization_well_formed = List.for_all (check_discrete_predicate_and_init variable_infos init_values_for_discrete) discrete_predicates in
+    (* If some value is None, there is errors *)
+    well_formed := !well_formed && discrete_initialization_well_formed;
 
 	(* Check that every discrete variable is given at least one initial value (if not: warns) *)
 	List.iter (fun discrete_index ->
@@ -2370,6 +2439,11 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			discrete_index, Hashtbl.find init_values_for_discrete discrete_index
 		) discrete
 	in
+
+    (* TODO benjamin here transform variable_only_used_in_init by constants, if no value, set to default *)
+    (* TODO benjamin change variable name because take previous name just for testing *)
+
+(*    let other_inequalities = List.map (replace_unused_discrete_variable_by_constant variable_infos init_values_for_discrete) other_inequalities in*)
 
     (* Check init constraints section : continuous *)
 
@@ -2421,7 +2495,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 
     (* There are errors in the constraints init section *)
     if !continuous_init_error then
-        raise (InvalidExpression ("There are errors in the constraints init section"));
+        raise (InvalidExpression ("There are errors in the continuous init section"));
 
 	(* Return whether the init declaration passed the tests *)
 	discrete_values_pairs, !well_formed
@@ -4884,6 +4958,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         constants = initialized_constants;
         variable_names = [];
         index_of_variables = Hashtbl.create 0;
+        removed_variable_names = [];
+        only_used_in_init_variable_names = [];
         type_of_variables = fun i -> DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational);
     }
     in
@@ -5024,15 +5100,21 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 
 	(* Unless a specific option is activated, we first remove all variables declared but unused *)
-	let clock_names, discrete_names, parameter_names, discrete_names_by_type, removed_variable_names =
+	let clock_names, discrete_names, parameter_names, discrete_names_by_type, removed_variable_names, only_used_in_init_variable_names =
 	if options#no_variable_autoremove then(
 		(* Nothing to do *)
-		single_clock_names, single_discrete_names, single_parameter_names, single_discrete_names_by_type, []
+		single_clock_names, single_discrete_names, single_parameter_names, single_discrete_names_by_type, [], []
 	)else (
 		(* Gather all variables used *)
 		let all_variables_used_in_model = get_all_variables_used_in_model parsed_model in
 		let all_variables_used_in_property = get_variables_in_property_option parsed_property_option in
 		let all_variable_used = StringSet.union all_variables_used_in_model all_variables_used_in_property in
+
+        (* TODO benjamin test, for get variable only used in init definition, useless now ? *)
+        (* Get all variables that are ONLY used in init definition *)
+        let only_used_in_init_variable_names_set = get_all_variables_used_only_in_init_definition parsed_model.init_definition all_variable_used in
+        let only_used_in_init_variable_names = StringSet.elements only_used_in_init_variable_names_set in
+        (* Convert theses variables to constants *)
 
 		(* Remove variable unused *)
 		let remove_unused_variables_gen variable_type_name = List.partition (fun variable_name ->
@@ -5040,6 +5122,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			if
 				(* Either it is used somewhere *)
 				(StringSet.mem variable_name all_variable_used)
+				(* TODO benjamin test for not remove variable used in init only, but a lot of non regression tests fail *)
+				(*
+				&&
+				not (StringSet.mem variable_name only_used_in_init_variable_names_set)
+				*)
 				(* Or it is a clock with the special global_time name *)
 				||
 				(variable_name = Constants.global_time_clock_name && List.mem variable_name single_clock_names)
@@ -5059,7 +5146,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		let single_discrete_names_by_type = List.filter (fun (var_type, variable_name) -> List.mem variable_name single_discrete_names) single_discrete_names_by_type in
 		(* Return and append removed variable names *)
 		let removed_variable_names = List.rev_append removed_clock_names (List.rev_append removed_discrete_names removed_parameter_names) in
-		single_clock_names, single_discrete_names, single_parameter_names, single_discrete_names_by_type, removed_variable_names
+		single_clock_names, single_discrete_names, single_parameter_names, single_discrete_names_by_type, removed_variable_names, only_used_in_init_variable_names
 	)
 	in
 
@@ -5323,8 +5410,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		) automata;
 	);
 
-    (* TODO benjamin move constant checking here *)
-
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -5348,6 +5433,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		variable_names				= variable_names;
 		variables					= variables;
 		removed_variable_names		= removed_variable_names;
+		only_used_in_init_variable_names = only_used_in_init_variable_names;
 	} in
 
     let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in

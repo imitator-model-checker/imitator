@@ -98,4 +98,6 @@ val all_variables_defined_in_parsed_global_expression : variable_infos -> global
 val all_variables_defined_in_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
 val only_discrete_in_nonlinear_term : variable_infos -> parsed_discrete_boolean_expression -> bool
 
+val is_parsed_linear_expression_constant : variable_infos -> linear_expression -> bool
+
 val variable_infos_of_parsed_model : useful_parsing_model_information -> variable_infos

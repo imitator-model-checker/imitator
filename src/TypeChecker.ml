@@ -1104,6 +1104,8 @@ let check_constant_expression initialized_constants expr =
         constants = initialized_constants;
         variable_names = [];
         index_of_variables = Hashtbl.create 0;
+        removed_variable_names = [];
+        only_used_in_init_variable_names = [];
         type_of_variables = fun i -> DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational);
     }
     in
