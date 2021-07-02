@@ -28,7 +28,7 @@
 * Fixed an issue met in v3 when a division by 0 is encountered.
 
 ### Benchmarks
-* Entire refactoring of the benchmarks library [AMP21](https://www.doi.org/10.1007/978-3-030-79379-1_3)
+* Entire refactoring of the benchmarks library [[AMP21]](https://www.doi.org/10.1007/978-3-030-79379-1_3)
 
 
 *******************************************************
@@ -41,6 +41,10 @@ The calling paradigm switches from a single file with numerous options (some of 
 * a property file, containing the property (and optionally the projection onto some parameters)
 The model syntax is almost entirely backward-compatible with (at least) the IMITATOR 2.10.1 syntax.
 The property syntax is entirely new.
+
+### Major features
+* New variants of the NDFS-based accepting cycle synthesis with several exploration strategies [[AAPP21]](https://www.doi.org/10.1007/978-3-030-72016-2_17)
+
 
 ### Syntax improvement
 * IMITATOR now supports multi-rate clocks with a syntax of the form `flow {x' = 1, y' = 2.5, z' = -3/5}`
@@ -72,7 +76,7 @@ minor release
 
 ### Bug fixing:
 * Fix bugs for option `-counterexample`
-* Fix issues in NDFS-based accepting cycle synthesis [NPP18](https://www.doi.org/10.1109/ICECCS2018.2018.00009), and options names
+* Fix issues in NDFS-based accepting cycle synthesis [[NPP18]](https://www.doi.org/10.1109/ICECCS2018.2018.00009), and options names
 
 
 *******************************************************
@@ -84,7 +88,7 @@ MAJOR RELEASE
 
 ### Major features
 * New accepting cycle synthesis (`-mode AccLoopSynth`)
-* New NDFS-based accepting cycle synthesis (`-mode AccLoopSynthNDFS`) with several exploration strategies [NPP18](https://www.doi.org/10.1109/ICECCS2018.2018.00009). Additional option `-counterexample` terminates the analysis as soon as one cycle is found.
+* New NDFS-based accepting cycle synthesis (`-mode AccLoopSynthNDFS`) with several exploration strategies [[NPP18]](https://www.doi.org/10.1109/ICECCS2018.2018.00009). Additional option `-counterexample` terminates the analysis as soon as one cycle is found.
 * In mode `EF -counterexample`, IMITATOR outputs an example of parameter valuation, and a full concrete run, with a graphical representation of the clocks and discrete variables evolution. An absolute time clock (initially set to 0 and never reset) named `global_time` needs to be defined in the model. [EXPERIMENTAL]
 * New check-syntax mode (`-mode checksyntax`), that simply checks the syntax and terminates without doing any analysis.
 
@@ -332,14 +336,14 @@ INTERMEDIATE RELEASE
 # release 2.7 (2015-07-22) Butter Guéméné
 
 ### Major algorithmic features since 2.6.1
-* Added EF-synthesis (option `-mode EF`): synthesize all parameter valuations such that a given state is reachable [AHV93](https://www.doi.org/10.1145/167088.167242) [JLR15](https://www.doi.org/10.1109/TSE.2014.2357445)
-* Added PRP and PRPC algorithms (option `-PRP`) [ALNS15](https://www.doi.org/10.1007/978-3-319-17524-9_5)
+* Added EF-synthesis (option `-mode EF`): synthesize all parameter valuations such that a given state is reachable [[AHV93]](https://www.doi.org/10.1145/167088.167242) [[JLR15]](https://www.doi.org/10.1109/TSE.2014.2357445)
+* Added PRP and PRPC algorithms (option `-PRP`) [[ALNS15]](https://www.doi.org/10.1007/978-3-319-17524-9_5)
 * Added a distributed version of the behavioral cartography (option `-distributed`), with several distribution schemes:
-	* static [ACN15](https://www.doi.org/10.1007/978-3-319-25423-4_21)
-	* sequential [ACE14](https://www.doi.org/10.1145/2642769.2642784)
-	* random [ACE14](https://www.doi.org/10.1145/2642769.2642784)
-	* shuffle [ACN15](https://www.doi.org/10.1007/978-3-319-25423-4_21)
-	* dynamic [ACN15](https://www.doi.org/10.1007/978-3-319-25423-4_21)
+	* static [[ACN15]](https://www.doi.org/10.1007/978-3-319-25423-4_21)
+	* sequential [[ACE14]](https://www.doi.org/10.1145/2642769.2642784)
+	* random [[ACE14]](https://www.doi.org/10.1145/2642769.2642784)
+	* shuffle [[ACN15]](https://www.doi.org/10.1007/978-3-319-25423-4_21)
+	* dynamic [[ACN15]](https://www.doi.org/10.1007/978-3-319-25423-4_21)
 	* unsupervised / unsupervised multi-threaded (unpublished, EXPERIMENTAL)
 
 ### Syntax improvement
