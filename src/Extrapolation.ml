@@ -11,7 +11,7 @@
  * Last modified     : 2021/06/17
  *
  ************************************************************)
- 
+
 
 (************************************************************)
 (* Internal modules *)
@@ -25,7 +25,9 @@ open Options
 
 
 (************************************************************)
-(* Type for NumConst or infinity *)
+(************************************************************)
+(* Type NumConst or infinity and its operators*)
+(************************************************************)
 (************************************************************)
 
 type numconst_or_infinity =
@@ -36,12 +38,14 @@ type numconst_or_infinity =
 	(* Minus-infinity *)
 	| Minus_infinity
 	
+(* Negation of a*)
 let neg_inf (a : numconst_or_infinity) =
 	match a with
 	| Infinity -> Minus_infinity
 	| Minus_infinity -> Infinity
 	| Finite a ->  Finite (NumConst.neg a )
-
+	
+(* Addition of a and b*)
 let add_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	match a, b with
 	| Infinity, Infinity -> Infinity
@@ -52,10 +56,12 @@ let add_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	| Finite a, Minus_infinity -> Minus_infinity
 	| Finite a, Finite b -> Finite (NumConst.add a b)
 	| _ -> raise (InternalError "Case infinity-infinity")
-	
+
+(* Substraction of b from a*)
 let sub_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	add_inf a (neg_inf b)
-	
+
+(* Multiplication of a and b*)	
 let mul_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	match a, b with
 	| Infinity, Infinity -> Infinity
@@ -67,15 +73,26 @@ let mul_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	| Minus_infinity, Finite b -> Minus_infinity
 	| Finite a, Minus_infinity -> Minus_infinity
 	| Finite a, Finite b -> Finite (NumConst.mul a b)
-	
+
+(* Inversion of a (ie., 1 divided by a)*)	
 let inv_inf (a : numconst_or_infinity) =
 	match a with
 	| Finite a -> Finite (NumConst.div (NumConst.numconst_of_int 1) a )
 	| _ -> Finite (NumConst.numconst_of_int 0)
 
+(* Division of a by b*)
 let div_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	mul_inf a (inv_inf b)
 	
+(* Comparison : a = b*)
+let eq_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	match a, b with
+	| Infinity, Infinity -> true
+	| Minus_infinity, Minus_infinity -> true
+	| Finite a, Finite b when (a = b) -> true
+	| _ -> false
+	
+(* Comparison : a < b*)
 let lesser_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	match a, b with
 	| Infinity, _ -> false
@@ -84,32 +101,40 @@ let lesser_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	| Minus_infinity, Finite b -> true
 	| Finite a, Infinity -> true
 	| Finite a, Finite b -> a < b
-	
-let leq_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
-	a = b || (lesser_inf a b)
 
+(* Comparison : a <= b*)
+let leq_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	(eq_inf a b) || (lesser_inf a b)
+
+(* Comparison : a > b*)
 let greater_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	lesser_inf b a
 
+(* Comparison : a >= b*)
 let geq_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	leq_inf b a
 
+(* Minimum between a  b*)
 let min_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	if greater_inf a b then b else a
 
+(* Maximum between a  b*)
 let max_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	if lesser_inf a b then b else a
-
-let eq_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
-	match a, b with
-	| Infinity, Infinity -> true
-	| Minus_infinity, Minus_infinity -> true
-	| Finite a, Finite b when (a = b) -> true
-	| _ -> false
+	
+(* Maximum value in an array of numconst_or_infinity, intersected with 0 *)
+let max_array a =
+	let m = ref(Finite (NumConst.numconst_of_int 0)) in
+	for i=0 to (Array.length a)-1 do 
+		m := max_inf !m a.(i)
+	done;
+	!m
 
 
 (************************************************************)
-(* Type for modified pta_type *)
+(************************************************************)
+(* Type for the modified lu_status type *)
+(************************************************************)
 (************************************************************)
 
 type modified_pta_type =
@@ -124,70 +149,35 @@ type modified_pta_type =
 	(* Any other, bounded or not *)
 	| Other 
 
-(************************************************************
- *Computation of the maximal constants for each clocks of a PTA with non-diagonal constraints (only one clock per constraint)
- ************************************************************)
- 
- 
+
+(************************************************************)
+(************************************************************)
+(* Computation of the maximal constants for each clocks of a PTA with non-diagonal constraints (only one clock per constraint) *)
+(************************************************************)
+(************************************************************)
+
+
 (************************************************************)
 (* Utilities *)
 (************************************************************)
 
-(* Returns factorial n *)
-(* Input = n : int*)
-(* Output = int*)
-
+(* Factorial of integer n *)
 let rec factorial n =
 	if n <= 1 then 1
 	else factorial (n-1) * n
 	
-(* Returns base power exponent *)	
-(* Input = base : int, exponent : int*)
-(* Output = int*)
-	
+(* Exponentiation of integer base by integer exponent *)		
 let rec power base exponent =
 	if exponent = 0 then 1
 	else power base (exponent-1) * base
-	
-(* Returns true if elem is not in set *)	
-(* Input = elem : 'a , set : a' list*)
-(* Output = bool*)
-
-let not_in elem set =
-	let result = ref(true) in
-	begin
-		List.iter (fun e -> if elem = e then result := false) set;
-		!result
-	end
-
-(* Returns true if l1 is included in l2*)	
-(* Input = l1: 'a list , l2 : a' list*)
-(* Output = bool*)
-
-let includes l1 l2 =
-	let result = ref(true) in
-	begin
-		List.iter (fun e -> if not_in e l2 then result := false) l1;
-		!result
-	end
 		
-(* Returns the maximum value in an array of numconst_or_infinity (intersected with 0) *)	
-
-let max_array a =
-	let m = ref(Finite (NumConst.numconst_of_int 0)) in
-	for i=0 to (Array.length a)-1 do 
-		m := max_inf !m a.(i)
-	done;
-	!m
-	
 
 (************************************************************)
 (* Sub-functions *)
 (************************************************************)
 
 
-(* Hide all bounded parameters in a list of guards by replacing them by their bounds *)	
-
+(* Hide all bounded parameters in a list of guards by replacing them by their bounds *)
 let hide_bounded (guards : (int * op * numconst_or_infinity array) list) (bounds : (numconst_or_infinity * numconst_or_infinity) array) =
 	let new_guards = guards in
 	let f (clock, operator, factors) = 
@@ -209,8 +199,7 @@ let hide_bounded (guards : (int * op * numconst_or_infinity array) list) (bounds
 	in List.map f new_guards
 	
 
-(* Returns a boolean array indicating for each clock if it is a parametric one *)	
-
+(* Returns a boolean array indicating for each clock if it is a parametric one *)
 let compute_parametric_clocks_array guards h =
 	let parametric_clocks_array = Array.make h false in
 	let f (clock, operator, factors) =
@@ -223,15 +212,13 @@ let compute_parametric_clocks_array guards h =
 	parametric_clocks_array
 	
 	
-(* Counts the number of true values in a boolean array *)	
-
+(* Counts the number of true values in a boolean array *)
 let compute_parametric_clocks_number parametric_clocks_array =
 	let parametric_clocks_number = ref(0) in	
 	Array.iter (fun p -> if p then parametric_clocks_number := !parametric_clocks_number + 1;) parametric_clocks_array;
 	!parametric_clocks_number	
 	
 (* Bounds all parameters with n if their current bound is greater than n *)	
-
 let set_bounds bounds n =
 	let new_bounds = bounds in
 	let f (min,max) = 
@@ -242,7 +229,6 @@ let set_bounds bounds n =
 	
 	
 (* Computes the maximal value (cf. "g_max" paper) of a guard *)	
-
 let compute_gmax (clock, operator, factors) bounds =
 	let k = (Array.length factors) - 1 in
 	let gmax = ref(factors.(k)) in
@@ -255,7 +241,6 @@ let compute_gmax (clock, operator, factors) bounds =
 	
 		
 (* Returns an array with the greatest non parametric constants compared to each clock (cf. "c_x" paper) *)	
-
 let compute_greatest_nonparametric_constants guards h=
 	let greatest_const = Array.make h (Finite (NumConst.numconst_of_int 0)) in
 	let f (clock, operator, factors) =
@@ -266,7 +251,6 @@ let compute_greatest_nonparametric_constants guards h=
 		
 		
 (* Compute the upper bound of the number of clock regions (cf. "R" paper) *)	
-
 let compute_regions_upper_bound greatest_nonparametric_constants h =
 	let regions_upper_bound = ref(Finite (NumConst.numconst_of_int ((factorial h) * (power 2 h)))) in
 	Array.iter (fun z -> regions_upper_bound := 
@@ -284,7 +268,6 @@ let compute_regions_upper_bound greatest_nonparametric_constants h =
 	
 		
 (* Compute the parameter valuation to use as an upper bound (cf. "N" paper) *)	
-
 let compute_n pta_type guards parametric_clocks_number h =
 	let gnc = compute_greatest_nonparametric_constants guards h in
 	let n = ref(
@@ -305,8 +288,7 @@ let compute_n pta_type guards parametric_clocks_number h =
 (* Main function *)
 (************************************************************)
 
-(* Return for each clock x the value to use for the LU-extrapolation of x (cf. "vec{LU}" paper) *)	
-
+(* Given a set of bounds, compute the maximal (lower and upper) constants for each clock )*)
 let get_max_bounds bounds guards h =
 	let max_const_L = Array.make h Minus_infinity in
 	let max_const_U = Array.make h Minus_infinity in
@@ -320,6 +302,7 @@ let get_max_bounds bounds guards h =
 	) guards;
 	(max_const_L,max_const_U)
 
+(* Return for each clock x the value to use for the LU-extrapolation of x (cf. "vec{LU}" paper) *)
 let compute_maximal_constants (pta_type : modified_pta_type) (bounds : (numconst_or_infinity * numconst_or_infinity) array) (guards : (int * op * numconst_or_infinity array) list) (h : int) : (numconst_or_infinity array * numconst_or_infinity array) =
 	let hide = 
 		if pta_type = LU_Ubounded then (hide_bounded guards bounds , PTA_L )
@@ -345,6 +328,12 @@ let compute_maximal_constants (pta_type : modified_pta_type) (bounds : (numconst
 	in get_max_bounds new_bounds guards h
 
 
+(************************************************************)
+(************************************************************)
+(* Data structure and functions for preparing extrapolation *)
+(************************************************************)
+(************************************************************)
+
 	
 (************************************************************)
 (* Global variables *)
@@ -361,9 +350,31 @@ let max_greatest_const = ref(Minus_infinity)
 let nb_parameters = ref 0
 let clocks = ref []
 
-(*------------------------------------------------------------*)
-(* Functions for preparing data structures for extrapolation *)
-(*------------------------------------------------------------*)
+
+(************************************************************)
+(* Utilities *)
+(************************************************************)
+
+(* Returns true if elem is not in List set *)	
+let not_in elem set =
+	let result = ref(true) in
+	begin
+		List.iter (fun e -> if elem = e then result := false) set;
+		!result
+	end
+
+(* Returns true if each element in l1 is included in l2*)	
+let includes l1 l2 =
+	let result = ref(true) in
+	begin
+		List.iter (fun e -> if not_in e l2 then result := false) l1;
+		!result
+	end
+
+
+(************************************************************)
+(* Sub-functions *)
+(************************************************************)
 	
 let get_p_bounds p_bounds =
 	let min = 
@@ -483,6 +494,10 @@ let set_maximums l u nb_clocks : unit =
 	end
 
 
+(************************************************************)
+(* Main function *)
+(************************************************************)
+
 let prepare_extrapolation () : unit =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
@@ -512,13 +527,16 @@ let prepare_extrapolation () : unit =
 	end
 
 
-(*************************************************************************)
-(** clock extrapolation on a given linear constraint **)
+(************************************************************)
+(************************************************************)
+(* Extrapolation functions *)
+(************************************************************)
+(************************************************************)
 
 
-(*------------------------------------------------------------*)
-(** M-extrapolation: returns (the constraint ^ x <= M) , (the constraint ^ x >= M) *)
-(*------------------------------------------------------------*)
+(************************************************************)
+(* (M,x)-extrapolation of a linear constraint *)
+(************************************************************)
 
 let m_extrapolation_of_x (big_m : numconst_or_infinity) (x : variable) (px_linear_constraint : LinearConstraint.px_linear_constraint) : LinearConstraint.px_linear_constraint list =
 
@@ -582,9 +600,9 @@ let m_extrapolation_of_x (big_m : numconst_or_infinity) (x : variable) (px_linea
 	|Infinity -> inf ()
 
 
-(*------------------------------------------------------------*)
-(** LU-extrapolation: returns (the constraint ^ x <= smaller bound) , (the constraint ^ x > smaller bound ^ x <= greater bound) , (the constraint ^ x > greater bound) *)
-(*------------------------------------------------------------*)
+(************************************************************)
+(* (LU,x)-extrapolation of a linear constraint *)
+(************************************************************)
 
 let lu_extrapolation_of_x (big_l : numconst_or_infinity) (big_u : numconst_or_infinity) (x : variable) (px_linear_constraint : LinearConstraint.px_linear_constraint) : LinearConstraint.px_linear_constraint list =
 
@@ -897,9 +915,10 @@ let lu_extrapolation_of_x (big_l : numconst_or_infinity) (big_u : numconst_or_in
 	|_ -> raise (InternalError "Match failure in lu_extrapolation_of_x (theoretically impossible !!!)")
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* Apply M-extrapolation to a constraint *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(************************************************************)
+(* vec{M}-extrapolation of a linear constraint *)
+(************************************************************)
+
 let px_m_extrapolation (the_constraint : LinearConstraint.px_linear_constraint) : LinearConstraint.px_linear_constraint list =
 	(* Set the constants *)
 	let m = !greatest_constants in
@@ -929,9 +948,10 @@ let px_m_extrapolation (the_constraint : LinearConstraint.px_linear_constraint) 
 	!constraints
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* Apply Mglobal-extrapolation to a constraint *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(************************************************************)
+(* M-extrapolation of a linear constraint (ie., the same constant M is used for all clocks) *)
+(************************************************************)
+
 let px_mglobal_extrapolation (the_constraint : LinearConstraint.px_linear_constraint) : LinearConstraint.px_linear_constraint list =
 	(* Set the constants *)
 	let m = !max_greatest_const in
@@ -960,9 +980,10 @@ let px_mglobal_extrapolation (the_constraint : LinearConstraint.px_linear_constr
 	!constraints
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* Apply LU-extrapolation to a constraint *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(************************************************************)
+(* vec{LU}-extrapolation of a linear constraint *)
+(************************************************************)
+
 let px_lu_extrapolation (the_constraint : LinearConstraint.px_linear_constraint) : LinearConstraint.px_linear_constraint list =
 	(* Set the constants *)
 	let l = !lower_constants in
@@ -993,9 +1014,10 @@ let px_lu_extrapolation (the_constraint : LinearConstraint.px_linear_constraint)
 	!constraints
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* Apply LU-extrapolation to a constraint *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(************************************************************)
+(* LU-extrapolation of a linear constraint (ie., the same constants L and U are used for all clocks) *)
+(************************************************************)
+
 let px_luglobal_extrapolation (the_constraint : LinearConstraint.px_linear_constraint) : LinearConstraint.px_linear_constraint list =
 	(* Set the constants *)
 	let l = !max_lower_const in
