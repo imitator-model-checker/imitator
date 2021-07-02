@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/06/25
+# Last modified     : 2021/07/02
 #************************************************************
 
 
@@ -33,7 +33,7 @@ tests = [
 		## Test version             : 1
 		## Test since               : 2021/03/33
 		## Last modified            : 2021/03/33
-		## Test for IMITATOR version: 3
+		## Test for IMITATOR version: 3.1
 		#'purpose'    : 'Test something',
 		#'input_files': ['somemodel.imi'],
 		#'options'    : '-mode checksyntax ',
@@ -4336,6 +4336,33 @@ OR
 END CONSTRAINT
 """
 			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/02
+		# Last modified            : 2021/07/02
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test EF with a parameter not used in the model (but still useful) + negative clock + negative flow',
+		'input_files': ['test_param_unused.imi' , 'EFaccepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_param_unused.res' , 'content' : """
+BEGIN CONSTRAINT
+ 14 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+		"""
+			} # end result file
+			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
