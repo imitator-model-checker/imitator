@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/06/29
+ * Last modified     : 2021/07/02
  *
  ************************************************************)
 
@@ -2617,33 +2617,35 @@ let pxd_time_past_assign c = time_past_assign !pxd_dim c
 (** Remove all upper bounds on the first variable list; the second list will remain constant *)
 (*** WARNING: this function is certainly not optimized at all! ***)
 (*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
-let p_grow_to_infinity_assign variables_elapse variables_constant linear_constraint =
+let grow_to_infinity_assign_gen nb_dimensions variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
 	let all_variables = List.rev_append variables_elapse variables_constant in
 	(* Perform time elapsing on each variable *)
 	List.iter (fun variable ->
-		time_elapse_assign !p_dim [variable] (list_diff all_variables [variable]) linear_constraint;
+		time_elapse_assign nb_dimensions [variable] (list_diff all_variables [variable]) linear_constraint;
 	) variables_elapse;
 	(* The end *)
 	()
 
-let px_grow_to_infinity_assign = p_grow_to_infinity_assign
+let p_grow_to_infinity_assign variables_elapse variables_constant linear_constraint = grow_to_infinity_assign_gen !p_dim variables_elapse variables_constant linear_constraint
+let px_grow_to_infinity_assign variables_elapse variables_constant linear_constraint = grow_to_infinity_assign_gen !px_dim variables_elapse variables_constant linear_constraint
 
 
 (** Remove all lower bounds on the first variable list; the second list will remain constant *)
 (** WARNING: this function is certainly not optimized at all! *)
 (*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
-let p_grow_to_zero_assign variables_elapse variables_constant linear_constraint =
+let grow_to_zero_assign_gen nb_dimensions variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
 	let all_variables = List.rev_append variables_elapse variables_constant in
 	(* Perform time elapsing on each variable *)
 	List.iter (fun variable ->
-		time_past_assign !p_dim [variable] (list_diff all_variables [variable]) linear_constraint;
+		time_past_assign nb_dimensions [variable] (list_diff all_variables [variable]) linear_constraint;
 	) variables_elapse;
 	(* The end *)
 	()
 
-let px_grow_to_zero_assign = p_grow_to_zero_assign
+let p_grow_to_zero_assign variables_elapse variables_constant linear_constraint = grow_to_zero_assign_gen !p_dim variables_elapse variables_constant linear_constraint
+let px_grow_to_zero_assign variables_elapse variables_constant linear_constraint = grow_to_zero_assign_gen !px_dim variables_elapse variables_constant linear_constraint
 
 (*------------------------------------------------------------*)
 (* Strict to non-strict *)
