@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/06/25
+ * Last modified     : 2021/07/05
  *
  ************************************************************)
 
@@ -770,11 +770,10 @@ class imitator_options =
 				), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
 				");
 
-        ("-imi2Jani", Unit (fun _ ->
+				("-imi2Jani", Unit (fun _ ->
 					imitator_mode <- Translation JaniSpec
 				), "Translate the model into a JaniSpec model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
 				");
-
 
 				("-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some true), " Layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled (i.e., no layer).");
 				("-no-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some false), " No layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled (i.e., no layer).
@@ -958,13 +957,19 @@ class imitator_options =
 			);
 
 			(*------------------------------------------------------------*)
-			(* Disable property if syntax check! *)
+			(* Disable property if syntax check, or translation, or state space analysis! *)
 			(*------------------------------------------------------------*)
-			if imitator_mode = Syntax_check && property_file_name <> None then(
-				(* Warn *)
-				print_warning "Syntax check mode: property is ignored!";
-				(* Delete property file *)
-				property_file_name <- None;
+			if property_file_name <> None then(
+				match imitator_mode with
+				| Syntax_check 
+				| State_space_computation
+				| Translation _
+				->
+					(* Warn *)
+					print_warning ("No need for a property in this mode: property file `" ^ (a_of_a_option property_file_name) ^ "` is ignored!");
+					(* Delete property file *)
+					property_file_name <- None;
+				| _ -> ()
 			);
 
 
