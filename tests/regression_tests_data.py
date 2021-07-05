@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/07/02
+# Last modified     : 2021/07/05
 #************************************************************
 
 
@@ -154,7 +154,7 @@ L/U subclass                            : L-PTA
 		# Test since               : 2021/06/25
 		# Last modified            : 2021/06/25
 		# Test for IMITATOR version: 3.1
-		'purpose'    : 'Test model syntax check even when a (wrong) property is passed',
+		'purpose'    : 'Test model syntax check even when a (non-existing) property is passed',
 		'input_files': ['testL.imi', 'nonexistingfile.imiprop'],
 		'options'    : '-mode checksyntax ',
 		'expectations' : [
@@ -474,6 +474,27 @@ Is strongly deterministic?              : false
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test unsatisfiable initial state (clock constraint)',
 		'input_files': ['unsatisfiableInitStateClocks.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateClocks.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/05
+		# Last modified            : 2021/07/05
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test state space (unsatisfiable initial state) even when a (useless, and non-existing) property is passed',
+		'input_files': ['unsatisfiableInitStateClocks.imi', 'nonexistingfile.imiprop'],
 		'options'    : '-mode statespace',
 		'expectations' : [
 			{'file': 'unsatisfiableInitStateClocks.res' , 'content' : """
@@ -15152,6 +15173,28 @@ init := True
 --* The end
 --************************************************************
 
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/05
+		# Last modified            : 2021/07/05
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test translation to HyTech even when a (useless, non-existing) property file is passed',
+		'input_files': ['flipflop.imi', 'nonexistingfile.imiprop'],
+		'options'    : '-imi2HyTech',
+		'expectations' : [
+			{'file': 'flipflop.hy' , 'content' : """
+var
+	s, ckG1, ckG2, ckG3, ckG4
 """
 			} # end result file
 			,
