@@ -129,14 +129,6 @@ main:
 
 		(* Return the parsed model *)
 		add_parsed_model_to_parsed_model_list included_model main_model
-(*		{
-			variable_declarations	= (List.append incl_decl declarations);
-			automata				= (List.append incl_automata automata);
-			init_definition			= (List.append incl_init init_definition);
-		}*)
-
-	(*** TODO: cleanup ***)
-(* 		resolve_property (bad::incl_prop), projection_definition, optimization_definition, carto *)
 	}
 ;
 
@@ -691,7 +683,9 @@ discrete_boolean_expression:
 /************************************************************/
 
 init_definition_option:
-    | old_init_definition { $1 }
+    | old_init_definition {
+		$1
+		}
     | init_definition { $1 }
     | { [ ] }
 ;
