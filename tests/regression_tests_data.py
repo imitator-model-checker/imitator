@@ -951,6 +951,7 @@ end
 		# Last modified            : 2021/07/01
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test no clock removal for x=y with x used in the model but not y',
+		'tags' : 'auto remove',
 		'input_files': ['test_var_remove.imi'],
 		'options'    : '-mode checksyntax ',
 		'expectations' : [
@@ -972,6 +973,7 @@ Number of clocks                        : 2
 		# Last modified            : 2021/07/01
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test correct variable removal for more complex dependencies',
+		'tags' : 'auto remove',
 		'input_files': ['test_var_remove_2.imi'],
 		'options'    : '-mode checksyntax ',
 		'expectations' : [
@@ -4539,6 +4541,7 @@ END CONSTRAINT
 		# Last modified            : 2021/07/02
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test EF with a parameter not used in the model (but still useful) + negative clock + negative flow',
+		'tags' : 'auto remove',
 		'input_files': ['test_param_unused.imi' , 'EFaccepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
