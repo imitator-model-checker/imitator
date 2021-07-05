@@ -684,6 +684,8 @@ discrete_boolean_expression:
 
 init_definition_option:
     | old_init_definition {
+		(* Print a warning because this syntax is deprecated *)
+		print_warning ("Old syntax detected for the initial state definition. You are advised to use the new syntax (from 3.1).");
 		$1
 		}
     | init_definition { $1 }

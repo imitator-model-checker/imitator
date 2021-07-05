@@ -6,7 +6,7 @@
 * `discrete` become `rational` (still encoded using exact arithmetics, as opposed to the new `int` type)
 
 ### Syntax changes in the model
-* New syntax for the initial state definition, with a separation between the discrete and the continuous parts (the former syntax remains accepted for backward-compatibility).
+* New syntax for the initial state definition, with a separation between the discrete and the continuous parts (the former syntax remains accepted for backward-compatibility, but a warning is triggered).
 
 ### Bug fixing:
 * Solved a bug (introduced in v3.0) related to variable automatic removal in the initial state definition
