@@ -66,6 +66,7 @@ rule token = parse
 	| "rational"       { CT_DISCRETE }
 	| "int"            { CT_INT }
 	| "bool"           { CT_BOOL }
+	| "binary"         { CT_BINARY_WORD }
 	| "do"             { CT_DO }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
@@ -103,12 +104,21 @@ rule token = parse
 	| "within"         { CT_WITHIN }
     | "rational_of_int"{ CT_BUILTIN_FUNC_RATIONAL_OF_INT }
     | "pow"            { CT_POW }
+    | "shift_left"     { CT_SHIFT_LEFT }
+    | "shift_right"    { CT_SHIFT_RIGHT }
+    | "fill_left"      { CT_FILL_LEFT }
+    | "fill_right"     { CT_FILL_RIGHT }
+    | "logand"         { CT_LOG_AND }
+    | "logor"          { CT_LOG_OR }
+    | "logxor"         { CT_LOG_XOR }
+    | "lognot"         { CT_LOG_NOT }
 
 
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
 	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm }
 	| ['0'-'9']+ as lxm { INT(NumConst.numconst_of_string lxm) }
+        | "0b"['0'-'9']+ as lxm { BINARYWORD lxm }
 (*	| '"' [^'"']* '"' as lxm { STRING lxm } *) (* a string between double quotes *)
 
 	| "<="             { OP_LEQ }

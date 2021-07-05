@@ -154,7 +154,7 @@ let string_of_initially model automaton_index =
 let string_of_invariant model automaton_index location_index stopwatches clocks =
 	(* Invariant *)
 	"while "
-	(* TODO benjamin HyTech doesn't support arithmetic expression in invariant, we should raise an exception *)
+	(* TODO benjamin HyTech doesn't support arithmetic expression in invariant, we should print a warning *)
 	(* or should we use only the continuous part ? *)
 	^ (ModelPrinter.string_of_guard model.variable_names (model.invariants automaton_index location_index))
 

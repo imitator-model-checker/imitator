@@ -143,6 +143,7 @@ let string_of_var_type_discrete_number_for_jani = function
 let string_of_var_type_discrete_for_jani = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
     | DiscreteValue.Var_type_discrete_bool -> "bool"
+    | DiscreteValue.Var_type_discrete_binary_word _ -> "binary_word" (* TODO benjamin type name is good for Jani ? *)
 
 (* Convert the initial discrete var declarations into a string *)
 let string_of_discrete model =

@@ -44,6 +44,7 @@ type var_type_discrete_number =
 type var_type_discrete =
     | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_bool
+    | Var_type_discrete_binary_word of int
 
 (* Type of variable in declarations *)
 type var_type =
@@ -72,7 +73,15 @@ and parsed_discrete_factor =
 	| Parsed_DF_unary_min of parsed_discrete_factor
 	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
 	| Parsed_pow_function of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
-
+	| Parsed_shift_left of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_shift_right of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_fill_left of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_fill_right of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_log_and of parsed_discrete_factor * parsed_discrete_factor
+	| Parsed_log_or of parsed_discrete_factor * parsed_discrete_factor
+	| Parsed_log_xor of parsed_discrete_factor * parsed_discrete_factor
+	| Parsed_log_not of parsed_discrete_factor
+(*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
 
 (****************************************************************)
 (** Boolean expressions *)
@@ -466,4 +475,14 @@ type useful_parsing_model_information = {
 	variable_names						: variable_name list;
 	variables							: variable_name array;
 	removed_variable_names				: variable_name list;
+	only_used_in_init_variable_names    : variable_name list;
+}
+
+type variable_infos = {
+	constants							: (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t;
+    variable_names						: variable_name list;
+	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
+	type_of_variables					: Automaton.variable_index -> DiscreteValue.var_type;
+	removed_variable_names				: variable_name list;
+	only_used_in_init_variable_names    : variable_name list;
 }

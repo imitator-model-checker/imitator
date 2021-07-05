@@ -241,7 +241,7 @@ let match_loc_predicate loc_predicate global_location =
 
 let match_simple_predicate (locations_acceptance_condition : automaton_index -> location_index -> bool) simple_predicate global_location =
 	match simple_predicate with
-	(* TODO benjamin check with etienne only rational are evaluated in property ? no type ? *)
+
 	(* Here convert the global_location to a variable valuation *)
 	| Discrete_boolean_expression discrete_boolean_expression -> DiscreteExpressionEvaluator.check_discrete_boolean_expression (get_discrete_value global_location) discrete_boolean_expression
 	
@@ -306,7 +306,7 @@ let string_of_location automata_names location_names discrete_names rational_dis
 			(* Convert to float? *)
 			match rational_display with
 			| Exact_display -> ""
-			| Float_display -> " (~ " ^ (string_of_float (DiscreteValue.float_value value)) ^ ")"
+			| Float_display -> " (~ " ^ (string_of_float (DiscreteValue.to_float_value value)) ^ ")"
 		)
 	) discrete in
 	let discrete_string = string_of_array_of_string_with_sep ", " string_array in

@@ -486,7 +486,7 @@ Error                                   : unsatisfiable initial state
 	#------------------------------------------------------------
 
 	,
-	
+
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -900,6 +900,92 @@ end
 	##------------------------------------------------------------]
 
 	,
+
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# AUTOMATIC VARIABLES REMOVAL
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test discrete variable automatic removal',
+		'input_files': ['testVarElim.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
+			{'file': 'testVarElim-statespace.states' , 'content' : """
+  STATE 1:
+  pta: l1, i = 0, j = 0 ==>
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test absence of discrete variable automatic removal',
+		'input_files': ['testVarElim.imi'],
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
+			{'file': 'testVarElim-statespace.states' , 'content' : """
+  STATE 1:
+  pta: l1, i = 0, j = 0, k = 0, l = 0 ==>
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/01
+		# Last modified            : 2021/07/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test no clock removal for x=y with x used in the model but not y',
+		'input_files': ['test_var_remove.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'test_var_remove.res' , 'content' : """
+Number of clocks                        : 2
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/01
+		# Last modified            : 2021/07/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test correct variable removal for more complex dependencies',
+		'input_files': ['test_var_remove_2.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'test_var_remove_2.res' , 'content' : """
+Number of clocks                        : 3
+		""" # TODO: add check for rational and parameter too, etc., perhaps using a -mode statespace -states-description -depth-limit 2
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# STATE SPACE GENERATION
@@ -2781,7 +2867,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.0.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a clock isn\'t updated with a bad type',
+		'purpose'    : 'Test that a clock isn’t updated with a bad type',
 		'tags': 'type checking, update',
 		'input_files': ['type_checking/updates/clock-update-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -2808,7 +2894,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in addition',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in addition',
 		'input_files': ['type_checking/expression-mixin-type-error-1.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2831,7 +2917,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in multiplication',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in multiplication',
 		'input_files': ['type_checking/expression-mixin-type-error-2.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2854,7 +2940,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in comparison',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in comparison',
 		'input_files': ['type_checking/expression-mixin-type-error-3.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
@@ -2877,7 +2963,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in "in" expression',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in "in" expression',
 		'input_files': ['type_checking/expression-mixin-type-error-4.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -3104,6 +3190,30 @@ Error                                   : invalid model
 
   Projection onto the parameters:
    3*p > 7
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/06/21
+		## Last modified            : 2021/06/21
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of non rational valued discrete variables in continuous init section raise an error',
+		'input_files': ['type_checking/inits/init-non-rational-discrete-in-continuous-error.imi'],
+		'tags': 'type checking, init',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'init-non-rational-discrete-in-continuous-error.res' , 'content' : """
+Error                                   : invalid model
 		"""
 			 } # end result file
 			,
@@ -3475,7 +3585,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : '',
+		'purpose'    : 'Test that behavior of pow function is correct',
 		'input_files': ['functions/pow.imi'],
 		'tags': 'semantic, behavior, function',
 		'options'    : '-mode statespace -states-description',
@@ -3515,6 +3625,103 @@ Error                                   : invalid model
   Projection onto the parameters:
    p1 = 82
 & p2 = 65
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/06/30
+		## Last modified            : 2021/06/30
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that behaviors of all possible functions on binary word are correct ',
+		'input_files': ['functions/binary-word.imi'],
+		'tags': 'semantic, behavior, function',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'binary-word-statespace.states' , 'content' : """
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: loc_init, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00000 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  pta: loc_land, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10100 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 2:
+  pta: loc_lor, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10111 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 3:
+  pta: loc_lxor, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00011 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 4:
+  pta: loc_lnot, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b01010 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 5:
+  pta: loc_shift_left, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10100 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 6:
+  pta: loc_shift_right, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 7:
+  pta: loc_fill_left, r = 0, i = 0, j = 0, bin_result2 = 0b10101000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 8:
+  pta: loc_fill_right, r = 0, i = 0, j = 0, bin_result2 = 0b00010101, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
 		"""
 			 } # end result file
 			,
@@ -3673,44 +3880,6 @@ Constraint nature                       : good
 DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1
   s_1 -> s_1 via "a"
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test discrete variable automatic elimination',
-		'input_files': ['testVarElim.imi'],
-		'options'    : '-mode statespace -states-description',
-		'expectations' : [
-			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
-			{'file': 'testVarElim-statespace.states' , 'content' : """
-  STATE 1:
-  pta: l1, i = 0, j = 0 ==>
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test absence of discrete variable automatic elimination',
-		'input_files': ['testVarElim.imi'],
-		'options'    : '-mode statespace -states-description -no-var-autoremove',
-		'expectations' : [
-			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
-			{'file': 'testVarElim-statespace.states' , 'content' : """
-  STATE 1:
-  pta: l1, i = 0, j = 0, k = 0, l = 0 ==>
 		"""
 			} # end result file
 			,
@@ -14691,12 +14860,36 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that init of a variable with a variable is forbidden - new init state (behavior)',
+		'purpose'    : 'Test that init of a variable with a variable is forbidden - new init state',
 		'tags' : 'semantic, behavior, init',
 		'input_files': ['init_state/init-variable-with-variable.imi'],
 		'options'    : '-no-var-autoremove -mode statespace -states-description',
 		'expectations' : [
 			{'file': 'init-variable-with-variable.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/06/21
+		## Last modified            : 2021/06/21
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init a variable with another variable in continuous init section is forbidden',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-using-variable-in-continuous-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'init-using-variable-in-continuous-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file
