@@ -2286,7 +2286,7 @@ let discrete_predicate_of_discrete_linear_predicate = function
             match (op, expression) with
             (* Simple constant: OK *)
             | (PARSED_OP_EQ, Linear_term (Constant c)) ->
-                let rational_value = DiscreteValue.Rational_value c in
+                let rational_value = DiscreteValue.Number_value c in
                 let discrete_predicate = Parsed_discrete_predicate (
                     discrete_name,
                     Parsed_global_expression (
@@ -2300,7 +2300,7 @@ let discrete_predicate_of_discrete_linear_predicate = function
                 Some discrete_predicate
             (* Constant: OK *)
             | (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
-                let coef_rational_value = DiscreteValue.Rational_value coef in
+                let coef_rational_value = DiscreteValue.Number_value coef in
                 let discrete_predicate = Parsed_discrete_predicate (
                     discrete_name,
                     Parsed_global_expression (
