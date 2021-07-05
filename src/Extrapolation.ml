@@ -180,32 +180,39 @@ let rec power base exponent =
 (* Hide all bounded parameters in a list of guards by replacing them by their bounds *)
 let hide_bounded (guards : (int * op * numconst_or_infinity array) list) (bounds : (numconst_or_infinity * numconst_or_infinity) array) =
 	let new_guards = guards in
-	let f (clock, operator, factors) = 
-		let k = (Array.length factors) - 1 in
+	let f (clock, operator, coefs) = 
+		let k = (Array.length coefs) - 1 in
 		for i = 0 to k-1 do
 			let (min,max) = bounds.(i) in
+			(* If the parameter is bounded replace it by its bounds *)
 			if (not (eq_inf max Infinity)) && (not (eq_inf min Minus_infinity)) then begin
-				if greater_inf factors.(i) (Finite (NumConst.numconst_of_int 0)) then begin
-					factors.(k) <- add_inf factors.(k) (mul_inf factors.(i) max);
-					factors.(i) <- (Finite (NumConst.numconst_of_int 0));
+				(* Upper bound for a positive coef *)
+				if greater_inf coefs.(i) (Finite (NumConst.numconst_of_int 0)) then begin
+					(* Add it to the constant part *)
+					coefs.(k) <- add_inf coefs.(k) (mul_inf coefs.(i) max);
+					(* Set coef to zero *)
+					coefs.(i) <- (Finite (NumConst.numconst_of_int 0));
 				end
+				(* Lower bound for a negative coef *)
 				else begin
-					factors.(k) <- add_inf factors.(k) (mul_inf factors.(i) min);
-					factors.(i) <- (Finite (NumConst.numconst_of_int 0));
+					(* Add it to the constant part *)
+					coefs.(k) <- add_inf coefs.(k) (mul_inf coefs.(i) min);
+					(* Set coef to zero *)
+					coefs.(i) <- (Finite (NumConst.numconst_of_int 0));
 				end
 			end
 		done;
-	(clock, operator, factors)
+	(clock, operator, coefs)
 	in List.map f new_guards
 	
 
 (* Returns a boolean array indicating for each clock if it is a parametric one *)
 let compute_parametric_clocks_array guards h =
 	let parametric_clocks_array = Array.make h false in
-	let f (clock, operator, factors) =
-		let k = (Array.length factors) - 1 in
+	let f (clock, operator, coefs) =
+		let k = (Array.length coefs) - 1 in
 		for i = 0 to k-1 do
-			if not (eq_inf factors.(i) (Finite (NumConst.numconst_of_int 0))) then parametric_clocks_array.(clock) <- true;
+			if not (eq_inf coefs.(i) (Finite (NumConst.numconst_of_int 0))) then parametric_clocks_array.(clock) <- true;
 		done
 	in
 	List.iter f guards;
@@ -229,13 +236,13 @@ let set_bounds bounds n =
 	
 	
 (* Computes the maximal value (cf. "g_max" paper) of a guard *)	
-let compute_gmax (clock, operator, factors) bounds =
-	let k = (Array.length factors) - 1 in
-	let gmax = ref(factors.(k)) in
+let compute_gmax (clock, operator, coefs) bounds =
+	let k = (Array.length coefs) - 1 in
+	let gmax = ref(coefs.(k)) in
 	for i = 0 to k-1 do
 		let (min,max) = bounds.(i) in
-		if greater_inf factors.(i) (Finite (NumConst.numconst_of_int 0)) then gmax := add_inf !gmax (mul_inf factors.(i) max)
-		else gmax := add_inf !gmax (mul_inf factors.(i) min);
+		if greater_inf coefs.(i) (Finite (NumConst.numconst_of_int 0)) then gmax := add_inf !gmax (mul_inf coefs.(i) max)
+		else gmax := add_inf !gmax (mul_inf coefs.(i) min);
 	done;
 	!gmax
 	
@@ -243,8 +250,8 @@ let compute_gmax (clock, operator, factors) bounds =
 (* Returns an array with the greatest non parametric constants compared to each clock (cf. "c_x" paper) *)	
 let compute_greatest_nonparametric_constants guards h=
 	let greatest_const = Array.make h (Finite (NumConst.numconst_of_int 0)) in
-	let f (clock, operator, factors) =
-		greatest_const.(clock) <- max_inf factors.((Array.length factors) - 1) greatest_const.(clock);
+	let f (clock, operator, coefs) =
+		greatest_const.(clock) <- max_inf coefs.((Array.length coefs) - 1) greatest_const.(clock);
 	in
 	List.iter f guards;
 	greatest_const
@@ -293,22 +300,27 @@ let get_max_bounds bounds guards h =
 	let max_const_L = Array.make h Minus_infinity in
 	let max_const_U = Array.make h Minus_infinity in
 	List.iter (
-	fun (clock, operator, factors) -> 
-		if operator = Op_g || operator = Op_ge then max_const_L.(clock) <- max_inf (compute_gmax (clock, operator, factors) bounds) max_const_L.(clock) 
-		else if operator = Op_l || operator = Op_le then max_const_U.(clock) <- max_inf (compute_gmax (clock, operator, factors) bounds) max_const_U.(clock)
-		else begin max_const_L.(clock) <- max_inf (compute_gmax (clock, operator, factors) bounds) max_const_L.(clock);
-		max_const_U.(clock) <- max_inf (compute_gmax (clock, operator, factors) bounds) max_const_L.(clock);
+	fun (clock, operator, coefs) -> 
+		(* If sign is > or >=, the guard counts for L only *)
+		if operator = Op_g || operator = Op_ge then max_const_L.(clock) <- max_inf (compute_gmax (clock, operator, coefs) bounds) max_const_L.(clock) 
+		(* If sign is < or <=, the guard counts for U only *)
+		else if operator = Op_l || operator = Op_le then max_const_U.(clock) <- max_inf (compute_gmax (clock, operator, coefs) bounds) max_const_U.(clock)
+		(* If sign is =, the guard counts for L and U *)
+		else begin max_const_L.(clock) <- max_inf (compute_gmax (clock, operator, coefs) bounds) max_const_L.(clock);
+		max_const_U.(clock) <- max_inf (compute_gmax (clock, operator, coefs) bounds) max_const_L.(clock);
 		end
 	) guards;
 	(max_const_L,max_const_U)
 
 (* Return for each clock x the value to use for the LU-extrapolation of x (cf. "vec{LU}" paper) *)
 let compute_maximal_constants (pta_type : modified_pta_type) (bounds : (numconst_or_infinity * numconst_or_infinity) array) (guards : (int * op * numconst_or_infinity array) list) (h : int) : (numconst_or_infinity array * numconst_or_infinity array) =
+	(* If LU-PTA with a bounded part, hide bounded parameters to reduce it to L-PTA or U-PTA *)
 	let hide = 
 		if pta_type = LU_Ubounded then (hide_bounded guards bounds , PTA_L )
 		else if pta_type = LU_Lbounded then (hide_bounded guards bounds , PTA_U )
 		else (guards, pta_type)
 	in
+	(* If L-PTA or U-PTA, compute N and use it to determine the bounds of unbounded parameters *)
 	let new_bounds =
 		let (guards, pta_type) = hide in
 		if pta_type = PTA_L || pta_type = PTA_U then set_bounds 
@@ -325,6 +337,7 @@ let compute_maximal_constants (pta_type : modified_pta_type) (bounds : (numconst
 				h
 			)
 		else bounds
+	(* Compute the lower and upper maximal constant for each clock in the PTA*)
 	in get_max_bounds new_bounds guards h
 
 
@@ -336,18 +349,31 @@ let compute_maximal_constants (pta_type : modified_pta_type) (bounds : (numconst
 
 	
 (************************************************************)
-(* Global variables *)
+(* Global variables to be used by the extrapolation functions*)
 (************************************************************)
 
+(* lower maximal constant for each clock*)
 let lower_constants = ref [||]
+
+(* upper maximal constant for each clock*)
 let upper_constants = ref [||]
 
+(* maximal constant for each clock*)
 let greatest_constants = ref [||]
+
+(* global lower maximal constant *)
 let max_lower_const = ref(Minus_infinity)
+
+(* global upper maximal constant *)
 let max_upper_const = ref(Minus_infinity)
+
+(* global maximal constant *)
 let max_greatest_const = ref(Minus_infinity)
 
+(* number of parameters in the PTA*)
 let nb_parameters = ref 0
+
+(* set of clocks of the PTA*)
 let clocks = ref []
 
 
@@ -375,25 +401,28 @@ let includes l1 l2 =
 (************************************************************)
 (* Sub-functions *)
 (************************************************************)
-	
+
+(** Function to retrieve the bounds of parameters **)
+
+(* Transform bound type in numconst_or_infinity *)
 let get_p_bounds p_bounds =
 	let min = 
 	(* Check if unbounded below *)
 	match p_bounds.lower with
 	| Unbounded -> Minus_infinity
-	(* A finite bound is a pair NumConst.t and a Boolean true iff it is closed (i.e., closed inequality, and not strict) *)
 	| Bounded (bound, is_closed) -> Finite bound
 	in
 	let max = 
 	(* Check if unbounded above *)
 	match p_bounds.upper with
 	| Unbounded -> Infinity
-	(* A finite bound is a pair NumConst.t and a Boolean true iff it is closed (i.e., closed inequality, and not strict) *)
 	| Bounded (bound, is_closed) -> Finite bound
 	in (min,max)
 	
-
 	
+(** Function to retrieve the clock operator and coefficients of guards **)
+
+(* Return the set of all guards (invariants or transitions) in the model *)	
 let get_raw_guards model =
 	let raw_guards = ref [] in
 	let get_actions automaton location = List.iter 
@@ -417,6 +446,7 @@ let get_raw_guards model =
 	List.iter get_locations model.automata;
 	!raw_guards
 	
+(* Return the set of all inequalities in guards of the model *)
 let get_inequalities model =
 	let inequalities = ref [] in
 	let guard_to_inequalities (guard) =
@@ -428,6 +458,7 @@ let get_inequalities model =
 	List.iter guard_to_inequalities (get_raw_guards model);
 	!inequalities
 	
+(* Transform a linear term in an array of coefficients *)
 let linear_term_to_coef_array linear_term nb_parameters =
 	let coef_array = Array.make (nb_parameters+1) (Finite (p_get_coefficient_in_linear_term linear_term)) in
 	for i=0 to nb_parameters-1 do 
@@ -435,12 +466,14 @@ let linear_term_to_coef_array linear_term nb_parameters =
 	done;
 	coef_array
 	
+(* Apply the negation on each elements in an array of numconst_or_infinity *)
 let revert_coef_array coef_array =
 	for i=0 to (Array.length coef_array - 1) do 
 		coef_array.(i) <- neg_inf coef_array.(i)
 	done;
 	coef_array
 	
+(* Return each guard in the model in the form of a triplet (clock,operator,coefficients) *)
 let get_guards model =
 	let guards = ref [] in
 	let f (i) =
@@ -448,13 +481,16 @@ let get_guards model =
 		let coef_array = linear_term_to_coef_array linear_term model.nb_parameters in
 		if op = Op_l || op = Op_le 
 		then guards := List.append [(clock-model.nb_parameters,op,coef_array)] !guards
+		(* If the operator is >, >= or =, apply the negation on coefficients (this is necessary due to the coefficients being send to the other side of the inequality in the linear term) *)
 		else guards := List.append [(clock-model.nb_parameters,op,(revert_coef_array coef_array))] !guards
 	in 
 	List.iter f (get_inequalities model);
 	!guards
 
 
+(** Function to determine the type of pta **)
 
+(* Returns the list of bounded parameters *)
 let get_bounded p_bounds =
 	let bounded_parameters = ref [] in
 	for i=0 to (Array.length p_bounds)-1 do 
@@ -463,6 +499,7 @@ let get_bounded p_bounds =
 	done;
 	!bounded_parameters
 
+(* Transform lu_status in modified_pta_type *)
 let get_pta_type pta_type bounded_parameters =
 	(* Get the L/U nature *)
 	match pta_type with
@@ -480,7 +517,9 @@ let get_pta_type pta_type bounded_parameters =
 	| PTA_U -> PTA_U 
 	
 	
-	
+(** Function to set global variables **)
+
+(* Set the values of greatest_constants, max_lower_const max_upper_const and max_greatest_const based on lower_constants and upper_constants  *)	
 let set_maximums l u nb_clocks : unit = 
 	let g_c = l in
 	for i=0 to nb_clocks-1 do 
@@ -504,17 +543,22 @@ let prepare_extrapolation () : unit =
 
 	let p_bounds = Array.make model.nb_parameters (Minus_infinity,Infinity) in
 	
+	(* Retrieve guards *)
 	let guards = get_guards model in
 	
 	let nb_clocks = model.nb_clocks in
 
 	begin
+		(* Retrieve parameters bounds *)
 		List.iter (fun (p) -> p_bounds.(p) <- get_p_bounds (model.parameters_bounds p) ) model.parameters;
 		
+		(* Define pta_type *)
 		let pta_type = get_pta_type model.lu_status (get_bounded p_bounds) in
 		
+		(* Compute maximal constants *)
 		let (l,u) = compute_maximal_constants pta_type p_bounds guards nb_clocks in
 		
+		(* Set global variables *)
 		begin
 			lower_constants := l;
 			upper_constants := u;
