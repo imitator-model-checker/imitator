@@ -1,0 +1,87 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test absence of issues in automated variable removal
+ * Description      : Test absence of issues in automated variable removal: t should be removed, not any other variable
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/07/01
+ * Last modified    : 2021/07/01
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.1
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y, z, t,
+		: clock;
+
+(* Discrete *)
+	r,
+		: rational;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant True
+	when x = 1 sync a do {x := p + 1} goto l1;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		r := 1/2,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 1
+		& y = 2
+		& z = 3
+		& t = 4
+		& x + y >= z + 2 - r
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
