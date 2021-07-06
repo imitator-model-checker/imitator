@@ -433,8 +433,66 @@ let check_only_discretes_in_parsed_global_expression index_of_variables type_of_
 (** Converting discrete arithmetic expressions *)
 (************************************************************)
 
+(* Convert parsed_discrete_arithmetic_expression *)
+let rec convert_parsed_discrete_arithmetic_expression_with_model variable_infos =
+    convert_parsed_discrete_arithmetic_expression variable_infos
+
+(* Convert a parsed global expression to an abstract model expression *)
+and convert_parsed_global_expression variable_infos = function
+    | Parsed_global_expression expr as global_expr ->
+        (* TYPE CHECK *)
+        let discrete_type = TypeChecker.discrete_type_of_expression variable_infos global_expr in
+
+        match discrete_type with
+        | DiscreteValue.Var_type_discrete_bool ->
+            bool_expression_of_parsed_expression variable_infos expr
+        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
+            rational_expression_of_parsed_expression variable_infos expr
+        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
+            int_expression_of_parsed_expression variable_infos expr
+        | DiscreteValue.Var_type_discrete_binary_word l ->
+            Binary_word_expression (binary_word_expression_of_parsed_boolean_expression variable_infos expr)
+        (* Should never happen *)
+        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
+            raise (InternalError "An expression still contains unknown literal number after type checking")
+
+(* Get typed rational expression of global parsed expression *)
+(* Extract arithmetic expression from parsed_discrete_boolean_expression *)
+and rational_expression_of_parsed_expression variable_infos (* expr *) =
+
+    let rec rational_expression_of_parsed_expression = function
+        | Parsed_Discrete_boolean_expression expr -> rational_expression_of_parsed_discrete_boolean_expression expr
+        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+
+    and rational_expression_of_parsed_discrete_boolean_expression = function
+        | Parsed_arithmetic_expression expr ->
+            Arithmetic_expression (Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression variable_infos expr))
+        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+    in
+    rational_expression_of_parsed_expression (* expr *)
+
+(* Get typed int expression of global parsed expression *)
+(* Extract arithmetic expression from parsed_discrete_boolean_expression *)
+and int_expression_of_parsed_expression variable_infos (* expr *) =
+
+    let rec int_expression_of_parsed_expression = function
+        | Parsed_Discrete_boolean_expression expr -> int_expression_of_parsed_discrete_boolean_expression expr
+        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+
+    and int_expression_of_parsed_discrete_boolean_expression = function
+        | Parsed_arithmetic_expression expr ->
+            Arithmetic_expression (Int_arithmetic_expression (convert_parsed_int_arithmetic_expression variable_infos expr))
+        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+    in
+    int_expression_of_parsed_expression
+(* Get typed bool expression of global parsed expression *)
+(* discrete type is the inner type of the boolean expression, for example : *)
+(* if x + 1 > 0 then x else y with x : int, give a Bool_expression (expr, Var_type_discrete_int) *)
+and bool_expression_of_parsed_expression variable_infos expr =
+     Bool_expression (convert_bool_expr variable_infos expr)
+
 (** Convert a boolean expression in its abstract model *)
-let rec convert_bool_expr variable_infos = function
+and convert_bool_expr variable_infos = function
 	| Parsed_True -> True_bool
 	| Parsed_False -> False_bool
 	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr variable_infos e1), (convert_bool_expr variable_infos e2))
@@ -707,6 +765,7 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
     in
     convert_parsed_int_arithmetic_expression_rec
 
+
 (* Try to convert a parsed boolean expression to abstract binary word expression *)
 and binary_word_expression_of_parsed_boolean_expression variable_infos = function
     (* A binary word can only be found in parsed factor *)
@@ -797,7 +856,8 @@ and binary_word_expression_of_parsed_factor variable_infos = function
         Logical_not (
             binary_word_expression_of_parsed_factor variable_infos factor
         )
-    | Parsed_DF_expression _
+    | Parsed_DF_expression expression ->
+        binary_word_expression_of_parsed_discrete_arithmetic_expression variable_infos expression
     | Parsed_DF_unary_min _
     | Parsed_rational_of_int_function _
     | Parsed_pow_function _ as factor ->
@@ -808,83 +868,9 @@ and binary_word_expression_of_parsed_factor variable_infos = function
         ))
 
 
-
-
-let convert_bool_expr_with_model variable_infos =
-    convert_bool_expr variable_infos
-
-let convert_parsed_rational_arithmetic_expression_with_model variable_infos =
-    convert_parsed_rational_arithmetic_expression variable_infos
-
-let convert_parsed_int_arithmetic_expression_with_model  variable_infos =
-    convert_parsed_int_arithmetic_expression variable_infos
-
-
 (*------------------------------------------------------------*)
 (* Functions for property conversion *)
 (*------------------------------------------------------------*)
-
-(* Convert parsed_discrete_arithmetic_expression *)
-let rec convert_parsed_discrete_arithmetic_expression_with_model variable_infos =
-    convert_parsed_discrete_arithmetic_expression variable_infos
-
-
-(* Convert a parsed global expression to an abstract model expression *)
-let rec convert_parsed_global_expression variable_infos = function
-    | Parsed_global_expression expr as global_expr ->
-        (* TYPE CHECK *)
-        let discrete_type = TypeChecker.discrete_type_of_expression variable_infos global_expr in
-
-        match discrete_type with
-        | DiscreteValue.Var_type_discrete_bool ->
-            bool_expression_of_parsed_expression variable_infos expr
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
-            rational_expression_of_parsed_expression variable_infos expr
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
-            int_expression_of_parsed_expression variable_infos expr
-        | DiscreteValue.Var_type_discrete_binary_word l ->
-            Binary_word_expression (binary_word_expression_of_parsed_boolean_expression variable_infos expr)
-        (* Should never happen *)
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
-            raise (InternalError "An expression still contains unknown literal number after type checking")
-
-(* Get typed rational expression of global parsed expression *)
-(* Extract arithmetic expression from parsed_discrete_boolean_expression *)
-and rational_expression_of_parsed_expression variable_infos (* expr *) =
-
-    let rec rational_expression_of_parsed_expression = function
-        | Parsed_Discrete_boolean_expression expr -> rational_expression_of_parsed_discrete_boolean_expression expr
-        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-    and rational_expression_of_parsed_discrete_boolean_expression = function
-        | Parsed_arithmetic_expression expr ->
-            Arithmetic_expression (Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression_with_model variable_infos expr))
-        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-    in
-    rational_expression_of_parsed_expression (* expr *)
-
-(* Get typed int expression of global parsed expression *)
-(* Extract arithmetic expression from parsed_discrete_boolean_expression *)
-and int_expression_of_parsed_expression variable_infos (* expr *) =
-
-    let rec int_expression_of_parsed_expression = function
-        | Parsed_Discrete_boolean_expression expr -> int_expression_of_parsed_discrete_boolean_expression expr
-        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-    and int_expression_of_parsed_discrete_boolean_expression = function
-        | Parsed_arithmetic_expression expr ->
-            Arithmetic_expression (Int_arithmetic_expression (convert_parsed_int_arithmetic_expression_with_model variable_infos expr))
-        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-    in
-    int_expression_of_parsed_expression
-(* Get typed bool expression of global parsed expression *)
-(* discrete type is the inner type of the boolean expression, for example : *)
-(* if x + 1 > 0 then x else y with x : int, give a Bool_expression (expr, Var_type_discrete_int) *)
-and bool_expression_of_parsed_expression variable_infos expr =
-     Bool_expression (convert_bool_expr variable_infos expr)
-
-
-
 
 (* Convert parsed_loc_predicate *)
 let convert_parsed_loc_predicate useful_parsing_model_information = function
@@ -3292,7 +3278,7 @@ let convert_updates variable_infos updates : updates =
         (* TYPE CHECK *)
         let uniformly_typed_bool_expr, _ = TypeChecker.check_conditional variable_infos boolean_value in
 
-        let convert_boolean_expr = convert_bool_expr_with_model variable_infos uniformly_typed_bool_expr in
+        let convert_boolean_expr = convert_bool_expr variable_infos uniformly_typed_bool_expr in
         let convert_if_updates = convert_normal_updates variable_infos if_updates in
         let convert_else_updates = convert_normal_updates variable_infos else_updates in
         (convert_boolean_expr, convert_if_updates, convert_else_updates)
