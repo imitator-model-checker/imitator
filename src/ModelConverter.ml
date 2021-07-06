@@ -1591,17 +1591,18 @@ let get_all_variable_dependencies_used_in_init parsed_model all_variables_used =
 
     StringSet.iter (fun variable_name ->
         let variable_dependencies = get_variable_dependencies parsed_model variable_name in
-
+        (* Get only variable not used but dependent of a variable used *)
+        let variable_dependencies_not_used = StringSet.diff variable_dependencies !all_variables_used in
         (* Display warning message *)
         StringSet.iter(fun variable_dependency_name ->
             print_warning (
                 "Variable \""
                 ^ variable_dependency_name
-                ^ "\" is declared but never use in the model; it is however keeped because of dependency with \""
+                ^ "\" is declared but never used in the model; it is however keep because of dependency with \""
                 ^ variable_name
                 ^ "\""
             );
-        ) variable_dependencies;
+        ) variable_dependencies_not_used;
 
         all_dependencies_used := StringSet.union !all_dependencies_used variable_dependencies;
     ) !all_variables_used;
