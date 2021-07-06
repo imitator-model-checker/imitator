@@ -1540,6 +1540,69 @@ let get_all_variables_used_only_in_init_definition init_definition all_variables
     let only_used_in_init_variable_names_set = StringSet.diff !all_variables_used_in_init all_variables_used in
     only_used_in_init_variable_names_set
 
+(* Get all variable dependencies of a given variable *)
+let get_variable_dependencies parsed_model variable_name =
+    let all_dependant_variables = ref StringSet.empty in
+    let rec get_variable_dependencies_rec dependent_variables variable_name =
+        List.iter (function
+            (* `loc[automaton] = location`: no variable => nothing to do *)
+            | Parsed_loc_assignment _ -> ()
+
+            (* Linear predicate are true or false constraint => nothing to do*)
+            | Parsed_linear_predicate Parsed_true_constraint
+            | Parsed_linear_predicate Parsed_false_constraint
+
+            (* Special form `variable ~ constant` => in this case we assume NOT used *)
+            | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable _), _, Linear_term (Constant _)))
+
+            (* Allow only constant-expression, so no variables to get *)
+            | Parsed_discrete_predicate _ -> ()
+
+            (* Linear constraint: get variables *)
+            | Parsed_linear_predicate (Parsed_linear_constraint _ as linear_constraint) ->
+                (** Gather all left-hand and right-hand variables *)
+                let linear_constraint_variables_ref = ref StringSet.empty in
+                get_variables_in_linear_constraint linear_constraint_variables_ref linear_constraint;
+
+                (* If variable appear in linear constraint, get all variable implies *)
+                if StringSet.mem variable_name !linear_constraint_variables_ref then (
+                    (* Get all variable that doesn't exists already in dependent_variables set *)
+                    let diff = StringSet.diff !linear_constraint_variables_ref !dependent_variables in
+                    let diff_list = StringSet.elements diff in
+                    let length = List.length diff_list in
+                    if length <> 0 then (
+                        dependent_variables := StringSet.union !dependent_variables !linear_constraint_variables_ref;
+                        (* Recursively search dependencies for new found variable *)
+                        StringSet.iter (fun dependent_variable_name ->
+                            get_variable_dependencies_rec dependent_variables dependent_variable_name
+                        ) diff;
+                    );
+                )
+
+        ) parsed_model.init_definition;
+    in
+    get_variable_dependencies_rec all_dependant_variables variable_name;
+    all_dependant_variables := StringSet.remove variable_name !all_dependant_variables;
+    !all_dependant_variables
+
+(* For each used variables, get their dependencies *)
+let get_all_variable_dependencies_used_in_init parsed_model all_variables_used =
+    let all_dependencies_used = ref StringSet.empty in
+
+    StringSet.iter (fun variable_name ->
+        let variable_dependencies = get_variable_dependencies parsed_model variable_name in
+
+        (* Display warning message *)
+        StringSet.iter(fun variable_dependency_name ->
+            print_warning ("Dependency `" ^ variable_dependency_name ^ "` of `" ^ variable_name ^ "` will be keep.");
+        ) variable_dependencies;
+
+        all_dependencies_used := StringSet.union !all_dependencies_used variable_dependencies;
+    ) !all_variables_used;
+
+    !all_dependencies_used
+
+
 (* Get the set of all variable names used in the parsed model *)
 let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_model) =
 	(* Create a set structure for variable names *)
@@ -1624,34 +1687,41 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
         (* Linear predicate are true or false constraint => nothing to do*)
 		| Parsed_linear_predicate Parsed_true_constraint
         | Parsed_linear_predicate Parsed_false_constraint
-        
+
+		(* Special form `variable ~ constant` => in this case we assume NOT used *)
+		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable _), _, Linear_term (Constant _)))
+
         (* Allow only constant-expression, so no variables to get *)
         | Parsed_discrete_predicate _ -> ()
-        
-		(* Special form `variable ~ constant` => in this case we assume NOT used *)
-		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable _), _, Linear_term (Constant _))) ->
-			()
-		
+
 		(* Linear constraint: get variables *)
 		| Parsed_linear_predicate (Parsed_linear_constraint (l_expr, _, r_expr)) ->
             (** Gather all left-hand and right-hand variables *)
-            let left_hand_variables = ref StringSet.empty in
-            let right_hand_variables = ref StringSet.empty in
-            get_variables_in_linear_expression left_hand_variables l_expr;
-            get_variables_in_linear_expression right_hand_variables r_expr;
+            let left_hand_variables_ref = ref StringSet.empty in
+            let right_hand_variables_ref = ref StringSet.empty in
+            get_variables_in_linear_expression left_hand_variables_ref l_expr;
+            get_variables_in_linear_expression right_hand_variables_ref r_expr;
+            let left_hand_variables, right_hand_variables = !left_hand_variables_ref, !right_hand_variables_ref in
 
             (* Right-hand variables are used if left-hand variables are used *)
-            let at_least_one_variable_used = StringSet.exists (fun variable_name -> StringSet.mem variable_name !all_variables_used) !left_hand_variables in
+            let at_least_one_variable_used = StringSet.exists (fun variable_name -> StringSet.mem variable_name !all_variables_used) left_hand_variables in
             if at_least_one_variable_used then (
+
+                let both_side_variables = StringSet.union left_hand_variables right_hand_variables in
+
                 StringSet.iter (fun variable_name ->
                     if not (StringSet.mem variable_name !all_variables_used) then
                         all_variables_used := StringSet.add variable_name !all_variables_used;
 
-                ) !right_hand_variables
+                ) both_side_variables
             )
 
 	) parsed_model.init_definition;
     *)
+
+    let all_dependencies_used = get_all_variable_dependencies_used_in_init parsed_model all_variables_used in
+    all_variables_used := StringSet.union !all_variables_used all_dependencies_used;
+
 
 	(* Return the set of variables actually used *)
 	!all_variables_used
@@ -2370,6 +2440,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
 (* TODO benjamin REFACTOR with check_variables_init *)
 let check_init (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
 
+    (* TODO benjamin remove here and use variable_info *)
 	let constants				= useful_parsing_model_information.constants in
 	let discrete				= useful_parsing_model_information.discrete in
 	let index_of_variables		= useful_parsing_model_information.index_of_variables in
@@ -5114,7 +5185,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* Get all variables that are ONLY used in init definition *)
         let only_used_in_init_variable_names_set = get_all_variables_used_only_in_init_definition parsed_model.init_definition all_variable_used in
         let only_used_in_init_variable_names = StringSet.elements only_used_in_init_variable_names_set in
-        (* Convert theses variables to constants *)
 
 		(* Remove variable unused *)
 		let remove_unused_variables_gen variable_type_name = List.partition (fun variable_name ->
@@ -5122,11 +5192,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			if
 				(* Either it is used somewhere *)
 				(StringSet.mem variable_name all_variable_used)
-				(* TODO benjamin test for not remove variable used in init only, but a lot of non regression tests fail *)
-				(*
-				&&
-				not (StringSet.mem variable_name only_used_in_init_variable_names_set)
-				*)
 				(* Or it is a clock with the special global_time name *)
 				||
 				(variable_name = Constants.global_time_clock_name && List.mem variable_name single_clock_names)

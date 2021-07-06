@@ -3201,29 +3201,30 @@ Error                                   : invalid model
 
 	,
 
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/06/21
-		## Last modified            : 2021/06/21
-		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init of non rational valued discrete variables in continuous init section raise an error',
-		'input_files': ['type_checking/inits/init-non-rational-discrete-in-continuous-error.imi'],
-		'tags': 'type checking, init',
-		'options'    : '',
-		'expectations' : [
-			{'file': 'init-non-rational-discrete-in-continuous-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
+# TODO benjamin remove, we can now use int in continuous init
+# 	#------------------------------------------------------------
+# 	{
+# 		## Test version             : 1
+# 		## Test since               : 2021/06/21
+# 		## Last modified            : 2021/06/21
+# 		## Test for IMITATOR version: 3.1.0
+# 		## Author 					: lbinria
+# 		'author': 'lbinria',
+# 		'purpose'    : 'Test that init of non rational valued discrete variables in continuous init section raise an error',
+# 		'input_files': ['type_checking/inits/init-non-rational-discrete-in-continuous-error.imi'],
+# 		'tags': 'type checking, init',
+# 		'options'    : '',
+# 		'expectations' : [
+# 			{'file': 'init-non-rational-discrete-in-continuous-error.res' , 'content' : """
+# Error                                   : invalid model
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
 
 	# END : Type checking on variable initializations
 
