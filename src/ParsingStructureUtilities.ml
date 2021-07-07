@@ -644,5 +644,4 @@ let variable_infos_of_parsed_model (parsed_model : useful_parsing_model_informat
         index_of_variables = parsed_model.index_of_variables;
         type_of_variables = parsed_model.type_of_variables;
         removed_variable_names = parsed_model.removed_variable_names;
-        only_used_in_init_variable_names = parsed_model.only_used_in_init_variable_names;
     }

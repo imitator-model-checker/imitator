@@ -951,6 +951,7 @@ end
 		# Last modified            : 2021/07/01
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test no clock removal for x=y with x used in the model but not y',
+		'tags' : 'auto remove',
 		'input_files': ['test_var_remove.imi'],
 		'options'    : '-mode checksyntax ',
 		'expectations' : [
@@ -972,6 +973,7 @@ Number of clocks                        : 2
 		# Last modified            : 2021/07/01
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test correct variable removal for more complex dependencies',
+		'tags' : 'auto remove',
 		'input_files': ['test_var_remove_2.imi'],
 		'options'    : '-mode checksyntax ',
 		'expectations' : [
@@ -3199,29 +3201,30 @@ Error                                   : invalid model
 
 	,
 
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/06/21
-		## Last modified            : 2021/06/21
-		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init of non rational valued discrete variables in continuous init section raise an error',
-		'input_files': ['type_checking/inits/init-non-rational-discrete-in-continuous-error.imi'],
-		'tags': 'type checking, init',
-		'options'    : '',
-		'expectations' : [
-			{'file': 'init-non-rational-discrete-in-continuous-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
+# TODO benjamin remove, we can now use int in continuous init
+# 	#------------------------------------------------------------
+# 	{
+# 		## Test version             : 1
+# 		## Test since               : 2021/06/21
+# 		## Last modified            : 2021/06/21
+# 		## Test for IMITATOR version: 3.1.0
+# 		## Author 					: lbinria
+# 		'author': 'lbinria',
+# 		'purpose'    : 'Test that init of non rational valued discrete variables in continuous init section raise an error',
+# 		'input_files': ['type_checking/inits/init-non-rational-discrete-in-continuous-error.imi'],
+# 		'tags': 'type checking, init',
+# 		'options'    : '',
+# 		'expectations' : [
+# 			{'file': 'init-non-rational-discrete-in-continuous-error.res' , 'content' : """
+# Error                                   : invalid model
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
 
 	# END : Type checking on variable initializations
 
@@ -4539,6 +4542,7 @@ END CONSTRAINT
 		# Last modified            : 2021/07/02
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test EF with a parameter not used in the model (but still useful) + negative clock + negative flow',
+		'tags' : 'auto remove',
 		'input_files': ['test_param_unused.imi' , 'EFaccepting.imiprop'],
 		'options'    : '',
 		'expectations' : [

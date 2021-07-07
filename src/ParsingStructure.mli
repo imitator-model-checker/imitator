@@ -475,7 +475,6 @@ type useful_parsing_model_information = {
 	variable_names						: variable_name list;
 	variables							: variable_name array;
 	removed_variable_names				: variable_name list;
-	only_used_in_init_variable_names    : variable_name list;
 }
 
 type variable_infos = {
@@ -484,5 +483,4 @@ type variable_infos = {
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
 	type_of_variables					: Automaton.variable_index -> DiscreteValue.var_type;
 	removed_variable_names				: variable_name list;
-	only_used_in_init_variable_names    : variable_name list;
 }
