@@ -79,6 +79,13 @@ class imitator_options :
 		method is_set_merge212				: bool
 		method set_merge212					: bool -> unit
 
+		method merge_n1						: int
+		method merge_n2						: int
+
+(*		method merge_heuristic				: bool
+		method is_set_merge					: bool
+		method set_merge					: bool -> unit*)
+
 		(* 		method merge_before : bool *)
 		method merge_heuristic				: merge_heuristic
 		method model_file_name				: string
