@@ -2567,7 +2567,7 @@ For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}), do not use 
 %------------------------------------------------------------
 \imitator{} considers that all the \IPTA{} declaring a given action must be able to synchronize all together, so that the synchronization can happen.
 By default, \imitator{} considers that the actions declared in an \IPTA{} are those declared in the \styleIMI{synclabs} section.
-Therefore, if an action is declared but never used in (at least) one \IPTA{}, this label will never be synchronized in the execution\footnote{In such a case, action label is actually completely removed before the execution, in order to optimize the execution, and the user is warned of this removal.}.
+Therefore, if an action is declared but never used in (at least) one \IPTA{}, this label will never be synchronized in the execution.\footnote{In such a case, action label is actually completely removed before the execution, in order to optimize the execution, and the user is warned of this removal.}
 
 The option \styleOption{-sync-auto-detect} allows to detect automatically the actions in each \IPTA{}: the actions declared in the \styleIMI{synclabs} section are ignored, and \imitator{} considers as declared actions only the actions really used in this \IPTA{}.
 
@@ -2738,13 +2738,13 @@ We define each of those two components below.
 \regleGrammaire{var\_type}
 %------------------------------------------------------------
 \begin{tabular}{l l}
+	$|$ & \styleIMI{bool}  \\
 	$|$ & \styleIMI{clock}     \\
 	$|$ & \styleIMI{constant}  \\
 	$|$ & \styleIMI{discrete}  \\
-	$|$ & \styleIMI{rational}  \\
 	$|$ & \styleIMI{int}  \\
-	$|$ & \styleIMI{bool}  \\
 	$|$ & \styleIMI{parameter} \\
+	$|$ & \styleIMI{rational}  \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -3033,8 +3033,8 @@ We define each of those two components below.
 	\   & \nt{rational}                                         \\
 	$|$ & \styleIMI{<name>}                                     \\
 	$|$ & \styleIMI{(} \nt{arithmetic\_expression} \styleIMI{)} \\
-	$|$ & \styleIMI{rational\_of\_int(} \nt{arithmetic\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{pow(} \nt{arithmetic\_expression}, \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{rational\_of\_int(} \nt{arithmetic\_expression} \styleIMI{)} \\
 \end{tabular}
 
 
