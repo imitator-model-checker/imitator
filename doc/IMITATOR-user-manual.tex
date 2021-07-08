@@ -1907,10 +1907,13 @@ However, \imitator{} does not perform what is referred to as \emph{symbolic mode
 In short, a symbolic state in \imitator{} is made of the following elements:
 \begin{itemize}
 	\item the current location (index) of each \IPTA{};
-	\item the current value of the (rational-valued) discrete variables;
-	\item a constraint on $\Clock \cup \Param \cup \DVar$ representing the continuous information.
+	\item the current value of the discrete variables;
+	\item a constraint on $\Clock \cup \Param$ representing the continuous information.
 \end{itemize}
-In \imitator{}, all rationals (\ie{} the value of the discrete variables and the coefficients used in the constraints) are unbounded rationals (implemented using GMP).
+In \imitator{}, all rationals (\ie{} the value of the rational-valued discrete variables and the coefficients used in the constraints) are unbounded rationals (implemented using GMP).
+Integers over 32 bits are used to encode \styleIMI{int} variables.
+No floating-point approximations (\styleIMI{float}) are used, except for the generation of graphics.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Built-in functions}\label{section:builtin-functions}
@@ -1921,7 +1924,7 @@ In \imitator{}, all rationals (\ie{} the value of the discrete variables and the
 \subsection{Arithmetic functions}
 
 \begin{itemize}
-    \item \styleIMI{pow(x : 'a, e : int) : 'a with 'a : [rational | int]}
+    \item \styleIMI{pow(x : 'a, e : int) : 'a} with \styleIMI{'a : [rational | int]}
 \end{itemize}
 
 \subsection{Conversion functions}
@@ -1960,7 +1963,7 @@ Type checking does the following :
 \begin{itemize}
 	\item It checks type consistency within the expressions;
 	\item It resolves the types of the expressions;
-	\item It applies a numerical type to literal numbers according to the numerical type holding by their outer expression;
+	\item It applies a numerical type to literal numbers according to the numerical type held by their outer expression;
 	\item It checks consistency between an expression type and variable type, in case of assignment;
 	\item It checks consistency between an expression type and its grammar rule.
 \end{itemize}
