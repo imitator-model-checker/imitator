@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/07/02
+ * Last modified     : 2021/07/09
  *
  ************************************************************)
 
@@ -21,8 +21,17 @@
 (* Exceptions *)
 (************************************************************)
 (************************************************************)
+
 (* Raised when a linear_inequality is not a clock guard, i.e., of the form `x ~ plterm` *)
-exception Not_a_clock_guard
+
+(* We found multiple clocks, e.g., x > y *)
+exception Not_a_clock_guard_multiple_clocks_found
+(* We found a discrete, e.g., x + d > 0 *)
+exception Not_a_clock_guard_discrete_found
+(* We found no clock, e.g., p + d > 0 *)
+exception Not_a_clock_guard_no_clock_found
+(* Temporary exception (TODO) for other cases *)
+exception Not_a_clock_guard_non_1_coefficient
 
 (* Raised when a linear_inequality is an equality, i.e., `pxd_linear_term = pxd_linear_term` *)
 exception Not_an_inequality
