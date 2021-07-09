@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/07/05
+ * Last modified     : 2021/07/09
  *
  ************************************************************)
 
@@ -737,6 +737,10 @@ class imitator_options =
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
 				");
 
+				("-imi2DOT", Unit (fun _ ->
+					imitator_mode <- Translation DOT
+				), "Translate the model into a dot graphics (graph) file, and exit without performing any analysis. Default: disabled");
+
 				("-imi2HyTech", Unit (fun _ ->
 					imitator_mode <- Translation HyTech
 				), "Translate the model into a HyTech model, and exit without performing any analysis. Default: disabled");
@@ -745,9 +749,10 @@ class imitator_options =
 					imitator_mode <- Translation IMI
 				), "Regenerate the model into an IMITATOR model, and exit without performing any analysis. Default: disabled");
 
-				("-imi2DOT", Unit (fun _ ->
-					imitator_mode <- Translation DOT
-				), "Translate the model into a dot graphics (graph) file, and exit without performing any analysis. Default: disabled");
+				("-imi2Jani", Unit (fun _ ->
+					imitator_mode <- Translation JaniSpec
+				), "Translate the model into a JaniSpec model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
+				");
 
 				("-imi2JPG", Unit (fun _ ->
 					imitator_mode <- Translation JPG
@@ -768,11 +773,6 @@ class imitator_options =
 				("-imi2Uppaal", Unit (fun _ ->
 					imitator_mode <- Translation Uppaal
 				), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
-				");
-
-				("-imi2Jani", Unit (fun _ ->
-					imitator_mode <- Translation JaniSpec
-				), "Translate the model into a JaniSpec model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
 				");
 
 				("-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some true), " Layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled (i.e., no layer).");
