@@ -10,9 +10,9 @@
  * defines post-related function, i.e., to compute the successor states of ONE
  * state. That (still) represents a large list of functions.
  *
- * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
+ * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia, Johan Arcile
  * Created           : 2015/12/02
- * Last modified     : 2021/06/17
+ * Last modified     : 2021/07/09
  *
  ************************************************************)
 
@@ -3088,11 +3088,11 @@ class virtual algoStateBased =
 		(* Call the asked extrapolation of the constraint *)
 		let constraints = 
 		match extrapolation with
-		| M -> Extrapolation.px_m_extrapolation the_constraint
-		| Mglobal -> Extrapolation.px_mglobal_extrapolation the_constraint
-		| LU -> Extrapolation.px_lu_extrapolation the_constraint
-		| LUglobal -> Extrapolation.px_luglobal_extrapolation the_constraint
-		| _ -> raise (InternalError "Option not recognized")
+		| M					-> Extrapolation.px_m_extrapolation the_constraint
+		| Mglobal			-> Extrapolation.px_mglobal_extrapolation the_constraint
+		| LU				-> Extrapolation.px_lu_extrapolation the_constraint
+		| LUglobal			-> Extrapolation.px_luglobal_extrapolation the_constraint
+		| No_extrapolation	-> raise (InternalError "Extrapolation type `No_extrapolation` impossible at that point")
 		in
 
 		(* Return the pair (location, constraint) for each constraint from the extrapolation *)
