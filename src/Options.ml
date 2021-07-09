@@ -193,7 +193,7 @@ class imitator_options =
 
 		(* Remove useless clocks (slightly experimental) *)
 		val mutable dynamic_clock_elimination		= false
-		
+
 		(* Remove global time clock when comparing states (expensive!) *)
 		val mutable no_global_time_in_comparison	= false
 
@@ -323,7 +323,7 @@ class imitator_options =
 
 		method merge_n1								= merge_n1
 		method merge_n2								= merge_n1
-		
+
 		method merge_algorithm						= merge_algorithm
 
 		method merge								= value_of_option "merge" merge
@@ -341,7 +341,7 @@ class imitator_options =
 (* 		method merge_before = merge_before *)
 		(* Merging heuristic for EFsynthminpq *)
 		method merge_heuristic						= merge_heuristic
-		
+
 		method model_file_name						= model_file_name
 		method model_local_file_name				= model_local_file_name
 		method nb_args								= nb_args
@@ -597,6 +597,21 @@ class imitator_options =
 					exit(1);
 				)
 
+			and set_merge_algorithm merge_algorithm_str =
+				(*  *)
+				if merge_algorithm_str = "none" then
+					merge_algorithm <- Merge_none
+				else if merge_algorithm_str = "static" then
+					merge_algorithm <- Merge_static
+				else if merge_algorithm_str = "expback" then
+					merge_algorithm <- Merge_exponentialbackoff
+				else(
+					print_error ("The merge algorithm `" ^ merge_algorithm_str ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
 			and set_merge_heuristic heuristic =
 				(*  *)
 				if heuristic = "always" then
@@ -782,9 +797,9 @@ class imitator_options =
         Use `queueBFSRS`    for a queue-based breadth-first search with ranking system. [ANP17]
         Use `queueBFSPRIOR` for a priority-based BFS with ranking system. [ANP17]
         Default: layerBFS.
-				");			
-				
-				
+				");
+
+
 				("-extrapolation", String set_extrapolation, " Extrapolation [work in progress].
         Use `M`             for M-extrapolation.
         Use `Mglobal`       for a single bound M-extrapolation.
@@ -793,7 +808,7 @@ class imitator_options =
         Default: none.
 				");
 
-				
+
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
 				");
 
@@ -853,6 +868,9 @@ class imitator_options =
 
 				("-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some true), "Use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS");
 				("-no-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some false), " Do not use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS.
+				");
+
+				("-merge-algorithm", String set_merge_algorithm, " Merge algorithm. Possible values are `none`, `static`, `expback`. Default: `none`.
 				");
 
 				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Possible values are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.
@@ -1126,6 +1144,24 @@ class imitator_options =
 			);
 
 
+			(* Warn if merge heuristics are used without merging *)
+			if merge = Some false then(
+				if merge_n1 <> AbstractAlgorithm.undefined_merge_n then(
+					print_warning "The value of option -merge-n1 is ignored since merging is not used.";
+				);
+				if merge_n2 <> AbstractAlgorithm.undefined_merge_n then(
+					print_warning "The value of option -merge-n2 is ignored since merging is not used.";
+				);
+				if merge_algorithm <> Merge_none then(
+					print_warning "The value of option -merge-algorithm is ignored since merging is not used.";
+				);
+				(*** NOTE: no default value, so no check ***)
+				(*
+				if merge_heuristic <> None then(
+					print_warning "The value of option -merge-algorithm is ignored since merging is not used.";
+				);*)
+			);
+
 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options: ignoring some options *)
@@ -1262,10 +1298,10 @@ class imitator_options =
 						begin
 						match cycle_algorithm with
 						| Some BFS -> () (* fine *)
-						| Some NDFS -> 
+						| Some NDFS ->
 							print_error ("The only implemented algorithm for generalized acceptance conditions in cycle synthesis is BFS. NDFS is ignored.");
 							cycle_algorithm <- Some BFS
-						| None -> 
+						| None ->
 							print_warning ("No algorithm specified for generalized acceptance conditions in cycle synthesis. Default chosen (BFS).");
 							cycle_algorithm <- Some BFS;
 						end;
@@ -1310,8 +1346,8 @@ class imitator_options =
 				| LUglobal			-> print_message Verbose_standard ("Extrapolation: global bound L/U-extrapolation")
 			end;
 
-            (* Merge heuristic *)
-            begin
+      (* Merge heuristic for EFsynthminpq *)
+      begin
 			match merge_heuristic with
 				| Merge_always -> print_message Verbose_experiments ("Merge heuristic: always.")
 				| Merge_targetseen -> print_message Verbose_experiments ("Merge heuristic: targetseen.")
@@ -1320,6 +1356,19 @@ class imitator_options =
 				| Merge_iter10 -> print_message Verbose_experiments ("Merge heuristic: iter10.")
 				| Merge_iter100 -> print_message Verbose_experiments ("Merge heuristic: iter100.")
 			end;
+
+            (* Merge algorithm *)
+            if merge_algorithm = Merge_none then(
+				print_message Verbose_low ("No merge algorithm.");
+            )else(
+				print_message Verbose_standard ("Merge algorithm: " ^ (AbstractAlgorithm.string_of_merge_algorithm merge_algorithm));
+
+				if merge_n1 = AbstractAlgorithm.undefined_merge_n && merge_n2 = AbstractAlgorithm.undefined_merge_n then(
+					print_message Verbose_low ("No n1, n2 for merge.");
+				)else(
+					print_message Verbose_standard ("Merge: n1 = " ^ (string_of_int merge_n1) ^ ", n2 = " ^ (string_of_int merge_n2) ^ ".");
+				);
+            );
 
 
 			if no_time_elapsing then
