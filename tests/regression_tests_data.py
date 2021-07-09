@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/07/08
+# Last modified     : 2021/07/09
 #************************************************************
 
 
@@ -666,7 +666,7 @@ var
 		: clock;
 
 	i
-		: discrete;
+		: rational;
 
 	p
 		: parameter;
@@ -747,7 +747,7 @@ var
 		: clock;
 
 	j, i
-		: discrete;
+		: rational;
 
 	p
 		: parameter;
@@ -831,7 +831,7 @@ var
 		: clock;
 
 	j, i
-		: discrete;
+		: rational;
 
 	p
 		: parameter;
@@ -14697,7 +14697,7 @@ var
 		: int;
 
 	i, j
-		: discrete;
+		: rational;
 
 
 (************************************************************)
