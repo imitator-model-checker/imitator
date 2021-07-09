@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/07/02
+ * Last modified     : 2021/07/09
  *
  ************************************************************)
 
@@ -40,8 +40,17 @@ open Constants
 (* Exceptions *)
 (************************************************************)
 (************************************************************)
+
 (* Raised when a linear_inequality is not a clock guard, i.e., of the form `x ~ plterm` *)
-exception Not_a_clock_guard
+
+(* We found multiple clocks, e.g., x > y *)
+exception Not_a_clock_guard_multiple_clocks_found
+(* We found a discrete, e.g., x + d > 0 *)
+exception Not_a_clock_guard_discrete_found
+(* We found no clock, e.g., p + d > 0 *)
+exception Not_a_clock_guard_no_clock_found
+(* Temporary exception (TODO) for other cases *)
+exception Not_a_clock_guard_non_1_coefficient
 
 (* Raised when a linear_inequality is an equality, i.e., `pxd_linear_term = pxd_linear_term` *)
 exception Not_an_inequality
@@ -1491,7 +1500,7 @@ let customized_string_of_p_linear_inequality = string_of_linear_inequality*)
 
 
 (*------------------------------------------------------------*)
-(** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard if the linear_inequality is not a proper clock guard x ~ plterm. If the clock has a coefficient `c`, then `plterm / c` is returned as the parametric linear term *)
+(** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard_* if the linear_inequality is not a proper clock guard x ~ plterm *)
 (*------------------------------------------------------------*)
 let clock_guard_of_linear_inequality linear_inequality =
 
@@ -1531,24 +1540,29 @@ let clock_guard_of_linear_inequality linear_inequality =
 		| Some coeff when NumConst.neq coeff NumConst.zero ->
 			(* If already found a non-null coeff for another clock before, raise an exception *)
 			if !clock_index_option <> None then(
-				raise Not_a_clock_guard;
+				raise Not_a_clock_guard_multiple_clocks_found;
 			);
-			
-			(* Store the clock index *)
-			clock_index_option := Some clock_index;
-
-			(* Store the coefficient *)
-			clock_coef_option := Some coeff;
-			
-		(* Clock not found *)
-		| _ -> ()
+			(* If the coefficient is not 1 or -1, raise an exception *)
+			if NumConst.neq coeff NumConst.one && NumConst.neq coeff NumConst.minus_one then(
+				raise Not_a_clock_guard_non_1_coefficient;
+			);
+			(* Otherwise, update the variables *)
+			clock_index_option := Some (clock_index);
+			if NumConst.equal coeff NumConst.one then(
+				positive_clock_option := Some true;
+			)else if NumConst.equal coeff NumConst.minus_one then(
+				positive_clock_option := Some false;
+			)else(
+			(* Safety guard *)
+				raise (InternalError("The clock coefficient must be either 1 or -1 at that point"))
+			);
 	done;
 	
 	(* Retrieve the (necessarily unique) clock index *)
-	let (clock_index, clock_coefficient) : (variable * coef) =
-	match !clock_index_option, !clock_coef_option with
-		| Some index, Some coef -> index, coef
-		| _ -> raise Not_a_clock_guard;
+	let clock_index =
+	match !clock_index_option with
+		| None -> raise Not_a_clock_guard_no_clock_found;
+		| Some index -> index
 	in
 
 
@@ -1561,7 +1575,7 @@ let clock_guard_of_linear_inequality linear_inequality =
 		(* Variable not found *)
 		| None -> ()
 		(* Variable found *)
-		| Some coeff -> raise Not_a_clock_guard;
+		| Some coeff -> raise Not_a_clock_guard_discrete_found;
 	done;
 	
 
@@ -2077,7 +2091,7 @@ let partition_lu variables linear_constraints =
 
 (*------------------------------------------------------------*)
 (** Return the parametric linear term which is the upper bound of the clock x in a px_linear_constraint; return None if no upper bound *)
-(*** NOTE: we asssume that all inequalities are of the form x \sim plt, and that a single inequality constrains x as an upper bound. Raises Not_a_clock_guard otherwise ***)
+(*** NOTE: we asssume that all inequalities are of the form x \sim plt, and that a single inequality constrains x as an upper bound. Raises Not_a_clock_guard_* otherwise ***)
 (*------------------------------------------------------------*)
 exception Found_upper_bound of p_linear_term
 let clock_upper_bound_in clock_index px_linear_constraint =

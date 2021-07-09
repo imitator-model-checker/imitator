@@ -18,6 +18,7 @@
 (************************************************************)
 open Exceptions
 open OCamlUtilities
+open ImitatorUtilities
 
 open AbstractModel
 open LinearConstraint
@@ -347,7 +348,7 @@ let compute_maximal_constants (pta_type : modified_pta_type) (bounds : (numconst
 (************************************************************)
 (************************************************************)
 
-	
+
 (************************************************************)
 (* Global variables to be used by the extrapolation functions*)
 (************************************************************)
@@ -384,18 +385,14 @@ let clocks : Automaton.variable_index list ref = ref []
 (* Returns true if elem is not in List set *)	
 let not_in elem set =
 	let result = ref(true) in
-	begin
-		List.iter (fun e -> if elem = e then result := false) set;
-		!result
-	end
+	List.iter (fun e -> if elem = e then result := false) set;
+	!result
 
 (* Returns true if each element in l1 is included in l2*)	
 let includes l1 l2 =
 	let result = ref(true) in
-	begin
-		List.iter (fun e -> if not_in e l2 then result := false) l1;
-		!result
-	end
+	List.iter (fun e -> if not_in e l2 then result := false) l1;
+	!result
 
 
 (************************************************************)
@@ -477,12 +474,29 @@ let revert_coef_array coef_array =
 let get_guards model =
 	let guards = ref [] in
 	let f i =
-		let (clock,op,linear_term) = clock_guard_of_linear_inequality i in
-		let coef_array = linear_term_to_coef_array linear_term model.nb_parameters in
-		if op = Op_l || op = Op_le 
-		then guards := List.append [(clock-model.nb_parameters,op,coef_array)] !guards
-		(* If the operator is >, >= or =, apply the negation on coefficients (this is necessary due to the coefficients being sent to the other side of the inequality in the linear term) *)
-		else guards := List.append [(clock-model.nb_parameters,op,(revert_coef_array coef_array))] !guards
+		(* Exception management, as we can have Not_a_clock_guard_* when calling `clock_guard_of_linear_inequality` *)
+		try(
+			let (clock,op,linear_term) =  clock_guard_of_linear_inequality i in
+			let coef_array = linear_term_to_coef_array linear_term model.nb_parameters in
+			if op = Op_l || op = Op_le 
+			then guards := List.append [(clock-model.nb_parameters,op,coef_array)] !guards
+			(* If the operator is >, >= or =, apply the negation on coefficients (this is necessary due to the coefficients being sent to the other side of the inequality in the linear term) *)
+			else guards := List.append [(clock-model.nb_parameters,op,(revert_coef_array coef_array))] !guards
+		) with
+			(* No clock, no worry! do nothing, this inequality is not a problem for computing bounds *)
+			| Not_a_clock_guard_no_clock_found -> ()
+			
+			| Not_a_clock_guard_multiple_clocks_found ->
+				print_error "Multiple clocks found in the same inequality when preparing extrapolation; this is not allowed";
+				raise (InternalError "Extrapolation cannot be applied to this model")
+			
+			| Not_a_clock_guard_discrete_found ->
+				print_error "Discrete variable found in an inequality with some clocks when preparing extrapolation; this is not allowed";
+				raise (InternalError "Extrapolation cannot be applied to this model")
+			
+			| Not_a_clock_guard_non_1_coefficient ->
+				print_error "Inequality found with a clock featuring a non-1 or -1 coefficient when preparing extrapolation; this is not allowed";
+				raise (InternalError "Extrapolation cannot be applied to this model")
 	in 
 	List.iter f (get_inequalities model);
 	!guards
@@ -527,10 +541,11 @@ let set_maximums l u nb_clocks : unit =
 		max_lower_const := max_inf !max_lower_const l.(i);
 		max_upper_const := max_inf !max_upper_const u.(i);
 	done;
-	begin
+
 	greatest_constants := g_c;
 	max_greatest_const := max_inf !max_lower_const !max_upper_const;
-	end
+	
+	()
 
 
 (************************************************************)
