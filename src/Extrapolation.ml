@@ -55,7 +55,7 @@ let add_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	| Minus_infinity, Finite b -> Minus_infinity
 	| Finite a, Minus_infinity -> Minus_infinity
 	| Finite a, Finite b -> Finite (NumConst.add a b)
-	| _ -> raise (InternalError "Case infinity-infinity")
+	| _ -> raise (InternalError "Case infinity-infinity in `add_inf`")
 
 (* Substraction of b from a*)
 let sub_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
@@ -74,7 +74,7 @@ let mul_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	| Finite a, Minus_infinity -> Minus_infinity
 	| Finite a, Finite b -> Finite (NumConst.mul a b)
 
-(* Inversion of a (ie., 1 divided by a)*)	
+(* Inversion of a (i.e., 1 divided by a) *)
 let inv_inf (a : numconst_or_infinity) =
 	match a with
 	| Finite a -> Finite (NumConst.div (NumConst.numconst_of_int 1) a )
@@ -353,28 +353,28 @@ let compute_maximal_constants (pta_type : modified_pta_type) (bounds : (numconst
 (************************************************************)
 
 (* lower maximal constant for each clock*)
-let lower_constants = ref [||]
+let lower_constants : numconst_or_infinity array ref = ref [||]
 
 (* upper maximal constant for each clock*)
-let upper_constants = ref [||]
+let upper_constants : numconst_or_infinity array ref = ref [||]
 
 (* maximal constant for each clock*)
-let greatest_constants = ref [||]
+let greatest_constants : numconst_or_infinity array ref = ref [||]
 
 (* global lower maximal constant *)
-let max_lower_const = ref(Minus_infinity)
+let max_lower_const : numconst_or_infinity ref = ref Minus_infinity
 
 (* global upper maximal constant *)
-let max_upper_const = ref(Minus_infinity)
+let max_upper_const : numconst_or_infinity ref = ref Minus_infinity
 
 (* global maximal constant *)
-let max_greatest_const = ref(Minus_infinity)
+let max_greatest_const : numconst_or_infinity ref = ref Minus_infinity
 
 (* number of parameters in the PTA*)
-let nb_parameters = ref 0
+let nb_parameters : int ref = ref 0
 
 (* set of clocks of the PTA*)
-let clocks = ref []
+let clocks : Automaton.variable_index list ref = ref []
 
 
 (************************************************************)
@@ -476,12 +476,12 @@ let revert_coef_array coef_array =
 (* Return each guard in the model in the form of a triplet (clock,operator,coefficients) *)
 let get_guards model =
 	let guards = ref [] in
-	let f (i) =
+	let f i =
 		let (clock,op,linear_term) = clock_guard_of_linear_inequality i in
 		let coef_array = linear_term_to_coef_array linear_term model.nb_parameters in
 		if op = Op_l || op = Op_le 
 		then guards := List.append [(clock-model.nb_parameters,op,coef_array)] !guards
-		(* If the operator is >, >= or =, apply the negation on coefficients (this is necessary due to the coefficients being send to the other side of the inequality in the linear term) *)
+		(* If the operator is >, >= or =, apply the negation on coefficients (this is necessary due to the coefficients being sent to the other side of the inequality in the linear term) *)
 		else guards := List.append [(clock-model.nb_parameters,op,(revert_coef_array coef_array))] !guards
 	in 
 	List.iter f (get_inequalities model);
@@ -499,8 +499,8 @@ let get_bounded p_bounds =
 	done;
 	!bounded_parameters
 
-(* Transform lu_status in modified_pta_type *)
-let get_pta_type pta_type bounded_parameters =
+(* Transform lu_status into modified_pta_type *)
+let get_pta_type pta_type bounded_parameters : modified_pta_type =
 	(* Get the L/U nature *)
 	match pta_type with
 	(* General PTA *)
@@ -537,38 +537,38 @@ let set_maximums l u nb_clocks : unit =
 (* Main function *)
 (************************************************************)
 
+(* Update all global variables to prepare the extrapolation *)
 let prepare_extrapolation () : unit =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
-	let p_bounds = Array.make model.nb_parameters (Minus_infinity,Infinity) in
+	let p_bounds = Array.make model.nb_parameters (Minus_infinity, Infinity) in
 	
-	(* Retrieve guards *)
+	(* Retrieve guards (actually invariants too) *)
 	let guards = get_guards model in
 	
 	let nb_clocks = model.nb_clocks in
 
-	begin
-		(* Retrieve parameters bounds *)
-		List.iter (fun (p) -> p_bounds.(p) <- get_p_bounds (model.parameters_bounds p) ) model.parameters;
-		
-		(* Define pta_type *)
-		let pta_type = get_pta_type model.lu_status (get_bounded p_bounds) in
-		
-		(* Compute maximal constants *)
-		let (l,u) = compute_maximal_constants pta_type p_bounds guards nb_clocks in
-		
-		(* Set global variables *)
-		begin
-			lower_constants := l;
-			upper_constants := u;
+	(* Retrieve parameters bounds *)
+	List.iter (fun (p) -> p_bounds.(p) <- get_p_bounds (model.parameters_bounds p) ) model.parameters;
+	
+	(* Define pta_type *)
+	let pta_type = get_pta_type model.lu_status (get_bounded p_bounds) in
+	
+	(* Compute maximal constants *)
+	let (l,u) = compute_maximal_constants pta_type p_bounds guards nb_clocks in
+	
+	(* Set global variables *)
+	lower_constants := l;
+	upper_constants := u;
 
-			set_maximums l u nb_clocks;
+	set_maximums l u nb_clocks;
 
-			nb_parameters := model.nb_parameters;
-			clocks := model.clocks;
-		end
-	end
+	nb_parameters := model.nb_parameters;
+	clocks := model.clocks;
+	
+	(* The end *)
+	()
 
 
 (************************************************************)
@@ -947,16 +947,16 @@ let lu_extrapolation_of_x (big_l : numconst_or_infinity) (big_u : numconst_or_in
 
 	(* Matching the input to corresponding case *)
 	match (big_l, big_u) with
-	|Finite l, Finite u when l < u -> finite_finite_less l u
-	|Minus_infinity, Finite u -> minus_inf_finite u
-	|Finite l , Infinity -> finite_inf l
-	|Minus_infinity, Infinity -> minus_inf_inf ()
-	|Finite l, Finite u when l > u -> finite_finite_great l u
-	|Finite l, Minus_infinity -> finite_minus_inf l
-	|Infinity, Finite u -> inf_finite u
-	|Infinity, Minus_infinity -> inf_minus_inf ()
-	|big_l, big_u when big_l = big_u -> m_extrapolation_of_x big_l x px_linear_constraint
-	|_ -> raise (InternalError "Match failure in lu_extrapolation_of_x (theoretically impossible !!!)")
+	| Finite l, Finite u when l < u		-> finite_finite_less l u
+	| Minus_infinity, Finite u			-> minus_inf_finite u
+	| Finite l , Infinity				-> finite_inf l
+	| Minus_infinity, Infinity			-> minus_inf_inf ()
+	| Finite l, Finite u when l > u		-> finite_finite_great l u
+	| Finite l, Minus_infinity			-> finite_minus_inf l
+	| Infinity, Finite u				-> inf_finite u
+	| Infinity, Minus_infinity			-> inf_minus_inf ()
+	| big_l, big_u when big_l = big_u	-> m_extrapolation_of_x big_l x px_linear_constraint
+	| _									-> raise (InternalError "Match failure in `lu_extrapolation_of_x` (theoretically impossible !!!)")
 
 
 (************************************************************)
