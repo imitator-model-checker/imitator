@@ -277,7 +277,7 @@ let numconst_value = function
 (* Get Int32.t value of int32 discrete value *)
 let int_value = function
     | Int_value x -> x
-    | _ -> raise (InternalError "Unable to get int value of non-int discrete value")
+    | _ as value -> raise (InternalError ("Unable to get int value of non-int discrete value: " ^ string_of_value value ^ ":" ^ string_of_var_type (var_type_of_value value)))
 
 (* Get bool value of bool discrete value *)
 let bool_value = function
@@ -409,7 +409,7 @@ let mul a b =
         | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Rational_value (NumConst.mul a b)
         | Int_value a, Int_value b -> Int_value (Int32.mul a b)
-        | _ -> raise (ComputingException "mul")
+        | _ -> raise (ComputingException ("try to multiply: " ^ string_of_value a ^ " : " ^ string_of_var_type_discrete (discrete_type_of_value a) ^ "," ^ string_of_value b ^ " : " ^ string_of_var_type_discrete (discrete_type_of_value b)))
 
 (* Divide two discrete value *)
 let div a b =

@@ -1485,7 +1485,7 @@ let get_variables_and_constants var_type =
         (* If no value: add to names *)
         | None -> (name :: current_list , constants)
         (* Otherwise: add to constants : name * value * var_type *)
-        | Some value -> (current_list , (name, value, var_type) :: constants)
+        | Some value -> (current_list , constants @ [(name, value, var_type)])
       ) ([], [])
 
 let get_declared_variable_names variable_declarations =
@@ -4999,6 +4999,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         type_of_variables = fun i -> DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational);
     }
     in
+
     (* Evaluate the constants init expressions *)
     let evaluated_constants = List.map (fun (name, expr, var_type) ->
 
@@ -5022,15 +5023,20 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         let value = ParsingStructureUtilities.try_reduce_parsed_global_expression initialized_constants converted_expr in
         (* Create evaluated constant tuple *)
         let evaluated_constant = name, expr, value, var_type in
+
+        let name, value = TypeChecker.check_constant_declaration evaluated_constant in
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;
         (* Return *)
-        evaluated_constant
+        name, value
     ) (List.rev constants) in
+
+
 
     (* TYPE CHECKING : CONSTANTS IN DECLARATION *)
     (* Check type consistency between constant type and value *)
-    let constant_tuples = TypeChecker.check_constant_declarations evaluated_constants in
+(*    let constant_tuples = TypeChecker.check_constant_declarations evaluated_constants in*)
+    let constant_tuples = evaluated_constants in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Make the array of constants *)
