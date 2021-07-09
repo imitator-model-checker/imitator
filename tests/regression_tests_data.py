@@ -15426,7 +15426,7 @@ init := True
 	#------------------------------------------------------------
 
 	,
-
+	
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -15440,6 +15440,86 @@ init := True
 			{'file': 'flipflop.hy' , 'content' : """
 var
 	s, ckG1, ckG2, ckG3, ckG4
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/09
+		# Last modified            : 2021/07/09
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test call for export to dot', # NOTE: no check is made concerning the validity of this export!
+		'input_files': ['flipflop.imi'],
+		'options'    : '-imi2DOT',
+		'expectations' : [
+			{'file': 'flipflop.dot' , 'content' : """
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/09
+		# Last modified            : 2021/07/09
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test call for export to JPG', # NOTE: no check is made concerning the validity of this export!
+		'input_files': ['flipflop.imi'],
+		'options'    : '-imi2JPG -graphics-source',
+		'expectations' : [
+			{'file': 'flipflop-pta.dot' , 'content' : """
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/09
+		# Last modified            : 2021/07/09
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test call for export to PDF', # NOTE: no check is made concerning the validity of this export!
+		'input_files': ['flipflop.imi'],
+		'options'    : '-imi2PDF -graphics-source',
+		'expectations' : [
+			{'file': 'flipflop-pta.dot' , 'content' : """
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/09
+		# Last modified            : 2021/07/09
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test call for export to PNG', # NOTE: no check is made concerning the validity of this export!
+		'input_files': ['flipflop.imi'],
+		'options'    : '-imi2PNG -graphics-source',
+		'expectations' : [
+			{'file': 'flipflop-pta.dot' , 'content' : """
 """
 			} # end result file
 			,
