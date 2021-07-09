@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/06/01
+# Last modified     : 2021/07/09
 #************************************************************
 
 
@@ -33,7 +33,7 @@ tests = [
 		## Test version             : 1
 		## Test since               : 2021/03/33
 		## Last modified            : 2021/03/33
-		## Test for IMITATOR version: 3
+		## Test for IMITATOR version: 3.1
 		#'purpose'    : 'Test something',
 		#'input_files': ['somemodel.imi'],
 		#'options'    : '-mode checksyntax ',
@@ -135,6 +135,27 @@ Error                                   : invalid model
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the L/U-nature (L-PTA)',
 		'input_files': ['testL.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'testL.res' , 'content' : """
+L/U subclass                            : L-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/06/25
+		# Last modified            : 2021/06/25
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test model syntax check even when a (non-existing) property is passed',
+		'input_files': ['testL.imi', 'nonexistingfile.imiprop'],
 		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'testL.res' , 'content' : """
@@ -465,6 +486,27 @@ Error                                   : unsatisfiable initial state
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/05
+		# Last modified            : 2021/07/05
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test state space (unsatisfiable initial state) even when a (useless, and non-existing) property is passed',
+		'input_files': ['unsatisfiableInitStateClocks.imi', 'nonexistingfile.imiprop'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateClocks.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 	
 	#------------------------------------------------------------
 	{
@@ -624,7 +666,7 @@ var
 		: clock;
 
 	i
-		: discrete;
+		: rational;
 
 	p
 		: parameter;
@@ -705,7 +747,7 @@ var
 		: clock;
 
 	j, i
-		: discrete;
+		: rational;
 
 	p
 		: parameter;
@@ -789,7 +831,7 @@ var
 		: clock;
 
 	j, i
-		: discrete;
+		: rational;
 
 	p
 		: parameter;
@@ -856,6 +898,142 @@ end
 		] # end expectations
 	} # end test case
 	##------------------------------------------------------------]
+
+	,
+
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# AUTOMATIC VARIABLES REMOVAL
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test discrete variable automatic removal',
+		'input_files': ['testVarElim.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
+			{'file': 'testVarElim-statespace.states' , 'content' : """
+  STATE 1:
+  pta: l1, i = 0, j = 0 ==>
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test absence of discrete variable automatic removal',
+		'input_files': ['testVarElim.imi'],
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
+			{'file': 'testVarElim-statespace.states' , 'content' : """
+  STATE 1:
+  pta: l1, i = 0, j = 0, k = 0, l = 0 ==>
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/01
+		# Last modified            : 2021/07/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test no clock removal for x=y with x used in the model but not y',
+		'tags' : 'auto remove',
+		'input_files': ['test_var_remove.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'test_var_remove.res' , 'content' : """
+Number of clocks                        : 2
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/01
+		# Last modified            : 2021/07/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test correct variable removal for more complex dependencies',
+		'tags' : 'auto remove',
+		'input_files': ['test_var_remove_2.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'test_var_remove_2.res' , 'content' : """
+Number of clocks                        : 3
+		""" # TODO: add check for rational and parameter too, etc., perhaps using a -mode statespace -states-description -depth-limit 2
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/08
+		# Last modified            : 2021/07/08
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test variable removal for event-recording automata',
+		'input_files': ['LALSD14_AIP.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'LALSD14_AIP.res' , 'content' : """
+Number of clocks                        : 4
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/08
+		# Last modified            : 2021/07/08
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test variable removal for various types',
+		'input_files': ['test_removal.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'test_removal.res' , 'content' : """
+Number of clocks                        : 1
+		"""
+			} # end result file
+			,
+			{'file': 'test_removal.res' , 'content' : """
+Number of parameters                    : 1
+Number of discrete variables            : 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
 
 	,
 
@@ -2739,7 +2917,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.0.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a clock isn\'t updated with a bad type',
+		'purpose'    : 'Test that a clock isn’t updated with a bad type',
 		'tags': 'type checking, update',
 		'input_files': ['type_checking/updates/clock-update-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -2766,7 +2944,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in addition',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in addition',
 		'input_files': ['type_checking/expression-mixin-type-error-1.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2789,7 +2967,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in multiplication',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in multiplication',
 		'input_files': ['type_checking/expression-mixin-type-error-2.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -2812,7 +2990,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in comparison',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in comparison',
 		'input_files': ['type_checking/expression-mixin-type-error-3.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
@@ -2835,7 +3013,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn\'t mix different types in "in" expression',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in "in" expression',
 		'input_files': ['type_checking/expression-mixin-type-error-4.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -3070,6 +3248,31 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 
 	,
+
+# TODO benjamin remove, we can now use int in continuous init
+# 	#------------------------------------------------------------
+# 	{
+# 		## Test version             : 1
+# 		## Test since               : 2021/06/21
+# 		## Last modified            : 2021/06/21
+# 		## Test for IMITATOR version: 3.1.0
+# 		## Author 					: lbinria
+# 		'author': 'lbinria',
+# 		'purpose'    : 'Test that init of non rational valued discrete variables in continuous init section raise an error',
+# 		'input_files': ['type_checking/inits/init-non-rational-discrete-in-continuous-error.imi'],
+# 		'tags': 'type checking, init',
+# 		'options'    : '',
+# 		'expectations' : [
+# 			{'file': 'init-non-rational-discrete-in-continuous-error.res' , 'content' : """
+# Error                                   : invalid model
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
 
 	# END : Type checking on variable initializations
 
@@ -3433,7 +3636,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : '',
+		'purpose'    : 'Test that behavior of pow function is correct',
 		'input_files': ['functions/pow.imi'],
 		'tags': 'semantic, behavior, function',
 		'options'    : '-mode statespace -states-description',
@@ -3473,6 +3676,103 @@ Error                                   : invalid model
   Projection onto the parameters:
    p1 = 82
 & p2 = 65
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/06/30
+		## Last modified            : 2021/06/30
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that behaviors of all possible functions on binary word are correct ',
+		'input_files': ['functions/binary-word.imi'],
+		'tags': 'semantic, behavior, function',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'binary-word-statespace.states' , 'content' : """
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: loc_init, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00000 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  pta: loc_land, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10100 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 2:
+  pta: loc_lor, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10111 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 3:
+  pta: loc_lxor, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00011 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 4:
+  pta: loc_lnot, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b01010 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 5:
+  pta: loc_shift_left, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10100 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 6:
+  pta: loc_shift_right, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 7:
+  pta: loc_fill_left, r = 0, i = 0, j = 0, bin_result2 = 0b10101000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 8:
+  pta: loc_fill_right, r = 0, i = 0, j = 0, bin_result2 = 0b00010101, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
 		"""
 			 } # end result file
 			,
@@ -3631,44 +3931,6 @@ Constraint nature                       : good
 DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1
   s_1 -> s_1 via "a"
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test discrete variable automatic elimination',
-		'input_files': ['testVarElim.imi'],
-		'options'    : '-mode statespace -states-description',
-		'expectations' : [
-			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
-			{'file': 'testVarElim-statespace.states' , 'content' : """
-  STATE 1:
-  pta: l1, i = 0, j = 0 ==>
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test absence of discrete variable automatic elimination',
-		'input_files': ['testVarElim.imi'],
-		'options'    : '-mode statespace -states-description -no-var-autoremove',
-		'expectations' : [
-			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
-			{'file': 'testVarElim-statespace.states' , 'content' : """
-  STATE 1:
-  pta: l1, i = 0, j = 0, k = 0, l = 0 ==>
 		"""
 			} # end result file
 			,
@@ -4315,6 +4577,34 @@ OR
 END CONSTRAINT
 """
 			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/02
+		# Last modified            : 2021/07/02
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test EF with a parameter not used in the model (but still useful) + negative clock + negative flow',
+		'tags' : 'auto remove',
+		'input_files': ['test_param_unused.imi' , 'EFaccepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_param_unused.res' , 'content' : """
+BEGIN CONSTRAINT
+ 14 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+		"""
+			} # end result file
+			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
@@ -6489,6 +6779,7 @@ END RESULT
 		'input_files': ['testCounterExSimple-6.imi', 'testCounterExSimple-6.imiprop'],
 		'options'    : '-no-merge -comparison none',
 		'expectations' : [
+				# NOTE / TODO: the NEGATIVE run is disabled so far! due to a BUG …
 			{'file': 'testCounterExSimple-6.res' , 'content' : """
 BEGIN RESULT
 
@@ -6517,60 +6808,19 @@ p = 2 & x = 2 & global_time = 0
 p = 2 & x = 2 & global_time = 0
 
  | 
- | via d = 1/4
+ | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 2 & x = 9/4 & global_time = 1/4
+p = 2 & x = 2 & global_time = 0
 
  | 
- | via d = 1/4
+ | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 2 & x = 0 & global_time = 1/2
+p = 2 & x = 0 & global_time = 0
 (************************************************************)
-
-
-(************************************************************)
- Run #2
-
- Valuation:
-  p = 2
-
- Other valuations with equivalent (discrete) run:
- p > 1
-
- Run nature: impossible run
-
- Run:
-Impossible concrete run for parameter valuation:
-  p = 2
-
-pta: l1 ==> 
-p = 2 & x = 2 & global_time = 0
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p = 2 & x = 2 & global_time = 0
-
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
- | 
- v  pta: l3 ==> 
-p = 2 & x = 2 & global_time = 0
- | 
- | via d = 0
- | followed by impossible transition labeled with a
- | 
- v  pta: ltarget ==> 
-p = 2 & x = 2 & global_time = 0
-(************************************************************)
-
-END RESULT
 """
 			} # end result file
 			,
@@ -9253,7 +9503,7 @@ OR
 END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation <good|bad> possible under-approximation
+Constraint soundness          : possible under-approximation <good|bad> possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
 Constraint nature             : good/bad
 ------------------------------------------------------------
@@ -9308,7 +9558,7 @@ BEGIN CONSTRAINT
 END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation <good|bad> possible under-approximation
+Constraint soundness          : possible under-approximation <good|bad> possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
 Constraint nature             : good/bad
 ------------------------------------------------------------
@@ -9332,7 +9582,7 @@ BEGIN CONSTRAINT
 END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation <good|bad> possible under-approximation
+Constraint soundness          : possible under-approximation <good|bad> possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
 Constraint nature             : good/bad
 ------------------------------------------------------------
@@ -14447,7 +14697,7 @@ var
 		: int;
 
 	i, j
-		: discrete;
+		: rational;
 
 
 (************************************************************)
@@ -14662,12 +14912,36 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that init of a variable with a variable is forbidden - new init state (behavior)',
+		'purpose'    : 'Test that init of a variable with a variable is forbidden - new init state',
 		'tags' : 'semantic, behavior, init',
 		'input_files': ['init_state/init-variable-with-variable.imi'],
 		'options'    : '-no-var-autoremove -mode statespace -states-description',
 		'expectations' : [
 			{'file': 'init-variable-with-variable.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/06/21
+		## Last modified            : 2021/06/21
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init a variable with another variable in continuous init section is forbidden',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-using-variable-in-continuous-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'init-using-variable-in-continuous-error.res' , 'content' : """
 Error                                   : invalid model
 		"""
 			 } # end result file
@@ -15144,6 +15418,28 @@ init := True
 --* The end
 --************************************************************
 
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/05
+		# Last modified            : 2021/07/05
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test translation to HyTech even when a (useless, non-existing) property file is passed',
+		'input_files': ['flipflop.imi', 'nonexistingfile.imiprop'],
+		'options'    : '-imi2HyTech',
+		'expectations' : [
+			{'file': 'flipflop.hy' , 'content' : """
+var
+	s, ckG1, ckG2, ckG3, ckG4
 """
 			} # end result file
 			,

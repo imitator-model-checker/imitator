@@ -1508,7 +1508,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		List.iter (fun (discrete_index, global_expression) ->
 
 			(* Compute its new value *)
-			let new_value = (*try( *)
+			let new_value =
 			DiscreteExpressionEvaluator.eval_global_expression (Location.get_discrete_value source_location) global_expression
 			in
 

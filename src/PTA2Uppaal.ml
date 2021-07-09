@@ -65,6 +65,7 @@ let string_of_var_type_discrete_number = function
 let string_of_var_type_discrete = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | DiscreteValue.Var_type_discrete_bool -> "bool"
+    | DiscreteValue.Var_type_discrete_binary_word _ -> "binary_word"
 
 (* Customized string of var_type *)
 let string_of_var_type = function

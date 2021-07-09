@@ -1,0 +1,239 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : SLAF14_3
+ * Description      : 
+ * Correctness      : System must be schedulable
+ * Scalable         : yes
+ * Generated        : 
+ * Categories       : Academic ; Protocol ; RTS
+ * Source           : 
+ * bibkey           : SLAF14
+ * Author           : Giuseppe Lipari
+ * Modeling         : 
+ * Input by         : 
+ * License          : 
+ * 
+ * Created          : < 2015/10/30
+ * Last modified    : 2020/08/18
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
+
+var
+    t1_c, t1_d, t1_urgent, t1_arr_x, t2_c, t2_d, t2_urgent, t2_arr_x, t3_c, t3_d, t3_urgent, t3_arr_x, CPU1_urgent : clock;
+    t1_inst, t2_inst, t3_inst, max_inst=5: discrete;
+    t1_D = 40, t1_arr_P=40, t2_D , t2_arr_P , t3_D = 100, t3_arr_P=100 : parameter;
+    
+
+automaton Task_t1
+synclabs : t1_arr_event , t1_arr , t1_dis , t1_pre , t1_end , t1_miss;
+loc t1_loc_idle : invariant True
+    when True sync t1_arr_event do { t1_urgent := 0 } goto t1_loc_act_event;
+loc t1_loc_act_event : invariant t1_urgent <= 0
+    when t1_urgent = 0 sync t1_arr do { t1_c := 0 , t1_d := 0 , t1_inst := 1 } goto t1_loc_act;
+loc t1_loc_act : invariant t1_d <= t1_D stop { t1_c }
+    when True sync t1_dis  goto t1_loc_exe;
+    when t1_d  >=  t1_D sync t1_miss  goto t1_loc_miss;
+    when t1_inst< max_inst sync t1_arr_event do { t1_inst := t1_inst+1 , t1_d := 0 } goto t1_loc_act;
+    when t1_inst= max_inst sync t1_arr_event  goto t1_loc_miss;
+    when t1_inst< max_inst sync t1_arr_event  goto t1_loc_act;
+loc t1_loc_exe : invariant t1_d <= t1_D & t1_c <= 5 * t1_inst
+    when t1_c<5*t1_inst sync t1_pre  goto t1_loc_act;
+    when t1_d >= t1_D & t1_c < 5 * t1_inst sync t1_miss  goto t1_loc_miss;
+    when t1_inst< max_inst sync t1_arr_event do { t1_inst := t1_inst+1 , t1_d := 0 } goto t1_loc_exe;
+    when t1_inst= max_inst sync t1_arr_event  goto t1_loc_miss;
+    when t1_inst< max_inst sync t1_arr_event  goto t1_loc_exe;
+    when t1_c = 5*t1_inst sync t1_end  goto t1_loc_idle;
+loc t1_loc_miss : invariant True
+end
+
+
+
+automaton Periodic_t1_arr
+synclabs : t1_arr_event;
+loc t1_arr_loc_arr : invariant t1_arr_x<=t1_arr_P
+    when t1_arr_x=t1_arr_P sync t1_arr_event do { t1_arr_x := 0 } goto t1_arr_loc_arr;
+end
+
+
+automaton Task_t2
+synclabs : t2_arr_event , t2_arr , t2_dis , t2_pre , t2_end , t2_miss;
+loc t2_loc_idle : invariant True
+    when True sync t2_arr_event do { t2_urgent := 0 } goto t2_loc_act_event;
+loc t2_loc_act_event : invariant t2_urgent <= 0
+    when t2_urgent = 0 sync t2_arr do { t2_c := 0 , t2_d := 0 , t2_inst := 1 } goto t2_loc_act;
+loc t2_loc_act : invariant t2_d <= t2_D stop { t2_c }
+    when True sync t2_dis  goto t2_loc_exe;
+    when t2_d  >=  t2_D sync t2_miss  goto t2_loc_miss;
+    when t2_inst< max_inst sync t2_arr_event do { t2_inst := t2_inst+1 , t2_d := 0 } goto t2_loc_act;
+    when t2_inst= max_inst sync t2_arr_event  goto t2_loc_miss;
+    when t2_inst< max_inst sync t2_arr_event  goto t2_loc_act;
+loc t2_loc_exe : invariant t2_d <= t2_D & t2_c <= 20 * t2_inst
+    when t2_c<20*t2_inst sync t2_pre  goto t2_loc_act;
+    when t2_d >= t2_D & t2_c < 20 * t2_inst sync t2_miss  goto t2_loc_miss;
+    when t2_inst< max_inst sync t2_arr_event do { t2_inst := t2_inst+1 , t2_d := 0 } goto t2_loc_exe;
+    when t2_inst= max_inst sync t2_arr_event  goto t2_loc_miss;
+    when t2_inst< max_inst sync t2_arr_event  goto t2_loc_exe;
+    when t2_c = 20*t2_inst sync t2_end  goto t2_loc_idle;
+loc t2_loc_miss : invariant True
+end
+
+
+
+automaton Periodic_t2_arr
+synclabs : t2_arr_event;
+loc t2_arr_loc_arr : invariant t2_arr_x<=t2_arr_P
+    when t2_arr_x=t2_arr_P sync t2_arr_event do { t2_arr_x := 0 } goto t2_arr_loc_arr;
+end
+
+
+automaton Task_t3
+synclabs : t3_arr_event , t3_arr , t3_dis , t3_pre , t3_end , t3_miss;
+loc t3_loc_idle : invariant True
+    when True sync t3_arr_event do { t3_urgent := 0 } goto t3_loc_act_event;
+loc t3_loc_act_event : invariant t3_urgent <= 0
+    when t3_urgent = 0 sync t3_arr do { t3_c := 0 , t3_d := 0 , t3_inst := 1 } goto t3_loc_act;
+loc t3_loc_act : invariant t3_d <= t3_D stop { t3_c }
+    when True sync t3_dis  goto t3_loc_exe;
+    when t3_d  >=  t3_D sync t3_miss  goto t3_loc_miss;
+    when t3_inst< max_inst sync t3_arr_event do { t3_inst := t3_inst+1 , t3_d := 0 } goto t3_loc_act;
+    when t3_inst= max_inst sync t3_arr_event  goto t3_loc_miss;
+    when t3_inst< max_inst sync t3_arr_event  goto t3_loc_act;
+loc t3_loc_exe : invariant t3_d <= t3_D & t3_c <= 30 * t3_inst
+    when t3_c<30*t3_inst sync t3_pre  goto t3_loc_act;
+    when t3_d >= t3_D & t3_c < 30 * t3_inst sync t3_miss  goto t3_loc_miss;
+    when t3_inst< max_inst sync t3_arr_event do { t3_inst := t3_inst+1 , t3_d := 0 } goto t3_loc_exe;
+    when t3_inst= max_inst sync t3_arr_event  goto t3_loc_miss;
+    when t3_inst< max_inst sync t3_arr_event  goto t3_loc_exe;
+    when t3_c = 30*t3_inst sync t3_end  goto t3_loc_idle;
+loc t3_loc_miss : invariant True
+end
+
+
+
+automaton Periodic_t3_arr
+synclabs : t3_arr_event;
+loc t3_arr_loc_arr : invariant t3_arr_x<=t3_arr_P
+    when t3_arr_x=t3_arr_P sync t3_arr_event do { t3_arr_x := 0 } goto t3_arr_loc_arr;
+end
+
+
+automaton sched_CPU1
+synclabs : t1_arr, t1_dis, t1_pre, t1_end, t2_arr, t2_dis, t2_pre, t2_end, t3_arr, t3_dis, t3_pre, t3_end;
+loc CPU1_loc_ : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1;
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_At3;
+loc CPU1_loc_At1 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1;
+loc CPU1_loc_At2 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2;
+loc CPU1_loc_At3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis goto CPU1_loc_Rt3;
+
+loc CPU1_loc_Rt3 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt3;
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2Rt3;
+    when True sync t3_end do { CPU1_urgent := 0 } goto CPU1_loc_Et3;
+loc CPU1_loc_Et3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0   goto CPU1_loc_stop;
+loc CPU1_loc_At1Rt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_pre goto CPU1_loc_At1Wt3;
+loc CPU1_loc_At1Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt3;
+loc CPU1_loc_At2Rt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_pre goto CPU1_loc_At2Wt3;
+loc CPU1_loc_At2Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2Wt3;
+
+loc CPU1_loc_Rt2 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt3;
+    when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2;
+loc CPU1_loc_Et2 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0   goto CPU1_loc_stop;
+loc CPU1_loc_At1Rt2 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2;
+loc CPU1_loc_At1Wt2 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2;
+
+loc CPU1_loc_Rt2Wt3 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2Wt3;
+    when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2Wt3;
+loc CPU1_loc_Et2Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis  goto CPU1_loc_Rt3;
+loc CPU1_loc_At1Rt2Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2Wt3;
+loc CPU1_loc_At1Wt2Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2Wt3;
+
+loc CPU1_loc_Rt1 : invariant True
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt3;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1;
+loc CPU1_loc_Et1 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0   goto CPU1_loc_stop;
+
+loc CPU1_loc_Rt1Wt3 : invariant True
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt3;
+loc CPU1_loc_Et1Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis  goto CPU1_loc_Rt3;
+
+loc CPU1_loc_Rt1Wt2 : invariant True
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2;
+loc CPU1_loc_Et1Wt2 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2;
+
+loc CPU1_loc_Rt1Wt2Wt3 : invariant True
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2Wt3;
+loc CPU1_loc_Et1Wt2Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2Wt3;
+
+loc CPU1_loc_stop : invariant True
+end
+
+
+
+automaton OBS_dline
+synclabs : t1_miss , t2_miss , t3_miss;
+loc dline_loc_nomiss : invariant True
+    when True sync t1_miss  goto dline_loc_miss;
+    when True sync t2_miss  goto dline_loc_miss;
+    when True sync t3_miss  goto dline_loc_miss;
+loc dline_loc_miss : invariant True
+end
+
+
+init :=     loc[Task_t1] = t1_loc_idle &
+    t1_urgent = 0 &    t1_c = 0 & t1_d = 0&
+    t1_inst = 0 &
+    t1_D >= 0 &
+    loc[Periodic_t1_arr] = t1_arr_loc_arr & t1_arr_x = t1_arr_P &
+    loc[Task_t2] = t2_loc_idle &
+    t2_urgent = 0 &    t2_c = 0 & t2_d = 0&
+    t2_inst = 0 &
+    t2_D >= 0 &
+    loc[Periodic_t2_arr] = t2_arr_loc_arr & t2_arr_x = t2_arr_P &
+    loc[Task_t3] = t3_loc_idle &
+    t3_urgent = 0 &    t3_c = 0 & t3_d = 0&
+    t3_inst = 0 &
+    t3_D >= 0 &
+    loc[Periodic_t3_arr] = t3_arr_loc_arr & t3_arr_x = t3_arr_P &
+    loc[sched_CPU1] = CPU1_loc_ &
+    CPU1_urgent = 0 &
+    loc[OBS_dline] = dline_loc_nomiss &
+    t2_arr_P>=20 & t2_arr_P<=100 &
+    t2_D>=20 & t2_D<=100 &
+    True;
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

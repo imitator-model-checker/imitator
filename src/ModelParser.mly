@@ -54,6 +54,7 @@ let unzip l = List.fold_left
 
 %token <NumConst.t> INT
 %token <string> FLOAT
+%token <string> BINARYWORD
 %token <string> NAME
 /* %token <string> STRING */
 %token <ParsingStructure.parsed_model> INCLUDE
@@ -68,7 +69,7 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_INT CT_BOOL CT_DO
+	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_DO
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -85,7 +86,8 @@ let unzip l = List.fold_left
 	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
-        CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW
+    CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
+    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT    
 
 
 %token EOF
@@ -127,14 +129,6 @@ main:
 
 		(* Return the parsed model *)
 		add_parsed_model_to_parsed_model_list included_model main_model
-(*		{
-			variable_declarations	= (List.append incl_decl declarations);
-			automata				= (List.append incl_automata automata);
-			init_definition			= (List.append incl_init init_definition);
-		}*)
-
-	(*** TODO: cleanup ***)
-(* 		resolve_property (bad::incl_prop), projection_definition, optimization_definition, carto *)
 	}
 ;
 
@@ -199,6 +193,8 @@ var_type:
 var_type_discrete:
     | var_type_discrete_number { Var_type_discrete_number $1 }
     | CT_BOOL { Var_type_discrete_bool }
+    /* TODO benjamin try to use directly int instead of numconst */
+    | CT_BINARY_WORD LPAREN pos_integer RPAREN { Var_type_discrete_binary_word (NumConst.to_int $3) }
 ;
 
 var_type_discrete_number:
@@ -519,16 +515,33 @@ arithmetic_term:
 
 arithmetic_factor:
 	| number { Parsed_DF_constant ($1) }
+    | binary_word { Parsed_DF_constant $1 }
 	| NAME { Parsed_DF_variable $1 }
 	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+	| function_call { $1 }
+;
+
+function_call:
 	| CT_BUILTIN_FUNC_RATIONAL_OF_INT LPAREN arithmetic_expression RPAREN { Parsed_rational_of_int_function $3 }
 	| CT_POW LPAREN arithmetic_expression COMMA arithmetic_expression RPAREN { Parsed_pow_function ($3, $5) }
+	| CT_SHIFT_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_left ($3, $5) }
+	| CT_SHIFT_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_right ($3, $5) }
+	| CT_FILL_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_fill_left ($3, $5) }
+	| CT_FILL_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_fill_right ($3, $5) }
+	| CT_LOG_AND LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_and ($3, $5) }
+	| CT_LOG_OR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_or ($3, $5) }
+	| CT_LOG_XOR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_xor ($3, $5) }
+	| CT_LOG_NOT LPAREN arithmetic_factor RPAREN { Parsed_log_not $3 }
 ;
 
 number:
 	| integer { DiscreteValue.Number_value $1 }
 	| float { DiscreteValue.Number_value $1 }
 	| integer OP_DIV pos_integer { ( DiscreteValue.Rational_value (NumConst.div $1 $3)) }
+;
+
+binary_word:
+        BINARYWORD { DiscreteValue.Binary_word_value (BinaryWord.binaryword_of_string $1) }
 ;
 
 /************************************************************/
@@ -596,12 +609,6 @@ linear_term:
 /* Init expression for variable */
 init_value_expression:
     | expression { $1 }
-;
-
-/* Init bool expression, like rational_linear_expression it's solvable directly at parsing (at compile time) */
-init_bool_value_expression:
-    | CT_TRUE { true } 
-    | CT_FALSE { false }
 ;
 
 /* Linear expression over rationals only */
@@ -676,7 +683,11 @@ discrete_boolean_expression:
 /************************************************************/
 
 init_definition_option:
-    | old_init_definition { $1 }
+    | old_init_definition {
+		(* Print a warning because this syntax is deprecated *)
+		print_warning ("Old syntax detected for the initial state definition. You are advised to use the new syntax (from 3.1).");
+		$1
+		}
     | init_definition { $1 }
     | { [ ] }
 ;

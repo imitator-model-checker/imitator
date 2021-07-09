@@ -12,7 +12,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2021/03/19
+ * Last modified     : 2021/06/17
  *
  ************************************************************)
 
@@ -154,7 +154,7 @@ let string_of_initially model automaton_index =
 let string_of_invariant model automaton_index location_index stopwatches clocks =
 	(* Invariant *)
 	"while "
-	(* TODO benjamin HyTech doesn't support arithmetic expression in invariant, we should raise an exception *)
+	(* TODO benjamin HyTech doesn't support arithmetic expression in invariant, we should print a warning *)
 	(* or should we use only the continuous part ? *)
 	^ (ModelPrinter.string_of_guard model.variable_names (model.invariants automaton_index location_index))
 
@@ -226,7 +226,7 @@ let string_of_transition model automaton_index transition =
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
 	let conditional_updates = transition.updates.conditional in
-	(if conditional_updates <> [] then print_message Verbose_standard "Conditions are not supported by HyTech. Ignoring..." );
+	(if conditional_updates <> [] then print_warning "Conditional updates are not supported by HyTech. Ignoring…" );
 	"\n\t" ^ "when "
 	(* Convert the guard *)
 	^ (ModelPrinter.string_of_guard model.variable_names transition.guard)
@@ -320,7 +320,7 @@ let string_of_initial_state () =
 	let model = Input.get_model () in
 
 	(* Print some information *)
-	print_message Verbose_low "Translating the initial state...";
+	print_message Verbose_low "Translating the initial state…";
 
 	(* Header of initial state *)
 	"\n"

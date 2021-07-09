@@ -5,10 +5,11 @@
  * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Parametric deadlock-freeness
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2019/09/09
+ * Last modified     : 2021/06/25
  *
  ************************************************************)
 
@@ -623,10 +624,10 @@ class algoDeadlockFree =
 				Good_constraint (result, Constraint_exact)
 			
 			)else(
-				(* A possibly under-approximated good constraint, and a possibly under-approximated bad constraint *)
+				(* A possibly under-approximated good constraint, and a possibly over-approximated bad constraint *)
 				Good_bad_constraint {
 					good	= (good_under_result, Constraint_maybe_under);
-					bad		= (bad_constraint, Constraint_maybe_under);
+					bad		= (bad_constraint, Constraint_maybe_over);
 				}
 			)
 			

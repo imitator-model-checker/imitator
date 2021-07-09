@@ -1,0 +1,28 @@
+(* Bug raised by Jaco van de Pol as of IMITATOR v3 *)
+
+var x,y: clock;
+automaton P
+   loc s0: invariant True when x<=1 goto s0;
+end
+
+
+(* init := loc[P]=s0 & x>=0 & x=y; *)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[P] := s0,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x >= 0
+		& x = y
+	;
+}

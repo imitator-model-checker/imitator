@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/06/17
+ * Last modified     : 2021/07/09
  *
  ************************************************************)
 
@@ -772,6 +772,10 @@ class imitator_options =
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
 				");
 
+				("-imi2DOT", Unit (fun _ ->
+					imitator_mode <- Translation DOT
+				), "Translate the model into a dot graphics (graph) file, and exit without performing any analysis. Default: disabled");
+
 				("-imi2HyTech", Unit (fun _ ->
 					imitator_mode <- Translation HyTech
 				), "Translate the model into a HyTech model, and exit without performing any analysis. Default: disabled");
@@ -780,9 +784,10 @@ class imitator_options =
 					imitator_mode <- Translation IMI
 				), "Regenerate the model into an IMITATOR model, and exit without performing any analysis. Default: disabled");
 
-				("-imi2DOT", Unit (fun _ ->
-					imitator_mode <- Translation DOT
-				), "Translate the model into a dot graphics (graph) file, and exit without performing any analysis. Default: disabled");
+				("-imi2Jani", Unit (fun _ ->
+					imitator_mode <- Translation JaniSpec
+				), "Translate the model into a JaniSpec model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
+				");
 
 				("-imi2JPG", Unit (fun _ ->
 					imitator_mode <- Translation JPG
@@ -804,12 +809,6 @@ class imitator_options =
 					imitator_mode <- Translation Uppaal
 				), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
 				");
-
-        ("-imi2Jani", Unit (fun _ ->
-					imitator_mode <- Translation JaniSpec
-				), "Translate the model into a JaniSpec model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
-				");
-
 
 				("-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some true), " Layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled (i.e., no layer).");
 				("-no-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some false), " No layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled (i.e., no layer).
@@ -992,6 +991,22 @@ class imitator_options =
 				);
 			);
 
+			(*------------------------------------------------------------*)
+			(* Disable property if syntax check, or translation, or state space analysis! *)
+			(*------------------------------------------------------------*)
+			if property_file_name <> None then(
+				match imitator_mode with
+				| Syntax_check 
+				| State_space_computation
+				| Translation _
+				->
+					(* Warn *)
+					print_warning ("No need for a property in this mode: property file `" ^ (a_of_a_option property_file_name) ^ "` is ignored!");
+					(* Delete property file *)
+					property_file_name <- None;
+				| _ -> ()
+			);
+
 
 
 
@@ -1014,7 +1029,10 @@ class imitator_options =
 			print_message Verbose_low ("Command: `" ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv) ^ "`" );
 
 
+			
+			(*------------------------------------------------------------*)
 			(* Print mode or property *)
+			(*------------------------------------------------------------*)
 			begin
 			match imitator_mode with
 			| Algorithm ->
@@ -1092,6 +1110,7 @@ class imitator_options =
 				| None -> false
 				| Some property -> AlgorithmOptions.is_cartography property
 			in
+			
 
 			(*------------------------------------------------------------*)
 			(* Check if #witness is supported for this algorithm *)

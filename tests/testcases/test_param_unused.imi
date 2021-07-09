@@ -1,0 +1,82 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test synthesis for a parameter unused in the model, but still of interest
+ * Description      : Test synthesis for a parameter unused in the model, but still of interest
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/07/02
+ * Last modified    : 2021/07/02
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.1
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant x >= -2 & y <= 5 flow {x' = -1}
+	when x = 2y do {} goto lTarget;
+
+accepting loc lTarget: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x >= 2
+		& 1 <= y & y <= 3
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& x > p
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

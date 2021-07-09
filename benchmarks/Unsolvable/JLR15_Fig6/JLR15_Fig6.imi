@@ -1,0 +1,79 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : JLR15_Fig6
+ * Description      : Example from [Figure 6, JLR15]
+ * Correctness      : l2 is reachable
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Toy ; Unsolvable
+ * Source           : "Integer Parameter Synthesis for Real-time Systems" (used to be Figure 1 in "Integer Parameter Synthesis for Timed Automata" in [TACAS, 2013])
+ * bibkey           : JLR15
+ * Author           : Aleksandra Jovanović, Didier Lime, Olivier H. Roux
+ * Modeling         : Aleksandra Jovanović, Didier Lime, Olivier H. Roux
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : 2013/11/13
+ * Last modified    : 2021/02/09
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+		: clock;
+
+(* Parameters *)
+	a, b,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton aa
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant x <= b
+	when x >= a do {x := 0} goto l1;
+	when y >= 2 goto l2;
+
+loc l2: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[aa] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& 0 <= a & a <= 10
+	& 0 <= b & b <= 10
+;
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
