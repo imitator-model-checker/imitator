@@ -8,9 +8,9 @@
  *
  * Module description: Contain all types and functions for operations onto discrete value
  *
- * File contributors : Benjamin L.
+ * File contributors : Benjamin L., Étienne André
  * Created           : 2021/03/01
- * Last modified     : 2021/03/01
+ * Last modified     : 2021/07/08
  *
  ************************************************************)
 
@@ -65,7 +65,7 @@ type discrete_value =
 
 (* String of number var type *)
 let string_of_var_type_discrete_number = function
-    | Var_type_discrete_rational -> "discrete"
+    | Var_type_discrete_rational -> "rational"
     | Var_type_discrete_int -> "int"
     | Var_type_discrete_unknown_number -> "number"
 
