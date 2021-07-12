@@ -537,7 +537,7 @@ function_call:
 number:
 	| integer { DiscreteValue.Number_value $1 }
 	| float { DiscreteValue.Number_value $1 }
-	| integer OP_DIV pos_integer { ( DiscreteValue.Rational_value (NumConst.div $1 $3)) }
+	/*| integer OP_DIV pos_integer { ( DiscreteValue.Rational_value (NumConst.div $1 $3)) }*/
 ;
 
 binary_word:

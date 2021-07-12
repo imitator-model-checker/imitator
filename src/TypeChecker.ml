@@ -592,6 +592,15 @@ and infer_parsed_discrete_term variable_infos = function
 
         Parsed_DT_mul (convert_l_expr, convert_r_expr), discrete_type
 
+    (* Specific case, literal rational => constant / constant *)
+    | Parsed_DT_div ((Parsed_DT_factor (Parsed_DF_constant lv)), Parsed_DF_constant rv) as term ->
+        let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational in
+        let l_numconst = DiscreteValue.to_numconst_value lv in
+        let r_numconst = DiscreteValue.to_numconst_value rv in
+        let numconst_value = NumConst.div l_numconst r_numconst in
+        let discrete_value = DiscreteValue.Rational_value numconst_value in
+        Parsed_DT_factor (Parsed_DF_constant discrete_value), target_type
+
     | Parsed_DT_div (term, factor) as expr_term ->
         let (convert_l_expr, convert_r_expr), discrete_type = check_and_convert_term variable_infos term factor expr_term in
         Parsed_DT_div (convert_l_expr, convert_r_expr), discrete_type
