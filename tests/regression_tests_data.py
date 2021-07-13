@@ -122,6 +122,28 @@ Error                                   : invalid model
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/13
+		# Last modified            : 2021/07/13
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test new syntactic features of v3.1',
+		'input_files': ['testSyntax31.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'testSyntax31.res' , 'content' : """
+Number of IPTAs                         : 1
+Number of clocks                        : 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# SYNTACTIC TESTS (statistics on models)
