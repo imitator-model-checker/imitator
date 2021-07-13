@@ -593,7 +593,8 @@ and infer_parsed_discrete_term variable_infos = function
         Parsed_DT_mul (convert_l_expr, convert_r_expr), discrete_type
 
     (* Specific case, literal rational => constant / constant *)
-    | Parsed_DT_div ((Parsed_DT_factor (Parsed_DF_constant lv)), Parsed_DF_constant rv) as term ->
+    (* Should be reduced directly as a rational value *)
+    | Parsed_DT_div ((Parsed_DT_factor (Parsed_DF_constant lv)), Parsed_DF_constant rv) ->
         let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational in
         let l_numconst = DiscreteValue.to_numconst_value lv in
         let r_numconst = DiscreteValue.to_numconst_value rv in
@@ -720,6 +721,7 @@ and infer_parsed_discrete_factor variable_infos = function
         (* If right expression unknown convert auto to int *)
         let converted_exp = if DiscreteValue.is_discrete_type_unknown_number_type r_type then (
             (* convert *)
+            print_message Verbose_high "Infer exponent as int";
             let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
             convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type exp
         ) else
@@ -1114,7 +1116,7 @@ let check_type_assignment variable_infos variable_name expr =
         infer_expr, expr_var_type_discrete
 
 
-let check_constant_expression initialized_constants expr =
+let check_constant_expression initialized_constants (name, expr, var_type) =
     let variable_infos = {
         constants = initialized_constants;
         variable_names = [];
@@ -1123,7 +1125,29 @@ let check_constant_expression initialized_constants expr =
         type_of_variables = (fun _ -> raise (TypeError "oups !"));
     }
     in
-    infer_expression variable_infos expr
+    let target_var_type = DiscreteValue.discrete_type_of_var_type var_type in
+    (* Infer expression type *)
+    let infer_expr, discrete_type = infer_expression variable_infos expr in
+    (* Check compatibility *)
+    let is_compatible = DiscreteValue.is_discrete_type_compatibles target_var_type discrete_type in
+
+    (* If not compatibles, display an error message *)
+    if not is_compatible then (
+        print_error ("Constant "
+            ^ name
+            ^ " of type "
+            ^ (DiscreteValue.string_of_var_type_discrete target_var_type)
+            ^ " is not compatible with expression \""
+            ^ (ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr)
+            ^ "\" of type "
+            ^ (DiscreteValue.string_of_var_type_discrete discrete_type)
+        );
+        raise (TypeError "Bad constant declaration(s)")
+    );
+
+    (* If no type was deduce from expression, so it's a rational *)
+    let converted_expr, converted_type = convert_literal_types_of_expression variable_infos target_var_type infer_expr, target_var_type in
+    converted_expr, converted_type
 
 let check_constant_declaration (name, _, value, var_type) =
     let is_compatible = DiscreteValue.check_value_compatible_with_type value var_type in
