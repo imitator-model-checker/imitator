@@ -721,15 +721,17 @@ and infer_parsed_discrete_factor variable_infos = function
         (* If right expression unknown convert auto to int *)
         let converted_exp = if DiscreteValue.is_discrete_type_unknown_number_type r_type then (
             (* convert *)
-            print_message Verbose_high "Infer exponent as int";
+            print_message Verbose_high "\tInfer exponent as int";
             let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
             convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type exp
         ) else
             infer_exp
         in
+        (* TODO benjamin analyse and eventually remove this comment, i think i should remove that ! *)
         (* If left expression unknown convert auto to rational *)
         (* Moreover result type depend on the type of left expression: *)
         (* it has the same number type as left expression type *)
+        (*
         let converted_expr, result_type = if DiscreteValue.is_discrete_type_unknown_number_type l_type then (
             (* convert *)
             let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational in
@@ -737,6 +739,9 @@ and infer_parsed_discrete_factor variable_infos = function
         ) else
             infer_expr, l_type
         in
+        *)
+
+        let converted_expr, result_type = infer_expr, l_type in
 
         print_message Verbose_high (
             "\tInfer expression type of `"
