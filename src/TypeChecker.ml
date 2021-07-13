@@ -10,7 +10,7 @@
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/17
- * Last modified     : 2021/03/17
+ * Last modified     : 2021/07/12
  *
  ************************************************************)
 
@@ -27,18 +27,18 @@ type variable_index = int
 
 (* Error message when mixin of different types *)
 let get_type_mixin_error_message l_type r_type str_expr =
-    "The expression \""
+    "The expression `"
     ^ str_expr
-    ^ "\" mix different types: "
+    ^ "` mixes different types: "
     ^ (DiscreteValue.string_of_var_type_discrete l_type)
     ^ ", "
     ^ (DiscreteValue.string_of_var_type_discrete r_type)
 
 (* Error message when mixin of different types *)
 let get_triplet_type_mixin_error_message type1 type2 type3 str_expr =
-    "The expression \""
+    "The expression `"
     ^ str_expr
-    ^ "\" mix different types: "
+    ^ "` mixes different types: "
     ^ (DiscreteValue.string_of_var_type_discrete type1)
     ^ ", "
     ^ (DiscreteValue.string_of_var_type_discrete type2)
@@ -93,7 +93,7 @@ let rec convert_literal_types_of_expression variable_infos target_type = functio
     | Parsed_global_expression expr ->
         Parsed_global_expression (convert_literal_types_of_parsed_boolean_expression variable_infos target_type expr)
 
-(* Convert literals types of a boolean expression to a given target type *)
+(* Convert literals types of a Boolean expression to a given target type *)
 and convert_literal_types_of_parsed_boolean_expression variable_infos target_type = function
     | Parsed_True -> Parsed_True
     | Parsed_False -> Parsed_False
@@ -108,7 +108,7 @@ and convert_literal_types_of_parsed_boolean_expression variable_infos target_typ
     | Parsed_Discrete_boolean_expression expr ->
         Parsed_Discrete_boolean_expression (convert_literal_types_of_parsed_discrete_boolean_expression variable_infos target_type expr)
 
-(* Convert literals types of a discrete boolean expression to a given target type *)
+(* Convert literals types of a discrete Boolean expression to a given target type *)
 and convert_literal_types_of_parsed_discrete_boolean_expression variable_infos target_type = function
     | Parsed_arithmetic_expression expr ->
         Parsed_arithmetic_expression (convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr)
@@ -158,7 +158,7 @@ and convert_literal_types_of_parsed_discrete_factor variable_infos target_type =
     | Parsed_DF_constant var_value as constant ->
         let discrete_type = DiscreteValue.discrete_type_of_value var_value in
         (* TODO benjamin quick fix because it seems that certain converted value are re-converted by top expression *)
-        (* for example a * pow(a, 2) with a rational, reconvert 2 to rational, it's bad, check if there is another way to avoid it ! *)
+        (* for example a * pow(a, 2) with a rational, reconvert 2 to rational, it's bad, check if there is another way to avoid it! *)
         if DiscreteValue.is_discrete_type_unknown_number_type discrete_type then (
             print_message Verbose_high ("\tInfer literal number value " ^ (DiscreteValue.string_of_value var_value) ^ " as " ^ (DiscreteValue.string_of_var_type_discrete target_type));
             Parsed_DF_constant (DiscreteValue.convert_value_to_discrete_type var_value target_type)
@@ -219,7 +219,7 @@ and convert_literal_types_of_parsed_discrete_factor variable_infos target_type =
 
 (* Convert literals types of a non-linear constraint to a given target type *)
 let convert_literal_types_of_nonlinear_constraint variable_infos target_type = function
-    (* It's ok non-linear constraint is of boolean type *)
+    (* It's ok non-linear constraint is of Boolean type *)
     | Parsed_true_nonlinear_constraint -> Parsed_true_nonlinear_constraint
     | Parsed_false_nonlinear_constraint -> Parsed_false_nonlinear_constraint
     | Parsed_nonlinear_constraint expr ->
@@ -268,9 +268,9 @@ let checkus
     match error_type with
     | Not_arithmetic_error ->
         raise (TypeError (
-            "The expression \""
+            "The expression `"
             ^ (string_fun variable_infos expr)
-            ^ "\" is not an arithmetic expression: "
+            ^ "` is not an arithmetic expression: "
             ^ (DiscreteValue.string_of_var_type_discrete l_type)
             ^ ", "
             ^ (DiscreteValue.string_of_var_type_discrete r_type)
@@ -295,7 +295,7 @@ let rec infer_expression variable_infos = function
         let convert_expr, discrete_type = infer_parsed_boolean_expression variable_infos expr in
         Parsed_global_expression convert_expr, discrete_type
 
-(* Type check and infer literal numbers of boolean expression *)
+(* Type check and infer literal numbers of Boolean expression *)
 and infer_parsed_boolean_expression variable_infos = function
 
     | Parsed_True -> Parsed_True, DiscreteValue.Var_type_discrete_bool
@@ -320,9 +320,9 @@ and check_and_convert_boolean_expression variable_infos l_expr r_expr expr =
         (* Check if two types are bool *)
         if not (DiscreteValue.is_discrete_type_bool_type l_type && DiscreteValue.is_discrete_type_bool_type r_type) then
             raise (TypeError (
-                "The expression \""
+                "The expression `"
                 ^ (string_of_parsed_boolean_expression variable_infos expr)
-                ^ "\" is not of type bool: "
+                ^ "` is not of type bool: "
                 ^ (DiscreteValue.string_of_var_type_discrete l_type)
                 ^ ", "
                 ^ (DiscreteValue.string_of_var_type_discrete r_type)
@@ -330,7 +330,7 @@ and check_and_convert_boolean_expression variable_infos l_expr r_expr expr =
         else
             (infer_l_expr, infer_r_expr), DiscreteValue.Var_type_discrete_bool
 
-(* Type checking and infer literal numbers of discrete boolean expression *)
+(* Type checking and infer literal numbers of discrete Boolean expression *)
 and infer_parsed_discrete_boolean_expression variable_infos = function
     | Parsed_arithmetic_expression expr ->
         let infer_expr, discrete_type = infer_parsed_discrete_arithmetic_expression variable_infos expr in
@@ -346,11 +346,11 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
         (* Check if 'not' contains a bool expression *)
         if not (DiscreteValue.is_discrete_type_bool_type discrete_type) then
             raise (TypeError (
-                "The expression \""
+                "The expression `"
                 ^ string_of_parsed_boolean_expression variable_infos expr
-                ^ "\" contained in \""
+                ^ "` contained in `"
                 ^ string_of_parsed_discrete_boolean_expression variable_infos not_expr
-                ^ "\" expression, is not of type bool: "
+                ^ "` expression, is not of type bool: "
                 ^ DiscreteValue.string_of_var_type_discrete discrete_type
             ))
         else
@@ -366,9 +366,9 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
         let get_infer_expr_message = get_infer_message (string_of_parsed_discrete_boolean_expression variable_infos expr) in
 
         print_message Verbose_high (
-            "\tInfer expression type of \""
+            "\tInfer expression type of `"
             ^ string_of_parsed_discrete_boolean_expression variable_infos expr
-            ^ "\" as "
+            ^ "` as "
             ^ DiscreteValue.string_of_var_type_discrete DiscreteValue.Var_type_discrete_bool
         );
 
@@ -427,9 +427,9 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
 
         if not (Lazy.force is_all_number) then
             raise (TypeError (
-                "One term of \""
+                "One term of `"
                 ^ string_of_parsed_discrete_boolean_expression variable_infos in_expr
-                ^ "\" expression, is not an arithmetic expression: "
+                ^ "` expression, is not an arithmetic expression: "
                 ^ DiscreteValue.string_of_var_type_discrete expr_type
                 ^ ", "
                 ^ DiscreteValue.string_of_var_type_discrete lower_type
@@ -439,9 +439,9 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
 
         else if Lazy.force is_type_conflict then
             raise (TypeError (
-                "The expression \""
+                "The expression `"
                 ^ string_of_parsed_discrete_boolean_expression variable_infos in_expr
-                ^ "\" mix different types: "
+                ^ "` mixes different types: "
                 ^ (DiscreteValue.string_of_var_type_discrete expr_type)
                 ^ ", "
                 ^ (DiscreteValue.string_of_var_type_discrete lower_type)
@@ -456,9 +456,9 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
             let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational in
 
             print_message Verbose_high (
-                "\tInfer literals of expression \"" ^
+                "\tInfer literals of expression `" ^
                 string_of_parsed_discrete_boolean_expression variable_infos in_expr ^
-                "\" as " ^
+                "` as " ^
                 DiscreteValue.string_of_var_type_discrete target_type
             );
 
@@ -471,9 +471,9 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
         else if not (DiscreteValue.is_discrete_type_unknown_number_type expr_type) then (
 
             print_message Verbose_high (
-                "\tInfer literals of expression \"" ^
+                "\tInfer literals of expression `" ^
                 string_of_parsed_discrete_boolean_expression variable_infos in_expr ^
-                "\" as " ^
+                "` as " ^
                 DiscreteValue.string_of_var_type_discrete expr_type
             );
 
@@ -486,9 +486,9 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
         else if not (DiscreteValue.is_discrete_type_unknown_number_type lower_type) then (
 
             print_message Verbose_high (
-                "\tInfer literals of expression \"" ^
+                "\tInfer literals of expression `" ^
                 string_of_parsed_discrete_boolean_expression variable_infos in_expr ^
-                "\" as " ^
+                "` as " ^
                 DiscreteValue.string_of_var_type_discrete lower_type
             );
 
@@ -501,9 +501,9 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
         else (
 
             print_message Verbose_high (
-                "\tInfer literals of expression \"" ^
+                "\tInfer literals of expression `" ^
                 string_of_parsed_discrete_boolean_expression variable_infos in_expr ^
-                "\" as " ^
+                "` as " ^
                 DiscreteValue.string_of_var_type_discrete upper_type
             );
 
@@ -550,9 +550,9 @@ and infer_parsed_discrete_arithmetic_expression variable_infos =
             match error_type with
             | Not_arithmetic_error ->
                 raise (TypeError (
-                    "The expression \""
+                    "The expression `"
                     ^ (string_of_parsed_arithmetic_expression variable_infos arithmetic_expr)
-                    ^ "\" is not an arithmetic expression: "
+                    ^ "` is not an arithmetic expression: "
                     ^ (DiscreteValue.string_of_var_type_discrete l_type)
                     ^ ", "
                     ^ (DiscreteValue.string_of_var_type_discrete r_type)
@@ -620,9 +620,9 @@ and check_and_convert_term variable_infos term factor expr_term =
         match error_type with
         | Not_arithmetic_error ->
             raise (TypeError (
-                "The term \""
+                "The term `"
                 ^ (string_of_parsed_term variable_infos expr_term)
-                ^ "\" is not an arithmetic expression: "
+                ^ "` is not an arithmetic expression: "
                 ^ (DiscreteValue.string_of_var_type_discrete l_type)
                 ^ ", "
                 ^ (DiscreteValue.string_of_var_type_discrete r_type)
@@ -661,11 +661,11 @@ and infer_parsed_discrete_factor variable_infos = function
         (* Check that expr type is a int type *)
         if not (DiscreteValue.is_discrete_type_int_type expr_type || DiscreteValue.is_discrete_type_unknown_number_type expr_type) then
             raise (TypeError (
-                "The expression \""
+                "The expression `"
                 ^ string_of_parsed_arithmetic_expression variable_infos expr
-                ^ "\" contained in \""
+                ^ "` contained in `"
                 ^ string_of_parsed_factor variable_infos int_expr
-                ^ "\" expression, is not of type int: "
+                ^ "` expression, is not of type int: "
                 ^ DiscreteValue.string_of_var_type_discrete expr_type
             ))
         else (
@@ -673,16 +673,16 @@ and infer_parsed_discrete_factor variable_infos = function
             let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
 
             print_message Verbose_high (
-                "\tInfer expression type of \""
+                "\tInfer expression type of `"
                 ^ string_of_parsed_factor variable_infos int_expr
-                ^ "\" as "
+                ^ "` as "
                 ^ DiscreteValue.string_of_var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
             );
 
             print_message Verbose_high (
-                "\tInfer literals of expression \"" ^
+                "\tInfer literals of expression `" ^
                 string_of_parsed_factor variable_infos int_expr ^
-                "\" as " ^
+                "` as " ^
                 DiscreteValue.string_of_var_type_discrete target_type
             );
 
@@ -700,9 +700,9 @@ and infer_parsed_discrete_factor variable_infos = function
         (* Check that two expression are arithmetic *)
         if not (DiscreteValue.is_discrete_type_number_type l_type && DiscreteValue.is_discrete_type_number_type r_type) then (
             raise (TypeError (
-                "The left or right expression contained \""
+                "The left or right expression contained `"
                 ^ (string_of_parsed_factor variable_infos pow_expr)
-                ^ "\" is not an arithmetic expression: "
+                ^ "` is not an arithmetic expression: "
                 ^ (DiscreteValue.string_of_var_type_discrete l_type)
                 ^ ", "
                 ^ (DiscreteValue.string_of_var_type_discrete r_type)
@@ -711,9 +711,9 @@ and infer_parsed_discrete_factor variable_infos = function
         (* Check that right expression (exponent) is int, otherwise raise an error *)
         else if not (DiscreteValue.is_discrete_type_unknown_number_type r_type || DiscreteValue.is_discrete_type_int_type r_type) then (
             raise (TypeError (
-                    "Exponent of expression \""
+                    "Exponent of expression `"
                     ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos pow_expr
-                    ^ "\" is not an integer"
+                    ^ "` is not an integer"
                 )
             );
         );
@@ -739,9 +739,9 @@ and infer_parsed_discrete_factor variable_infos = function
         in
 
         print_message Verbose_high (
-            "\tInfer expression type of \""
+            "\tInfer expression type of `"
             ^ (string_of_parsed_factor variable_infos pow_expr)
-            ^ "\" as "
+            ^ "` as "
             ^ (DiscreteValue.string_of_var_type_discrete result_type)
         );
 
@@ -759,18 +759,18 @@ and infer_parsed_discrete_factor variable_infos = function
         (* factor should be binary word *)
         if not (DiscreteValue.is_discrete_type_binary_word_type l_type) then (
             raise (TypeError (
-                "Left member of expression \""
+                "Left member of expression `"
                 ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos shift
-                ^ "\" is not a binary word"
+                ^ "` is not a binary word"
             ))
         );
 
         (* expr should be int *)
         if not (DiscreteValue.is_discrete_type_unknown_number_type r_type || DiscreteValue.is_discrete_type_int_type r_type) then (
             raise (TypeError (
-                "Right member of expression \""
+                "Right member of expression `"
                 ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos shift
-                ^ "\" is not an int expression"
+                ^ "` is not an int expression"
             ))
         );
 
@@ -780,9 +780,9 @@ and infer_parsed_discrete_factor variable_infos = function
             let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
 
             print_message Verbose_high (
-                "\tInfer expression \""
+                "\tInfer expression `"
                 ^ (string_of_parsed_arithmetic_expression variable_infos expr)
-                ^ "\" as "
+                ^ "` as "
                 ^ (DiscreteValue.string_of_var_type_discrete target_type)
             );
 
@@ -809,9 +809,9 @@ and infer_parsed_discrete_factor variable_infos = function
                     "Shift parameter of "
                     ^ string_of_parsed_factor_constructor shift
                     ^ " function should be a constant expression."
-                    ^ " Expression \""
+                    ^ " Expression `"
                     ^ ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos converted_expr
-                    ^ "\" is not constant."
+                    ^ "` is not constant."
                 ));
 
             let shift_value = ParsingStructureUtilities.try_reduce_parsed_arithmetic_expression variable_infos.constants converted_expr in
@@ -827,9 +827,9 @@ and infer_parsed_discrete_factor variable_infos = function
                     "Shift parameter of "
                     ^ string_of_parsed_factor_constructor shift
                     ^ " should be a constant expression."
-                    ^ " Expression \""
+                    ^ " Expression `"
                     ^ ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos converted_expr
-                    ^ "\" is not constant."
+                    ^ "` is not constant."
                 ));
 
             let shift_value = ParsingStructureUtilities.try_reduce_parsed_arithmetic_expression variable_infos.constants converted_expr in
@@ -837,15 +837,15 @@ and infer_parsed_discrete_factor variable_infos = function
             let length = base_length + Int32.to_int (DiscreteValue.int_value shift_value) in
             Parsed_fill_right (infer_factor, converted_expr), DiscreteValue.Var_type_discrete_binary_word length
         | _ ->
-            raise (InternalError "Never happen !")
+            raise (InternalError "Never happen!")
         )
         in
 
         let _, t = typed_shift in
         print_message Verbose_high (
-            "\tInfer expression \""
+            "\tInfer expression `"
             ^ (string_of_parsed_factor variable_infos shift)
-            ^ "\" as "
+            ^ "` as "
             ^ (DiscreteValue.string_of_var_type_discrete t)
         );
 
@@ -861,9 +861,9 @@ and infer_parsed_discrete_factor variable_infos = function
         (* factors should be binary words of the same length *)
         if not (DiscreteValue.is_discrete_type_binary_word_type l_type && DiscreteValue.is_discrete_type_binary_word_type r_type) then (
             raise (TypeError (
-                "Left or right member of expression \""
+                "Left or right member of expression `"
                 ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos log_op
-                ^ "\" is not a binary word: "
+                ^ "` is not a binary word: "
                 ^ DiscreteValue.string_of_var_type_discrete l_type
                 ^ ", "
                 ^ DiscreteValue.string_of_var_type_discrete r_type
@@ -872,9 +872,9 @@ and infer_parsed_discrete_factor variable_infos = function
 
         if l_type <> r_type then (
             raise (TypeError (
-                "Expression \""
+                "Expression `"
                 ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos log_op
-                ^ "\" mix different types: "
+                ^ "` mixes different types: "
                 ^ DiscreteValue.string_of_var_type_discrete l_type
                 ^ ", "
                 ^ DiscreteValue.string_of_var_type_discrete r_type
@@ -882,9 +882,9 @@ and infer_parsed_discrete_factor variable_infos = function
         );
 
         print_message Verbose_high (
-            "\tInfer expression \""
+            "\tInfer expression `"
             ^ (string_of_parsed_factor variable_infos log_op)
-            ^ "\" as "
+            ^ "` as "
             ^ (DiscreteValue.string_of_var_type_discrete l_type)
         );
 
@@ -896,7 +896,7 @@ and infer_parsed_discrete_factor variable_infos = function
         | Parsed_log_xor _ ->
             Parsed_log_xor (infer_l_factor, infer_r_factor), l_type
         | _ ->
-            raise (InternalError "Never happen !")
+            raise (InternalError "Never happen!")
         )
     | Parsed_log_not factor as log_op ->
         let infer_factor, discrete_type = infer_parsed_discrete_factor variable_infos factor in
@@ -904,9 +904,9 @@ and infer_parsed_discrete_factor variable_infos = function
         (* factors should be binary words of the same length *)
         if not (DiscreteValue.is_discrete_type_binary_word_type discrete_type) then (
             raise (TypeError (
-                "Member of expression \""
+                "Member of expression `"
                 ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos log_op
-                ^ "\" is not a binary word: "
+                ^ "` is not a binary word: "
                 ^ DiscreteValue.string_of_var_type_discrete discrete_type
             ))
         ) else (
@@ -918,7 +918,7 @@ and infer_parsed_discrete_factor variable_infos = function
 
 (* Type checking and infer literal numbers of non-linear constraint *)
 and infer_nonlinear_constraint variable_infos = function
-    (* It's ok non-linear constraint is of boolean type *)
+    (* It's ok non-linear constraint is of Boolean type *)
     | Parsed_true_nonlinear_constraint -> Parsed_true_nonlinear_constraint, DiscreteValue.Var_type_discrete_bool
     | Parsed_false_nonlinear_constraint -> Parsed_false_nonlinear_constraint, DiscreteValue.Var_type_discrete_bool
     | Parsed_nonlinear_constraint expr ->
@@ -984,7 +984,7 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
     | Parsed_log_xor (factor, _)
     | Parsed_log_not factor ->
         (* Shift result type is a binary word of length depending on the left member length *)
-        (* Logical and, or, xor, not depend on one member length (arbitrary, because already type checked !) *)
+        (* Logical and, or, xor, not depend on one member length (arbitrary, because already type checked!) *)
         discrete_type_of_parsed_discrete_factor variable_infos factor
 
 
@@ -996,13 +996,13 @@ let check_nonlinear_constraint variable_infos nonlinear_constraint =
 
     let uniformly_typed_nonlinear_constraint, discrete_type = infer_nonlinear_constraint variable_infos nonlinear_constraint in
     print_message Verbose_high ("nonlinear constraint " ^ (string_of_parsed_nonlinear_constraint variable_infos nonlinear_constraint) ^ " was checked ");
-    (* Check that non-linear constraint is a boolean expression *)
+    (* Check that non-linear constraint is a Boolean expression *)
     match discrete_type with
     | DiscreteValue.Var_type_discrete_bool -> uniformly_typed_nonlinear_constraint, discrete_type
     | _ -> raise (TypeError (
-        "Guard or invariant expression \""
+        "Guard or invariant expression `"
         ^ (string_of_parsed_nonlinear_constraint variable_infos nonlinear_constraint)
-        ^ "\" is not a boolean expression"
+        ^ "` is not a Boolean expression"
     ))
 
 
@@ -1033,13 +1033,13 @@ let check_update variable_infos variable_name expr =
         (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
          if not (DiscreteValue.is_discrete_type_compatibles var_type_discrete expr_type) then (
             raise (TypeError (
-                "Variable \""
+                "Variable `"
                 ^ variable_name
-                ^ "\" of type "
+                ^ "` of type "
                 ^ (DiscreteValue.string_of_var_type var_type)
-                ^ " is not compatible with expression \""
+                ^ " is not compatible with expression `"
                 ^ (ParsingStructureUtilities.string_of_parsed_global_expression variable_infos uniformly_typed_expr)
-                ^ "\" of type "
+                ^ "` of type "
                 ^ (DiscreteValue.string_of_var_type_discrete expr_type)
                 )
             )
@@ -1049,9 +1049,9 @@ let check_update variable_infos variable_name expr =
             (* If the expression type is a number, and as expression type and var type are compatibles *)
             (* convert expression type to variable type (infer to variable type) *)
             print_message Verbose_high (
-                "\tInfer update expression \""
+                "\tInfer update expression `"
                 ^ (string_of_parsed_global_expression variable_infos expr)
-                ^ "\" to variable type "
+                ^ "` to variable type "
                 ^ (DiscreteValue.string_of_var_type_discrete var_type_discrete)
             );
 
@@ -1069,14 +1069,14 @@ let check_conditional variable_infos expr =
 
     let uniformly_typed_bool_expr, expr_type = infer_parsed_boolean_expression variable_infos expr in
 
-    (* Check that non-linear constraint is a boolean expression *)
+    (* Check that non-linear constraint is a Boolean expression *)
     if DiscreteValue.is_discrete_type_bool_type expr_type then
         uniformly_typed_bool_expr, expr_type
     else (
         raise (TypeError (
-            "Expression \""
+            "Expression `"
             ^ (string_of_parsed_boolean_expression variable_infos expr)
-            ^ "\" in conditional statement, is not a boolean expression"
+            ^ "` in conditional statement, is not a Boolean expression"
             )
         )
     )
@@ -1091,9 +1091,9 @@ let check_type_assignment variable_infos variable_name expr =
         ^ variable_name
         ^ " of type "
         ^ (DiscreteValue.string_of_var_type_discrete variable_type)
-        ^ " is not compatible with expression : \""
+        ^ " is not compatible with expression : `"
         ^ (string_of_parsed_global_expression variable_infos expr)
-        ^ "\""
+        ^ "`"
         ^ " of type "
         ^ (DiscreteValue.string_of_var_type_discrete expr_type)
     in
@@ -1122,7 +1122,7 @@ let check_constant_expression initialized_constants (name, expr, var_type) =
         variable_names = [];
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];
-        type_of_variables = (fun _ -> raise (TypeError "oups !"));
+        type_of_variables = (fun _ -> raise (TypeError "oops!"));
     }
     in
     let target_var_type = DiscreteValue.discrete_type_of_var_type var_type in
@@ -1137,9 +1137,9 @@ let check_constant_expression initialized_constants (name, expr, var_type) =
             ^ name
             ^ " of type "
             ^ (DiscreteValue.string_of_var_type_discrete target_var_type)
-            ^ " is not compatible with expression \""
+            ^ " is not compatible with expression `"
             ^ (ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr)
-            ^ "\" of type "
+            ^ "` of type "
             ^ (DiscreteValue.string_of_var_type_discrete discrete_type)
         );
         raise (TypeError "Bad constant declaration(s)")
@@ -1229,9 +1229,9 @@ let check_discrete_init variable_infos variable_name expr =
     let converted_expr =
         if DiscreteValue.is_discrete_type_unknown_number_type expr_type then (
             print_message Verbose_high (
-                "\tInfer expression type of \""
+                "\tInfer expression type of `"
                 ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos infer_expr
-                ^ "\" as the same as assigned variable type: " ^ DiscreteValue.string_of_var_type_discrete var_discrete_type
+                ^ "` as the same as assigned variable type: " ^ DiscreteValue.string_of_var_type_discrete var_discrete_type
             );
             convert_literal_types_of_expression variable_infos var_discrete_type infer_expr
         )
