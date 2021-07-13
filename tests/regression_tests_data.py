@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/07/09
+# Last modified     : 2021/07/13
 #************************************************************
 
 
@@ -36,7 +36,7 @@ tests = [
 		## Test for IMITATOR version: 3.1
 		#'purpose'    : 'Test something',
 		#'input_files': ['somemodel.imi'],
-		#'options'    : '-mode checksyntax ',
+		#'options'    : '-mode checksyntax',
 		#'expectations' : [
 			#{'file': 'somemodel.res' , 'content' : """
 #here the content to check
@@ -8471,6 +8471,33 @@ Constraint nature                       : good
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/13
+		# Last modified            : 2021/07/13
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test cycle synthesis with BSID',
+		'input_files': ['ALR15_fig1.imi', 'ALR15_fig1-CycleThrough.imiprop'],
+		'options'    : '-cycle-algo NDFS -depth-step 1',
+		'expectations' : [
+			{'file': 'ALR15_fig1.res' , 'content' : """
+BEGIN CONSTRAINT
+ 1 >= p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
