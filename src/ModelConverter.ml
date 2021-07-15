@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci, Benjamin Loillier
  * Created           : 2009/09/09
- * Last modified     : 2021/07/01
+ * Last modified     : 2021/07/15
  *
  ************************************************************)
 
@@ -1596,11 +1596,11 @@ let get_all_variable_dependencies_used_in_init parsed_model all_variables_used =
         (* Display warning message *)
         StringSet.iter(fun variable_dependency_name ->
             print_warning (
-                "Variable \""
+                "Variable `"
                 ^ variable_dependency_name
-                ^ "\" is declared but never used in the model; it is however keep because of dependency with \""
+                ^ "` is declared but never used in the model; it is however kept because of a dependency with `"
                 ^ variable_name
-                ^ "\""
+                ^ "`"
             );
         ) variable_dependencies_not_used;
 
