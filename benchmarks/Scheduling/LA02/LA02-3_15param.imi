@@ -15,7 +15,7 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : < 2013
- * Last modified    : 2021/04/12
+ * Last modified    : 2021/07/19
  * Model version    : 0.1
  * 
  * IMITATOR version : 3.0
@@ -57,7 +57,7 @@
 (************************************************************)
 (* Including body *)
 (************************************************************)
-#include "LA02-body:3.imi";
+#include "LA02_body-3.imi";
 
 
 (************************************************************)
