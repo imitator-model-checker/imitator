@@ -24,6 +24,9 @@ exception Division_by_0 of string
 
 exception Found
 
+(** Exception when an #include fails in a model *)
+exception IncludeFileNotFound of string
+
 (** Exception when interfacing with another program *)
 exception InterfacingError of string
 
