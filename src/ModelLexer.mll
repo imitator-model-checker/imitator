@@ -16,7 +16,7 @@
 {
 open Lexing
 open Exceptions
-open ImitatorUtilities
+(* open ImitatorUtilities *)
 open ModelParser
 
 (* OCaml style comments *)
@@ -41,7 +41,7 @@ rule token = parse
 			)with 
 				| Sys_error e ->
 					(* Abort properly *)
-					print_error(e);
+(* 					print_error(e); *)
 					raise (IncludeFileNotFound file_name);
 			in
 			let lb = Lexing.from_channel c in
