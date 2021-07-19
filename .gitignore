@@ -14,6 +14,7 @@
 *.cmxs
 *.cmxa
 *.pyc
+*.txt
 
 # MAC users
 .DS_Store
@@ -55,6 +56,7 @@ benchmarks/**/*.jani
 
 *_cart.png
 *_cart_bounds.txt
+*_cart_points_*.txt
 
 tests/**/*-regenerated.imi
 tests/**/*.log
