@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/07/09
+ * Last modified     : 2021/07/17
  *
  ************************************************************)
 
@@ -793,8 +793,8 @@ class imitator_options =
 
 				("-mode", String set_mode, " Special mode for " ^ Constants.program_name ^ ".
         Use `checksyntax` for a simple syntax check and no analysis.
-        Use `statespace`  for the generation of the entire parametric state space."
-        );
+        Use `statespace`  for the generation of the entire parametric state space.
+        ");
 
 				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled (accepting states are put at the head).
 				");
