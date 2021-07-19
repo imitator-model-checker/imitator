@@ -20,9 +20,6 @@
 .DS_Store
 =
 
-# LP
-papers/*
-
 # PyCharm configuration
 .idea
 
