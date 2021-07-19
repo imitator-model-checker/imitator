@@ -10,12 +10,14 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/14
+ * Last modified     : 2021/07/19
 *****************************************************************)
 
 {
-open ModelParser
 open Lexing
+open Exceptions
+open ImitatorUtilities
+open ModelParser
 
 (* OCaml style comments *)
 let comment_depth = ref 0;;
@@ -29,12 +31,19 @@ rule token = parse
 	| [' ' '\t']         { token lexbuf }     (* skip blanks *)
 
 	(* C style include *)
-	| "#include \""   ( [^'"' '\n']* as filename) '"'
+	| "#include \""   ( [^'"' '\n']* as file_name) '"'
     {
 			let top_file = lexbuf.lex_start_p.pos_fname in
-			let absolute_filename = FilePath.make_absolute (FilePath.dirname top_file) filename in
+			let absolute_filename = FilePath.make_absolute (FilePath.dirname top_file) file_name in
 
-			let c = open_in absolute_filename in
+			let c = try(
+				open_in absolute_filename
+			)with 
+				| Sys_error e ->
+					(* Abort properly *)
+					print_error(e);
+					raise (IncludeFileNotFound file_name);
+			in
 			let lb = Lexing.from_channel c in
 			lb.Lexing.lex_curr_p <- { lb.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
 

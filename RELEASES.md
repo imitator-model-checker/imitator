@@ -11,6 +11,7 @@
 
 ### Bug fixing:
 * Solved a bug (introduced in v3.0) related to variable automatic removal in the initial state definition
+* Solved a bug that crashed the tool when an included file was not found
 
 
 *******************************************************
