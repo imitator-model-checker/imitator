@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/07/13
+# Last modified     : 2021/07/19
 #************************************************************
 
 
@@ -920,6 +920,91 @@ end
 		] # end expectations
 	} # end test case
 	##------------------------------------------------------------]
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/19
+		# Last modified            : 2021/07/19
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test include: non-existing included file',
+		'input_files': ['tests_include_model/example-include-nonexisting-1.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'example-include-nonexisting-1.res' , 'content' : """
+Error                                   : model parsing error
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/19
+		# Last modified            : 2021/07/19
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test include: non-existing included file with funny characters',
+		'input_files': ['tests_include_model/example-include-nonexisting-2.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'example-include-nonexisting-2.res' , 'content' : """
+Error                                   : model parsing error
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/19
+		# Last modified            : 2021/07/19
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test include: parsing error in included file',
+		'input_files': ['tests_include_model/example-include-nonexisting-3a.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'example-include-nonexisting-3a.res' , 'content' : """
+Error                                   : model parsing error
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/19
+		# Last modified            : 2021/07/19
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test include: non-existing file in included file',
+		'input_files': ['tests_include_model/example-include-nonexisting-4a.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'example-include-nonexisting-4a.res' , 'content' : """
+Error                                   : model parsing error
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
 
 	,
 
