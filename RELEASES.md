@@ -1,36 +1,30 @@
 *******************************************************
-# release 3.1 (2021-XX-XX) Cheese Artichoke
+# release 3.1 (2021-07-20) Cheese Artichoke
 
 ### Syntax improvement
 * New types for discrete global variables: Boolean variables (`bool`), integer (`int`, over 32 bits) variables
 * `discrete` become `rational` (still encoded using exact arithmetics, as opposed to the new `int` type)
 * New power operator `pow(v, i)` over discrete variables, with `v` an integer or rational expression, and `i` an integer expression (possibly involving integer variables)
 
+### Result
+* IMITATOR now attempts to generate a result (`.res`) file even in the case of an error such as parsing error of the model or of the property
+
 ### Syntax changes in the model
 * New syntax for the initial state definition, with a separation between the discrete and the continuous parts (the former syntax remains accepted for backward-compatibility, but a warning is triggered).
-
-### Bug fixing:
-* Solved a bug (introduced in v3.0) related to variable automatic removal in the initial state definition
-* Solved a bug that crashed the tool when an included file was not found
-
-
-*******************************************************
-# release 3.1.0-beta (2021-04-28) Cheese Artichoke
 
 ### Syntax changes in the property
 * `property := AcceptingCycle` now allowed as a shortcut for `property := CycleThrough(accepting)`
 
-### Result
-* IMITATOR now attempts to generate a result (`.res`) file even in the case of an error such as parsing error of the model or of the property
-
 ### Export
 * New translation to the [JANI](https://jani-spec.org/) interchange format
 
-### Bug fixing:
-* Fixed an issue met in v3 when a division by 0 is encountered.
-
 ### Benchmarks
 * Entire refactoring of the benchmarks library [[AMP21]](https://www.doi.org/10.1007/978-3-030-79379-1_3)
+
+### Bug fixing:
+* Fixed an issue met in v3.0 when a division by 0 is encountered.
+* Solved a bug (introduced in v3.0) related to variable automatic removal in the initial state definition
+* Solved a bug that crashed the tool when an included file was not found
 
 
 *******************************************************
