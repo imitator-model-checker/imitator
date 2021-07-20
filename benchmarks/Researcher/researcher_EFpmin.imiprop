@@ -1,0 +1,1 @@
+property := #synth EFpmin(loc[researcher] = finished & nb >= 3, pTotal);

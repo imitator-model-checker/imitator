@@ -46,7 +46,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\imitator{} is a free, open source software tool to perform automated parameter synthesis for concurrent timed systems~\cite{AFKS12}.
+\imitator{} is a free, open source software tool to perform automated parameter synthesis for concurrent timed systems~\cite{Andre21}.
 \imitator{} takes as input a network of \imitator{} parametric timed automata (\NIPTA{}): \NIPTA{} are an extension of parametric timed automata~\cite{AHV93}, a well-known formalism to specify and verify models of systems where timing constants can be replaced with parameters, \ie{} unknown constants.
 
 \imitator{} addresses several variants of the following problem:
@@ -66,6 +66,7 @@ Numerous analysis options are available.
 
 \imitator{} was able to verify numerous case studies from the literature and from the industry, such as communication protocols, hardware asynchronous circuits, schedulability problems and various other systems such as models of coffee machines (probably the most critical systems from a researcher point of view).
 Numerous benchmarks are available at \imitator{} Web page~\cite{imitator}.
+An official benchmarks library is available at~\cite{AMP21}.
 
 In this document, we present the input syntax, we formally define the input model of \imitator{}, and we explain how to perform various analyses using the numerous options.
 
@@ -370,7 +371,7 @@ Int variables are encoded in \imitator{} using the \styleFileContent{int} type o
 	All arithmetic operations over the ``int'' variables are taken modulo $2^{32}$.
 	Overflow can therefore occur.
 	
-	For critical models, it is highly advised to use \emph{rational} variables instead (the computation using rational variables is slower but always exact).
+	For critical models, it is highly advised to use \emph{rational} variables instead (the computation using rational variables may be significantly slower but always exact).
 \end{becareful}
 
 Formally, the set of integer variables is $\IVar = \{ \ivar_1, \dots, \ivar_\IVarCard \} $;
@@ -506,7 +507,7 @@ On the other hand, arithmetic expressions are richer than linear constraints, as
 Since version 2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
 
 \paragraph{Flows and stopwatches}
-By default, all clocks at evolve at the same rate in all locations, and this rate is~1.
+By default, all clocks evolve at the same rate in all locations, and this rate is~1.
 That is, by default, $\forall \loc \in \Loc, \forall \clock \in \Clock : \flow(\loc, \clock) = 1$.
 
 However, one can explicitly define an alternative (constant, rational-valued) flow using two methods:
@@ -666,7 +667,7 @@ If an \IPTA{} declares an action \styleIMI{a} that is never used in this \IPTA{}
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Constants}
+\section{Global constants}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} supports global constants, \ie{} a variable the value of which is known once for all.
@@ -676,9 +677,16 @@ The syntax is the following one:
 \end{center}
 Then, any occurrence of \styleIMI{c} in the model is replaced with \styleIMI{1}.
 
-Constants are (unbounded, exact) rationals.
+By default, constants are (unbounded, exact) rationals.
+It is possible to define constants of another type by making their type explicit:
 
-Limited linear expressions over rationals can be used in the definition of a constant; however no other constant can be used in a definition, \ie{} one cannot (yet) write \styleIMI{c1 = c2 + 1: constant;}.
+\begin{center}
+	\styleIMI{c = 1: int;}
+\end{center}
+
+In this case, \styleIMI{c} is a constant of type \styleIMI{int}.
+
+Limited linear expressions over rationals can be used in the definition of a (rational) constant; however no other constant can be used in a definition, \ie{} one cannot (yet) write \styleIMI{c1 = c2 + 1: constant;}.
 
 
 %------------------------------------------------------------
@@ -758,9 +766,9 @@ Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis
 % The option \styleOption{-output-result} is not compulsory, but allows one to
 One obtains a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
 
-The options \styleOption{-merge} and \styleOption{-inclusion} are implicitely activated for this algorithm, as they usually greatly increase the analysis efficiency and the termination.
-You may want to use \styleOption{-no-merge} or \styleOption{-no-inclusion} to disable them.
-The options \styleOption{-dynamic-elimination} (not activated by default) and \styleOption{-inclusion-bidir} can also be used to (try to) reduce the state space.
+The options \styleOption{-merge} and \styleOption{-comparison inclusion} are implicitly activated for this algorithm, as they usually greatly increase the analysis efficiency and the termination.
+You may want to use \styleOption{-no-merge} and \styleOption{-comparison none} to disable them.
+The options \styleOption{-dynamic-elimination} (not activated by default) and \styleOption{-comparison doubleinclusion} can also be used to (try to) reduce the state space.
 
 \imitator{} can also
 output the state space in a graphical form (option \styleOption{-draw-statespace}),
@@ -969,7 +977,8 @@ In both cases, the property syntax is as follows:
 
 
 
-The second algorithm (\cref{sss:accepting-loop-NDFS}) is so far the default in \imitator{}; both algorithms have \emph{not} been experimentally compared with each other; this is the subject of future work.
+The second algorithm (\cref{sss:accepting-loop-NDFS}) is the default in \imitator{}.
+% both algorithms have \emph{not} been experimentally compared with each other; this is the subject of future work.
 
 
 As usual, \imitator{} can also
@@ -1054,11 +1063,7 @@ When using the \styleOption{-depth-limit} option, the depth-first search stops e
 the current branch and backtracks when this depth is reached.
 
 
-As usual, \imitator{} can also
-output the state space in a graphical form (option \styleOption{-draw-statespace})
-or
-output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
-
+\paragraph{Exploration with layers}
 The exploration with layers considers different ordering policies for its pending
 list via the \styleOption{-pending-order} option:
 \begin{description}
@@ -1071,6 +1076,7 @@ list via the \styleOption{-pending-order} option:
 	\item[\styleOption{-pending-order zone}]: the states are added to the list on
 	      the basis of a largest zone first.
 \end{description}
+
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1095,7 +1101,13 @@ uses the following options :
 The results obtained at each iteration are displayed, thus giving valuable information
 to the user.
 
+\medskip
 
+
+As usual, \imitator{} can also
+output the state space in a graphical form (option \styleOption{-draw-statespace})
+or
+output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1521,7 +1533,7 @@ We do not give a formal grammar for this file (yet), but it can be easily inferr
 The file header recalls the exact version of \imitator{} used to run the analysis, including the build number, the git branch and the git SHA hash.
 It also recalls the model name, the exact command used, and the time when the file was generated (which may slightly differ from the time the analysis was run, if the analysis was significantly long).
 
-Then, the header recalls global information on the model (number of \IPTA{}, of clocks, of parameters, whether the model contains stopwatches, etc.).
+Then, the header recalls global information on the model (number of \IPTA{}, of clocks, of parameters, whether the model contains clocks with a rate $\neq 1$, etc.).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1716,8 +1728,8 @@ In particular, \imitator{} allows any conjunction of linear constraints (see \cr
 In addition, \uppaal{} only allows invariants of the form $\clock \leq c$ or $\clock < c$, which is not a restriction in \imitator{}.
 No checks are made when translating, and therefore \uppaal{} may not accept models translated from \imitator{} input models using these features.
 
-\paragraph{Discrete variables}
-Discrete rational variables in \imitator{} are rational-valued with an exact value.
+\paragraph{Rational variables}
+Rational variables in \imitator{} are rational-valued with an exact value.
 In \uppaal{}, they are interpreted as (bounded) integers: overflows may occur and, if their value becomes non-integer, it seems \uppaal{} will just round them to the nearest integer, thus creating a difference in semantics.
 
 \paragraph{Strong broadcast synchronization}
@@ -1895,64 +1907,96 @@ However, \imitator{} does not perform what is referred to as \emph{symbolic mode
 In short, a symbolic state in \imitator{} is made of the following elements:
 \begin{itemize}
 	\item the current location (index) of each \IPTA{};
-	\item the current value of the (rational-valued) discrete variables;
-	\item a constraint on $\Clock \cup \Param \cup \DVar$ representing the continuous information.
+	\item the current value of the discrete variables;
+	\item a constraint on $\Clock \cup \Param$ representing the continuous information.
 \end{itemize}
-In \imitator{}, all rationals (\ie{} the value of the discrete variables and the coefficients used in the constraints) are unbounded rationals (implemented using GMP).
+In \imitator{}, all rationals (\ie{} the value of the rational-valued discrete variables and the coefficients used in the constraints) are unbounded rationals (implemented using GMP).
+Integers over 32 bits are used to encode \styleIMI{int} variables.
+No floating-point approximations (\styleIMI{float}) are used, except for the generation of graphics.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Built-in functions}\label{section:builtin-functions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\imitator{} 3.1 and higher comes with some built-in functions:
+
+\subsection{Arithmetic functions}
+
+\begin{itemize}
+    \item \styleIMI{pow(x : 'a, e : int) : 'a} with \styleIMI{'a : [rational | int]}
+\end{itemize}
+
+\subsection{Conversion functions}
+
+\begin{itemize}
+    \item \styleIMI{rational\_of\_int(x : int) : rational}
+\end{itemize}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Type system}\label{section:type_system}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Since version 3.1 \imitator{} support typed discrete variables. Few common primitive types as integer, rational and boolean are available. They can be declared with the following keywords :
+Since version 3.1 \imitator{} supports several types of discrete variables.
+Common primitive types as integer, rational and Booleans are available.
+They can be declared with the following keywords:
 
 \begin{itemize}
-\item Rational: \styleIMI{discrete} or \styleIMI{rational}
-\item Integer (32 bits): \styleIMI{int}
-\item Boolean: \styleIMI{bool}
+	\item Rational: \styleIMI{rational} (or \styleIMI{discrete} for backward-compatibility)
+	\item Integer (32 bits): \styleIMI{int}
+	\item Boolean: \styleIMI{bool}
 \end{itemize}
 
-Theses types are divided into two categories: numerical and boolean. Integer and rational types belong to numerical category, while boolean type belong to boolean category.
+Theses types are divided into two categories: numerical (for \styleIMI{rational} and \styleIMI{int}) and Booleans (for \styleIMI{bool}).
 
-\imitator{} models are statically typed in the sense of their variables and expressions types are resolved upstream of the algorithms execution.
+\imitator{} models are statically typed, in the sense of their variables and expressions types are resolved prior to the algorithms execution.
 
-In this continuity, discrete variables are not latently typed. The types are associated with variables and not with values. In other terms, once a variable is declared with a defined type, it only accept this type.
+% In this continuity, discrete variables are not latently typed.
+% The types are associated with variables and not with values. In other terms, once a variable is declared with a defined type, it only accept this type.
 
 \subsection{Type checking}
 
-In order to verify the model type consistency, a step called type checking, is applied - during the semantic analysis - on all expressions of the model: declarations, assignments, updates, conditions (\styleIMI{if-then-else}), guards and invariants. Type checking step do the following :
+In order to verify the model type consistency, a step called \emph{type checking} is applied---during the semantic analysis prior to the start of the verification or synthesis algorithm---on all expressions of the model: declarations, assignments, updates, conditions (\styleIMI{if-then-else}), guards and invariants.
+Type checking does the following :
 
 \begin{itemize}
- \item It check type consistency within the expressions
- \item It resolve the types of the expressions
- \item It apply a numerical type to literal numbers according to the numerical type holding by their outer expression
- \item It check consistency between an expression type and variable type, in case of assignment
- \item It check consistency between an expression type and it's grammar rule
+	\item It checks type consistency within the expressions;
+	\item It resolves the types of the expressions;
+	\item It applies a numerical type to literal numbers according to the numerical type held by their outer expression;
+	\item It checks consistency between an expression type and variable type, in case of assignment;
+	\item It checks consistency between an expression type and its grammar rule.
 \end{itemize}
 
 \subsection{Expression type solving}
 
-The expression tree is traversed (depth-first search) in order to deduce it's type. As soon as a variable, constant or literal is found, the expression take it's type. If the expression only contain literals numbers, it will be deduce as a rational arithmetic expression. 
+The expression tree is traversed (depth-first search) in order to deduce its type.
+As soon as a variable, constant or literal is found, the expression takes its type.
+If the expression only contains numbers (\eg{} \styleIMI{2 + 3 * 4}), the inferred type will be a \emph{rational} arithmetic expression (and not the \styleIMI{int} type).
 
-All variables, constants or literals types must be in accordance with each other. In other words, an expression doesn't support the mixing of different types because \imitator{} model language doesn't support implicit conversion.
+% All variables, constants or literals types must be in accordance with each other. In other words, an expression doesn't support the mixing of different types because \imitator{} model language doesn't support implicit conversion.
+\imitator{} does not support implicit conversion.
+In other words, \styleIMI{r + i + 3}, where \styleIMI{r} is a rational and \styleIMI{i} is an \styleIMI{int}, is not allowed.
+Neither is allowed \styleIMI{r := i}.
 
-If an expression mix different types, a type error is raise
+If an expression mixes different types, a type error is risen before the start of the algorithm.
 
 
 \subsection{Literal number type inference}
 
-The types of literal numbers are automatically resolved during the semantic analysis and more precisely during the type checking step. Once an expression type is resolved, all literal numbers within are automatically typed as the numerical type holding by the expression. 
+The types of literal numbers are automatically resolved during the semantic analysis and more precisely during the type checking step.
+Once an expression type is resolved, all literal numbers within are automatically typed as the numerical type holding by the expression. 
 
-For example, in the following update expression \styleIMI{b := True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1}  will be automatically typed as a \styleIMI{int}.
+For example, in the following update expression \styleIMI{b := True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1} will be automatically typed as a \styleIMI{int}.
 
 \subsection{Type conversion}
 
-As said previously, there is no implicit conversion of variables, constants or literals from one type to another type. All expressions are holding exactly one type and cannot mix different types. However, it's possible to convert an expression to another type using built-in conversion functions:
+As said previously, there is no implicit conversion of variables, constants or literals from one type to another type. All expressions are holding exactly one type and cannot mix different types. However, it is possible to convert an expression to another type using built-in conversion functions:
 
 \begin{itemize}
-\item \styleIMI{rational\_of\_int}: convert an int expression to a rational one
+	\item \styleIMI{rational\_of\_int}: converts an \styleIMI{int} expression to a rational one.
 \end{itemize}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2050,7 +2094,7 @@ Possible values are:
 \begin{description}
 	\item[\styleOption{none}]:
 	Does not test if a new state was already encountered.
-To be set to this value \emph{only} if the state space is a tree with all states being different (otherwise analysis may loop).
+To be set to this value \emph{only} if the state space is a tree with all states being different (otherwise analysis may enter an infinite loop and never terminate).
 
 	\item[\styleOption{equality}]
 	Test the \emph{equality} of the constraints.
@@ -2413,7 +2457,7 @@ For non-Zeno cycle synthesis (\cref{ss:mode:Zeno}), choose to either:
 %------------------------------------------------------------
 \paragraph{\styleOption{-output-float} (default: disabled)}
 %------------------------------------------------------------
-Convert (exact-valued) discrete variables into (possibly approximated) floats in all outputs.
+Convert (exact-valued) discrete rational variables into (possibly approximated) floats in all outputs.
 
 
 %------------------------------------------------------------
@@ -2523,7 +2567,7 @@ For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}), do not use 
 %------------------------------------------------------------
 \imitator{} considers that all the \IPTA{} declaring a given action must be able to synchronize all together, so that the synchronization can happen.
 By default, \imitator{} considers that the actions declared in an \IPTA{} are those declared in the \styleIMI{synclabs} section.
-Therefore, if an action is declared but never used in (at least) one \IPTA{}, this label will never be synchronized in the execution\footnote{In such a case, action label is actually completely removed before the execution, in order to optimize the execution, and the user is warned of this removal.}.
+Therefore, if an action is declared but never used in (at least) one \IPTA{}, this label will never be synchronized in the execution.\footnote{In such a case, action label is actually completely removed before the execution, in order to optimize the execution, and the user is warned of this removal.}
 
 The option \styleOption{-sync-auto-detect} allows to detect automatically the actions in each \IPTA{}: the actions declared in the \styleIMI{synclabs} section are ignored, and \imitator{} considers as declared actions only the actions really used in this \IPTA{}.
 
@@ -2685,22 +2729,22 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\   & \styleIMI{<name>}                                             \\
-	$|$ & \styleIMI{<name> =} \nt{rational}                             \\
+	$|$ & \styleIMI{<name> =} \nt{global\_expression}                             \\
 	$|$ & \styleIMI{<name>} \styleIMI{,} \nt{var\_list}                 \\
-	$|$ & \styleIMI{<name> =} \nt{rational} \styleIMI{,} \nt{var\_list} \\
+	$|$ & \styleIMI{<name> =} \nt{global\_expression} \styleIMI{,} \nt{var\_list} \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{var\_type}
 %------------------------------------------------------------
 \begin{tabular}{l l}
+	$|$ & \styleIMI{bool}  \\
 	$|$ & \styleIMI{clock}     \\
 	$|$ & \styleIMI{constant}  \\
 	$|$ & \styleIMI{discrete}  \\
-	$|$ & \styleIMI{rational}  \\
 	$|$ & \styleIMI{int}  \\
-	$|$ & \styleIMI{bool}  \\
 	$|$ & \styleIMI{parameter} \\
+	$|$ & \styleIMI{rational}  \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2895,7 +2939,7 @@ We define each of those two components below.
 \regleGrammaire{update}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{<name>} \styleIMI{:=} \nt{arithmetic\_expression} \\
+	\  & \styleIMI{<name>} \styleIMI{:=} \nt{global\_expression} \\
 \end{tabular}
 
 % \smallskip
@@ -2923,15 +2967,23 @@ We define each of those two components below.
 \end{tabular}
 
 %------------------------------------------------------------
+\regleGrammaire{global\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{boolean\_expression} \\
+	$|$ & \nt{arithmetic\_expression} \\
+\end{tabular}
+
+%------------------------------------------------------------
 \regleGrammaire{boolean\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\   & \styleIMI{True}                                                    \\
 	$|$ & \styleIMI{False}                                                   \\
-	$|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
 	$|$ & \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression}    \\
 	$|$ & \nt{boolean\_expression} \styleIMI{|} \nt{boolean\_expression}     \\
 	$|$ & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
+	$|$ & \nt{discrete\_boolean\_expression}                                 \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2941,6 +2993,7 @@ We define each of those two components below.
 	\   & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
 	$|$ & \nt{arithmetic\_expression} \styleIMI{in} $[$ \nt{arithmetic\_expression} \styleIMI{,} \nt{arithmetic\_expression} $]$ \\
 	$|$ & \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \\
+    $|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2980,6 +3033,8 @@ We define each of those two components below.
 	\   & \nt{rational}                                         \\
 	$|$ & \styleIMI{<name>}                                     \\
 	$|$ & \styleIMI{(} \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{pow(} \nt{arithmetic\_expression}, \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{rational\_of\_int(} \nt{arithmetic\_expression} \styleIMI{)} \\
 \end{tabular}
 
 
@@ -3119,18 +3174,86 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{init}
 %------------------------------------------------------------
+% \begin{tabular}{l l}
+% 	 & \nt{init\_definition} \styleIMI{end} \\
+% 	 $|$ & \nt{old\_init\_definition} \styleIMI{end} \\
+% \end{tabular}
+% 
+% %------------------------------------------------------------
+% \regleGrammaire{init\_definition}
+% %------------------------------------------------------------
 \begin{tabular}{l l}
-	 & \nt{init\_definition} \styleIMI{end} \\
+	\   & \styleIMI{init} \styleIMI{:= \{} \nt{init\_discrete\_continuous\_definition} \styleIMI{\}} \\
+% 	$|$ & \emptystring                                                       \\
 \end{tabular}
 
-
 %------------------------------------------------------------
-\regleGrammaire{init\_definition}
+\regleGrammaire{init\_discrete\_continuous\_definition}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \styleIMI{init} \styleIMI{:=} \nt{region\_expression} \styleIMI{;} \\
+	\ & \nt{init\_discrete\_definition} \nt{init\_continuous\_definition} \\
+    $|$ & \nt{init\_continuous\_definition} \nt{init\_discrete\_definition} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_discrete\_definition}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{discrete} \styleIMI{=} \nt{init\_discrete\_expression} \styleIMI{;} \\
 	$|$ & \emptystring                                                       \\
 \end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_discrete\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{,}  \nt{init\_discrete\_expression\_nonempty\_list} \\
+	$|$ &  \nt{init\_discrete\_expression\_nonempty\_list} \\
+	$|$ & \emptystring                                                       \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_discrete\_expression\_nonempty\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{init\_discrete\_state\_predicate} \styleIMI{,}  \nt{init\_discrete\_expression\_nonempty\_list} \\
+	$|$ & \nt{init\_discrete\_state\_predicate} \\
+	$|$ & \nt{init\_discrete\_state\_predicate} \styleIMI{,} \\                                                       \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_discrete\_state\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{<name> :=} \nt{global\_expression} \\
+	$|$ & \nt{init\_discrete\_loc\_predicate} \\
+	$|$ & \styleIMI{(}                                                      \nt{init\_discrete\_state\_predicate} \styleIMI{)}                                                      \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_discrete\_loc\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{loc[ <name> ] := <name>} \\
+	$|$ & \styleIMI{<name> is in <name>} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_continuous\_definition}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{continuous} \styleIMI{=} \nt{region\_expression} \styleIMI{;} \\
+	$|$ & \emptystring                                                       \\
+\end{tabular}
+
+
+% %------------------------------------------------------------
+% \regleGrammaire{old\_init\_definition}
+% %------------------------------------------------------------
+% \begin{tabular}{l l}
+% 	\   & \styleIMI{init} \styleIMI{:=} \nt{region\_expression} \styleIMI{;} \\
+% 	$|$ & \emptystring                                                       \\
+% \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{region\_expression}
@@ -3144,37 +3267,37 @@ We define each of those two components below.
 \regleGrammaire{region\_expression\_fol}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \nt{init\_state\_predicate}                                             \\
+	\   & \nt{linear\_constraint}                                             \\
 	$|$ & \styleIMI{(} \nt{region\_expression\_fol} \styleIMI{)}                  \\
 	$|$ & \nt{region\_expression\_fol} \styleIMI{\&} \nt{region\_expression\_fol} \\
 \end{tabular}
 
 
-%------------------------------------------------------------
-\regleGrammaire{init\_state\_predicate}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{init\_loc\_predicate} \\
-	$|$ & \nt{linear\_constraint}   \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{init\_loc\_predicate}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{loc[ <name> ] = <name>} \\
-	$|$ & \styleIMI{<name> is in <name>}    \\
-\end{tabular}
-
-
-%------------------------------------------------------------
-\regleGrammaire{discrete\_predicate}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{<name>} \nt{relop} \nt{rational}                                                         \\
-	$|$ & \styleIMI{<name>} \styleIMI{in} \styleIMI{[}\nt{rational} \styleIMI{,} \nt{rational} \styleIMI{]}  \\
-	$|$ & \styleIMI{<name>} \styleIMI{in} \styleIMI{[}\nt{rational} \styleIMI{..} \nt{rational} \styleIMI{]} \\
-\end{tabular}
+% %------------------------------------------------------------
+% \regleGrammaire{init\_state\_predicate}
+% %------------------------------------------------------------
+% \begin{tabular}{l l}
+% 	\   & \nt{init\_loc\_predicate} \\
+% 	$|$ & \nt{linear\_constraint}   \\
+% \end{tabular}
+% 
+% %------------------------------------------------------------
+% \regleGrammaire{init\_loc\_predicate}
+% %------------------------------------------------------------
+% \begin{tabular}{l l}
+% 	\   & \styleIMI{loc[ <name> ] = <name>} \\
+% 	$|$ & \styleIMI{<name> is in <name>}    \\
+% \end{tabular}
+% 
+% 
+% %------------------------------------------------------------
+% \regleGrammaire{discrete\_predicate}
+% %------------------------------------------------------------
+% \begin{tabular}{l l}
+% 	\   & \styleIMI{<name>} \nt{relop} \nt{rational}                                                         \\
+% 	$|$ & \styleIMI{<name>} \styleIMI{in} \styleIMI{[}\nt{rational} \styleIMI{,} \nt{rational} \styleIMI{]}  \\
+% 	$|$ & \styleIMI{<name>} \styleIMI{in} \styleIMI{[}\nt{rational} \styleIMI{..} \nt{rational} \styleIMI{]} \\
+% \end{tabular}
 
 
 
@@ -3817,6 +3940,10 @@ Vincent~Bloemen implemented the optimal-time reachability synthesis.
 Jaime~Arias simplified a lot the source code management and implemented new features.
 %
 Jiří~Srba suggested the translation of \imitator{}'s strong broadcast into \uppaal{}.
+%
+Benjamin~Loillier enhanced the syntax, notably allowing Boolean and int types.
+%
+Dylan~Marinho reformatted the library of benchmarks~\cite{AMP21} and implemented the translation to~\jani{}.
 
 We acknowledge the help of the PPL~\cite{BHZ08} developers for their help with solving several issues over the years, and more generally for making this very useful library available.
 
@@ -3855,7 +3982,7 @@ The following people contributed to the development of \imitator{}.
 	Dylan Marinho        & 2021 & -- &      \\
 	Nguy\~{ê}n~Hoàng~Gia & 2014 & -- & 2018 \\
 	Laure Petrucci       & 2019 & -- &      \\
-	Jaco Van de Pol      & 2019 & -- &      \\
+	Jaco van de Pol      & 2019 & -- &      \\
 	Romain Soulat        & 2010 & -- & 2013 \\
 \end{tabular}
 

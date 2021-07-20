@@ -10,12 +10,14 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/14
+ * Last modified     : 2021/07/19
 *****************************************************************)
 
 {
-open ModelParser
 open Lexing
+open Exceptions
+(* open ImitatorUtilities *)
+open ModelParser
 
 (* OCaml style comments *)
 let comment_depth = ref 0;;
@@ -29,12 +31,19 @@ rule token = parse
 	| [' ' '\t']         { token lexbuf }     (* skip blanks *)
 
 	(* C style include *)
-	| "#include \""   ( [^'"' '\n']* as filename) '"'
+	| "#include \""   ( [^'"' '\n']* as file_name) '"'
     {
 			let top_file = lexbuf.lex_start_p.pos_fname in
-			let absolute_filename = FilePath.make_absolute (FilePath.dirname top_file) filename in
+			let absolute_filename = FilePath.make_absolute (FilePath.dirname top_file) file_name in
 
-			let c = open_in absolute_filename in
+			let c = try(
+				open_in absolute_filename
+			)with 
+				| Sys_error e ->
+					(* Abort properly *)
+(* 					print_error(e); *)
+					raise (IncludeFileNotFound file_name);
+			in
 			let lb = Lexing.from_channel c in
 			lb.Lexing.lex_curr_p <- { lb.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
 
@@ -66,6 +75,7 @@ rule token = parse
 	| "rational"       { CT_DISCRETE }
 	| "int"            { CT_INT }
 	| "bool"           { CT_BOOL }
+	| "binary"         { CT_BINARY_WORD }
 	| "do"             { CT_DO }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
@@ -103,12 +113,21 @@ rule token = parse
 	| "within"         { CT_WITHIN }
     | "rational_of_int"{ CT_BUILTIN_FUNC_RATIONAL_OF_INT }
     | "pow"            { CT_POW }
+    | "shift_left"     { CT_SHIFT_LEFT }
+    | "shift_right"    { CT_SHIFT_RIGHT }
+    | "fill_left"      { CT_FILL_LEFT }
+    | "fill_right"     { CT_FILL_RIGHT }
+    | "logand"         { CT_LOG_AND }
+    | "logor"          { CT_LOG_OR }
+    | "logxor"         { CT_LOG_XOR }
+    | "lognot"         { CT_LOG_NOT }
 
 
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
 	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm }
 	| ['0'-'9']+ as lxm { INT(NumConst.numconst_of_string lxm) }
+        | "0b"['0'-'9']+ as lxm { BINARYWORD lxm }
 (*	| '"' [^'"']* '"' as lxm { STRING lxm } *) (* a string between double quotes *)
 
 	| "<="             { OP_LEQ }

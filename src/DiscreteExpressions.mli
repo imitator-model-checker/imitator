@@ -12,11 +12,6 @@
  *
  ************************************************************)
 
-(* Expression type *)
-type expression_type =
-    | Expression_type_discrete_bool of DiscreteValue.var_type_discrete
-    | Expression_type_discrete_arithmetic of DiscreteValue.var_type_discrete_number
-
 (************************************************************)
 (************************************************************)
 (** Operators *)
@@ -57,6 +52,7 @@ and rational_factor =
 	| DF_expression of rational_arithmetic_expression
 	| DF_rational_of_int of int_arithmetic_expression
 	| DF_unary_min of rational_factor
+	| DF_pow of rational_arithmetic_expression * int_arithmetic_expression
 
 (************************************************************)
 (** Int arithmetic expressions for discrete variables *)
@@ -77,10 +73,33 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
+    | Int_pow of int_arithmetic_expression * int_arithmetic_expression
+
 
 type discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
     | Int_arithmetic_expression of int_arithmetic_expression
+
+(************************************************************)
+(************************************************************)
+(************************************************************)
+(** Binary word expressions for discrete variables *)
+(************************************************************)
+(************************************************************)
+
+(** Binary word expression *)
+type binary_word_expression =
+    | Logical_shift_left of binary_word_expression * int_arithmetic_expression
+    | Logical_shift_right of binary_word_expression * int_arithmetic_expression
+    | Logical_fill_left of binary_word_expression * int_arithmetic_expression
+    | Logical_fill_right of binary_word_expression * int_arithmetic_expression
+    | Logical_and of binary_word_expression * binary_word_expression
+    | Logical_or of binary_word_expression * binary_word_expression
+    | Logical_xor of binary_word_expression * binary_word_expression
+    | Logical_not of binary_word_expression
+    | Binary_word_constant of BinaryWord.t
+    | Binary_word_variable of Automaton.variable_index
+
 
 (************************************************************)
 (************************************************************)
@@ -93,7 +112,6 @@ type discrete_arithmetic_expression =
 type boolean_expression =
 	| True_bool (** True *)
 	| False_bool (** False *)
-	| Not_bool of boolean_expression (** Negation *)
 	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
 	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
 	| Discrete_boolean_expression of discrete_boolean_expression
@@ -101,14 +119,20 @@ type boolean_expression =
 and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
+    | Boolean_comparison of discrete_boolean_expression * relop * discrete_boolean_expression
+    | Binary_comparison of binary_word_expression * relop * binary_word_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression of boolean_expression
+	(** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
+	| Not_bool of boolean_expression (** Negation *)
 	(** discrete variable in boolean expression *)
 	| DB_variable of Automaton.variable_index
 	(** discrete constant in boolean expression *)
-	| DB_constant of DiscreteValue.discrete_value
+	| DB_constant of bool
+
+
 
 (****************************************************************)
 (** Global expression *)
@@ -117,21 +141,17 @@ type global_expression =
     (* A typed expression *)
     | Arithmetic_expression of discrete_arithmetic_expression
     | Bool_expression of boolean_expression
-
-
-val string_of_expression_type : expression_type -> string
-(* Check if a variable type is compatible with an expression type *)
-val is_var_type_discrete_compatible_with_expr_type : DiscreteValue.var_type_discrete -> expression_type -> bool
-(* Check if a variable type is compatible with an expression type *)
-val is_var_type_compatible_with_expr_type : DiscreteValue.var_type -> expression_type -> bool
-(* Check if expression type is a boolean expression type *)
-val is_bool_expression_type : expression_type -> bool
-(* Check if expression type is a unknown number type *)
-val is_unknown_number_expression_type : expression_type -> bool
-(* Check if expression type is a bool of unknown number type *)
-val is_bool_of_unknown_number_expression_type : expression_type -> bool
+    | Binary_word_expression of binary_word_expression
 
 (* String *)
+
+(* Constructors strings *)
+val string_of_rational_factor_constructor : rational_factor -> string
+val string_of_int_factor_constructor : int_factor -> string
+val string_of_binary_word_expression_constructor : binary_word_expression -> string
+
+(* Expressions strings *)
+
 val customized_string_of_global_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string
 val string_of_global_expression : (Automaton.variable_index -> string) -> global_expression -> string
 

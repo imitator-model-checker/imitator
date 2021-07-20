@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/03/19
+ * Last modified     : 2021/06/11
  *
  ************************************************************)
 
@@ -20,8 +20,11 @@
 (* Exceptions *)
 (************************************************************)
 (************************************************************)
-(* Raised when a linear_term is not a clock guard, i.e., of the form x ~ plterm *)
+(* Raised when a linear_inequality is not a clock guard, i.e., of the form `x ~ plterm` *)
 exception Not_a_clock_guard
+
+(* Raised when a linear_inequality is an equality, i.e., `pxd_linear_term = pxd_linear_term` *)
+exception Not_an_inequality
 
 (* Raised when a linear_term is not a one-dimensional single parameter constraint, i.e., of the form p ~ c *)
 exception Not_a_1d_parameter_constraint
@@ -178,8 +181,8 @@ val op_of_pxd_linear_inequality				: pxd_linear_inequality -> op
 (** Negate a linear inequality; for an equality, perform the pi0-compatible negation *)
 val negate_wrt_pi0 : p_valuation -> p_linear_inequality -> p_linear_inequality
 
-(** Negate an inequality ('=' is disallowed); raises InternalError if "=" is used *)
-val negate_inequality : p_linear_inequality -> p_linear_inequality
+(** Negate an inequality (`=` is disallowed); raises Not_an_inequality if `=` is used *)
+(* val negate_inequality : p_linear_inequality -> p_linear_inequality *)
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -307,6 +310,10 @@ val partition_lu : variable list -> pxd_linear_constraint list -> (variable list
 (** {3 Operations without modification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+(** Given a linear constraint and a variable (dimension), return the pair of bounds, i.e., the infimum and supremum. If the dimension is not bounded, return None. Otherwise return a pair Some (NumConst.t, minimum) (resp. maximum), which is true if the bound is closed (i.e., a minimum (resp. maximum), as opposed to an infimum (resp. supremum)). *)
+val p_compute_bounds : p_linear_constraint -> variable -> (((NumConst.t * bool) option) * ((NumConst.t * bool) option))
+
+
 (** Exhibit a point in a linear_constraint; raise EmptyConstraint if the constraint is empty. *)
 (*** NOTE: we try to exhibit in each dimension the minimum, except if no minimum (infimum) in which case we get either the middle between the infimum and the supremum (if any supremum), or the infimum if no supremum; and dually if no infimum. ***)
 val p_exhibit_point : p_linear_constraint -> p_valuation
@@ -364,11 +371,11 @@ val px_is_zero_in : variable -> px_linear_constraint -> bool
 val pxd_is_zero_in : variable -> pxd_linear_constraint -> bool
 
 (** Check if a variable is bounded from above in a constraint *)
-(*** WARNING: in an equality x <= p, x is NOT considered to be bounded (when p is not itself) ***)
+(*** WARNING: in an equality x <= p, x is NOT considered to be bounded (when p is not itself bounded) ***)
 val px_is_bounded_from_above_in : variable -> px_linear_constraint -> bool
 
 (** Check if a variable is bounded from above in a constraint *)
-(*** WARNING: in an equality x <= p, x is NOT considered to be bounded (when p is not itself) ***)
+(*** WARNING: in an equality x <= p, x is NOT considered to be bounded (when p is not itself bounded) ***)
 val pxd_is_bounded_from_above_in : variable -> pxd_linear_constraint -> bool
 
 (*------------------------------------------------------------*)
@@ -443,10 +450,10 @@ val px_valuate_parameters : p_valuation -> px_linear_constraint -> x_linear_cons
 (*------------------------------------------------------------*)
 (* Convex negation *)
 (*------------------------------------------------------------*)
-(** Assuming p_linear_constraint contains a single inequality, this function returns the negation of this inequality (in the form of a p_constraint). Raises InternalError if more than one inequality. *)
+(** Assuming p_linear_constraint contains a single inequality, this function returns the negation of this inequality (in the form of a p_constraint). Raises Not_an_inequality if more than one inequality, or if an equality is found. *)
 val negate_single_inequality_p_constraint : p_linear_constraint -> p_linear_constraint
 
-(** Negates a constraint made either of a single inequality, or made of 2 inequalities, one of which is p >= 0, for a given p *)
+(** Negates a constraint made either of a single inequality, or made of 2 inequalities, one of which is `p >= 0`, for a given `p`. Raises Not_an_inequality if more than two inequalities, or if an equality is found. *)
 (*** HACK: a very ad-hoc function, needed for EFmax ***)
 val negate_single_inequality_nonnegative_p_constraint : Automaton.parameter_index -> p_linear_constraint -> p_linear_constraint
 

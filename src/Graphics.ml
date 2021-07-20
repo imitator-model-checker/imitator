@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2021/04/21
+ * Last modified     : 2021/07/09
  *
  ************************************************************)
  
@@ -828,7 +828,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				);
 
 				(* Convert to the plotutils format *)
-				(draw_x_y NumConst.zero (DiscreteValue.numconst_value zero_value))
+				(draw_x_y NumConst.zero (DiscreteValue.to_numconst_value zero_value))
 			)
 			
 			::
@@ -882,7 +882,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 							
 							(* Same value, current time *)
 							(* Convert to the plotutils format *)
-							(draw_x_y !absolute_time (DiscreteValue.numconst_value !previous_value))
+							(draw_x_y !absolute_time (DiscreteValue.to_numconst_value !previous_value))
 							(* Separator for next point *)
 							^ "\n"
 							,value
@@ -914,7 +914,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 							
 							(* Update the value of the clock using the flow *)
 							(* Clock can only be updated by rationals so we use the numconst value of discrete variable *)
-							let previous_numconst_value = DiscreteValue.numconst_value !previous_value in
+							let previous_numconst_value = DiscreteValue.to_numconst_value !previous_value in
 							let clock_value_after_elapsing = NumConst.add previous_numconst_value (NumConst.mul time_elapsed flow) in
 							
 							(* Same value, current time *)
@@ -945,7 +945,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				previous_point_str
 				
 				(* Then add the current point (easy) in the plotutils format *)
-				^ (draw_x_y !absolute_time (DiscreteValue.numconst_value value))
+				^ (draw_x_y !absolute_time (DiscreteValue.to_numconst_value value))
 			) abstract_steps
 			)
 		) in
@@ -1744,7 +1744,7 @@ let dot dot_image_extension radical dot_source_file : (string option) =
 	print_message Verbose_standard "";
 	
 	(* Create the input file *)
-	print_message Verbose_medium ("Creating input file for dot…");
+	print_message Verbose_medium ("Creating input file `" ^ dot_file_name ^ "` for dot…");
 
 	(* Write dot file *)
 	if options#with_graphics_source then(

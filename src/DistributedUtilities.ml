@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Camille Coti
  * Created           : 2014/03/24
- * Last modified     : 2020/08/28
+ * Last modified     : 2021/07/15
  *
  ************************************************************)
  
@@ -166,14 +166,14 @@ let serialize_pi0 (pi0:PVal.pval) =
 	(* Add separators *)
 	String.concat serialize_SEP_LIST pi0_string_list
 
-let unserialize_pi0_pair pi0_pair_string =
+let unserialize_pi0_pair (pi0_pair_string : string) =
 	match split serialize_SEP_PAIR pi0_pair_string with
 	| [variable_string ; value_string ] ->
 		LinearConstraint.unserialize_variable variable_string , unserialize_numconst value_string
 	| _ -> raise (SerializationError ("Cannot unserialize pi0 value '" ^ pi0_pair_string ^ "': (variable_index, value) expected."))
 
 
-let unserialize_pi0 pi0_string =
+let unserialize_pi0 (pi0_string : string) =
 	(*** TODO: check correct number of values ! ***)
 	(* Split into a list of pairs *)
 	let pi0_pairs_string = split serialize_SEP_LIST pi0_string in
@@ -219,14 +219,14 @@ let serialize_hyper_rectangle hyper_rectangle =
 	(* Add separators *)
 	String.concat serialize_SEP_LIST hyper_rectangle_string_list
 
-let unserialize_hyper_rectangle_pair hyper_rectangle_pair_string =
+let unserialize_hyper_rectangle_pair (hyper_rectangle_pair_string : string) =
 	match split serialize_SEP_PAIR hyper_rectangle_pair_string with
 	| [min_string ; max_string ] ->
 		unserialize_numconst min_string , unserialize_numconst max_string
 	| _ -> raise (SerializationError ("Cannot unserialize hyper_rectangle value '" ^ hyper_rectangle_pair_string ^ "': (min, max) expected."))
 
 
-let unserialize_hyper_rectangle hyper_rectangle_string =
+let unserialize_hyper_rectangle (hyper_rectangle_string : string) =
 	(*** TODO: check correct number of values ! ***)
 	(* Split into a list of pairs *)
 	let hyper_rectangle_pairs_string = split serialize_SEP_LIST hyper_rectangle_string in
@@ -437,7 +437,7 @@ let serialize_abstract_state_space abstract_state_space =
 	(string_of_int abstract_state_space.nb_transitions)
 
 
-let unserialize_abstract_state_space abstract_state_space_string =
+let unserialize_abstract_state_space (abstract_state_space_string : string) =
 	match split serialize_SEP_PAIR abstract_state_space_string with
 	| [nb_states_str; nb_transitions_str] ->
 		(* Abstract state space of IM for BC (to save memory) *)
@@ -490,7 +490,7 @@ let serialize_abstract_point_based_result abstract_point_based_result =
 
 
 
-let unserialize_abstract_point_based_result abstract_point_based_result_string =
+let unserialize_abstract_point_based_result (abstract_point_based_result_string : string) =
 
 	print_message Verbose_high ( "[Master] About to unserialize '" ^ abstract_point_based_result_string ^ "'");
 	let reference_val_str, result_str, abstract_state_space_str, (*statespace_nature_str, nb_random_selections_str , *)computation_time_str, (*soundness_str, *)termination_str =
@@ -559,7 +559,7 @@ let serialize_abstract_point_based_result_list abstract_point_based_result_list 
 
 
 (** Unserialize a list of im_result *)
-let unserialize_abstract_point_based_result_list abstract_point_based_result_list_string =
+let unserialize_abstract_point_based_result_list (abstract_point_based_result_list_string : string) =
 	(* Retrieve the list of im_result *)
 	let split_list = split serialize_SEP_LIST_IMRESULT abstract_point_based_result_list_string in
 	
@@ -985,12 +985,15 @@ let receive_pull_request () =
      (* receive the result itself *)
      let buff = Bytes.create l in
      let res = ref buff in
+     
      print_message Verbose_high ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
      res := Mpi.receive source_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world ;
-     print_message Verbose_high("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+     let res_str : string = Bytes.to_string !res in
+
+     print_message Verbose_high("[Master] received buffer " ^ res_str ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
 			
      (* Get the constraint *)
-     let abstract_point_based_result = unserialize_abstract_point_based_result !res in
+     let abstract_point_based_result = unserialize_abstract_point_based_result res_str in
      
      Tile (source_rank , abstract_point_based_result)
 		   
@@ -1041,9 +1044,11 @@ let receive_pull_request () =
     let res = ref buff in
     print_message Verbose_high ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
     res := Mpi.receive source_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world ;
-    print_message Verbose_high("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+     let res_str = Bytes.to_string !res in
+
+     print_message Verbose_high("[Master] received buffer " ^ res_str ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
     (* Get the constraint *)
-    let pi0 = (unserialize_pi0 !res) in
+    let pi0 = (unserialize_pi0 res_str) in
     Pi0 (source_rank , pi0)
 
 	| Slave_bcresult_tag ->
@@ -1085,13 +1090,15 @@ let receive_work () =
 		(* Receive the data itself *)
 		let buff = Bytes.create w in
 		let work = ref buff in
-
+		
 		work := Mpi.receive master_rank (int_of_master_tag Master_data_tag) Mpi.comm_world;
 		
-		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_data_tag)));
+		let work_str : string = Bytes.to_string !work in
+
+		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ work_str ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_data_tag)));
 		
 		(* Get the pi0 *)
-		let pi0 = unserialize_pi0 !work in
+		let pi0 = unserialize_pi0 work_str in
 (*		(*** HACK ***)
 		(* Convert back to an array *)
 		let array_pi0 = Array.make model.nb_parameters NumConst.zero in
@@ -1112,11 +1119,12 @@ let receive_work () =
 		let work1 = ref buff1 in
 
 		work1 := Mpi.receive master_rank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world;
+		let work1_str : string = Bytes.to_string !work1 in
 		
-		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work1 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_tileupdate_tag)));
+		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ work1_str ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_tileupdate_tag)));
 		
 		(* Get the result *)
-		let abstract_point_based_result = unserialize_abstract_point_based_result !work1 in
+		let abstract_point_based_result = unserialize_abstract_point_based_result work1_str in
 		TileUpdate abstract_point_based_result
 		
 	| Master_subdomain_tag -> 
@@ -1125,11 +1133,12 @@ let receive_work () =
 		let work2 = ref buff2 in
 
 		work2 := Mpi.receive master_rank (int_of_master_tag Master_subdomain_tag) Mpi.comm_world;
+		let work2_str : string = Bytes.to_string !work2 in
 		
-		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work2 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_subdomain_tag)));
+		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ work2_str ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_subdomain_tag)));
 		
 		(* Get the K *)
-		let subdomain = unserialize_hyper_rectangle !work2 in
+		let subdomain = unserialize_hyper_rectangle work2_str in
 		Subdomain subdomain
 
 	| Master_terminate_tag -> Terminate
@@ -1164,11 +1173,14 @@ let receive_cartography_result () : rank * Result.cartography_result =
 		let buff = Bytes.create l in
 		let res = ref buff in
 		print_message Verbose_high ("[Coordinator] Buffer created with length " ^ (string_of_int l)^"");	
+
 		res := Mpi.receive source_rank (int_of_slave_tag Slave_bcresult_tag) Mpi.comm_world ;
-		print_message Verbose_high("[Coordinator] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from Worker "  ^ (string_of_int source_rank) ^ "");
+		let res_str : string = Bytes.to_string !res in
+		
+		print_message Verbose_high("[Coordinator] received buffer " ^ res_str ^ " of size " ^ ( string_of_int l) ^ " from Worker "  ^ (string_of_int source_rank) ^ "");
 				
 		(* Get the cartography_result *)
-		let cartography_result = unserialize_cartography_result !res in
+		let cartography_result = unserialize_cartography_result res_str in
 		
 		(* Return rank and result *)
 		source_rank , cartography_result
@@ -1207,11 +1219,14 @@ let receive_pull_request_NZCUB () =
 	    let buff = Bytes.create l in
 	    let res = ref buff in
 	    print_message Verbose_high ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
+	    
 	    res := Mpi.receive source_rank (int_of_slave_tag Slave_good_or_bad_constraint) Mpi.comm_world ;
-	    print_message Verbose_high("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+		let res_str : string = Bytes.to_string !res in
+
+		print_message Verbose_high("[Master] received buffer " ^ res_str ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
 				
 	    (* Get the Good_or_bad_constraint *)
-	    let good_or_bad_constraint = unserialize_good_or_bad_constraint !res in
+	    let good_or_bad_constraint = unserialize_good_or_bad_constraint res_str in
 
 	  	Good_or_bad_constraint (source_rank, good_or_bad_constraint) 
 

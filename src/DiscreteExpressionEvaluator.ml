@@ -5,6 +5,7 @@ open DiscreteExpressions
 let rec eval_global_expression discrete_valuation = function
     | Arithmetic_expression expr -> eval_discrete_arithmetic_expression discrete_valuation expr
     | Bool_expression expr -> DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
+    | Binary_word_expression expr -> DiscreteValue.Binary_word_value (eval_discrete_binary_word_expression discrete_valuation expr)
 
 and eval_discrete_arithmetic_expression discrete_valuation = function
     | Rational_arithmetic_expression expr ->
@@ -57,9 +58,13 @@ and eval_rational_expression discrete_valuation expr =
         | DF_expression expr ->
             eval_rational_expression_rec expr
         | DF_rational_of_int expr ->
-            (* TODO benjamin warning double conversion ! *)
 (*            ImitatorUtilities.print_message Verbose_standard "Evaluate a int expression";*)
+            ImitatorUtilities.print_warning
+                "Conversion of an int expression to a rational expression
+                may cause overflow if your platform doesn't manage `int` as an exact 32 bits integer";
             NumConst.numconst_of_int (Int32.to_int (eval_int_expression discrete_valuation expr))
+        | DF_pow (expr, exp) ->
+            NumConst.pow (eval_rational_expression_rec expr) (eval_int_expression discrete_valuation exp)
         | DF_unary_min factor ->
             NumConst.neg (eval_rational_factor factor)
     in
@@ -109,7 +114,8 @@ and eval_int_expression discrete_valuation (* expr *) =
             eval_int_expression_rec expr
         | Int_unary_min factor ->
             Int32.neg (eval_int_factor factor)
-
+        | Int_pow (expr, exp) ->
+            OCamlUtilities.pow (eval_int_expression_rec expr) (eval_int_expression_rec exp)
     in
     eval_int_expression_rec
 
@@ -120,7 +126,6 @@ and eval_int_expression discrete_valuation (* expr *) =
 and is_boolean_expression_satisfied discrete_valuation = function
     | True_bool -> true
     | False_bool -> false
-    | Not_bool b -> not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
     | And_bool (b1, b2) -> (is_boolean_expression_satisfied discrete_valuation b1) && (is_boolean_expression_satisfied discrete_valuation b2) (* conjunction *)
     | Or_bool (b1, b2) -> (is_boolean_expression_satisfied discrete_valuation b1) || (is_boolean_expression_satisfied discrete_valuation b2) (* disjunction *)
     | Discrete_boolean_expression dbe -> check_discrete_boolean_expression discrete_valuation dbe
@@ -129,15 +134,25 @@ and is_boolean_expression_satisfied discrete_valuation = function
 and check_discrete_boolean_expression discrete_valuation = function
     | DB_variable variable_index ->
         DiscreteValue.bool_value (discrete_valuation variable_index)
-    | DB_constant constant ->
-        DiscreteValue.bool_value constant
+    | DB_constant value ->
+        value
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
-    | Expression (discrete_arithmetic_expression_1, relop, discrete_arithmetic_expression_2) ->
+    (* TODO benjamin WARNING here we compare discrete value with operator it's bad *)
+    | Expression (l_expr, relop, r_expr) ->
         eval_discrete_relop
             relop
-            (eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_1)
-            (eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_2)
-
+            (eval_discrete_arithmetic_expression discrete_valuation l_expr)
+            (eval_discrete_arithmetic_expression discrete_valuation r_expr)
+    | Boolean_comparison (l_expr, relop, r_expr) ->
+         eval_discrete_boolean_relop
+             relop
+             (check_discrete_boolean_expression discrete_valuation l_expr)
+             (check_discrete_boolean_expression discrete_valuation r_expr)
+    | Binary_comparison (l_expr, relop, r_expr) ->
+        eval_discrete_binary_relop
+            relop
+            (eval_discrete_binary_word_expression discrete_valuation l_expr)
+            (eval_discrete_binary_word_expression discrete_valuation r_expr)
     (** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
     | Expression_in (discrete_arithmetic_expression_1, discrete_arithmetic_expression_2, discrete_arithmetic_expression_3) ->
         (* Compute the first one to avoid redundancy *)
@@ -151,7 +166,9 @@ and check_discrete_boolean_expression discrete_valuation = function
             (eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_3)
     | Boolean_expression boolean_expression ->
         is_boolean_expression_satisfied discrete_valuation boolean_expression
-
+    | Not_bool b ->
+        not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
+(* TODO benjamin refactor here ! *)
 and eval_discrete_relop relop value_1 value_2 : bool =
     match relop with
     | OP_L		-> value_1 <  value_2
@@ -160,3 +177,57 @@ and eval_discrete_relop relop value_1 value_2 : bool =
     | OP_NEQ	-> value_1 <> value_2
     | OP_GEQ	-> value_1 >= value_2
     | OP_G		-> value_1 >  value_2
+and eval_discrete_boolean_relop relop value_1 value_2 : bool =
+    match relop with
+    | OP_L		-> value_1 <  value_2
+    | OP_LEQ	-> value_1 <= value_2
+    | OP_EQ		-> value_1 =  value_2
+    | OP_NEQ	-> value_1 <> value_2
+    | OP_GEQ	-> value_1 >= value_2
+    | OP_G		-> value_1 >  value_2
+and eval_discrete_binary_relop relop value_1 value_2 : bool =
+    match relop with
+    | OP_L		-> value_1 <  value_2
+    | OP_LEQ	-> value_1 <= value_2
+    | OP_EQ		-> value_1 =  value_2
+    | OP_NEQ	-> value_1 <> value_2
+    | OP_GEQ	-> value_1 >= value_2
+    | OP_G		-> value_1 >  value_2
+
+
+and eval_discrete_binary_word_expression discrete_valuation = function
+    | Logical_shift_left (binary_word, expr) ->
+        BinaryWord.shift_left
+            (eval_discrete_binary_word_expression discrete_valuation binary_word)
+            (Int32.to_int (eval_int_expression discrete_valuation expr))
+    | Logical_shift_right (binary_word, expr) ->
+        BinaryWord.shift_right
+            (eval_discrete_binary_word_expression discrete_valuation binary_word)
+            (Int32.to_int (eval_int_expression discrete_valuation expr))
+    | Logical_fill_left (binary_word, expr) ->
+        BinaryWord.fill_left
+            (eval_discrete_binary_word_expression discrete_valuation binary_word)
+            (Int32.to_int (eval_int_expression discrete_valuation expr))
+    | Logical_fill_right (binary_word, expr) ->
+        BinaryWord.fill_right
+            (eval_discrete_binary_word_expression discrete_valuation binary_word)
+            (Int32.to_int (eval_int_expression discrete_valuation expr))
+    | Logical_and (l_binary_word, r_binary_word) ->
+        BinaryWord.log_and
+            (eval_discrete_binary_word_expression discrete_valuation l_binary_word)
+            (eval_discrete_binary_word_expression discrete_valuation r_binary_word)
+    | Logical_or (l_binary_word, r_binary_word) ->
+        BinaryWord.log_or
+            (eval_discrete_binary_word_expression discrete_valuation l_binary_word)
+            (eval_discrete_binary_word_expression discrete_valuation r_binary_word)
+    | Logical_xor (l_binary_word, r_binary_word) ->
+        BinaryWord.log_xor
+            (eval_discrete_binary_word_expression discrete_valuation l_binary_word)
+            (eval_discrete_binary_word_expression discrete_valuation r_binary_word)
+    | Logical_not binary_word ->
+        BinaryWord.log_not
+            (eval_discrete_binary_word_expression discrete_valuation binary_word)
+
+    | Binary_word_constant value -> value
+    | Binary_word_variable variable_index ->
+        DiscreteValue.binary_word_value (discrete_valuation variable_index)

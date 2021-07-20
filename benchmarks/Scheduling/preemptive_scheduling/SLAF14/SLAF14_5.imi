@@ -1,0 +1,557 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : SLAF14_5
+ * Description      : 
+ * Correctness      : System must be schedulable
+ * Scalable         : yes
+ * Generated        : 
+ * Categories       : Academic ; Protocol ; RTS
+ * Source           : 
+ * bibkey           : SLAF14
+ * Author           : Giuseppe Lipari
+ * Modeling         : 
+ * Input by         : 
+ * License          : 
+ * 
+ * Created          : < 2015/10/30
+ * Last modified    : 2020/08/18
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
+
+
+var
+    t1_c, t1_d, t1_urgent, t1_arr_x, t2_c, t2_d, t2_urgent, t2_arr_x, t3_c, t3_d, t3_urgent, t3_arr_x, t4_c, t4_d, t4_urgent, t4_arr_x, t5_c, t5_d, t5_urgent, t5_arr_x, CPU1_urgent : clock;
+    t1_C = 2, t1_arr_P = 8, t2_C = 5, t2_arr_P = 20, t3_C = 8, t3_arr_P = 50, t4_C, t4_arr_P = 100, t5_C, t5_arr_P = 200 : parameter;
+    
+
+automaton Task_t1
+synclabs : t1_arr_event , t1_arr , t1_dis , t1_pre , t1_end , t1_miss;
+loc t1_loc_idle : invariant True
+    when True sync t1_arr_event do { t1_urgent := 0 } goto t1_loc_act_event;
+loc t1_loc_act_event : invariant t1_urgent <= 0
+    when t1_urgent = 0 sync t1_arr do { t1_c := 0 , t1_d := 0 } goto t1_loc_act;
+loc t1_loc_act : invariant t1_d <= t1_arr_P stop { t1_c }
+    when True sync t1_dis  goto t1_loc_exe;
+    when t1_d  >=  t1_arr_P sync t1_miss  goto t1_loc_miss;
+loc t1_loc_exe : invariant t1_d <= t1_arr_P & t1_c <= t1_C
+    when t1_c<t1_C sync t1_pre  goto t1_loc_act;
+    when t1_d >= t1_arr_P & t1_c < t1_C sync t1_miss  goto t1_loc_miss;
+    when t1_c = t1_C sync t1_end  goto t1_loc_idle;
+loc t1_loc_miss : invariant True
+end
+
+
+
+automaton Periodic_t1_arr
+synclabs : t1_arr_event;
+loc t1_arr_loc_arr : invariant t1_arr_x<=t1_arr_P
+    when t1_arr_x=t1_arr_P sync t1_arr_event do { t1_arr_x :=  0 } goto t1_arr_loc_arr;
+end
+
+
+automaton Task_t2
+synclabs : t2_arr_event , t2_arr , t2_dis , t2_pre , t2_end , t2_miss;
+loc t2_loc_idle : invariant True
+    when True sync t2_arr_event do { t2_urgent := 0 } goto t2_loc_act_event;
+loc t2_loc_act_event : invariant t2_urgent <= 0
+    when t2_urgent = 0 sync t2_arr do { t2_c := 0 , t2_d := 0 } goto t2_loc_act;
+loc t2_loc_act : invariant t2_d <= t2_arr_P stop { t2_c }
+    when True sync t2_dis  goto t2_loc_exe;
+    when t2_d  >=  t2_arr_P sync t2_miss  goto t2_loc_miss;
+loc t2_loc_exe : invariant t2_d <= t2_arr_P & t2_c <= t2_C
+    when t2_c<t2_C sync t2_pre  goto t2_loc_act;
+    when t2_d >= t2_arr_P & t2_c < t2_C sync t2_miss  goto t2_loc_miss;
+    when t2_c = t2_C sync t2_end  goto t2_loc_idle;
+loc t2_loc_miss : invariant True
+end
+
+
+
+automaton Periodic_t2_arr
+synclabs : t2_arr_event;
+loc t2_arr_loc_arr : invariant t2_arr_x<=t2_arr_P
+    when t2_arr_x=t2_arr_P sync t2_arr_event do { t2_arr_x :=  0 } goto t2_arr_loc_arr;
+end
+
+
+automaton Task_t3
+synclabs : t3_arr_event , t3_arr , t3_dis , t3_pre , t3_end , t3_miss;
+loc t3_loc_idle : invariant True
+    when True sync t3_arr_event do { t3_urgent := 0 } goto t3_loc_act_event;
+loc t3_loc_act_event : invariant t3_urgent <= 0
+    when t3_urgent = 0 sync t3_arr do { t3_c := 0 , t3_d := 0 } goto t3_loc_act;
+loc t3_loc_act : invariant t3_d <= t3_arr_P stop { t3_c }
+    when True sync t3_dis  goto t3_loc_exe;
+    when t3_d  >=  t3_arr_P sync t3_miss  goto t3_loc_miss;
+loc t3_loc_exe : invariant t3_d <= t3_arr_P & t3_c <= t3_C
+    when t3_c<t3_C sync t3_pre  goto t3_loc_act;
+    when t3_d >= t3_arr_P & t3_c < t3_C sync t3_miss  goto t3_loc_miss;
+    when t3_c = t3_C sync t3_end  goto t3_loc_idle;
+loc t3_loc_miss : invariant True
+end
+
+
+
+automaton Periodic_t3_arr
+synclabs : t3_arr_event;
+loc t3_arr_loc_arr : invariant t3_arr_x<=t3_arr_P
+    when t3_arr_x=t3_arr_P sync t3_arr_event do { t3_arr_x :=  0 } goto t3_arr_loc_arr;
+end
+
+
+automaton Task_t4
+synclabs : t4_arr_event , t4_arr , t4_dis , t4_pre , t4_end , t4_miss;
+loc t4_loc_idle : invariant True
+    when True sync t4_arr_event do { t4_urgent := 0 } goto t4_loc_act_event;
+loc t4_loc_act_event : invariant t4_urgent <= 0
+    when t4_urgent = 0 sync t4_arr do { t4_c := 0 , t4_d := 0 } goto t4_loc_act;
+loc t4_loc_act : invariant t4_d <= t4_arr_P stop { t4_c }
+    when True sync t4_dis  goto t4_loc_exe;
+    when t4_d  >=  t4_arr_P sync t4_miss  goto t4_loc_miss;
+loc t4_loc_exe : invariant t4_d <= t4_arr_P & t4_c <= t4_C
+    when t4_c<t4_C sync t4_pre  goto t4_loc_act;
+    when t4_d >= t4_arr_P & t4_c < t4_C sync t4_miss  goto t4_loc_miss;
+    when t4_c = t4_C sync t4_end  goto t4_loc_idle;
+loc t4_loc_miss : invariant True
+end
+
+
+
+automaton Periodic_t4_arr
+synclabs : t4_arr_event;
+loc t4_arr_loc_arr : invariant t4_arr_x<=t4_arr_P
+    when t4_arr_x=t4_arr_P sync t4_arr_event do { t4_arr_x :=  0 } goto t4_arr_loc_arr;
+end
+
+
+automaton Task_t5
+synclabs : t5_arr_event , t5_arr , t5_dis , t5_pre , t5_end , t5_miss;
+loc t5_loc_idle : invariant True
+    when True sync t5_arr_event do { t5_urgent := 0 } goto t5_loc_act_event;
+loc t5_loc_act_event : invariant t5_urgent <= 0
+    when t5_urgent = 0 sync t5_arr do { t5_c := 0 , t5_d := 0 } goto t5_loc_act;
+loc t5_loc_act : invariant t5_d <= t5_arr_P stop { t5_c }
+    when True sync t5_dis  goto t5_loc_exe;
+    when t5_d  >=  t5_arr_P sync t5_miss  goto t5_loc_miss;
+loc t5_loc_exe : invariant t5_d <= t5_arr_P & t5_c <= t5_C
+    when t5_c<t5_C sync t5_pre  goto t5_loc_act;
+    when t5_d >= t5_arr_P & t5_c < t5_C sync t5_miss  goto t5_loc_miss;
+    when t5_c = t5_C sync t5_end  goto t5_loc_idle;
+loc t5_loc_miss : invariant True
+end
+
+
+
+automaton Periodic_t5_arr
+synclabs : t5_arr_event;
+loc t5_arr_loc_arr : invariant t5_arr_x<=t5_arr_P
+    when t5_arr_x=t5_arr_P sync t5_arr_event do { t5_arr_x :=  0 } goto t5_arr_loc_arr;
+end
+
+
+automaton sched_CPU1
+synclabs : t1_arr, t1_dis, t1_pre, t1_end, t2_arr, t2_dis, t2_pre, t2_end, t3_arr, t3_dis, t3_pre, t3_end, t4_arr, t4_dis, t4_pre, t4_end, t5_arr, t5_dis, t5_pre, t5_end;
+loc CPU1_loc_ : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1;
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_At3;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_At4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_At5;
+loc CPU1_loc_At1 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1;
+loc CPU1_loc_At2 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2;
+loc CPU1_loc_At3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis goto CPU1_loc_Rt3;
+loc CPU1_loc_At4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_dis goto CPU1_loc_Rt4;
+loc CPU1_loc_At5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t5_dis goto CPU1_loc_Rt5;
+
+loc CPU1_loc_Rt5 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt5;
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2Rt5;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_At3Rt5;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_At4Rt5;
+    when True sync t5_end do { CPU1_urgent := 0 } goto CPU1_loc_Et5;
+loc CPU1_loc_Et5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0   goto CPU1_loc_stop;
+loc CPU1_loc_At1Rt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t5_pre goto CPU1_loc_At1Wt5;
+loc CPU1_loc_At1Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt5;
+loc CPU1_loc_At2Rt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t5_pre goto CPU1_loc_At2Wt5;
+loc CPU1_loc_At2Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2Wt5;
+loc CPU1_loc_At3Rt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t5_pre goto CPU1_loc_At3Wt5;
+loc CPU1_loc_At3Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis goto CPU1_loc_Rt3Wt5;
+loc CPU1_loc_At4Rt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t5_pre goto CPU1_loc_At4Wt5;
+loc CPU1_loc_At4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_dis goto CPU1_loc_Rt4Wt5;
+
+loc CPU1_loc_Rt4 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt4;
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2Rt4;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_At3Rt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt4Wt5;
+    when True sync t4_end do { CPU1_urgent := 0 } goto CPU1_loc_Et4;
+loc CPU1_loc_Et4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0   goto CPU1_loc_stop;
+loc CPU1_loc_At1Rt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_pre goto CPU1_loc_At1Wt4;
+loc CPU1_loc_At1Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt4;
+loc CPU1_loc_At2Rt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_pre goto CPU1_loc_At2Wt4;
+loc CPU1_loc_At2Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2Wt4;
+loc CPU1_loc_At3Rt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_pre goto CPU1_loc_At3Wt4;
+loc CPU1_loc_At3Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis goto CPU1_loc_Rt3Wt4;
+
+loc CPU1_loc_Rt4Wt5 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt4Wt5;
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2Rt4Wt5;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_At3Rt4Wt5;
+    when True sync t4_end do { CPU1_urgent := 0 } goto CPU1_loc_Et4Wt5;
+loc CPU1_loc_Et4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t5_dis  goto CPU1_loc_Rt5;
+loc CPU1_loc_At1Rt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_pre goto CPU1_loc_At1Wt4Wt5;
+loc CPU1_loc_At1Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt4Wt5;
+loc CPU1_loc_At2Rt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_pre goto CPU1_loc_At2Wt4Wt5;
+loc CPU1_loc_At2Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2Wt4Wt5;
+loc CPU1_loc_At3Rt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_pre goto CPU1_loc_At3Wt4Wt5;
+loc CPU1_loc_At3Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis goto CPU1_loc_Rt3Wt4Wt5;
+
+loc CPU1_loc_Rt3 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt3;
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2Rt3;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt3Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt3Wt5;
+    when True sync t3_end do { CPU1_urgent := 0 } goto CPU1_loc_Et3;
+loc CPU1_loc_Et3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0   goto CPU1_loc_stop;
+loc CPU1_loc_At1Rt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_pre goto CPU1_loc_At1Wt3;
+loc CPU1_loc_At1Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt3;
+loc CPU1_loc_At2Rt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_pre goto CPU1_loc_At2Wt3;
+loc CPU1_loc_At2Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2Wt3;
+
+loc CPU1_loc_Rt3Wt5 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt3Wt5;
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2Rt3Wt5;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt3Wt4Wt5;
+    when True sync t3_end do { CPU1_urgent := 0 } goto CPU1_loc_Et3Wt5;
+loc CPU1_loc_Et3Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t5_dis  goto CPU1_loc_Rt5;
+loc CPU1_loc_At1Rt3Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_pre goto CPU1_loc_At1Wt3Wt5;
+loc CPU1_loc_At1Wt3Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt3Wt5;
+loc CPU1_loc_At2Rt3Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_pre goto CPU1_loc_At2Wt3Wt5;
+loc CPU1_loc_At2Wt3Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2Wt3Wt5;
+
+loc CPU1_loc_Rt3Wt4 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt3Wt4;
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2Rt3Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt3Wt4Wt5;
+    when True sync t3_end do { CPU1_urgent := 0 } goto CPU1_loc_Et3Wt4;
+loc CPU1_loc_Et3Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_dis  goto CPU1_loc_Rt4;
+loc CPU1_loc_At1Rt3Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_pre goto CPU1_loc_At1Wt3Wt4;
+loc CPU1_loc_At1Wt3Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt3Wt4;
+loc CPU1_loc_At2Rt3Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_pre goto CPU1_loc_At2Wt3Wt4;
+loc CPU1_loc_At2Wt3Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2Wt3Wt4;
+
+loc CPU1_loc_Rt3Wt4Wt5 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt3Wt4Wt5;
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2Rt3Wt4Wt5;
+    when True sync t3_end do { CPU1_urgent := 0 } goto CPU1_loc_Et3Wt4Wt5;
+loc CPU1_loc_Et3Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_dis  goto CPU1_loc_Rt4Wt5;
+loc CPU1_loc_At1Rt3Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_pre goto CPU1_loc_At1Wt3Wt4Wt5;
+loc CPU1_loc_At1Wt3Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt3Wt4Wt5;
+loc CPU1_loc_At2Rt3Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_pre goto CPU1_loc_At2Wt3Wt4Wt5;
+loc CPU1_loc_At2Wt3Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2Wt3Wt4Wt5;
+
+loc CPU1_loc_Rt2 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt3;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt5;
+    when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2;
+loc CPU1_loc_Et2 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0   goto CPU1_loc_stop;
+loc CPU1_loc_At1Rt2 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2;
+loc CPU1_loc_At1Wt2 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2;
+
+loc CPU1_loc_Rt2Wt5 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2Wt5;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt3Wt5;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt4Wt5;
+    when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2Wt5;
+loc CPU1_loc_Et2Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t5_dis  goto CPU1_loc_Rt5;
+loc CPU1_loc_At1Rt2Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2Wt5;
+loc CPU1_loc_At1Wt2Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2Wt5;
+
+loc CPU1_loc_Rt2Wt4 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2Wt4;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt3Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt4Wt5;
+    when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2Wt4;
+loc CPU1_loc_Et2Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_dis  goto CPU1_loc_Rt4;
+loc CPU1_loc_At1Rt2Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2Wt4;
+loc CPU1_loc_At1Wt2Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2Wt4;
+
+loc CPU1_loc_Rt2Wt4Wt5 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2Wt4Wt5;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt3Wt4Wt5;
+    when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2Wt4Wt5;
+loc CPU1_loc_Et2Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_dis  goto CPU1_loc_Rt4Wt5;
+loc CPU1_loc_At1Rt2Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2Wt4Wt5;
+loc CPU1_loc_At1Wt2Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2Wt4Wt5;
+
+loc CPU1_loc_Rt2Wt3 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2Wt3;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt3Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt3Wt5;
+    when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2Wt3;
+loc CPU1_loc_Et2Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis  goto CPU1_loc_Rt3;
+loc CPU1_loc_At1Rt2Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2Wt3;
+loc CPU1_loc_At1Wt2Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2Wt3;
+
+loc CPU1_loc_Rt2Wt3Wt5 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2Wt3Wt5;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt3Wt4Wt5;
+    when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2Wt3Wt5;
+loc CPU1_loc_Et2Wt3Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis  goto CPU1_loc_Rt3Wt5;
+loc CPU1_loc_At1Rt2Wt3Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2Wt3Wt5;
+loc CPU1_loc_At1Wt2Wt3Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2Wt3Wt5;
+
+loc CPU1_loc_Rt2Wt3Wt4 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2Wt3Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt3Wt4Wt5;
+    when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2Wt3Wt4;
+loc CPU1_loc_Et2Wt3Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis  goto CPU1_loc_Rt3Wt4;
+loc CPU1_loc_At1Rt2Wt3Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2Wt3Wt4;
+loc CPU1_loc_At1Wt2Wt3Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2Wt3Wt4;
+
+loc CPU1_loc_Rt2Wt3Wt4Wt5 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2Wt3Wt4Wt5;
+    when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2Wt3Wt4Wt5;
+loc CPU1_loc_Et2Wt3Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis  goto CPU1_loc_Rt3Wt4Wt5;
+loc CPU1_loc_At1Rt2Wt3Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2Wt3Wt4Wt5;
+loc CPU1_loc_At1Wt2Wt3Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+
+loc CPU1_loc_Rt1 : invariant True
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt3;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1;
+loc CPU1_loc_Et1 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0   goto CPU1_loc_stop;
+
+loc CPU1_loc_Rt1Wt5 : invariant True
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt5;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt3Wt5;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt4Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt5;
+loc CPU1_loc_Et1Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t5_dis  goto CPU1_loc_Rt5;
+
+loc CPU1_loc_Rt1Wt4 : invariant True
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt4;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt3Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt4Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt4;
+loc CPU1_loc_Et1Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_dis  goto CPU1_loc_Rt4;
+
+loc CPU1_loc_Rt1Wt4Wt5 : invariant True
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt4Wt5;
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt3Wt4Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt4Wt5;
+loc CPU1_loc_Et1Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t4_dis  goto CPU1_loc_Rt4Wt5;
+
+loc CPU1_loc_Rt1Wt3 : invariant True
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt3Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt3Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt3;
+loc CPU1_loc_Et1Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis  goto CPU1_loc_Rt3;
+
+loc CPU1_loc_Rt1Wt3Wt5 : invariant True
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3Wt5;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt3Wt4Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt3Wt5;
+loc CPU1_loc_Et1Wt3Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis  goto CPU1_loc_Rt3Wt5;
+
+loc CPU1_loc_Rt1Wt3Wt4 : invariant True
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt3Wt4Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt3Wt4;
+loc CPU1_loc_Et1Wt3Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis  goto CPU1_loc_Rt3Wt4;
+
+loc CPU1_loc_Rt1Wt3Wt4Wt5 : invariant True
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt3Wt4Wt5;
+loc CPU1_loc_Et1Wt3Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t3_dis  goto CPU1_loc_Rt3Wt4Wt5;
+
+loc CPU1_loc_Rt1Wt2 : invariant True
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2;
+loc CPU1_loc_Et1Wt2 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2;
+
+loc CPU1_loc_Rt1Wt2Wt5 : invariant True
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3Wt5;
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt4Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2Wt5;
+loc CPU1_loc_Et1Wt2Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2Wt5;
+
+loc CPU1_loc_Rt1Wt2Wt4 : invariant True
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt4Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2Wt4;
+loc CPU1_loc_Et1Wt2Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2Wt4;
+
+loc CPU1_loc_Rt1Wt2Wt4Wt5 : invariant True
+    when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2Wt4Wt5;
+loc CPU1_loc_Et1Wt2Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2Wt4Wt5;
+
+loc CPU1_loc_Rt1Wt2Wt3 : invariant True
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3Wt4;
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2Wt3;
+loc CPU1_loc_Et1Wt2Wt3 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2Wt3;
+
+loc CPU1_loc_Rt1Wt2Wt3Wt5 : invariant True
+    when True sync t4_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2Wt3Wt5;
+loc CPU1_loc_Et1Wt2Wt3Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2Wt3Wt5;
+
+loc CPU1_loc_Rt1Wt2Wt3Wt4 : invariant True
+    when True sync t5_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2Wt3Wt4;
+loc CPU1_loc_Et1Wt2Wt3Wt4 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2Wt3Wt4;
+
+loc CPU1_loc_Rt1Wt2Wt3Wt4Wt5 : invariant True
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2Wt3Wt4Wt5;
+loc CPU1_loc_Et1Wt2Wt3Wt4Wt5 : invariant CPU1_urgent <= 0
+    when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2Wt3Wt4Wt5;
+
+loc CPU1_loc_stop : invariant True
+end
+
+
+
+automaton OBS_dline
+synclabs : t1_miss , t2_miss , t3_miss , t4_miss , t5_miss;
+loc dline_loc_nomiss : invariant True
+    when True sync t1_miss  do {t1_d := 0} goto dline_loc_miss;
+    when True sync t2_miss  do {t1_d := 0} goto dline_loc_miss;
+    when True sync t3_miss  do {t1_d := 0} goto dline_loc_miss;
+    when True sync t4_miss  do {t1_d := 0} goto dline_loc_miss;
+    when True sync t5_miss  do {t1_d := 0} goto dline_loc_miss;
+loc dline_loc_miss : invariant t1_d=0 stop{t1_d}
+end
+
+
+init :=     loc[Task_t1] = t1_loc_idle &
+    t1_C >= 0 &    t1_urgent = 0 &    t1_c = 0 & t1_d = 0&
+    loc[Periodic_t1_arr] = t1_arr_loc_arr & t1_arr_x = t1_arr_P &
+    loc[Task_t2] = t2_loc_idle &
+    t2_C >= 0 &    t2_urgent = 0 &    t2_c = 0 & t2_d = 0&
+    loc[Periodic_t2_arr] = t2_arr_loc_arr & t2_arr_x = t2_arr_P &
+    loc[Task_t3] = t3_loc_idle &
+    t3_C >= 0 &    t3_urgent = 0 &    t3_c = 0 & t3_d = 0&
+    loc[Periodic_t3_arr] = t3_arr_loc_arr & t3_arr_x = t3_arr_P &
+    loc[Task_t4] = t4_loc_idle &
+    t4_C >= 0 &    t4_urgent = 0 &    t4_c = 0 & t4_d = 0&
+    loc[Periodic_t4_arr] = t4_arr_loc_arr & t4_arr_x = t4_arr_P &
+    loc[Task_t5] = t5_loc_idle &
+    t5_C >= 0 &    t5_urgent = 0 &    t5_c = 0 & t5_d = 0&
+    loc[Periodic_t5_arr] = t5_arr_loc_arr & t5_arr_x = t5_arr_P &
+    loc[sched_CPU1] = CPU1_loc_ &
+    CPU1_urgent = 0 &
+    loc[OBS_dline] = dline_loc_nomiss &
+ 	True
+   
+(*     FOR fair comparison of EF synthesis with other algorithms *)
+		& 10 <= t4_C 
+    	& t4_C <= 50
+		& 10 <= t5_C 
+    	& t5_C <= 50
+;
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

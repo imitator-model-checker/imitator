@@ -1,0 +1,61 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Boolean negation
+ * Description      : Test boolean negation, lend location should be reachable
+ * Correctness      : True
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/04/30
+ * Last modified    : 2021/04/30
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.1.0
+ ************************************************************)
+var 
+
+    b = False
+        : bool;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when not(not(not(b))) goto lend;
+ 
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial constraint *)
+	(*------------------------------------------------------------*)
+	 & True
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -1,0 +1,116 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that behavior of pow function is correct
+ * Description      : Test use of different expression in pow function and check that it's behavior is correct
+ * Correctness      : True
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic, Behavior
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/06/07
+ * Last modified    : 2021/06/07
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.1.0
+ ************************************************************)
+var 
+    n, 
+    i, 
+    j, 
+    k = 1
+        : int;
+    
+    r1, 
+    r2, 
+    kr = 1,
+    
+    projected_result_1,
+    projected_result_2
+    
+        : rational;
+    
+    p1, p2
+        : parameter;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant n <= 2
+
+    (* Pow on int expression, result type should be int , so try to add with int constant *)
+	when 
+        n = 0 
+        & pow(i, j) + k = 82 
+        & pow(j, i) + k = 65
+    do { 
+        n := n + 1, 
+        projected_result_1 := rational_of_int(pow(i, j) + k),
+        projected_result_2 := rational_of_int(pow(j, i) + k) 
+    } goto l1;
+	
+    (* Pow on rational expression, result type should be rational, so try to add with rational constant *)
+	when 
+        n = 1 
+        & pow(r1, j) + kr = 82 
+        & pow(r2, i) + kr = 65
+    do { 
+        n := n + 1, 
+        projected_result_1 := pow(r1, j) + kr,
+        projected_result_2 := pow(r2, i) + kr 
+    } goto l1;
+	
+	when 
+        n = 2 
+        (* Project result to parameter *)
+        & p1 = projected_result_1 
+        & p2 = projected_result_2 
+    do { 
+        n := n + 1 
+    } goto lend;
+	
+accepting loc lend: invariant True
+
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    continuous = 
+        & p1 >= 0
+        & p1 >= 0
+    ;
+
+    discrete = 
+        loc[pta] := l1,
+        n := 0,
+        i := 3,
+        j := 4,
+        r1 := 3,
+        r2 := 4,
+        projected_result_1 := 0,
+        projected_result_2 := 0,
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

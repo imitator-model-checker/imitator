@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2021/04/21
+ * Last modified     : 2021/06/01
  *
  ************************************************************)
  
@@ -218,6 +218,16 @@ let list_set_nth i elem l =
 	in
 	set i elem l
 
+let list_combination l1 l2 =
+    let acc = [] in
+    let l = ref acc in
+    for i = 0 to (List.length l1) - 1 do
+        for j = 0 to (List.length l2) - 1 do
+            if i <> j then
+                l := (List.nth l1 i, List.nth l2 j)::!l;
+        done
+    done;
+    !l
 
 (** Select the sublist of a list from position i to position j *)
 let sublist minb maxb l =
@@ -373,9 +383,12 @@ let string_of_array_of_string_with_sep sep a =
 		!the_string ^ a.(length - 1)
 	)
 
-(** Convert a list of string into a string with separators (uses an internal conversion to array) *)
-let string_of_list_of_string_with_sep sep l =
-	string_of_array_of_string_with_sep sep (Array.of_list l)
+(** Convert a list of string into a string with separators *)
+let rec string_of_list_of_string_with_sep sep = function
+	| [] -> ""
+	| [elem] -> elem
+	| head :: tail -> head ^ sep ^ (string_of_list_of_string_with_sep sep tail)
+
 
 (** Convert a list of int into a string with , separator *)
 let string_of_list_of_int l =
@@ -558,3 +571,9 @@ let write_to_file file_name file_content =
 	close_out oc;
 	()
 
+(* pow of x by e *)
+let pow x e =
+    let rec pow_rec r = function
+        | e when Int32.equal e Int32.one -> r
+        | e -> pow_rec (Int32.mul x r) (Int32.sub e Int32.one)
+    in pow_rec x e

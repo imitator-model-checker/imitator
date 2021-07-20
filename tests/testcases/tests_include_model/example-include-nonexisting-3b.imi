@@ -1,0 +1,28 @@
+(************************************************************
+ *                      IMITATOR MODEL
+ *
+ * Play with #include (parsing error in included file)
+ *
+ * Description     : TODO
+ * Correctness     : TODO
+ * Source          : TODO
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2021/07/19
+ * Last modified   : 2021/07/19
+ *
+ * IMITATOR version: 3.1
+ ************************************************************)
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant True
+	this is a parsing error
+
+end (* pta *)

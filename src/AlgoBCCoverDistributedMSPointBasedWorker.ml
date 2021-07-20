@@ -76,13 +76,13 @@ class virtual algoBCCoverDistributedMSPointBasedWorker (v0 : HyperRectangle.hype
 	(* Generic algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
-	
+
 		(* Counters *)
 		(*** TODO: set as class variables? ***)
-		let counter_waiting = new Counter.counter in
-		let counter_working = new Counter.counter in
-		counter_waiting#init;
-		counter_working#init;
+		let counter_waiting = Statistics.create_time_counter_and_register "counter_waiting" Algorithm_counter Verbose_low in
+		let counter_working = Statistics.create_time_counter_and_register "counter_working" Algorithm_counter Verbose_low in
+
+
 
 (* 		let model = Input.get_model() in *)
 

@@ -45,7 +45,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\imitator{}~\cite{AFKS12} has no developer manual, for many (mainly bad) reasons:
+\imitator{}~\cite{Andre21} has no developer manual, for many (mainly bad) reasons:
 lack of time, small team of developers with strong interactions, little concurrent development.
 
 Nevertheless, this document tries (or will try) to summarize some of the important internal characteristics of \imitator{}.
@@ -91,6 +91,18 @@ In \imitator{}, the variables are numbered as follows in the constraint, startin
 % TODO: dessin avec les variables et une accolade dessous montrant les indices
 
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Type inference}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Since version 3.1 and the addition of \styleIMI{int} and \styleIMI{bool} types, a type inference system is added to \imitator{}.
+Details can be obtained on how the types are inferred using the following command:
+
+\styleCommand{\binimitator{} model.imi -verbose high | grep "Infer"}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

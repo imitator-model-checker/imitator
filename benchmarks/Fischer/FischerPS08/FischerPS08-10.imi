@@ -1,0 +1,411 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : FischerPS08-10
+ * Description      : 
+ * Correctness      : 
+ * Scalable         : yes
+ * Generated        : yes
+ * Categories       : Academic ; Protocol ; RTS
+ * Source           : Wojciech Penczek, Maciej Szreter. SAT-based Unbounded Model Checking of Timed Automata. Fundam. Inform. 85(1-4): 425-440 (2008)
+ * bibkey           : PS08
+ * Author           : Wojciech Penczek and Maciej Szreter
+ * Modeling         : Wojciech Penczek and Maciej Szreter
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 
+ * Last modified    : 
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
+
+var
+	x1, x2, x3, x4, x5, x6, x7, x8, x9, x10
+	: clock;
+
+	nb
+	: discrete;
+
+	delta, Delta
+	: parameter;
+
+automaton process1
+	synclabs: Start1, SetX1, Enter1, SetX01;
+
+	loc idle1: invariant True
+		when True sync Start1 do {x1 := 0} goto trying1;
+
+	loc trying1: invariant True
+		when x1 < delta sync SetX1 do {x1 := 0} goto waiting1;
+
+	loc waiting1: invariant True
+		when x1 > Delta sync Enter1 do {nb := nb + 1} goto critical1;
+
+	loc critical1: invariant True
+		when True sync SetX01 do {nb := nb - 1} goto idle1;
+
+end
+
+automaton process2
+	synclabs: Start2, SetX2, Enter2, SetX02;
+
+	loc idle2: invariant True
+		when True sync Start2 do {x2 := 0} goto trying2;
+
+	loc trying2: invariant True
+		when x2 < delta sync SetX2 do {x2 := 0} goto waiting2;
+
+	loc waiting2: invariant True
+		when x2 > Delta sync Enter2 do {nb := nb + 1} goto critical2;
+
+	loc critical2: invariant True
+		when True sync SetX02 do {nb := nb - 1} goto idle2;
+
+end
+
+automaton process3
+	synclabs: Start3, SetX3, Enter3, SetX03;
+
+	loc idle3: invariant True
+		when True sync Start3 do {x3 := 0} goto trying3;
+
+	loc trying3: invariant True
+		when x3 < delta sync SetX3 do {x3 := 0} goto waiting3;
+
+	loc waiting3: invariant True
+		when x3 > Delta sync Enter3 do {nb := nb + 1} goto critical3;
+
+	loc critical3: invariant True
+		when True sync SetX03 do {nb := nb - 1} goto idle3;
+
+end
+
+automaton process4
+	synclabs: Start4, SetX4, Enter4, SetX04;
+
+	loc idle4: invariant True
+		when True sync Start4 do {x4 := 0} goto trying4;
+
+	loc trying4: invariant True
+		when x4 < delta sync SetX4 do {x4 := 0} goto waiting4;
+
+	loc waiting4: invariant True
+		when x4 > Delta sync Enter4 do {nb := nb + 1} goto critical4;
+
+	loc critical4: invariant True
+		when True sync SetX04 do {nb := nb - 1} goto idle4;
+
+end
+
+automaton process5
+	synclabs: Start5, SetX5, Enter5, SetX05;
+
+	loc idle5: invariant True
+		when True sync Start5 do {x5 := 0} goto trying5;
+
+	loc trying5: invariant True
+		when x5 < delta sync SetX5 do {x5 := 0} goto waiting5;
+
+	loc waiting5: invariant True
+		when x5 > Delta sync Enter5 do {nb := nb + 1} goto critical5;
+
+	loc critical5: invariant True
+		when True sync SetX05 do {nb := nb - 1} goto idle5;
+
+end
+
+automaton process6
+	synclabs: Start6, SetX6, Enter6, SetX06;
+
+	loc idle6: invariant True
+		when True sync Start6 do {x6 := 0} goto trying6;
+
+	loc trying6: invariant True
+		when x6 < delta sync SetX6 do {x6 := 0} goto waiting6;
+
+	loc waiting6: invariant True
+		when x6 > Delta sync Enter6 do {nb := nb + 1} goto critical6;
+
+	loc critical6: invariant True
+		when True sync SetX06 do {nb := nb - 1} goto idle6;
+
+end
+
+automaton process7
+	synclabs: Start7, SetX7, Enter7, SetX07;
+
+	loc idle7: invariant True
+		when True sync Start7 do {x7 := 0} goto trying7;
+
+	loc trying7: invariant True
+		when x7 < delta sync SetX7 do {x7 := 0} goto waiting7;
+
+	loc waiting7: invariant True
+		when x7 > Delta sync Enter7 do {nb := nb + 1} goto critical7;
+
+	loc critical7: invariant True
+		when True sync SetX07 do {nb := nb - 1} goto idle7;
+
+end
+
+automaton process8
+	synclabs: Start8, SetX8, Enter8, SetX08;
+
+	loc idle8: invariant True
+		when True sync Start8 do {x8 := 0} goto trying8;
+
+	loc trying8: invariant True
+		when x8 < delta sync SetX8 do {x8 := 0} goto waiting8;
+
+	loc waiting8: invariant True
+		when x8 > Delta sync Enter8 do {nb := nb + 1} goto critical8;
+
+	loc critical8: invariant True
+		when True sync SetX08 do {nb := nb - 1} goto idle8;
+
+end
+
+automaton process9
+	synclabs: Start9, SetX9, Enter9, SetX09;
+
+	loc idle9: invariant True
+		when True sync Start9 do {x9 := 0} goto trying9;
+
+	loc trying9: invariant True
+		when x9 < delta sync SetX9 do {x9 := 0} goto waiting9;
+
+	loc waiting9: invariant True
+		when x9 > Delta sync Enter9 do {nb := nb + 1} goto critical9;
+
+	loc critical9: invariant True
+		when True sync SetX09 do {nb := nb - 1} goto idle9;
+
+end
+
+automaton process10
+	synclabs: Start10, SetX10, Enter10, SetX010;
+
+	loc idle10: invariant True
+		when True sync Start10 do {x10 := 0} goto trying10;
+
+	loc trying10: invariant True
+		when x10 < delta sync SetX10 do {x10 := 0} goto waiting10;
+
+	loc waiting10: invariant True
+		when x10 > Delta sync Enter10 do {nb := nb + 1} goto critical10;
+
+	loc critical10: invariant True
+		when True sync SetX010 do {nb := nb - 1} goto idle10;
+
+end
+
+automaton variable
+	synclabs:
+	Start1, SetX1, Enter1, SetX01, Start2, SetX2, Enter2, SetX02, Start3, SetX3, Enter3, SetX03, Start4, SetX4, Enter4, SetX04, Start5, SetX5, Enter5, SetX05, Start6, SetX6, Enter6, SetX06, Start7, SetX7, Enter7, SetX07, Start8, SetX8, Enter8, SetX08, Start9, SetX9, Enter9, SetX09, Start10, SetX10, Enter10, SetX010;
+
+	loc Val0: invariant True
+	when True sync Start1 do {} goto Val0;
+	when True sync Start2 do {} goto Val0;
+	when True sync Start3 do {} goto Val0;
+	when True sync Start4 do {} goto Val0;
+	when True sync Start5 do {} goto Val0;
+	when True sync Start6 do {} goto Val0;
+	when True sync Start7 do {} goto Val0;
+	when True sync Start8 do {} goto Val0;
+	when True sync Start9 do {} goto Val0;
+	when True sync Start10 do {} goto Val0;
+	when True sync SetX1 do {} goto Val1;
+	when True sync SetX2 do {} goto Val2;
+	when True sync SetX3 do {} goto Val3;
+	when True sync SetX4 do {} goto Val4;
+	when True sync SetX5 do {} goto Val5;
+	when True sync SetX6 do {} goto Val6;
+	when True sync SetX7 do {} goto Val7;
+	when True sync SetX8 do {} goto Val8;
+	when True sync SetX9 do {} goto Val9;
+	when True sync SetX10 do {} goto Val10;
+
+	loc Val1: invariant True
+	when True sync Enter1 do {} goto Val1;
+	when True sync SetX01 do {} goto Val0;
+	when True sync SetX1 do {} goto Val1;
+	when True sync SetX2 do {} goto Val2;
+	when True sync SetX3 do {} goto Val3;
+	when True sync SetX4 do {} goto Val4;
+	when True sync SetX5 do {} goto Val5;
+	when True sync SetX6 do {} goto Val6;
+	when True sync SetX7 do {} goto Val7;
+	when True sync SetX8 do {} goto Val8;
+	when True sync SetX9 do {} goto Val9;
+	when True sync SetX10 do {} goto Val10;
+
+	loc Val2: invariant True
+	when True sync Enter2 do {} goto Val2;
+	when True sync SetX02 do {} goto Val0;
+	when True sync SetX1 do {} goto Val1;
+	when True sync SetX2 do {} goto Val2;
+	when True sync SetX3 do {} goto Val3;
+	when True sync SetX4 do {} goto Val4;
+	when True sync SetX5 do {} goto Val5;
+	when True sync SetX6 do {} goto Val6;
+	when True sync SetX7 do {} goto Val7;
+	when True sync SetX8 do {} goto Val8;
+	when True sync SetX9 do {} goto Val9;
+	when True sync SetX10 do {} goto Val10;
+
+	loc Val3: invariant True
+	when True sync Enter3 do {} goto Val3;
+	when True sync SetX03 do {} goto Val0;
+	when True sync SetX1 do {} goto Val1;
+	when True sync SetX2 do {} goto Val2;
+	when True sync SetX3 do {} goto Val3;
+	when True sync SetX4 do {} goto Val4;
+	when True sync SetX5 do {} goto Val5;
+	when True sync SetX6 do {} goto Val6;
+	when True sync SetX7 do {} goto Val7;
+	when True sync SetX8 do {} goto Val8;
+	when True sync SetX9 do {} goto Val9;
+	when True sync SetX10 do {} goto Val10;
+
+	loc Val4: invariant True
+	when True sync Enter4 do {} goto Val4;
+	when True sync SetX04 do {} goto Val0;
+	when True sync SetX1 do {} goto Val1;
+	when True sync SetX2 do {} goto Val2;
+	when True sync SetX3 do {} goto Val3;
+	when True sync SetX4 do {} goto Val4;
+	when True sync SetX5 do {} goto Val5;
+	when True sync SetX6 do {} goto Val6;
+	when True sync SetX7 do {} goto Val7;
+	when True sync SetX8 do {} goto Val8;
+	when True sync SetX9 do {} goto Val9;
+	when True sync SetX10 do {} goto Val10;
+
+	loc Val5: invariant True
+	when True sync Enter5 do {} goto Val5;
+	when True sync SetX05 do {} goto Val0;
+	when True sync SetX1 do {} goto Val1;
+	when True sync SetX2 do {} goto Val2;
+	when True sync SetX3 do {} goto Val3;
+	when True sync SetX4 do {} goto Val4;
+	when True sync SetX5 do {} goto Val5;
+	when True sync SetX6 do {} goto Val6;
+	when True sync SetX7 do {} goto Val7;
+	when True sync SetX8 do {} goto Val8;
+	when True sync SetX9 do {} goto Val9;
+	when True sync SetX10 do {} goto Val10;
+
+	loc Val6: invariant True
+	when True sync Enter6 do {} goto Val6;
+	when True sync SetX06 do {} goto Val0;
+	when True sync SetX1 do {} goto Val1;
+	when True sync SetX2 do {} goto Val2;
+	when True sync SetX3 do {} goto Val3;
+	when True sync SetX4 do {} goto Val4;
+	when True sync SetX5 do {} goto Val5;
+	when True sync SetX6 do {} goto Val6;
+	when True sync SetX7 do {} goto Val7;
+	when True sync SetX8 do {} goto Val8;
+	when True sync SetX9 do {} goto Val9;
+	when True sync SetX10 do {} goto Val10;
+
+	loc Val7: invariant True
+	when True sync Enter7 do {} goto Val7;
+	when True sync SetX07 do {} goto Val0;
+	when True sync SetX1 do {} goto Val1;
+	when True sync SetX2 do {} goto Val2;
+	when True sync SetX3 do {} goto Val3;
+	when True sync SetX4 do {} goto Val4;
+	when True sync SetX5 do {} goto Val5;
+	when True sync SetX6 do {} goto Val6;
+	when True sync SetX7 do {} goto Val7;
+	when True sync SetX8 do {} goto Val8;
+	when True sync SetX9 do {} goto Val9;
+	when True sync SetX10 do {} goto Val10;
+
+	loc Val8: invariant True
+	when True sync Enter8 do {} goto Val8;
+	when True sync SetX08 do {} goto Val0;
+	when True sync SetX1 do {} goto Val1;
+	when True sync SetX2 do {} goto Val2;
+	when True sync SetX3 do {} goto Val3;
+	when True sync SetX4 do {} goto Val4;
+	when True sync SetX5 do {} goto Val5;
+	when True sync SetX6 do {} goto Val6;
+	when True sync SetX7 do {} goto Val7;
+	when True sync SetX8 do {} goto Val8;
+	when True sync SetX9 do {} goto Val9;
+	when True sync SetX10 do {} goto Val10;
+
+	loc Val9: invariant True
+	when True sync Enter9 do {} goto Val9;
+	when True sync SetX09 do {} goto Val0;
+	when True sync SetX1 do {} goto Val1;
+	when True sync SetX2 do {} goto Val2;
+	when True sync SetX3 do {} goto Val3;
+	when True sync SetX4 do {} goto Val4;
+	when True sync SetX5 do {} goto Val5;
+	when True sync SetX6 do {} goto Val6;
+	when True sync SetX7 do {} goto Val7;
+	when True sync SetX8 do {} goto Val8;
+	when True sync SetX9 do {} goto Val9;
+	when True sync SetX10 do {} goto Val10;
+
+	loc Val10: invariant True
+	when True sync Enter10 do {} goto Val10;
+	when True sync SetX010 do {} goto Val0;
+	when True sync SetX1 do {} goto Val1;
+	when True sync SetX2 do {} goto Val2;
+	when True sync SetX3 do {} goto Val3;
+	when True sync SetX4 do {} goto Val4;
+	when True sync SetX5 do {} goto Val5;
+	when True sync SetX6 do {} goto Val6;
+	when True sync SetX7 do {} goto Val7;
+	when True sync SetX8 do {} goto Val8;
+	when True sync SetX9 do {} goto Val9;
+	when True sync SetX10 do {} goto Val10;
+end
+
+automaton observer
+
+	loc obs_OK: invariant True
+		(* Change '2' with any number of processes in CS *)
+		when nb = 2 do {} goto obs_BAD;
+
+	loc obs_BAD: invariant True
+end (* observer *)
+
+
+	init := True
+	& loc[process1] = idle1
+	& loc[process2] = idle2
+	& loc[process3] = idle3
+	& loc[process4] = idle4
+	& loc[process5] = idle5
+	& loc[process6] = idle6
+	& loc[process7] = idle7
+	& loc[process8] = idle8
+	& loc[process9] = idle9
+	& loc[process10] = idle10
+	& loc[variable] = Val0
+	& loc[observer] = obs_OK
+	& x1 = 0
+	& x2 = 0
+	& x3 = 0
+	& x4 = 0
+	& x5 = 0
+	& x6 = 0
+	& x7 = 0
+	& x8 = 0
+	& x9 = 0
+	& x10 = 0
+	& nb = 0
+	& Delta >= 0
+	& delta >= 0;
+
+end

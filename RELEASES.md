@@ -1,20 +1,30 @@
 *******************************************************
-# release 3.1.0-beta (2021-04-28) Cheese Artichoke
+# release 3.1 (2021-07-20) Cheese Artichoke
 
-### Syntax changes in the property
-* `property := AcceptingCycle` now allowed as a shortcut for `property := CycleThrough(accepting)`
+### Syntax improvement
+* New types for discrete global variables: Boolean variables (`bool`), integer (`int`, over 32 bits) variables
+* `discrete` become `rational` (still encoded using exact arithmetics, as opposed to the new `int` type)
+* New power operator `pow(v, i)` over discrete variables, with `v` an integer or rational expression, and `i` an integer expression (possibly involving integer variables)
 
 ### Result
 * IMITATOR now attempts to generate a result (`.res`) file even in the case of an error such as parsing error of the model or of the property
 
+### Syntax changes in the model
+* New syntax for the initial state definition, with a separation between the discrete and the continuous parts (the former syntax remains accepted for backward-compatibility, but a warning is triggered).
+
+### Syntax changes in the property
+* `property := AcceptingCycle` now allowed as a shortcut for `property := CycleThrough(accepting)`
+
 ### Export
 * New translation to the [JANI](https://jani-spec.org/) interchange format
 
-### Bug fixing:
-* Fixed an issue met in v3 when a division by 0 is encountered.
-
 ### Benchmarks
-* Entire refactoring of the benchmarks library [AMP21]
+* Entire refactoring of the benchmarks library [[AMP21]](https://www.doi.org/10.1007/978-3-030-79379-1_3)
+
+### Bug fixing:
+* Fixed an issue met in v3.0 when a division by 0 is encountered.
+* Solved a bug (introduced in v3.0) related to variable automatic removal in the initial state definition
+* Solved a bug that crashed the tool when an included file was not found
 
 
 *******************************************************
@@ -27,6 +37,10 @@ The calling paradigm switches from a single file with numerous options (some of 
 * a property file, containing the property (and optionally the projection onto some parameters)
 The model syntax is almost entirely backward-compatible with (at least) the IMITATOR 2.10.1 syntax.
 The property syntax is entirely new.
+
+### Major features
+* New variants of the NDFS-based accepting cycle synthesis with several exploration strategies [[AAPP21]](https://www.doi.org/10.1007/978-3-030-72016-2_17)
+
 
 ### Syntax improvement
 * IMITATOR now supports multi-rate clocks with a syntax of the form `flow {x' = 1, y' = 2.5, z' = -3/5}`
@@ -58,7 +72,7 @@ minor release
 
 ### Bug fixing:
 * Fix bugs for option `-counterexample`
-* Fix issues in NDFS-based accepting cycle synthesis [NPP18], and options names
+* Fix issues in NDFS-based accepting cycle synthesis [[NPP18]](https://www.doi.org/10.1109/ICECCS2018.2018.00009), and options names
 
 
 *******************************************************
@@ -70,7 +84,7 @@ MAJOR RELEASE
 
 ### Major features
 * New accepting cycle synthesis (`-mode AccLoopSynth`)
-* New NDFS-based accepting cycle synthesis (`-mode AccLoopSynthNDFS`) with several exploration strategies [NPP18]. Additional option `-counterexample` terminates the analysis as soon as one cycle is found.
+* New NDFS-based accepting cycle synthesis (`-mode AccLoopSynthNDFS`) with several exploration strategies [[NPP18]](https://www.doi.org/10.1109/ICECCS2018.2018.00009). Additional option `-counterexample` terminates the analysis as soon as one cycle is found.
 * In mode `EF -counterexample`, IMITATOR outputs an example of parameter valuation, and a full concrete run, with a graphical representation of the clocks and discrete variables evolution. An absolute time clock (initially set to 0 and never reset) named `global_time` needs to be defined in the model. [EXPERIMENTAL]
 * New check-syntax mode (`-mode checksyntax`), that simply checks the syntax and terminates without doing any analysis.
 
@@ -318,14 +332,14 @@ INTERMEDIATE RELEASE
 # release 2.7 (2015-07-22) Butter Guéméné
 
 ### Major algorithmic features since 2.6.1
-* Added EF-synthesis (option `-mode EF`): synthesize all parameter valuations such that a given state is reachable [AHV93,JLR15]
-* Added PRP and PRPC algorithms (option `-PRP`) [ALNS15]
+* Added EF-synthesis (option `-mode EF`): synthesize all parameter valuations such that a given state is reachable [[AHV93]](https://www.doi.org/10.1145/167088.167242) [[JLR15]](https://www.doi.org/10.1109/TSE.2014.2357445)
+* Added PRP and PRPC algorithms (option `-PRP`) [[ALNS15]](https://www.doi.org/10.1007/978-3-319-17524-9_5)
 * Added a distributed version of the behavioral cartography (option `-distributed`), with several distribution schemes:
-	* static [ACN15]
-	* sequential [ACE14]
-	* random [ACE14]
-	* shuffle [ACN15]
-	* dynamic [ACN15]
+	* static [[ACN15]](https://www.doi.org/10.1007/978-3-319-25423-4_21)
+	* sequential [[ACE14]](https://www.doi.org/10.1145/2642769.2642784)
+	* random [[ACE14]](https://www.doi.org/10.1145/2642769.2642784)
+	* shuffle [[ACN15]](https://www.doi.org/10.1007/978-3-319-25423-4_21)
+	* dynamic [[ACN15]](https://www.doi.org/10.1007/978-3-319-25423-4_21)
 	* unsupervised / unsupervised multi-threaded (unpublished, EXPERIMENTAL)
 
 ### Syntax improvement

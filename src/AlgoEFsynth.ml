@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2020/09/23
+ * Last modified     : 2021/07/05
  *
  ************************************************************)
 
@@ -202,7 +202,10 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	method process_counterexample target_state_index =
-		(* Only process counterexample if needed *)
+		()
+		
+		(*** NOTE: temporarily (?) disabled 2021/07 by ÉA, because merging is used by default, but not sound for counterexample reconstruction ***)
+(*		(* Only process counterexample if needed *)
 		let property = Input.get_property() in
 		if property.synthesis_type = Witness then(
 			
@@ -221,6 +224,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		
 		(* The end *)
 		()
+		*)
 	
 
 	

@@ -1,0 +1,59 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that init a variable with another variable in continuous init section is forbidden
+ * Description      : Init a variable with another variable in continuous init section should lead to an error
+ * Correctness      : Error
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/06/21
+ * Last modified    : 2021/06/21
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.1.0
+ ************************************************************)
+var 
+    i, j
+        : rational;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when i = j goto lend;
+ 
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+    ;
+    continuous = 
+        & j = 0
+        & i = j
+    ;
+    
+}
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

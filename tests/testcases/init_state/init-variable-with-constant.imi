@@ -1,0 +1,64 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Init discrete variable with constants 
+ * Description      : Init a boolean discrete variable with two constants in new init zone
+ * Correctness      : True
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic, Behavior, Init
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/03/09
+ * Last modified    : 2021/05/31
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.1.0
+ ************************************************************)
+var 
+    i = 1, j = 1
+        : rational;
+    b
+        : bool;
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when b goto lend;
+	
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        b := j - 1 < i + 1 (* Init a boolean with constants *)
+    ;
+    continuous = 
+        & True
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

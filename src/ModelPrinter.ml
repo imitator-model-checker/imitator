@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/09/28
+ * Last modified     : 2021/06/01
  *
  ************************************************************)
 
@@ -168,8 +168,10 @@ let string_of_declarations model =
 let string_of_global_expression = DiscreteExpressions.string_of_global_expression
 (* Get string of an arithmetic expression *)
 let string_of_arithmetic_expression = DiscreteExpressions.string_of_arithmetic_expression
-(* Get string of non-linear constraint inequalities *)
-let string_of_nonlinear_constraint = NonlinearConstraint.string_of_nonlinear_constraint
+(* Get string of a boolean expression *)
+let string_of_boolean_expression = DiscreteExpressions.string_of_boolean_expression
+(* Get string of a discrete boolean expression *)
+let string_of_discrete_boolean_expression = DiscreteExpressions.string_of_discrete_boolean_expression
 
 
 (************************************************************)
@@ -178,17 +180,29 @@ let string_of_nonlinear_constraint = NonlinearConstraint.string_of_nonlinear_con
 
 (*** NOTE: special handling as we have a discrete and a continuous guard that must be handled homogeneously ***)
 
-(** Convert a guard into a string *)
-let string_of_guard variable_names = function
+let customized_string_of_guard customized_boolean_string variable_names = function
 	| True_guard -> LinearConstraint.string_of_true
 	| False_guard -> LinearConstraint.string_of_false
-	| Discrete_guard discrete_guard -> string_of_nonlinear_constraint variable_names discrete_guard
+	| Discrete_guard discrete_guard -> NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard
 	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard ->
-		(string_of_nonlinear_constraint variable_names discrete_continuous_guard.discrete_guard)
+		(NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard)
 		^ LinearConstraint.string_of_and ^
 		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
 
+(** Convert a guard into a string *)
+let string_of_guard = customized_string_of_guard Constants.default_string
+(*
+let string_of_guard variable_names = function
+	| True_guard -> LinearConstraint.string_of_true
+	| False_guard -> LinearConstraint.string_of_false
+	| Discrete_guard discrete_guard -> NonlinearConstraint.string_of_nonlinear_constraint variable_names discrete_guard
+	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
+	| Discrete_continuous_guard discrete_continuous_guard ->
+		(NonlinearConstraint.string_of_nonlinear_constraint variable_names discrete_continuous_guard.discrete_guard)
+		^ LinearConstraint.string_of_and ^
+		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
+*)
 
 
 
@@ -230,7 +244,7 @@ let string_of_invariant model automaton_index location_index =
 	^
 	let stopped = model.stopwatches automaton_index location_index in
 	(* Case 1: no stopwatches *)
-	if stopped = [] then " "
+	if stopped = [] then ""
 	(* Case 2: some clocks stopped *)
 	else
 	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
@@ -240,7 +254,7 @@ let string_of_invariant model automaton_index location_index =
 	^
 	let flow = model.flow automaton_index location_index in
 	(* Case 1: no explicit flow *)
-	if flow = [] then " "
+	if flow = [] then ""
 	(* Case 2: some flow *)
 	else
 	let flow_str = string_of_list_of_string_with_sep "," (List.map (fun (variable_index, flow_value) -> (model.variable_names variable_index) ^ "' = " ^ (NumConst.string_of_numconst flow_value) ) flow) in
@@ -287,8 +301,6 @@ let string_of_discrete_updates ?(sep=", ") model updates =
 		(* Convert the arithmetic_expression *)
 		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
 	) updates)
-
-let string_of_boolean_expression = DiscreteExpressions.string_of_boolean_expression
 
 (** Return if there is no clock updates *)
 let no_clock_updates clock_updates =
@@ -587,9 +599,9 @@ let string_of_old_initial_state model =
 	^ "\n" ^ ";"
 
 (************************************************************)
-(** New initial state *)
+(** New initial state since version 3.1 *)
 (************************************************************)
-let string_of_new_initial_state model =
+let string_of_initial_state model =
 	(* Header of initial state *)
 	"\n"
 	^ "\n" ^ "(************************************************************)"
@@ -599,21 +611,22 @@ let string_of_new_initial_state model =
 	^ "\n" ^ "init := {"
     ^ "\n"
 	(* Discrete zone *)
-	^ "\n" ^ "\t(*------------------------------------------------------------*)"
-	^ "\n" ^ "\t(* Discretes *)"
-	^ "\n" ^ "\t(*------------------------------------------------------------*)"
     ^ "\n" ^ "\tdiscrete = "
-    ^ "\n" ^ "\t\t(* Locations *)"
+	^ "\n" ^ "\t\t(*------------------------------------------------------------*)"
+    ^ "\n" ^ "\t\t(* Initial location *)"
+	^ "\n" ^ "\t\t(*------------------------------------------------------------*)"
     ^ "\n"
     ^ (string_of_new_initial_locations ~indent_level:2 model) ^ ","
-    ^ "\n" ^ "\t\t(* Discretes *)"
+	^ "\n" ^ "\t\t(*------------------------------------------------------------*)"
+    ^ "\n" ^ "\t\t(* Initial discrete variables assignments *)"
+	^ "\n" ^ "\t\t(*------------------------------------------------------------*)"
     ^ "\n"
     ^ (string_of_new_initial_discretes ~indent_level:2 model)
     ^ "\n" ^ "\t;"
     ^ "\n"
 	(* Continuous zone *)
 	^ "\n" ^ "\t(*------------------------------------------------------------*)"
-	^ "\n" ^ "\t(* Initial constraint *)"
+	^ "\n" ^ "\t(* Initial continuous constraint *)"
 	^ "\n" ^ "\t(*------------------------------------------------------------*)"
 
     ^ "\n" ^ "\tcontinuous = "
@@ -622,15 +635,15 @@ let string_of_new_initial_state model =
     ^ "\n"
 	^ "\n" ^ "}"
 
-(* Convert initial state to string *)
-(* Keep retro-compatibility between old init zone and new init zone *)
+(*(* Convert initial state to string *)
+(* Keep backward-compatibility between old init zone and new init zone *)
 let string_of_initial_state model =
     (* If all variable are rational, we can print initial state as old model *)
     if List.for_all (fun (var_type, _) -> DiscreteValue.is_rational_type var_type) model.discrete_names_by_type_group then
         string_of_old_initial_state model
     (* Else, we use the new init zone *)
     else
-        string_of_new_initial_state model
+        string_of_initial_state model*)
 
 (************************************************************)
 (** Property *)

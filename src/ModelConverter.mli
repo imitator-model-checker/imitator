@@ -28,8 +28,6 @@ exception InvalidModel
 
 exception InvalidProperty
 
-exception TypeError of string
-
 (****************************************************************)
 (** Types *)
 (****************************************************************)

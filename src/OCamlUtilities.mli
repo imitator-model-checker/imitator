@@ -89,6 +89,9 @@ val list_delete_at : int -> 'a list -> 'a list
 (** Replace the ith element of a list *)
 val list_set_nth : int -> 'a -> 'a list -> 'a list
 
+(** Get combination of two list **)
+val list_combination : 'a list -> 'a list -> ('a * 'a) list
+
 (** Select the sublist of a list from position i to position j *)
 val sublist : int -> int -> 'a list -> 'a list
 
@@ -222,3 +225,5 @@ val read_from_file : string -> string
 (** `write_to_file file_name file_content` will create a file `file_name` with content `file_content` *)
 val write_to_file : string -> string -> unit
 
+(* pow of x by e *)
+val pow : Int32.t -> Int32.t -> Int32.t

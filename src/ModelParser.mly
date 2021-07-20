@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Benjamin Loillier, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2021/04/27
+ * Last modified     : 2021/06/01
  *
  ************************************************************/
 
@@ -54,6 +54,7 @@ let unzip l = List.fold_left
 
 %token <NumConst.t> INT
 %token <string> FLOAT
+%token <string> BINARYWORD
 %token <string> NAME
 /* %token <string> STRING */
 %token <ParsingStructure.parsed_model> INCLUDE
@@ -68,7 +69,7 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_INT CT_BOOL CT_DO
+	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_DO
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -85,7 +86,8 @@ let unzip l = List.fold_left
 	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
-        CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW
+    CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
+    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT    
 
 
 %token EOF
@@ -127,14 +129,6 @@ main:
 
 		(* Return the parsed model *)
 		add_parsed_model_to_parsed_model_list included_model main_model
-(*		{
-			variable_declarations	= (List.append incl_decl declarations);
-			automata				= (List.append incl_automata automata);
-			init_definition			= (List.append incl_init init_definition);
-		}*)
-
-	(*** TODO: cleanup ***)
-(* 		resolve_property (bad::incl_prop), projection_definition, optimization_definition, carto *)
 	}
 ;
 
@@ -199,6 +193,8 @@ var_type:
 var_type_discrete:
     | var_type_discrete_number { Var_type_discrete_number $1 }
     | CT_BOOL { Var_type_discrete_bool }
+    /* TODO benjamin try to use directly int instead of numconst */
+    | CT_BINARY_WORD LPAREN pos_integer RPAREN { Var_type_discrete_binary_word (NumConst.to_int $3) }
 ;
 
 var_type_discrete_number:
@@ -519,15 +515,33 @@ arithmetic_term:
 
 arithmetic_factor:
 	| number { Parsed_DF_constant ($1) }
+    | binary_word { Parsed_DF_constant $1 }
 	| NAME { Parsed_DF_variable $1 }
 	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+	| function_call { $1 }
+;
+
+function_call:
 	| CT_BUILTIN_FUNC_RATIONAL_OF_INT LPAREN arithmetic_expression RPAREN { Parsed_rational_of_int_function $3 }
+	| CT_POW LPAREN arithmetic_expression COMMA arithmetic_expression RPAREN { Parsed_pow_function ($3, $5) }
+	| CT_SHIFT_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_left ($3, $5) }
+	| CT_SHIFT_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_right ($3, $5) }
+	| CT_FILL_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_fill_left ($3, $5) }
+	| CT_FILL_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_fill_right ($3, $5) }
+	| CT_LOG_AND LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_and ($3, $5) }
+	| CT_LOG_OR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_or ($3, $5) }
+	| CT_LOG_XOR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_xor ($3, $5) }
+	| CT_LOG_NOT LPAREN arithmetic_factor RPAREN { Parsed_log_not $3 }
 ;
 
 number:
 	| integer { DiscreteValue.Number_value $1 }
 	| float { DiscreteValue.Number_value $1 }
-	| integer OP_DIV pos_integer { ( DiscreteValue.Rational_value (NumConst.div $1 $3)) }
+	/*| integer OP_DIV pos_integer { ( DiscreteValue.Rational_value (NumConst.div $1 $3)) }*/
+;
+
+binary_word:
+        BINARYWORD { DiscreteValue.Binary_word_value (BinaryWord.binaryword_of_string $1) }
 ;
 
 /************************************************************/
@@ -597,12 +611,6 @@ init_value_expression:
     | expression { $1 }
 ;
 
-/* Init bool expression, like rational_linear_expression it's solvable directly at parsing (at compile time) */
-init_bool_value_expression:
-    | CT_TRUE { true } 
-    | CT_FALSE { false }
-;
-
 /* Linear expression over rationals only */
 rational_linear_expression:
 	| rational_linear_term { $1 }
@@ -648,11 +656,11 @@ pos_float:
 /************************************************************/
 /** BOOLEAN EXPRESSIONS */
 /************************************************************/
+
 boolean_expression:
 	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
-	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
 	| CT_TRUE { Parsed_True }
 	| CT_FALSE { Parsed_False }
 ;
@@ -660,13 +668,14 @@ boolean_expression:
 discrete_boolean_expression:
 	| arithmetic_expression { Parsed_arithmetic_expression $1 }
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
-	| arithmetic_expression relop arithmetic_expression { Parsed_expression ($1, $2, $3) }
+	| discrete_boolean_expression relop discrete_boolean_expression { Parsed_expression ($1, $2, $3) }
 	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	/* allowed for convenience */
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	/* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) */
 	| LPAREN boolean_expression RPAREN { Parsed_boolean_expression $2 }
+	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
 ;
 
 /************************************************************/
@@ -674,14 +683,18 @@ discrete_boolean_expression:
 /************************************************************/
 
 init_definition_option:
+    | old_init_definition {
+		(* Print a warning because this syntax is deprecated *)
+		print_warning ("Old syntax detected for the initial state definition. You are advised to use the new syntax (from 3.1).");
+		$1
+		}
     | init_definition { $1 }
-    | new_init_definition { $1 }
     | { [ ] }
 ;
 
-init_definition:
+/* Old init style (until 3.0), kept for backward-compatibility */
+old_init_definition:
 	| CT_INIT OP_ASSIGN init_expression SEMICOLON { $3 }
-	| { [ ] }
 ;
 
 
@@ -718,11 +731,11 @@ new_init_loc_predicate:
 ;
 
 /************************************************************/
-/** NEW INIT DEFINITION SECTION : SEPARATION OF DISCRETE AND CONTINUOUS */
+/** NEW INIT DEFINITION SECTION from 3.1: SEPARATION OF DISCRETE AND CONTINUOUS */
 /************************************************************/
 
-new_init_definition:
-	| CT_INIT OP_ASSIGN LBRACE new_init_discrete_continuous_definition RBRACE { $4 }
+init_definition:
+	| CT_INIT OP_ASSIGN LBRACE new_init_discrete_continuous_definition RBRACE semicolon_opt { $4 }
 ;
 
 new_init_discrete_continuous_definition:
@@ -787,12 +800,10 @@ comma_opt:
 	| { }
 ;
 
-/*
 semicolon_opt:
 	| SEMICOLON { }
 	| { }
 ;
-*/
 
 ampersand_opt:
 	| AMPERSAND { }

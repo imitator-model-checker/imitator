@@ -45,6 +45,7 @@ let jani_boolean_strings : customized_boolean_string = {
 	ge_operator   = ">";
 	g_operator    = "≥";
 	not_operator  = "¬";
+	in_operator   = ""; (* useless *)
 }
 
 let jani_strings = {
@@ -142,6 +143,7 @@ let string_of_var_type_discrete_number_for_jani = function
 let string_of_var_type_discrete_for_jani = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
     | DiscreteValue.Var_type_discrete_bool -> "bool"
+    | DiscreteValue.Var_type_discrete_binary_word _ -> "binary_word" (* TODO benjamin type name is good for Jani ? *)
 
 (* Convert the initial discrete var declarations into a string *)
 let string_of_discrete model =
@@ -414,7 +416,6 @@ let string_of_discrete_boolean_expression variable_names =
 let rec string_of_boolean variable_names = function
 	| True_bool -> string_of_true
 	| False_bool -> string_of_false
-	| Not_bool b -> "{\"op\": \""^ jani_boolean_strings.not_operator ^"\"" ^ jani_separator ^ "\"exp\": " ^ (string_of_boolean variable_names b) ^ "}"
 	| And_bool (b1, b2) ->
 		"{\"op\": \"" ^ jani_boolean_strings.and_operator ^ "\"" ^ jani_separator
 		^ "\"left\": " ^ (string_of_boolean variable_names b1) ^ jani_separator

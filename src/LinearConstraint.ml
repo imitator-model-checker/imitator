@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/03/19
+ * Last modified     : 2021/06/11
  *
  ************************************************************)
 
@@ -39,8 +39,11 @@ open Constants
 (* Exceptions *)
 (************************************************************)
 (************************************************************)
-(* Raised when a linear_term is not a clock guard, i.e., of the form x ~ plterm *)
+(* Raised when a linear_inequality is not a clock guard, i.e., of the form `x ~ plterm` *)
 exception Not_a_clock_guard
+
+(* Raised when a linear_inequality is an equality, i.e., `pxd_linear_term = pxd_linear_term` *)
+exception Not_an_inequality
 
 (* Raised when a linear_term is not a one-dimensional single parameter constraint, i.e., of the form p ~ c *)
 exception Not_a_1d_parameter_constraint
@@ -717,7 +720,7 @@ let rec variable_in_linear_term v = function
 		if Gmp.Z.equal coeff (Gmp.Z.zero) then false
 		else (match rterm with
 			| Variable variable -> v = variable
-			| _ -> raise (InternalError ("In function 'variable_in_linear_term', pattern 'Times' was expected to be only used for coeff * variable."))
+			| _ -> raise (InternalError ("In function `variable_in_linear_term`, pattern `Times` was expected to be only used for coeff * variable."))
 		)
 
 (*------------------------------------------------------------*)
@@ -749,7 +752,7 @@ let rec get_variable_coef_in_linear_term_rec nb_times_ref coeff_option minus_fla
 				let coef = NumConst.numconst_of_mpz coeff in
 				coeff_option := Some (if minus_flag then NumConst.neg coef else coef);
 			)
-			| _ -> raise (InternalError ("In function 'get_variable_coef_in_linear_term_rec', pattern 'Times' was expected to be only used for coeff * variable."))
+			| _ -> raise (InternalError ("In function `get_variable_coef_in_linear_term_rec`, pattern `Times` was expected to be only used for coeff * variable."))
 		)
 
 let get_variable_coef_in_linear_term v linear_term =
@@ -761,11 +764,11 @@ let get_variable_coef_in_linear_term v linear_term =
 	if !nb_times_ref = 0 then None else(
 		(* If more than one occurrence: InternalError *)
 		if !nb_times_ref > 1 then(
-			raise (InternalError ("Variable found several times in a linear_term in 'get_variable_coef_in_linear_term'; that was assumed not to happen."));
+			raise (InternalError ("Variable found several times in a linear_term in `get_variable_coef_in_linear_term`; that was assumed not to happen."));
 		);
 		(* Else: return the coefficient (and do a safety check that everything happened as expected...) *)
 		match !coeff_option with
-			| None -> raise (InternalError ("Impossible situation in 'get_variable_coef_in_linear_term': a coefficient was found > 0 times, but the coefficient was not saved."));
+			| None -> raise (InternalError ("Impossible situation in `get_variable_coef_in_linear_term`: a coefficient was found > 0 times, but the coefficient was not saved."));
 			| Some c -> Some c
 	)
 
@@ -794,7 +797,7 @@ let rec get_coefficient_in_linear_term_rec minus_flag = function
 		if Gmp.Z.equal coeff (Gmp.Z.zero) then ()
 		else (match rterm with
 			| Variable variable -> ()
-			| _ -> raise (InternalError ("In function 'get_coefficient_in_linear_term_rec', pattern 'Times' was expected to be only used for coeff * variable."))
+			| _ -> raise (InternalError ("In function `get_coefficient_in_linear_term_rec`, pattern `Times` was expected to be only used for coeff * variable."))
 		)
 
 let get_coefficient_in_linear_term linear_term =
@@ -1321,13 +1324,13 @@ let negate_wrt_pi0 pi0 linear_inequality =
 			)
 
 
-(** Negate an inequality ('=' is disallowed); raises InternalError if "=" is used *)
+(** Negate an inequality (`=` is disallowed); raises Not_an_inequality if `=` is used *)
 let negate_inequality = function
 	| Less_Than (lterm, rterm) -> Greater_Or_Equal (lterm, rterm)
 	| Less_Or_Equal (lterm, rterm) -> Greater_Than (lterm, rterm)
 	| Greater_Than (lterm, rterm) -> Less_Or_Equal (lterm, rterm)
 	| Greater_Or_Equal (lterm, rterm) -> Less_Than (lterm, rterm)
-	| Equal (lterm, rterm) -> raise (InternalError "Trying to negate an equality in negate_inequality")
+	| Equal (lterm, rterm) -> raise Not_an_inequality
 
 
 
@@ -1983,7 +1986,7 @@ let partition_lu variables linear_constraints =
 					update_variable
 						(xor (coeff <! Gmp.Z.zero) lower_side)
 						variable
-				| _ -> raise (InternalError ("In function 'check_linear_term', pattern 'Times' was expected to be only used for coeff * variable."))
+				| _ -> raise (InternalError ("In function `check_linear_term`, pattern `Times` was expected to be only used for coeff * variable."))
 			)
 	in
 	
@@ -1995,7 +1998,7 @@ let partition_lu variables linear_constraints =
 		
 		(* FOR ALL INEQUALITIES IN THAT CONSTRAINT *)
 		List.iter (function
-			(* Case 1: equality --> check if any variable in 'variables' appears in it *)
+			(* Case 1: equality --> check if any variable in `variables` appears in it *)
 			| Equal (lterm, rterm) -> 
 				List.iter (fun variable -> 
 					if variable_in_linear_term variable lterm || variable_in_linear_term variable rterm then raise Not_LU
@@ -2228,13 +2231,14 @@ let px_hull_assign_if_exact = ippl_hull_assign_if_exact
 (*------------------------------------------------------------*)
 (* Convex negation *)
 (*------------------------------------------------------------*)
-(** Assuming p_linear_constraint contains a single inequality, this function returns the negation of this inequality (in the form of a p_constraint). Raises InternalError if more than one inequality. *)
+(** Assuming p_linear_constraint contains a single inequality, this function returns the negation of this inequality (in the form of a p_constraint). Raises Not_an_inequality if more than one inequality, or if an equality is found. *)
 let negate_single_inequality_p_constraint p_linear_constraint =
 	(* Retrieve the inequalities *)
 	let inequalities = p_get_inequalities p_linear_constraint in
 	(* Check *)
 	if List.length inequalities <> 1 then(
-		raise (InternalError("Exactly one inequality should be contained in negate_single_inequality_p_constraint"))
+		print_error "Exactly one inequality should be contained in negate_single_inequality_p_constraint";
+		raise Not_an_inequality
 	);
 	(* Get the (only) inequality *)
 	let inequality = List.nth inequalities 0 in
@@ -2244,7 +2248,7 @@ let negate_single_inequality_p_constraint p_linear_constraint =
 	make_p_constraint [negated_inequality]
 
 
-(** Negates a constraint made either of a single inequality, or made of 2 inequalities, one of which is p >= 0, for a given p *)
+(** Negates a constraint made either of a single inequality, or made of 2 inequalities, one of which is `p >= 0`, for a given `p`. Raises Not_an_inequality if more than two inequalities, or if an equality is found. *)
 (*** HACK: a very ad-hoc function, needed for EFmax ***)
 (** NOTE: We kind of need to 'reimplement' the negate_single_inequality_p_constraint function, because there may be some p >= 0 inequality, that we do not need to negate ***)
 let negate_single_inequality_nonnegative_p_constraint parameter_index p_linear_constraint =
@@ -2256,7 +2260,8 @@ let negate_single_inequality_nonnegative_p_constraint parameter_index p_linear_c
 	
 	(* 2 or more inequality or 0 inequality: problem *)
 	if nb_inequalities < 1 || nb_inequalities > 2 then(
-		raise (InternalError("Exactly one or two inequalities should be contained in negate_inequality"))
+		print_error "Exactly one or two inequalities should be contained in negate_single_inequality_nonnegative_p_constraint";
+		raise Not_an_inequality
 	);
 	
 	(* Easy case: only one inequality *)
@@ -2493,7 +2498,7 @@ let pxd_time_elapse_assign_wrt_polyhedron = time_elapse_assign_wrt_polyhedron
 
 
 (* Generic time elapsing function *)
-(* 'reverse_direction' should be minus_one for growing, one for decreasing *)
+(* `reverse_direction` should be minus_one for growing, one for decreasing *)
 let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse variables_constant linear_constraint =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
@@ -2619,9 +2624,45 @@ let render_non_strict_p_linear_constraint k =
 
 
 	
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Operations without modification} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+
+(*------------------------------------------------------------*)
+(* Bounds on variables *)
+(*------------------------------------------------------------*)
+
+(** Given a linear constraint and a variable (dimension), return the pair of bounds, i.e., the infimum and supremum. If the dimension is not bounded, return None. Otherwise return a pair Some (NumConst.t, minimum) (resp. maximum), which is true if the bound is closed (i.e., a minimum (resp. maximum), as opposed to an infimum (resp. supremum)). *)
+let compute_bounds linear_constraint dimension : (((NumConst.t * bool) option) * ((NumConst.t * bool) option)) =
+	(* Create linear expression with just the dimension of interest *)
+	let linear_expression : Ppl.linear_expression = ppl_linear_expression_of_linear_term (make_linear_term [(NumConst.one, dimension)] NumConst.zero) in
+	
+	(* Compute the lower bound *)
+	(*** DOC: function signature is val ppl_Polyhedron_minimize : polyhedron -> linear_expression -> bool * Gmp.Z.t * Gmp.Z.t * bool ***)
+	let bounded_from_below, infimum_numerator, infimum_denominator, is_minimum = ippl_minimize linear_constraint linear_expression in
+	
+	(* Build the infimum *)
+	let infimum = NumConst.numconst_of_zfrac infimum_numerator infimum_denominator in
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then
+		print_message Verbose_high ("Infimum of dimension " ^ (string_of_int dimension) ^ " is " ^ (NumConst.string_of_numconst infimum) ^ ". Is it a minimum? " ^ (string_of_bool is_minimum));
+
+	(* Compute the upper bound *)
+	let bounded_from_above, supremum_numerator, supremum_denominator, is_maximum = ippl_maximize linear_constraint linear_expression in
+		
+	(* Build the supremum *)
+	let supremum = NumConst.numconst_of_zfrac supremum_numerator supremum_denominator in
+	
+	(* Build the pair *)
+	(if bounded_from_below then Some (infimum, is_minimum) else None)
+	,
+	(if bounded_from_above then Some (supremum, is_maximum) else None)
+
+
+let p_compute_bounds = compute_bounds
+
 
 (*------------------------------------------------------------*)
 (* Point exhibition *)
@@ -4186,9 +4227,10 @@ let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Operations without modification} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
 
 (*------------------------------------------------------------*)
 (* Point exhibition *)
@@ -4668,7 +4710,7 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 														() 
 														)
 								| Ti (c1, rterm) -> ()
-								(*| _ -> raise (InternalError("Detection error 'get_coef' function"))*)
+								(*| _ -> raise (InternalError("Detection error `get_coef` function"))*)
 								end;
 								!b
 

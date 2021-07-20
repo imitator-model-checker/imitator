@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2021/04/27
+ * Last modified     : 2021/07/15
  *
  ************************************************************)
 
@@ -23,7 +23,7 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "3.1-beta"
+let version_string = "3.1"
 
 let version_name = "Cheese Artichoke"
 
@@ -151,6 +151,7 @@ type customized_boolean_string = {
 	ge_operator  : string;
 	g_operator   : string;
 	not_operator : string;
+	in_operator  : string;
 }
 
 (** Data structure allowing for customizing string conversions of arithmetic symbols *)
@@ -181,6 +182,7 @@ let default_string = {
 	ge_operator   = " >= ";
 	g_operator    = " > ";
 	not_operator  = " not ";
+	in_operator   = " in ";
 }
 
 (** Default string values of bool symbols without white spaces around operators *)
@@ -196,6 +198,7 @@ let default_string_without_whitespace = {
 	ge_operator   = ">=";
 	g_operator    = ">";
 	not_operator  = " not ";
+	in_operator   = " in ";
 }
 
 (** Default string values of arithmetic symbols *)

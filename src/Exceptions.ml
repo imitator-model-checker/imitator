@@ -24,6 +24,9 @@ exception Division_by_0 of string
 
 exception Found
 
+(** Exception when an #include fails in a model *)
+exception IncludeFileNotFound of string
+
 (** Exception when interfacing with another program *)
 exception InterfacingError of string
 
@@ -57,3 +60,6 @@ exception UnsatisfiableInitialState
 
 (* Used when an expression is not well formed *)
 exception InvalidExpression of string
+
+(* Used when an expression is ill-typed formed or when computing on not compatible types *)
+exception TypeError of string

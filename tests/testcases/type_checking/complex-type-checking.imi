@@ -1,0 +1,98 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Complex operations type checking
+ * Description      : Make a lot of complex operations on multiple types
+ * Correctness      : p > 10
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Semantic, Type Checking
+ * Source           : 
+ * bibkey           : 
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/05/27
+ * Last modified    : 2021/05/27
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.1.0
+ ************************************************************)
+var 
+    x 
+        : clock;
+    p
+        : parameter;
+    i
+        : int;
+    j
+        : rational;
+    k
+        : rational;
+    b1, b2, b3 = True
+    	: bool;
+
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ 
+loc l1: invariant True 
+	when 
+        rational_of_int(i) + 1 = j 
+        & b1
+        & not(not(b1)) = not(b2)
+        & (i < 1) & not(False) = b1
+        & x > j
+        & p = x
+    do { b1 := False, b2 := True, i := 1, j := 0, x := 0 }
+    goto l2;
+    
+loc l2: invariant True 
+	when 
+        rational_of_int(i) - 1 = j 
+        & not(b1)
+        & not(b1) = b2
+        & (i < 1) = (b1 | not(b2))
+        & rational_of_int((i + 1) * 2) > j + 1 & (True)
+        & x > j
+        & p = x + k
+    do { b1 := not(b1), b2 := not(b2), i := 0, j := 1, x := 0 , if not(b1) & (2 + 1 > 3 | 1 < 2) & k < 10 then k := k + 1 end }
+    goto l1;
+	
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete = 
+        loc[pta] := l1,
+        b1 := True & 1 < 2,
+        b2 := False & b3,
+        i := 0,
+        j := 1,
+        k := 0
+    ;
+    continuous = 
+        & p >= 0
+        & x >= 0
+    ;
+    
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

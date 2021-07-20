@@ -63,6 +63,7 @@ val add : t -> t -> t
 val sub : t -> t -> t
 val mul : t -> t -> t
 val div : t -> t -> t
+val pow : t -> Int32.t -> t
 val neg : t -> t
 val abs : t -> t
 
