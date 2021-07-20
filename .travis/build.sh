@@ -1,7 +1,7 @@
 # PPL version
 PPL_VERSION=1.2
 
-if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
+if [[ "$RUNNER_OS" = "Linux" ]]; then
     sudo apt-get update -qq
     sudo apt-get install -qq wget unzip curl build-essential g++ m4 ocaml-native-compilers camlp4-extra ocaml oasis ocaml-findlib \
         libextlib-ocaml libextlib-ocaml-dev libfileutils-ocaml-dev \
@@ -33,8 +33,8 @@ rm -rf ppl-${PPL_VERSION}*
 # Build IMITATOR
 sudo cp METAS/META.ppl /usr/lib/ocaml/METAS/
 
-if [[ "$DISTRIBUTED" = "False" ]]; then
-    sh build.sh
-else
+if [[ "$DISTRIBUTED" = "True" ]]; then
     sh build-patator.sh
+else
+    sh build.sh
 fi
