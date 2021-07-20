@@ -68,7 +68,8 @@ jobs:
           release_name: ${{ env.TAG }}
           files: |
             bin/*
-            doc/*
+            doc/IMITATOR-user-manual.pdf
+            doc/IMITATOR-not-developer-manual.pdf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
