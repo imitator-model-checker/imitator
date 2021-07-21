@@ -38,6 +38,7 @@ def create_sandbox():
 
 def check_syntax(sandbox_dir):
     models = Path('../benchmarks').rglob("*.[iI][mM][iI]")
+
     count = 0
     error_models = []
     for model in models:
@@ -53,7 +54,7 @@ def check_syntax(sandbox_dir):
         print("----------------------------------")
         # input('press key next')
 
-    print(str(len(error_models)) + "/" + str(len(list(models))) + " syntax error(s)")
+    print(str(len(error_models)) + "/" + str(count) + " syntax error(s)")
     print("list of models with errors:")
     for model in error_models:
         print(model)
