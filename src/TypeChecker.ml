@@ -1154,59 +1154,6 @@ let check_constant_expression initialized_constants (name, expr, var_type) =
     let converted_expr, converted_type = convert_literal_types_of_expression variable_infos target_var_type infer_expr, target_var_type in
     converted_expr, converted_type
 
-let check_constant_declaration (name, _, value, var_type) =
-    let is_compatible = DiscreteValue.check_value_compatible_with_type value var_type in
-    (* If not compatibles, display an error message *)
-    if not (is_compatible) then (
-        print_error ("Constant "
-            ^ name
-            ^ " of type "
-            ^ (DiscreteValue.string_of_var_type var_type)
-            ^ " is not compatible with value "
-            ^ (DiscreteValue.string_of_value value)
-            ^ " of type "
-            ^ (DiscreteValue.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value value))
-        );
-        raise (TypeError "Bad constant declaration(s)")
-    );
-
-    let discrete_type = DiscreteValue.discrete_type_of_var_type var_type in
-    name, DiscreteValue.convert_value_to_discrete_type value discrete_type
-
-(* Check that constant declarations are well typed *)
-let check_constant_declarations evaluated_constants =
-
-    (* Check type consistency between constant type and value *)
-    let is_types_consistents = List.for_all (fun (name, _, value, var_type) ->
-        let is_compatible = DiscreteValue.check_value_compatible_with_type value var_type in
-        (* If not compatibles, display an error message *)
-        if not (is_compatible) then (
-            print_error ("Constant "
-                ^ name
-                ^ " of type "
-                ^ (DiscreteValue.string_of_var_type var_type)
-                ^ " is not compatible with value "
-                ^ (DiscreteValue.string_of_value value)
-                ^ " of type "
-                ^ (DiscreteValue.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value value))
-            )
-        );
-        is_compatible
-    ) evaluated_constants in
-
-    if not (is_types_consistents) then (
-        raise (TypeError "Bad constant declaration(s)")
-    );
-
-    (* Convert value assigned to the constant to the type of the constant *)
-    (* and create tuples for representing constants as name * value *)
-    let constant_tuples = List.map (fun (name, _, value, var_type) ->
-        let discrete_type = DiscreteValue.discrete_type_of_var_type var_type in
-        name, DiscreteValue.convert_value_to_discrete_type value discrete_type
-    ) evaluated_constants in
-
-
-    constant_tuples
 
 (* Check that a discrete variable initialization is well typed *)
 let check_discrete_init variable_infos variable_name expr =

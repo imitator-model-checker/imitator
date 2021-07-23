@@ -8,12 +8,13 @@
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/05
- * Last modified     : 2021/06/25
+ * Last modified     : 2021/07/29
  *
  ************************************************************)
 
 open Exceptions
 open ParsingStructure
+open CustomModules
 
 type variable_name = string
 
@@ -27,99 +28,125 @@ type linear_expression_leaf =
     | Leaf_linear_constant of NumConst.t
     | Leaf_linear_variable of NumConst.t * variable_name
 
+(* Leaf of linear constraint *)
+type linear_constraint_leaf =
+    | Leaf_true_linear_constraint
+    | Leaf_false_linear_constraint
+
+(* Leaf of non-linear constraint *)
+type nonlinear_constraint_leaf =
+    | Leaf_true_nonlinear_constraint
+    | Leaf_false_nonlinear_constraint
+
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
-let rec fold_parsed_global_expression (operator : 'a -> 'a -> 'a) leaf_fun variable_infos = function
-     | Parsed_global_expression expr -> fold_parsed_boolean_expression operator leaf_fun variable_infos expr
+let rec fold_parsed_global_expression (operator : 'a -> 'a -> 'a) leaf_fun = function
+     | Parsed_global_expression expr -> fold_parsed_boolean_expression operator leaf_fun expr
 
-and fold_parsed_boolean_expression operator leaf_fun variable_infos = function
+and fold_parsed_boolean_expression operator leaf_fun = function
 	| Parsed_True -> leaf_fun (Leaf_constant (DiscreteValue.Bool_value true))
 	| Parsed_False -> leaf_fun (Leaf_constant (DiscreteValue.Bool_value false))
 	| Parsed_And (l_expr, r_expr)
 	| Parsed_Or (l_expr, r_expr) ->
 	    operator
-	        (fold_parsed_boolean_expression operator leaf_fun variable_infos l_expr)
-	        (fold_parsed_boolean_expression operator leaf_fun variable_infos r_expr)
+	        (fold_parsed_boolean_expression operator leaf_fun l_expr)
+	        (fold_parsed_boolean_expression operator leaf_fun r_expr)
 	| Parsed_Discrete_boolean_expression expr ->
-	    fold_parsed_discrete_boolean_expression operator leaf_fun variable_infos expr
+	    fold_parsed_discrete_boolean_expression operator leaf_fun expr
 
-and fold_parsed_discrete_boolean_expression operator leaf_fun variable_infos = function
+and fold_parsed_discrete_boolean_expression operator leaf_fun = function
     | Parsed_arithmetic_expression expr ->
-        fold_parsed_discrete_arithmetic_expression operator leaf_fun variable_infos expr
+        fold_parsed_discrete_arithmetic_expression operator leaf_fun expr
 	| Parsed_expression (l_expr, _, r_expr) ->
 	    operator
-	        (fold_parsed_discrete_boolean_expression operator leaf_fun variable_infos l_expr)
-	        (fold_parsed_discrete_boolean_expression operator leaf_fun variable_infos r_expr)
+	        (fold_parsed_discrete_boolean_expression operator leaf_fun l_expr)
+	        (fold_parsed_discrete_boolean_expression operator leaf_fun r_expr)
 	| Parsed_expression_in (lower_expr, expr, upper_expr) ->
 	    operator
-	        (fold_parsed_discrete_arithmetic_expression operator leaf_fun variable_infos expr)
+	        (fold_parsed_discrete_arithmetic_expression operator leaf_fun expr)
             (operator
-                (fold_parsed_discrete_arithmetic_expression operator leaf_fun variable_infos lower_expr)
-                (fold_parsed_discrete_arithmetic_expression operator leaf_fun variable_infos upper_expr))
+                (fold_parsed_discrete_arithmetic_expression operator leaf_fun lower_expr)
+                (fold_parsed_discrete_arithmetic_expression operator leaf_fun upper_expr))
 	| Parsed_boolean_expression expr
 	| Parsed_Not expr ->
-        fold_parsed_boolean_expression operator leaf_fun variable_infos expr
+        fold_parsed_boolean_expression operator leaf_fun expr
 
-and fold_parsed_discrete_arithmetic_expression operator leaf_fun variable_infos = function
+and fold_parsed_discrete_arithmetic_expression operator leaf_fun = function
 	| Parsed_DAE_plus (expr, term)
 	| Parsed_DAE_minus (expr, term) ->
         operator
-            (fold_parsed_discrete_arithmetic_expression operator leaf_fun variable_infos expr)
-            (fold_parsed_discrete_term operator leaf_fun variable_infos term)
+            (fold_parsed_discrete_arithmetic_expression operator leaf_fun expr)
+            (fold_parsed_discrete_term operator leaf_fun term)
 	| Parsed_DAE_term term ->
-        fold_parsed_discrete_term operator leaf_fun variable_infos term
+        fold_parsed_discrete_term operator leaf_fun term
 
-and fold_parsed_discrete_term operator leaf_fun variable_infos = function
+and fold_parsed_discrete_term operator leaf_fun = function
 	| Parsed_DT_mul (term, factor)
 	| Parsed_DT_div (term, factor) ->
 	    operator
-	        (fold_parsed_discrete_term operator leaf_fun variable_infos term)
-	        (fold_parsed_discrete_factor operator leaf_fun variable_infos factor)
+	        (fold_parsed_discrete_term operator leaf_fun term)
+	        (fold_parsed_discrete_factor operator leaf_fun factor)
 	| Parsed_DT_factor factor ->
-        fold_parsed_discrete_factor operator leaf_fun variable_infos factor
+        fold_parsed_discrete_factor operator leaf_fun factor
 
-and fold_parsed_discrete_factor operator leaf_fun variable_infos = function
+and fold_parsed_discrete_factor operator leaf_fun = function
 	| Parsed_DF_variable variable_name -> leaf_fun (Leaf_variable variable_name)
 	| Parsed_DF_constant value -> leaf_fun (Leaf_constant value)
 	| Parsed_DF_expression expr
 	| Parsed_rational_of_int_function expr ->
-        fold_parsed_discrete_arithmetic_expression operator leaf_fun variable_infos expr
+        fold_parsed_discrete_arithmetic_expression operator leaf_fun expr
 	| Parsed_pow_function (expr_0, expr_1) ->
         operator
-            (fold_parsed_discrete_arithmetic_expression operator leaf_fun variable_infos expr_0)
-            (fold_parsed_discrete_arithmetic_expression operator leaf_fun variable_infos expr_1)
+            (fold_parsed_discrete_arithmetic_expression operator leaf_fun expr_0)
+            (fold_parsed_discrete_arithmetic_expression operator leaf_fun expr_1)
 	| Parsed_shift_left (factor, expr)
 	| Parsed_shift_right (factor, expr)
 	| Parsed_fill_left (factor, expr)
 	| Parsed_fill_right (factor, expr) ->
         operator
-            (fold_parsed_discrete_factor operator leaf_fun variable_infos factor)
-            (fold_parsed_discrete_arithmetic_expression operator leaf_fun variable_infos expr)
+            (fold_parsed_discrete_factor operator leaf_fun factor)
+            (fold_parsed_discrete_arithmetic_expression operator leaf_fun expr)
 	| Parsed_log_and (factor_0, factor_1)
 	| Parsed_log_or (factor_0, factor_1)
 	| Parsed_log_xor (factor_0, factor_1) ->
         operator
-            (fold_parsed_discrete_factor operator leaf_fun variable_infos factor_0)
-            (fold_parsed_discrete_factor operator leaf_fun variable_infos factor_1)
+            (fold_parsed_discrete_factor operator leaf_fun factor_0)
+            (fold_parsed_discrete_factor operator leaf_fun factor_1)
 	| Parsed_log_not factor
 	| Parsed_DF_unary_min factor ->
-	    fold_parsed_discrete_factor operator leaf_fun variable_infos factor
+	    fold_parsed_discrete_factor operator leaf_fun factor
 
+
+let rec fold_parsed_linear_constraint operator leaf_fun linear_constraint_leaf_fun = function
+    | Parsed_true_constraint -> linear_constraint_leaf_fun Leaf_true_linear_constraint
+    | Parsed_false_constraint -> linear_constraint_leaf_fun Leaf_false_linear_constraint
+    | Parsed_linear_constraint (l_expr, _, r_expr) ->
+        operator
+            (fold_parsed_linear_expression operator leaf_fun l_expr)
+            (fold_parsed_linear_expression operator leaf_fun r_expr)
 
 (** Fold a parsed linear expression using operator applying custom function on leafs **)
-
-let rec fold_parsed_linear_expression operator leaf_fun variable_infos = function
+and fold_parsed_linear_expression operator leaf_fun = function
     | Linear_term term ->
-        fold_parsed_linear_term operator leaf_fun variable_infos term
+        fold_parsed_linear_term operator leaf_fun term
     | Linear_plus_expression (expr, term)
     | Linear_minus_expression (expr, term) ->
         operator
-            (fold_parsed_linear_expression operator leaf_fun variable_infos expr)
-            (fold_parsed_linear_term operator leaf_fun variable_infos term)
+            (fold_parsed_linear_expression operator leaf_fun expr)
+            (fold_parsed_linear_term operator leaf_fun term)
 
-and fold_parsed_linear_term operator leaf_fun variable_infos = function
+and fold_parsed_linear_term operator leaf_fun = function
     | Constant value -> leaf_fun (Leaf_linear_constant value)
     | Variable (value, variable_name) -> leaf_fun (Leaf_linear_variable (value, variable_name))
+
+
+let fold_parsed_nonlinear_constraint operator leaf_fun nonlinear_constraint_leaf_fun = function
+    | Parsed_false_nonlinear_constraint ->
+        nonlinear_constraint_leaf_fun Leaf_false_nonlinear_constraint
+    | Parsed_true_nonlinear_constraint ->
+        nonlinear_constraint_leaf_fun Leaf_true_nonlinear_constraint
+    | Parsed_nonlinear_constraint expr ->
+        fold_parsed_discrete_boolean_expression operator leaf_fun expr
 
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
@@ -130,6 +157,15 @@ let for_all_in_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arit
 let for_all_in_parsed_discrete_term = fold_parsed_discrete_term (&&)
 let for_all_in_parsed_discrete_factor = fold_parsed_discrete_factor (&&)
 
+(** Check if all leaf of a linear expression satisfy the predicate **)
+let for_all_in_parsed_linear_expression = fold_parsed_linear_expression (&&)
+(** Check if all leaf of a linear term satisfy the predicate **)
+let for_all_in_parsed_linear_term = fold_parsed_linear_term (&&)
+(** Check if all leaf of a linear constraint satisfy the predicate **)
+let for_all_in_parsed_linear_constraint = fold_parsed_linear_constraint (&&)
+(** Check if all leaf of a non-linear constraint satisfy the predicate **)
+let for_all_in_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint (&&)
+
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
 let exists_in_parsed_global_expression = fold_parsed_global_expression (||)
@@ -138,6 +174,15 @@ let exists_in_parsed_discrete_boolean_expression = fold_parsed_discrete_boolean_
 let exists_in_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithmetic_expression (||)
 let exists_in_parsed_discrete_term = fold_parsed_discrete_term (||)
 let exists_in_parsed_discrete_factor = fold_parsed_discrete_factor (||)
+
+(** Check if any leaf of a linear expression satisfy the predicate **)
+let exists_in_parsed_linear_expression = fold_parsed_linear_expression (||)
+(** Check if any leaf of a linear term satisfy the predicate **)
+let exists_in_parsed_linear_term = fold_parsed_linear_term (||)
+(** Check if any leaf of a linear constraint satisfy the predicate **)
+let exists_in_parsed_linear_constraint = fold_parsed_linear_constraint (||)
+(** Check if any leaf of a non-linear constraint satisfy the predicate **)
+let exists_in_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint (||)
 
 (** Iterate over a parsing structure **)
 
@@ -149,51 +194,14 @@ let iterate_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithme
 let iterate_parsed_discrete_term  = fold_parsed_discrete_term binunit
 let iterate_parsed_discrete_factor = fold_parsed_discrete_factor binunit
 
-(** Check if all leaf of a linear expression satisfy the predicate **)
-let for_all_in_parsed_linear_expression = fold_parsed_linear_expression (&&)
-(** Check if all leaf of a linear term satisfy the predicate **)
-let for_all_in_parsed_linear_term = fold_parsed_linear_term (&&)
-
-(** Check if any leaf of a linear expression the predicate **)
-let exists_in_parsed_linear_expression = fold_parsed_linear_expression (||)
-(** Check if any leaf of a linear term the predicate **)
-let exists_in_parsed_linear_term = fold_parsed_linear_term (||)
-
 (** Iterate over a linear expression **)
 let iterate_parsed_linear_expression = fold_parsed_linear_expression binunit
 (** Iterate over a linear term **)
 let iterate_parsed_linear_term = fold_parsed_linear_term binunit
-
-
-type ('t_parsed_boolean_expression, 't_parsed_discrete_boolean_expression) parsing_structure_map_leaf =
-    | Map_global_expression of 't_parsed_boolean_expression
-    | Map_true
-    | Map_false
-    | Map_and of 't_parsed_boolean_expression * 't_parsed_boolean_expression
-    | Map_or of 't_parsed_boolean_expression * 't_parsed_boolean_expression
-    | Map_discrete_boolean_expression of 't_parsed_discrete_boolean_expression
-
-let rec map_parsed_global_expression map_leaf_fun variable_infos = function
-     | Parsed_global_expression expr ->
-        map_leaf_fun (Map_global_expression (map_parsed_boolean_expression map_leaf_fun variable_infos expr))
-
-and map_parsed_boolean_expression map_leaf_fun variable_infos = function
-	| Parsed_True -> map_leaf_fun Map_true
-	| Parsed_False -> map_leaf_fun Map_false
-	| Parsed_And (l_expr, r_expr) ->
-	    map_leaf_fun (Map_and (
-            (map_parsed_boolean_expression map_leaf_fun variable_infos l_expr),
-            (map_parsed_boolean_expression map_leaf_fun variable_infos r_expr)
-        ))
-	| Parsed_Or (l_expr, r_expr) ->
-	    map_leaf_fun (Map_or (
-            (map_parsed_boolean_expression map_leaf_fun variable_infos l_expr),
-            (map_parsed_boolean_expression map_leaf_fun variable_infos r_expr)
-        ))
-	| Parsed_Discrete_boolean_expression expr ->
-	    raise (InvalidExpression "not implemented")
-
-
+(** Iterate over a linear constraint **)
+let iterate_parsed_linear_constraint = fold_parsed_linear_constraint binunit
+(** Iterate over a non-linear constraint **)
+let iterate_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint binunit
 
 
 let string_of_parsed_factor_constructor = function
@@ -562,7 +570,8 @@ let is_linear_constant variable_infos = function
     | Leaf_linear_variable (_, variable_name) -> Hashtbl.mem variable_infos.constants variable_name
     | Leaf_linear_constant _ -> true
 
-let is_variable_defined variable_infos expr = function
+
+let is_variable_defined variable_infos = function
     | Leaf_variable variable_name ->
         if not (List.mem variable_name variable_infos.variable_names) && not (Hashtbl.mem variable_infos.constants variable_name) then(
             (* TODO benjamin message or not message ? *)
@@ -576,6 +585,15 @@ let is_variable_defined variable_infos expr = function
         else
             true
     | Leaf_constant _ -> true
+
+let is_variable_defined_in_linear_expression variable_infos callback_fail = function
+    | Leaf_linear_constant _ -> true
+    | Leaf_linear_variable (_, variable_name) ->
+        if not (List.mem variable_name variable_infos.variable_names) && not (Hashtbl.mem variable_infos.constants variable_name) then(
+            callback_fail variable_name; false
+        )
+        else
+            true
 
 let is_only_discrete variable_infos = function
     | Leaf_constant _ -> true
@@ -595,47 +613,96 @@ let is_only_discrete variable_infos = function
         )
 
 let is_parsed_global_expression_constant variable_infos =
-    for_all_in_parsed_global_expression (is_constant variable_infos) variable_infos
+    for_all_in_parsed_global_expression (is_constant variable_infos)
 
 let is_parsed_arithmetic_expression_constant variable_infos =
-    for_all_in_parsed_discrete_arithmetic_expression (is_constant variable_infos) variable_infos
+    for_all_in_parsed_discrete_arithmetic_expression (is_constant variable_infos)
 
 (* Check that all variables in a parsed global expression are effectivily be defined *)
 let all_variables_defined_in_parsed_global_expression variable_infos expr =
-    for_all_in_parsed_global_expression (is_variable_defined variable_infos expr) variable_infos expr
+    for_all_in_parsed_global_expression (is_variable_defined variable_infos) expr
 
 (* Check that all variables in a parsed parsed boolean expression are effectivily be defined *)
 let all_variables_defined_in_parsed_boolean_expression variable_infos expr =
-    for_all_in_parsed_boolean_expression (is_variable_defined variable_infos expr) variable_infos expr
+    for_all_in_parsed_boolean_expression (is_variable_defined variable_infos) expr
+
+(* Check that all variables in a linear expression are effectivily be defined *)
+let all_variables_defined_in_linear_expression variable_infos callback_fail expr =
+    for_all_in_parsed_linear_expression (is_variable_defined_in_linear_expression variable_infos callback_fail) expr
+
+(* Check that all variables in a linear constraint are effectivily be defined *)
+let all_variables_defined_in_linear_constraint variable_infos callback_fail expr =
+    for_all_in_parsed_linear_constraint
+        (is_variable_defined_in_linear_expression variable_infos callback_fail)
+        (function | Leaf_false_linear_constraint | Leaf_true_linear_constraint -> true) expr
 
 (* Check that there is only discrete variables in a parsed parsed discrete boolean expression *)
 let only_discrete_in_nonlinear_term variable_infos expr =
-    for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos) variable_infos expr
+    for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos) expr
 
 let is_parsed_linear_expression_constant variable_infos expr =
-    for_all_in_parsed_linear_expression (is_linear_constant variable_infos) variable_infos expr
+    for_all_in_parsed_linear_expression (is_linear_constant variable_infos) expr
 
-(* TODO benjamin CLEAN *)
-(*
-let test_iterate variable_infos =
-    iterate_parsed_global_expression (function
-        | Leaf_variable variable_name -> ()
-        | Leaf_constant _ -> ()
-    ) variable_infos
-*)
 
-(*
-let test_map variable_infos expr =
-    map_parsed_global_expression (function
-        | Map_global_expression expr -> Parsed_global_expression expr
-        | Map_true -> Parsed_True
-        | Map_false -> Parsed_False
-        | Map_and (l_expr, r_expr) -> Parsed_And (l_expr, r_expr)
-        | Map_or (l_expr, r_expr) -> Parsed_Or (l_expr, r_expr)
-        | Map_discrete_boolean_expression expr -> Parsed_Discrete_boolean_expression expr
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a linear_expression *)
+(*------------------------------------------------------------*)
+let add_variable_of_linear_expression variables_used_ref = function
+    | Leaf_linear_constant _ -> ()
+    | Leaf_linear_variable (_, variable_name) ->
+        (* Add the variable name to the set and update the reference *)
+        variables_used_ref := StringSet.add variable_name !variables_used_ref
 
-    ) variable_infos expr
-*)
+let add_variable_of_discrete_boolean_expression variables_used_ref = function
+    | Leaf_constant _ -> ()
+    | Leaf_variable variable_name ->
+        (* Add the variable name to the set and update the reference *)
+        variables_used_ref := StringSet.add variable_name !variables_used_ref
+
+
+let get_variables_in_parsed_global_expression_with_accumulator variables_used_ref =
+    iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
+
+let get_variables_in_parsed_boolean_expression_with_accumulator variables_used_ref =
+    iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
+
+let get_variables_in_parsed_discrete_boolean_expression_with_accumulator variables_used_ref =
+    iterate_parsed_discrete_boolean_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
+
+let get_variables_in_linear_expression_with_accumulator variables_used_ref =
+    iterate_parsed_linear_expression (add_variable_of_linear_expression variables_used_ref)
+
+let get_variables_in_linear_constraint_with_accumulator variables_used_ref =
+    iterate_parsed_linear_constraint
+        (add_variable_of_linear_expression variables_used_ref)
+        (function | Leaf_true_linear_constraint | Leaf_false_linear_constraint -> ())
+
+let get_variables_in_nonlinear_constraint_with_accumulator variables_used_ref =
+    iterate_parsed_nonlinear_constraint
+        (add_variable_of_discrete_boolean_expression variables_used_ref)
+        (function | Leaf_true_nonlinear_constraint | Leaf_false_nonlinear_constraint -> ())
+
+
+(* Create and wrap an accumulator then return result directly *)
+let wrap_accumulator f expr =
+    let variables_used_ref = ref StringSet.empty in
+    f variables_used_ref expr;
+    !variables_used_ref
+
+let get_variables_in_parsed_global_expression =
+    wrap_accumulator get_variables_in_parsed_global_expression_with_accumulator
+
+let get_variables_in_parsed_discrete_boolean_expression =
+    wrap_accumulator get_variables_in_parsed_discrete_boolean_expression_with_accumulator
+
+let get_variables_in_linear_expression =
+    wrap_accumulator get_variables_in_linear_expression_with_accumulator
+
+let get_variables_in_linear_constraint =
+    wrap_accumulator get_variables_in_linear_constraint_with_accumulator
+
+let get_variables_in_nonlinear_constraint =
+    wrap_accumulator get_variables_in_nonlinear_constraint_with_accumulator
 
 let variable_infos_of_parsed_model (parsed_model : useful_parsing_model_information) =
     {
