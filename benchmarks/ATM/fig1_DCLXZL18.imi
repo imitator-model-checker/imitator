@@ -1,37 +1,37 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : fig1-DCLXZL18
  * Description      : An ATM modeled using a PTA
  * Correctness      : N/A
- * Scalable         : 
- * Generated        : 
- * Categories       : 
+ * Scalable         :
+ * Generated        :
+ * Categories       :
  * Source           : Fig.1, "Parameter Synthesis Problems for one parametric clock Timed Automata" (https://arxiv.org/abs/1809.07177)
- * bibkey           : 
+ * bibkey           :
  * Author           : Liyun Dai, Taolue Chen, Zhiming Liu, Bican Xia, Naijun Zhan, Kim G. Larsen
  * Modeling         : Liyun Dai, Taolue Chen, Zhiming Liu, Bican Xia, Naijun Zhan, Kim G. Larsen
  * Input by         : Jawher Jerray, Étienne André
  * License          : unclear ("Non-exclusive license to distribute" on arxiv: https://arxiv.org/licenses/nonexclusive-distrib/1.0/license.html)
- * 
+ *
  * Created          : 2018/09/23
- * Last modified    : 2020/08/13
- * Model version    : 
- * 
- * IMITATOR version : 
+ * Last modified    : 2021/07/26
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 var
 
 (* Clocks *)
- 	x, 
-	y, 
+ 	x,
+	y,
 	z,
 		: clock;
 
 (* Parameters *)
-	p1, 
-	p2, 
+	p1,
+	p2,
 	p3,
 		: parameter;
 
@@ -42,7 +42,7 @@ synclabs: ;
 
 loc Idle: invariant True
 	when True do {x := 0 , y := 0 , z := 0} goto Start;
-	
+
 loc Start: invariant z <= p1
 	when z > p1 goto Idle;
 	when z <= p1 do { y := 0 } goto Login;
@@ -65,30 +65,35 @@ end (* pta *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[pta] = Idle
+init := {
 
-	(*------------------------------------------------------------*)
-	(* Initial discrete assignments *)
-	(*------------------------------------------------------------*)
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[pta] := Idle,
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x = 0
-	& y = 0
-	& z = 0
+  	(*------------------------------------------------------------*)
+  	(* Initial discrete assignments *)
+  	(*------------------------------------------------------------*)
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& p1 >= 0
-	& p2 >= 0
-	& p3 >= 0
-;
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& x = 0
+  	& y = 0
+  	& z = 0
+
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& p1 >= 0
+  	& p2 >= 0
+  	& p3 >= 0
+  ;
+}
 
 
 (************************************************************)
