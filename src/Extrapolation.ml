@@ -535,7 +535,7 @@ let get_pta_type pta_type bounded_parameters : modified_pta_type =
 
 (* Set the values of greatest_constants, max_lower_const max_upper_const and max_greatest_const based on lower_constants and upper_constants  *)	
 let set_maximums l u nb_clocks : unit = 
-	let g_c = l in
+	let g_c = Array.make nb_clocks Minus_infinity in
 	for i=0 to nb_clocks-1 do 
 		g_c.(i) <- max_inf l.(i) u.(i);
 		max_lower_const := max_inf !max_lower_const l.(i);
