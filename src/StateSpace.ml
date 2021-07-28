@@ -1545,10 +1545,11 @@ let merge state_space queue =
 	tcounter_merge#start;
 
     (* Check if the are_mergeable test needs to be perform according to the merge options *)
-    let perform_test fails skips =
+    let perform_test location_index =
         match options#merge_algorithm with
         | Merge_none -> true
         | Merge_static -> (* n1 and n2 don't change *)
+            let fails = !lenght_fail_sequence and skips = !lenght_skip_sequence in
               (* While looking for the number of fails *)
               (* If it found n1 fails, go to the skip step *)
               if fails = options#merge_n1 then
@@ -1570,33 +1571,34 @@ let merge state_space queue =
                    false
               else raise (InternalError "perform_test for Merge_static");
         | Merge_exponentialbackoff -> (* n1 don't change, n2 exp. *)
-                      (* While looking for the number of fails *)
-                      (* If it found n1 fails, go to the skip step *)
-                      if fails = options#merge_n1 then
-                          begin
-                          lenght_fail_sequence := 0;
-                          step := "skip";
-                          false
-                          end
-                      (* If it found n2 skip, go to the fail step *)
-                      else if skips = !skip_factor*options#merge_n2 then
-                          begin
-                          lenght_skip_sequence := 0;
-                          skip_factor := !skip_factor * 2;
-                          step := "fail";
-                          true
-                          end
-                      else if !step = "fail" then (* ie. fail sequence is performing *)
-                           true
-                      else if !step = "skip"  then (* ie. skip sequence is performing *)
-                           false
-                      else raise (InternalError "perform_test for Merge_static");
+            let fails = !lenght_fail_sequence and skips = !lenght_skip_sequence in
+              (* While looking for the number of fails *)
+              (* If it found n1 fails, go to the skip step *)
+              if fails = options#merge_n1 then
+                  begin
+                  lenght_fail_sequence := 0;
+                  step := "skip";
+                  false
+                  end
+              (* If it found n2 skip, go to the fail step *)
+              else if skips = !skip_factor*options#merge_n2 then
+                  begin
+                  lenght_skip_sequence := 0;
+                  skip_factor := !skip_factor * 2;
+                  step := "fail";
+                  true
+                  end
+              else if !step = "fail" then (* ie. fail sequence is performing *)
+                   true
+              else if !step = "skip"  then (* ie. skip sequence is performing *)
+                   false
+              else raise (InternalError "perform_test for Merge_exponentialbackoff");
     in
 
     (* Check if two states can be merged *)
     (*** NOTE: with side-effects! ***)
-    let are_mergeable s s' : bool =
-        if perform_test !lenght_fail_sequence !lenght_skip_sequence then
+    let are_mergeable s s' location_index : bool =
+        if perform_test location_index then
             begin
             (* Statistics *)
             nb_merging_attempts#increment;
@@ -1661,7 +1663,8 @@ let merge state_space queue =
                 | [] -> [] (* here, we are really done *)
                 | m :: tail_mc -> begin
                     let sj,c' = m in
-                    if are_mergeable c c' then begin
+                    let location_index = state.global_location in
+                    if are_mergeable c c' location_index then begin
                         (* Statistics *)
                         nb_merged#increment;
 
