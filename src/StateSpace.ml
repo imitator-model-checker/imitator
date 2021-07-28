@@ -1537,6 +1537,7 @@ let lenght_skip_sequence = ref 0
 let skip_factor = ref 1
 let step = ref "fail"
 (* TODO DYLAN add options skip_factor: initial value (for now 1) and exp_factor (for now 2) *)
+let sequences_table = Hashtbl.create 0
 
 (* Merges states in queue with states in state space. Removes unreachable states. Returns unmerged part of queue *)
 let merge state_space queue =
@@ -1570,6 +1571,25 @@ let merge state_space queue =
               else if !step = "skip"  then (* ie. skip sequence is performing *)
                    false
               else raise (InternalError "perform_test for Merge_static");
+        | Merge_static_per_location -> (* n1 and n2 don't change, sequences per location *)
+            (* Check if location_index exists. If not, create it *)
+            let binding = Hashtbl.find_opt sequences_table location_index in
+            if binding = None
+            then
+                begin Hashtbl.add sequences_table location_index ("fail", 0); true end
+            else
+                (*TODO: check why Options.get is unbound...*)
+                (*let step, sequence = Options.get binding*)
+                let step, sequence = Hashtbl.find sequences_table location_index in
+                if step = "fail" && sequence = options#merge_n1
+                    then begin Hashtbl.replace sequences_table location_index ("skip", 0); false end
+                else if step = "skip" && sequence = options#merge_n2
+                    then begin Hashtbl.replace sequences_table location_index ("fail", 0); true end
+                else if step = "fail"
+                    then true
+                else if step = "skip"
+                    then false
+                else raise (InternalError "perform_test for Merge_static_per_location");
         | Merge_exponentialbackoff -> (* n1 don't change, n2 exp. *)
             let fails = !lenght_fail_sequence and skips = !lenght_skip_sequence in
               (* While looking for the number of fails *)
@@ -1595,6 +1615,29 @@ let merge state_space queue =
               else raise (InternalError "perform_test for Merge_exponentialbackoff");
     in
 
+    let add_merging_step test_result location_index =
+        match options#merge_algorithm with
+            | Merge_none -> None
+            | Merge_static ->
+                (match test_result with
+                | "Y" -> lenght_fail_sequence:=0; None
+                | "N" -> lenght_fail_sequence := !lenght_fail_sequence + 1; None
+                | "." -> lenght_skip_sequence := !lenght_skip_sequence + 1; None)
+            | Merge_static_per_location ->
+                (match test_result with
+                | "Y" -> Hashtbl.replace sequences_table location_index ("fail", 0); None
+                | "N" | "." ->
+                    let step, sequence = Hashtbl.find sequences_table location_index in
+                    Hashtbl.replace sequences_table location_index (step, sequence+1); None
+                )
+            | Merge_exponentialbackoff ->
+                (match test_result with
+                | "Y" -> lenght_fail_sequence:=0; skip_factor := 1; None
+                | "N" -> lenght_fail_sequence := !lenght_fail_sequence + 1; None
+                | "." -> lenght_skip_sequence := !lenght_skip_sequence + 1; None)
+
+    in
+
     (* Check if two states can be merged *)
     (*** NOTE: with side-effects! ***)
     let are_mergeable s s' location_index : bool =
@@ -1608,16 +1651,7 @@ let merge state_space queue =
 
             (* Statistics *)
             data_recorder_merging#add_data (if merged then "Y" else "N");
-
-            (* Merge algorithm *)
-            if merged
-                then
-                    begin
-                    lenght_fail_sequence:=0;
-                    skip_factor := 1;
-                    end
-                else
-                    lenght_fail_sequence := !lenght_fail_sequence + 1;
+            add_merging_step (if merged then "Y" else "N") location_index;
 
             (* Return result *)
             merged
@@ -1625,7 +1659,7 @@ let merge state_space queue =
         else
             begin
             data_recorder_merging#add_data ".";
-            lenght_skip_sequence := !lenght_skip_sequence + 1;
+            add_merging_step "." location_index;
             tcounter_skip_test#increment;
             false
             end
