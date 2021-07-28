@@ -190,7 +190,7 @@ class imitator_options =
 
 		(* Remove useless clocks (slightly experimental) *)
 		val mutable dynamic_clock_elimination		= false
-		
+
 		(* Remove global time clock when comparing states (expensive!) *)
 		val mutable no_global_time_in_comparison	= false
 
@@ -578,6 +578,8 @@ class imitator_options =
 					merge_algorithm <- Merge_none
 				else if merge_algorithm_str = "static" then
 					merge_algorithm <- Merge_static
+				else if merge_algorithm_str = "staticl" then
+                    merge_algorithm <- Merge_static_per_location
 				else if merge_algorithm_str = "expback" then
 					merge_algorithm <- Merge_exponentialbackoff
 				else(
@@ -835,7 +837,7 @@ class imitator_options =
 				("-no-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some false), " Do not use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS.
 				");
 
-				("-merge-algorithm", String set_merge_algorithm, " Merge algorithm. Possible values are `none`, `static`, `expback`. Default: `none`.
+				("-merge-algorithm", String set_merge_algorithm, " Merge algorithm. Possible values are `none`, `static`, `staticl`, `expback`. Default: `none`.
 				");
 
 				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Possible values are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.
@@ -1263,10 +1265,10 @@ class imitator_options =
 						begin
 						match cycle_algorithm with
 						| Some BFS -> () (* fine *)
-						| Some NDFS -> 
+						| Some NDFS ->
 							print_error ("The only implemented algorithm for generalized acceptance conditions in cycle synthesis is BFS. NDFS is ignored.");
 							cycle_algorithm <- Some BFS
-						| None -> 
+						| None ->
 							print_warning ("No algorithm specified for generalized acceptance conditions in cycle synthesis. Default chosen (BFS).");
 							cycle_algorithm <- Some BFS;
 						end;

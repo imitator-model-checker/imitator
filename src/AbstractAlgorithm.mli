@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/18
- * Last modified     : 2021/07/09
+ * Last modified     : 2021/07/28
  *
  ************************************************************)
 
@@ -132,6 +132,8 @@ type merge_algorithm =
 	(** TODO: description *)
 	| Merge_static
 	(** TODO: description *)
+	| Merge_static_per_location
+    (** TODO: description *)
 	| Merge_exponentialbackoff
 
 (** Style of graphical state space to output *)
