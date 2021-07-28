@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/18
- * Last modified     : 2021/07/08
+ * Last modified     : 2021/07/28
  *
  ************************************************************)
 
@@ -136,6 +136,8 @@ type merge_algorithm =
 	(** TODO: description *)
 	| Merge_static
 	(** TODO: description *)
+	| Merge_static_per_location
+    (** TODO: description *)
 	| Merge_exponentialbackoff
 
 
@@ -308,4 +310,5 @@ let string_of_merge_heuristic (merge_heuristic : merge_heuristic) : string = mat
 let string_of_merge_algorithm (merge_algorithm : merge_algorithm) : string = match merge_algorithm with
 	| Merge_none				-> "no merge"
 	| Merge_static				-> "static"
+	| Merge_static_per_location	-> "staticl"
 	| Merge_exponentialbackoff	-> "exponential backoff"
