@@ -1551,10 +1551,16 @@ let add_p_constraint_to_states state_space p_constraint =
 (* ---------------------------- *)
 (* Code for Merging starts here *)
 (* ---------------------------- *)
+
+(* Type to distinguish sequence types *)
+type sequence_type =
+	| Fail
+	| Skip
+
 let lenght_fail_sequence = ref 0
 let lenght_skip_sequence = ref 0
 let skip_factor = ref 1
-let step = ref "fail"
+let step : sequence_type ref = ref Fail
 (* TODO DYLAN add options skip_factor: initial value (for now 1) and exp_factor (for now 2) *)
 let sequences_table = Hashtbl.create 0
 
@@ -1575,19 +1581,19 @@ let merge state_space queue =
               if fails = options#merge_n1 then
                   begin
                   lenght_fail_sequence := 0;
-                  step := "skip";
+                  step := Skip;
                   false
                   end
               (* If it found n2 skip, go to the fail step *)
               else if skips = options#merge_n2 then
                   begin
                   lenght_skip_sequence := 0;
-                  step := "fail";
+                  step := Fail;
                   true
                   end
-              else if !step = "fail" then (* ie. fail sequence is performing *)
+              else if !step = Fail then (* i.e. fail sequence is performing *)
                    true
-              else if !step = "skip"  then (* ie. skip sequence is performing *)
+              else if !step = Skip  then (* i.e. skip sequence is performing *)
                    false
               else raise (InternalError "perform_test for Merge_static");
         | Merge_static_per_location -> (* n1 and n2 don't change, sequences per location *)
@@ -1595,18 +1601,18 @@ let merge state_space queue =
             let binding = Hashtbl.find_opt sequences_table location_index in
             if binding = None
             then
-                begin Hashtbl.add sequences_table location_index ("fail", 0); true end
+                begin Hashtbl.add sequences_table location_index (Fail, 0); true end
             else
-                (*TODO: check why Options.get is unbound...*)
+                (*TODO: check why Options.get is unbound…*)
                 (*let step, sequence = Options.get binding*)
                 let step, sequence = Hashtbl.find sequences_table location_index in
-                if step = "fail" && sequence = options#merge_n1
-                    then begin Hashtbl.replace sequences_table location_index ("skip", 0); false end
-                else if step = "skip" && sequence = options#merge_n2
-                    then begin Hashtbl.replace sequences_table location_index ("fail", 0); true end
-                else if step = "fail"
+                if step = Fail && sequence = options#merge_n1
+                    then begin Hashtbl.replace sequences_table location_index (Skip, 0); false end
+                else if step = Skip && sequence = options#merge_n2
+                    then begin Hashtbl.replace sequences_table location_index (Fail, 0); true end
+                else if step = Fail
                     then true
-                else if step = "skip"
+                else if step = Skip
                     then false
                 else raise (InternalError "perform_test for Merge_static_per_location");
         | Merge_exponentialbackoff -> (* n1 don't change, n2 exp. *)
@@ -1616,7 +1622,7 @@ let merge state_space queue =
               if fails = options#merge_n1 then
                   begin
                   lenght_fail_sequence := 0;
-                  step := "skip";
+                  step := Skip;
                   false
                   end
               (* If it found n2 skip, go to the fail step *)
@@ -1624,36 +1630,41 @@ let merge state_space queue =
                   begin
                   lenght_skip_sequence := 0;
                   skip_factor := !skip_factor * 2;
-                  step := "fail";
+                  step := Fail;
                   true
                   end
-              else if !step = "fail" then (* ie. fail sequence is performing *)
+              else if !step = Fail then (* i.e. fail sequence is performing *)
                    true
-              else if !step = "skip"  then (* ie. skip sequence is performing *)
+              else if !step = Skip  then (* i.e. skip sequence is performing *)
                    false
               else raise (InternalError "perform_test for Merge_exponentialbackoff");
     in
 
     let add_merging_step test_result location_index =
         match options#merge_algorithm with
-            | Merge_none -> None
+            | Merge_none -> ()
             | Merge_static ->
                 (match test_result with
-                | "Y" -> lenght_fail_sequence:=0; None
-                | "N" -> lenght_fail_sequence := !lenght_fail_sequence + 1; None
-                | "." -> lenght_skip_sequence := !lenght_skip_sequence + 1; None)
+                | "Y" -> lenght_fail_sequence:=0; ()
+                | "N" -> lenght_fail_sequence := !lenght_fail_sequence + 1; ()
+                | "." -> lenght_skip_sequence := !lenght_skip_sequence + 1; ()
+                | _ -> raise (InternalError "impossible situation in `add_merging_step`: letter should be `Y` / `N` / `.`")
+				)
             | Merge_static_per_location ->
                 (match test_result with
-                | "Y" -> Hashtbl.replace sequences_table location_index ("fail", 0); None
+                | "Y" -> Hashtbl.replace sequences_table location_index (Fail, 0); ()
                 | "N" | "." ->
                     let step, sequence = Hashtbl.find sequences_table location_index in
-                    Hashtbl.replace sequences_table location_index (step, sequence+1); None
+                    Hashtbl.replace sequences_table location_index (step, sequence+1); ()
+                | _ -> raise (InternalError "impossible situation in `add_merging_step`: letter should be `Y` / `N` / `.`")
                 )
             | Merge_exponentialbackoff ->
                 (match test_result with
-                | "Y" -> lenght_fail_sequence:=0; skip_factor := 1; None
-                | "N" -> lenght_fail_sequence := !lenght_fail_sequence + 1; None
-                | "." -> lenght_skip_sequence := !lenght_skip_sequence + 1; None)
+                | "Y" -> lenght_fail_sequence:=0; skip_factor := 1; ()
+                | "N" -> lenght_fail_sequence := !lenght_fail_sequence + 1; ()
+                | "." -> lenght_skip_sequence := !lenght_skip_sequence + 1; ()
+                | _ -> raise (InternalError "impossible situation in `add_merging_step`: letter should be `Y` / `N` / `.`")
+                )
 
     in
 
