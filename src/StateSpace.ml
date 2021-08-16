@@ -1548,7 +1548,7 @@ let length_skip_sequence = ref 0
 let skip_factor = ref 1
 let step : sequence_type ref = ref Fail
 (* TODO DYLAN add options skip_factor: initial value (for now 1) and exp_factor (for now 2) *)
-let sequences_table = Hashtbl.create 0
+let sequences_table : (Location.global_location, (sequence_type * int)) Hashtbl.t = Hashtbl.create 0
 
 (* Merges states in queue with states in state space. Removes unreachable states. Returns unmerged part of queue *)
 let merge state_space queue =
@@ -1557,7 +1557,7 @@ let merge state_space queue =
 	tcounter_merge#start;
 
     (* Check if the are_mergeable test needs to be perform according to the merge options *)
-    let perform_test location_index =
+    let perform_test (global_location : Location.global_location) =
         match options#merge_algorithm with
         | Merge_none -> true
         | Merge_static -> (* n1 and n2 don't change *)
@@ -1583,19 +1583,19 @@ let merge state_space queue =
                    false
               else raise (InternalError "perform_test for Merge_static");
         | Merge_static_per_location -> (* n1 and n2 don't change, sequences per location *)
-            (* Check if location_index exists. If not, create it *)
-            let binding = Hashtbl.find_opt sequences_table location_index in
+            (* Check if global_location exists. If not, create it *)
+            let binding = Hashtbl.find_opt sequences_table global_location in
             if binding = None
             then
-                begin Hashtbl.add sequences_table location_index (Fail, 0); true end
+                begin Hashtbl.add sequences_table global_location (Fail, 0); true end
             else
                 (*TODO: check why Options.get is unbound…*)
                 (*let step, sequence = Options.get binding*)
-                let step, sequence = Hashtbl.find sequences_table location_index in
+                let step, sequence = Hashtbl.find sequences_table global_location in
                 if step = Fail && sequence = options#merge_n1
-                    then begin Hashtbl.replace sequences_table location_index (Skip, 0); false end
+                    then begin Hashtbl.replace sequences_table global_location (Skip, 0); false end
                 else if step = Skip && sequence = options#merge_n2
-                    then begin Hashtbl.replace sequences_table location_index (Fail, 0); true end
+                    then begin Hashtbl.replace sequences_table global_location (Fail, 0); true end
                 else if step = Fail
                     then true
                 else if step = Skip
@@ -1626,7 +1626,7 @@ let merge state_space queue =
               else raise (InternalError "perform_test for Merge_exponentialbackoff");
     in
 
-    let add_merging_step (test_result : merging_result) location_index =
+    let add_merging_step (test_result : merging_result) (global_location : Location.global_location) =
         match options#merge_algorithm with
             | Merge_none -> ()
             | Merge_static ->
@@ -1637,10 +1637,10 @@ let merge state_space queue =
 				)
             | Merge_static_per_location ->
                 (match test_result with
-                | Merging_Y -> Hashtbl.replace sequences_table location_index (Fail, 0); ()
+                | Merging_Y -> Hashtbl.replace sequences_table global_location (Fail, 0); ()
                 | Merging_N | Merging_dot ->
-                    let step, sequence = Hashtbl.find sequences_table location_index in
-                    Hashtbl.replace sequences_table location_index (step, sequence+1); ()
+                    let step, sequence = Hashtbl.find sequences_table global_location in
+                    Hashtbl.replace sequences_table global_location (step, sequence+1); ()
                 )
             | Merge_exponentialbackoff ->
                 (match test_result with
@@ -1653,18 +1653,18 @@ let merge state_space queue =
 
     (* Check if two states can be merged *)
     (*** NOTE: with side-effects! ***)
-    let are_mergeable s s' location_index : bool =
-        if perform_test location_index then
+    let are_mergeable (c : LinearConstraint.px_linear_constraint) (c' : LinearConstraint.px_linear_constraint) (global_location : Location.global_location) : bool =
+        if perform_test global_location then
             begin
             (* Statistics *)
             nb_merging_attempts#increment;
 
             (* Call dedicated function *)
-            let merged = LinearConstraint.px_hull_assign_if_exact s s' in
+            let merged = LinearConstraint.px_hull_assign_if_exact c c' in
 
             (* Statistics *)
             data_recorder_merging#add_data (if merged then "Y" else "N");
-            add_merging_step (if merged then Merging_Y else Merging_N) location_index;
+            add_merging_step (if merged then Merging_Y else Merging_N) global_location;
 
             (* Return result *)
             merged
@@ -1672,18 +1672,18 @@ let merge state_space queue =
         else
             begin
             data_recorder_merging#add_data ".";
-            add_merging_step Merging_dot location_index;
+            add_merging_step Merging_dot global_location;
             tcounter_skip_test#increment;
             false
             end
     in
 
     (* Get states sharing the same location and discrete values from hash_table, excluding s *)
-    let get_siblings state_space si new_states =
+    let get_siblings state_space (si : state_index) new_states =
         let options = Input.get_options () in
         let s = get_state state_space si in
-        let l = s.global_location in
-            let li = new_location_index state_space l in
+        let gl = s.global_location in
+            let li = new_location_index state_space gl in
         let sibs = Hashtbl.find_all state_space.states_for_comparison li in
         (* lookup px_constraints and exclude si itself *)
             let result = List.fold_left (fun siblings sj ->
@@ -1698,10 +1698,10 @@ let merge state_space queue =
     in
 
     (* function for merging one state with its siblings *)
-    let merge_state si =
+    let merge_state (si : state_index) =
         print_message Verbose_total ("[Merge] Try to merge state " ^ (string_of_int si));
         let state = get_state state_space si in
-        let c = state.px_constraint in
+        let (c : LinearConstraint.px_linear_constraint) = state.px_constraint in
         (* get merge candidates as pairs (index, state) *)
         let candidates = get_siblings state_space si queue in
         (* try to merge with siblings, restart if merge found, return eaten states *)
@@ -1710,8 +1710,8 @@ let merge state_space queue =
                 | [] -> [] (* here, we are really done *)
                 | m :: tail_mc -> begin
                     let sj,c' = m in
-                    let location_index = state.global_location in
-                    if are_mergeable c c' location_index then begin
+                    let global_location : Location.global_location = state.global_location in
+                    if are_mergeable c c' global_location then begin
                         (* Statistics *)
                         nb_merged#increment;
 
