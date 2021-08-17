@@ -248,7 +248,7 @@ More elaborate properties are detailed in \cref{ss:mode:prop}.
 We give below the whole property file:
 
 %------------------------------------------------------------
-\IncludeIMIfile{include/fischerPAT_obs.imiprop}
+\IncludeIMIproperty{include/fischerPAT_obs.imiprop}
 %------------------------------------------------------------
 
 
@@ -329,16 +329,16 @@ They can be seen as syntactic sugar to represent a possibly unbounded number of 
 
 
 Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
-if they are not, a warning is issued, and they are arbitrarily set to a standard value (\eg{}~ \styleIMI{0} for numerical variables, \BFalse{} for Boolean variables, and to \styleIMI{0b0} for Binary words).
+if they are not, a warning is issued, and they are arbitrarily set to a standard value (\eg{} \styleIMI{0} for numerical variables, or \BFalse{} for Boolean variables; see \cref{section:init} for the actual value).
 
 Discrete variables can be tested in guards, and updated along transitions.
 
 \imitator{} currently supports four types of discrete variables:
 \begin{enumerate}
-	\item Rational-valued variables
-	\item ``Int''-valued variables (over 32~bits)
+	\item rational-valued variables
+	\item ``int''-valued variables (over 32~bits)
 	\item Boolean variables
-	\item Binary word variables
+	\item binary word variables, allowing to use bitwise binary operations.
 \end{enumerate}
 
 %------------------------------------------------------------
@@ -394,14 +394,57 @@ a Boolean variable valuation is a function $\bval : \BVar \rightarrow \setB$, wh
 %------------------------------------------------------------
 
 % \emph{Binary word variables}
-Binary word variables are binary strings of fixed length.
-The set of Binary word variables is $\WVar = \{ \wvar_1, \dots, \wvar_\WVarCard \} $;
-a Binary word variable valuation is a function $\wval : \WVar \rightarrow \setW(l)$, where $\setW(l)$ is an ordered set of length $l$ and $\setW(l) = \{b_1, ..., b_l \}$ with $b_l = \{0, 1\}$.
+Binary word variables are sequences of bits of fixed length.
+Bitwise operations can be defined on these variables (on same length).
 
+For example, defining two binary words \styleIMI{bw1} and \styleIMI{bw2} both of size~4 (type : \styleIMI{binary(4)}), such that initially \styleIMI{bw1 := 0b1010} and \styleIMI{bw2 := 0b1011}, we can use a guard \styleIMI{logor(bw1, bw2) <> bw1} that checks whether the result of the bitwise (logical) ``or'' operation on both variables differs from \styleIMI{bw1}.
+Then, if this check is true, one may want to shift the bits of \styleIMI{b1} by 2~positions, and set \styleIMI{bw2} to the result of the bitwise ``and'' operation on~\styleIMI{bw1} and~\styleIMI{bw2}.
+%
+This transition would be written as follows in \imitator{} format:
+
+%------------------------------------------------------------
+\begin{lstlisting}[style=IMITATORmodel,numbers=none]
+when logor(bw1, bw2) <> bw1 sync a do {bw1 := shift_left(bw1, 2), bw2 := logand(bw1, bw2)} goto l1;
+\end{lstlisting}
+%------------------------------------------------------------
+
+Note that binary words are of fixed length, and operations can only be applied to words of the \emph{same} length.
+
+% The set of Binary word variables is $\WVar = \{ \wvar_1, \dots, \wvar_\WVarCard \} $;
+% a Binary word variable valuation is a function $\wval : \WVar \rightarrow \setW(l)$, where $\setW(l)$ is an ordered set of length $l$ and $\setW(l) = \{b_1, ..., b_l \}$ with $b_l = \{0, 1\}$.
+We denote by~$\WVar$ the set of binary word variables.
 
 
 %------------------------------------------------------------
-\subsubsection{Discrete variables}
+\subsubsection{Built-in functions over discrete variables}\label{section:builtin-functions}
+%------------------------------------------------------------
+
+\imitator{} 3.1 and higher comes with some built-in functions over discrete variables:
+
+\paragraph{Arithmetic functions}
+
+\begin{itemize}
+    \item \styleIMI{pow(x : 'a, e : int) : 'a} with \styleIMI{'a : [rational | int]}: compute the power of a number
+\end{itemize}
+
+\paragraph{Conversion functions}
+
+\begin{itemize}
+    \item \styleIMI{rational\_of\_int(x : int) : rational}: convert an int number to a rational one
+\end{itemize}
+
+\paragraph{Binary word functions}
+
+\begin{itemize}
+    \item \styleIMI{shift\_left(b : binary\_word(l), i : int) : binary\_word(l)}: shift a binary word of length \styleIMI{l} to left
+		\item \styleIMI{shift\_right(b : binary\_word(l), i : int) : binary\_word(l)}: shift a binary word of length \styleIMI{l} to right
+		\item \styleIMI{fill\_left(b : binary\_word(l), i : const int) : binary\_word(l + i)}: shift a binary word of length \styleIMI{l} to left (non destructive)
+		\item \styleIMI{fill\_right(b : binary\_word(l), i : const int) : binary\_word(l + i)}: shift a binary word of length \styleIMI{l} to right (non destructive)
+\end{itemize}
+
+
+%------------------------------------------------------------
+\subsubsection{Discrete variables definition}
 %------------------------------------------------------------
 
 The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar \cup \WVar $.
@@ -459,8 +502,10 @@ We can now give a formal definition of \IPTA{}.
 
 %------------------------------------------------------------
 \begin{remark}
-	In the subsequent formal definition, we rule out int-valued variables and Boolean variables, for sake of simplicity.
+	In the subsequent formal definition, we rule out int-valued variables, Boolean variables and binary words, for sake of simplicity.
 	They can be used in a straightforward manner.
+	That is, guards (and invariants) can also include operations on such variables.
+	See the grammar in \cref{chapter:grammar} for the exact behavior allowed by \imitator{}.
 \end{remark}
 %------------------------------------------------------------
 
@@ -657,7 +702,17 @@ That is, we can define initial constraints such as:
 % TODO: style for sample piece of file
 
 However, discrete variables must be initialized to a \emph{constant} compatible with their type.
-Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i := ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to~0 (or to $\BFalse$ for Boolean variables), and will issue a warning.
+Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i := ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to a default value, and will issue a warning.
+
+This initial default value is as follows, depending on the variable type:
+
+\begin{tabular}{l l}
+	Rational & 0\\
+	Integer & 0\\
+	Boolean & \BFalse{}\\
+	Binary words & \styleIMI{0b0}\\
+\end{tabular}
+
 
 
 
@@ -1745,6 +1800,10 @@ No checks are made when translating, and therefore \uppaal{} may not accept mode
 Rational variables in \imitator{} are rational-valued with an exact value.
 In \uppaal{}, they are interpreted as (bounded) integers: overflows may occur and, if their value becomes non-integer, it seems \uppaal{} will just round them to the nearest integer, thus creating a difference in semantics.
 
+\paragraph{Binary variables}
+Binary words are not translated.
+
+
 \paragraph{Strong broadcast synchronization}
 \imitator{} uses a single communication model: strong broadcast (see \cref{sect:synchronization}), while \uppaal{} uses both channel binary synchronization, and broadcast synchronization.
 None of them match \imitator{}'s semantics.
@@ -1786,8 +1845,12 @@ To generate an equivalent \hytech{} model without performing any analysis, use:
 \styleCommand{\binimitator{} model.imi -imi2HyTech}
 
 \imitator{} will generate a file \stylePath{model.hy}.
-Note that the translation of properties is not supported.
+
+The syntax going beyond that of \hytech{} (typically, Booleans, binary words…)\ is obviously not translated.
+
+In addition, the translation of properties is not supported.
 % TODO
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Translation to \jani{}}\label{section:jani}
@@ -1831,6 +1894,7 @@ It is done by listing synchronization vectors in the \styleIMI{syncs} entry.
 Properties are so far not translated to \jani{}.
 The corresponding input in the \jani{} file exists but remains empty.
 
+% TODO: binary words?
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1929,33 +1993,6 @@ No floating-point approximations (\styleIMI{float}) are used, except for the gen
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Built-in functions}\label{section:builtin-functions}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\imitator{} 3.1 and higher comes with some built-in functions:
-
-\subsection{Arithmetic functions}
-
-\begin{itemize}
-    \item \styleIMI{pow(x : 'a, e : int) : 'a} with \styleIMI{'a : [rational | int]} : compute the power of a number
-\end{itemize}
-
-\subsection{Conversion functions}
-
-\begin{itemize}
-    \item \styleIMI{rational\_of\_int(x : int) : rational} : convert a int number to a rational one
-\end{itemize}
-
-\subsection{Binary word functions}
-
-\begin{itemize}
-    \item \styleIMI{shift\_left(b : binary\_word(l), i : int) : binary\_word(l)} : shift a binary word of length \styleIMI{l} to left
-		\item \styleIMI{shift\_right(b : binary\_word(l), i : int) : binary\_word(l)} : shift a binary word of length \styleIMI{l} to right
-		\item \styleIMI{fill\_left(b : binary\_word(l), i : const int) : binary\_word(l + i)} : shift a binary word of length \styleIMI{l} to left (non destructive)
-		\item \styleIMI{fill\_right(b : binary\_word(l), i : const int) : binary\_word(l + i)} : shift a binary word of length \styleIMI{l} to right (non destructive)
-\end{itemize}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Type system}\label{section:type_system}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1970,7 +2007,7 @@ They can be declared with the following keywords:
 	\item Binary word: \styleIMI{binary(l)} with \styleIMI{l} the length of the word
 \end{itemize}
 
-Theses types are divided into three categories: numerical (for \styleIMI{rational} and \styleIMI{int}), Booleans (for \styleIMI{bool}) and Binary (for \styleIMI{binary(l)}).
+These types are divided into three categories: numerical (for \styleIMI{rational} and \styleIMI{int}), Booleans (for \styleIMI{bool}) and Binary (for \styleIMI{binary(l)}).
 
 \imitator{} models are statically typed, in the sense of their variables and expressions types are resolved prior to the algorithms execution.
 
@@ -3792,6 +3829,7 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{automatically\_generated\_x\_obs},
 \styleIMI{automaton},
 \styleIMI{before},
+\styleIMI{binary},
 \styleIMI{clock},
 \styleIMI{constant},
 \styleIMI{discrete},
@@ -3801,6 +3839,8 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{eventually},
 \styleIMI{everytime},
 \styleIMI{False},
+\styleIMI{fill\_left},
+\styleIMI{fill\_right},
 \styleIMI{flow},
 \styleIMI{goto},
 \styleIMI{happened},
@@ -3812,15 +3852,23 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{invariant},
 \styleIMI{is},
 \styleIMI{loc},
+\styleIMI{logand},
+\styleIMI{lognot},
+\styleIMI{logor},
+\styleIMI{logxor},
 \styleIMI{next},
 \styleIMI{nosync\_obs},
 \styleIMI{not},
 \styleIMI{once},
 \styleIMI{or},
 \styleIMI{parameter},
+\styleIMI{pow},
 \styleIMI{projectresult},
 \styleIMI{property},
+\styleIMI{rational\_of\_int},
 \styleIMI{sequence},
+\styleIMI{shift\_left},
+\styleIMI{shift\_right},
 \styleIMI{special\_0\_clock},
 \styleIMI{step},
 \styleIMI{stop},
