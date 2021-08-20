@@ -242,7 +242,8 @@ This is input in the property as follows:
 	\styleIMI{property := \#synth AGnot(loc[observer] = obs\_violation);}
 \end{center}
 Here, \styleIMI{AGnot} stands for safety.
-More elaborate properties are detailed in \cref{ss:mode:prop} (however, most properties in \imitator{} \emph{reduce} to safety or reachability, and more complex properties such as Büchi-like properties or fairness are not yet supported by \imitator{}).
+More elaborate properties are detailed in \cref{ss:mode:prop}.
+% (however, most properties in \imitator{} \emph{reduce} to safety or reachability, and more complex properties such as Büchi-like properties or fairness are not yet supported by \imitator{}).
 
 We give below the whole property file:
 
@@ -969,6 +970,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by location matching an accepting condition.
 Such accepting conditions are given in the form of a state predicate, \ie{} a conjunction or disjunction of locations and values for discrete variables.
+This can be seen as a liveness property, or more precisely Büchi acceptance condition.
 
 \imitator{} implements two algorithms to this goal:
 \begin{enumerate}
