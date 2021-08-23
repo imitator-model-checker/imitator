@@ -417,7 +417,7 @@ let div a b =
         | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Rational_value (NumConst.div a b)
         | Int_value a, Int_value  b -> Int_value  (Int32.div a b)
-        | _ -> raise (ComputingException "div")
+        | _ -> raise (ComputingException ("try to divide: " ^ string_of_value a ^ " : " ^ string_of_var_type_discrete (discrete_type_of_value a) ^ "," ^ string_of_value b ^ " : " ^ string_of_var_type_discrete (discrete_type_of_value b)))
 
 (* Negate a discrete value *)
 let neg = function

@@ -1,48 +1,57 @@
 (*******************************************************************************
  *                                IMITATOR MODEL                               
  * 
- * Title            : LA02-2_5param
- * Description      : ?
- * Correctness      : ?
+ * Title            : ALR15_fig1
+ * Description      : Toy example for which reachability synthesis does not terminate. Expected result p \in (0, 1]
+ * Correctness      : Reachability
  * Scalable         : no
- * Generated        : ?
- * Categories       : RTS
- * Source           : Naoyuki Tamura. CSP2SAT: JSS benchmark results. 2007.
- * bibkey           : [Tamura07]
- * Author           : Naoyuki Tamura
- * Modeling         : ?? (Romain Soulat?)
- * Input by         : ?? (Romain Soulat?)
+ * Generated        : no
+ * Categories       : Academic ; Toy ; Unsolvable
+ * Source           : Own work
+ * bibkey           : ALR15
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
- * Created          : < 2013
- * Last modified    : 2021/07/19
- * Model version    : 0.1
+ * Created          : 2021/02/08
+ * Last modified    : 2021/02/08
+ * Model version    : 
  * 
- * IMITATOR version : 3.0
+ * IMITATOR version : 3
  ******************************************************************************)
- 
+
 var
-	time
+
+(* Clocks *)
+ 	x, y,
 		: clock;
-	deadline = 231
+
+(* Parameters *)
+	p,
 		: parameter;
 
-	c_1:clock;
-			wcet_m_0_job_1 = 20,
-			wcet_m_1_job_1 = 31,
-			wcet_m_2_job_1 = 17,
-			wcet_m_3_job_1 = 87,
-			wcet_m_4_job_1 = 76
-		:parameter;
-
-	c_2:clock;
-	wcet_m_4_job_2, wcet_m_2_job_2, wcet_m_0_job_2, wcet_m_1_job_2, wcet_m_3_job_2:parameter;
 
 
 (************************************************************)
-(* Including body *)
+  automaton pta
 (************************************************************)
-#include "LA02_body-2.imi";
+synclabs: ;
+
+loc l1: invariant True
+	when x = 1 do {x := 0} goto l2;
+	when x >= 1 & y = 0 goto l4;
+
+loc l2: invariant True
+	when y = 1 do {y := 0} goto l3;
+
+loc l3: invariant True
+	when y <= p do {y := 0} goto l1;
+
+loc l4: invariant True
+
+end (* pta *)
+
 
 
 (************************************************************)
@@ -53,24 +62,20 @@ init :=
 	(*------------------------------------------------------------*)
 	(* Initial location *)
 	(*------------------------------------------------------------*)
-			loc[checker] = check_1 &
-			loc[job_1] = m_0_waiting &
-			loc[job_2] = m_4_waiting &
-			c_1 = 0 &
-			c_2 = 0 &
-			time = 0
-			
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
 	(*------------------------------------------------------------*)
 	(* Parameter constraints *)
 	(*------------------------------------------------------------*)
-			& wcet_m_4_job_2 >= 0
-			& wcet_m_2_job_2 >= 0
-			& wcet_m_0_job_2 >= 0
-			& wcet_m_1_job_2 >= 0
-			& wcet_m_3_job_2 >= 0
+	& 0 <= p & p <= 1
 ;
 
-			
 
 (************************************************************)
 (* The end *)

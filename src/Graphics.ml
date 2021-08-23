@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2021/04/21
+ * Last modified     : 2021/07/09
  *
  ************************************************************)
  
@@ -1744,7 +1744,7 @@ let dot dot_image_extension radical dot_source_file : (string option) =
 	print_message Verbose_standard "";
 	
 	(* Create the input file *)
-	print_message Verbose_medium ("Creating input file for dot…");
+	print_message Verbose_medium ("Creating input file `" ^ dot_file_name ^ "` for dot…");
 
 	(* Write dot file *)
 	if options#with_graphics_source then(

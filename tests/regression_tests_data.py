@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/07/09
+# Last modified     : 2021/07/19
 #************************************************************
 
 
@@ -36,7 +36,7 @@ tests = [
 		## Test for IMITATOR version: 3.1
 		#'purpose'    : 'Test something',
 		#'input_files': ['somemodel.imi'],
-		#'options'    : '-mode checksyntax ',
+		#'options'    : '-mode checksyntax',
 		#'expectations' : [
 			#{'file': 'somemodel.res' , 'content' : """
 #here the content to check
@@ -113,6 +113,28 @@ Error                                   : property file not found
 		'expectations' : [
 			{'file': 'testSyntaxNonLinearClock.res' , 'content' : """
 Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/13
+		# Last modified            : 2021/07/13
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test new syntactic features of v3.1',
+		'input_files': ['testSyntax31.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'testSyntax31.res' , 'content' : """
+Number of IPTAs                         : 1
+Number of clocks                        : 1
 		"""
 			} # end result file
 			,
@@ -898,6 +920,91 @@ end
 		] # end expectations
 	} # end test case
 	##------------------------------------------------------------]
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/19
+		# Last modified            : 2021/07/19
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test include: non-existing included file',
+		'input_files': ['tests_include_model/example-include-nonexisting-1.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'example-include-nonexisting-1.res' , 'content' : """
+Error                                   : model parsing error
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/19
+		# Last modified            : 2021/07/19
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test include: non-existing included file with funny characters',
+		'input_files': ['tests_include_model/example-include-nonexisting-2.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'example-include-nonexisting-2.res' , 'content' : """
+Error                                   : model parsing error
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/19
+		# Last modified            : 2021/07/19
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test include: parsing error in included file',
+		'input_files': ['tests_include_model/example-include-nonexisting-3a.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'example-include-nonexisting-3a.res' , 'content' : """
+Error                                   : model parsing error
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/19
+		# Last modified            : 2021/07/19
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test include: non-existing file in included file',
+		'input_files': ['tests_include_model/example-include-nonexisting-4a.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'example-include-nonexisting-4a.res' , 'content' : """
+Error                                   : model parsing error
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
 
 	,
 
@@ -8474,6 +8581,33 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test since               : 2021/07/13
+		# Last modified            : 2021/07/13
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test cycle synthesis with BSID',
+		'input_files': ['ALR15_fig1.imi', 'ALR15_fig1-CycleThrough.imiprop'],
+		'options'    : '-cycle-algo NDFS -depth-step 1',
+		'expectations' : [
+			{'file': 'ALR15_fig1.res' , 'content' : """
+BEGIN CONSTRAINT
+ 1 >= p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2020/09/10
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
@@ -15426,7 +15560,7 @@ init := True
 	#------------------------------------------------------------
 
 	,
-
+	
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -15440,6 +15574,86 @@ init := True
 			{'file': 'flipflop.hy' , 'content' : """
 var
 	s, ckG1, ckG2, ckG3, ckG4
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/09
+		# Last modified            : 2021/07/09
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test call for export to dot', # NOTE: no check is made concerning the validity of this export!
+		'input_files': ['flipflop.imi'],
+		'options'    : '-imi2DOT',
+		'expectations' : [
+			{'file': 'flipflop.dot' , 'content' : """
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/09
+		# Last modified            : 2021/07/09
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test call for export to JPG', # NOTE: no check is made concerning the validity of this export!
+		'input_files': ['flipflop.imi'],
+		'options'    : '-imi2JPG -graphics-source',
+		'expectations' : [
+			{'file': 'flipflop-pta.dot' , 'content' : """
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/09
+		# Last modified            : 2021/07/09
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test call for export to PDF', # NOTE: no check is made concerning the validity of this export!
+		'input_files': ['flipflop.imi'],
+		'options'    : '-imi2PDF -graphics-source',
+		'expectations' : [
+			{'file': 'flipflop-pta.dot' , 'content' : """
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/07/09
+		# Last modified            : 2021/07/09
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test call for export to PNG', # NOTE: no check is made concerning the validity of this export!
+		'input_files': ['flipflop.imi'],
+		'options'    : '-imi2PNG -graphics-source',
+		'expectations' : [
+			{'file': 'flipflop-pta.dot' , 'content' : """
 """
 			} # end result file
 			,

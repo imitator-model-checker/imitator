@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci, Benjamin Loillier
  * Created           : 2009/09/09
- * Last modified     : 2021/07/01
+ * Last modified     : 2021/07/15
  *
  ************************************************************)
 
@@ -1596,11 +1596,11 @@ let get_all_variable_dependencies_used_in_init parsed_model all_variables_used =
         (* Display warning message *)
         StringSet.iter(fun variable_dependency_name ->
             print_warning (
-                "Variable \""
+                "Variable `"
                 ^ variable_dependency_name
-                ^ "\" is declared but never used in the model; it is however keep because of dependency with \""
+                ^ "` is declared but never used in the model; it is however kept because of a dependency with `"
                 ^ variable_name
-                ^ "\""
+                ^ "`"
             );
         ) variable_dependencies_not_used;
 
@@ -5033,13 +5033,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
         (* TYPE CHECKING *)
-        let converted_expr, _ = TypeChecker.check_constant_expression initialized_constants expr in
+        let constant = name, expr, var_type in
+        let converted_expr, _ = TypeChecker.check_constant_expression initialized_constants constant in
         (* Try to get the value *)
         let value = ParsingStructureUtilities.try_reduce_parsed_global_expression initialized_constants converted_expr in
-        (* Create evaluated constant tuple *)
-        let evaluated_constant = name, expr, value, var_type in
+(*         Create evaluated constant tuple *)
+(*        let evaluated_constant = name, expr, value, var_type in*)
 
-        let name, value = TypeChecker.check_constant_declaration evaluated_constant in
+(*        let name, value = TypeChecker.check_constant_declaration evaluated_constant in*)
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;
         (* Return *)

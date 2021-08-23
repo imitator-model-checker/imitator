@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2021/04/27
+ * Last modified     : 2021/07/15
  *
  ************************************************************)
 
@@ -23,7 +23,7 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "3.1-beta"
+let version_string = "3.1"
 
 let version_name = "Cheese Artichoke"
 

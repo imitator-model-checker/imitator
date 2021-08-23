@@ -145,6 +145,11 @@ let parser_lexer_gen (model_or_property : model_or_property) (options : Options.
 			let failure_message = "Parsing error (`failure`) in file `" ^ file_name ^ "`: " ^ f in
 			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
 
+		(* Problem with an included file *)
+		| IncludeFileNotFound included_file ->
+			(* Abort properly *)
+			let failure_message = "File `" ^ included_file ^ "` (included by `" ^ file_name ^ "`) not found." in
+			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
 	in
 	parsing_structure
 
@@ -162,6 +167,7 @@ let parser_lexer_from_file (model_or_property : model_or_property) (options : Op
 	(* Lexing *)
 	print_message Verbose_total ("Lexing…");
 	let lexbuf = try (Lexing.from_channel in_channel) with
+		(* Failure during parsing *)
 		| Failure f ->
 			(* Abort properly *)
 			let failure_message = "Lexing error in file `" ^ file_name ^ "`: " ^ f in

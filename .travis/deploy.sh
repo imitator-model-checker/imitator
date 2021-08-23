@@ -2,10 +2,10 @@
 
 cd bin
 
-if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
-    if [[ "$DISTRIBUTED" = "False" ]]; then
-        mv "imitator" "imitator-$TRAVIS_TAG-amd64"
+if [[ "$RUNNER_OS" = "Linux" ]]; then
+    if [ -f "patator" ]; then
+        mv "patator" "patator-$TAG-amd64"
     else
-        mv "patator" "patator-$TRAVIS_TAG-amd64"
+        mv "imitator" "imitator-$TAG-amd64"
     fi
 fi

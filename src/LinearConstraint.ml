@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/07/09
+ * Last modified     : 2021/08/16
  *
  ************************************************************)
 
@@ -739,7 +739,7 @@ let rec variable_in_linear_term v = function
 (** Check whether a variable appears exactly one time in a linear_term (with coeff <> 0): if yes, return Some i, where i is its coefficient; otherwise return None *)
 (*------------------------------------------------------------*)
 
-(* Intermediate, recursive function. nb_times_ref is an int ref. coeff_option is a NumConst.t ref option. minus_flag is a flag to check whether we are in some negative coefficient. *)
+(* Intermediate, recursive function. nb_times_ref is an int ref. coeff_option is a `coef ref option`. minus_flag is a flag to check whether we are in some negative coefficient. *)
 
 let rec get_variable_coef_in_linear_term_rec nb_times_ref coeff_option minus_flag v = function
 	| Variable variable -> if v = variable then(
@@ -789,7 +789,7 @@ let get_variable_coef_in_linear_term v linear_term =
 (*** NOTE: we assume there is at most one constant coefficient ***)
 (*------------------------------------------------------------*)
 
-exception Found_coef of NumConst.t
+exception Found_coef of coef
 
 (* First a recursive function *)
 let rec get_coefficient_in_linear_term_rec minus_flag = function
@@ -1153,7 +1153,7 @@ let string_of_pxd_linear_term_for_jani = string_of_linear_term_for_jani
 (* to the corresponding PPL data structure, it is normalized such *)
 (* that the only non-rational coefficient is outside the term:    *)
 (* p/q * ( ax + by + c ) *)
-let normalize_linear_term (lt : internal_linear_term) : (Ppl.linear_expression * NumConst.t) =
+let normalize_linear_term (lt : internal_linear_term) : (Ppl.linear_expression * coef) =
 	(* Increment discrete counter *)
 	ppl_tcounter_normalize_linear_term#increment;
 	
@@ -1500,16 +1500,12 @@ let customized_string_of_p_linear_inequality = string_of_linear_inequality*)
 
 
 (*------------------------------------------------------------*)
-(** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard_* if the linear_inequality is not a proper clock guard x ~ plterm *)
+(** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard if the linear_inequality is not a proper clock guard x ~ plterm. If the clock has a coefficient `c`, then `plterm / c` is returned as the parametric linear term *)
 (*------------------------------------------------------------*)
 let clock_guard_of_linear_inequality linear_inequality =
 
 	(*** NOTE: strongly relies on the fact that parameters indexes are from 0 to M-1, and clock indexes from M to M+H-1 ***)
 	
-(*	print_newline();
-	print_string (string_of_pxd_linear_inequality (fun i -> "v_" ^ (string_of_int i)) linear_inequality);
-	print_newline();*)
-
 	(* First get both linear terms *)
 	let lterm, rterm =
 	match linear_inequality with
@@ -1520,75 +1516,70 @@ let clock_guard_of_linear_inequality linear_inequality =
 	(* Compute lterm - rterm *)
 	let linear_term = Minus (lterm, rterm) in
 	
-(*	print_newline();
-	print_string (string_of_ppl_linear_term (fun i -> "v_" ^ (string_of_int i)) linear_term);
-	print_newline();*)
-
 	
-	(* Variable to store the (necessarily unique) clock index *)
-	let clock_index_option = ref None in
+	(* Variable to store the (necessarily unique) clock index (None means not yet initialized) *)
+	let clock_index_option : variable option ref = ref None in
 
-	(* Flag to remember whether the clock coefficient is 1 or -1 (None means not yet initialized) *)
-	let positive_clock_option = ref None in
-	
+	(* Variable to store the (necessarily unique) clock coefficient (None means not yet initialized) *)
+	let clock_coef_option : coef option ref = ref None in
+
 	(* Create an array to store the coefficient of all parameters *)
 	let parameter_coefficients = Array.make !nb_parameters NumConst.zero in
 	
-	(*** WARNING: not efficient! for each variable, we go through the entire linear term, although it would be smarter to retrive all coefficients at once… ***)
+	(*** WARNING: not efficient! for each variable, we go through the entire linear term, although it would be smarter to retrieve all coefficients at once… ***)
 	(*** TO OPTIMIZE ***)
 	
+
 	(* First iterate on clocks to check that exactly one clock is used *)
+	
 	for clock_index = !nb_parameters to !nb_parameters + !nb_clocks - 1 do
 		(* Find the coefficient of the clock in the linear term *)
 		let coeff_option = get_variable_coef_in_linear_term clock_index linear_term in
 		match coeff_option with
-		(* Clock not found *)
-		| None -> ()
 		(* Clock found *)
-		| Some coeff ->
+		| Some coeff when NumConst.neq coeff NumConst.zero ->
 			(* If already found a non-null coeff for another clock before, raise an exception *)
 			if !clock_index_option <> None then(
 				raise Not_a_clock_guard_multiple_clocks_found;
 			);
-			(* If the coefficient is not 1 or -1, raise an exception *)
-			if NumConst.neq coeff NumConst.one && NumConst.neq coeff NumConst.minus_one then(
-				raise Not_a_clock_guard_non_1_coefficient;
-			);
-			(* Otherwise, update the variables *)
-			clock_index_option := Some (clock_index);
-			if NumConst.equal coeff NumConst.one then(
-				positive_clock_option := Some true;
-			)else if NumConst.equal coeff NumConst.minus_one then(
-				positive_clock_option := Some false;
-			)else(
-			(* Safety guard *)
-				raise (InternalError("The clock coefficient must be either 1 or -1 at that point"))
-			);
+			
+			(* Store the clock index *)
+			clock_index_option := Some clock_index;
+
+			(* Store the coefficient *)
+			clock_coef_option := Some coeff;
+			
+		(* Clock not found *)
+		| _ -> ()
 	done;
 	
 	(* Retrieve the (necessarily unique) clock index *)
-	let clock_index =
-	match !clock_index_option with
-		| None -> raise Not_a_clock_guard_no_clock_found;
-		| Some index -> index
+	let (clock_index, clock_coefficient) : (variable * coef) =
+	match !clock_index_option, !clock_coef_option with
+		| Some index, Some coef -> index, coef
+		| _ -> raise Not_a_clock_guard_no_clock_found;
 	in
 
+
 	(* Second, iterate on discrete to check that none appear (otherwise not a well-formed guard) *)
+	
 	for discrete_index = !nb_parameters + !nb_clocks to !nb_parameters + !nb_clocks + !nb_discrete - 1 do
 		(* Find the coefficient of the discrete in the linear term *)
-		let coeff_option = get_variable_coef_in_linear_term discrete_index linear_term in
-		match coeff_option with
+		let discrete_coeff_option = get_variable_coef_in_linear_term discrete_index linear_term in
+		match discrete_coeff_option with
 		(* Variable not found *)
 		| None -> ()
 		(* Variable found *)
 		| Some coeff -> raise Not_a_clock_guard_discrete_found;
 	done;
 	
+
 	(* Third, iterate on parameters to retrieve their coefficients *)
+
 	for parameter_index = 0 to !nb_parameters - 1 do
 		(* Find the coefficient of the parameter in the linear term *)
-		let coeff_option = get_variable_coef_in_linear_term parameter_index linear_term in
-		match coeff_option with
+		let parameter_coeff_option = get_variable_coef_in_linear_term parameter_index linear_term in
+		match parameter_coeff_option with
 		(* Variable not found *)
 		| None -> ()
 		(* Variable found: update array *)
@@ -1598,41 +1589,33 @@ let clock_guard_of_linear_inequality linear_inequality =
 	(* Retrieve the constant coefficient *)
 	let coefficient = get_coefficient_in_linear_term linear_term in
 
-	(* Gather a list of pairs (parameter_coef, parameter_index) *)
-	(*** BADPROG: not tail-recursive... *)
+	(* Gather a list of pairs (parameter_coef / clock_coefficient, parameter_index) *)
+	(*** NOTE: not tail-recursive… ***)
 	let members = ref [] in
 	Array.iteri (fun parameter_index parameter_coef -> 
-		(* If coefficient is not zero... *)
+		(* If coefficient is not zero… *)
 		if NumConst.neq parameter_coef NumConst.zero then(
 			(* Add new pair to the list of members *)
-			members := (parameter_coef, parameter_index) :: !members;
+			members := ((NumConst.div parameter_coef clock_coefficient), parameter_index) :: !members;
 		);
 	) parameter_coefficients;
 	
 	(* Reconstruct the parametric linear term *)
-	let parametric_linear_term = make_linear_term !members coefficient in
+	let parametric_linear_term = make_linear_term !members (NumConst.div coefficient clock_coefficient) in
 	
-	(* Negate it if needed: if the clock is NEGATIVE, it will be naturally moved to the other side, hence no need to change the sign of the plterm *)
-	
-	(*check this small code again*)
-	
-	let parametric_linear_term = if !positive_clock_option = Some true
-		then IR_Minus ((make_linear_term [] NumConst.zero) , parametric_linear_term)
-		else parametric_linear_term 
-	in
-	
-	
-	(* Retrieve the operator *)
+	(* Retrieve the operator, and swap if the clock coefficient is negative *)
+	let positive_clock_coefficient = NumConst.ge clock_coefficient NumConst.zero in
+
 	let operator =
 	match linear_inequality with
-		| Less_Than _ -> if !positive_clock_option = Some true then Op_l else Op_g
-		| Less_Or_Equal _ -> if !positive_clock_option = Some true then Op_le else Op_ge
-		| Greater_Than _ -> if !positive_clock_option = Some true then Op_g else Op_l
-		| Greater_Or_Equal _ -> if !positive_clock_option = Some true then Op_ge else Op_le
+		| Less_Than _ -> if positive_clock_coefficient then Op_l else Op_g
+		| Less_Or_Equal _ -> if positive_clock_coefficient then Op_le else Op_ge
+		| Greater_Than _ -> if positive_clock_coefficient then Op_g else Op_l
+		| Greater_Or_Equal _ -> if positive_clock_coefficient then Op_ge else Op_le
 		| Equal _ -> Op_eq
 	in
 
-	(* Return the result *)
+	(* Return the triple result *)
 	(clock_index, operator, parametric_linear_term)
 
 
@@ -2095,7 +2078,7 @@ let partition_lu variables linear_constraints =
 
 (*------------------------------------------------------------*)
 (** Return the parametric linear term which is the upper bound of the clock x in a px_linear_constraint; return None if no upper bound *)
-(*** NOTE: we asssume that all inequalities are of the form x \sim plt, and that a single inequality constrains x as an upper bound. Raises Not_a_clock_guard_* otherwise ***)
+(*** NOTE: we asssume that all inequalities are of the form x \sim plt, and that a single inequality constrains x as an upper bound. Raises `Not_a_clock_guard` otherwise ***)
 (*------------------------------------------------------------*)
 exception Found_upper_bound of p_linear_term
 let clock_upper_bound_in clock_index px_linear_constraint =
@@ -2686,8 +2669,8 @@ let render_non_strict_p_linear_constraint k =
 (* Bounds on variables *)
 (*------------------------------------------------------------*)
 
-(** Given a linear constraint and a variable (dimension), return the pair of bounds, i.e., the infimum and supremum. If the dimension is not bounded, return None. Otherwise return a pair Some (NumConst.t, minimum) (resp. maximum), which is true if the bound is closed (i.e., a minimum (resp. maximum), as opposed to an infimum (resp. supremum)). *)
-let compute_bounds linear_constraint dimension : (((NumConst.t * bool) option) * ((NumConst.t * bool) option)) =
+(** Given a linear constraint and a variable (dimension), return the pair of bounds, i.e., the infimum and supremum. If the dimension is not bounded, return None. Otherwise return a pair Some (coef, minimum) (resp. maximum), which is true if the bound is closed (i.e., a minimum (resp. maximum), as opposed to an infimum (resp. supremum)). *)
+let compute_bounds linear_constraint dimension : (((coef * bool) option) * ((coef * bool) option)) =
 	(* Create linear expression with just the dimension of interest *)
 	let linear_expression : Ppl.linear_expression = ppl_linear_expression_of_linear_term (make_linear_term [(NumConst.one, dimension)] NumConst.zero) in
 
@@ -2773,7 +2756,7 @@ let exhibit_point nb_dimensions linear_constraint =
 			let bounded_from_below, infimum_numerator, infimum_denominator, is_minimum = ippl_minimize restricted_linear_constraint linear_expression in
 			
 			(* Build the infimum *)
-			let infimum : NumConst.t = NumConst.numconst_of_zfrac infimum_numerator infimum_denominator in
+			let infimum : coef = NumConst.numconst_of_zfrac infimum_numerator infimum_denominator in
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then

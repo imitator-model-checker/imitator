@@ -11,9 +11,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2007/11
- * Last modified   : 2020/09/14
+ * Last modified   : 2021/07/09
  *
- * IMITATOR version: 3.0
+ * IMITATOR version: 3.1
  ************************************************************)
 
 var 	s, ckG1, ckG2, ckG3, ckG4
@@ -57,11 +57,9 @@ loc Input2: invariant s <= tLO + tHold
 	when s = tLO + tHold sync dDown do {} goto Input3;
 
 loc Input3: invariant s <= tLO + tHI 
-	when s = tLO + tHI sync ckDown do {s := 0} goto Input4;  (*IF ONE WANTS TO BLOCK THE TIME AFTER ckDown*)
-(*  	when s = tLO + tHI sync ckDown do {} goto Input4; *)
+	when s = tLO + tHI sync ckDown do {s := 0} goto Input4;
 
-loc Input4: invariant s <= 0  (*IF ONE WANTS TO BLOCK THE TIME AFTER ckDown*)
-(*  loc Input4: invariant True  *)
+loc Input4: invariant s <= 0
 
 end (* input *)
 
@@ -343,59 +341,55 @@ end (* g4 *)
 (************************************************************)
 (* Initial state *)
 (************************************************************)
-
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[input] = Input0
-	& loc[g1]    = G10011
-	& loc[g2]    = G2101
-	& loc[g3]    = G30011
-	& loc[g4]    = G410
-
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& s = 0
-	& ckG1 >= 0
-	& ckG2 >= 0
-	& ckG3 >= 0
-	& ckG4 >= 0
-
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-
-	& dG1_l >= 0
-	& dG2_l >= 0
-	& dG3_l >= 0
-	& dG4_l >= 0
-
-	& tHI  >= 0
-	& tLO  >= 0
-	& tSetup >= 0
-	& tHold  >= 0
-
-	& dG1_l <= dG1_u 
-	& dG2_l <= dG2_u
-	& dG3_l <= dG3_u
-	& dG4_l <= dG4_u
+init := {
 	
-	& tSetup <= tLO
-	& tHold <= tHI
-;
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[input] := Input0,
+		loc[g1]    := G10011,
+		loc[g2]    := G2101,
+		loc[g3]    := G30011,
+		loc[g4]    := G410,
 
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+    ;
 
-(************************************************************)
-(* Property specification *)
-(************************************************************)
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& s = 0
+		& ckG1 >= 0
+		& ckG2 >= 0
+		& ckG3 >= 0
+		& ckG4 >= 0
 
-(* Not exactly the property that we would like! The real property is qUp and ckDown always occur, and qUp occurs before ckDown *)
-(* property := if qUp then eventually ckDown *)
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& dG1_l >= 0
+		& dG2_l >= 0
+		& dG3_l >= 0
+		& dG4_l >= 0
 
+		& tHI  >= 0
+		& tLO  >= 0
+		& tSetup >= 0
+		& tHold  >= 0
 
-(* property := if ckDown then qUp has happened before; *)
+		& dG1_l <= dG1_u 
+		& dG2_l <= dG2_u
+		& dG3_l <= dG3_u
+		& dG4_l <= dG4_u
+		
+		& tSetup <= tLO
+		& tHold <= tHI
+	;
+}
 
 
 (************************************************************)

@@ -206,7 +206,7 @@ Since \imitator{} 3.1, the initial definition section is split between the \emph
 % This new section introduce a more powerful initialization system allowing initialization of discrete variables by constant expressions. It mean that it's possible to initialize any discrete variables of any type (proposed by \imitator{}) with an expression that can be resolved at compile time (use of variables is forbbiden). It's also the only way to initialize discrete integer and discrete boolean variables.
 
 % Note the difference between constraints initializations and discrete variables initializations.
-% Disrete are initialized in the \styleIMI{continuous} part while other are initialized in the \styleIMI{discrete} part. 
+% Disrete are initialized in the \styleIMI{continuous} part while other are initialized in the \styleIMI{discrete} part.
 The discrete initialization (introduced by the \styleIMI{discrete} keyword) assigns an initial value to each discrete (global) variable, and sets the initial location for each automaton.
 Note that the assignment operator \styleIMI{:=} is used (in contrast with unification operator \styleIMI{=} used for constraints).
 % As all discrete variables are independent, the initializations are separated with a comma.
@@ -242,7 +242,8 @@ This is input in the property as follows:
 	\styleIMI{property := \#synth AGnot(loc[observer] = obs\_violation);}
 \end{center}
 Here, \styleIMI{AGnot} stands for safety.
-More elaborate properties are detailed in \cref{ss:mode:prop} (however, most properties in \imitator{} \emph{reduce} to safety or reachability, and more complex properties such as Büchi-like properties or fairness are not yet supported by \imitator{}).
+More elaborate properties are detailed in \cref{ss:mode:prop}.
+% (however, most properties in \imitator{} \emph{reduce} to safety or reachability, and more complex properties such as Büchi-like properties or fairness are not yet supported by \imitator{}).
 
 We give below the whole property file:
 
@@ -328,15 +329,16 @@ They can be seen as syntactic sugar to represent a possibly unbounded number of 
 
 
 Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
-if they are not, a warning is issued, and they are arbitrarily set to a standard value (\eg{}~0 for numerical variables, and to \BFalse{} for Boolean variables).
+if they are not, a warning is issued, and they are arbitrarily set to a standard value (\eg{}~ \styleIMI{0} for numerical variables, \BFalse{} for Boolean variables, and to \styleIMI{0b0} for Binary words).
 
 Discrete variables can be tested in guards, and updated along transitions.
 
-\imitator{} currently supports three types of discrete variables:
+\imitator{} currently supports four types of discrete variables:
 \begin{enumerate}
-	\item rational-valued variables
-	\item ``int''-valued variables (over 32~bits)
+	\item Rational-valued variables
+	\item ``Int''-valued variables (over 32~bits)
 	\item Boolean variables
+	\item Binary word variables
 \end{enumerate}
 
 %------------------------------------------------------------
@@ -370,7 +372,7 @@ Int variables are encoded in \imitator{} using the \styleFileContent{int} type o
 \begin{becareful}[int encoding]
 	All arithmetic operations over the ``int'' variables are taken modulo $2^{32}$.
 	Overflow can therefore occur.
-	
+
 	For critical models, it is highly advised to use \emph{rational} variables instead (the computation using rational variables may be significantly slower but always exact).
 \end{becareful}
 
@@ -387,12 +389,22 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 The set of Boolean variables is $\BVar = \{ \bvar_1, \dots, \bvar_\BVarCard \} $;
 a Boolean variable valuation is a function $\bval : \BVar \rightarrow \setB$, where $\setB = \{\BTrue, \BFalse \}$.
 
+%------------------------------------------------------------
+\subsubsection{Binary word variables}
+%------------------------------------------------------------
+
+% \emph{Binary word variables}
+Binary word variables are binary strings of fixed length.
+The set of Binary word variables is $\WVar = \{ \wvar_1, \dots, \wvar_\WVarCard \} $;
+a Binary word variable valuation is a function $\wval : \WVar \rightarrow \setW(l)$, where $\setW(l)$ is an ordered set of length $l$ and $\setW(l) = \{b_1, ..., b_l \}$ with $b_l = \{0, 1\}$.
+
+
 
 %------------------------------------------------------------
 \subsubsection{Discrete variables}
 %------------------------------------------------------------
 
-The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar $.
+The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar \cup \WVar $.
 
 %a discrete variable valuation is a function $\dval : \DVar \rightarrow \setN$.
 
@@ -958,6 +970,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by location matching an accepting condition.
 Such accepting conditions are given in the form of a state predicate, \ie{} a conjunction or disjunction of locations and values for discrete variables.
+This can be seen as a liveness property, or more precisely Büchi acceptance condition.
 
 \imitator{} implements two algorithms to this goal:
 \begin{enumerate}
@@ -1924,15 +1937,23 @@ No floating-point approximations (\styleIMI{float}) are used, except for the gen
 \subsection{Arithmetic functions}
 
 \begin{itemize}
-    \item \styleIMI{pow(x : 'a, e : int) : 'a} with \styleIMI{'a : [rational | int]}
+    \item \styleIMI{pow(x : 'a, e : int) : 'a} with \styleIMI{'a : [rational | int]} : compute the power of a number
 \end{itemize}
 
 \subsection{Conversion functions}
 
 \begin{itemize}
-    \item \styleIMI{rational\_of\_int(x : int) : rational}
+    \item \styleIMI{rational\_of\_int(x : int) : rational} : convert a int number to a rational one
 \end{itemize}
 
+\subsection{Binary word functions}
+
+\begin{itemize}
+    \item \styleIMI{shift\_left(b : binary\_word(l), i : int) : binary\_word(l)} : shift a binary word of length \styleIMI{l} to left
+		\item \styleIMI{shift\_right(b : binary\_word(l), i : int) : binary\_word(l)} : shift a binary word of length \styleIMI{l} to right
+		\item \styleIMI{fill\_left(b : binary\_word(l), i : const int) : binary\_word(l + i)} : shift a binary word of length \styleIMI{l} to left (non destructive)
+		\item \styleIMI{fill\_right(b : binary\_word(l), i : const int) : binary\_word(l + i)} : shift a binary word of length \styleIMI{l} to right (non destructive)
+\end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Type system}\label{section:type_system}
@@ -1946,9 +1967,10 @@ They can be declared with the following keywords:
 	\item Rational: \styleIMI{rational} (or \styleIMI{discrete} for backward-compatibility)
 	\item Integer (32 bits): \styleIMI{int}
 	\item Boolean: \styleIMI{bool}
+	\item Binary word: \styleIMI{binary(l)} with \styleIMI{l} the length of the word
 \end{itemize}
 
-Theses types are divided into two categories: numerical (for \styleIMI{rational} and \styleIMI{int}) and Booleans (for \styleIMI{bool}).
+Theses types are divided into three categories: numerical (for \styleIMI{rational} and \styleIMI{int}), Booleans (for \styleIMI{bool}) and Binary (for \styleIMI{binary(l)}).
 
 \imitator{} models are statically typed, in the sense of their variables and expressions types are resolved prior to the algorithms execution.
 
@@ -1985,7 +2007,7 @@ If an expression mixes different types, a type error is risen before the start o
 \subsection{Literal number type inference}
 
 The types of literal numbers are automatically resolved during the semantic analysis and more precisely during the type checking step.
-Once an expression type is resolved, all literal numbers within are automatically typed as the numerical type holding by the expression. 
+Once an expression type is resolved, all literal numbers within are automatically typed as the numerical type holding by the expression.
 
 For example, in the following update expression \styleIMI{b := True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1} will be automatically typed as a \styleIMI{int}.
 
@@ -2738,6 +2760,7 @@ We define each of those two components below.
 \regleGrammaire{var\_type}
 %------------------------------------------------------------
 \begin{tabular}{l l}
+  $|$ & \styleIMI{binary (} \nt{pos\_integer}  \styleIMI{)} \\
 	$|$ & \styleIMI{bool}  \\
 	$|$ & \styleIMI{clock}     \\
 	$|$ & \styleIMI{constant}  \\
@@ -2967,11 +2990,34 @@ We define each of those two components below.
 \end{tabular}
 
 %------------------------------------------------------------
+\regleGrammaire{syn\_label}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{sync} \styleIMI{<name>} \\
+\end{tabular}
+
+%------------------------------------------------------------
 \regleGrammaire{global\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \nt{boolean\_expression} \\
-	$|$ & \nt{arithmetic\_expression} \\
+	\   & \nt{arithmetic\_expression} \\
+  $|$ & \nt{binary\_word\_expression} \\
+	$|$ & \nt{boolean\_expression} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{binary\_word\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{shift\_left (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	\   & \styleIMI{shift\_right (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	\   & \styleIMI{fill\_left (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	\   & \styleIMI{fill\_right (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	\   & \styleIMI{log\_and (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
+	\   & \styleIMI{log\_or (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
+	\   & \styleIMI{log\_xor (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
+	\   & \styleIMI{log\_not (} \nt{binary\_word\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{<binary\_word>} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2993,14 +3039,7 @@ We define each of those two components below.
 	\   & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
 	$|$ & \nt{arithmetic\_expression} \styleIMI{in} $[$ \nt{arithmetic\_expression} \styleIMI{,} \nt{arithmetic\_expression} $]$ \\
 	$|$ & \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \\
-    $|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{syn\_label}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{sync} \styleIMI{<name>} \\
+  $|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
 \end{tabular}
 
 
@@ -3178,7 +3217,7 @@ We define each of those two components below.
 % 	 & \nt{init\_definition} \styleIMI{end} \\
 % 	 $|$ & \nt{old\_init\_definition} \styleIMI{end} \\
 % \end{tabular}
-% 
+%
 % %------------------------------------------------------------
 % \regleGrammaire{init\_definition}
 % %------------------------------------------------------------
@@ -3280,7 +3319,7 @@ We define each of those two components below.
 % 	\   & \nt{init\_loc\_predicate} \\
 % 	$|$ & \nt{linear\_constraint}   \\
 % \end{tabular}
-% 
+%
 % %------------------------------------------------------------
 % \regleGrammaire{init\_loc\_predicate}
 % %------------------------------------------------------------
@@ -3288,8 +3327,8 @@ We define each of those two components below.
 % 	\   & \styleIMI{loc[ <name> ] = <name>} \\
 % 	$|$ & \styleIMI{<name> is in <name>}    \\
 % \end{tabular}
-% 
-% 
+%
+%
 % %------------------------------------------------------------
 % \regleGrammaire{discrete\_predicate}
 % %------------------------------------------------------------

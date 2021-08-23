@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/07/09
+ * Last modified     : 2021/07/17
  *
  ************************************************************)
 
@@ -774,7 +774,7 @@ class imitator_options =
 
 				("-imi2DOT", Unit (fun _ ->
 					imitator_mode <- Translation DOT
-				), "Translate the model into a dot graphics (graph) file, and exit without performing any analysis. Default: disabled");
+				), "   Translate the model into a dot graphics (graph) file, and exit without performing any analysis. Default: disabled");
 
 				("-imi2HyTech", Unit (fun _ ->
 					imitator_mode <- Translation HyTech
@@ -782,28 +782,27 @@ class imitator_options =
 
 				("-imi2IMI", Unit (fun _ ->
 					imitator_mode <- Translation IMI
-				), "Regenerate the model into an IMITATOR model, and exit without performing any analysis. Default: disabled");
+				), "   Regenerate the model into an IMITATOR model, and exit without performing any analysis. Default: disabled");
 
 				("-imi2Jani", Unit (fun _ ->
 					imitator_mode <- Translation JaniSpec
-				), "Translate the model into a JaniSpec model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
-				");
+				), "  Translate the model into a JaniSpec model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled");
 
 				("-imi2JPG", Unit (fun _ ->
 					imitator_mode <- Translation JPG
-				), "Translate the model into a graphics, and exit without performing any analysis. Default: disabled");
+				), "   Translate the model into a graphics, and exit without performing any analysis. Default: disabled");
 
 				("-imi2PDF", Unit (fun _ ->
 					imitator_mode <- Translation PDF
-				), "Translate the model into a graphics, and exit without performing any analysis. Default: disabled");
+				), "   Translate the model into a graphics, and exit without performing any analysis. Default: disabled");
 
 				("-imi2PNG", Unit (fun _ ->
 					imitator_mode <- Translation PNG
-				), "Translate the model into a graphics, and exit without performing any analysis. Default: disabled");
+				), "   Translate the model into a graphics, and exit without performing any analysis. Default: disabled");
 
 				("-imi2TikZ", Unit (fun _ ->
 					imitator_mode <- Translation TikZ
-				), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Default: disabled");
+				), "  Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Default: disabled");
 
 				("-imi2Uppaal", Unit (fun _ ->
 					imitator_mode <- Translation Uppaal
@@ -829,8 +828,8 @@ class imitator_options =
 
 				("-mode", String set_mode, " Special mode for " ^ Constants.program_name ^ ".
         Use `checksyntax` for a simple syntax check and no analysis.
-        Use `statespace`  for the generation of the entire parametric state space."
-        );
+        Use `statespace`  for the generation of the entire parametric state space.
+        ");
 
 				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled (accepting states are put at the head).
 				");
