@@ -440,6 +440,10 @@ We denote by~$\WVar$ the set of binary word variables.
 		\item \styleIMI{shift\_right(b : binary\_word(l), i : int) : binary\_word(l)}: shift a binary word of length \styleIMI{l} to right
 		\item \styleIMI{fill\_left(b : binary\_word(l), i : const int) : binary\_word(l + i)}: shift a binary word of length \styleIMI{l} to left (non destructive)
 		\item \styleIMI{fill\_right(b : binary\_word(l), i : const int) : binary\_word(l + i)}: shift a binary word of length \styleIMI{l} to right (non destructive)
+		\item \styleIMI{log\_and(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: make AND bitwise operation between two binary words of length \styleIMI{l}
+		\item \styleIMI{log\_or(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: make OR bitwise operation between two binary words of length \styleIMI{l}
+		\item \styleIMI{log\_xor(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: make XOR bitwise operation between two binary words of length \styleIMI{l}
+		\item \styleIMI{log\_not(b : binary\_word(l)) : binary\_word(l)}: make NOT bitwise operation on a binary word of length \styleIMI{l}
 \end{itemize}
 
 
