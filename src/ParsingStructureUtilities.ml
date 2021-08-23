@@ -38,6 +38,9 @@ type nonlinear_constraint_leaf =
     | Leaf_true_nonlinear_constraint
     | Leaf_false_nonlinear_constraint
 
+type init_state_predicate_leaf =
+    | Leaf_loc_assignment of automaton_name * location_name
+
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
 let rec fold_parsed_global_expression (operator : 'a -> 'a -> 'a) leaf_fun = function
@@ -135,11 +138,12 @@ and fold_parsed_linear_expression operator leaf_fun = function
             (fold_parsed_linear_expression operator leaf_fun expr)
             (fold_parsed_linear_term operator leaf_fun term)
 
+(** Fold a parsed linear term using operator applying custom function on leafs **)
 and fold_parsed_linear_term operator leaf_fun = function
     | Constant value -> leaf_fun (Leaf_linear_constant value)
     | Variable (value, variable_name) -> leaf_fun (Leaf_linear_variable (value, variable_name))
 
-
+(** Fold a parsed linear constraint using operator applying custom function on leafs **)
 let fold_parsed_nonlinear_constraint operator leaf_fun nonlinear_constraint_leaf_fun = function
     | Parsed_false_nonlinear_constraint ->
         nonlinear_constraint_leaf_fun Leaf_false_nonlinear_constraint
@@ -147,6 +151,26 @@ let fold_parsed_nonlinear_constraint operator leaf_fun nonlinear_constraint_leaf
         nonlinear_constraint_leaf_fun Leaf_true_nonlinear_constraint
     | Parsed_nonlinear_constraint expr ->
         fold_parsed_discrete_boolean_expression operator leaf_fun expr
+
+(** Fold a parsed update expression using operator applying custom function on leafs **)
+(** As update expression contain list of leaf, it return list of result from function applications **)
+let fold_map_parsed_update operator leaf_fun = function
+	| Normal (_, expr) ->
+	    [fold_parsed_global_expression operator leaf_fun expr]
+	| Condition (bool_expr, update_list_if, update_list_else) ->
+	        (fold_parsed_boolean_expression operator leaf_fun bool_expr) ::
+	        (List.map (fun (_, expr) -> fold_parsed_global_expression operator leaf_fun expr) (update_list_if@update_list_else))
+
+(** Fold a parsed update expression using operator applying custom function on leafs **)
+(** And fold the list of leaf using base **)
+let fold_parsed_update operator base leaf_fun expr =
+    let elements = fold_map_parsed_update operator leaf_fun expr in
+    List.fold_left operator base elements
+
+let fold_init_state_predicate operator loc_assignment_leaf_fun linear_expression_leaf_fun linear_constraint_leaf_fun leaf_fun = function
+	| Parsed_loc_assignment (automaton_name, loc_name) -> loc_assignment_leaf_fun (automaton_name, loc_name)
+	| Parsed_linear_predicate linear_constraint -> fold_parsed_linear_constraint operator linear_expression_leaf_fun linear_constraint_leaf_fun linear_constraint
+	| Parsed_discrete_predicate (_, expr) -> fold_parsed_global_expression operator leaf_fun expr
 
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
@@ -165,6 +189,8 @@ let for_all_in_parsed_linear_term = fold_parsed_linear_term (&&)
 let for_all_in_parsed_linear_constraint = fold_parsed_linear_constraint (&&)
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
 let for_all_in_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint (&&)
+(** Check if all leaf of a parsed update satisfy the predicate **)
+let for_all_in_parsed_update = fold_parsed_update (&&) true
 
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
@@ -183,6 +209,8 @@ let exists_in_parsed_linear_term = fold_parsed_linear_term (||)
 let exists_in_parsed_linear_constraint = fold_parsed_linear_constraint (||)
 (** Check if any leaf of a non-linear constraint satisfy the predicate **)
 let exists_in_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint (||)
+(** Check if any leaf of a parsed update satisfy the predicate **)
+let exists_in_parsed_update = fold_parsed_update (||) false
 
 (** Iterate over a parsing structure **)
 
@@ -203,6 +231,7 @@ let iterate_parsed_linear_constraint = fold_parsed_linear_constraint binunit
 (** Iterate over a non-linear constraint **)
 let iterate_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint binunit
 
+let iterate_parsed_update = fold_parsed_update binunit ()
 
 let string_of_parsed_factor_constructor = function
 	| Parsed_DF_variable _ -> "variable"
@@ -682,6 +711,9 @@ let get_variables_in_nonlinear_constraint_with_accumulator variables_used_ref =
         (add_variable_of_discrete_boolean_expression variables_used_ref)
         (function | Leaf_true_nonlinear_constraint | Leaf_false_nonlinear_constraint -> ())
 
+let get_variables_in_parsed_update_with_accumulator variables_used_ref =
+    iterate_parsed_update
+        (add_variable_of_discrete_boolean_expression variables_used_ref)
 
 (* Create and wrap an accumulator then return result directly *)
 let wrap_accumulator f expr =

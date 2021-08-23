@@ -109,19 +109,6 @@ let numconst_value_or_fail = function
 let is_variable_or_constant_declared index_of_variables constants variable_name =
     Hashtbl.mem index_of_variables variable_name || Hashtbl.mem constants variable_name
 
-(*------------------------------------------------------------*)
-(* Gather all variable names used in expressions              *)
-(*------------------------------------------------------------*)
-
-(** Add variables names in normal and conditional updates *)
-let rec get_variables_in_parsed_update variables_used_ref = function
-	| Normal (_, global_expression) -> ParsingStructureUtilities.get_variables_in_parsed_global_expression_with_accumulator variables_used_ref global_expression
-	| Condition (bool_expr, update_list_if, update_list_else) -> (** recolect in bool exprs *)
-		ParsingStructureUtilities.get_variables_in_parsed_boolean_expression_with_accumulator variables_used_ref bool_expr;
-		List.iter (fun (_, global_expression) ->
-			ParsingStructureUtilities.get_variables_in_parsed_global_expression_with_accumulator variables_used_ref global_expression
-		) (update_list_if@update_list_else)
-
 
 (************************************************************)
 (** Checking discrete arithmetic expressions *)
@@ -1288,7 +1275,8 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 					(* 					all_variables_used := StringSet.add variable_name !all_variables_used; *)
 					(* Second add the variable names in the update expression *)
 					(* get_variables_in_parsed_update_arithmetic_expression all_variables_used arithmetic_expression; *)
-					get_variables_in_parsed_update all_variables_used update_expression
+					ParsingStructureUtilities.get_variables_in_parsed_update_with_accumulator all_variables_used update_expression
+
 					) updates;
 				) location.transitions;
 			) locations;
