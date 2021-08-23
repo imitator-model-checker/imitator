@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Johan Arcile
  * Created           : 2021/06/17
- * Last modified     : 2021/06/17
+ * Last modified     : 2021/08/23
  *
  ************************************************************)
 
@@ -599,6 +599,9 @@ let prepare_extrapolation () : unit =
 
 let m_extrapolation_of_x (big_m : numconst_or_infinity) (x : variable) (px_linear_constraint : LinearConstraint.px_linear_constraint) : LinearConstraint.px_linear_constraint list =
 
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
 	(* Case m is Finite *)
 	let finite (m : NumConst.t) =
 	
@@ -610,6 +613,13 @@ let m_extrapolation_of_x (big_m : numconst_or_infinity) (x : variable) (px_linea
 		(* Intersect `x <= M` with the input constraint *)
 		px_intersection_assign x_leq_M [px_linear_constraint];
 		let px_linear_constraint1 = x_leq_M in
+		
+		(* Display some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("Linear constraint 1 = " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names px_linear_constraint1));
+		);
+
+		
 	
 		(* Prepare `x > M`, i.e., `x - M > 0` *)
 		let px_linear_term : px_linear_term = make_px_linear_term [(NumConst.one, x)] (NumConst.neg m) in
