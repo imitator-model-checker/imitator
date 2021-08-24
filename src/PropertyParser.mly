@@ -47,6 +47,7 @@ let resolve_property l =
 %token <int> INT
 %token <string> FLOAT
 %token <string> NAME
+%token <string> BINARYWORD
 %token <string> STRING
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
@@ -354,6 +355,7 @@ discrete_factor:
 	| positive_rational { Parsed_DF_constant (DiscreteValue.Number_value $1) }
   | CT_TRUE { Parsed_DF_constant (DiscreteValue.Bool_value true) }
   | CT_FALSE { Parsed_DF_constant (DiscreteValue.Bool_value false) }
+  | binary_word { Parsed_DF_constant $1 }
 	| RPAREN discrete_expression LPAREN { Parsed_DF_expression $2 }
 	| OP_MINUS discrete_factor { Parsed_DF_unary_min $2 }
 ;
@@ -406,6 +408,9 @@ pos_float:
 	}
 ;
 
+binary_word:
+        BINARYWORD { DiscreteValue.Binary_word_value (BinaryWord.binaryword_of_string $1) }
+;
 
 /************************************************************/
 projection_definition:
