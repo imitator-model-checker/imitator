@@ -15,7 +15,7 @@
  ************************************************************)
 
 open ParsingStructure
-
+open AbstractProperty
 
 type variable_name = string
 type variable_index = int
@@ -71,6 +71,10 @@ val check_constant_expression : (Automaton.variable_name , DiscreteValue.discret
 
 (* Check that a discrete variable initialization is well typed *)
 val check_discrete_init : variable_infos -> variable_name -> ParsingStructure.global_expression -> ParsingStructure.global_expression
+
+(* Type check a state predicate *)
+(* return a tuple containing the state predicate uniformly typed and the resolved type of the expression *)
+val check_parsed_state_predicate : variable_infos -> parsed_state_predicate -> parsed_state_predicate * DiscreteValue.var_type_discrete
 
 val discrete_type_of_expression : variable_infos -> ParsingStructure.global_expression -> DiscreteValue.var_type_discrete
 val discrete_type_of_parsed_boolean_expression : variable_infos -> ParsingStructure.parsed_boolean_expression -> DiscreteValue.var_type_discrete

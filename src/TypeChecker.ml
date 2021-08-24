@@ -930,6 +930,60 @@ and infer_nonlinear_constraint variable_infos = function
         let convert_expr, discrete_type = infer_parsed_discrete_boolean_expression variable_infos expr in
         Parsed_nonlinear_constraint convert_expr, discrete_type
 
+
+(* Type checking and infer literal numbers of simple predicate *)
+let rec infer_parsed_simple_predicate variable_infos = function
+	| Parsed_discrete_boolean_expression expr ->
+	    let convert_expr, discrete_type = infer_parsed_discrete_boolean_expression variable_infos expr in
+        (* TODO benjamin check types are bool *)
+        if not (DiscreteValue.is_discrete_type_bool_type discrete_type) then (
+            raise (TypeError (
+                "Expression `"
+                ^ string_of_parsed_discrete_boolean_expression variable_infos expr
+                ^ "` in property, is not a boolean expression: "
+                ^ DiscreteValue.string_of_var_type_discrete discrete_type
+            ))
+        )
+        else
+	        Parsed_discrete_boolean_expression convert_expr, discrete_type
+	| Parsed_loc_predicate predicate as loc_predicate -> loc_predicate, DiscreteValue.Var_type_discrete_bool
+	| Parsed_state_predicate_true -> Parsed_state_predicate_true, DiscreteValue.Var_type_discrete_bool
+	| Parsed_state_predicate_false -> Parsed_state_predicate_false, DiscreteValue.Var_type_discrete_bool
+	| Parsed_state_predicate_accepting -> Parsed_state_predicate_accepting, DiscreteValue.Var_type_discrete_bool
+
+and infer_parsed_state_predicate variable_infos = function
+	| Parsed_state_predicate_OR (expr1, expr2) ->
+	    let convert_expr1, _ = infer_parsed_state_predicate variable_infos expr1 in
+	    let convert_expr2, _ = infer_parsed_state_predicate variable_infos expr2 in
+		Parsed_state_predicate_OR (convert_expr1, convert_expr2), DiscreteValue.Var_type_discrete_bool
+
+	| Parsed_state_predicate_term term ->
+	    let convert_term, discrete_type = infer_parsed_state_predicate_term variable_infos term in
+	    Parsed_state_predicate_term convert_term, discrete_type
+
+and infer_parsed_state_predicate_term variable_infos = function
+	| Parsed_state_predicate_term_AND (term1, term2) ->
+        let convert_term1, _ = infer_parsed_state_predicate_term variable_infos term1 in
+        let convert_term2, _ = infer_parsed_state_predicate_term variable_infos term2 in
+		Parsed_state_predicate_term_AND (convert_term1, convert_term2), DiscreteValue.Var_type_discrete_bool
+
+	| Parsed_state_predicate_factor factor ->
+	    let convert_factor, discrete_type = infer_parsed_state_predicate_factor variable_infos factor in
+	    Parsed_state_predicate_factor convert_factor, discrete_type
+
+and infer_parsed_state_predicate_factor variable_infos = function
+	| Parsed_state_predicate_factor_NOT factor ->
+	    let convert_factor, discrete_type = infer_parsed_state_predicate_factor variable_infos factor in
+	    Parsed_state_predicate_factor_NOT convert_factor, discrete_type
+	| Parsed_simple_predicate predicate ->
+	    let convert_predicate, discrete_type = infer_parsed_simple_predicate variable_infos predicate in
+	    Parsed_simple_predicate convert_predicate, discrete_type
+	| Parsed_state_predicate predicate ->
+	    let convert_predicate, discrete_type = infer_parsed_state_predicate variable_infos predicate in
+	    Parsed_state_predicate convert_predicate, discrete_type
+
+
+
 (** Resolve expression discrete type **)
 
 let rec discrete_type_of_expression variable_infos = function
@@ -994,6 +1048,10 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
 
 
 (** Checking functions **)
+
+let check_parsed_state_predicate variable_infos predicate =
+    let uniformly_typed_state_predicate, discrete_type = infer_parsed_state_predicate variable_infos predicate in
+    uniformly_typed_state_predicate, discrete_type
 
 (* Type non-linear constraint *)
 (* return a tuple containing the non-linear constraint uniformly typed and the resolved type of the expression *)
