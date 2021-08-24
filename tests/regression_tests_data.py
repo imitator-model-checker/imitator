@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/07/19
+# Last modified     : 2021/08/17
 #************************************************************
 
 
@@ -3792,6 +3792,60 @@ Error                                   : invalid model
 
 	,
 
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/08/17
+		# Last modified            : 2021/08/17
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test simple operations on binary words',
+		'input_files': ['binary/testbinary.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'testbinary-statespace.states' , 'content' : """
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1, bw1 = 0b1010, bw2 = 0b1011 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  pta: l1, bw1 = 0b1000, bw2 = 0b1010 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 2:
+  pta: l1, bw1 = 0b0000, bw2 = 0b1000 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 3:
+  pta: l1, bw1 = 0b0000, bw2 = 0b0000 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
 	#------------------------------------------------------------
 	{
 		## Test version             : 1

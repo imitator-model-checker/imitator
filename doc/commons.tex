@@ -174,10 +174,10 @@
 \newcommand{\BVar}{B} % set of boolean variables
 \newcommand{\bvar}{b} % boolean variable
 \newcommand{\BVarCard}{L} % cardinality of boolean variables
-\newcommand{\wval}{\ensuremath{\omega}} % binary variable
+% \newcommand{\wval}{\ensuremath{\omega}} % binary variable
 \newcommand{\WVar}{W} % set of binary word variables
-\newcommand{\wvar}{w} % binary word variable
-\newcommand{\WVarCard}{M} % cardinality of binary word variables
+\newcommand{\wvar}{w} % binary word variable % TODO: conflict
+% \newcommand{\WVarCard}{M} % cardinality of binary word variables  % TODO: conflict
 % \newcommand{\DVarinit}{\DVar_\init} % discrete variable
 \newcommand{\edge}{e}
 \newcommand{\flow}{\ensuremath{\mathit{flow}}}
@@ -209,7 +209,7 @@
 
 % Sets
 \newcommand{\setB}{\ensuremath{\mathbb B}}
-\newcommand{\setW}{\ensuremath{\mathbb W}}
+% \newcommand{\setW}{\ensuremath{\mathbb W}}
 \newcommand{\setN}{\ensuremath{\mathbb N}}
 \newcommand{\setQ}{\ensuremath{\mathbb Q}}
 \newcommand{\setQplus}{\ensuremath{\mathbb Q}_{\geq 0}}
@@ -465,31 +465,97 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % IMITATOR FILES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{bggcolor}{rgb}{0.95,0.95,0.95}
+\definecolor{commentscolor}{rgb}{0.6,0.6,0.6}
+\definecolor{numberscolor}{rgb}{0.1,.5,0.1}
+\definecolor{stringscolor}{rgb}{1,0.6,0.6}
+
+
 \usepackage{listings}
 \newcommand{\IncludeIMIfile}[1]{
-	\lstset{language=Imitator}
+	\lstset{style=IMITATORmodel}
 	\lstinputlisting[
 		basicstyle=\footnotesize,
-		breaklines=true,
-		breakatwhitespace=true,
+% 		breaklines=true,
+% 		breakatwhitespace=true,
 		columns=fixed,
-		numbers=left,
-		frame=single,
-		numberstyle=\tiny,
-		tabsize=4,
+% 		numbers=left,
+% 		frame=single,
+% 		numberstyle=\tiny,
+% 		tabsize=4,
 % 		title=\lstname
 	]{#1}
 }
 
-\lstdefinelanguage{Imitator}{
+\newcommand{\IncludeIMIproperty}[1]{
+	\lstset{style=IMITATORproperty}
+	\lstinputlisting[]{#1}
+}
+
+\lstdefinestyle{IMITATORmodel}{
+	backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+	basicstyle=\tt\footnotesize,        % the size of the fonts that are used for the code
+	breakatwhitespace=true,         % sets if automatic breaks should only happen at whitespace
+	breaklines=true,                 % sets automatic line breaking
+	%   captionpos=b,                    % sets the caption-position to bottom
+	commentstyle=\color{commentscolor},    % comment style
+	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+	extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+	%   firstnumber=1,                % start line enumeration with line 1000
+	frame=single,	                   % adds a frame around the code
+	keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+	keywordstyle=\bfseries\color{blue},       % keyword style
+	language=caml,                 % the language of the code
+	deletekeywords={done},            % if you want to delete keywords from the given language; WARNING! must be set AFTER the `language=…`
 	morekeywords={
-		and, automaton, clock, constant, continuous, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, invariant, loc, locations, not, or, parameter, print, property, rational, reach, region, unreachable, urgent, sync, synclabs, True, var, wait, when, while
+		and, automaton, binary, clock, constant, continuous, discrete, do, end, False, fill_left, fill_right, flow, forward, from, goto, if, in, init, int, initially, invariant, loc, logand, lognot, logor, logxor, not, or, parameter, rational, shift_left, shift_right, stop, sync, sync, synclabs, True, urgent, var, when, while
 	},
+	numbers=right,                    % where to put the line-numbers; possible values are (none, left, right)
+	numbersep=5pt,                   % how far the line-numbers are from the code
+	numberstyle=\tiny\color{numberscolor}, % the style that is used for the line-numbers
+	rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+	showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+	showstringspaces=false,          % underline spaces within strings only
+	showtabs=false,                  % show tabs within strings adding particular underscores
+	stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+	stringstyle=\color{stringscolor},     % string literal style
+	tabsize=2,	                   % sets default tabsize to 2 spaces
 	sensitive=false,
 % 	morecomment=[l][\color{gray}]{--},
 	morecomment=[s][keywordstyle]{"}{"},
 % 	morecomment=[s]{/*}{*/},
 	morecomment=[s][\color{gray!50!blue}]{(*}{*)},
+}
+
+
+
+\lstdefinestyle{IMITATORproperty}{
+  backgroundcolor=\color{bggcolor},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+  basicstyle=\tt\scriptsize,        % the size of the fonts that are used for the code
+%   breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+%   captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{commentscolor},    % comment style
+%   deletekeywords={},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+%   firstnumber=1000,                % start line enumeration with line 1000
+  frame=single,	                   % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\bfseries\color{blue},       % keyword style
+%   language=caml,                 % the language of the code
+  morekeywords={always,everytime,eventually,loc,property,sequence,synth,within,witness},            % if you want to add more keywords to the set
+  numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
+%   numbersep=5pt,                   % how far the line-numbers are from the code
+%   numberstyle=\tiny\color{bggcolor}, % the style that is used for the line-numbers
+%   rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+%   showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+%   showstringspaces=false,          % underline spaces within strings only
+%   showtabs=false,                  % show tabs within strings adding particular underscores
+%   stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
+%   stringstyle=\color{bggcolor},     % string literal style
+%   tabsize=2,	                   % sets default tabsize to 2 spaces
+%   title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
 }
 
 
