@@ -478,10 +478,13 @@ let get_guards model =
 		try(
 			let (clock,op,linear_term) =  clock_guard_of_linear_inequality i in
 			let coef_array = linear_term_to_coef_array linear_term model.nb_parameters in
+			(*
 			if op = Op_l || op = Op_le 
 			then guards := List.append [(clock-model.nb_parameters,op,coef_array)] !guards
 			(* If the operator is >, >= or =, apply the negation on coefficients (this is necessary due to the coefficients being sent to the other side of the inequality in the linear term) *)
 			else guards := List.append [(clock-model.nb_parameters,op,(revert_coef_array coef_array))] !guards
+			*)
+			guards := List.append [(clock-model.nb_parameters,op,(revert_coef_array coef_array))] !guards
 		) with
 			(* No clock, no worry! do nothing, this inequality is not a problem for computing bounds *)
 			| Not_a_clock_guard_no_clock_found -> ()
@@ -576,6 +579,20 @@ let prepare_extrapolation () : unit =
 	(* Set global variables *)
 	lower_constants := l;
 	upper_constants := u;
+	
+	Array.iter (fun (e) -> 
+		match e with
+		|Finite n -> print_message Verbose_standard ("\n L : " ^ (NumConst.string_of_numconst n))
+		|Minus_infinity -> print_message Verbose_standard ("\n L : - infinity")
+		|Infinity -> print_message Verbose_standard ("\n L : infinity")
+	) l; 
+	
+	Array.iter (fun (e) -> 
+		match e with
+		|Finite n -> print_message Verbose_standard ("\n U : " ^ (NumConst.string_of_numconst n))
+		|Minus_infinity -> print_message Verbose_standard ("\n U : - infinity")
+		|Infinity -> print_message Verbose_standard ("\n U : infinity")
+	) u; 
 
 	set_maximums l u nb_clocks;
 
@@ -615,9 +632,11 @@ let m_extrapolation_of_x (big_m : numconst_or_infinity) (x : variable) (px_linea
 		let px_linear_constraint1 = x_leq_M in
 		
 		(* Display some information *)
-		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high ("Linear constraint 1 = " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names px_linear_constraint1));
+		(*
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("Linear constraint 1 = " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names px_linear_constraint1));
 		);
+		*)
 
 		
 	
