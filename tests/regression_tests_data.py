@@ -3725,6 +3725,32 @@ Error                                   : invalid model
 
 	,
 
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/08/25
+		## Last modified            : 2021/08/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that properties support type checking',
+		'input_files': ['type_checking/typed-property.imi', 'type_checking/typed-property.imiprop'],
+		'tags':'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'typed-property.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	# END : Type checking on guards tests
 
 	#------------------------------------------------------------
