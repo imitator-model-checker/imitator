@@ -42,7 +42,7 @@ rule token = parse
  	| "#exhibit"       { CT_EXHIBIT }
  	| "#witness"       { CT_EXHIBIT }
  	| "#synth"         { CT_SYNTH }
- 	
+
  	(* Keywords for properties *)
 	| "AccCycle"       { CT_ACCEPTINGCYCLE }
 	| "AcceptingCycle" { CT_ACCEPTINGCYCLE }
@@ -107,6 +107,7 @@ rule token = parse
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
 	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm }
 	| ['0'-'9']+ as lxm { INT(int_of_string lxm) }
+  | "0b"['0'-'9']+ as lxm { BINARYWORD lxm }
 	| '"' [^'"']* '"' as lxm { STRING lxm } (* a string between double quotes *)
 
 	| "<="             { OP_LEQ }
