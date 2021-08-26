@@ -31,6 +31,7 @@ type var_type_discrete =
     | Var_type_discrete_bool
     | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_binary_word of int
+    | Var_type_discrete_array of var_type_discrete * int
 
 (* Type of variable in declarations *)
 type var_type =
@@ -51,6 +52,7 @@ type discrete_value =
     | Int_value of Int32.t
     | Bool_value of bool
     | Binary_word_value of BinaryWord.t
+    | Array_value of discrete_value array
 
 (************************************************************)
 (** Type functions  *)

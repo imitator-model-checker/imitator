@@ -69,7 +69,7 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_DO
+	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY CT_DO
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -87,7 +87,7 @@ let unzip l = List.fold_left
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
-    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT    
+    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT
 
 
 %token EOF
@@ -116,7 +116,7 @@ main:
 		let declarations	= $1 in
 		let automata		= $2 in
 		let init_definition	= $3 in
-		
+
 		let main_model =
 		{
 			variable_declarations	= declarations;
@@ -124,7 +124,7 @@ main:
 			init_definition			= init_definition;
 		}
 		in
-		
+
 		let included_model = unzip !include_list in
 
 		(* Return the parsed model *)
@@ -191,6 +191,7 @@ var_type:
 ;
 
 var_type_discrete:
+    | var_type_discrete CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_int $4) }
     | var_type_discrete_number { Var_type_discrete_number $1 }
     | CT_BOOL { Var_type_discrete_bool }
     /* TODO benjamin try to use directly int instead of numconst */
@@ -515,10 +516,23 @@ arithmetic_term:
 
 arithmetic_factor:
 	| number { Parsed_DF_constant ($1) }
-    | binary_word { Parsed_DF_constant $1 }
+  | binary_word { Parsed_DF_constant $1 }
+  | literal_array { Parsed_DF_constant (DiscreteValue.Number_value NumConst.zero) }
 	| NAME { Parsed_DF_variable $1 }
 	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
 	| function_call { $1 }
+;
+
+literal_array:
+  /* Empty array */
+  | LSQBRA RSQBRA {}
+  /* Non-empty array */
+  | LSQBRA literal_array_fol RSQBRA {}
+;
+
+literal_array_fol:
+	| boolean_expression COMMA literal_array_fol { $1 :: $3 }
+	| boolean_expression { [$1] }
 ;
 
 function_call:

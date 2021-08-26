@@ -35,6 +35,7 @@ type var_type_discrete =
     | Var_type_discrete_bool
     | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_binary_word of int
+    | Var_type_discrete_array of var_type_discrete * int
 
 (** Type of variable in declarations *)
 type var_type =
@@ -56,6 +57,7 @@ type discrete_value =
     | Int_value of Int32.t
     | Bool_value of bool
     | Binary_word_value of BinaryWord.t
+    | Array_value of discrete_value array
 
 (************************************************************)
 (** Type functions  *)
@@ -70,10 +72,11 @@ let string_of_var_type_discrete_number = function
     | Var_type_discrete_unknown_number -> "number"
 
 (* String of discrete var type *)
-let string_of_var_type_discrete = function
+let rec string_of_var_type_discrete = function
     | Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | Var_type_discrete_bool -> "bool"
     | Var_type_discrete_binary_word l -> "binary(" ^ string_of_int l ^ ")"
+    | Var_type_discrete_array (discrete_type, length) -> string_of_var_type_discrete discrete_type ^ " array(" ^ string_of_int length ^ ")"
 
 (* String of var type *)
 let string_of_var_type = function
@@ -141,20 +144,26 @@ let is_discrete_type_binary_word_type = function
     | _ -> false
 
 (* Get var type of a discrete value *)
-let var_type_of_value = function
+let rec var_type_of_value = function
     | Number_value _ -> var_type_unknown_number
     | Rational_value _ -> var_type_rational
     | Int_value _ -> var_type_int
     | Bool_value _ -> var_type_bool
     | Binary_word_value b -> var_type_binary_word (BinaryWord.length b)
+    | Array_value a -> var_type_of_value (Array.get a 0)
 
 (* Get discrete var type of a discrete value *)
-let discrete_type_of_value = function
+let rec discrete_type_of_value = function
     | Number_value _ -> Var_type_discrete_number Var_type_discrete_unknown_number
     | Rational_value _ -> Var_type_discrete_number Var_type_discrete_rational
     | Int_value _ -> Var_type_discrete_number Var_type_discrete_int
     | Bool_value _ -> Var_type_discrete_bool
     | Binary_word_value b -> Var_type_discrete_binary_word (BinaryWord.length b)
+    | Array_value a ->
+        if Array.length a = 0 then
+            Var_type_discrete_array (Var_type_discrete_number Var_type_discrete_rational, 0)
+        else
+            Var_type_discrete_array (discrete_type_of_value (Array.get a 0), Array.length a)
 
 let discrete_type_of_var_type = function
     | Var_type_clock
@@ -186,12 +195,15 @@ let check_value_compatible_with_type value var_type =
 (************************************************************)
 
 (** String of values  **)
-let customized_string_of_value customized_boolean_string = function
+let rec customized_string_of_value customized_boolean_string = function
     | Number_value x
     | Rational_value x -> NumConst.string_of_numconst x
     | Bool_value x -> if x then customized_boolean_string.true_string else customized_boolean_string.false_string
     | Int_value x -> Int32.to_string x
     | Binary_word_value b -> BinaryWord.string_of_binaryword b
+    | Array_value a ->
+        let string_array = Array.map (fun x -> customized_string_of_value customized_boolean_string x) a in
+        OCamlUtilities.string_of_array_of_string string_array
 
 let string_of_value = customized_string_of_value default_string
 
@@ -235,10 +247,11 @@ let default_discrete_number_value = function
     | Var_type_discrete_int -> Int_value int_default_value
 
 (* Get default discrete value *)
-let default_discrete_value = function
+let rec default_discrete_value = function
     | Var_type_discrete_number x -> default_discrete_number_value x
     | Var_type_discrete_bool -> Bool_value bool_default_value
     | Var_type_discrete_binary_word l -> Binary_word_value (BinaryWord.zero l)
+    | Var_type_discrete_array (discrete_type, length) -> Array_value (Array.make length (default_discrete_value discrete_type))
 
 (* Get default discrete value *)
 let default_value = function
@@ -292,6 +305,7 @@ let to_numconst_value = function
     (* Warning, a bit is lost when converting on 32 bit platform !*)
     | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
     | Binary_word_value x -> NumConst.numconst_of_int (BinaryWord.hash x)
+    | Array_value _ -> raise (InternalError "Unable to convert array to NumConst.t value")
 
 (* Convert any discrete value to Int32 value, if possible *)
 let to_int_value = function
@@ -302,6 +316,7 @@ let to_int_value = function
     (* Warning, a bit is lost when converting on 32 bit platform !*)
     | Int_value x -> x
     | Binary_word_value x -> Int32.of_int (BinaryWord.hash x)
+    | Array_value _ -> raise (InternalError "Unable to convert array to Int32.t value")
 
 (* Convert any discrete value to float value, if possible *)
 let to_float_value = function
@@ -310,6 +325,8 @@ let to_float_value = function
     | Bool_value x -> if x then 0.0 else 0.0
     | Int_value x -> Int32.to_float x
     | Binary_word_value x -> float_of_int (BinaryWord.hash x)
+    | Array_value _ -> raise (InternalError "Unable to convert array to float value")
+
 
 (* Get binary word value of discrete value *)
 let binary_word_value = function
@@ -327,6 +344,34 @@ let of_bool x = Bool_value x
 let convert_to_rational_value value =
     Rational_value (to_numconst_value value)
 
+(* Convert discrete value to another discrete type *)
+(* Use for implicit conversion *)
+let convert_value_to_discrete_type value target_type =
+    match value, target_type with
+    (* Source and target type are identical *)
+    | Rational_value _, Var_type_discrete_number Var_type_discrete_rational
+    | Int_value _, Var_type_discrete_number Var_type_discrete_int
+    | Number_value _, Var_type_discrete_number Var_type_discrete_unknown_number -> value
+    (* Number_value to Rational_value *)
+    | Number_value _, Var_type_discrete_number Var_type_discrete_rational
+    (* Int_value to Rational_value *)
+    | Int_value _, Var_type_discrete_number Var_type_discrete_rational ->
+        Rational_value (to_numconst_value value)
+    (* Number_value to Int_value *)
+    | Number_value _, Var_type_discrete_number Var_type_discrete_int
+    (* Rational_value to Int_value *)
+    | Rational_value _, Var_type_discrete_number Var_type_discrete_int ->
+        Int_value (to_int_value value)
+    (* Other are not supported *)
+    | x, t -> failwith (
+        "Implicit conversion of value "
+        ^ (string_of_value x)
+        ^ " to "
+        ^ (string_of_var_type_discrete t)
+        ^ " type is not supported"
+    )
+
+(*
 (* TODO benjamin LOOK really necessary ? *)
 (* Convert discrete value to another discrete type *)
 let convert_value_to_discrete_type value target_type =
@@ -356,14 +401,17 @@ let convert_value_to_discrete_type value target_type =
         ^ (string_of_var_type_discrete t)
         ^ " type is not supported"
     )
+*)
 
 (* Hash code of discrete value *)
-let hash = function
+let rec hash = function
     | Number_value x
     | Rational_value x -> Gmp.Z.to_int (NumConst.get_num x)
     | Bool_value x -> if x then 1 else 0
     | Int_value x -> Int32.to_int x
     | Binary_word_value b -> BinaryWord.hash b
+    (* Arbitrary *)
+    | Array_value a -> Array.fold_left (fun acc x -> acc + (hash x)) 0 a
 
 (** Dynamic computing operations on values  **)
 

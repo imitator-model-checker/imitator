@@ -78,10 +78,11 @@ let convert_var_type_discrete_number = function
     | ParsingStructure.Var_type_discrete_int -> DiscreteValue.Var_type_discrete_int
 
 (* Convert discrete var type from parsing structure to abstract model *)
-let convert_var_type_discrete = function
+let rec convert_var_type_discrete = function
     | ParsingStructure.Var_type_discrete_number x -> DiscreteValue.Var_type_discrete_number (convert_var_type_discrete_number x)
     | ParsingStructure.Var_type_discrete_bool -> DiscreteValue.Var_type_discrete_bool
     | ParsingStructure.Var_type_discrete_binary_word l -> DiscreteValue.Var_type_discrete_binary_word l
+    | ParsingStructure.Var_type_discrete_array (t, l) -> DiscreteValue.Var_type_discrete_array (convert_var_type_discrete t, l)
 
 (* Convert var type from parsing structure to abstract model *)
 let convert_var_type = function

@@ -523,6 +523,7 @@ and try_reduce_parsed_arithmetic_expression constants expr =
             (* Should never happen *)
             | DiscreteValue.Var_type_discrete_bool
             | DiscreteValue.Var_type_discrete_binary_word _
+            | DiscreteValue.Var_type_discrete_array _
             | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number as t ->
                 raise (InternalError (
                     "Try to reduce a pow function on a "
