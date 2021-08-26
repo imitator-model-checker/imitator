@@ -108,8 +108,18 @@ type binary_word_expression =
 (************************************************************)
 (************************************************************)
 
+(****************************************************************)
+(** Global expression *)
+(****************************************************************)
+type global_expression =
+    (* A typed expression *)
+    | Arithmetic_expression of discrete_arithmetic_expression
+    | Bool_expression of boolean_expression
+    | Binary_word_expression of binary_word_expression
+    | Array_expression of array_expression
+
 (** Boolean expression *)
-type boolean_expression =
+and boolean_expression =
 	| True_bool (** True *)
 	| False_bool (** False *)
 	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
@@ -132,16 +142,12 @@ and discrete_boolean_expression =
 	(** discrete constant in boolean expression *)
 	| DB_constant of bool
 
+and array_expression =
+    (* Add here some function on array *)
+    | Array_constant of global_expression array
+    | Array_variable of Automaton.variable_index
 
 
-(****************************************************************)
-(** Global expression *)
-(****************************************************************)
-type global_expression =
-    (* A typed expression *)
-    | Arithmetic_expression of discrete_arithmetic_expression
-    | Bool_expression of boolean_expression
-    | Binary_word_expression of binary_word_expression
 
 (* String *)
 
