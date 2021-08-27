@@ -1,9 +1,9 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : BRPAAPP21_RC
  * Description      : Bounded Retransmission Protocol [version slightly modified]
- * Correctness      : 
+ * Correctness      :
  * Scalable         : no
  * Generated        : no
  * Categories       : Protocol
@@ -13,15 +13,16 @@
  * Modeling         : Laurent Fribourg
  * Input by         : Étienne André, Laure Petrucci, Jaco van de Pol
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- * 
+ *
  * Created          : ? (< 09/2007)
- * Last modified    : 2020/09/22
- * Model version    : 
- * 
- * IMITATOR version : 
+ * Last modified    : 2021/07/26
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
-var     x,z,u,v
+var
+	x,z,u,v
 		: clock;
 
 	i,	(* subscript of the chunk currently beeing processed (1<=i<=N) *)
@@ -40,20 +41,20 @@ var     x,z,u,v
 	TR,	(* time-out of the receiver for indicating failure
 			when R has not received the last chunk of a file *)
 	TD  (* maximum delay in channel K (and L) *)
-           : parameter;
+		: parameter;
 (****************************************************)
 
 
 
 (****************************************************
- ****************************************************
- AUTOMATA
- ****************************************************
- ****************************************************)
+****************************************************
+AUTOMATA
+****************************************************
+****************************************************)
 
 
 (****************************************************)
-  automaton sender
+automaton sender
 (****************************************************)
 synclabs: S_in, rcvA, sndD, S_DK, S_NOK, S_OK;
 
@@ -81,7 +82,7 @@ end (* sender *)
 
 
 (****************************************************)
-  automaton receiver
+automaton receiver
 (****************************************************)
 synclabs: rcvD, sndA, R_NOK, R_OK, R_FST, R_INC;
 
@@ -152,19 +153,38 @@ end (* channelL *)
 (************************************************************)
 (* Initial state *)
 (************************************************************)
-init :=   loc[sender]=idleS
-	& loc[receiver]=new_file
-	& loc[channelK]=startK
-	& loc[channelL]=startL
+init :=    {
 
-	& x=0 & z=0 & u=0 & v=0
-	& rc=0 & i=1 & ab=0
-	& b1=0 & bN=0 & rb1=0 & rbN=0
-	& rab=0 & exp_ab=0
+	discrete =
+		(* Initial state *)
+		loc[sender]:=idleS,
+		loc[receiver]:=new_file,
+		loc[channelK]:=startK,
+		loc[channelL]:=startL,
 
-	& TD > 0
-	& TS > 0
-	& TR > 0
-	& SYNC > 0
-  & TS > 2 * TD
+		(* Initial discrete variables assignments *)
+		rc:=0,
+		i:=1,
+		ab:=0,
+		b1:=0,
+		bN:=0,
+		rb1:=0,
+		rbN:=0,
+		rab:=0,
+		exp_ab:=0,
 	;
+
+	continuous =
+		(* Initial clock constraints *)
+		& x=0 & z=0 & u=0 & v=0
+
+		(* Parameter constraints *)
+		& TD > 0
+		& TS > 0
+		& TR > 0
+		& SYNC > 0
+	  & TS > 2 * TD
+	;
+}
+
+end
