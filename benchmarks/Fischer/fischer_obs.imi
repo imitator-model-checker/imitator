@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
  * Fischer's mutual exclusion protocol
  *
@@ -12,16 +12,16 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : < 2012/02/14
- * Fork from       : 
+ * Fork from       :
  * Fork date       : 2015/02/18
- * Last modified   : 2020/08/14
+ * Last modified   : 2021/08/30
  *
- * IMITATOR version: 3.0
+ * IMITATOR version: 3.1
  ************************************************************)
- 
 
-var 
-	
+
+var
+
 	x1, (*P1's clock*)
 	x2, (*P2's clock*)
 		:clock;
@@ -44,7 +44,7 @@ synclabs : tau,start1,set1,enter1,abort1,release1;
 loc idle: invariant True
 	when k=0 sync start1 do {x1 :=0} goto start;
 	when True sync tau do {} goto idle;
-	
+
 loc start: invariant x1<=a
 	when True sync set1 do {k :=1 , x1 :=0} goto check;
 	when True sync tau do {} goto start;
@@ -69,7 +69,7 @@ synclabs : tau,start2,set2,enter2,abort2,release2;
 loc idle: invariant True
 	when k=0 sync start2 do {x2 :=0} goto start;
 	when True sync tau do {} goto idle;
-	
+
 loc start: invariant x2<=a
 	when True sync set2 do {k :=2,x2 :=0} goto check;
 	when True sync tau do {} goto start;
@@ -91,7 +91,7 @@ automaton arbitrer
 synclabs : set1,release1,
            set2,release2,
 	   tau;
-	   
+
 
 loc loc_arbitrer: invariant True
 	when True sync set1 do {} goto loc_arbitrer;
@@ -107,7 +107,7 @@ automaton obs
 (************************************************************)
 synclabs : enter1, release1,
            enter2, release2;
-	   
+
 
 loc obs0: invariant True
 	when True sync enter1 goto obs1;
@@ -130,33 +130,28 @@ end
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	  loc[proc1] = idle
-	& loc[proc2] = idle
-	& loc[arbitrer] = loc_arbitrer
-	& loc[obs] = obs0
-	
-	(*------------------------------------------------------------*)
-	(* Initial discrete assignments *)
-	(*------------------------------------------------------------*)
-	& k=0
-	
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x1 = 0
-	& x2 = 0
-	
+init := {
+  discrete =
+	  (* Initial location *)
+	  loc[proc1] := idle,
+  	loc[proc2] := idle,
+  	loc[arbitrer] := loc_arbitrer,
+  	loc[obs] := obs0,
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& a >= 0
-	& b >= 0
-;
+	   (* Initial discrete assignments *)
+	   k := 0,
+	;
+
+  continuous =
+  	(* Initial clock constraints *)
+  	& x1 = 0
+  	& x2 = 0
+
+  	(* Parameter constraints *)
+  	& a >= 0
+  	& b >= 0
+  ;
+}
 
 
 (************************************************************)

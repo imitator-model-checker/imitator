@@ -1,9 +1,9 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : FischerPS08-10
- * Description      : 
- * Correctness      : 
+ * Description      :
+ * Correctness      :
  * Scalable         : yes
  * Generated        : yes
  * Categories       : Academic ; Protocol ; RTS
@@ -12,13 +12,13 @@
  * Author           : Wojciech Penczek and Maciej Szreter
  * Modeling         : Wojciech Penczek and Maciej Szreter
  * Input by         : Étienne André
- * License          : 
- * 
- * Created          : 
- * Last modified    : 
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * License          :
+ *
+ * Created          :
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -381,31 +381,38 @@ automaton observer
 end (* observer *)
 
 
-	init := True
-	& loc[process1] = idle1
-	& loc[process2] = idle2
-	& loc[process3] = idle3
-	& loc[process4] = idle4
-	& loc[process5] = idle5
-	& loc[process6] = idle6
-	& loc[process7] = idle7
-	& loc[process8] = idle8
-	& loc[process9] = idle9
-	& loc[process10] = idle10
-	& loc[variable] = Val0
-	& loc[observer] = obs_OK
-	& x1 = 0
-	& x2 = 0
-	& x3 = 0
-	& x4 = 0
-	& x5 = 0
-	& x6 = 0
-	& x7 = 0
-	& x8 = 0
-	& x9 = 0
-	& x10 = 0
-	& nb = 0
-	& Delta >= 0
-	& delta >= 0;
+init := {
+	discrete =
+		loc[process1] := idle1,
+		loc[process2] := idle2,
+		loc[process3] := idle3,
+		loc[process4] := idle4,
+		loc[process5] := idle5,
+		loc[process6] := idle6,
+		loc[process7] := idle7,
+		loc[process8] := idle8,
+		loc[process9] := idle9,
+		loc[process10] := idle10,
+		loc[variable] := Val0,
+		loc[observer] := obs_OK,
+
+		nb := 0,
+	;
+	
+	continuous =
+		& x1 = 0
+		& x2 = 0
+		& x3 = 0
+		& x4 = 0
+		& x5 = 0
+		& x6 = 0
+		& x7 = 0
+		& x8 = 0
+		& x9 = 0
+		& x10 = 0
+		& Delta >= 0
+		& delta >= 0
+	;
+}
 
 end

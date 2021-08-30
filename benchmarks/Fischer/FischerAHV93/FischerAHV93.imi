@@ -1,24 +1,24 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : FischerAHV93
  * Description      : Fischer protocol for mutual exclusion (parametric timed version). Modeled exactly as in [AHV93] although smarter modeling could have been done thanks to the IMITATOR syntax.
  * Correctness      : No two processes in the critical section (i.e., in P1_4 and P2_4 at the same time)
- * Scalable         : 
- * Generated        : 
+ * Scalable         :
+ * Generated        :
  * Categories       : Academic ; Protocol ; RTS
  * Source           : Model described in "Parametric Real-Time Reasoning" (fig. 2) Alur, Henzinger, Vardi (STOC 1993)
  * bibkey           : AHV93
  * Author           : Alur, Henzinger, Vardi
  * Modeling         : Alur, Henzinger, Vardi
  * Input by         : Étienne André
- * License          : 
- * 
+ * License          :
+ *
  * Created          : 2011/11/25
- * Last modified    : 2020/08/14
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -119,35 +119,24 @@ loc P2_4: invariant True
 end (*P2*)
 
 
-(************************************************************)
-(* Initial state *)
-(************************************************************)
-init :=
-	(*----------------------
-	-- Initial locations
-	----------------------*)
-	& loc[lock] = lock0
-	& loc[P1]   = P1_0
-	& loc[P2]   = P2_0
-	
-	(*----------------------
-	-- Clocks
-	----------------------*)
+init := {
+  discrete =
+  	(* Initial state *)
+  	loc[lock] := lock0,
+  	loc[P1]   := P1_0,
+  	loc[P2]   := P2_0,
+  ;
 
-	(*----------------------
-	-- Given constraints
-	----------------------*)
-	& a >= 0
-	& b >= 0
-	& c >= 0
-	& d >= 0
+  continuous =
+    (* Initial clock constraints *)
 
-	(*----------------------
-	-- Instantiations
-	----------------------*)
-
-;
-
+  	(* Parameter constraints *)
+  	& a >= 0
+  	& b >= 0
+  	& c >= 0
+  	& d >= 0
+  ;
+}
 
 (************************************************************)
 (* The end *)
