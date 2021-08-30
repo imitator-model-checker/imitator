@@ -1,11 +1,11 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : packaging
  * Description      : Packaging system
  * Correctness      : Risk unreachable (??)
- * Scalable         : 
- * Generated        : 
+ * Scalable         :
+ * Generated        :
  * Categories       : Academic ; ProdCons
  * Source           : https://github.com/astefano/efsmt_coverts/tree/master/imitator_examples/Imitator/packaging
  * bibkey           : ABBCR16
@@ -13,12 +13,12 @@
  * Modeling         : Lăcrămioara Aştefănoaei
  * Input by         : Lăcrămioara Aştefănoaei / Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- * 
+ *
  * Created          : 2017/01/18
- * Last modified    : 2020/08/13
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -27,7 +27,7 @@
 var
 
 (* Clocks *)
- 	x,y 
+ 	x,y
 		: clock;
 
 (* Parameters *)
@@ -79,7 +79,7 @@ loc risk: invariant True
 (*	when True sync resolvem do {} goto risk;
 	when True sync shipm do {} goto risk;
 	when True sync fillm do {} goto risk;
-	when True sync resumem do {} goto risk;	
+	when True sync resumem do {} goto risk;
 	when True sync packm do {} goto risk;
 	when True sync errpm do {} goto risk;*)
 
@@ -124,26 +124,30 @@ resolve , resolvem*)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[FFS] = f0
-	& loc[Monitor] = m0
-	& loc[Packaging] = p0
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[FFS] := f0,
+  	loc[Monitor] := m0,
+  	loc[Packaging] := p0,
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x = 0
-	& y = 0 (*** NOTE: in the original model, y=0 was ommitted; error?? ***)
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& x = 0
+  	& y = 0 (*** NOTE: in the original model, y=0 was ommitted; error?? ***)
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& a >= 0
-	& b >= 0
-;
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& a >= 0
+  	& b >= 0
+  ;
+}
 
 (************************************************************)
 (* The end *)

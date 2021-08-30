@@ -9,11 +9,11 @@
  *
  * Author          : Étienne André
  * Created         : 2015/02/11
- * Last modified   : 2020/08/18
- * IMITATOR version: 3
+ * Last modified   : 2021/08/30
+ * IMITATOR version: 3.1
  ************************************************************)
 
-var 
+var
 	(* local clocks *)
 	t_AVI, t_LRI, t_PVARP, t_VRP, t_5a,
 	(* global clocks *)
@@ -28,13 +28,13 @@ var
 	TPVAB		= 50,
 	Aminwait	= 0,(* (random value)*)
 	Amaxwait	= 1000,(* (random value)*)
-	
+
 	(* Constants for readability *)
 	TRUE = 1,
 	FALSE = 0
-	
+
 		: parameter;
-	
+
 	(* Hack to test another PTA's location *)
 	AVIisIdle, PVARPisIdle
 		: discrete;
@@ -256,63 +256,67 @@ end (* monitor5a *)
 (* Initial state *)
 (************************************************************)
 
-init := True
-	(*------------------------------------------------------------
-	   INITIAL LOCATION
-	  ------------------------------------------------------------*)
-	& loc[LRI]			= LRI
-	& loc[AVI]			= Idle
-	& loc[URI]			= URI
-	& loc[PVARP]		= Idle
-	& loc[VRP]			= Idle
-	& loc[RHM]			= AReady
-	& loc[monitor5a]	= wait_1st
+init := {
+	discrete =
+		(*------------------------------------------------------------
+		   INITIAL LOCATION
+		  ------------------------------------------------------------*)
+		loc[LRI]			:= LRI,
+		loc[AVI]			:= Idle,
+		loc[URI]			:= URI,
+		loc[PVARP]		:= Idle,
+		loc[VRP]			:= Idle,
+		loc[RHM]			:= AReady,
+		loc[monitor5a]	:= wait_1st,
 
 
-	(*------------------------------------------------------------
-	   INITIAL DISCRETE
-	  ------------------------------------------------------------*)
-	& AVIisIdle			= TRUE
-	& PVARPisIdle		= TRUE
-	
-	(*------------------------------------------------------------
-	   INITIAL CLOCKS
-	  ------------------------------------------------------------*)
-	& clk		= 0
-	& x			= 0
-	& x_urgent	= 0
-	
-	& t_AVI		= 0
-	& t_LRI		= 0
-	& t_PVARP	= 0
-	& t_VRP		= 0
-	& t_5a		= 0
+		(*------------------------------------------------------------
+		   INITIAL DISCRETE
+		  ------------------------------------------------------------*)
+		AVIisIdle			:= TRUE,
+		PVARPisIdle		:= TRUE,
+	;
 
-	
-	(*------------------------------------------------------------
-	   PARAMETER CONSTRAINTS
-	  ------------------------------------------------------------*)
-	& TAVI		>= 0
-	& TLRI		>= 0
-	& TPVARP	>= 0
-	& TVRP		>= 0
-	& TURI		>= 0
-	& TPVAB		>= 0
-	& Aminwait	>= 0
-	& Amaxwait	>= 0
-	
-	& Aminwait <= Amaxwait
+	continuous =
+		(*------------------------------------------------------------
+		   INITIAL CLOCKS
+		  ------------------------------------------------------------*)
+		& clk		= 0
+		& x			= 0
+		& x_urgent	= 0
 
-	
-	(*------------------------------------------------------------
-	   PARAMETER VALUATION
-	  ------------------------------------------------------------*)
-(*	& TAVI		= 150
-	& TLRI		= 1000
-	& TPVARP	= 100
-	& TVRP		= 150
-	& TURI		= 400
-	& TPVAB		= 50*)
-;
+		& t_AVI		= 0
+		& t_LRI		= 0
+		& t_PVARP	= 0
+		& t_VRP		= 0
+		& t_5a		= 0
+
+
+		(*------------------------------------------------------------
+		   PARAMETER CONSTRAINTS
+		  ------------------------------------------------------------*)
+		& TAVI		>= 0
+		& TLRI		>= 0
+		& TPVARP	>= 0
+		& TVRP		>= 0
+		& TURI		>= 0
+		& TPVAB		>= 0
+		& Aminwait	>= 0
+		& Amaxwait	>= 0
+
+		& Aminwait <= Amaxwait
+
+
+		(*------------------------------------------------------------
+		   PARAMETER VALUATION
+		  ------------------------------------------------------------*)
+		(*	& TAVI		= 150
+		& TLRI		= 1000
+		& TPVARP	= 100
+		& TVRP		= 150
+		& TURI		= 400
+		& TPVAB		= 50*)
+	;
+}
 
 end

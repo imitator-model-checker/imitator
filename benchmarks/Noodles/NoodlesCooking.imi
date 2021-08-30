@@ -1,24 +1,24 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : NoodlesCooking
  * Description      : Toy example to cook noodles
  * Correctness      : The water must not boil over [in fact, no parameter valuation can prevent this, because the timer is not necessarily set from the beginning!]
- * Scalable         : 
- * Generated        : 
+ * Scalable         :
+ * Generated        :
  * Categories       : Education ; Toy
  * Source           : "SITH" course final examination at Institut Galilée, Université Paris 13 (2013-2014)
- * bibkey           : 
+ * bibkey           :
  * Author           : Étienne André
  * Modeling         : Étienne André
  * Input by         : Étienne André
- * License          : 
- * 
+ * License          :
+ *
  * Created          : 2014/03/21
- * Last modified    : 2020/08/13
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -26,7 +26,7 @@
 
 var 	xPot, xTimer
 		: clock;
-		
+
 	dPot, dTimer
 		: parameter;
 
@@ -59,23 +59,27 @@ end (* system *)
 (* Initial state *)
 (************************************************************)
 init :=
-	(*------------------------------------------------------------*)
-	(*   INITIAL LOCATION *)
-	(*------------------------------------------------------------*)
-	& loc[system] = heating
+	discrete =
+		(*------------------------------------------------------------*)
+		(*   INITIAL LOCATION *)
+		(*------------------------------------------------------------*)
+		loc[system] := heating,
+	;
 
-	(*------------------------------------------------------------*)
-	(*   INITIAL CLOCKS *)
-	(*------------------------------------------------------------*)
-	& xPot = 0
-	& xTimer = 0
-	
-	(*------------------------------------------------------------*)
-	(*   PARAMETER CONSTRAINTS *)
-	(*------------------------------------------------------------*)
-	& dPot >= 0
-	& dTimer >= 0
-;
+	continuous =
+		(*------------------------------------------------------------*)
+		(*   INITIAL CLOCKS *)
+		(*------------------------------------------------------------*)
+		& xPot = 0
+		& xTimer = 0
+
+		(*------------------------------------------------------------*)
+		(*   PARAMETER CONSTRAINTS *)
+		(*------------------------------------------------------------*)
+		& dPot >= 0
+		& dTimer >= 0
+	;
+}
 
 
 (************************************************************)
