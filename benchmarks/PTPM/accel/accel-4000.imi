@@ -1,6 +1,6 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : accel-4000
  * Description      : Parametric timed pattern matching benchmark : accel
  * Correctness      : N/A
@@ -13,12 +13,12 @@
  * Modeling         : Étienne André
  * Input by         : Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- * 
+ *
  * Created          : 2018/04/06
- * Last modified    : 2020/08/18
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -20218,7 +20218,7 @@ synclabs: A, B, C, D, E, F, G, H;
 		when xabs = 4000 sync A goto w10046;
 
 	(* END GENERATED *)
-	
+
 	loc w10046: invariant True
 end (* word *)
 
@@ -20226,26 +20226,30 @@ end (* word *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[pta] = pre_s0
-	& loc[word] = w1
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[pta] := pre_s0,
+  	loc[word] := w1,
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x = 0
-	& xabs = 0
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& x = 0
+  	& xabs = 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& p10 >= 0
-	& t >= 0
-	& tprime >= 0
-;
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& p10 >= 0
+  	& t >= 0
+  	& tprime >= 0
+  ;
+}
 
 
 
