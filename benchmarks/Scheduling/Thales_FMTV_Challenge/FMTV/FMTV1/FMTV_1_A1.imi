@@ -1,24 +1,24 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : FMTV_1_A1
- * Description      : 
- * Correctness      : 
- * Scalable         : 
- * Generated        : 
+ * Description      :
+ * Correctness      :
+ * Scalable         :
+ * Generated        :
  * Categories       : Industrial ; Protocol ; RTS
- * Source           : 
+ * Source           :
  * bibkey           : SAL15
  * Author           : Étienne André and Youcheng Sun
- * Modeling         : 
- * Input by         : 
- * License          : 
- * 
+ * Modeling         :
+ * Input by         :
+ * License          :
+ *
  * Created          : 2015/03/19
- * Last modified    : 2020/08/18
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -27,60 +27,60 @@
 var
 
     (** CONSTANTS **)
-	
+
     (* Frames *)
     FRAME_EMPTY = 0, (* no frame *)
-    
-    FRAME_OTHER = 1, 
+
+    FRAME_OTHER = 1,
     FRAME_OTHER2 = 2,
     FRAME_OTHER3 = 3,
-    
+
     FRAME_THEFRAME = 200, (* the actual frame produced by the camera *)
 
     (* Timings from the specification *)
     T1WCET = 28,
     T2BCL = 17,
-    T2WCL = 19, 
-     
+    T2WCL = 19,
+
     T3CET = 8,
-	
+
     T4CET_empty = 1,
     T4CET_nonempty = 10,
-	
-	
+
+
     (* P1, P3 and P4 are task official periods *)
     P3 = 40/3,
     P4 = 40,
-     
+
     (*P1_delta, P3_delta and P4_delta are possible variations of the periods *)
     (*OFFICIAL VALUES*)
     P3_delta = 1/150 (*40/3 * 0,0005*),
     P4_delta = 0.004 (*40 * 0,0001*),
     : parameter;
-    
+
     (** CLOCKS **)
-    
+
     ckT1T2, ckT3, ckT4
     : clock;
-    
+
     (** DISCRETE **)
-    
+
     (* Current frame in tasks 3 and 4 *)
     frame_in_3,
     frame_in_4,
-    
+
     (* Frame in the register (of capacity 1) between T2 and T3; we assume it cannot be empty (TODO: justify!) *)
     register23,
-    
+
     (* Current frame in the buffer (n=1) between T3 and T4 *)
     buffer34,
     (* Highest frame number in the buffer (n=1) between T3 and T4 (because "if the buffer has already stored a frame with a given index, any additional frame with the same index is discarded") *)
     buffer34_highest,
-    
+
     : discrete;
-    
+
     (** PARAMETERS **)
-    
+
     (* The end-to-end latency *)
     e2e,
     (*P1_uncertain, P3_uncertain and P4_uncertain are constant task periods with a little of uncertainty *)
@@ -166,7 +166,7 @@ synclabs: start, T4_start_empty, T4_start_nonempty, T4_done;
 loc T4preinit: invariant True
 	(* Initially, T4 can be either processing or waiting *)
 	when True sync start goto T4wait;
-	
+
 (* Processing a non-empty frame *)
 loc T4process_nonempty: invariant ckT4 <= T4CET_nonempty
 	(* If another frame: wait for next round *)
@@ -197,55 +197,58 @@ end (* T4 *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[cameraT1T2] = camera0
-	& loc[T3] = T3preinit
-	& loc[T4] = T4preinit
+init := {
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[cameraT1T2] := camera0,
+		loc[T3] := T3preinit,
+		loc[T4] := T4preinit,
 
-	(*------------------------------------------------------------
-	   INITIAL CLOCKS
-	  ------------------------------------------------------------*)
-	(* Start exactly when the camera has output the frame *)
-	& ckT1T2 = 0
-	(* Other components can be in any state *)
-	& 0 <= ckT3 & ckT3 <= P3_uncertain
-	& 0 <= ckT4 & ckT4 <= P4_uncertain
+		(*------------------------------------------------------------
+			 INITIAL DISCRETE VARIABLES
+			------------------------------------------------------------*)
+		(* Required by IMITATOR, but in fact will be nondeterministically initialized by the PTA cameraT1T2 *)
+		frame_in_4 := FRAME_OTHER,
 
-	(*------------------------------------------------------------
-	   INITIAL DISCRETE VARIABLES
-	  ------------------------------------------------------------*)
-	(* Required by IMITATOR, but in fact will be nondeterministically initialized by the PTA cameraT1T2 *)
-	& frame_in_4 = FRAME_OTHER
-	
-        (* Required by IMITATOR, but in fact will be nondeterministically initialized by the PTA cameraT1T2 *)
-	& buffer34 = FRAME_OTHER
-	& buffer34_highest = FRAME_OTHER
+		(* Required by IMITATOR, but in fact will be nondeterministically initialized by the PTA cameraT1T2 *)
+		buffer34 := FRAME_OTHER,
+		buffer34_highest := FRAME_OTHER,
 
-	(* We assume there is another frame in the task 3 (again, this has no importance *)
-	& frame_in_3 = FRAME_OTHER2
-	
-	(* We assume there is another frame in the register (this has no importance *)
-	& register23 = FRAME_OTHER3
-	
+		(* We assume there is another frame in the task 3 (again, this has no importance *)
+		frame_in_3 := FRAME_OTHER2,
 
-	(*------------------------------------------------------------
-	   PARAMETER CONSTRAINTS
-	  ------------------------------------------------------------*)
-	& e2e >= 0
+		(* We assume there is another frame in the register (this has no importance *)
+		register23 := FRAME_OTHER3,
+	;
 
-	& P3 - P3_delta <= P3_uncertain & P3_uncertain <= P3 + P3_delta
-	& P4 - P4_delta <= P4_uncertain & P4_uncertain <= P4 + P4_delta
-	
-	(* Obvious but safer *)
-	& T2BCL <= T2WCL
-	& T3CET <= P3_uncertain
-	& T4CET_empty <= T4CET_nonempty
-	& T4CET_nonempty <= P4_uncertain
+	continuous =
+		(*------------------------------------------------------------
+		   INITIAL CLOCKS
+		  ------------------------------------------------------------*)
+		(* Start exactly when the camera has output the frame *)
+		& ckT1T2 = 0
+		(* Other components can be in any state *)
+		& 0 <= ckT3 & ckT3 <= P3_uncertain
+		& 0 <= ckT4 & ckT4 <= P4_uncertain
 
-;
+
+		(*------------------------------------------------------------
+		   PARAMETER CONSTRAINTS
+		  ------------------------------------------------------------*)
+		& e2e >= 0
+
+		& P3 - P3_delta <= P3_uncertain & P3_uncertain <= P3 + P3_delta
+		& P4 - P4_delta <= P4_uncertain & P4_uncertain <= P4 + P4_delta
+
+		(* Obvious but safer *)
+		& T2BCL <= T2WCL
+		& T3CET <= P3_uncertain
+		& T4CET_empty <= T4CET_nonempty
+		& T4CET_nonempty <= P4_uncertain
+	;
+}
 
 
 (************************************************************)

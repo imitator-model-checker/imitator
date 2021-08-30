@@ -1,6 +1,6 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : LA02-3_15param
  * Description      : ?
  * Correctness      : ?
@@ -13,14 +13,14 @@
  * Modeling         : ?? (Romain Soulat?)
  * Input by         : ?? (Romain Soulat?)
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- * 
+ *
  * Created          : < 2013
- * Last modified    : 2021/07/19
+ * Last modified    : 2021/08/30
  * Model version    : 0.1
- * 
- * IMITATOR version : 3.0
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
- 
+
  var
 	c_3:clock;
 		wcet_m_0_job_3,
@@ -31,7 +31,7 @@
 	: parameter;
 
 	c_2:clock;
-	
+
 		wcet_m_0_job_2,
 		wcet_m_1_job_2,
 		wcet_m_2_job_2,
@@ -43,7 +43,7 @@
 	deadline = 300: parameter;
 
 	c_1:clock;
-	
+
 		wcet_m_0_job_1,
 		wcet_m_1_job_1,
 		wcet_m_2_job_1,
@@ -53,7 +53,7 @@
 
 
 
-		
+
 (************************************************************)
 (* Including body *)
 (************************************************************)
@@ -64,23 +64,26 @@
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-			loc[checker] = check_1 &
-			loc[job_1] = m_0_waiting &
-			loc[job_2] = m_4_waiting &
-			loc[job_3] = m_1_waiting &
-			
-			c_1 = 0 &
-			c_2 = 0 &
-			c_3 = 0 &
-			time = 0
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+			loc[checker] := check_1,
+	    loc[job_1]   := m_0_waiting,
+			loc[job_2]   := m_4_waiting,
+			loc[job_3]   := m_1_waiting,
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
+  continuous =
+  		c_1 = 0 &
+  		c_2 = 0 &
+  		c_3 = 0 &
+  		time = 0
+
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
 		& wcet_m_0_job_1 >= 0
 		& wcet_m_1_job_1 >= 0
 		& wcet_m_2_job_1 >= 0
@@ -98,9 +101,8 @@ init :=
 		& wcet_m_2_job_3 >= 0
 		& wcet_m_3_job_3 >= 0
 		& wcet_m_4_job_3 >= 0
-
-;
-
+  ;
+}
 
 
 (************************************************************)

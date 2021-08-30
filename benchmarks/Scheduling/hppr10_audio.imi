@@ -1,5 +1,5 @@
 var
-	
+
 	ptpOff, ptpPeriod, audOff, audPeriod, D1, driftDelta, D2, C1, C2: parameter;
 	cPtp,cAudio,rAudioChecker,cAudioChecker :clock;
 
@@ -60,14 +60,17 @@ end
 (* Initial state *)
 (************************************************************)
 
-init :=
+init := {
+	discrete =
 	(*------------------------------------------------------------*)
 	(* Initial location *)
 	(*------------------------------------------------------------*)
-		loc[act_Ptp]  = WFO  &
-		loc[act_Audio]  = WFO  &
-		loc[Audio_Checker] = idle &
-		
+		loc[act_Ptp]  := WFO,
+		loc[act_Audio]  := WFO,
+		loc[Audio_Checker] := idle,
+	;
+
+	continuous =
 		rAudioChecker = 0 &
 		cAudioChecker = 0 &
 		cPtp = 0 &
@@ -75,39 +78,38 @@ init :=
 	(*------------------------------------------------------------*)
 	(* Pi0 *)
 	(*------------------------------------------------------------*)
-(* 	ptpOff = 0 & *)
- ptpPeriod = 40 &
-(* 	audOff = 0 & *)
-	audPeriod = 10 &
-(* 	D1 = 10 & *)
-(* 	driftDelta = 0 & *)
-(* 	D2 = 10 & *)
-(* 	C1 = 10 & *)
-(* 	C2 = 5 & *)
+	(* 	ptpOff = 0 & *)
+	 ptpPeriod = 40 &
+	(* 	audOff = 0 & *)
+		audPeriod = 10 &
+	(* 	D1 = 10 & *)
+	(* 	driftDelta = 0 & *)
+	(* 	D2 = 10 & *)
+	(* 	C1 = 10 & *)
+	(* 	C2 = 5 & *)
 
-(*--n1 = 0 &
---n2 = 0 &
---task = 0 &
---dm = 0*)
+	(*--n1 = 0 &
+	--n2 = 0 &
+	--task = 0 &
+	--dm = 0*)
 
-True
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
+	True
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
 
 
-	& ptpOff >= 0
-	& ptpPeriod >= 0
-	& audOff >= 0
-	& audPeriod >= 0
-	& D1 >= 0
-	& driftDelta >= 0
-	& D2 >= 0
-	& C1 >= 0
-	& C2 >= 0
-
-;
-
+		& ptpOff >= 0
+		& ptpPeriod >= 0
+		& audOff >= 0
+		& audPeriod >= 0
+		& D1 >= 0
+		& driftDelta >= 0
+		& D2 >= 0
+		& C1 >= 0
+		& C2 >= 0
+	;
+}
 
 
 (************************************************************)

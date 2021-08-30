@@ -8,7 +8,7 @@ var time: clock;
 	c2: clock;
 	wcet_m2_job2: parameter;
 
-	 
+
 automaton checker
 
 synclabs: DEADLINE, m3_j1_finished, m2_j2_finished, m1_j1_begin, m1_j1_finished, m2_j1_begin, m2_j1_finished, m3_j1_begin, m2_j2_begin;
@@ -45,7 +45,7 @@ loc finished: invariant time <= deadline
 
 loc error: invariant time <= deadline
 
-end	
+end
 
 automaton job1
 
@@ -119,32 +119,36 @@ end
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-			loc[checker] = nop &
-			loc[job1] = m1_begin &
-			loc[job2] = m2_begin &
-			c1 = 0 &	
-			c2 = 0 &
-			time = 0 &
-			
-			(* Positive parameters *)
-			wcet_m1_job1 >= 0 &
-			wcet_m2_job1 >= 0 &
-			wcet_m3_job1 >= 0 &
-			wcet_m2_job2 >= 0 &
+init := {
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+			loc[checker] := nop,
+			loc[job1] 	 := m1_begin,
+			loc[job2] 	 := m2_begin,
+	;
 
-	(*------------------------------------------------------------*)
-	(* Pi0 *)
-	(*------------------------------------------------------------*)
-(*--			wcet_m1_job1 = 3 &
---			wcet_m2_job1 = 2 &*)
+	continuous =
+		c1 = 0 &
+		c2 = 0 &
+		time = 0 &
+
+		(* Positive parameters *)
+		wcet_m1_job1 >= 0 &
+		wcet_m2_job1 >= 0 &
+		wcet_m3_job1 >= 0 &
+		wcet_m2_job2 >= 0 &
+
+		(*------------------------------------------------------------*)
+		(* Pi0 *)
+		(*------------------------------------------------------------*)
+		(*--			wcet_m1_job1 = 3 &
+		--			wcet_m2_job1 = 2 &*)
 			wcet_m3_job1 = 4 &
 			wcet_m2_job2 = 5
-
-;
+	;
+}
 
 (************************************************************)
 (* The end *)

@@ -1,24 +1,24 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : SLAF14_3
- * Description      : 
+ * Description      :
  * Correctness      : System must be schedulable
  * Scalable         : yes
- * Generated        : 
+ * Generated        :
  * Categories       : Academic ; Protocol ; RTS
- * Source           : 
+ * Source           :
  * bibkey           : SLAF14
  * Author           : Giuseppe Lipari
- * Modeling         : 
- * Input by         : 
- * License          : 
- * 
+ * Modeling         :
+ * Input by         :
+ * License          :
+ *
  * Created          : < 2015/10/30
- * Last modified    : 2020/08/18
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -28,7 +28,7 @@ var
     t1_c, t1_d, t1_urgent, t1_arr_x, t2_c, t2_d, t2_urgent, t2_arr_x, t3_c, t3_d, t3_urgent, t3_arr_x, CPU1_urgent : clock;
     t1_inst, t2_inst, t3_inst, max_inst=5: discrete;
     t1_D = 40, t1_arr_P=40, t2_D , t2_arr_P , t3_D = 100, t3_arr_P=100 : parameter;
-    
+
 
 automaton Task_t1
 synclabs : t1_arr_event , t1_arr , t1_dis , t1_pre , t1_end , t1_miss;
@@ -211,27 +211,51 @@ loc dline_loc_miss : invariant True
 end
 
 
-init :=     loc[Task_t1] = t1_loc_idle &
-    t1_urgent = 0 &    t1_c = 0 & t1_d = 0&
-    t1_inst = 0 &
-    t1_D >= 0 &
-    loc[Periodic_t1_arr] = t1_arr_loc_arr & t1_arr_x = t1_arr_P &
-    loc[Task_t2] = t2_loc_idle &
-    t2_urgent = 0 &    t2_c = 0 & t2_d = 0&
-    t2_inst = 0 &
-    t2_D >= 0 &
-    loc[Periodic_t2_arr] = t2_arr_loc_arr & t2_arr_x = t2_arr_P &
-    loc[Task_t3] = t3_loc_idle &
-    t3_urgent = 0 &    t3_c = 0 & t3_d = 0&
-    t3_inst = 0 &
-    t3_D >= 0 &
-    loc[Periodic_t3_arr] = t3_arr_loc_arr & t3_arr_x = t3_arr_P &
-    loc[sched_CPU1] = CPU1_loc_ &
-    CPU1_urgent = 0 &
-    loc[OBS_dline] = dline_loc_nomiss &
-    t2_arr_P>=20 & t2_arr_P<=100 &
-    t2_D>=20 & t2_D<=100 &
-    True;
+init := {
+
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[Task_t1] := t1_loc_idle,
+		loc[Periodic_t1_arr] := t1_arr_loc_arr,
+		loc[Task_t2] := t2_loc_idle,
+		loc[Periodic_t2_arr] := t2_arr_loc_arr,
+		loc[Task_t3] := t3_loc_idle,
+		loc[Periodic_t3_arr] := t3_arr_loc_arr,
+		loc[sched_CPU1] := CPU1_loc_,
+		loc[OBS_dline] := dline_loc_nomiss,
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		t1_inst := 0,
+		t2_inst := 0, 
+		t3_inst := 0
+	;
+
+	(*------------------------------------------------------------*)
+	(* Initial continuous constraint *)
+	(*------------------------------------------------------------*)
+	continuous =
+		&  t2_arr_P >= 20
+    & t2_D >= 20
+    & 100 >= t2_D
+    & 100 >= t2_arr_P
+    & t3_d = 0
+    & t3_c = 0
+    & t2_arr_P = t2_arr_x
+    & t2_urgent = 0
+    & t2_d = 0
+    & t2_c = 0
+    & t1_arr_x = 40
+    & t1_urgent = 0
+    & t1_d = 0
+    & t1_c = 0
+    & t3_arr_x = 100
+    & t3_urgent = 0
+    & CPU1_urgent = 0
+	;
+}
 
 (************************************************************)
 (* The end *)

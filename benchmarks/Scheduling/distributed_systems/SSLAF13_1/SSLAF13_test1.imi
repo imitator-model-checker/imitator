@@ -1,6 +1,6 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : SSLAF13_test1
  * Description      : Test Case 1 from [SSLAF13]. Note: might not be the final model of the paper (?)
  * Correctness      : system is schedulable
@@ -12,19 +12,19 @@
  * Author           : Youcheng Sun, Romain Soulat, Giuseppe Lipari, Etienne Andre and Laurent Fribourg
  * Modeling         : Youcheng Sun, Romain Soulat, Giuseppe Lipari, Etienne Andre and Laurent Fribourg
  * Input by         : ?
- * License          : 
- * 
+ * License          :
+ *
  * Created          : < 2013/10
- * Last modified    : 2018/08/20
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
 
 
-var 
+var
 	t_asap_1:clock;
 	t_pipeline_1:clock;
 	t_task_11:clock;
@@ -295,56 +295,60 @@ end
 
 
 
-init:= True &
-	loc[proc_1]= proc_1_000 &
-	loc[proc_2]= idle &
-	loc[proc_3]= proc_3_000 &
-	loc[pipeline_1]=P1_1 &
-	loc[pipeline_2]=P2_1 &
-	loc[pipeline_3]=P3_1 &
-	loc[pipeline_4]=P4_1 &
-	t_asap_1 = 0 &
-	t_pipeline_1 = 0 &
-	t_task_11 = 0 & 
-	t_asap_2 = 0 &
-	t_pipeline_2 = 0 &
-	t_task_21 = 0 & 
-	t_task_22 = 0 & 
-	t_task_23 = 0 & 
-	t_task_24 = 0 & 
-	t_task_25 = 0 & 
-	t_asap_3 = 0 &
-	t_pipeline_3 = 0 &
-	t_task_31 = 0 & 
-	t_asap_4 = 0 &
-	t_pipeline_4 = 0 &
-	t_task_41 = 0 & 
-	Token_11 = 0 & 
-	Token_21 = 0 & 
-	Token_22 = 0 & 
-	Token_23 = 0 & 
-	Token_24 = 0 & 
-	Token_25 = 0 & 
-	Token_31 = 0 & 
-	Token_41 = 0 & 
-	True
-	
-	& T_pipeline_1 >= 0
-	& D_pipeline_1 >= 0
-	& T_pipeline_2 >= 0
-	& D_pipeline_2 >= 0
-	& C_task_11 >= 0
-	& C_task_21 >= 0
-	& C_task_22 >= 0
-	& C_task_23 >= 0
-	& C_task_24 >= 0
-	& C_task_25 >= 0
-	& T_pipeline_3 >= 0
-	& D_pipeline_3 >= 0
-	& T_pipeline_4 >= 0
-	& D_pipeline_4 >= 0
-	& C_task_41 >= 0
-;
+init:= {
+	discrete =
+		loc[proc_1] := proc_1_000,
+		loc[proc_2] := idle,
+		loc[proc_3] := proc_3_000,
+		loc[pipeline_1]:= P1_1,
+		loc[pipeline_2] := P2_1,
+		loc[pipeline_3] := P3_1,
+		loc[pipeline_4] := P4_1,
+
+		Token_11 := 0,
+		Token_21 := 0,
+		Token_22 := 0,
+		Token_23 := 0,
+		Token_24 := 0,
+		Token_25 := 0,
+		Token_31 := 0,
+		Token_41 := 0,
+	;
+	continuous =
+		t_asap_1 = 0 &
+		t_pipeline_1 = 0 &
+		t_task_11 = 0 &
+		t_asap_2 = 0 &
+		t_pipeline_2 = 0 &
+		t_task_21 = 0 &
+		t_task_22 = 0 &
+		t_task_23 = 0 &
+		t_task_24 = 0 &
+		t_task_25 = 0 &
+		t_asap_3 = 0 &
+		t_pipeline_3 = 0 &
+		t_task_31 = 0 &
+		t_asap_4 = 0 &
+		t_pipeline_4 = 0 &
+		t_task_41 = 0
+
+		& T_pipeline_1 >= 0
+		& D_pipeline_1 >= 0
+		& T_pipeline_2 >= 0
+		& D_pipeline_2 >= 0
+		& C_task_11 >= 0
+		& C_task_21 >= 0
+		& C_task_22 >= 0
+		& C_task_23 >= 0
+		& C_task_24 >= 0
+		& C_task_25 >= 0
+		& T_pipeline_3 >= 0
+		& D_pipeline_3 >= 0
+		& T_pipeline_4 >= 0
+		& D_pipeline_4 >= 0
+		& C_task_41 >= 0
+	;
+}
 
 (************************************************************)
 (* The end *)
