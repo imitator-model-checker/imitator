@@ -1,24 +1,24 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : researcher_globaltime
  * Description      : Researcher writing papers and drinking coffee; version with global_time clock
  * Correctness      : Depends on the property
- * Scalable         : 
- * Generated        : 
+ * Scalable         :
+ * Generated        :
  * Categories       : Toy ; Education
  * Source           : Own work
- * bibkey           : 
+ * bibkey           :
  * Author           : Étienne André
  * Modeling         : Étienne André
  * Input by         : Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- * 
+ *
  * Created          : 2021/01/26
- * Last modified    : 2021/02/01
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 var
@@ -70,34 +70,37 @@ end (* researcher *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[researcher] = working
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[researcher] := working,
 
-	(*------------------------------------------------------------*)
-	(* Initial discrete assignments *)
-	(*------------------------------------------------------------*)
-	& nb = 0
+  	(*------------------------------------------------------------*)
+  	(* Initial discrete assignments *)
+  	(*------------------------------------------------------------*)
+  	nb := 0,
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x = 0
-	& t = 0
-	& global_time = 0
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& x = 0
+  	& t = 0
+  	& global_time = 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& pTotal >= 0
-	& pNeed >= MINNEED
-	& pCoffee >= 0
-	
-	& MAXBREAK >= 0
-;
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& pTotal >= 0
+  	& pNeed >= MINNEED
+  	& pCoffee >= 0
 
+  	& MAXBREAK >= 0
+  ;
+}
 
 (************************************************************)
 (* The end *)
