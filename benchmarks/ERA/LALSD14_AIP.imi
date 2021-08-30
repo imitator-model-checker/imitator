@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
  * AIP from [LALSD14] ; version with parameters. Used as benchmark for [André & Lin, 2017].
  *
@@ -13,40 +13,40 @@
 
  *
  * Created         : 2016/07/05
- * Last modified   : 2020/08/25
+ * Last modified   : 2021/08/30
  *
- * IMITATOR version: 3
+ * IMITATOR version: 3.1
  ************************************************************)
 
  var
 	clock_L3_in_I1, clock_I_L3_I1, clock_O_L3_TU3_1: clock;
-	
+
 	clock_L3_in_I2, clock_I_L3_I2, clock_O_L3_TU3_2: clock;
-	
+
 	clock_I_L3_TU3_1, clock_O_L3_I1, clock_product1, clock_I_L3_TU3_2, clock_O_L3_I2, clock_product2: clock;
-	
+
 	clock_I_CL_TU3_1, clock_O_CL_TU1_1, clock_I_L1_TU1_1, clock_O_L1_AS1_1,
 	clock_I_L1_AS1_1, clock_O_L1_TU1_1, clock_I_CL_TU1_1,
 	clock_I_CL_TU2_2, clock_O_CL_TU1_2, clock_I_L1_TU1_2, clock_O_L1_AS1_2,
 	clock_I_L1_AS1_2, clock_O_L1_TU1_2, clock_I_CL_TU1_2: clock;
-	
+
 	clock_O_CL_TU2_1, clock_I_L2_TU2_1, clock_O_L2_AS2_1,
 	clock_I_L2_AS2_1, clock_O_L2_TU2_1, clock_I_CL_TU2_1,
 	clock_I_CL_TU3_2, clock_O_CL_TU2_2, clock_I_L2_TU2_2, clock_O_L2_AS2_2,
 	clock_I_L2_AS2_2, clock_O_L2_TU2_2: clock;
-	
+
 	clock_L3_out_TU3_1: clock;
-	
+
 	clock_L3_out_TU3_2: clock;
-	
+
 	clock_O_CL_TU3_1, clock_O_CL_TU3_2: clock;
-	
+
 	clock_task1B, clock_task1A: clock;
-	
+
 	clock_task2A, clock_task2B: clock;
 
 	p_is1 (*= 1*),
- 	p_is2 (*= 1*), 
+ 	p_is2 (*= 1*),
 (* 	p_tu3a = 1, *)
 (* 	p_deadline9 = 3, *)
 		: parameter;
@@ -61,13 +61,13 @@ synclabs: L3_in_I1, I_L3_I1, O_L3_TU3_1;
 
 loc InputStation_1_I0(*-*- ACCEPTING -*-*): invariant True
 	when True sync L3_in_I1 do {clock_L3_in_I1 := 0} goto I1;
-	
+
 loc I1(*-*- ACCEPTING -*-*): invariant True
 	when clock_L3_in_I1 <= p_is1 sync I_L3_I1 do {clock_I_L3_I1 := 0} goto I2;
-	
+
 loc I2(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L3_TU3_1 do {clock_O_L3_TU3_1 := 0} goto InputStation_1_I0;
-	
+
 end (* InputStation_1 *)
 
 
@@ -87,9 +87,9 @@ loc I1(*-*- ACCEPTING -*-*): invariant True
 end (* InputStation_2 *)
 
 (************************************************************)
-  automaton  AssemblyStation_1  
+  automaton  AssemblyStation_1
 (************************************************************)
-synclabs: 
+synclabs:
 I_L1_TU1_1, O_L1_AS1_1, task1A, task1B, I_L1_AS1_1, O_L1_TU1_1,
 I_L1_TU1_2, O_L1_AS1_2, I_L1_AS1_2, O_L1_TU1_2;
 
@@ -104,18 +104,18 @@ loc T2(*-*- ACCEPTING -*-*): invariant True
 	when True sync task1A do {clock_task1A := 0} goto T2;
 	when True sync task1B do {clock_task1B := 0} goto T2;
 	when True sync I_L1_AS1_1 do {clock_I_L1_AS1_1 := 0} goto T3;
-	
+
 loc T3(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L1_TU1_1 do {clock_O_L1_TU1_1 := 0} goto AssemblyStation_1_T0;
 
 loc T4(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L1_AS1_2 do {clock_O_L1_AS1_2 := 0} goto T5;
-	
+
 loc T5(*-*- ACCEPTING -*-*): invariant True
 	when True sync task1A do {clock_task1A := 0} goto T5;
 	when True sync task1B do {clock_task1B := 0} goto T5;
 	when True sync I_L1_AS1_2 do {clock_I_L1_AS1_2 := 0} goto T6;
-	
+
 loc T6(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L1_TU1_2 do {clock_O_L1_TU1_2 := 0} goto AssemblyStation_1_T0;
 
@@ -126,9 +126,9 @@ end (*  AssemblyStation_1  *)
 
 
 (************************************************************)
-  automaton  TransportUnit_1 
+  automaton  TransportUnit_1
 (************************************************************)
-synclabs: 
+synclabs:
 I_CL_TU3_1, O_CL_TU1_1, I_L1_TU1_1, O_L1_AS1_1,
 I_L1_AS1_1, O_L1_TU1_1, I_CL_TU1_1,
 I_CL_TU2_2, O_CL_TU1_2, I_L1_TU1_2, O_L1_AS1_2,
@@ -145,28 +145,28 @@ loc T1(*-*- ACCEPTING -*-*): invariant True
 
 loc T2(*-*- ACCEPTING -*-*): invariant True
 	when True sync I_L1_TU1_1 do {clock_I_L1_TU1_1 := 0} goto T3;
-	
+
 loc T3(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L1_AS1_1 do {clock_O_L1_AS1_1 := 0} goto TransportUnit_1_T0;
 
 loc T4(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_CL_TU1_2 do {clock_O_CL_TU1_2 := 0} goto T5;
-	
+
 loc T5(*-*- ACCEPTING -*-*): invariant True
 	when True sync I_L1_TU1_2 do {clock_I_L1_TU1_2 := 0} goto T6;
-	
+
 loc T6(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L1_AS1_2 do {clock_O_L1_AS1_2 := 0} goto TransportUnit_1_T0;
-	
+
 loc T7(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L1_TU1_1 do {clock_O_L1_TU1_1 := 0} goto T8;
-	
+
 loc T8(*-*- ACCEPTING -*-*): invariant True
 	when True sync I_CL_TU1_1 do {clock_I_CL_TU1_1 := 0} goto TransportUnit_1_T0;
-	
+
 loc T9(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L1_TU1_2 do {clock_O_L1_TU1_2 := 0} goto T10;
-	
+
 loc T10(*-*- ACCEPTING -*-*): invariant True
 	when True sync I_CL_TU1_2 do {clock_I_CL_TU1_2 := 0} goto TransportUnit_1_T0;
 
@@ -177,9 +177,9 @@ end (*  TransportUnit_1 *)
 
 
 (************************************************************)
-  automaton  TransportUnit_3A 
+  automaton  TransportUnit_3A
 (************************************************************)
-synclabs: 
+synclabs:
 I_L3_I1, L3_out_TU3_1, O_L3_TU3_1, I_CL_TU3_1, O_CL_TU1_1;
 
 loc TransportUnit_3A_T0(*-*- ACCEPTING -*-*): invariant True
@@ -190,7 +190,7 @@ loc T1(*-*- ACCEPTING -*-*): invariant True
 
 loc T2(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L3_TU3_1 do {clock_O_L3_TU3_1 := 0} goto T3;
-	
+
 loc T3(*-*- ACCEPTING -*-*): invariant True
 	when True sync I_CL_TU3_1 do {clock_I_CL_TU3_1 := 0} goto T4;
 
@@ -207,7 +207,7 @@ end (*  TransportUnit_3A *)
 (* --- BEGIN COMPONENT B --- *)
 
 (************************************************************)
-  automaton OutputStation 
+  automaton OutputStation
 (************************************************************)
 synclabs: I_L3_TU3_1, O_L3_I1, product1, I_L3_TU3_2, O_L3_I2, product2;
 
@@ -220,7 +220,7 @@ loc I1(*-*- ACCEPTING -*-*): invariant True
 
 loc I2(*-*- ACCEPTING -*-*): invariant True
 	when True sync product1 do {clock_product1 := 0} goto OutputStation_I0;
-	
+
 loc I3(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L3_I2 do {clock_O_L3_I2 := 0} goto I4;
 
@@ -230,9 +230,9 @@ loc I4(*-*- ACCEPTING -*-*): invariant True
 end (* OutputStation *)
 
 (************************************************************)
-  automaton  TransportUnit_2 
+  automaton  TransportUnit_2
 (************************************************************)
-synclabs: 
+synclabs:
 I_CL_TU1_1, O_CL_TU2_1, I_L2_TU2_1, O_L2_AS2_1,
 I_L2_AS2_1, O_L2_TU2_1, I_CL_TU2_1,
 I_CL_TU3_2, O_CL_TU2_2, I_L2_TU2_2, O_L2_AS2_2,
@@ -249,28 +249,28 @@ loc T1(*-*- ACCEPTING -*-*): invariant True
 
 loc T2(*-*- ACCEPTING -*-*): invariant True
 	when True sync I_L2_TU2_1 do {clock_I_L2_TU2_1 := 0} goto T3;
-	
+
 loc T3(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L2_AS2_1 do {clock_O_L2_AS2_1 := 0} goto TransportUnit_2_T0;
 
 loc T4(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_CL_TU2_2 do {clock_O_CL_TU2_2 := 0} goto T5;
-	
+
 loc T5(*-*- ACCEPTING -*-*): invariant True
 	when True sync I_L2_TU2_2 do {clock_I_L2_TU2_2 := 0} goto T6;
-	
+
 loc T6(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L2_AS2_2 do {clock_O_L2_AS2_2 := 0} goto TransportUnit_2_T0;
-	
+
 loc T7(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L2_TU2_1 do {clock_O_L2_TU2_1 := 0} goto T8;
-	
+
 loc T8(*-*- ACCEPTING -*-*): invariant True
 	when True sync I_CL_TU2_1 do {clock_I_CL_TU2_1 := 0} goto TransportUnit_2_T0;
-	
+
 loc T9(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L2_TU2_2 do {clock_O_L2_TU2_2 := 0} goto T10;
-	
+
 loc T10(*-*- ACCEPTING -*-*): invariant True
 	when True sync I_CL_TU2_2 do {clock_I_CL_TU2_2 := 0} goto TransportUnit_2_T0;
 
@@ -278,9 +278,9 @@ end (*  TransportUnit_2 *)
 
 
 (************************************************************)
-  automaton  TransportUnit_3B 
+  automaton  TransportUnit_3B
 (************************************************************)
-synclabs: 
+synclabs:
 I_L3_I2, L3_out_TU3_2, O_L3_TU3_2, I_CL_TU3_2, O_CL_TU2_2;
 
 loc TransportUnit_3B_T0(*-*- ACCEPTING -*-*): invariant True
@@ -292,7 +292,7 @@ loc T1(*-*- ACCEPTING -*-*): invariant True
 
 loc T2(*-*- ACCEPTING -*-*): invariant True
 	when True sync I_CL_TU3_2 do {clock_I_CL_TU3_2 := 0} goto T3;
-	
+
 loc T3(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_CL_TU2_2 do {clock_O_CL_TU2_2 := 0} goto TransportUnit_3B_T0;
 
@@ -301,9 +301,9 @@ end (*  TransportUnit_3B *)
 
 
 (************************************************************)
-  automaton  TransportUnit_3C 
+  automaton  TransportUnit_3C
 (************************************************************)
-synclabs: 
+synclabs:
 I_CL_TU2_1, O_CL_TU3_1, I_L3_TU3_1, I_CL_TU1_2, O_CL_TU3_2, I_L3_TU3_2;
 
 loc TransportUnit_3C_T0(*-*- ACCEPTING -*-*): invariant True
@@ -315,7 +315,7 @@ loc T1(*-*- ACCEPTING -*-*): invariant True
 
 loc T2(*-*- ACCEPTING -*-*): invariant True
 	when True sync I_L3_TU3_1 do {clock_I_L3_TU3_1 := 0} goto TransportUnit_3C_T0;
-	
+
 loc T3(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_CL_TU3_2 do {clock_O_CL_TU3_2 := 0} goto T4;
 
@@ -330,9 +330,9 @@ end (*  TransportUnit_3C *)
 
 
 (************************************************************)
-  automaton  AssemblyStation_2  
+  automaton  AssemblyStation_2
 (************************************************************)
-synclabs: 
+synclabs:
 I_L2_TU2_1, O_L2_AS2_1, task2A, task2B, I_L2_AS2_1, O_L2_TU2_1,
 I_L2_TU2_2, O_L2_AS2_2, I_L2_AS2_2, O_L2_TU2_2;
 
@@ -347,18 +347,18 @@ loc T2(*-*- ACCEPTING -*-*): invariant True
 	when True sync task2A do {clock_task2A := 0} goto T2;
 	when True sync task2B do {clock_task2B := 0} goto T2;
 	when True sync I_L2_AS2_1 do {clock_I_L2_AS2_1 := 0} goto T3;
-	
+
 loc T3(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L2_TU2_1 do {clock_O_L2_TU2_1 := 0} goto AssemblyStation_2_T0;
 
 loc T4(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L2_AS2_2 do {clock_O_L2_AS2_2 := 0} goto T5;
-	
+
 loc T5(*-*- ACCEPTING -*-*): invariant True
 	when True sync task2A do {clock_task2A := 0} goto T5;
 	when True sync task2B do {clock_task2B := 0} goto T5;
 	when True sync I_L2_AS2_2 do {clock_I_L2_AS2_2 := 0} goto T6;
-	
+
 loc T6(*-*- ACCEPTING -*-*): invariant True
 	when True sync O_L2_TU2_2 do {clock_O_L2_TU2_2 := 0} goto AssemblyStation_2_T0;
 
@@ -372,9 +372,9 @@ end (*  AssemblyStation_2  *)
 (* --- BEGIN SPECIFICATION --- *)
 
 (************************************************************)
-  automaton  Spec_9 
+  automaton  Spec_9
 (************************************************************)
-synclabs: 
+synclabs:
 L3_in_I1, L3_out_TU3_1;
 
 loc Spec_9_T0: invariant True
@@ -401,96 +401,94 @@ end (*  Spec_9 *)
 (************************************************************)
 
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[InputStation_1] = InputStation_1_I0
-	& loc[InputStation_2] = InputStation_2_I0
-	& loc[OutputStation] = OutputStation_I0
-	& loc[TransportUnit_1] = TransportUnit_1_T0
-	& loc[TransportUnit_2] = TransportUnit_2_T0
-	& loc[TransportUnit_3A] = TransportUnit_3A_T0
-	& loc[TransportUnit_3B] = TransportUnit_3B_T0
-	& loc[TransportUnit_3C] = TransportUnit_3C_T0
-	& loc[AssemblyStation_1] = AssemblyStation_1_T0
-	& loc[AssemblyStation_2] = AssemblyStation_2_T0
- 	& loc[Spec_9] = Spec_9_T0 
-	
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& clock_L3_in_I1 = 0
-	& clock_I_L3_I1 = 0
-	& clock_O_L3_TU3_1 = 0
-	
-	& clock_L3_in_I2 = 0
-	& clock_I_L3_I2 = 0
-	& clock_O_L3_TU3_2 = 0	
+init := {
 
-	& clock_I_L3_TU3_1 = 0
-	& clock_O_L3_I1 = 0
-	& clock_product1 = 0
-	& clock_I_L3_TU3_2 = 0
-	& clock_O_L3_I2 = 0
-	& clock_product2 = 0
-	
-	& clock_I_CL_TU3_1 = 0
-	& clock_O_CL_TU1_1 = 0
-	& clock_I_L1_TU1_1 = 0
-	& clock_O_L1_AS1_1 = 0
-	
-	& clock_I_L1_AS1_1 = 0
-	& clock_O_L1_TU1_1 = 0
-	& clock_I_CL_TU1_1 = 0
-	
-	& clock_I_CL_TU2_2 = 0
-	& clock_O_CL_TU1_2 = 0
-	& clock_I_L1_TU1_2 = 0
-	& clock_O_L1_AS1_2 = 0
-	
-	& clock_I_L1_AS1_2 = 0
-	& clock_O_L1_TU1_2 = 0
-	& clock_I_CL_TU1_2 = 0
-  
-	& clock_O_CL_TU2_1 = 0
-	& clock_I_L2_TU2_1 = 0
-	& clock_O_L2_AS2_1 = 0
-	
-	& clock_I_L2_AS2_1 = 0
-	& clock_O_L2_TU2_1 = 0
-	& clock_I_CL_TU2_1 = 0
-	
-	& clock_I_CL_TU3_2 = 0
-	& clock_O_CL_TU2_2 = 0
-	& clock_I_L2_TU2_2 = 0
-	& clock_O_L2_AS2_2 = 0
-	
-	& clock_I_L2_AS2_2 = 0
-	& clock_O_L2_TU2_2 = 0
-	
-	& clock_L3_out_TU3_1 = 0
-	
-	& clock_L3_out_TU3_2 = 0
-	
-	& clock_O_CL_TU3_1 = 0 
-	& clock_O_CL_TU3_2 = 0
-	
-	& clock_task1B = 0 
-	& clock_task1A = 0
-	
-	& clock_task2B = 0 
-	& clock_task2A = 0
-	
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& p_is1 >= 0
-	& p_is2 >= 0
-	& (*p_tu3a*)1 >= 0
-	& (*p_deadline9*)3 >= 0
+  discrete =
+  	(* Initial location *)
+  	loc[InputStation_1]  := InputStation_1_I0,
+  	loc[InputStation_2]  := InputStation_2_I0,
+  	loc[OutputStation]   := OutputStation_I0,
+  	loc[TransportUnit_1] := TransportUnit_1_T0,
+  	loc[TransportUnit_2] := TransportUnit_2_T0,
+  	loc[TransportUnit_3A]:= TransportUnit_3A_T0,
+  	loc[TransportUnit_3B]:= TransportUnit_3B_T0,
+  	loc[TransportUnit_3C]:= TransportUnit_3C_T0,
+  	loc[AssemblyStation_1]:= AssemblyStation_1_T0,
+  	loc[AssemblyStation_2]:= AssemblyStation_2_T0,
+   	loc[Spec_9] := Spec_9_T0,
+  ;
 
-;
+  continuous =
+  	(* Initial clock constraints *)
+  	& clock_L3_in_I1 = 0
+  	& clock_I_L3_I1 = 0
+  	& clock_O_L3_TU3_1 = 0
+
+  	& clock_L3_in_I2 = 0
+  	& clock_I_L3_I2 = 0
+  	& clock_O_L3_TU3_2 = 0
+
+  	& clock_I_L3_TU3_1 = 0
+  	& clock_O_L3_I1 = 0
+  	& clock_product1 = 0
+  	& clock_I_L3_TU3_2 = 0
+  	& clock_O_L3_I2 = 0
+  	& clock_product2 = 0
+
+  	& clock_I_CL_TU3_1 = 0
+  	& clock_O_CL_TU1_1 = 0
+  	& clock_I_L1_TU1_1 = 0
+  	& clock_O_L1_AS1_1 = 0
+
+  	& clock_I_L1_AS1_1 = 0
+  	& clock_O_L1_TU1_1 = 0
+  	& clock_I_CL_TU1_1 = 0
+
+  	& clock_I_CL_TU2_2 = 0
+  	& clock_O_CL_TU1_2 = 0
+  	& clock_I_L1_TU1_2 = 0
+  	& clock_O_L1_AS1_2 = 0
+
+  	& clock_I_L1_AS1_2 = 0
+  	& clock_O_L1_TU1_2 = 0
+  	& clock_I_CL_TU1_2 = 0
+
+  	& clock_O_CL_TU2_1 = 0
+  	& clock_I_L2_TU2_1 = 0
+  	& clock_O_L2_AS2_1 = 0
+
+  	& clock_I_L2_AS2_1 = 0
+  	& clock_O_L2_TU2_1 = 0
+  	& clock_I_CL_TU2_1 = 0
+
+  	& clock_I_CL_TU3_2 = 0
+  	& clock_O_CL_TU2_2 = 0
+  	& clock_I_L2_TU2_2 = 0
+  	& clock_O_L2_AS2_2 = 0
+
+  	& clock_I_L2_AS2_2 = 0
+  	& clock_O_L2_TU2_2 = 0
+
+  	& clock_L3_out_TU3_1 = 0
+
+  	& clock_L3_out_TU3_2 = 0
+
+  	& clock_O_CL_TU3_1 = 0
+  	& clock_O_CL_TU3_2 = 0
+
+  	& clock_task1B = 0
+  	& clock_task1A = 0
+
+  	& clock_task2B = 0
+  	& clock_task2A = 0
+
+  	(* Parameter constraints *)
+  	& p_is1 >= 0
+  	& p_is2 >= 0
+  	& (*p_tu3a*)1 >= 0
+  	& (*p_deadline9*)3 >= 0
+  ;
+}
 
 
 (************************************************************)
