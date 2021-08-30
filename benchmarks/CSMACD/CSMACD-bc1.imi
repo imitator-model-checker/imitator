@@ -1,6 +1,6 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : CSMACD-bc1
  * Description      : Non-probabilistic model deduced from the probabilistic model in "Symbolic Model Checking for Probabilistic Timed Automata" (M. Kwiatkowska, G. Norman, J. Sproston and F. Wang., FORMATS/FTRTFT'2004). See figures on http://www.prismmodelchecker.org/casestudies/csma.php.
  * Correctness      : Transmission completed
@@ -13,26 +13,25 @@
  * Modeling         : M. Kwiatkowska, G. Norman, J. Sproston and F. Wang
  * Input by         : Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- * 
+ *
  * Created          : 2007
- * Last modified    : 2020/08/14
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
 
 
 var
-
-(* Clocks *)
+	(* Clocks *)
 	x1,
 	x2,
 	y,
 		: clock;
 
-(* Parameters *)
+	(* Parameters *)
 	lambda,    (* length of a message *)
 	sigma,     (* propagation time of a message *)
 	timeslot,
@@ -41,7 +40,7 @@ var
 
 
 (************************************************************)
-  automaton medium
+automaton medium
 (************************************************************)
 synclabs: send1, send2, end1, end2, busy1, busy2, cd;
 
@@ -154,28 +153,26 @@ end (* sender2 *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[medium]  = Init
-	& loc[sender1] = Init1
-	& loc[sender2] = Init2
+init := {
+	discrete =
+		(* Initial location *)
+		loc[medium]  := Init,
+		loc[sender1] := Init1,
+		loc[sender2] := Init2,
+	;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x1 = 0
-	& x2 = 0
-	& y  = 0
+	continuous =
+		(* Initial clock constraints *)
+		& x1 = 0
+		& x2 = 0
+		& y  = 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& lambda >=0
-	& sigma >= 0
-	& timeslot >= 0
-;
+		(* Parameter constraints *)
+		& lambda >=0
+		& sigma >= 0
+		& timeslot >= 0
+	;
+}
 
 
 (************************************************************)
