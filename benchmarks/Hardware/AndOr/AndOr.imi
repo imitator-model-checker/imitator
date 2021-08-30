@@ -1,31 +1,32 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : AndOr
  * Description      : Modeling of an "AND" and an "OR" logical gate
  * Correctness      : Alternating sequence: b- x- a- b+ a+ x+
- * Scalable         : 
- * Generated        : 
+ * Scalable         :
+ * Generated        :
  * Categories       : Academic ; Hardware
  * Source           : From "Verification of Concurrent Systems with Parametric Delays Using Octahedra" (2005) by Clariso and Cortadella; Fig 3a
  * bibkey           : CC05
  * Author           : Roberto Clariso and Jordi Cortadella
  * Modeling         : Étienne André and Laurent Fribourg
  * Input by         : Étienne André
- * License          : 
- * 
+ * License          :
+ *
  * Created          : 2008/01
- * Last modified    : 2020/04/30
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
 
- 
 
-var 	ckOr, ckAnd, cka, ckb
+
+var
+  ckOr, ckAnd, cka, ckb
 		: clock;
 
 	dA_High_l, dA_High_u,
@@ -34,7 +35,7 @@ var 	ckOr, ckAnd, cka, ckb
 	dB_Low_l, dB_Low_u,
 	dOr_l, dOr_u,
 	dAnd_l, dAnd_u
-			: parameter;
+		: parameter;
 
 
 (************************************************************)
@@ -97,7 +98,7 @@ loc And101: invariant ckAnd <= dAnd_u & ckAnd>=0
 	when True sync bUp do {} goto And111;
 	when ckAnd >= dAnd_l sync xDown do {} goto And100;
 
-loc And110: invariant ckAnd <= dAnd_u& ckAnd>=0 
+loc And110: invariant ckAnd <= dAnd_u& ckAnd>=0
 	when True sync tDown do {} goto And010;
 	when True sync bDown do {} goto And100;
 	when ckAnd >= dAnd_l sync xUp do {} goto And111;
@@ -161,161 +162,158 @@ end (*orGate*)
 (************************************************************)
 (* Initial state *)
 (************************************************************)
-init :=
-	(*------------------------------------------------------------*)
-	(*   INITIAL LOCATION *)
-	(*------------------------------------------------------------*)
-	  loc[input] = InputInit
-	& loc[andGate] = And111
-	& loc[orGate] = Or111
+init := {
 
+  discrete =
+	  (*   INITIAL LOCATION *)
+	  loc[input] := InputInit,
+  	loc[andGate] := And111,
+  	loc[orGate] := Or111,
+  ;
 
-	(*------------------------------------------------------------*)
+  continuous =
 	(*   INITIAL CLOCKS *)
-	(*------------------------------------------------------------*)
-	& ckOr  >= 0
-	& ckAnd >= 0
-	& cka   =  0
-	& ckb   =  0
-	& ckb   <= dB_High_u
+  	& ckOr  >= 0
+  	& ckAnd >= 0
+  	& cka   =  0
+  	& ckb   =  0
+  	& ckb   <= dB_High_u
 
-	(*------------------------------------------------------------*)
-	(*   PARAMETER CONSTRAINTS *)
-	(*------------------------------------------------------------*)
-	& dA_High_l <= dA_High_u
-	& dA_Low_l <= dA_Low_u
+  	(*   PARAMETER CONSTRAINTS *)
+  	& dA_High_l <= dA_High_u
+  	& dA_Low_l <= dA_Low_u
 
-	& dB_High_l <= dB_High_u
-	& dB_Low_l <= dB_Low_u
+  	& dB_High_l <= dB_High_u
+  	& dB_Low_l <= dB_Low_u
 
-	& dOr_l <= dOr_u
-	& dAnd_l <= dAnd_u	
+  	& dOr_l <= dOr_u
+  	& dAnd_l <= dAnd_u
 
-	& 0 <= dA_High_l 
-	& 0 <= dA_Low_l 
-	& 0 <= dB_High_l 
-	& 0 <= dB_Low_l 
-	& 0 <= dOr_l 
-	& 0 <= dAnd_l
+  	& 0 <= dA_High_l
+  	& 0 <= dA_Low_l
+  	& 0 <= dB_High_l
+  	& 0 <= dB_Low_l
+  	& 0 <= dOr_l
+  	& 0 <= dAnd_l
 
-(*
-	-- JEU DE VALEURS DONNANT 9 ETATS (DONC MAUVAIS)
+    (*
+    	-- JEU DE VALEURS DONNANT 9 ETATS (DONC MAUVAIS)
 
---	& dA_High_u = 20
---	& dA_High_l = 19
---	& dAnd_u = 10
---	& dAnd_l = 9
---	& bpre_u = 8
---	& bpre_l = 7
---	& dOr_u = 5
---	& dOr_l = 4
---	& dB_Low_u = 19
---	& dB_Low_l = 18
---	& dA_Low_u = 18
---	& dA_Low_l = 16
+    --	& dA_High_u = 20
+    --	& dA_High_l = 19
+    --	& dAnd_u = 10
+    --	& dAnd_l = 9
+    --	& bpre_u = 8
+    --	& bpre_l = 7
+    --	& dOr_u = 5
+    --	& dOr_l = 4
+    --	& dB_Low_u = 19
+    --	& dB_Low_l = 18
+    --	& dA_Low_u = 18
+    --	& dA_Low_l = 16
 
 
--- JEU DE VALEURS DONNANT 8 ETATS (tous sauf le 1) mais qui apparemment ne reboucle pas DONC MAUVAIS
---	& dA_High_u = 20
---	& dA_High_l = 19
---	& dAnd_u = 10
---	& dAnd_l = 9
---	& bpre_u = 8
---	& bpre_l = 7
---	& dOr_u = 5
---	& dOr_l = 4
---	& dB_Low_u = 21
---	& dB_Low_l = 20
---	& dA_Low_u = 18
---	& dA_Low_l = 16
+    -- JEU DE VALEURS DONNANT 8 ETATS (tous sauf le 1) mais qui apparemment ne reboucle pas DONC MAUVAIS
+    --	& dA_High_u = 20
+    --	& dA_High_l = 19
+    --	& dAnd_u = 10
+    --	& dAnd_l = 9
+    --	& bpre_u = 8
+    --	& bpre_l = 7
+    --	& dOr_u = 5
+    --	& dOr_l = 4
+    --	& dB_Low_u = 21
+    --	& dB_Low_l = 20
+    --	& dA_Low_u = 18
+    --	& dA_Low_l = 16
 
--- JEU DE VALEURS VERIFIANT LES CONTRAINTES DE LAURENT avec 8 etats (tous sauf le 1) et qui boucle (donc tout va bien)
-	---START PI0---
--- 	& dA_High_l = 13
--- 	& dA_High_u = 14
--- 	& dA_Low_l = 16
--- 	& dA_Low_u = 18
--- -- 	& dB_High_l = 10
--- -- 	& dB_High_u = 12
--- 	& dB_High_l = 7
--- 	& dB_High_u = 8
--- 	& dB_Low_l = 19
--- 	& dB_Low_u = 20
--- 	& dAnd_l = 3
--- 	& dAnd_u = 4
--- 	& dOr_l = 1
--- 	& dOr_u = 2
-	---END PI0---
+    -- JEU DE VALEURS VERIFIANT LES CONTRAINTES DE LAURENT avec 8 etats (tous sauf le 1) et qui boucle (donc tout va bien)
+    	---START PI0---
+    -- 	& dA_High_l = 13
+    -- 	& dA_High_u = 14
+    -- 	& dA_Low_l = 16
+    -- 	& dA_Low_u = 18
+    -- -- 	& dB_High_l = 10
+    -- -- 	& dB_High_u = 12
+    -- 	& dB_High_l = 7
+    -- 	& dB_High_u = 8
+    -- 	& dB_Low_l = 19
+    -- 	& dB_Low_u = 20
+    -- 	& dAnd_l = 3
+    -- 	& dAnd_u = 4
+    -- 	& dOr_l = 1
+    -- 	& dOr_u = 2
+    	---END PI0---
 
-	----------------------
-	-- Contraintes donnees par IMITATOR 1
-	----------------------
---       & dOr_l <= dOr_u
---       & dOr_u + dA_High_u < bpre_l + dB_Low_l
---       & dA_Low_l <= dA_Low_u
---       & dA_High_l <= dA_High_u
---       & bpre_l <= bpre_u
---       & 0 < dAnd_l
---       & 0 < dOr_l
---       & bpre_l + dB_Low_l <= dA_Low_u + dA_High_u
---       & dAnd_u + dOr_u < bpre_l
---       & 0 < dA_Low_l
---       & dB_Low_l <= dB_Low_u
---       & dAnd_l <= dAnd_u
---       & bpre_u + dAnd_u < dA_High_l
--- print (reach forward from init endreach);
-
-
-(*	& dA_High_l = 13
-	& dA_High_u = 14
-	& dA_Low_l = 16
-	& dA_Low_u = 18
--- 	& dB_High_l = 10
--- 	& dB_High_u = 12
-	& dB_High_l = 7
-	& dB_High_u = 8
-	& dB_Low_l = 19
-	& dB_Low_u = 20
-	& dAnd_l = 3
---	& dAnd_u = 4
-	& dOr_l = 1
-	& dOr_u = 2
-*)
+    	----------------------
+    	-- Contraintes donnees par IMITATOR 1
+    	----------------------
+    --       & dOr_l <= dOr_u
+    --       & dOr_u + dA_High_u < bpre_l + dB_Low_l
+    --       & dA_Low_l <= dA_Low_u
+    --       & dA_High_l <= dA_High_u
+    --       & bpre_l <= bpre_u
+    --       & 0 < dAnd_l
+    --       & 0 < dOr_l
+    --       & bpre_l + dB_Low_l <= dA_Low_u + dA_High_u
+    --       & dAnd_u + dOr_u < bpre_l
+    --       & 0 < dA_Low_l
+    --       & dB_Low_l <= dB_Low_u
+    --       & dAnd_l <= dAnd_u
+    --       & bpre_u + dAnd_u < dA_High_l
+    -- print (reach forward from init endreach);
 
 
-(* CARTO 5 PARAM (INFINITY'10 ?) 
-	& dA_High_l = 13
---	& dA_High_u = 13 .. 30 -- 14
-	& dA_Low_l = 16
---	& dA_Low_u = 16 .. 30 -- 16 .. 25 -- 18
-	& dB_High_l = 7
---	& dB_High_u = 7 .. 20 --7 .. 15 -- 8
-	& dB_Low_l = 19
---	& dB_Low_u = 20 -- 19 .. 25 -- 20
-	& dAnd_l = 3
---	& dAnd_u = 3 .. 10 -- 3 .. 5 -- 4
-	& dOr_l = 1
---	& dOr_u = 1 .. 5 -- 1 .. 5 -- 2
-*)
+    (*	& dA_High_l = 13
+    	& dA_High_u = 14
+    	& dA_Low_l = 16
+    	& dA_Low_u = 18
+    -- 	& dB_High_l = 10
+    -- 	& dB_High_u = 12
+    	& dB_High_l = 7
+    	& dB_High_u = 8
+    	& dB_Low_l = 19
+    	& dB_Low_u = 20
+    	& dAnd_l = 3
+    --	& dAnd_u = 4
+    	& dOr_l = 1
+    	& dOr_u = 2
+    *)
 
 
-(* CARTO 4 PARAM (as of 2013/01/23) *)
-(*	& dA_High_l = 13
-	& dA_High_u = 14
-	& dA_Low_l = 16
-(* 	& dA_Low_u = 16 .. 30 -- 16 .. 25 -- 18 *)
-	& dB_High_l = 7
-(* 	& dB_High_u = 7 .. 20 --7 .. 15 -- 8 *)
-	& dB_Low_l = 19
-(* 	& dB_Low_u = 20 -- 19 .. 25 -- 20 *)
-	& dAnd_l = 3
-(* 	& dAnd_u = 3 .. 10 -- 3 .. 5 -- 4 *)
-	& dOr_l = 1
-(* 	& dOr_u = 1 .. 5 (* 1 .. 5 -- 2*) *)
-*)
-*)
-;
+    (* CARTO 5 PARAM (INFINITY'10 ?)
+    	& dA_High_l = 13
+    --	& dA_High_u = 13 .. 30 -- 14
+    	& dA_Low_l = 16
+    --	& dA_Low_u = 16 .. 30 -- 16 .. 25 -- 18
+    	& dB_High_l = 7
+    --	& dB_High_u = 7 .. 20 --7 .. 15 -- 8
+    	& dB_Low_l = 19
+    --	& dB_Low_u = 20 -- 19 .. 25 -- 20
+    	& dAnd_l = 3
+    --	& dAnd_u = 3 .. 10 -- 3 .. 5 -- 4
+    	& dOr_l = 1
+    --	& dOr_u = 1 .. 5 -- 1 .. 5 -- 2
+    *)
 
+
+    (* CARTO 4 PARAM (as of 2013/01/23) *)
+    (*	& dA_High_l = 13
+    	& dA_High_u = 14
+    	& dA_Low_l = 16
+    (* 	& dA_Low_u = 16 .. 30 -- 16 .. 25 -- 18 *)
+    	& dB_High_l = 7
+    (* 	& dB_High_u = 7 .. 20 --7 .. 15 -- 8 *)
+    	& dB_Low_l = 19
+    (* 	& dB_Low_u = 20 -- 19 .. 25 -- 20 *)
+    	& dAnd_l = 3
+    (* 	& dAnd_u = 3 .. 10 -- 3 .. 5 -- 4 *)
+    	& dOr_l = 1
+    (* 	& dOr_u = 1 .. 5 (* 1 .. 5 -- 2*) *)
+    *)
+    *)
+  ;
+}
 
 (************************************************************)
 (* The end *)

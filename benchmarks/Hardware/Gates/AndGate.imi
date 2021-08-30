@@ -5,9 +5,9 @@
  *
  * Author          : Christopher Makanga
  * Created         : 2014/08/28
- * Last modified   : 2020/08/14
+ * Last modified   : 2021/08/30
  *
- * IMITATOR version: 3
+ * IMITATOR version: 3.1
  ************************************************************)
 
 var 	ckAnd
@@ -56,7 +56,7 @@ loc And101: invariant ckAnd <= dAnd_u
 	when ckAnd >= dAnd_l sync sDown do {} goto And100;
 
 (* Untable *)
-loc And110: invariant ckAnd <= dAnd_u 
+loc And110: invariant ckAnd <= dAnd_u
 	when True sync i1Down do {} goto And010;
 	when True sync i2Down do {} goto And100;
 	when ckAnd >= dAnd_l sync sUp do {} goto And111;
@@ -74,22 +74,26 @@ end (*AndGate*)
 (* Analysis *)
 (************************************************************)
 
-init := True
-	(*------------------------------------------------------------
-	   INITIAL LOCATION
-	  ------------------------------------------------------------*)
-	& loc[AndGate] = And000
+init := {
+	discrete =
+		(*------------------------------------------------------------
+		   INITIAL LOCATION
+		  ------------------------------------------------------------*)
+		loc[AndGate] := And000,
+	;
 
-	(*------------------------------------------------------------
-	   INITIAL CLOCKS
-	  ------------------------------------------------------------*)
-	& ckAnd = 0
+	continuous =
+		(*------------------------------------------------------------
+		   INITIAL CLOCKS
+		  ------------------------------------------------------------*)
+		& ckAnd = 0
 
-	(*------------------------------------------------------------
-	   PARAMETER CONSTRAINTS
-	  ------------------------------------------------------------*)
-	& dAnd_l >= 0
-	& dAnd_l <= dAnd_u
-;
+		(*------------------------------------------------------------
+		   PARAMETER CONSTRAINTS
+		  ------------------------------------------------------------*)
+		& dAnd_l >= 0
+		& dAnd_l <= dAnd_u
+	;
+}
 
 end

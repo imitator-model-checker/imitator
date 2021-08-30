@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
  * Race on a digital circuit (SR Latch)
  *
@@ -12,15 +12,15 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2010/03/19
- * Last modified   : 2020/08/19
+ * Last modified   : 2021/08/30
  *
- * IMITATOR version: 3.0
+ * IMITATOR version: 3.1
  ************************************************************)
- 
- 
+
+
 var 	ckNor1, ckNor2, s
 		: clock;
-	
+
 	dNor1 (*= 2*),
 	dNor2 (*= 2*),
 (*  	t_R_down, t_S_down, *)
@@ -177,10 +177,10 @@ loc env_10: invariant s <= t_down
 (*-- loc env_11: invariant True
 -- 	when True sync R_Down do {} goto env_01;
 -- 	when True sync S_Down do {} goto env_10;
--- 
+--
 -- loc env_01: invariant True
 -- 	when True sync S_Down do {} goto env_final;
--- 
+--
 -- loc env_10: invariant True
 -- 	when True sync R_Down do {} goto env_final;*)
 
@@ -188,10 +188,10 @@ loc env_10: invariant s <= t_down
 (*-- loc env_11: invariant s <= t_R_down & s <= t_S_down
 -- 	when s = t_R_down sync R_Down do {} goto env_01;
 -- 	when s = t_S_down sync S_Down do {} goto env_10;
--- 
+--
 -- loc env_01: invariant s <= t_S_down
 -- 	when s = t_S_down sync S_Down do {} goto env_final;
--- 
+--
 -- loc env_10: invariant s <= t_R_down
 -- 	when s = t_R_down sync R_Down do {} goto env_final;*)
 
@@ -203,49 +203,52 @@ end (*env*)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
 
-(*	-- R down
--- 	& loc[norGate1] = Nor1_110
--- 	& loc[norGate2] = Nor2_001
--- 	& loc[env]		= env_R
+    (*	-- R down
+    -- 	loc[norGate1] := Nor1_110,
+    -- 	loc[norGate2] := Nor2_001,
+    -- 	loc[env]		:= env_R,
 
-	-- S down
--- 	& loc[norGate1] = Nor1_001
--- 	& loc[norGate2] = Nor2_110
--- 	& loc[env]		= env_S*)
+    	-- S down
+    -- 	loc[norGate1] := Nor1_001,
+    -- 	loc[norGate2] := Nor2_110,
+    -- 	loc[env]		:= env_S,*)
 
-(* 	-- S and R down *)
-	& loc[norGate1] = Nor1_100
-	& loc[norGate2] = Nor2_010
-	& loc[env]		= env_11
+    (* 	-- S and R down *)
+  	loc[norGate1] := Nor1_100,
+  	loc[norGate2] := Nor2_010,
+  	loc[env]		  := env_11,
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& ckNor1	= 0
-	& ckNor2	= 0
-	& s			= 0
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& ckNor1	= 0
+  	& ckNor2	= 0
+  	& s			= 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& dNor1 >= 0
-	& dNor2 >= 0
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& dNor1 >= 0
+  	& dNor2 >= 0
 
-	(*------------------------------------------------------------*)
-	(* Pi0 *)
-	(*------------------------------------------------------------*)
-(*	& dNor1	= 2
- 	& dNor2	= 2
-*)
-	& t_down	= 1
+  	(*------------------------------------------------------------*)
+  	(* Pi0 *)
+  	(*------------------------------------------------------------*)
+    (*	& dNor1	= 2
+     	& dNor2	= 2
+    *)
+  	& t_down	= 1
 
-;
-
+  ;
+}
 
 (************************************************************)
 (* The end *)

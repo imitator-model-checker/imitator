@@ -1,24 +1,24 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : IMPOloop
  * Description      : Model of a small acyclic asynchronous circuit
  * Correctness      : Q must not rise
- * Scalable         : 
- * Generated        : 
+ * Scalable         :
+ * Generated        :
  * Categories       : Academic ; Hardware
  * Source           : "Preserving Partial Order Runs in Parametric Time Petri Nets"  (ACSD 2015), Fig. 7
  * bibkey           : ACR16
  * Author           : Étienne André, Thomas Chatain, César Rodríguez
  * Modeling         : Étienne André, Thomas Chatain, César Rodríguez
  * Input by         : Étienne André
- * License          : 
- * 
+ * License          :
+ *
  * Created          : 2015/01/29
- * Last modified    : 2020/08/13
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -154,7 +154,7 @@ loc And101: invariant ckAnd <= dAnd_u
 	when ckAnd >= dAnd_l sync qDown do {} goto And100;
 
 (* Untable *)
-loc And110: invariant ckAnd <= dAnd_u 
+loc And110: invariant ckAnd <= dAnd_u
 	when True sync n3Down do {} goto And010;
 	when True sync n2Down do {} goto And100;
 	when ckAnd >= dAnd_l sync qUp do {} goto And111;
@@ -188,78 +188,83 @@ end (*EnvI*)
 (* Initial state *)
 (************************************************************)
 
-init := True
-	(*------------------------------------------------------------
-	   INITIAL LOCATION
-	  ------------------------------------------------------------*)
-	 (*
-		I  = 1
-		N1 = 1
-		N2 = 0
-		N3 = 0
-		Q  = 1
-	 *)
-	  
-	& loc[Not1Gate]	= Not111
-	& loc[Not2Gate]	= Not210
-	& loc[Not3Gate]	= Not310
-	& loc[AndGate]	= And001
-	& loc[EnvI]		= EnvI1
+init := {
 
-	(*------------------------------------------------------------
-	   INITIAL CLOCKS
-	  ------------------------------------------------------------*)
-	& ckNot1 = 0
-	& ckNot2 = 0
-	& ckNot3 = 0
-	& ckAnd = 0
-	& ckEnv = 0
+	discrete =
+		(*------------------------------------------------------------
+		   INITIAL LOCATION
+		  ------------------------------------------------------------*)
+		 (*
+			I  = 1
+			N1 = 1
+			N2 = 0
+			N3 = 0
+			Q  = 1
+		 *)
 
-	(*------------------------------------------------------------
-	   PARAMETER CONSTRAINTS
-	  ------------------------------------------------------------*)
-	& dNot1_l >= 0
-	& dNot1_l <= dNot1_u
-	& dNot2_l >= 0
-	& dNot2_l <= dNot2_u
-	& dNot3_l >= 0
-	& dNot3_l <= dNot3_u
-	& dAnd_l >= 0
-	& dAnd_l <= dAnd_u
-	& di_l >= 0
-	& di_l <= di_u
-	
+		loc[Not1Gate]	:= Not111,
+		loc[Not2Gate]	:= Not210,
+		loc[Not3Gate]	:= Not310,
+		loc[AndGate]	:= And001,
+		loc[EnvI]			:= EnvI1,
+	;
 
-	(*------------------------------------------------------------
-	   RESULT OF IM
-	  ------------------------------------------------------------*)
-(*	
-	& di_l + dNot2_l > dAnd_u
-    & dNot1_l > dAnd_u
-    & dAnd_l > di_u
-   *)
+	continuous =
+			(*------------------------------------------------------------
+			   INITIAL CLOCKS
+			  ------------------------------------------------------------*)
+			& ckNot1 = 0
+			& ckNot2 = 0
+			& ckNot3 = 0
+			& ckAnd = 0
+			& ckEnv = 0
+
+			(*------------------------------------------------------------
+			   PARAMETER CONSTRAINTS
+			  ------------------------------------------------------------*)
+			& dNot1_l >= 0
+			& dNot1_l <= dNot1_u
+			& dNot2_l >= 0
+			& dNot2_l <= dNot2_u
+			& dNot3_l >= 0
+			& dNot3_l <= dNot3_u
+			& dAnd_l >= 0
+			& dAnd_l <= dAnd_u
+			& di_l >= 0
+			& di_l <= di_u
 
 
-    (*------------------------------------------------------------
-	   RESULT OF IMPO
-	  ------------------------------------------------------------*)
-(*	& di_l + dNot2_l > dAnd_u
-    & dNot1_l > dAnd_u*)
+			(*------------------------------------------------------------
+			   RESULT OF IM
+			  ------------------------------------------------------------*)
+		(*
+			& di_l + dNot2_l > dAnd_u
+		    & dNot1_l > dAnd_u
+		    & dAnd_l > di_u
+		   *)
 
-	(*------------------------------------------------------------
-	   PARAMETER VALUATION
-	  ------------------------------------------------------------*)
-(*	& dNot1_l	= 8
-	& dNot1_u	= 10
-	& dNot2_l	= 4
-	& dNot2_u	= 5
-	& dNot3_l	= 2
-	& dNot3_u	= 8
-	& dAnd_l	= 3
-	& dAnd_u	= 4
-	& di_l		= 1
-	& di_u		= 2*)
-;
+
+		    (*------------------------------------------------------------
+			   RESULT OF IMPO
+			  ------------------------------------------------------------*)
+		(*	& di_l + dNot2_l > dAnd_u
+		    & dNot1_l > dAnd_u*)
+
+			(*------------------------------------------------------------
+			   PARAMETER VALUATION
+			  ------------------------------------------------------------*)
+		(*	& dNot1_l	= 8
+			& dNot1_u	= 10
+			& dNot2_l	= 4
+			& dNot2_u	= 5
+			& dNot3_l	= 2
+			& dNot3_u	= 8
+			& dAnd_l	= 3
+			& dAnd_u	= 4
+			& di_l		= 1
+			& di_u		= 2*)
+	;
+}
 
 
 (************************************************************)

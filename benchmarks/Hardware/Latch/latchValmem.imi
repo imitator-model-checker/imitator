@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
  * Sample latch circuit (ST-Microelectronics)
  *
@@ -12,11 +12,11 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2007/12
- * Last modified   : 2020/08/28
+ * Last modified   : 2021/08/30
  *
- * IMITATOR version: 3.0
+ * IMITATOR version: 3.1
  ************************************************************)
- 
+
 var 	s, ckClock, ckD, ckNot1, ckNot2, ckXor, ckAnd, ckLatch
 		: clock;
 
@@ -36,7 +36,7 @@ var 	s, ckClock, ckD, ckNot1, ckNot2, ckXor, ckAnd, ckLatch
 	dAndUp2, dAndDown1,
 	dLatchUp
 			: parameter;
-	
+
 
 
 (************************************************************)
@@ -171,7 +171,7 @@ loc LatchD1E0: invariant ckLatch >= 0
 	when True sync dDown1 do {} goto LatchD0E0;
 
 loc LatchD1E1: invariant ckLatch <= dLatchUp
-	when ckLatch >= dLatchUp sync latchUp1 do {(*tLatchUp1 := s, *) q := 1} 
+	when ckLatch >= dLatchUp sync latchUp1 do {(*tLatchUp1 := s, *) q := 1}
 			goto LatchD1E1B;
 	when True sync dDown1 do {} goto LatchD0E1;
 	when True sync andDown1 do {} goto LatchD1E0;
@@ -188,110 +188,114 @@ end (*latch1*)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	  loc[clock1] = ClockLow1
-	& loc[d1] = DLow1
-	& loc[not1] = Not1High1
-	& loc[not2] = Not2Low1
-	& loc[xor1] = XorLow1
-	& loc[and1] = AndLow1 
-	& loc[latch1] = LatchD0E0
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[clock1]  := ClockLow1,
+  	loc[d1]      := DLow1,
+  	loc[not1]    := Not1High1,
+  	loc[not2]    := Not2Low1,
+  	loc[xor1]    := XorLow1,
+  	loc[and1]    := AndLow1,
+  	loc[latch1]  := LatchD0E0,
 
-	(*------------------------------------------------------------*)
-	(* Initial discrete assignments *)
-	(*------------------------------------------------------------*)
-	& q=2
-	
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& s       = 0
-	& ckClock = 0
-	& ckD     = 0
-	& ckNot1  = 0
-	& ckNot2  = 0
-	& ckXor   = 0
-	& ckAnd   = 0
-	& ckLatch = 0
+  	(*------------------------------------------------------------*)
+  	(* Initial discrete assignments *)
+  	(*------------------------------------------------------------*)
+  	q := 2,
+  ;
 
-
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-
-	& dClockLow		>= 0
-	& dClockHigh	>= 0
-	& dHold			>= 0
-	& dNot2Up		>= 0
-	& dXorUp2Up		>= 0
-	& dLatchUp>=0
-	& dAndUp2 >=0
-	& dNot2Down>=0
-	& dNot1Up>=0
-	& dNot1Down>=0
-	& dXorDown1Up>=0
-	& dAndDown1>=0
-	& dSetup>=0
- 
-(*	& dLatchUp>0
-	& dAndUp2 >0
-	& dNot2Down>0
-	& dNot1Up>0
-	& dNot1Down>0
-	& dXorDown1Up>0
-	& dAndDown1>0
-	& dSetup>0
-
- 	& dNot1Down = dNot1Down
- 	& dNot1Up = dNot1Up
- 	& dNot2Down = dNot2Down
- 	& dNot2Up = dNot2Up
- 	& dXorUp2Up = dXorUp2Up
- 	& dXorDown1Up = dXorDown1Up
- 	& dAndUp2 = dAndUp2
- 	& dAndDown1 = dAndDown1
- 	& dLatchUp = dLatchUp*)
-
-	(*------------------------------------------------------------*)
-	(* Resulting times and durations (in ps) *)
-	(*------------------------------------------------------------*)
-(*	
- 	& tNot1Down1 = 0
- 
- 	& tNot2Up1 = 0
- 
- 	& tXorUp1 = 0
- 	& tXorDown1 = 0
- 
- 	& tAndUp1 = 0
- 	& tAndDown1 = 0
- 
- 	& tLatchUp1 = 0*)
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& s       = 0
+  	& ckClock = 0
+  	& ckD     = 0
+  	& ckNot1  = 0
+  	& ckNot2  = 0
+  	& ckXor   = 0
+  	& ckAnd   = 0
+  	& ckLatch = 0
 
 
-	(*------------------------------------------------------------*)
-	(* Valuations *)
-	(*------------------------------------------------------------*)
-(* 	& dClockHigh = 1000
- 	& dClockLow = 1000
- 
- 	& dNot1Down = 147
- 	& dNot1Up = 219
- 	& dNot2Down = 163
- 	& dNot2Up = 155
- 	& dXorUp2Up = 147
- 	& dXorDown1Up = 416
-  	& dAndUp2 = 80
- 	& dAndUp2 >= 0
- 	& dAndDown1 = 155
- 	& dLatchUp = 240
-  	& dHold = 350
- 	& dHold >= 0
- 	& dSetup = 1*)
-;
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+
+  	& dClockLow		>= 0
+  	& dClockHigh	>= 0
+  	& dHold			>= 0
+  	& dNot2Up		>= 0
+  	& dXorUp2Up		>= 0
+  	& dLatchUp>=0
+  	& dAndUp2 >=0
+  	& dNot2Down>=0
+  	& dNot1Up>=0
+  	& dNot1Down>=0
+  	& dXorDown1Up>=0
+  	& dAndDown1>=0
+  	& dSetup>=0
+
+  (*	& dLatchUp>0
+  	& dAndUp2 >0
+  	& dNot2Down>0
+  	& dNot1Up>0
+  	& dNot1Down>0
+  	& dXorDown1Up>0
+  	& dAndDown1>0
+  	& dSetup>0
+
+   	& dNot1Down = dNot1Down
+   	& dNot1Up = dNot1Up
+   	& dNot2Down = dNot2Down
+   	& dNot2Up = dNot2Up
+   	& dXorUp2Up = dXorUp2Up
+   	& dXorDown1Up = dXorDown1Up
+   	& dAndUp2 = dAndUp2
+   	& dAndDown1 = dAndDown1
+   	& dLatchUp = dLatchUp*)
+
+  	(*------------------------------------------------------------*)
+  	(* Resulting times and durations (in ps) *)
+  	(*------------------------------------------------------------*)
+  (*
+   	& tNot1Down1 = 0
+
+   	& tNot2Up1 = 0
+
+   	& tXorUp1 = 0
+   	& tXorDown1 = 0
+
+   	& tAndUp1 = 0
+   	& tAndDown1 = 0
+
+   	& tLatchUp1 = 0*)
+
+
+  	(*------------------------------------------------------------*)
+  	(* Valuations *)
+  	(*------------------------------------------------------------*)
+  (* 	& dClockHigh = 1000
+   	& dClockLow = 1000
+
+   	& dNot1Down = 147
+   	& dNot1Up = 219
+   	& dNot2Down = 163
+   	& dNot2Up = 155
+   	& dXorUp2Up = 147
+   	& dXorDown1Up = 416
+    	& dAndUp2 = 80
+   	& dAndUp2 >= 0
+   	& dAndDown1 = 155
+   	& dLatchUp = 240
+    	& dHold = 350
+   	& dHold >= 0
+   	& dSetup = 1*)
+  ;
+}
 
 
 (************************************************************)
