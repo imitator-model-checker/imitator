@@ -1,24 +1,24 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : Pipeline_KP12_2_3
  * Description      : The network presented in Figure 2 models the system consisting of the Producer feeding the Consumer with data sent through a sequence of nodes with additional processing capabilities. The model is scalable with respect to the number n of the processing nodes and the length m of each processing node and it contains three lower (a,c,e) and three upper (b,d,f) parameters. Note: the clocks were renamed (w.r.t. to [KP12]) for sake of simplicity.
  * Correctness      : φ2 = ConsWaiting ∧ ProdReady ∧ xtotal ≥ 5
  * Scalable         : yes
- * Generated        : 
+ * Generated        :
  * Categories       : Academic ; ProdCons
  * Source           : SMT-based Parameter Synthesis for L/U Automata, Michał Knapik and Wojciech Penczek
  * bibkey           : KP12
  * Author           : Michał Knapik and Wojciech Penczek
  * Modeling         : Michał Knapik and Wojciech Penczek
  * Input by         : Étienne André
- * License          : 
- * 
+ * License          :
+ *
  * Created          : 2015/09/18
- * Last modified    : 2020/08/18
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -129,35 +129,39 @@ end (* observer *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[Producer]	= prodReady
-	& loc[Consumer]	= consReady
-	& loc[Node1]	= node1Ready
-	& loc[Node2]	= node2Ready
-	& loc[observer]	= waiting
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[Producer]	:= prodReady,
+  	loc[Consumer]	:= consReady,
+  	loc[Node1]	  := node1Ready,
+  	loc[Node2]	  := node2Ready,
+  	loc[observer]	:= waiting,
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& xprod = 0
-	& xnode1 = 0
-	& xnode2 = 0
-	& xcons = 0
-	& xtotal = 0
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& xprod = 0
+  	& xnode1 = 0
+  	& xnode2 = 0
+  	& xcons = 0
+  	& xtotal = 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& a >= 0
-	& b >= 0
-	& c >= 0
-	& d >= 0
-	& e >= 0
-	& f >= 0
-;
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& a >= 0
+  	& b >= 0
+  	& c >= 0
+  	& d >= 0
+  	& e >= 0
+  	& f >= 0
+  ;
+}
 
 
 (************************************************************)
