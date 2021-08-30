@@ -1,24 +1,24 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : infinite-Zero
  * Description      : Toy benchmark for which there exists an infinite accepting run for q=0
- * Correctness      : 
+ * Correctness      :
  * Scalable         : no
  * Generated        : no
  * Categories       : Academic ; Toy ; Unsolvable
  * Source           : Own work
- * bibkey           : 
+ * bibkey           :
  * Author           : Jaco van de Pol
  * Modeling         : Dylan Marinho and Jaco van de Pol
  * Input by         : Dylan Marinho
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- * 
+ *
  * Created          : 2021/01/21
- * Last modified    : 2021/01/21
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 var
@@ -49,24 +49,28 @@ end (* pta *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[pta] = l1
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[pta] := l1,
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x = 0
-	& y = 0
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& x = 0
+  	& y = 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& p >= 0
-  & q >= 0
-;
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& p >= 0
+    & q >= 0
+  ;
+}
 
 
 (************************************************************)
