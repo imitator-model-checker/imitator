@@ -1,24 +1,24 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : RCP_CS01
  * Description      : Protocol described in "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX" Collomb-Annichini, Sighireanu (RTTOOLS 2001)
  * Correctness      : see paper
- * Scalable         : 
- * Generated        : 
+ * Scalable         :
+ * Generated        :
  * Categories       : Industrial ; Protocol ; RTS
  * Source           : "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX"
  * bibkey           : CS01
  * Author           : Collomb-Annichini, Sighireanu
  * Modeling         : Collomb-Annichini, Sighireanu
  * Input by         : Étienne André
- * License          : 
- * 
+ * License          :
+ *
  * Created          : 2015/07/31
- * Last modified    : 2020/08/18
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -37,7 +37,7 @@ var 	x1, x2, x12, y12, x21, y21
 	rc_slow_min, rc_slow_max (*= 167*),
 	delay
 		: parameter;
-	
+
 	s1, s2,
 	s12, sprime12,
 	s21, sprime21,
@@ -69,7 +69,7 @@ loc fast1: invariant x1 <= rc_fast_max
 	when True sync rcv_ack21 do {s1 := ack} goto fast1;
 	when True sync rcv_idle21 do {s1 := idle} goto fast1;
 	when True sync rcv_req21 do {s1 := req} goto fast1;
-	
+
 
 loc slow1: invariant x1 <= rc_slow_max
 	when x1 >= rc_slow_min goto sample1;
@@ -77,7 +77,7 @@ loc slow1: invariant x1 <= rc_slow_max
 	when True sync rcv_ack21 do {s1 := ack} goto slow1;
 	when True sync rcv_idle21 do {s1 := idle} goto slow1;
 	when True sync rcv_req21 do {s1 := req} goto slow1;
-	
+
 
 urgent loc sample1: invariant True
 	when s1 = idle sync snd_req12 goto snt_req1;
@@ -121,7 +121,7 @@ loc fast2: invariant x2 <= rc_fast_max
 	when True sync rcv_ack12 do {s2 := ack} goto fast2;
 	when True sync rcv_idle12 do {s2 := idle} goto fast2;
 	when True sync rcv_req12 do {s2 := req} goto fast2;
-	
+
 
 loc slow2: invariant x2 <= rc_slow_max
 	when x2 >= rc_slow_min goto sample2;
@@ -129,7 +129,7 @@ loc slow2: invariant x2 <= rc_slow_max
 	when True sync rcv_ack12 do {s2 := ack} goto slow2;
 	when True sync rcv_idle12 do {s2 := idle} goto slow2;
 	when True sync rcv_req12 do {s2 := req} goto slow2;
-	
+
 
 urgent loc sample2: invariant True
 	when s2 = idle sync snd_req21 goto snt_req2;
@@ -170,7 +170,7 @@ loc bufone12: invariant y12 <= delay
 	when s12 = ack sync snd_ack12 goto bufone12;
 	when s12 = idle sync snd_idle12 goto bufone12;
 	when s12 = req sync snd_req12 goto bufone12;
-	
+
 	when True sync snd_ack12 do {y12 := 0, sprime12 := ack} goto buftwo12;
 	when True sync snd_idle12 do {y12 := 0, sprime12 := idle} goto buftwo12;
 	when True sync snd_req12 do {y12 := 0, sprime12 := req} goto buftwo12;
@@ -179,7 +179,7 @@ loc bufone12: invariant y12 <= delay
 	when y12 > 0 & s12 = idle sync rcv_idle12 goto empty12;
 	when y12 > 0 & s12 = req sync rcv_req12 goto empty12;
 
-	
+
 loc buftwo12: invariant x12 <= delay
 	when sprime12 = ack sync snd_ack12 goto buftwo12;
 	when sprime12 = idle sync snd_idle12 goto buftwo12;
@@ -189,7 +189,7 @@ loc buftwo12: invariant x12 <= delay
 	when x12 > 0 sync rcv_idle12 do {sprime12 := s12} goto bufone12;
 	when x12 > 0 sync rcv_req12 do {sprime12 := s12} goto bufone12;
 
-end 
+end
 
 
 
@@ -210,7 +210,7 @@ loc bufone21: invariant y21 <= delay
 	when s21 = ack sync snd_ack21 goto bufone21;
 	when s21 = idle sync snd_idle21 goto bufone21;
 	when s21 = req sync snd_req21 goto bufone21;
-	
+
 	when True sync snd_ack21 do {y21 := 0, sprime21 := ack} goto buftwo21;
 	when True sync snd_idle21 do {y21 := 0, sprime21 := idle} goto buftwo21;
 	when True sync snd_req21 do {y21 := 0, sprime21 := req} goto buftwo21;
@@ -219,7 +219,7 @@ loc bufone21: invariant y21 <= delay
 	when y21 > 0 & s21 = idle sync rcv_idle21 goto empty21;
 	when y21 > 0 & s21 = req sync rcv_req21 goto empty21;
 
-	
+
 loc buftwo21: invariant x21 <= delay
 	when sprime21 = ack sync snd_ack21 goto buftwo21;
 	when sprime21 = idle sync snd_idle21 goto buftwo21;
@@ -229,7 +229,7 @@ loc buftwo21: invariant x21 <= delay
 	when x21 > 0 sync rcv_idle21 do {sprime21 := s21} goto bufone21;
 	when x21 > 0 sync rcv_req21 do {sprime21 := s21} goto bufone21;
 
-end 
+end
 
 
 (************************************************************)
@@ -265,59 +265,60 @@ end (*s1o*)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[node1]  = rcont1
-	& loc[node2]  = rcont2
-	& loc[wire12] = empty12
-	& loc[wire21] = empty21
-	& loc[s1o]    = S1oStart
+init := {
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[node1]  := rcont1,
+		loc[node2]  := rcont2,
+		loc[wire12] := empty12,
+		loc[wire21] := empty21,
+		loc[s1o]    := S1oStart,
 
-	(*------------------------------------------------------------*)
-	(* Initial discrete assignments *)
-	(*------------------------------------------------------------*)
-		(* It seems these values are not relevant in the beginning *)
-	& s1 = 0
-	
-	& s2 = 0
-	
-	& s12 = 0
-	& sprime12 = 0
+		(*------------------------------------------------------------*)
+		(* Initial discrete assignments *)
+		(*------------------------------------------------------------*)
+			(* It seems these values are not relevant in the beginning *)
+		s1 := 0,
+		s2 := 0,
+		s12 := 0,
+		sprime12 := 0,
+		s21 := 0,
+		sprime21 := 0,
+	;
 
-	& s21 = 0
-	& sprime21 = 0
+	continuous =
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x1 = 0
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x1 = 0
-	
-	& x2 = 0
-	
-	& x12 = 0
-	& y12 = 0
+		& x2 = 0
 
-	& x21 = 0
-	& y21 = 0
+		& x12 = 0
+		& y12 = 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& delay >= 0 
-	& rc_fast_min >= 0
-	& rc_fast_max >= 0
-	& rc_slow_max >= 0
-	& rc_slow_min >= 0
+		& x21 = 0
+		& y21 = 0
 
-	(* Constraint given in [CS01] *)
-	& delay > 0
-	& rc_fast_min <= rc_fast_max
-	& rc_fast_max < rc_slow_min
-	& rc_slow_min <= rc_slow_max
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& delay >= 0
+		& rc_fast_min >= 0
+		& rc_fast_max >= 0
+		& rc_slow_max >= 0
+		& rc_slow_min >= 0
 
-;
+		(* Constraint given in [CS01] *)
+		& delay > 0
+		& rc_fast_min <= rc_fast_max
+		& rc_fast_max < rc_slow_min
+		& rc_slow_min <= rc_slow_max
+
+	;
+}
 
 
 (************************************************************)
