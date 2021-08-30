@@ -1,29 +1,29 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : TrainAHV93
  * Description      : Classical Railroad Gate Controller
  * Correctness      : "Whenever the train is inside the gate, the gate should be closed"
- * Scalable         : 
- * Generated        : 
+ * Scalable         :
+ * Generated        :
  * Categories       : Academic
  * Source           : Model described in "Parametric Real-Time Reasoning" (fig. 2); Alur, Henzinger, Vardi (STOC 1993)
  * bibkey           : AHV93
  * Author           : Alur, Henzinger, Vardi
  * Modeling         : Alur, Henzinger, Vardi
  * Input by         : Étienne André
- * License          : 
- * 
+ * License          :
+ *
  * Created          : 2011/11/25
- * Last modified    : 2020/08/19
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
 
- 
+
 
 var
  	x, y, z
@@ -102,32 +102,34 @@ end (*controller*)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[train]      = train0
-	& loc[gate]       = gate0
-	& loc[controller] = controller0
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[train]      := train0,
+  	loc[gate]       := gate0,
+  	loc[controller] := controller0,
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x >= 0
-	& y >= 0
-	& z >= 0
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& x >= 0
+  	& y >= 0
+  	& z >= 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& a >= 0 & a <= b
-	& c >= 0 & c <= d
-	& e >= 0 & e <= f
-;
-
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& a >= 0 & a <= b
+  	& c >= 0 & c <= d
+  	& e >= 0 & e <= f
+  ;
+}
 
 (************************************************************)
 (* The end *)
 (************************************************************)
 end
-

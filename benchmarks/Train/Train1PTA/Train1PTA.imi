@@ -1,24 +1,24 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : Train1PTA
  * Description      : Simple model with 1 PTA only
  * Correctness      : "Crash" cannot happen
- * Scalable         : 
- * Generated        : 
+ * Scalable         :
+ * Generated        :
  * Categories       : Education ; Toy
  * Source           : Own work
- * bibkey           : 
+ * bibkey           :
  * Author           : Étienne André
  * Modeling         : Étienne André
  * Input by         : Étienne André
- * License          : 
- * 
+ * License          :
+ *
  * Created          : 2012/03/13
- * Last modified    : 2020/03/20
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/30
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -66,26 +66,29 @@ end (* system *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	  loc[system]      = Far
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	  loc[system]      := Far,
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x = 0
-	& y = 0
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& x = 0
+  	& y = 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& dApproach >= 0
-	& dStartDown >= 0
-	& dGetDown >= 0
-;
-
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& dApproach >= 0
+  	& dStartDown >= 0
+  	& dGetDown >= 0
+  ;
+}
 
 
 (************************************************************)
