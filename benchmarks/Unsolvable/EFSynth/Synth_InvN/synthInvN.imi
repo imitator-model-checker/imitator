@@ -1,6 +1,6 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : synthInvN
  * Description      : Toy benchmark for which the result is "p = 1/i | i \in N" but IMITATOR cannot find it because the accumulated constraints grow forever
  * Correctness      : Reachability
@@ -8,17 +8,17 @@
  * Generated        : no
  * Categories       : Academic ; Toy ; Unsolvable
  * Source           : Own work
- * bibkey           : 
+ * bibkey           :
  * Author           : Étienne André
  * Modeling         : Dylan Marinho
  * Input by         : Dylan Marinho
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- * 
+ *
  * Created          : 2021/01/21
- * Last modified    : 2021/02/08
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2021/08/31
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 var
@@ -52,24 +52,27 @@ end (* pta *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[pta] = l1
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[pta] := l1,
+  ;
+  
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& x = 0
+  	& y = 0
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x = 0
-	& y = 0
-
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& p >= 0
-;
-
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& p >= 0
+  ;
+}
 
 (************************************************************)
 (* The end *)
