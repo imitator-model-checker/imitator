@@ -15,12 +15,12 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : < 2013
- * Last modified    : 2021/07/19
+ * Last modified    : 2021/08/30
  * Model version    : 0.1
  * 
- * IMITATOR version : 3.0
+ * IMITATOR version : 3.1
  ******************************************************************************)
- 
+
 var
 	time
 		: clock;
@@ -49,36 +49,41 @@ var
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-			loc[checker] = check_1 &
-			loc[job_1] = m_0_waiting &
-			loc[job_2] = m_4_waiting &
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+			loc[checker] := check_1,
+			loc[job_1] := m_0_waiting,
+			loc[job_2] := m_4_waiting,
+  ;
+
+  continuous =
 			c_1 = 0 &
 			c_2 = 0 &
 			time = 0
-			
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-			& deadline >= 0
-			
-			& wcet_m_0_job_1 >= 0
-			& wcet_m_1_job_1 >= 0
-			& wcet_m_2_job_1 >= 0
-			& wcet_m_3_job_1 >= 0
-			& wcet_m_4_job_1 >= 0
 
-			& wcet_m_4_job_2 >= 0
-			& wcet_m_2_job_2 >= 0
-			& wcet_m_0_job_2 >= 0
-			& wcet_m_1_job_2 >= 0
-			& wcet_m_3_job_2 >= 0
-;
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  			& deadline >= 0
 
-			
+  			& wcet_m_0_job_1 >= 0
+  			& wcet_m_1_job_1 >= 0
+  			& wcet_m_2_job_1 >= 0
+  			& wcet_m_3_job_1 >= 0
+  			& wcet_m_4_job_1 >= 0
+
+  			& wcet_m_4_job_2 >= 0
+  			& wcet_m_2_job_2 >= 0
+  			& wcet_m_0_job_2 >= 0
+  			& wcet_m_1_job_2 >= 0
+  			& wcet_m_3_job_2 >= 0
+  ;
+}
+
+
 
 (************************************************************)
 (* The end *)

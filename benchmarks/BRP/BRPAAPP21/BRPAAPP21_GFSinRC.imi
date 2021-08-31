@@ -15,13 +15,14 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : ? (< 09/2007)
- * Last modified    : 2020/09/22
+ * Last modified    : 2021/07/26
  * Model version    : 
  * 
- * IMITATOR version : 
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
-var     x,z,u,v
+var
+	x,z,u,v
 		: clock;
 
 	i,	(* subscript of the chunk currently beeing processed (1<=i<=N) *)
@@ -40,7 +41,7 @@ var     x,z,u,v
 	TR,	(* time-out of the receiver for indicating failure
 			when R has not received the last chunk of a file *)
 	TD  (* maximum delay in channel K (and L) *)
-           : parameter;
+     : parameter;
 (****************************************************)
 
 
@@ -68,7 +69,7 @@ accepting loc s1: invariant True
 end (* monitor *)
 
 (****************************************************)
-  automaton sender
+automaton sender
 (****************************************************)
 synclabs: S_in, rcvA, sndD, S_DK, S_NOK, S_OK;
 
@@ -96,7 +97,7 @@ end (* sender *)
 
 
 (****************************************************)
-  automaton receiver
+automaton receiver
 (****************************************************)
 synclabs: rcvD, sndA, R_NOK, R_OK, R_FST, R_INC;
 
@@ -163,19 +164,38 @@ end (* channelL *)
 (************************************************************)
 (* Initial state *)
 (************************************************************)
-init :=   loc[sender]=idleS
-	& loc[receiver]=new_file
-	& loc[channelK]=startK
-	& loc[channelL]=startL
-	& loc[monitor]=s0
+init :=   {
 
-	& x=0 & z=0 & u=0 & v=0
-	& rc=0 & i=1 & ab=0
-	& b1=0 & bN=0 & rb1=0 & rbN=0
-	& rab=0 & exp_ab=0
+	discrete =
+		(* Initial state *)
+		loc[sender] := idleS,
+		loc[receiver] := new_file,
+		loc[channelK] := startK,
+		loc[channelL] := startL,
+		loc[monitor] := s0,
 
-	& SYNC >= TR
- 	& TS > 2*TD
- 	& TD > 0
- 	& TR > 4*TS + 3*TD
+		(* Initial discrete variables assignments *)
+		rc:=0,
+		i:=1,
+		ab:=0,
+		b1:=0,
+		bN:=0,
+		rb1:=0,
+		rbN:=0,
+		rab:=0,
+		exp_ab:=0,
+	;
+
+	continuous =
+		(* Initial clock constraints *)
+		& x=0 & z=0 & u=0 & v=0
+
+		(* Parameter constraints *)
+		& SYNC >= TR
+	 	& TS > 2*TD
+	 	& TD > 0
+	 	& TR > 4*TS + 3*TD
  	;
+}
+
+end

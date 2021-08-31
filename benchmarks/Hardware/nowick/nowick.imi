@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
  * nowick example
  *
@@ -12,11 +12,11 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2014/08/29
- * Last modified   : 2020/08/13
+ * Last modified   : 2021/08/30
  *
- * IMITATOR version: 3.0
+ * IMITATOR version: 3.1
  ************************************************************)
- 
+
  var 	ckiiAnd, ckOr3, ckOr2, ckOr1, ckAnd1, ckii3And1, ckii3And2,
 		(*ckInputA, ckInputB, ckInputC, *)
 			x_a, x_b, x_c,
@@ -30,7 +30,7 @@
 	, d5 = 2, D5 = 3
 	, d6 = 2, D6 = 3
 	, d7 = 2, D7 = 3*)
-	
+
 	(* Set consistent with CC05 (found by C. Makanga) *)
 	  d1 = 4, D1 = 9,
 	d2 = 3, D2 = 9,
@@ -38,7 +38,7 @@
 	d4 = 3, (*D4 = 9,*)
 	d5 = 2, D5 = 6,
 	d6 = 10, D6 = 12,
-	d7 = 10, D7 = 12, 
+	d7 = 10, D7 = 12,
 
 	(* Set consistent with CC05, with punctual delays (found by C. Makanga) *)
 (*	  d1 = 9, D1 = 9
@@ -48,11 +48,11 @@
 	, d5 = 6, D5 = 6
 	, d6 = 10, D6 = 10
 	, d7 = 11, D7 = 11, *)
-	
+
 	(*	& D4 + D5 < d1 + d6 + 2
 	& D1 < d2 + d7 + 4*)
 
-	
+
 	(* Fully parametric *)
 	(*d1, D1,
 	d2, D2,
@@ -70,7 +70,7 @@
 	DcMin = 0, DcMax = 1000,*)
 
 		: parameter;
-			
+
 (************************************************************)
 
 
@@ -115,7 +115,7 @@ loc Or3_101: invariant True
 	when True sync gUp do {} goto Or3_111;
 
 (* Unstable *)
-loc Or3_110: invariant ckOr3 <= D7 
+loc Or3_110: invariant ckOr3 <= D7
 	when True sync fDown do {ckOr3 := 0} goto Or3_010;
 	when True sync gDown do {ckOr3 := 0} goto Or3_100;
 	when ckOr3 >= d7 sync yUp do {} goto Or3_111;
@@ -168,7 +168,7 @@ loc Or2_101: invariant True
 	when True sync fUp do {} goto Or2_111;
 
 (* Unstable *)
-loc Or2_110: invariant ckOr2 <= D6 
+loc Or2_110: invariant ckOr2 <= D6
 	when True sync eDown do {ckOr2 := 0} goto Or2_010;
 	when True sync fDown do {ckOr2 := 0} goto Or2_100;
 	when ckOr2 >= d6 sync xUp do {} goto Or2_111;
@@ -188,7 +188,7 @@ synclabs: kUp, kDown, cUp, cDown,
 	hUp, hDown;
 
 (* Configuration : kch *)
-	
+
 (* Stable *)
 loc Or1_000: invariant True
 	when True sync kUp do {ckOr1 := 0} goto Or1_100;
@@ -223,7 +223,7 @@ loc Or1_101: invariant True
 	when True sync cUp do {} goto Or1_111;
 
 (* Unstable *)
-loc Or1_110: invariant ckOr1 <= D5 
+loc Or1_110: invariant ckOr1 <= D5
 	when True sync kDown do {ckOr1 := 0} goto Or1_010;
 	when True sync cDown do {ckOr1 := 0} goto Or1_100;
 	when ckOr1 >= d5 sync hUp do {} goto Or1_111;
@@ -276,7 +276,7 @@ loc And1_101: invariant ckAnd1 <= D4
 	when ckAnd1 >= d4 sync kDown do {} goto And1_100;
 
 (* Untable *)
-loc And1_110: invariant ckAnd1 <= D4 
+loc And1_110: invariant ckAnd1 <= D4
 	when True sync hDown do {} goto And1_010;
 	when True sync aDown do {} goto And1_100;
 	when ckAnd1 >= d4 sync kUp do {} goto And1_111;
@@ -307,7 +307,7 @@ loc ii3And2_0000: invariant True
 loc ii3And2_0001: invariant ckii3And2 <= D2
 	when True sync hUp do {ckii3And2 := 0} goto ii3And2_1001;
 	when True sync aUp do {ckii3And2 := 0} goto ii3And2_0101;
-	when True sync bUp do {ckii3And2 := 0} goto ii3And2_0011;	
+	when True sync bUp do {ckii3And2 := 0} goto ii3And2_0011;
 	when ckii3And2 >= d2 sync fDown do {} goto ii3And2_0000;
 
 (* Stable *)
@@ -324,7 +324,7 @@ loc ii3And2_0011: invariant ckii3And2 <= D2
 	when ckii3And2 >= d2 sync fDown do {} goto ii3And2_0010;
 
 (* Stable *)
-loc ii3And2_0100: invariant True 
+loc ii3And2_0100: invariant True
 	when True sync hUp do {} goto ii3And2_1100;
 	when True sync aDown do {} goto ii3And2_0000;
 	when True sync bUp do {ckii3And2 := 0} goto ii3And2_0110;
@@ -337,7 +337,7 @@ loc ii3And2_0101: invariant ckii3And2 <= D2
 	when ckii3And2 >= d2 sync fDown do {} goto ii3And2_0100;
 
 (* Unstable *)
-loc ii3And2_0110: invariant ckii3And2 <= D2 
+loc ii3And2_0110: invariant ckii3And2 <= D2
 	when True sync hUp do {ckii3And2 := 0} goto ii3And2_1110;
 	when True sync aDown do {} goto ii3And2_0010;
 	when True sync bDown do {} goto ii3And2_0100;
@@ -421,7 +421,7 @@ loc ii3And1_0000: invariant True
 loc ii3And1_0001: invariant ckii3And1 <= D1
 	when True sync cUp do {ckii3And1 := 0} goto ii3And1_1001;
 	when True sync aUp do {ckii3And1 := 0} goto ii3And1_0101;
-	when True sync bUp do {ckii3And1 := 0} goto ii3And1_0011;	
+	when True sync bUp do {ckii3And1 := 0} goto ii3And1_0011;
 	when ckii3And1 >= d1 sync eDown do {} goto ii3And1_0000;
 
 (* Stable *)
@@ -438,7 +438,7 @@ loc ii3And1_0011: invariant ckii3And1 <= D1
 	when ckii3And1 >= d1 sync eDown do {} goto ii3And1_0010;
 
 (* Stable *)
-loc ii3And1_0100: invariant True 
+loc ii3And1_0100: invariant True
 	when True sync cUp do {} goto ii3And1_1100;
 	when True sync aDown do {} goto ii3And1_0000;
 	when True sync bUp do {ckii3And1 := 0} goto ii3And1_0110;
@@ -451,7 +451,7 @@ loc ii3And1_0101: invariant ckii3And1 <= D1
 	when ckii3And1 >= d1 sync eDown do {} goto ii3And1_0100;
 
 (* Unstable *)
-loc ii3And1_0110: invariant ckii3And1 <= D1 
+loc ii3And1_0110: invariant ckii3And1 <= D1
 	when True sync cUp do {ckii3And1 := 0} goto ii3And1_1110;
 	when True sync aDown do {} goto ii3And1_0010;
 	when True sync bDown do {} goto ii3And1_0100;
@@ -468,7 +468,7 @@ loc ii3And1_1000: invariant True
 	when True sync cDown do {} goto ii3And1_0000;
 	when True sync aUp do {} goto ii3And1_1100;
 	when True sync bUp do {} goto ii3And1_1010;
-	
+
 (* Unstable *)
 loc ii3And1_1001: invariant ckii3And1 <= D1
 	when True sync cDown do {ckii3And1 := 0} goto ii3And1_0001;
@@ -564,7 +564,7 @@ loc iiAnd_110: invariant True
 	when True sync bDown do {ckiiAnd := 0} goto iiAnd_100;
 
 (* Unstable *)
-loc iiAnd_111: invariant ckiiAnd <= D3 
+loc iiAnd_111: invariant ckiiAnd <= D3
 	when True sync hDown do {ckiiAnd := 0} goto iiAnd_011;
 	when True sync bDown do {} goto iiAnd_101;
 	when ckiiAnd >= d3 sync gDown do {} goto iiAnd_110;
@@ -618,32 +618,32 @@ end (*InputB*)*)
   automaton InputaManagement
 (************************************************************)
 synclabs: aUp, aDown, (*xUp, *)xDown,yUp, yDown;
-	  
+
 	  loc inputa_Low : invariant True
 	      when True sync yDown do {x_a := 0} goto inputa_rising;
-	  
+
 	loc inputa_rising : invariant x_a <= DaMax
 		when x_a >= DaMin sync aUp do {} goto inputa_waiting_yUp;
-	      
+
 	loc inputa_waiting_yUp : invariant True
 		when True sync yUp do {} goto inputa_waiting_xDown;
-	      
+
 	loc inputa_waiting_xDown : invariant True
 		when True sync xDown do {} goto inputa_waiting_yDown;
-	      
+
 	loc inputa_waiting_yDown : invariant True
-		when True sync yDown do {} goto inputa_High;      
-	  
+		when True sync yDown do {} goto inputa_High;
+
 	  loc inputa_High : invariant True
 	      when True sync xDown do {} goto inputa_xDown;
 	      when True sync yUp do {} goto inputa_yUp;
 
 	  loc inputa_xDown : invariant True
 	      when True sync yUp do {x_a := 0} goto inputa_falling;
-	  
+
 	  loc inputa_yUp : invariant True
 	      when True sync xDown do {x_a := 0} goto inputa_falling;
-	  
+
 	  loc inputa_falling : invariant x_a <= DaMax
 	    when x_a >= DaMin sync aDown do {} goto inputa_Low;
 
@@ -654,13 +654,13 @@ end (*InputaManagement*)
   automaton InputbManagement
 (************************************************************)
 synclabs: bUp, bDown, xUp, (*xDown,*)(*yUp, *)yDown;
-	  
+
 	  loc inputb_Low : invariant True
 	      when True sync yDown do {x_b := 0} goto inputb_rising;
-	  
+
 	  loc inputb_rising : invariant x_b <= DbMax
 	      when x_b >= DbMin sync bUp do {} goto inputb_High1;
-	  
+
 	  loc inputb_High1 : invariant True
 	      when True sync xUp do {} goto inputb_High2;
 
@@ -670,10 +670,10 @@ synclabs: bUp, bDown, xUp, (*xDown,*)(*yUp, *)yDown;
 
 	  loc inputb_xUp : invariant True
 	      when True sync yDown do {x_b := 0} goto inputb_falling;
-	  
+
 	  loc inputb_yDown : invariant True
 	      when True sync xUp do {x_b := 0} goto inputb_falling;
-	  
+
 	  loc inputb_falling : invariant x_b <= DbMax
 	    when x_b >= DbMin sync bDown do {} goto (* inputb_Low_waiting_yDown;
 
@@ -688,36 +688,36 @@ end (*InputaManagement*)
   automaton InputcManagement
 (************************************************************)
 synclabs: cUp, cDown, xUp, xDown, yUp(*, yDown*);
-	  
+
 	  loc inputc_Low : invariant True
 	      when True sync xUp do {} goto inputc_xUp;
 	      when True sync yUp do {} goto inputc_yUp;
 
 	  loc inputc_xUp : invariant True
 	      when True sync yUp do {x_c := 0} goto inputc_rising;
-	  
+
 	  loc inputc_yUp : invariant True
 	      when True sync xUp do {x_c := 0} goto inputc_rising;
-	  
+
 	  loc inputc_rising : invariant x_c <= DcMax
 	    when x_c >= DcMin sync cUp do {} goto inputc_High;
-	  
+
 	  loc inputc_High : invariant True
 	      when True sync xDown do {x_c := 0} goto inputc_falling;
-	  
+
 	  loc inputc_falling : invariant x_c <= DcMax
 	      when x_c >= DcMin sync cDown do {} goto inputc_Low_waiting_xUp;
 
 	loc inputc_Low_waiting_xUp : invariant True
 		when True sync xUp goto inputc_Low_waiting_xDown_yUp;
-	
+
 	loc inputc_Low_waiting_xDown_yUp : invariant True
 		when True sync xDown goto inputc_Low_waiting_yUp;
 		when True sync yUp goto inputc_Low_waiting_xDown;
-	
+
 	loc inputc_Low_waiting_xDown : invariant True
 		when True sync xDown goto inputc_Low;
-	
+
 	loc inputc_Low_waiting_yUp : invariant True
 		when True sync yUp goto inputc_Low;
 
@@ -823,69 +823,74 @@ end (* full environment *)*)
 (* Initial state *)
 (************************************************************)
 
-init := True
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[Or3Gate] = Or3_000
-	& loc[Or2Gate] = Or2_000
-	& loc[Or1Gate] = Or1_000
-	& loc[And1Gate] = And1_000
-	& loc[ii3And1Gate] = ii3And1_0000
-	& loc[ii3And2Gate] = ii3And2_0000
-	& loc[iiAndGate] = iiAnd_000
-(*	& loc[InputC] = InputC_0
-	& loc[InputA] = InputA_0
-	& loc[InputB] = InputB_0*)
-(* 	& loc[environment] = env0 *)
-	& loc[InputaManagement] = inputa_rising
-	& loc[InputbManagement] = inputb_rising
-	& loc[InputcManagement] = inputc_Low
-		
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& ckiiAnd = 0
-	& ckOr3 = 0
-	& ckOr2 = 0
-	& ckOr1 = 0
-	& ckAnd1 = 0
-	& ckii3And1 = 0
-	& ckii3And2 = 0
-	& ckiiAnd = 0
-(*	& ckInputC = 0
-	& ckInputA = 0
-	& ckInputB = 0*)
-	& x_a = 0
-	& x_b = 0
-	& x_c = 0
+init := {
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& d1 >= 0
-	& d2 >= 0
-	& d3 >= 0
-	& d4 >= 0
-	& d5 >= 0
-	& d6 >= 0
-	& d7 >= 0
-	& d1 <= D1
-	& d2 <= D2
-	& d3 <= D3
-	& d4 <= D4
-	& d5 <= D5
-	& d6 <= D6
-	& d7 <= D7
-	
-	
-	(*------------------------------------------------------------*)
-	(* The constraint in [CC05] *)
-	(*------------------------------------------------------------*)
-(*	& D4 + D5 < d1 + d6 + 2
-	& D1 < d2 + d7 + 4*)
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[Or3Gate] := Or3_000,
+  	loc[Or2Gate] := Or2_000,
+  	loc[Or1Gate] := Or1_000,
+  	loc[And1Gate] := And1_000,
+  	loc[ii3And1Gate] := ii3And1_0000,
+  	loc[ii3And2Gate] := ii3And2_0000,
+  	loc[iiAndGate] := iiAnd_000,
+    (*	loc[InputC] := InputC_0,
+  	loc[InputA] := InputA_0,
+  	loc[InputB] := InputB_0,*)
+    (* 	loc[environment] := env0, *)
+  	loc[InputaManagement] := inputa_rising,
+  	loc[InputbManagement] := inputb_rising,
+  	loc[InputcManagement] := inputc_Low,
+  ;
 
-;
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& ckiiAnd = 0
+  	& ckOr3 = 0
+  	& ckOr2 = 0
+  	& ckOr1 = 0
+  	& ckAnd1 = 0
+  	& ckii3And1 = 0
+  	& ckii3And2 = 0
+  	& ckiiAnd = 0
+  (*	& ckInputC = 0
+  	& ckInputA = 0
+  	& ckInputB = 0*)
+  	& x_a = 0
+  	& x_b = 0
+  	& x_c = 0
+
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& d1 >= 0
+  	& d2 >= 0
+  	& d3 >= 0
+  	& d4 >= 0
+  	& d5 >= 0
+  	& d6 >= 0
+  	& d7 >= 0
+  	& d1 <= D1
+  	& d2 <= D2
+  	& d3 <= D3
+  	& d4 <= D4
+  	& d5 <= D5
+  	& d6 <= D6
+  	& d7 <= D7
+
+
+  	(*------------------------------------------------------------*)
+  	(* The constraint in [CC05] *)
+  	(*------------------------------------------------------------*)
+  (*	& D4 + D5 < d1 + d6 + 2
+  	& D1 < d2 + d7 + 4*)
+
+  ;
+}
 
 (************************************************************)
 (* The end *)

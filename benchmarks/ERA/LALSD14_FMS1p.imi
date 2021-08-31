@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
  * FMS-1 from [LALSD14] (parameterized version)
  *
@@ -13,9 +13,9 @@
 
  *
  * Created         : 2016/07/05
- * Last modified   : 2020/08/14
+ * Last modified   : 2021/08/30
  *
- * IMITATOR version: 3
+ * IMITATOR version: 3.1
  ************************************************************)
 
 var
@@ -23,22 +23,22 @@ var
 (* Clocks *)
 	(* Conveyor1 *)
  	c_B1_in, c_I_B1_C1, xO_B1_R1,
- 	
+
  	(* Mill *)
  	xI_B3_R1, xB3_in_M, xB3_out_M, xI_B3_M, xO_B3_R2, xO_B3_M,
- 	
+
  	(* Robot1 *)
  	(*c_I_B1_C1, *)xB1_out, (*xO_B1_R1, *)xB3_in_R1, (*xI_B3_R1, *)(*xO_B3_M, *)
- 	
+
  	(* Robot2 *)
  	(*xI_B3_M, *)xB3_out_R2, (*xO_B3_R2, *)xB5_in_R2, xI_B5_R2, xO_B5_A,
- 	
+
  	(* AssemblyStation *)
  	(*xI_B5_R2, *)xB5_out_A, (*xO_B5_A, *)xproduct,
- 	
+
  	(* Spec1 *)
 	(*c_B1_in, xB1_out*)
-	
+
 	(* Spec3 *)
 	(*xO_B3_M, xI_B3_M*)
 		: clock;
@@ -219,45 +219,44 @@ end (* Spec5 *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[Conveyor1]		= C0
-	& loc[Mill]				= M0
-	& loc[Robot1]			= R1_0
-	& loc[Robot2]			= R2_0
-	& loc[AssemblyStation]	= A0
-	& loc[Spec1]			= S0
+init := {
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	&
-	(* Conveyor1 *)
- 	c_B1_in = 0 &  c_I_B1_C1 = 0 &  xO_B1_R1 = 0 & 
- 	
- 	(* Mill *)
- 	xI_B3_R1 = 0 &  xB3_in_M = 0 &  xB3_out_M = 0 &  xI_B3_M = 0 &  xO_B3_R2 = 0 &  xO_B3_M = 0 & 
- 	
- 	(* Robot1 *)
- 	(*c_I_B1_C1 = 0 &  *)xB1_out = 0 &  (*xO_B1_R1 = 0 &  *)xB3_in_R1 = 0 &  (*xI_B3_R1 = 0 &  *)(*xO_B3_M = 0 &  *)
- 	
- 	(* Robot2 *)
- 	(*xI_B3_M = 0 &  *)xB3_out_R2 = 0 &  (*xO_B3_R2 = 0 &  *)xB5_in_R2 = 0 &  xI_B5_R2 = 0 &  xO_B5_A = 0 & 
- 	
- 	(* AssemblyStation *)
- 	(*xI_B5_R2 = 0 &  *)xB5_out_A = 0 &  (*xO_B5_A = 0 &  *)xproduct = 0
- 	
- 	(* Spec1 *)
-	(*c_B1_in = 0 &  xB1_out*)
+  discrete =
+  	(* Initial location *)
+  	loc[Conveyor1]		   := C0,
+  	loc[Mill]				     := M0,
+  	loc[Robot1]			     := R1_0,
+  	loc[Robot2]			     := R2_0,
+  	loc[AssemblyStation] := A0,
+  	loc[Spec1]			     := S0,
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& p_conveyor >= 0
-	& p_deadline >= 0
-;
+  continuous =
+  	(* Initial clock constraints *)
+  	&
+  	(* Conveyor1 *)
+   	c_B1_in = 0 &  c_I_B1_C1 = 0 &  xO_B1_R1 = 0 &
+
+   	(* Mill *)
+   	xI_B3_R1 = 0 &  xB3_in_M = 0 &  xB3_out_M = 0 &  xI_B3_M = 0 &  xO_B3_R2 = 0 &  xO_B3_M = 0 &
+
+   	(* Robot1 *)
+   	(*c_I_B1_C1 = 0 &  *)xB1_out = 0 &  (*xO_B1_R1 = 0 &  *)xB3_in_R1 = 0 &  (*xI_B3_R1 = 0 &  *)(*xO_B3_M = 0 &  *)
+
+   	(* Robot2 *)
+   	(*xI_B3_M = 0 &  *)xB3_out_R2 = 0 &  (*xO_B3_R2 = 0 &  *)xB5_in_R2 = 0 &  xI_B5_R2 = 0 &  xO_B5_A = 0 &
+
+   	(* AssemblyStation *)
+   	(*xI_B5_R2 = 0 &  *)xB5_out_A = 0 &  (*xO_B5_A = 0 &  *)xproduct = 0
+
+   	(* Spec1 *)
+  	(*c_B1_in = 0 &  xB1_out*)
+
+  	(* Parameter constraints *)
+  	& p_conveyor >= 0
+  	& p_deadline >= 0
+  ;
+}
 
 
 (************************************************************)

@@ -15,13 +15,13 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : < 2011/12/02
- * Last modified    : 2020/08/17
+ * Last modified    : 2021/08/30
  * Model version    : 
  * 
- * IMITATOR version : 3
+ * IMITATOR version : 3.1
  ******************************************************************************)
- 
- 
+
+
 (*--Job2_4: solution = 27
 --
 --J1: m3(1),m1(3),m2(6),m4(7)
@@ -33,7 +33,7 @@ var 	x1, x2, s
 
 	m1,m2,m3,m4
 		: discrete;
-		
+
 (*	d11 = 3,
 	d12 = 6,
 	d13 = 1,
@@ -58,30 +58,30 @@ var 	x1, x2, s
 synclabs: b1,FIN1;
 
 loc I1: invariant True
-	when  m3=0  sync b1 do {x1 := 0, m3 := 1} goto J1;  
+	when  m3=0  sync b1 do {x1 := 0, m3 := 1} goto J1;
 
 loc J1: invariant x1<= d13
-	when  x1 = d13 sync b1 do {m3 := 0} goto K1;   
+	when  x1 = d13 sync b1 do {m3 := 0} goto K1;
 
 loc K1: invariant True
-	when  m1=0 sync b1 do {x1 := 0,m1 := 1} goto L1;   
+	when  m1=0 sync b1 do {x1 := 0,m1 := 1} goto L1;
 
 loc L1: invariant x1 <= d11
-	when  x1=d11 sync b1 do {m1 := 0} goto M1;   
+	when  x1=d11 sync b1 do {m1 := 0} goto M1;
 
 loc M1: invariant True
-	when  m2=0 sync b1 do {x1 := 0,m2 := 1} goto N1;   
+	when  m2=0 sync b1 do {x1 := 0,m2 := 1} goto N1;
 
 loc N1: invariant x1 <= d12
-	when  x1=d12 sync b1 do {m3 := 0} goto P1;   
+	when  x1=d12 sync b1 do {m3 := 0} goto P1;
 
 loc P1: invariant True
-	when  m4=0 sync b1 do {x1 := 0,m4 := 1} goto Q1;   
+	when  m4=0 sync b1 do {x1 := 0,m4 := 1} goto Q1;
 
 loc Q1: invariant x1 <= d14
-	when  x1=d14 sync FIN1 do {m4 := 0} goto End1;   
+	when  x1=d14 sync FIN1 do {m4 := 0} goto End1;
 
-loc End1: invariant True 
+loc End1: invariant True
 
 end (*job1*)
 
@@ -91,30 +91,30 @@ end (*job1*)
 synclabs: b2,FIN2;
 
 loc I2: invariant True
-	when  m2=0 sync b2 do {x2 := 0,m2 := 1} goto J2;  
+	when  m2=0 sync b2 do {x2 := 0,m2 := 1} goto J2;
 
 loc J2: invariant x2<= d22
-	when  x2 = d22 sync b2 do {m2 := 0} goto K2;   
+	when  x2 = d22 sync b2 do {m2 := 0} goto K2;
 
 loc K2: invariant True
-	when  m3=0 sync b2 do {x2 := 0,m3 := 1} goto L2;   
+	when  m3=0 sync b2 do {x2 := 0,m3 := 1} goto L2;
 
 loc L2: invariant x2 <= d23
-	when  x2=d23 sync b2 do {m3 := 0} goto M2;   
+	when  x2=d23 sync b2 do {m3 := 0} goto M2;
 
 loc M2: invariant True
-	when  m1=0 sync b2 do {x2 := 0,m1 := 1} goto N2;   
+	when  m1=0 sync b2 do {x2 := 0,m1 := 1} goto N2;
 
 loc N2: invariant x2 <= d21
-	when  x2=d21 sync b2 do {m1 := 0} goto P2;   
+	when  x2=d21 sync b2 do {m1 := 0} goto P2;
 
 loc P2: invariant True
-	when  m4=0 sync b2 do {x2 := 0,m4 := 1} goto Q2;   
+	when  m4=0 sync b2 do {x2 := 0,m4 := 1} goto Q2;
 
 loc Q2: invariant x2 <= d24
-	when  x2=d24 sync FIN2 do {m4 := 0} goto End2;   
+	when  x2=d24 sync FIN2 do {m4 := 0} goto End2;
 
-loc End2: invariant True 
+loc End2: invariant True
 
 end (*job1*)
 
@@ -122,35 +122,41 @@ end (*job1*)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	  loc[job1] = I1
-	& loc[job2] = I2
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+	  loc[job1] := I1,
+  	loc[job2] := I2,
 
-	& m1=0 & m2=0 	& m3=0 & m4=0 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x1=0 
-	& x2=0
-	& s=0
-	
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& d11 >= 0
-	& d12 >= 0
-	& d13 >= 0
-	& d14 >= 0
-	& d21 >= 0
-	& d22 >= 0
-	& d23 >= 0
-	& d24 >= 0
+  	m1 := 0,
+    m2 := 0,
+    m3 := 0,
+    m4 := 0,
+  ;
 
-;
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& x1=0
+  	& x2=0
+  	& s=0
 
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& d11 >= 0
+  	& d12 >= 0
+  	& d13 >= 0
+  	& d14 >= 0
+  	& d21 >= 0
+  	& d22 >= 0
+  	& d23 >= 0
+  	& d24 >= 0
+  ;
+}
 
 (************************************************************)
 (* The end *)

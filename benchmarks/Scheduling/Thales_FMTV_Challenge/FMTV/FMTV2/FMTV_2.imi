@@ -15,19 +15,19 @@
  * License          : 
  * 
  * Created          : 2015/xx/xx (< 2015/10/30)
- * Last modified    : 2020/08/18
+ * Last modified    : 2021/08/30
  * Model version    : 
  * 
- * IMITATOR version : 3
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
 
 
 var
- 
+
     (** CONSTANTS **)
- 
+
     P6 = 100,
     J6 = 20, (*the jitter of task 6*)
     C6_seg1_max = 4,
@@ -48,12 +48,12 @@ var
 
     (** CLOCKS **)
 
-    sched_urgent, 
+    sched_urgent,
     j6, p6, c6,
     p5, c5,
     p7, c7,
-    p2, c2,   
-    delay 
+    p2, c2,
+    delay
     	  : clock;
 
     (* PARAMETERS *)
@@ -72,7 +72,7 @@ automaton T6
 synclabs: T6_arr, T6_start, T6_dis, T6_pre, T6_act, T7_act, T5_act, T6_end, miss_event;
 
 loc T6_idle: invariant p6 <= P6      (*ing for activation *)
-    when p6 = P6 
+    when p6 = P6
 	 do {p6  :=  0, j6 := 0, delay := 0}
 	 goto T6_jitter_pre;
 
@@ -86,17 +86,17 @@ loc T6_jitter_pre: invariant j6 <= J6    (*ing for jitter*)
 
 loc T6_jitter_post: invariant c6 <=0    (*signal  the start*)
     when c6 = 0
-    	 sync T6_start       
+    	 sync T6_start
 	 do {c6 := 0}
 	 goto T6_seg1_susp;
 
 
 loc T6_seg1_susp: invariant p6<=P6 stop {c6}   (*the task is suspended*)
-    when True 
+    when True
     	 sync T6_dis
-	 
+
 	 goto T6_seg1_exec;
-	 
+
     when p6=P6                             (*signal a deadline miss*)
     	 sync miss_event
 	 do {p6 := 0}
@@ -104,9 +104,9 @@ loc T6_seg1_susp: invariant p6<=P6 stop {c6}   (*the task is suspended*)
 
 
 loc T6_seg1_exec: invariant c6<=C6_seg1_max  (*T6 executes*)
-    when c6 >= C6_seg1_min 
+    when c6 >= C6_seg1_min
     	 sync T5_act
-	 do {c6 := 0}    	 
+	 do {c6 := 0}
 	 goto T6_hole_pre;
 
     when p6 >= P6                            (*dline miss*)
@@ -116,22 +116,22 @@ loc T6_seg1_exec: invariant c6<=C6_seg1_max  (*T6 executes*)
 
     when True                                (*preemption*)
     	 sync T6_pre
-	 
+
 	 goto T6_seg1_susp;
 
 
 loc T6_hole_pre: invariant c6 <= 0      (*signal "end of seg1"*)
-    when c6 = 0 
+    when c6 = 0
     	 sync T6_end
-	 
+
 	 goto T6_hole;
 
 (*-- loc T6_hole_act: invariant c6 <= 0       (*activates T5*)
 --     when c6 = 0
 --     	 sync T5_act
--- 	 
+--
 -- 	 goto T6_hole;*)
-    
+
 loc T6_hole : invariant True            (*s for end of T5 *)
     when True
     	 sync T6_act
@@ -140,18 +140,18 @@ loc T6_hole : invariant True            (*s for end of T5 *)
 
 
 loc T6_hole_post : invariant c6 <= 0    (*signal a fake arrival time*)
-    when c6=0      
+    when c6=0
     	 sync T6_arr
 	 do {c6 := 0}
 	 goto T6_seg2_susp;
 
 
 loc T6_seg2_susp: invariant p6 <= P6 stop {c6}  (*suspended invarianting for a schedule dispatch event*)
-    when True 
-    	 sync T6_dis 
-	 
+    when True
+    	 sync T6_dis
+
 	 goto T6_seg2_exec;
-	 
+
     when p6=P6              (*miss ? *)
     	 sync miss_event
 	 do {p6 := 0}
@@ -160,7 +160,7 @@ loc T6_seg2_susp: invariant p6 <= P6 stop {c6}  (*suspended invarianting for a s
 
 
 loc T6_seg2_exec: invariant c6<=C6_seg2_max  (*executes the second segment*)
-    when c6 >= C6_seg2_min 
+    when c6 >= C6_seg2_min
     	 sync T7_act
 	 do {c6 := 0}
 	 goto T6_seg3_exec;
@@ -172,7 +172,7 @@ loc T6_seg2_exec: invariant c6<=C6_seg2_max  (*executes the second segment*)
 
     when True               (*preemption*)
     	 sync T6_pre
-	 
+
 	 goto T6_seg2_susp;
 
 
@@ -189,17 +189,17 @@ loc T6_seg3_exec: invariant c6<=C6_seg3_max  (*executes the third segment*)
 
     when True               (*preemption*)
     	 sync T6_pre
-	 
+
 	 goto T6_seg3_susp;
- 
+
 
 
 loc T6_seg3_susp: invariant p6 <= P6 stop {c6}  (*suspended invarianting for a schedule dispatch event*)
-    when True 
-    	 sync T6_dis 
-	 
+    when True
+    	 sync T6_dis
+
 	 goto T6_seg3_exec;
-	 
+
     when p6=P6              (*miss ? *)
     	 sync miss_event
 	 do {p6 := 0}
@@ -207,7 +207,7 @@ loc T6_seg3_susp: invariant p6 <= P6 stop {c6}  (*suspended invarianting for a s
 
 
 end
-	 
+
 
 
 
@@ -218,39 +218,39 @@ automaton T5
 synclabs: T5_arr, T5_end, T5_pre, T5_dis, T5_act, T6_act;
 
 loc T5_idle: invariant True
-    when True 
-    	 sync T5_act 
+    when True
+    	 sync T5_act
 	 do {c5 := 0}
-	 goto T5_starting; 
+	 goto T5_starting;
 
 loc T5_starting: invariant c5 <= 0
-    when c5 = 0 
+    when c5 = 0
     	 sync T5_arr
-	 
+
 	 goto T5_susp;
 
 loc T5_susp: invariant True stop {c5}
     when True
     	 sync T5_dis
-	 
+
 	 goto T5_exec;
 
 loc T5_exec: invariant c5 <= C5_max
-    when c5 >= C5_min 
+    when c5 >= C5_min
     	 sync T5_end
 	 do {c5 := 0}
 	 goto T5_ending;
 
     when True
     	 sync T5_pre
-	 
+
 	 goto T5_susp;
 
 
 loc T5_ending: invariant c5<=0
-    when c5 = 0 
+    when c5 = 0
     	 sync T6_act
-	 
+
 	 goto T5_idle;
 
 end
@@ -258,7 +258,7 @@ end
 
 
 (* Task T7 *)
-automaton T7 
+automaton T7
 synclabs: T7_act, T7_arr, T7_end, T7_dis, T7_pre, T7_finish;
 
 loc T7_idle: invariant True
@@ -276,9 +276,9 @@ loc T7_starting: invariant c7 <=0
 
 
 loc T7_susp: invariant True stop {c7}
-    when True 
+    when True
     	 sync T7_dis
-	 
+
 	 goto T7_exec;
 
 loc T7_exec: invariant c7<=C7_max
@@ -287,48 +287,48 @@ loc T7_exec: invariant c7<=C7_max
 	 do {c7  :=  0}
 	 goto T7_ending;
 
-     when True 
+     when True
     	 sync T7_pre
-	 
+
 	 goto T7_susp;
 
 
 loc T7_ending: invariant c7<=0
     when c7 = 0
     	 sync T7_end
-	 
+
 	 goto T7_idle;
 
-	 
+
 end
 
 
 
-(* AUTOMATON T2 *) 
+(* AUTOMATON T2 *)
 automaton T2
 synclabs: T2_arr, T2_dis, T2_pre, T2_end;
 
 loc T2_idle: invariant p2 <= P2_uncertain
-    when p2 = P2_uncertain 
+    when p2 = P2_uncertain
     	 sync T2_arr
 	 do {p2 := 0, c2 := 0}
 	 goto T2_susp;
 
 loc T2_susp: invariant True stop {c2}
-    when True 
+    when True
     	 sync T2_dis
-	 
+
 	 goto T2_exec;
 
 loc T2_exec: invariant c2 <= C2_max
-    when c2 >= C2_min 
+    when c2 >= C2_min
     	 sync T2_end
-	 
+
 	 goto T2_idle;
 
     when True
     	 sync T2_pre
-	 
+
 	 goto T2_susp;
 
 end
@@ -339,34 +339,34 @@ end
 
 (* Observer Automaton *)
 
-automaton Observer 
+automaton Observer
 synclabs: miss_event, T6_start, T7_finish;
 
 loc Obs_idle: invariant True
-    when True 
+    when True
     	 sync T6_start
 (* 	  delay  :=  0} *)
 	 goto Obs_start;
 
-    when True 
-    	 sync miss_event 
-	 
+    when True
+    	 sync miss_event
+
 	 goto Obs_miss;
 
 loc Obs_start: invariant True
-    when delay = D 
+    when delay = D
     	 sync T7_finish
-	 
+
 	 goto Obs_stop;
 
 loc Obs_stop: invariant True
-    when True 
+    when True
     	 do{}
 	 goto Obs_stop;
 
 loc Obs_miss: invariant True
-    when True 
-    	 
+    when True
+
 	 goto Obs_miss;
 
 end
@@ -549,41 +549,45 @@ end
 (* Initial state *)
 (************************************************************)
 
-init :=
+init := {
+
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[T6] := T6_idle,
+		loc[T5] := T5_idle,
+		loc[T7] := T7_idle,
+		loc[T2] := T2_idle,
+		loc[Observer] := Obs_idle,
+		loc[sched_sched] := sched_loc_,
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+
+	;
+
 	(*------------------------------------------------------------*)
-	(* Initial location *)
+	(* Initial continuous constraint *)
 	(*------------------------------------------------------------*)
+	continuous =
+		&  25*P2_uncertain >= 999
+    & P2_uncertain >= p2
+    & D >= 0
+    & p6 >= 0
+    & 100 >= p6
+    & p2 + 28 >= P2_uncertain
+    & 1001 >= 25*P2_uncertain
+    & sched_urgent = 0
+    & j6 = 0
+    & c6 = 0
+    & c5 = 0
+    & c7 = 0
+    & c2 = 0
+    & delay = 0
+	;
 
-		(* Init scheduler *)
-       & loc[sched_sched] = sched_loc_ 
-       & sched_urgent = 0
-
-       (* Init T6 *)
-       & loc[T6] = T6_idle
-       & c6 = 0 & j6 = 0
-       & p6 >= 0 & p6 <= P6
-      
-       (* Init T5 *)
-       & loc[T5] = T5_idle
-       & c5 = 0
-  
-       (* Init T7 *)
-       & loc[T7] = T7_idle
-       & c7 = 0
-
-       (* Init T2 *)
-       & loc[T2] = T2_idle
-       & c2 = 0 
-       & P2_uncertain-28 <= p2 & p2 <= P2_uncertain
-(*        & 0 <= p2 & p2 <= P2_uncertain *)
-       & P2 - P2_delta <= P2_uncertain & P2_uncertain <= P2 + P2_delta
-
-       (* Init Observer *)
-       & loc[Observer] = Obs_idle
-       & delay = 0
-       
-        & D >= 0
-       ;
+}
 
 (************************************************************)
 (* The end *)

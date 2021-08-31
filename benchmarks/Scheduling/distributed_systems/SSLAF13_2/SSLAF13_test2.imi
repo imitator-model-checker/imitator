@@ -15,15 +15,15 @@
  * License          : 
  * 
  * Created          : < 2015/10/30
- * Last modified    : 2018/08/20
+ * Last modified    : 2021/08/30
  * Model version    : 
  * 
- * IMITATOR version : 3
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
 
-var 
+var
 	t_asap_1:clock;
 	t_pipeline_1:clock;
 	t_task_11:clock;
@@ -297,54 +297,59 @@ end
 
 
 
-init:= True &
-	loc[proc_1]= proc_1_000 &
-	loc[proc_2]= idle &
-	loc[proc_3]= proc_3_0 &
-	loc[proc_4]= proc_4_00 &
-	loc[pipeline_1]=P1_1 &
-	loc[pipeline_2]=P2_1 &
-	t_asap_1 = 0 &
-	t_pipeline_1 = 0 &
-	t_task_11 = 0 & 
-	t_task_12 = 0 & 
-	t_task_13 = 0 & 
-	t_task_14 = 0 & 
-	t_task_15 = 0 & 
-	t_asap_2 = 0 &
-	t_pipeline_2 = 0 &
-	t_task_21 = 0 & 
-	t_task_22 = 0 & 
-	t_task_23 = 0 & 
-	t_task_24 = 0 & 
-	t_task_25 = 0 & 
-	Token_11 = 0 & 
-	Token_12 = 0 & 
-	Token_13 = 0 & 
-	Token_14 = 0 & 
-	Token_15 = 0 & 
-	Token_21 = 0 & 
-	Token_22 = 0 & 
-	Token_23 = 0 & 
-	Token_24 = 0 & 
-	Token_25 = 0 & 
-	True
-	
-	& T_pipeline_1 >= 0
-	& D_pipeline_1 >= 0
-	& C_task_11 >= 0
-	& C_task_12>= 0
-	& C_task_13 >= 0
-	& C_task_14 >= 0
-	& C_task_15 >= 0
-	& T_pipeline_2 >= 0
-	& D_pipeline_2 >= 0
-	& C_task_21 >= 0
-	& C_task_22 >= 0
-	& C_task_23 >= 0
-	& C_task_24 >= 0
-	& C_task_25 >= 0
-;
+init:= {
+	discrete =
+		loc[proc_1]			:= proc_1_000,
+		loc[proc_2]			:= idle,
+		loc[proc_3]			:= proc_3_0,
+		loc[proc_4]			:= proc_4_00,
+		loc[pipeline_1]	:= P1_1,
+		loc[pipeline_2]	:= P2_1,
+
+		Token_11 := 0,
+		Token_12 := 0,
+		Token_13 := 0,
+		Token_14 := 0,
+		Token_15 := 0,
+		Token_21 := 0,
+		Token_22 := 0,
+		Token_23 := 0,
+		Token_24 := 0,
+		Token_25 := 0,
+	;
+
+	continuous =
+		t_asap_1 = 0 &
+		t_pipeline_1 = 0 &
+		t_task_11 = 0 &
+		t_task_12 = 0 &
+		t_task_13 = 0 &
+		t_task_14 = 0 &
+		t_task_15 = 0 &
+		t_asap_2 = 0 &
+		t_pipeline_2 = 0 &
+		t_task_21 = 0 &
+		t_task_22 = 0 &
+		t_task_23 = 0 &
+		t_task_24 = 0 &
+		t_task_25 = 0
+
+		& T_pipeline_1 >= 0
+		& D_pipeline_1 >= 0
+		& C_task_11 >= 0
+		& C_task_12>= 0
+		& C_task_13 >= 0
+		& C_task_14 >= 0
+		& C_task_15 >= 0
+		& T_pipeline_2 >= 0
+		& D_pipeline_2 >= 0
+		& C_task_21 >= 0
+		& C_task_22 >= 0
+		& C_task_23 >= 0
+		& C_task_24 >= 0
+		& C_task_25 >= 0
+	;
+}
 
 (************************************************************)
 (* The end *)

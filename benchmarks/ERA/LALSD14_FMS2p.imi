@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
  * FMS-2 from [LALSD14] (parameterized version)
  *
@@ -13,9 +13,9 @@
 
  *
  * Created         : 2016/07/07
- * Last modified   : 2020/09/14
+ * Last modified   : 2021/08/30
  *
- * IMITATOR version: 3
+ * IMITATOR version: 3.1
  ************************************************************)
 
 var
@@ -23,34 +23,34 @@ var
 (* Clocks *)
 	(* Conveyor1 *)
  	c_B1_in, c_I_B1_C1, xO_B1_R1,
- 	
+
  	(* Conveyor2 *)
  	c_B2_in, c_I_B2_C2, xO_B2_R3,
- 	
+
  	(* Mill *)
  	xI_B3_R1, xB3_in_M, xB3_out_M, xI_B3_M, xO_B3_R2, xO_B3_M,
- 	
+
  	(* Lathe *)
  	xI_B4_R3, xB4_in_L, xB4_out_L, xO_B4_L, xI_B4_L, xO_B4_R4,
- 	
+
  	(* Robot1 *)
  	(*c_I_B1_C1, *)xB1_out, (*xO_B1_R1, *)xB3_in_R1, (*xI_B3_R1, *)(*xO_B3_M, *)
- 	
+
  	(* Robot2 *)
  	(*xI_B3_M, *)xB3_out_R2, (*xO_B3_R2, *)xB5_in_R2, xI_B5_R2, xO_B5_A,
- 	
+
  	(* Robot3 *)
  	(*c_I_B2_C2, *)xB2_out, (*xO_B2_R3, *)xB4_in_R3, (*xI_B4_R3, xO_B4_L,*)
- 	
+
  	(* Robot4 *)
  	(*xI_B4_L, *)xB4_out_R4, (*xO_B4_R4, *)c_B6_in_R4, c_I_B6_R4, xO_B6_A,
- 	
+
  	(* AssemblyStation *)
  	(*xI_B5_R2, *)xB5_out_A, (*xO_B5_A, c_I_B6_R4, *)xB6_out_A, (*xO_B6_A, *)xproduct,
- 	
+
  	(* Spec1 *)
 	(*c_B1_in, xB1_out*)
-	
+
 	(* Spec3 *)
 	(*xO_B3_M, xI_B3_M*)
 		: clock;
@@ -300,62 +300,61 @@ end (* Spec1 *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[Conveyor1]		= C1_0
-	& loc[Conveyor2]		= C2_0
-	& loc[Mill]				= M0
-	& loc[Lathe]			= L0
-	& loc[Robot1]			= R1_0
-	& loc[Robot2]			= R2_0
-	& loc[Robot3]			= R3_0
-	& loc[Robot4]			= R4_0
-	& loc[AssemblyStation]	= A0
-	& loc[Spec1]			= S0
-	
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	&
-	(* Conveyor1 *)
- 	c_B1_in = 0 &  c_I_B1_C1 = 0 &  xO_B1_R1 = 0 & 
- 	
- 	(* Conveyor2 *)
- 	c_B2_in = 0 & c_I_B2_C2 = 0 & xO_B2_R3 = 0 &
- 	
- 	(* Mill *)
- 	xI_B3_R1 = 0 &  xB3_in_M = 0 &  xB3_out_M = 0 &  xI_B3_M = 0 &  xO_B3_R2 = 0 &  xO_B3_M = 0 & 
- 	
- 	(* Lathe *)
- 	xI_B4_R3 = 0 & xB4_in_L = 0 & xB4_out_L = 0 & xO_B4_L = 0 & xI_B4_L = 0 & xO_B4_R4 = 0 &
- 	
- 	(* Robot1 *)
- 	(*c_I_B1_C1 = 0 &  *)xB1_out = 0 &  (*xO_B1_R1 = 0 &  *)xB3_in_R1 = 0 &  (*xI_B3_R1 = 0 &  *)(*xO_B3_M = 0 &  *)
- 	
- 	(* Robot2 *)
- 	(*xI_B3_M = 0 &  *)xB3_out_R2 = 0 &  (*xO_B3_R2 = 0 &  *)xB5_in_R2 = 0 &  xI_B5_R2 = 0 &  xO_B5_A = 0 & 
- 	
- 	(* Robot3 *)
- 	(*c_I_B2_C2 = 0 & *)xB2_out = 0 & (*xO_B2_R3 = 0 & *)xB4_in_R3 = 0 & (*xI_B4_R3 = 0 & xO_B4_L = 0 &*)
- 	
- 	(* Robot4 *)
- 	(*xI_B4_L = 0 & *)xB4_out_R4 = 0 & (*xO_B4_R4 = 0 & *)c_B6_in_R4 = 0 & c_I_B6_R4 = 0 & xO_B6_A = 0 &
- 	
- 	(* AssemblyStation *)
- 	(*xI_B5_R2 = 0 &  *)xB5_out_A = 0 &  (*xO_B5_A = 0 &  *)xproduct = 0
- 	
- 	(* Spec1 *)
-	(*c_B1_in = 0 &  xB1_out*)
- 	
-	
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& p_conveyor >= 0
-	& p_deadline >= 0
-;
+init := {
+
+  discrete =
+  	(* Initial location *)
+  	loc[Conveyor1]		:= C1_0,
+  	loc[Conveyor2]		:= C2_0,
+  	loc[Mill]				  := M0,
+  	loc[Lathe]			  := L0,
+  	loc[Robot1]			  := R1_0,
+  	loc[Robot2]		  	:= R2_0,
+  	loc[Robot3]			  := R3_0,
+  	loc[Robot4]			  := R4_0,
+  	loc[AssemblyStation]	:= A0,
+  	loc[Spec1]			  := S0,
+  ;
+
+  continuous =
+  	(* Initial clock constraints *)
+  	&
+  	(* Conveyor1 *)
+   	c_B1_in = 0 &  c_I_B1_C1 = 0 &  xO_B1_R1 = 0 &
+
+   	(* Conveyor2 *)
+   	c_B2_in = 0 & c_I_B2_C2 = 0 & xO_B2_R3 = 0 &
+
+   	(* Mill *)
+   	xI_B3_R1 = 0 &  xB3_in_M = 0 &  xB3_out_M = 0 &  xI_B3_M = 0 &  xO_B3_R2 = 0 &  xO_B3_M = 0 &
+
+   	(* Lathe *)
+   	xI_B4_R3 = 0 & xB4_in_L = 0 & xB4_out_L = 0 & xO_B4_L = 0 & xI_B4_L = 0 & xO_B4_R4 = 0 &
+
+   	(* Robot1 *)
+   	(*c_I_B1_C1 = 0 &  *)xB1_out = 0 &  (*xO_B1_R1 = 0 &  *)xB3_in_R1 = 0 &  (*xI_B3_R1 = 0 &  *)(*xO_B3_M = 0 &  *)
+
+   	(* Robot2 *)
+   	(*xI_B3_M = 0 &  *)xB3_out_R2 = 0 &  (*xO_B3_R2 = 0 &  *)xB5_in_R2 = 0 &  xI_B5_R2 = 0 &  xO_B5_A = 0 &
+
+   	(* Robot3 *)
+   	(*c_I_B2_C2 = 0 & *)xB2_out = 0 & (*xO_B2_R3 = 0 & *)xB4_in_R3 = 0 & (*xI_B4_R3 = 0 & xO_B4_L = 0 &*)
+
+   	(* Robot4 *)
+   	(*xI_B4_L = 0 & *)xB4_out_R4 = 0 & (*xO_B4_R4 = 0 & *)c_B6_in_R4 = 0 & c_I_B6_R4 = 0 & xO_B6_A = 0 &
+
+   	(* AssemblyStation *)
+   	(*xI_B5_R2 = 0 &  *)xB5_out_A = 0 &  (*xO_B5_A = 0 &  *)xproduct = 0
+
+   	(* Spec1 *)
+  	(*c_B1_in = 0 &  xB1_out*)
+
+
+  	(* Parameter constraints *)
+  	& p_conveyor >= 0
+  	& p_deadline >= 0
+  ;
+}
 
 
 (************************************************************)

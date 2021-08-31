@@ -15,26 +15,25 @@
  * License          : 
  * 
  * Created          : 2011/01/21
- * Last modified    : 2020/08/13
+ * Last modified    : 2021/08/30
  * Model version    : 
  * 
- * IMITATOR version : 3
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
 
 
 var
-
 (* Clocks *)
- 	x, y
-		: clock;
+  x, y
+    : clock;
 
 (* Parameters *)
-	p1, (* The minimum time between two consecutive requests for sugar *)
-	p2, (* The time during which one can request sugar *)
-	p3, (* The total time necessary to prepare coffee *)
-		: parameter;
+  p1, (* The minimum time between two consecutive requests for sugar *)
+  p2, (* The time during which one can request sugar *)
+  p3, (* The total time necessary to prepare coffee *)
+    : parameter;
 
 
 
@@ -66,25 +65,26 @@ end (* machine *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[machine] = idle
+init := {
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x = 0
-	& y = 0
+  discrete =
+		(* Initial state *)
+    loc[machine] := idle,
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& p1 >= 0
-	& p2 >= 0
-	& p3 >= 0
-;
+    (* Initial discrete variables assignments *)
+  ;
+
+  continuous =
+    (* Initial clock constraints *)
+    & x = 0
+    & y = 0
+
+    (* Parameter constraints *)
+  	& p1 >= 0
+  	& p2 >= 0
+  	& p3 >= 0
+    ;
+}
 
 
 
