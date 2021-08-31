@@ -29,7 +29,6 @@ open Result
 open AlgoStateBased
 open State
 open Statistics
-module IntMap = Map.Make(struct type t = int let compare = compare end)
 
 (************************************************************)
 (************************************************************)
@@ -43,9 +42,46 @@ module IntMap = Map.Make(struct type t = int let compare = compare end)
 
 exception DFS_Limit_detected of bfs_limit_reached
 
+
+
+(************************************************************)
+(* Type *)
+(************************************************************)
+
+module IntMap = Map.Make(struct type t = int let compare = compare end)
+
 (************************************************************)
 (* Functions *)
 (************************************************************)
+
+(*------------------------------------------------------------*)
+(* add x before the first y in q such that (before x y) holds *)
+(*------------------------------------------------------------*)
+let rec add_ordered x q before =
+	match q with
+	| [] -> [x]
+	| y::q' -> if before x y then x::q else y::(add_ordered x q' before)
+
+let rec in_queue astate thequeue =
+	match thequeue with
+	| [] -> false
+	| (thestate,_)::body ->
+		if (astate = thestate) then true
+		else in_queue astate body
+
+
+(***********************)
+(* printing the queues *)
+(***********************)
+let printtable (colour : string) thetable =
+	if verbose_mode_greater Verbose_medium then(
+			let printrecord state_index u rest =
+					(string_of_int state_index) ^ " " ^ rest;
+			in print_message Verbose_medium("Table " ^ colour ^ " : [ "
+					^ Hashtbl.fold printrecord thetable "" ^ "]")
+	);
+	()
+
 
 
 (************************************************************)
@@ -61,21 +97,31 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 	(************************************************************)
 
 	(* for the evaluation of the synthesis result *)
-	val mutable cyclecount = 0 (* counter for the cycles found *)
-	val mutable processed_blue = 0 (* number of states processed by a blue dfs *)
+	val mutable cyclecount				= 0 (* counter for the cycles found *)
+	val mutable processed_blue			= 0 (* number of states processed by a blue dfs *)
 		(* total count for iterative version *)
-	val mutable total_cyclecount = 0
-	val mutable total_processed_blue = 0
-	val mutable depth_reached = false (* used when a max depth has been reached *)
-	val mutable execute_again = true (* used when not doing iterative deepening for 1 execution only *)
-	val mutable current_depth = -1 (* used for iterative deepening *)
-	val mutable the_depth_step = -1 (* used for iterative deepening *)
-	val mutable max_depth = -1 (* used for iterative deepening *)
-	val mutable min_depth_found = -1 (* minimal depth at which a cycle is found *)
-	val mutable max_depth_reached = 0 (* maximum depth actually reached *)
+	val mutable total_cyclecount		= 0
+	val mutable total_processed_blue	= 0
+	val mutable depth_reached			= false (* used when a max depth has been reached *)
+	val mutable execute_again			= true (* used when not doing iterative deepening for 1 execution only *)
+	val mutable current_depth			= -1 (* used for iterative deepening *)
+	val mutable the_depth_step			= -1 (* used for iterative deepening *)
+	val mutable max_depth				= -1 (* used for iterative deepening *)
+	val mutable min_depth_found			= -1 (* minimal depth at which a cycle is found *)
+	val mutable max_depth_reached		= 0 (* maximum depth actually reached *)
 	
-	val mutable pzone_table : (State.state_index, LinearConstraint.p_linear_constraint) Hashtbl.t = Hashtbl.create 100
-	val mutable pzone_nc_table : (State.state_index, LinearConstraint.p_nnconvex_constraint) Hashtbl.t = Hashtbl.create 100
+	(************************************)
+	(* basic queues for NDFS algorithms *)
+	(************************************)
+	val mutable cyan			: (State.state_index, unit) Hashtbl.t = Hashtbl.create 100
+	val mutable blue			: (State.state_index, unit) Hashtbl.t = Hashtbl.create 100
+	val mutable green			: (State.state_index, unit) Hashtbl.t = Hashtbl.create 100
+	val mutable greendepth		: int IntMap.t = IntMap.empty
+	val mutable red				: (State.state_index, unit) Hashtbl.t = Hashtbl.create 100
+	val mutable pending			: (State.state_index * int) list = []; (* used in the layered algorithms *)
+
+	val mutable pzone_table		: (State.state_index, LinearConstraint.p_linear_constraint) Hashtbl.t = Hashtbl.create 100
+	val mutable pzone_nc_table	: (State.state_index, LinearConstraint.p_nnconvex_constraint) Hashtbl.t = Hashtbl.create 100
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -148,6 +194,47 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 			astate_constr
 		)
 
+	(***************************************************)
+	(* Generic check of zone projection on parameters *)
+	(***************************************************)
+	method private parameter_projection_gen (operator : LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint -> bool) (state_index1 : State.state_index) (state_index2 : State.state_index) : bool =
+		let constr1 : LinearConstraint.p_linear_constraint = self#find_or_compute_pzone state_index1 in
+		let constr2 : LinearConstraint.p_linear_constraint = self#find_or_compute_pzone state_index2 in
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("Projected constraint 1: \n"
+				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
+				^ " state: "
+				^ (StateSpace.string_of_state_index state_index1));
+			print_message Verbose_high ("Projected constraint 2: \n"
+				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
+				^ " state: "
+				^ (StateSpace.string_of_state_index state_index2)));
+		operator constr1 constr2
+
+
+	(***************************************************)
+	(* Check equality of zone projection on parameters *)
+	(***************************************************)
+	method private same_parameter_projection (state_index1 : State.state_index) (state_index2 : State.state_index) : bool =
+		self#parameter_projection_gen LinearConstraint.p_is_equal state_index1 state_index2
+
+
+	(****************************************************)
+	(* Check inclusion of zone projection on parameters *)
+	(****************************************************)
+	method private smaller_parameter_projection (state_index1 : State.state_index) (state_index2 : State.state_index) : bool =
+		self#parameter_projection_gen LinearConstraint.p_is_leq state_index1 state_index2
+
+	(***************************)
+	(* Check inclusion of zone *)
+	(***************************)
+	method private smaller_zone (state_index1 : State.state_index) (state_index2 : State.state_index) : bool =
+		let state1	: State.state = StateSpace.get_state state_space state_index1 in
+		let constr1	: LinearConstraint.px_linear_constraint = state1.px_constraint in
+		let state2	: State.state = StateSpace.get_state state_space state_index2 in
+		let constr2	: LinearConstraint.px_linear_constraint = state2.px_constraint in
+		LinearConstraint.px_is_leq constr1 constr2
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run NDFS exploration [WORK IN PROGRESS] *)
@@ -160,17 +247,19 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 
 		let options = Input.get_options() in
 		limit_reached <- Keep_going;
+		
 		(************************************)
-		(* basic queues for NDFS algorithms *)
+		(* Initialize basic queues for NDFS algorithms *)
 		(************************************)
-		let cyan = Hashtbl.create 100 in
-		let blue = Hashtbl.create 100 in
-		let green = Hashtbl.create 100 in
-		let greendepth = ref IntMap.empty in
-		let red = Hashtbl.create 100 in
-		let pending = ref [] in (* used in the layered algorithms *)
-		pzone_table <- Hashtbl.create 100; (* Used as a cache of projected convex parameter zones *)
-		pzone_nc_table <- Hashtbl.create 100; (* Used as a cache of projected non-convex parameter zones *)
+		cyan			<- Hashtbl.create 100;
+		blue			<- Hashtbl.create 100;
+		green			<- Hashtbl.create 100;
+		greendepth		<- IntMap.empty;
+		red				<- Hashtbl.create 100;
+		pending			<- []; (* used in the layered algorithms *)
+		
+		pzone_table		<- Hashtbl.create 100; (* Used as a cache of projected convex parameter zones *)
+		pzone_nc_table	<- Hashtbl.create 100; (* Used as a cache of projected non-convex parameter zones *)
 		
 		(**************************************)
 		(* variable for the synthesis results *)
@@ -189,17 +278,6 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
                 List.length (Hashtbl.find_all table state_index) > 0
         in
 
-		(***********************)
-		(* printing the queues *)
-		(***********************)
-        let printtable colour thetable =
-            if verbose_mode_greater Verbose_medium then(
-                    let printrecord state_index u rest =
-                            (string_of_int state_index) ^ " " ^ rest;
-                    in print_message Verbose_medium("Table " ^ colour ^ " : [ "
-                            ^ Hashtbl.fold printrecord thetable "" ^ "]")
-            );
-        in
 
 		let printpendingqueue colour thequeue =
 			if verbose_mode_greater Verbose_medium then(
@@ -235,54 +313,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		in
 
 
-		(***************************)
-		(* Check inclusion of zone *)
-		(***************************)
-        let smaller_zone state_index1 state_index2 =
-			let state1 = StateSpace.get_state state_space state_index1 in
-			let constr1 = state1.px_constraint in
-                        let state2 = StateSpace.get_state state_space state_index2 in
-                        let constr2 = state2.px_constraint in
-			LinearConstraint.px_is_leq constr1 constr2
-		in
 
-		(*** TODO: factor the following 2 functions!!! ***)
-
-		(***************************************************)
-		(* Check equality of zone projection on parameters *)
-		(***************************************************)
-		let same_parameter_projection state_index1 state_index2 =
-			let constr1 = self#find_or_compute_pzone state_index1 in
-			let constr2 = self#find_or_compute_pzone state_index2 in
-			if verbose_mode_greater Verbose_high then(
-				print_message Verbose_high ("Projected constraint 1: \n"
-					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
-					^ " state: "
-					^ (StateSpace.string_of_state_index state_index1));
-				print_message Verbose_high ("Projected constraint 2: \n"
-					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
-					^ " state: "
-					^ (StateSpace.string_of_state_index state_index2)));
-			LinearConstraint.p_is_equal constr1 constr2
-		in
-
-		(****************************************************)
-		(* Check inclusion of zone projection on parameters *)
-		(****************************************************)
-		let smaller_parameter_projection state_index1 state_index2 =
-			let constr1 = self#find_or_compute_pzone state_index1 in
-			let constr2 = self#find_or_compute_pzone state_index2 in
-			if verbose_mode_greater Verbose_high then(
-				print_message Verbose_high ("Projected constraint 1: \n"
-					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
-					^ " state: "
-					^ (StateSpace.string_of_state_index state_index1));
-				print_message Verbose_high ("Projected constraint 2: \n"
-					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
-					^ " state: "
-					^ (StateSpace.string_of_state_index state_index2)));
-			LinearConstraint.p_is_leq constr1 constr2
-		in
 
 		(****************************************************************************************)
 		(* Check if parameter constraint is included in a non-convex list of convex constraints *)
@@ -309,31 +340,18 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(* add a state and its depth to the pending queue *)
 		(**************************************************)
 
-        (* add x before the first y in q such that (before x y) holds *)
-        let rec add_ordered x q before =
-            match q with
-            | [] -> [x]
-            | y::q' -> if before x y then x::q else y::(add_ordered x q' before)
-        in
         let before s t = (* TODO: avoid hash-table lookups for every comparison *)
             match options#pending_order with
             | Pending_none -> true
             | Pending_accept -> State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space s)
-            | Pending_param -> (smaller_parameter_projection t s)
-            | Pending_zone -> (smaller_zone t s)
+            | Pending_param -> (self#smaller_parameter_projection t s)
+            | Pending_zone -> (self#smaller_zone t s)
         in
 		let add_pending astate_index astate_depth =
 			let before_pair (astate_index,_) (bstate_index,_) = before astate_index bstate_index in
-			pending := add_ordered (astate_index,astate_depth) !pending before_pair;
-			printpendingqueue "Pending (state added)" !pending
+			pending <- add_ordered (astate_index,astate_depth) pending before_pair;
+			printpendingqueue "Pending (state added)" pending
         in
-        let rec in_queue astate thequeue =
-			match thequeue with
-			| [] -> false
-			| (thestate,_)::body ->
-				if (astate = thestate) then true
-				else in_queue astate body
-		in
 
 		(**********************************)
 		(* Check the subsumption relation *)
@@ -385,7 +403,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				(* we traverse all states with the same location modulo hash collision *)
 				else let similar_states = StateSpace.get_comparable_states state_space smallstate
 						and check_sub bigstate = (table_test setbig bigstate) && (subsumes bigstate smallstate)
-							&& (same_parameter_projection bigstate smallstate)
+							&& (self#same_parameter_projection bigstate smallstate)
 					in begin
 						if verbose_mode_greater Verbose_high then(
 							print_message Verbose_high ("layersetsubsumes with " ^ string_of_int (List.length similar_states) ^ " states"));
@@ -445,7 +463,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(* Mark a state blue if deadlock or no successor is green, *)
 		(* Otherwise mark green and associate the depth in the map *)
 		(***********************************************************)
-		let mark_blue_or_green thestate thedepth =
+		let mark_blue_or_green thestate (thedepth : int) =
 			(* mark only if not blue due to lookahead *)
 			(* if the green colour is not used (option no_green),
 				then the state is necessarily marked blue *)
@@ -453,16 +471,16 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				let successors = StateSpace.get_successors state_space thestate
 					and is_green astate = table_test green astate
 					and is_pending_not_blue astate =
-						(in_queue astate !pending) &&
+						(in_queue astate pending) &&
 							not (table_test blue astate)
 				in
 				if ( options#no_green || List.exists is_green successors ||
-					(!pending <> [] &&
+					(pending <> [] &&
 						List.exists is_pending_not_blue successors))
 				then ( if options#recompute_green &&
 						(not (is_green thestate) ||
-							(IntMap.find thestate !greendepth) > thedepth)
-					then (greendepth := IntMap.add thestate thedepth !greendepth);
+							(IntMap.find thestate greendepth) > thedepth)
+					then (greendepth <- IntMap.add thestate thedepth greendepth);
 					table_add green thestate;
 					printtable "Green (mark_blue_or_green)" green)
 				else (  table_add blue thestate;
@@ -473,14 +491,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(***********************************************)
 		(* Test if a green state should be re-explored *)
 		(***********************************************)
-		let test_reexplore_green thestate thedepth =
+		let test_reexplore_green thestate (thedepth : int) =
 			print_message Verbose_high ("?? re-explore state " ^ (string_of_int thestate));
 			printtable "Green (test_reexplore_green)" green;
 			if not (table_test green thestate)
 			then true
 			else( (* it is green => check the depth if recomputation is required *)
  				if options#recompute_green &&
-					(IntMap.find thestate !greendepth) > thedepth
+					(IntMap.find thestate greendepth) > thedepth
 				then( (* the reexplored state must also be removed from previous red exploration *)
 					table_rem green thestate;
 					table_rem red thestate;
@@ -577,7 +595,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				if not depth_ok && not (table_test blue thestate) then (
 					table_add green thestate;
 					if options#recompute_green
-					then greendepth := IntMap.add thestate thestate_depth !greendepth;
+					then greendepth <- IntMap.add thestate thestate_depth greendepth;
 					()
 				)
 		)
@@ -626,7 +644,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				Hashtbl.clear green;
 				(* We keep the blue states from the previous run unless we do not use the green colour *)
 				if options#no_green then Hashtbl.clear blue;
-				greendepth := IntMap.empty;
+				greendepth <- IntMap.empty;
 				processed_blue <- 0;
 				cyclecount <-0;
 				Hashtbl.clear red;
@@ -722,7 +740,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 							in
 							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
-								(same_parameter_projection thestate astate)
+								(self#same_parameter_projection thestate astate)
 							in
 							let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 								(table_test cyan astate)
@@ -834,7 +852,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 							in
 							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
-								(same_parameter_projection thestate astate)
+								(self#same_parameter_projection thestate astate)
 							in
 							let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 								(subsumesset astate cyan)
@@ -860,14 +878,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				| true, false ->
 					(* set up the dfs blue calls *)
 					add_pending init_state_index 0;
-					(try (while !pending <> [] do
-						match !pending with
+					(try (while pending <> [] do
+						match pending with
 						| [] -> print_message Verbose_standard ("Impossible case");
 						| (thestate,thestate_depth)::body ->
-							pending := body;
+							pending <- body;
 							print_message Verbose_medium ("Popped state "
 								^ (string_of_int thestate));
-							printpendingqueue "Pending" !pending;
+							printpendingqueue "Pending" pending;
 							if (not (table_test blue thestate) &&
 								test_reexplore_green thestate thestate_depth) then
 							begin
@@ -919,7 +937,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								not (table_test cyan astate)
 							in
 							let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-								not (same_parameter_projection thestate astate)
+								not (self#same_parameter_projection thestate astate)
 							in
 							let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
 								add_pending astate (astate_depth + 1) in
@@ -958,7 +976,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 									in
 									let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
-										(same_parameter_projection thestate astate)
+										(self#same_parameter_projection thestate astate)
 									in
 									let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 										(table_test cyan astate)
@@ -987,14 +1005,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				| true, true ->
 					(* set up the dfs blue calls *)
 					add_pending init_state_index 0;
-					(try (while !pending <> [] do
-						match !pending with
+					(try (while pending <> [] do
+						match pending with
 						| [] -> print_message Verbose_standard ("Impossible case");
 						| (thestate,thestate_depth)::body ->
-							pending := body;
+							pending <- body;
 							print_message Verbose_medium ("Popped state "
 								^ (string_of_int thestate));
-							printpendingqueue "Pending" !pending;
+							printpendingqueue "Pending" pending;
 							if (not (table_test blue thestate) &&
 								test_reexplore_green thestate thestate_depth) then
 							begin
@@ -1047,7 +1065,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								not (layersetsubsumes red astate)
 							in
 							let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-								not (same_parameter_projection thestate astate)
+								not (self#same_parameter_projection thestate astate)
 							in
 							let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
 								add_pending astate (astate_depth + 1) in
@@ -1086,7 +1104,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 									in
 									let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
-										(same_parameter_projection thestate astate)
+										(self#same_parameter_projection thestate astate)
 									in
 									let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 										(subsumesset astate cyan)
