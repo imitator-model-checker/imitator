@@ -6,6 +6,7 @@ let rec eval_global_expression discrete_valuation = function
     | Arithmetic_expression expr -> eval_discrete_arithmetic_expression discrete_valuation expr
     | Bool_expression expr -> DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
     | Binary_word_expression expr -> DiscreteValue.Binary_word_value (eval_discrete_binary_word_expression discrete_valuation expr)
+    | Array_expression expr -> eval_array_expression discrete_valuation expr
 
 and eval_discrete_arithmetic_expression discrete_valuation = function
     | Rational_arithmetic_expression expr ->
@@ -231,3 +232,9 @@ and eval_discrete_binary_word_expression discrete_valuation = function
     | Binary_word_constant value -> value
     | Binary_word_variable variable_index ->
         DiscreteValue.binary_word_value (discrete_valuation variable_index)
+
+and eval_array_expression discrete_valuation = function
+    | Array_constant expr_array ->
+        Array_value (Array.map (fun expr -> eval_global_expression discrete_valuation expr) expr_array)
+    | Array_variable variable_index ->
+        Array_value (DiscreteValue.array_value (discrete_valuation variable_index))

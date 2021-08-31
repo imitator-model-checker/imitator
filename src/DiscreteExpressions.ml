@@ -136,6 +136,7 @@ and discrete_boolean_expression =
 
 and array_expression =
     (* Add here some function on array *)
+	| Array_comparison of array_expression * relop * array_expression
     | Array_constant of global_expression array
     | Array_variable of Automaton.variable_index
 
@@ -277,6 +278,7 @@ let rec customized_string_of_global_expression customized_string variable_names 
     | Arithmetic_expression expr -> customized_string_of_arithmetic_expression customized_string.boolean_string variable_names expr
     | Bool_expression expr -> customized_string_of_boolean_expression customized_string.boolean_string variable_names expr
     | Binary_word_expression expr -> customized_string_of_binary_word_expression customized_string.boolean_string variable_names expr
+    | Array_expression expr -> customized_string_of_array_expression customized_string variable_names expr
 
 (* Convert an arithmetic expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
@@ -508,6 +510,11 @@ and customized_string_of_binary_word_expression customized_string variable_names
     | Binary_word_constant value -> BinaryWord.string_of_binaryword value
     | Binary_word_variable variable_index -> variable_names variable_index
 
+and customized_string_of_array_expression customized_string variable_names = function
+    | Array_constant expr_array ->
+        "[" ^ Array.fold_left (fun acc expr -> acc ^ ", " ^ customized_string_of_global_expression customized_string variable_names expr) "" expr_array ^ "]"
+    | Array_variable variable_index -> variable_names variable_index
+
 
 let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
 let string_of_arithmetic_expression = customized_string_of_arithmetic_expression Constants.default_string
@@ -525,6 +532,7 @@ let rec customized_string_of_global_expression_for_jani customized_string variab
     | Arithmetic_expression expr -> customized_string_of_arithmetic_expression_for_jani customized_string variable_names expr
     | Bool_expression expr -> customized_string_of_boolean_expression_for_jani customized_string variable_names expr
     | Binary_word_expression expr -> customized_string_of_binary_word_expression_for_jani customized_string variable_names expr
+    | Array_expression expr -> customized_string_of_array_expression_for_jani customized_string variable_names expr
 
 and customized_string_of_boolean_expression_for_jani customized_string variable_names = function
 	| True_bool -> customized_string.boolean_string.true_string
@@ -777,6 +785,11 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
 	    ^ (customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word) ^ "}"
     | Binary_word_constant value -> BinaryWord.string_of_binaryword value
     | Binary_word_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
+
+and customized_string_of_array_expression_for_jani customized_string variable_names = function
+    | Array_constant expr_array ->
+        "[" ^ Array.fold_left (fun acc expr -> acc ^ ", " ^ customized_string_of_global_expression customized_string variable_names expr) "" expr_array ^ "]"
+    | Array_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
 
 let string_of_arithmetic_expression_for_jani = customized_string_of_arithmetic_expression_for_jani Constants.global_default_string
 let string_of_discrete_boolean_expression_for_jani = customized_string_of_discrete_boolean_expression_for_jani Constants.global_default_string

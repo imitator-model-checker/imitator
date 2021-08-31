@@ -164,6 +164,9 @@ and convert_literal_types_of_parsed_discrete_factor variable_infos target_type =
             Parsed_DF_constant (DiscreteValue.convert_value_to_discrete_type var_value target_type)
         ) else
             constant
+    | Parsed_DF_array expr_array ->
+        let converted_array = Array.map (convert_literal_types_of_parsed_boolean_expression variable_infos target_type) expr_array in
+        Parsed_DF_array converted_array
     | Parsed_DF_expression expr ->
         Parsed_DF_expression (convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr)
     | Parsed_rational_of_int_function expr ->
@@ -651,6 +654,48 @@ and infer_parsed_discrete_factor variable_infos = function
         let discrete_type = DiscreteValue.discrete_type_of_value var_value in
         Parsed_DF_constant var_value, discrete_type
 
+    | Parsed_DF_array expr_array as df_array ->
+
+        let infer_expr_array = Array.map (infer_parsed_boolean_expression variable_infos) expr_array in
+
+
+        (* Check if there is any number in array that is known type *)
+        let known_number = List.filter (fun (_, discrete_type) -> DiscreteValue.is_discrete_type_known_number_type discrete_type) (Array.to_list infer_expr_array) in
+
+        (*  *)
+        let infer_expr_array =
+            if List.length known_number > 0 then (
+                let first_known_number_expr, target_type = List.nth known_number 0 in
+                Array.map (fun (expr, discrete_type) ->
+                    if DiscreteValue.is_discrete_type_unknown_number_type discrete_type then
+                        convert_literal_types_of_parsed_boolean_expression variable_infos target_type expr, target_type
+                    else
+                        expr, discrete_type
+                ) infer_expr_array
+            ) else
+                infer_expr_array
+        in
+
+        let discrete_types = Array.map (fun (_, discrete_type) -> discrete_type) infer_expr_array in
+        let converted_expr_array = Array.map (fun (converted_expr, _) -> converted_expr) infer_expr_array in
+
+        (* Check if all elements in array had the same types *)
+        let first_type = Array.get discrete_types 0 in
+        let all_same = Array.for_all (fun discrete_type -> discrete_type = first_type) discrete_types in
+
+        (* If not all the same, type error ! *)
+        if not all_same then (
+            let str_discrete_types = Array.map (fun discrete_type -> DiscreteValue.string_of_var_type_discrete discrete_type) discrete_types in
+            raise (TypeError (
+                "The array `"
+                ^ string_of_parsed_factor variable_infos df_array
+                ^ "` mixes different types: ["
+                ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_discrete_types
+                ^ "]"
+            ))
+        ) else
+            Parsed_DF_array converted_expr_array, DiscreteValue.Var_type_discrete_array (first_type, Array.length expr_array)
+
     | Parsed_DF_expression expr ->
         let infer_expr, expr_type = infer_parsed_discrete_arithmetic_expression variable_infos expr in
         Parsed_DF_expression infer_expr, expr_type
@@ -1026,6 +1071,10 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
 	| Parsed_DF_constant value ->
 	    DiscreteValue.discrete_type_of_value value
 
+    | Parsed_DF_array expr_array ->
+        (* Arbitrary take the first item of array *)
+        discrete_type_of_parsed_boolean_expression variable_infos (Array.get expr_array 0)
+
 	| Parsed_DF_unary_min factor ->
 	    discrete_type_of_parsed_discrete_factor variable_infos factor
 	| Parsed_DF_expression expr
@@ -1170,7 +1219,14 @@ let check_type_assignment variable_infos variable_name expr =
 
     (* Check expression / variable type consistency *)
     let is_consistent = DiscreteValue.is_discrete_type_compatibles variable_type expr_var_type_discrete in
-
+    print_message Verbose_standard (
+        "Check "
+        ^ DiscreteValue.string_of_var_type_discrete variable_type
+        ^ ","
+        ^ DiscreteValue.string_of_var_type_discrete expr_var_type_discrete
+        ^ ":"
+        ^ string_of_bool is_consistent
+    );
     (* Not consistent ? raise a type error with appropriate message*)
     if not (is_consistent) then (
         raise (TypeError (get_error_message variable_name variable_type expr_var_type_discrete infer_expr))

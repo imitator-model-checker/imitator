@@ -297,6 +297,11 @@ and search_variable_of_discrete_arithmetic_expression variable_infos expr =
         | Parsed_DF_constant var_value ->
             let bool_value = DiscreteValue.bool_value var_value in
             DB_constant bool_value
+        | Parsed_DF_array expr_array ->
+            raise (InternalError (
+                "Search of boolean variable in an array expression, something failed.
+                Maybe an arithmetic expression was resolved as an array expression before"
+            ))
         | Parsed_rational_of_int_function _
         | Parsed_pow_function _
         | Parsed_shift_left _
@@ -2181,7 +2186,9 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
         (* Nested expression used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
         | Parsed_DF_expression expr ->
             raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
-
+        (* TODO benjamin REFACTOR maybe mix with below *)
+        | Parsed_DF_array expr_array ->
+            raise (InvalidExpression ("Use of an array is forbidden in an expression involving clock(s) or parameter(s)"))
         | Parsed_rational_of_int_function _
         | Parsed_pow_function _
         | Parsed_shift_left _

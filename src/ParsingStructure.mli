@@ -55,40 +55,16 @@ type var_type =
 	| Var_type_parameter
 
 (****************************************************************)
-(** Arithmetic expressions for discrete variables *)
+(** Global expression *)
 (****************************************************************)
-type parsed_discrete_arithmetic_expression =
-	| Parsed_DAE_plus of parsed_discrete_arithmetic_expression * parsed_discrete_term
-	| Parsed_DAE_minus of parsed_discrete_arithmetic_expression * parsed_discrete_term
-	| Parsed_DAE_term of parsed_discrete_term
-
-and parsed_discrete_term =
-	| Parsed_DT_mul of parsed_discrete_term * parsed_discrete_factor
-	| Parsed_DT_div of parsed_discrete_term * parsed_discrete_factor
-	| Parsed_DT_factor of parsed_discrete_factor
-
-and parsed_discrete_factor =
-	| Parsed_DF_variable of variable_name
-	| Parsed_DF_constant of DiscreteValue.discrete_value
-	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
-	| Parsed_DF_unary_min of parsed_discrete_factor
-	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
-	| Parsed_pow_function of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
-	| Parsed_shift_left of parsed_discrete_factor * parsed_discrete_arithmetic_expression
-	| Parsed_shift_right of parsed_discrete_factor * parsed_discrete_arithmetic_expression
-	| Parsed_fill_left of parsed_discrete_factor * parsed_discrete_arithmetic_expression
-	| Parsed_fill_right of parsed_discrete_factor * parsed_discrete_arithmetic_expression
-	| Parsed_log_and of parsed_discrete_factor * parsed_discrete_factor
-	| Parsed_log_or of parsed_discrete_factor * parsed_discrete_factor
-	| Parsed_log_xor of parsed_discrete_factor * parsed_discrete_factor
-	| Parsed_log_not of parsed_discrete_factor
-(*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
+type global_expression =
+    | Parsed_global_expression of parsed_boolean_expression
 
 (****************************************************************)
 (** Boolean expressions *)
 (****************************************************************)
 
-type parsed_discrete_boolean_expression =
+and parsed_discrete_boolean_expression =
     | Parsed_arithmetic_expression of parsed_discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression of parsed_discrete_boolean_expression * parsed_relop * parsed_discrete_boolean_expression
@@ -108,10 +84,37 @@ and parsed_boolean_expression =
 	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
 
 (****************************************************************)
-(** Global expression *)
+(** Arithmetic expressions for discrete variables *)
 (****************************************************************)
-type global_expression =
-    | Parsed_global_expression of parsed_boolean_expression
+and parsed_discrete_arithmetic_expression =
+	| Parsed_DAE_plus of parsed_discrete_arithmetic_expression * parsed_discrete_term
+	| Parsed_DAE_minus of parsed_discrete_arithmetic_expression * parsed_discrete_term
+	| Parsed_DAE_term of parsed_discrete_term
+
+and parsed_discrete_term =
+	| Parsed_DT_mul of parsed_discrete_term * parsed_discrete_factor
+	| Parsed_DT_div of parsed_discrete_term * parsed_discrete_factor
+	| Parsed_DT_factor of parsed_discrete_factor
+
+and parsed_discrete_factor =
+	| Parsed_DF_variable of variable_name
+	| Parsed_DF_constant of DiscreteValue.discrete_value
+	| Parsed_DF_array of parsed_boolean_expression array
+	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
+	| Parsed_DF_unary_min of parsed_discrete_factor
+	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
+	| Parsed_pow_function of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
+	| Parsed_shift_left of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_shift_right of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_fill_left of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_fill_right of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_log_and of parsed_discrete_factor * parsed_discrete_factor
+	| Parsed_log_or of parsed_discrete_factor * parsed_discrete_factor
+	| Parsed_log_xor of parsed_discrete_factor * parsed_discrete_factor
+	| Parsed_log_not of parsed_discrete_factor
+(*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
+
+
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
 type variable_declaration = var_type * (variable_name * global_expression option) list

@@ -170,6 +170,8 @@ val int_value : discrete_value -> Int32.t
 val bool_value : discrete_value -> bool
 (* Get binary word value of discrete value *)
 val binary_word_value : discrete_value -> BinaryWord.t
+(* Get array value of discrete value *)
+val array_value : discrete_value -> discrete_value array
 
 (* Convert any discrete value to NumConst.t value, if possible *)
 val to_numconst_value : discrete_value -> NumConst.t

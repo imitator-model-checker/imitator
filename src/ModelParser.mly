@@ -517,7 +517,7 @@ arithmetic_term:
 arithmetic_factor:
 	| number { Parsed_DF_constant ($1) }
   | binary_word { Parsed_DF_constant $1 }
-  | literal_array { Parsed_DF_constant (DiscreteValue.Number_value NumConst.zero) }
+  | literal_array { Parsed_DF_array (Array.of_list $1) }
 	| NAME { Parsed_DF_variable $1 }
 	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
 	| function_call { $1 }
@@ -525,9 +525,9 @@ arithmetic_factor:
 
 literal_array:
   /* Empty array */
-  | LSQBRA RSQBRA {}
+  | LSQBRA RSQBRA { [] }
   /* Non-empty array */
-  | LSQBRA literal_array_fol RSQBRA {}
+  | LSQBRA literal_array_fol RSQBRA { $2 }
 ;
 
 literal_array_fol:

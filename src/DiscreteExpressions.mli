@@ -116,7 +116,7 @@ type global_expression =
     | Arithmetic_expression of discrete_arithmetic_expression
     | Bool_expression of boolean_expression
     | Binary_word_expression of binary_word_expression
-    | Array_expression of array_expression
+    | Array_expression of array_expression (* TODO benjamin CLEAN to remove *)
 
 (** Boolean expression *)
 and boolean_expression =
@@ -142,8 +142,10 @@ and discrete_boolean_expression =
 	(** discrete constant in boolean expression *)
 	| DB_constant of bool
 
+(* TODO benjamin CLEAN to remove *)
 and array_expression =
     (* Add here some function on array *)
+	| Array_comparison of array_expression * relop * array_expression
     | Array_constant of global_expression array
     | Array_variable of Automaton.variable_index
 

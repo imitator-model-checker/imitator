@@ -203,7 +203,7 @@ let rec customized_string_of_value customized_boolean_string = function
     | Binary_word_value b -> BinaryWord.string_of_binaryword b
     | Array_value a ->
         let string_array = Array.map (fun x -> customized_string_of_value customized_boolean_string x) a in
-        OCamlUtilities.string_of_array_of_string string_array
+        "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "]"
 
 let string_of_value = customized_string_of_value default_string
 
@@ -331,6 +331,11 @@ let to_float_value = function
 (* Get binary word value of discrete value *)
 let binary_word_value = function
     | Binary_word_value x -> x
+    | _ -> raise (ComputingException "unable to get binary word value of non binary word")
+
+(* Get array value of discrete value *)
+let array_value = function
+    | Array_value x -> x
     | _ -> raise (ComputingException "unable to get binary word value of non binary word")
 
 (* Get discrete value from NumConst.t *)
