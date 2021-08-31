@@ -130,8 +130,8 @@ end
 (* Initial state *)
 (************************************************************)
 
-init := {
-  discrete =
+init := {
+	discrete =
 	  (* Initial location *)
 	  loc[proc1] := idle,
   	loc[proc2] := idle,
