@@ -15,23 +15,23 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : < 06/2007
- * Last modified    : 2020/08/19
+ * Last modified    : 2021/08/30
  * Model version    : 
  * 
- * IMITATOR version : 3
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
 
 
- 
+
 var
 
 (* Clocks *)
  	PLCclk, COMclk, NETclk, RIOclk, ENVclk,
 	tt, yy , zz,
 		: clock;
-		
+
 		(*** TODO: yy is only used for urgency, and could be replaced with urgent locations ***)
 
 (* Parameters *)
@@ -44,7 +44,7 @@ var
 	SIGmrt,
 		: parameter;
 
- 
+
 
 (************************************************************)
   automaton PLC
@@ -52,13 +52,13 @@ var
 synclabs: PLCbeg,COMin0, COMin1, PLCout0, PLCout1;
 
 loc PLCinit: invariant True
-	when True  sync PLCbeg do {PLCclk := 0} goto PLC1; 
+	when True  sync PLCbeg do {PLCclk := 0} goto PLC1;
 
 
 loc PLC1 : invariant PLCclk <= PLCct
 (*	when True sync COMin1 goto PLC4; -- remis (30/06/07) ----* *)
 	when True sync COMin0 goto PLC1; (* remis (30/06/07) ----**)
-	when PLCclk>=PLCmtt  sync PLCout0  goto PLC3; 
+	when PLCclk>=PLCmtt  sync PLCout0  goto PLC3;
 (*	when PLCclk>=PLCmtt  sync COMin1  do {yy := 0} goto PLC5;  *)
 
 loc PLC3 : invariant PLCclk <= PLCct
@@ -84,7 +84,7 @@ loc PLC7 : invariant PLCclk <= PLCct
 
 
 loc PLC9 : invariant PLCclk <= PLCct
-	when PLCclk=PLCct do{PLCclk := 0}  goto PLC7;  
+	when PLCclk=PLCct do{PLCclk := 0}  goto PLC7;
 	when True sync COMin1 goto PLC9;  (* remis (30/06/07) ----**)
 
 
@@ -97,7 +97,7 @@ automaton COM
 synclabs : PLCbeg, PLCout0, PLCout1, CNreq0, CNreq1, NCrep0, NCrep1, COMin1, COMin0;
 
 loc COMinit: invariant True
-	when True  sync PLCbeg goto COM1; 
+	when True  sync PLCbeg goto COM1;
 
 loc COM1 : invariant True
 	when True do {COMclk := 0} goto COM2;
@@ -109,7 +109,7 @@ loc COM2 : invariant COMclk <= COMd
 (*	when True sync PLCout1 goto COM7; *)
 
 loc COM3 : invariant COMclk <= COMct  (* inv. nouveau*)
-	when True sync NCrep0 do {tt := 0} goto COM4; 
+	when True sync NCrep0 do {tt := 0} goto COM4;
 	when True sync PLCout0 goto COM3;	(* retrait --> loss*)
 	when True sync NCrep1 do {tt := 0} goto COM5;
 (*	when True sync PLCout1 goto COM8;	-- retrait le 03/07/07 ----* *)
@@ -121,11 +121,11 @@ loc COM5 : invariant tt=0
 	when tt=0 sync COMin1 goto COM6;
 
 loc COM6 : invariant COMclk<= COMct
-	when COMclk= COMct  do {COMclk := 0} goto COM2; 
+	when COMclk= COMct  do {COMclk := 0} goto COM2;
 	when True sync PLCout0 goto COM6; (* remis le 30/06/07	 de 10 mn a 1h >> OVERFLOW*)
 	when True sync PLCout1 goto COM11; (* retrait le 03/07/07 --- de 10 mn a 1h*)
 
-loc COM7 : invariant COMclk <= COMd		
+loc COM7 : invariant COMclk <= COMd
 	when COMclk=COMd  sync CNreq0 goto COM8;
 	when True sync PLCout1 goto COM7; (* remis le 30/06/07 ----**)
 
@@ -141,15 +141,15 @@ loc COM10 : invariant tt=0
 	when tt=0 sync COMin1 goto COM11;
 
 loc COM11 : invariant COMclk<= COMct
-	when COMclk= COMct  do {COMclk := 0} goto COM12; 
+	when COMclk= COMct  do {COMclk := 0} goto COM12;
 	when True sync PLCout1 goto COM11; (* remis 30/06/07 (retrait ->loss!!)*)
 
-loc COM12 : invariant COMclk <= COMd		
+loc COM12 : invariant COMclk <= COMd
 	when COMclk=COMd  sync CNreq1 goto COM13; (* = au lieu de <=*)
 	when True sync PLCout1 goto COM12; (* retrait 03/07/07 ----**)
 
 loc COM13 : invariant COMclk <= COMct  (* inv. nouveau*)
-	when True sync NCrep1 
+	when True sync NCrep1
 			do {tt := 0} goto COM14;(*(03/07) before:goto COM14 ----**)
 	when True sync PLCout1 goto COM13; (* (retrait: 55 it.--> 54)*)
 
@@ -248,13 +248,13 @@ loc ENVinit: invariant True
 	when True sync SIGout0 goto ENV1;
 
 
-loc ENV1: invariant True 
-	when True sync SIGin1 do {ENVclk := 0} goto ENV2; 
+loc ENV1: invariant True
+	when True sync SIGin1 do {ENVclk := 0} goto ENV2;
 	when True sync SIGout0 goto ENV1;
 
 loc ENV2 : invariant ENVclk <= SIGmrt
-	when True sync SIGout0 goto ENV2;   
-	when True sync SIGout1 do {yy := 0} goto ENV4; 
+	when True sync SIGout0 goto ENV2;
+	when True sync SIGout1 do {yy := 0} goto ENV4;
 	when ENVclk=SIGmrt do {yy := 0} goto ENV5;
 
 loc ENV4 : invariant yy=0
@@ -276,69 +276,72 @@ end (*ENV*)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	&	loc[PLC]=PLCinit 
-	&	loc[COM]=COMinit
-	&	loc[NET]=NET1
-	&	loc[RIO]=RIO1
-	&	loc[ENV]=ENVinit
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[PLC] := PLCinit,
+  	loc[COM] := COMinit,
+  	loc[NET] := NET1,
+  	loc[RIO] := RIO1,
+  	loc[ENV] := ENVinit,
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& PLCclk>=0 & COMclk>=0 & NETclk>=0 & RIOclk>=0 & ENVclk>=0 
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& PLCclk>=0 & COMclk>=0 & NETclk>=0 & RIOclk>=0 & ENVclk>=0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-
-
-(*--	& 	0 <  NETd
---	& 	NETd < COMd 
---	&	COMd < RIOd 
---	& 	RIOd < PLCmtt
---	& 	PLCmtt < PLCct
---	& 	PLCct < COMct
---	& 	COMct < SIGmrt*)
-
-(*	---START PI0---
---	&	PLCct  = 600
---	&	COMct  = 500
---	& 	SIGmrt = 2071
---	&	PLCmtt = 100
---	&	RIOd   = 70
---	&	COMd   = 25
---	&	NETd   = 10
-	---END PI0---*)
-
-	&	PLCct  > 0
-	&	COMct  > 0
-	&	SIGmrt  > 0
-	&	PLCmtt  > 0
-	&	RIOd  > 0
-	&	COMd  > 0
-	&	NETd  > 0
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
 
 
-	& 	tt = 0 & yy = 0 & zz=0 (*& s = 0*)
+    (*--	& 	0 <  NETd
+    --	& 	NETd < COMd
+    --	&	COMd < RIOd
+    --	& 	RIOd < PLCmtt
+    --	& 	PLCmtt < PLCct
+    --	& 	PLCct < COMct
+    --	& 	COMct < SIGmrt*)
 
-(*--	&	ta = 0 & tb = 0 & tc = 0 & td = 0 & te = 0
---	&	tf = 0 & tg = 0 & th = 0 & ti = 0 *)
+    (*	---START PI0---
+    --	&	PLCct  = 600
+    --	&	COMct  = 500
+    --	& 	SIGmrt = 2071
+    --	&	PLCmtt = 100
+    --	&	RIOd   = 70
+    --	&	COMd   = 25
+    --	&	NETd   = 10
+    	---END PI0---*)
 
-(*	---START PI0---
--- 	&	PLCct  = 600
--- 	&	COMct  = 500
--- 	& 	SIGmrt = 2071
--- 	&	PLCmtt = 100
--- 	&	RIOd   = 70
--- 	&	COMd   = 25
--- 	&	NETd   = 10
-	---END PI0---*)
-;
+  	&	PLCct  > 0
+  	&	COMct  > 0
+  	&	SIGmrt  > 0
+  	&	PLCmtt  > 0
+  	&	RIOd  > 0
+  	&	COMd  > 0
+  	&	NETd  > 0
 
+
+  	& 	tt = 0 & yy = 0 & zz=0 (*& s = 0*)
+
+    (*--	&	ta = 0 & tb = 0 & tc = 0 & td = 0 & te = 0
+    --	&	tf = 0 & tg = 0 & th = 0 & ti = 0 *)
+
+    (*	---START PI0---
+    -- 	&	PLCct  = 600
+    -- 	&	COMct  = 500
+    -- 	& 	SIGmrt = 2071
+    -- 	&	PLCmtt = 100
+    -- 	&	RIOd   = 70
+    -- 	&	COMd   = 25
+    -- 	&	NETd   = 10
+    	---END PI0---*)
+  ;
+}
 
 (************************************************************)
 (* The end *)

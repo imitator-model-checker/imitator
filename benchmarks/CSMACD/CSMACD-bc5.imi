@@ -15,10 +15,10 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : 2007
- * Last modified    : 2020/08/14
+ * Last modified    : 2021/08/30
  * Model version    : 
  * 
- * IMITATOR version : 3
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 var
@@ -1384,28 +1384,27 @@ end (* sender2 *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[medium]  = Init
-	& loc[sender1] = Init1
-	& loc[sender2] = Init2
+init := {
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x1 = 0
-	& x2 = 0
-	& y  = 0
+	discrete =
+		(* Initial location *)
+		loc[medium]  := Init,
+		loc[sender1] := Init1,
+		loc[sender2] := Init2,
+	;
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& lambda >=0
-	& sigma >= 0
-	& timeslot >= 0
-;
+	continuous =
+		(* Initial clock constraints *)
+		& x1 = 0
+		& x2 = 0
+		& y  = 0
+
+		(* Parameter constraints *)
+		& lambda >=0
+		& sigma >= 0
+		& timeslot >= 0
+	;
+}
 
 
 (************************************************************)

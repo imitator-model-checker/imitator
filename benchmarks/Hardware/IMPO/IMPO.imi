@@ -15,10 +15,10 @@
  * License          : 
  * 
  * Created          : 2015/01/29
- * Last modified    : 2020/08/13
+ * Last modified    : 2021/08/30
  * Model version    : 
  * 
- * IMITATOR version : 3
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -128,7 +128,7 @@ loc And101: invariant ckAnd <= dAnd_u
 	when ckAnd >= dAnd_l sync qDown do {} goto And100;
 
 (* Untable *)
-loc And110: invariant ckAnd <= dAnd_u 
+loc And110: invariant ckAnd <= dAnd_u
 	when True sync n1Down do {} goto And010;
 	when True sync n2Down do {} goto And100;
 	when ckAnd >= dAnd_l sync qUp do {} goto And111;
@@ -178,64 +178,69 @@ end (*EnvI2*)
 (* Initial state *)
 (************************************************************)
 
-init := True
-	(*------------------------------------------------------------
-	   INITIAL LOCATION
-	  ------------------------------------------------------------*)
-	 (*
-		I1  = 1
-		I2  = 0
-		N1 = 0
-		N2 = 1
-		Q  = 0
-	 *)
-	  
-	& loc[EnvI1]	= EnvI11
-	& loc[EnvI2]	= EnvI20
-	& loc[Not1Gate]	= Not110
-	& loc[Not2Gate]	= Not201
-	& loc[AndGate]	= And010
+init := {
 
-	(*------------------------------------------------------------
-	   INITIAL CLOCKS
-	  ------------------------------------------------------------*)
-	& ckNot1 = 0
-	& ckNot2 = 0
-	& ckAnd = 0
-	& ckEnv1 = 0
-	& ckEnv2 = 0
+	discrete =
+		(*------------------------------------------------------------
+		   INITIAL LOCATION
+		  ------------------------------------------------------------*)
+		 (*
+			I1  = 1
+			I2  = 0
+			N1 = 0
+			N2 = 1
+			Q  = 0
+		 *)
 
-	(*------------------------------------------------------------
-	   PARAMETER CONSTRAINTS
-	  ------------------------------------------------------------*)
-	& dNot1_l >= 0
-	& dNot1_l <= dNot1_u
-	& dNot2_l >= 0
-	& dNot2_l <= dNot2_u
-	& dAnd_l >= 0
-	& dAnd_l <= dAnd_u
-	& di1_l >= 0
-	& di1_l <= di1_u
-	& di2_l >= 0
-	& di2_l <= di2_u
-	
-	(*------------------------------------------------------------
-	   PARAMETER VALUATION
-	  ------------------------------------------------------------*)
-	  
-(*(*	& dNot1_l	= 6
-	& dNot1_u	= 7
-	& dNot2_l	= 1
-	& dNot2_u	= 2
-	& dAnd_l	= 1
-	& dAnd_u	= 2*)*)
+		loc[EnvI1]	:= EnvI11,
+		loc[EnvI2]	:= EnvI20,
+		loc[Not1Gate]	:= Not110,
+		loc[Not2Gate]	:= Not201,
+		loc[AndGate]	:= And010,
+	;
 
-(*	& dNot2_l  = 0.1
-	& dNot2_u = 0.3
-	& dNot1_l  = 0.4
-	& dNot1_u = 0.4*)
-	
-;
+	continuous =
+		(*------------------------------------------------------------
+		   INITIAL CLOCKS
+		  ------------------------------------------------------------*)
+		& ckNot1 = 0
+		& ckNot2 = 0
+		& ckAnd = 0
+		& ckEnv1 = 0
+		& ckEnv2 = 0
+
+		(*------------------------------------------------------------
+		   PARAMETER CONSTRAINTS
+		  ------------------------------------------------------------*)
+		& dNot1_l >= 0
+		& dNot1_l <= dNot1_u
+		& dNot2_l >= 0
+		& dNot2_l <= dNot2_u
+		& dAnd_l >= 0
+		& dAnd_l <= dAnd_u
+		& di1_l >= 0
+		& di1_l <= di1_u
+		& di2_l >= 0
+		& di2_l <= di2_u
+
+		(*------------------------------------------------------------
+		   PARAMETER VALUATION
+		  ------------------------------------------------------------*)
+
+	(*(*	& dNot1_l	= 6
+		& dNot1_u	= 7
+		& dNot2_l	= 1
+		& dNot2_u	= 2
+		& dAnd_l	= 1
+		& dAnd_u	= 2*)*)
+
+	(*	& dNot2_l  = 0.1
+		& dNot2_u = 0.3
+		& dNot1_l  = 0.4
+		& dNot1_u = 0.4*)
+
+	;
+}
 
 
 (************************************************************)

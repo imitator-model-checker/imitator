@@ -15,17 +15,17 @@
  * License          : 
  * 
  * Created          : 2012/10/08
- * Last modified    : 2020/08/14
+ * Last modified    : 2021/08/30
  * Model version    : 
  * 
- * IMITATOR version : 3
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
 
 
 
-var 
+var
 	(*P1's clock*)
 	x1,
 	(*P2's clock*)
@@ -34,7 +34,7 @@ var
 	x3,
 	y3,*)
 		:clock;
-	
+
 
 	turn,
 	counter
@@ -43,14 +43,14 @@ var
 	delta,
 	epsilon
 		: parameter;
-		
+
 
 	IDLE = -1
-		: constant; 
+		: constant;
 
-		
+
 (*
-THIS MODEL IS SUPPOSED TO BE EQUIVALENT TO THE FOLLOWING PAT.PAR MODEL 
+THIS MODEL IS SUPPOSED TO BE EQUIVALENT TO THE FOLLOWING PAT.PAR MODEL
 
 #define N 3;
 #define Idle -1;
@@ -151,36 +151,31 @@ end (*proc2*)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[proc1] = idle1
-	& loc[proc2] = idle2
-(* 	& loc[proc3] = idle3 *)
-(*	& loc[proc4] = idle4*)
+init := {
+	discrete =
+		(* Initial location *)
+		loc[proc1] := idle1,
+		loc[proc2] := idle2,
+		(* 	loc[proc3] := idle3, *)
+		(*	loc[proc4] := idle4,*)
 
-	(*------------------------------------------------------------*)
-	(* Initial discrete assignments *)
-	(*------------------------------------------------------------*)
-	& turn = IDLE
-	& counter = 0
+		(* Initial discrete assignments *)
+		turn := IDLE,
+		counter := 0,
+	;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x1 = 0
-	& x2 = 0
+	continuous =
+		(* Initial clock constraints *)
+		& x1 = 0
+		& x2 = 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& delta >= 0
-	& epsilon >= 0
-(*	& delta   = 3
-	& epsilon = 4*)
-
-;
+		(* Parameter constraints *)
+		& delta >= 0
+		& epsilon >= 0
+		(*	& delta   = 3
+			& epsilon = 4*)
+	;
+}
 
 
 (************************************************************)

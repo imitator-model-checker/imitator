@@ -25,7 +25,7 @@ var
 	time_2_3: clock;
 	offset_2_3 : parameter;
 	x_1, x_2: clock;
-	
+
 
 
 automaton j_1_1
@@ -140,7 +140,7 @@ automaton j_2_2
 
 synclabs: Release2, Done2;
 
-loc init_1: invariant True 
+loc init_1: invariant True
 	when True sync Done2 goto idling;
 	when True sync Release2 do {wcet_2 := wcet_2, bcet_2 :=  bcet_2, priority_2 := priority_2} goto init_1;
 
@@ -209,18 +209,22 @@ end
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-			loc[j_1_1] = idling &
-			loc[j_1_2] = init_1 &
-			loc[j_1_3] = init_1 &
-			loc[j_1_4] = init_1 &
-			loc[j_2_1] = idling &
-			loc[j_2_2] = init_1 &
-			loc[j_2_3] = init_1 &
-			loc[scheduler] = non_1_non_2 &
+init := {
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+			loc[j_1_1] := idling,
+			loc[j_1_2] := init_1,
+			loc[j_1_3] := init_1,
+			loc[j_1_4] := init_1,
+			loc[j_2_1] := idling,
+			loc[j_2_2] := init_1,
+			loc[j_2_3] := init_1,
+			loc[scheduler] := non_1_non_2,
+	;
+
+	continuous =
 			x_1 = 0 &
 			x_2 = 0 &
 			time_1_1 = 0 &
@@ -230,13 +234,13 @@ init :=
 			time_2_1 = 0 &
 			time_2_2 = 0 &
 			time_2_3 = 0 &
-(*--			offset_1_1 = 0 &
---			offset_1_2 = 20 &
---			offset_1_3 = 75 &
---			offset_1_4 = 130 &
---			offset_2_1 = 30 &
---			offset_2_2 = 60 &
---			offset_2_3 = 120 &*)
+			(*--			offset_1_1 = 0 &
+			--			offset_1_2 = 20 &
+			--			offset_1_3 = 75 &
+			--			offset_1_4 = 130 &
+			--			offset_2_1 = 30 &
+			--			offset_2_2 = 60 &
+			--			offset_2_3 = 120 &*)
 			priority_1 = priority1_1 &
 			wcet_1 = wcet1_1 &
 			bcet_1 = bcet1_1 &
@@ -253,48 +257,49 @@ init :=
 			priority2_2 = 3 &
 			priority2_3 = 1 &
 
-(*--			bcet1_1 = 10 &
---			wcet1_1 = 40 &
---			bcet1_2 = 5 &
---			wcet1_2 = 10 &
---			bcet1_3 = 20 &
---			wcet1_3 = 30 &
---			bcet1_4 = 15 &
---			wcet1_4 = 50 &
---			bcet2_1 = 10 &
---			wcet2_1 = 10 &
---			bcet2_2 = 5 &
---			wcet2_2 = 40 &
---			bcet2_3 = 20 &
---			wcet2_3 = 70 *)
+		(*--			bcet1_1 = 10 &
+		--			wcet1_1 = 40 &
+		--			bcet1_2 = 5 &
+		--			wcet1_2 = 10 &
+		--			bcet1_3 = 20 &
+		--			wcet1_3 = 30 &
+		--			bcet1_4 = 15 &
+		--			wcet1_4 = 50 &
+		--			bcet2_1 = 10 &
+		--			wcet2_1 = 10 &
+		--			bcet2_2 = 5 &
+		--			wcet2_2 = 40 &
+		--			bcet2_3 = 20 &
+		--			wcet2_3 = 70 *)
 
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
 
-	offset_1_1 >= 0
-	& bcet1_1 >= 0
-	& bcet1_2 >= 0
-	& bcet1_3 >= 0
-	& bcet1_4 >= 0
-	& bcet2_1 >= 0
-	& bcet2_2 >= 0
-	& bcet2_3 >= 0
-	& wcet1_1 >= 0
-	& wcet1_2 >= 0
-	& wcet1_3 >= 0
-	& wcet1_4 >= 0
-	& wcet2_1 >= 0
-	& wcet2_2 >= 0
-	& wcet2_3 >= 0
-	& offset_1_2 >= 0
-	& offset_1_3 >= 0
-	& offset_1_4 >= 0
-	& offset_2_1 >= 0
-	& offset_2_2 >= 0
-	& offset_2_3 >= 0
-;
+		offset_1_1 >= 0
+		& bcet1_1 >= 0
+		& bcet1_2 >= 0
+		& bcet1_3 >= 0
+		& bcet1_4 >= 0
+		& bcet2_1 >= 0
+		& bcet2_2 >= 0
+		& bcet2_3 >= 0
+		& wcet1_1 >= 0
+		& wcet1_2 >= 0
+		& wcet1_3 >= 0
+		& wcet1_4 >= 0
+		& wcet2_1 >= 0
+		& wcet2_2 >= 0
+		& wcet2_3 >= 0
+		& offset_1_2 >= 0
+		& offset_1_3 >= 0
+		& offset_1_4 >= 0
+		& offset_2_1 >= 0
+		& offset_2_2 >= 0
+		& offset_2_3 >= 0
+	;
+}
 
 (************************************************************)
 (* The end *)

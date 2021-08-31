@@ -15,54 +15,55 @@
  * License          : 
  * 
  * Created          : ? (< 09/2007)
- * Last modified    : 2020/04/30
+ * Last modified    : 2021/07/26
  * Model version    : 
  * 
- * IMITATOR version : 3
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
 
- 
 
-var     x,ys, yr,z,u,v
+
+var
+  x,ys, yr,z,u,v
 	(* removed 'w' as only used in R's automaton to mark urgent locations *)
-           : clock;
+    : clock;
 
 	i,	(*subscript of the chunk currently beeing processed (1<=i<=N)*)
 	ab,	(* alternating bit accompanying the next chunk to be sent*)
 	rc, (* nb of attempt undertaken by S to retransmit d_i (0<=rc<=MAX)*)
 
-	b1,bN, rb1,rbN, 
+	b1,bN, rb1,rbN,
 
 
 	retry, (*specifique ici (borne le nombre de retentatives du sender lors d'une erreur a Maxr)*)
 	Maxr,
 
-	rab, exp_ab 
-           : discrete;
-	
+	rab, exp_ab
+    : discrete;
 
-        MAX = 2, 	(*maximal number of retransmissions*)
+
+  MAX = 2, 	(*maximal number of retransmissions*)
 	N = 2, 	(*number of chunks of a file*)
 	SYNC = 17, 	(*delay added after a failure in order to assure that S does not start transmitting a new file before the receiver has properly reacted to the failure *)
 	T1 = 3,	(*time-out of the sender for initiating a retransmission when S has not received an ack from S*)
 	TR,	(*time-out of the receiver for indicating failure when R has not received the last chunk of a file*)
 	TD  (*maximum delay in channel K (and L)*)
-           : parameter;
+    : parameter;
 
 
 
 
 (************************************************************)
-  automaton sender
+automaton sender
 (************************************************************)
 synclabs: Sin, B, F, Sout_DK, Sout_NOK, Sout_OK;
 
 
 loc idleS: invariant x>=0
-	when True sync Sin do {b1 := 1,i := 1,x := 0} goto next_frame; 
-				
+	when True sync Sin do {b1 := 1,i := 1,x := 0} goto next_frame;
+
 
 urgent loc next_frame: invariant True
 
@@ -100,7 +101,7 @@ end (*sender*)
 
 
 (************************************************************)
-  automaton receiver	
+automaton receiver
 (************************************************************)
 synclabs: G, A, Rout_NOK, Rout_OK, Rout_FST, Rout_INC;
 
@@ -169,7 +170,7 @@ synclabs: F,G;
 
 loc startK: invariant u>=0
 
-	when True sync F do {u := 0} goto in_transitK;   
+	when True sync F do {u := 0} goto in_transitK;
 
 
 loc in_transitK: invariant u<=TD
@@ -216,7 +217,7 @@ synclabs: A,B;
 
 loc startL: invariant v>=0
 
-	when True sync A do {v := 0} goto in_transitL;   
+	when True sync A do {v := 0} goto in_transitL;
 
 
 
@@ -233,14 +234,14 @@ end (*channelL*)
 
 
 (************************************************************)
-automaton Sclient	
+automaton Sclient
 (************************************************************)
 synclabs: Sin, Sout_OK, Sout_DK, Sout_NOK;
 
 loc startSC: invariant ys<=SYNC 	(*invariant ys>=0*)
 
-	when ys=SYNC & retry<=Maxr sync Sin do {ys := 0, retry := retry+1} 
-				goto transSC; 
+	when ys=SYNC & retry<=Maxr sync Sin do {ys := 0, retry := retry+1}
+				goto transSC;
 (* 	when True sync Sin do {ys := 0} *)
 
 loc transSC: invariant ys>=0
@@ -252,7 +253,7 @@ loc transSC: invariant ys>=0
 end (*Sclient*)
 
 (************************************************************)
-automaton Rclient	
+automaton Rclient
 (************************************************************)
 synclabs: Rout_FST, Rout_OK, Rout_INC, Rout_NOK;
 
@@ -263,9 +264,9 @@ loc startRC: invariant yr>=0
 
 loc transRC: invariant yr>=0
 
-	when True sync Rout_OK  goto startRC; 
-	when True sync Rout_INC  goto transRC; 
-	when True sync Rout_NOK  goto startRC; 
+	when True sync Rout_OK  goto startRC;
+	when True sync Rout_INC  goto transRC;
+	when True sync Rout_NOK  goto startRC;
 
 end (*Rclient*)
 
@@ -274,50 +275,61 @@ end (*Rclient*)
 (************************************************************)
 (* Initial state *)
 (************************************************************)
-init := loc[sender]=idleS
-	& loc[receiver]=new_file
-	& loc[channelK]=startK
-	& loc[channelL]=startL
-	& loc[Sclient]=startSC
-	& loc[Rclient]=startRC
-	& x=0 & ys=0 & yr=0 & z=0
-(* 	& w=0 *)
-	& u=0 & v=0
-	& rc=0 & i=0 & ab=0 
-	& b1=0 & bN=0 & rb1=0 & rbN=0
-	& rab=0 & exp_ab=0
-	& retry=0 & Maxr=0 	(*Maxr=1*)
+init := {
 
-(*	-- & TR>=4T1+3TD	--TR=SYNC>4T1+3TD
-	-- & T1>2TD & TR<=SYNC & TD>0 *)
+  discrete =
+    (* Initial state *)
+    loc[sender]:=idleS,
+  	loc[receiver]:=new_file,
+  	loc[channelK]:=startK,
+  	loc[channelL]:=startL,
+  	loc[Sclient]:=startSC,
+  	loc[Rclient]:=startRC,
 
-(*	& MAX > 0
-	& N > 0*)
-	& TD > 0
-	& T1 > 0
-	& TR > 0
-	& SYNC > 0
-	
-(* 	Constraint for EF to be fair with EFIM or IM *)
-	& TD   >= 1 & TD <= 50
-	& TR   >= 1 & TR <= 50
+    (* Initial discrete variables assignments *)
+  	rc:=0 , i:=0 , ab:=0,
+  	b1:=0 , bN:=0 , rb1:=0 , rbN:=0,
+  	rab:=0 , exp_ab:=0,
+  	retry:=0 , Maxr:=0 	(*Maxr=1*)
+  ;
 
-	
-(*	
-	----------------------
-	-- Constraint output by IMITATOR 1
-	----------------------
--- 	& 5T1 < TD + TR
---       & N = 2
---       & MAX = 2
---       & 0 < TD
---       & TR <= TD + SYNC
---       & 2TD < T1
---       & 3TD + 4T1 <= TR
---       & TR < 2TD + 5T1*)
+  continuous =
+    (* Initial clock constraints *)
+    & x=0 & ys=0 & yr=0 & z=0
+    (* 	& w=0 *)
+    & u=0 & v=0
 
-;
+    (* Parameter constraints *)
+      (*	-- & TR>=4T1+3TD	--TR=SYNC>4T1+3TD
+      	-- & T1>2TD & TR<=SYNC & TD>0 *)
 
+      (*	& MAX > 0
+      	& N > 0*)
+  	& TD > 0
+  	& T1 > 0
+  	& TR > 0
+  	& SYNC > 0
+
+  (* 	Constraint for EF to be fair with EFIM or IM *)
+  	& TD   >= 1 & TD <= 50
+  	& TR   >= 1 & TR <= 50
+
+
+  (*
+  	----------------------
+  	-- Constraint output by IMITATOR 1
+  	----------------------
+  -- 	& 5T1 < TD + TR
+  --       & N = 2
+  --       & MAX = 2
+  --       & 0 < TD
+  --       & TR <= TD + SYNC
+  --       & 2TD < T1
+  --       & 3TD + 4T1 <= TR
+  --       & TR < 2TD + 5T1*)
+
+  ;
+}
 
 (************************************************************)
 (* The end *)

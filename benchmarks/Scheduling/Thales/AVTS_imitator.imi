@@ -1,18 +1,18 @@
 (************************************************************
-* IMITATOR MODEL
-*
-* Aerial Video Tracking Sytem
-*
-* Description : Preemptive model
-* Source : Thales
-* Author : Baptiste Parquier
-* Modeling : Baptiste Parquier
-* Input by : Baptiste Parquier
-*
-* Created : 2016/08/29
-* Last modified : 2020/08/18
-*
-* IMITATOR version: 3
+ * IMITATOR MODEL
+ *
+ * Aerial Video Tracking Sytem
+ *
+ * Description : Preemptive model
+ * Source : Thales
+ * Author : Baptiste Parquier
+ * Modeling : Baptiste Parquier
+ * Input by : Baptiste Parquier
+ *
+ * Created : 2016/08/29
+ * Last modified : 2021/08/30
+ *
+ * IMITATOR version: 3.1
 ************************************************************)
 
 var
@@ -322,7 +322,7 @@ urgent loc obs13: invariant True stop {t1}
 	when t1 <= WT goto obs10;
 
 loc bloque1: invariant True
-	
+
 end (* Observateur1 *)
 
 
@@ -347,7 +347,7 @@ urgent loc obs23: invariant True stop {t2}
 	when t2 <= WT goto obs20;
 
 loc bloque2: invariant True
-	
+
 end (* Observateur2 *)
 
 
@@ -370,55 +370,58 @@ end (* Observateur *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[periodic_event_T2_1] = p20
-	& loc[memoire_lancement_T2_1] = m20
-	& loc[periodic_event_T6_1] = p60
-	& loc[memoire_lancement_T6_1] = m610
-	& loc[memoire_lancement_T5_1] = m510
-	& loc[memoire_lancement_T6_2] = m620
-	& loc[memoire_lancement_T6_3] = m630
-	& loc[memoire_lancement_T7_1] = m70
-	& loc[tasks] = l0
-	& loc[Observateur1] = obs10
-	& loc[Observateur2] = obs20
-	& loc[Observateur] = obsI
+init := {
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[periodic_event_T2_1] := p20,
+		loc[memoire_lancement_T2_1] := m20,
+		loc[periodic_event_T6_1] := p60,
+		loc[memoire_lancement_T6_1] := m610,
+		loc[memoire_lancement_T5_1] := m510,
+		loc[memoire_lancement_T6_2] := m620,
+		loc[memoire_lancement_T6_3] := m630,
+		loc[memoire_lancement_T7_1] := m70,
+		loc[tasks] := l0,
+		loc[Observateur1] := obs10,
+		loc[Observateur2] := obs20,
+		loc[Observateur] := obsI,
 
-	(*------------------------------------------------------------*)
-	(* Initial discrete assignments *)
-	(*------------------------------------------------------------*)
-	& c2 = 0
-	& c61 = 0
-	& c5 = 0
-	& c62 = 0
-	& c63 = 0
-	& c7 = 0
-	& chemin_T6_1 = 1
-	& chemin_T7_1 = 1
+		(*------------------------------------------------------------*)
+		(* Initial discrete assignments *)
+		(*------------------------------------------------------------*)
+		c2 := 0,
+		c61 := 0,
+		c5 := 0,
+		c62 := 0,
+		c63 := 0,
+		c7 := 0,
+		chemin_T6_1 := 1,
+		chemin_T7_1 := 1,
+	;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x2p = 0
-	& x2 = 0
-	& x6p = 0
-	& x61 = 0
-	& x62 = 0
-	& x63 = 0
-	& x5 = 0
-	& x7 = 0
-	& t1 = 0
-	& t2 = 0
-	
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& WT >= 0
-;
+	continuous =
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x2p = 0
+		& x2 = 0
+		& x6p = 0
+		& x61 = 0
+		& x62 = 0
+		& x63 = 0
+		& x5 = 0
+		& x7 = 0
+		& t1 = 0
+		& t2 = 0
 
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& WT >= 0
+	;
+}
 
 (************************************************************)
 (* The end *)
