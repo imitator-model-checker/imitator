@@ -1,9 +1,9 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : FischerPS08-5
- * Description      :
- * Correctness      :
+ * Description      : 
+ * Correctness      : 
  * Scalable         : yes
  * Generated        : yes
  * Categories       : Academic ; Protocol ; RTS
@@ -12,12 +12,12 @@
  * Author           : Wojciech Penczek and Maciej Szreter
  * Modeling         : Wojciech Penczek and Maciej Szreter
  * Input by         : Étienne André
- * License          :
- *
- * Created          :
+ * License          : 
+ * 
+ * Created          : 
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

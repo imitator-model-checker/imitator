@@ -1,9 +1,9 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : infinite-5_6
  * Description      : Toy benchmark for which there exists an infinite accepting run for p>=6 but not detecting if the algorithm diverges on the infinite p>=5 path
- * Correctness      :
+ * Correctness      : 
  * Scalable         : no
  * Generated        : no
  * Categories       : Academic ; Toy ; Unsolvable
@@ -13,11 +13,11 @@
  * Modeling         : Dylan Marinho
  * Input by         : Dylan Marinho
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : 2021/01/21
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

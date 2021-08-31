@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : SLAF14_5
- * Description      :
+ * Description      : 
  * Correctness      : System must be schedulable
  * Scalable         : yes
- * Generated        :
+ * Generated        : 
  * Categories       : Academic ; Protocol ; RTS
- * Source           :
+ * Source           : 
  * bibkey           : SLAF14
  * Author           : Giuseppe Lipari
- * Modeling         :
- * Input by         :
- * License          :
- *
+ * Modeling         : 
+ * Input by         : 
+ * License          : 
+ * 
  * Created          : < 2015/10/30
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

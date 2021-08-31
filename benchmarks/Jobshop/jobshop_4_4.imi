@@ -1,11 +1,11 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : jobshop_4_4
  * Description      : Jobshop case study
  * Correctness      : All tasks performed on time
- * Scalable         :
- * Generated        :
+ * Scalable         : 
+ * Generated        : 
  * Categories       : RTS ; Scheduling
  * Source           : Maler et al. ("Job-Shop Scheduling Using Timed Automata", by Yasmina Abdeddaïm and Oded Maler, CAV 2001 (??))
  * bibkey           : AM01
@@ -13,11 +13,11 @@
  * Modeling         : Romain Soulat
  * Input by         : Romain Soulat, Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : < 2011/10/25
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

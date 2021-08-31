@@ -1,6 +1,6 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : LA02-2_10param
  * Description      : ?
  * Correctness      : ?
@@ -13,11 +13,11 @@
  * Modeling         : ?? (Romain Soulat?)
  * Input by         : ?? (Romain Soulat?)
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : < 2013
  * Last modified    : 2021/08/30
  * Model version    : 0.1
- *
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

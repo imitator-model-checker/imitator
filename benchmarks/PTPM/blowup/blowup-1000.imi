@@ -1,6 +1,6 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : blowup-1000
  * Description      : Template of a timed word alternating between a and c
  * Correctness      : N/A
@@ -13,11 +13,11 @@
  * Modeling         : Étienne André and Masaki Waga
  * Input by         : Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : 2018/03/07
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

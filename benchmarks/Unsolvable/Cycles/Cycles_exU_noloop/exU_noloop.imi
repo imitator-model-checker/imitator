@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : exU_noloop
  * Description      : U-PTA for which there exists a loop in the trace set of p=infinity, but not for any actual parameter valuation. NOTE: principle similar to `infinite:infeasiblePath.imi`
- * Correctness      :
+ * Correctness      : 
  * Scalable         : no
  * Generated        : no
  * Categories       : Academic ; Toy ; Unsolvable
  * Source           : Didier Lime
- * bibkey           :
+ * bibkey           : 
  * Author           : Didier Lime
  * Modeling         : Étienne André
  * Input by         : Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : 2015/09/30
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : JLR13_3tasks_npfp
  * Description      : Three periodic tasks run upon a uniprocessor by their fixed priorites, and the execution of a task cannot be preempted.
- * Correctness      :
- * Scalable         :
- * Generated        :
+ * Correctness      : 
+ * Scalable         : 
+ * Generated        : 
  * Categories       : Academic ; Protocol ; RTS
  * Source           : From "Integer Parameter Synthesis for Timed Automata" (2013) by A. Jovanovic, D. Lime and O.H. Roux; Section 6
  * bibkey           : JLR13
- * Author           :
+ * Author           : 
  * Modeling         : Youcheng Sun
  * Input by         : Youcheng Sun, Étienne André
- * License          :
- *
+ * License          : 
+ * 
  * Created          : xxxx (< 2015/10/28)
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

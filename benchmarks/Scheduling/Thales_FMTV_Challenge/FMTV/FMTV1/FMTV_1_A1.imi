@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : FMTV_1_A1
- * Description      :
- * Correctness      :
- * Scalable         :
- * Generated        :
+ * Description      : 
+ * Correctness      : 
+ * Scalable         : 
+ * Generated        : 
  * Categories       : Industrial ; Protocol ; RTS
- * Source           :
+ * Source           : 
  * bibkey           : SAL15
  * Author           : Étienne André and Youcheng Sun
- * Modeling         :
- * Input by         :
- * License          :
- *
+ * Modeling         : 
+ * Input by         : 
+ * License          : 
+ * 
  * Created          : 2015/03/19
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

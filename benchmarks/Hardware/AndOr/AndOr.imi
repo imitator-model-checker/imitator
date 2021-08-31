@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : AndOr
  * Description      : Modeling of an "AND" and an "OR" logical gate
  * Correctness      : Alternating sequence: b- x- a- b+ a+ x+
- * Scalable         :
- * Generated        :
+ * Scalable         : 
+ * Generated        : 
  * Categories       : Academic ; Hardware
  * Source           : From "Verification of Concurrent Systems with Parametric Delays Using Octahedra" (2005) by Clariso and Cortadella; Fig 3a
  * bibkey           : CC05
  * Author           : Roberto Clariso and Jordi Cortadella
  * Modeling         : Étienne André and Laurent Fribourg
  * Input by         : Étienne André
- * License          :
- *
+ * License          : 
+ * 
  * Created          : 2008/01
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

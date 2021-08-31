@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : NuclearPlant
  * Description      : Toy example of a nuclear plant that may explode
  * Correctness      : The nuclear plant must not blow up
- * Scalable         :
- * Generated        :
+ * Scalable         : 
+ * Generated        : 
  * Categories       : Education ; Toy
  * Source           : "SITH" course final examination at Institut Galilée, Université Paris 13 (2013-2014)
- * bibkey           :
+ * bibkey           : 
  * Author           : Étienne André
  * Modeling         : Étienne André
  * Input by         : Étienne André
- * License          :
- *
+ * License          : 
+ * 
  * Created          : 2014/03/21
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

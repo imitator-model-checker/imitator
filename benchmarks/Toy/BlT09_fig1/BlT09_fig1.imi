@@ -1,6 +1,6 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : BlT09_fig1
  * Description      : TODO
  * Correctness      : infinite run visiting infinitely often location 3
@@ -12,12 +12,12 @@
  * Author           : Laura Bozzelli, Salvatore La Torre
  * Modeling         : Laura Bozzelli, Salvatore La Torre
  * Input by         : Étienne André
- * License          :
- *
+ * License          : 
+ * 
  * Created          : 2015/11/17
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

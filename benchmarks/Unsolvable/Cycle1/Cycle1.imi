@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : Cycle1
  * Description      : Unsolvable benchmark for cycle synthesis. The tool cannot find the cycle because the generated clock constraints grow forever.
  * Correctness      : Cycle
- * Scalable         :
- * Generated        :
+ * Scalable         : 
+ * Generated        : 
  * Categories       : Academic ; Toy ; Unsolvable
  * Source           : Own work
- * bibkey           :
+ * bibkey           : 
  * Author           : Jaco Van de Pol
  * Modeling         : Jaco Van de Pol
  * Input by         : Jaco Van de Pol, Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : 2020/08
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

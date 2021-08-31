@@ -1,9 +1,9 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : infinite-noSolution
  * Description      : Toy benchmark for which the PZG has an infinite path but where the PTA infinite path is infeasible, i.e., there not exists any infinite accepting run for any value of p. NOTE: principle similar to `exU-noloop.imi`
- * Correctness      :
+ * Correctness      : 
  * Scalable         : no
  * Generated        : no
  * Categories       : Academic ; Toy ; Unsolvable
@@ -13,11 +13,11 @@
  * Modeling         : Jaco van de Pol
  * Input by         : Dylan Marinho
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : 2021/01/21
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

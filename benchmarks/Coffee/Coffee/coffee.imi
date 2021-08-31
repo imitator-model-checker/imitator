@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : coffee
  * Description      : Coffee machine (no coin, coffee is free!); a single button is used to wake the machine up, and to add sugar. Then a cup, and coffee are delivered after a (parametric) time.
  * Correctness      : Many possibilities (e.g., "it is possible to get a coffee")
- * Scalable         :
- * Generated        :
+ * Scalable         : 
+ * Generated        : 
  * Categories       : Education ; Toy
  * Source           : Own work
- * bibkey           :
+ * bibkey           : 
  * Author           : Étienne André
- * Modeling         :
+ * Modeling         : 
  * Input by         : Étienne André
- * License          :
- *
+ * License          : 
+ * 
  * Created          : 2011/01/21
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

@@ -1,6 +1,6 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : synthpNplusq
  * Description      : Toy benchmark for which the result is "r = p*i+q | i \in N" but IMITATOR cannot find it because the accumulated constraints grow forever
  * Correctness      : Reachability
@@ -12,12 +12,12 @@
  * Author           : Rajeev Alur, Thomas A. Henzinger, Moshe Y. Vardi
  * Modeling         : Dylan Marinho
  * Input by         : Dylan Marinho
- * License          :
- *
+ * License          : 
+ * 
  * Created          : 2021/01/21
  * Last modified    : 2021/08/31
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

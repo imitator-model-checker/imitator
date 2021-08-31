@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : Train1PTA
  * Description      : Simple model with 1 PTA only
  * Correctness      : "Crash" cannot happen
- * Scalable         :
- * Generated        :
+ * Scalable         : 
+ * Generated        : 
  * Categories       : Education ; Toy
  * Source           : Own work
- * bibkey           :
+ * bibkey           : 
  * Author           : Étienne André
  * Modeling         : Étienne André
  * Input by         : Étienne André
- * License          :
- *
+ * License          : 
+ * 
  * Created          : 2012/03/13
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

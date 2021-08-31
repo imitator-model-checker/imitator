@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : RCP_CS01
  * Description      : Protocol described in "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX" Collomb-Annichini, Sighireanu (RTTOOLS 2001)
  * Correctness      : see paper
- * Scalable         :
- * Generated        :
+ * Scalable         : 
+ * Generated        : 
  * Categories       : Industrial ; Protocol ; RTS
  * Source           : "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX"
  * bibkey           : CS01
  * Author           : Collomb-Annichini, Sighireanu
  * Modeling         : Collomb-Annichini, Sighireanu
  * Input by         : Étienne André
- * License          :
- *
+ * License          : 
+ * 
  * Created          : 2015/07/31
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

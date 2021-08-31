@@ -1,6 +1,6 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : SSLAF13_test2
  * Description      : Test Case 2 from [SSLAF13]. Note: might not be the final model of the paper (?)
  * Correctness      : system is schedulable
@@ -12,13 +12,13 @@
  * Author           : Youcheng Sun, Romain Soulat, Giuseppe Lipari, Etienne Andre and Laurent Fribourg
  * Modeling         : Youcheng Sun, Romain Soulat, Giuseppe Lipari, Etienne Andre and Laurent Fribourg
  * Input by         : ?
- * License          :
- *
+ * License          : 
+ * 
  * Created          : < 2015/10/30
  * Last modified    : 2021/08/30
- * Model version    :
- *
- * IMITATOR version : 3
+ * Model version    : 
+ * 
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 

@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : FMTV_2
- * Description      :
- * Correctness      :
- * Scalable         :
- * Generated        :
+ * Description      : 
+ * Correctness      : 
+ * Scalable         : 
+ * Generated        : 
  * Categories       : Industrial ; Protocol ; RTS
- * Source           :
+ * Source           : 
  * bibkey           : SAL15
  * Author           : G. Lipari and Youcheng Sun
- * Modeling         :
- * Input by         :
- * License          :
- *
+ * Modeling         : 
+ * Input by         : 
+ * License          : 
+ * 
  * Created          : 2015/xx/xx (< 2015/10/30)
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

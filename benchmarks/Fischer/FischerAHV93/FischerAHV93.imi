@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : FischerAHV93
  * Description      : Fischer protocol for mutual exclusion (parametric timed version). Modeled exactly as in [AHV93] although smarter modeling could have been done thanks to the IMITATOR syntax.
  * Correctness      : No two processes in the critical section (i.e., in P1_4 and P2_4 at the same time)
- * Scalable         :
- * Generated        :
+ * Scalable         : 
+ * Generated        : 
  * Categories       : Academic ; Protocol ; RTS
  * Source           : Model described in "Parametric Real-Time Reasoning" (fig. 2) Alur, Henzinger, Vardi (STOC 1993)
  * bibkey           : AHV93
  * Author           : Alur, Henzinger, Vardi
  * Modeling         : Alur, Henzinger, Vardi
  * Input by         : Étienne André
- * License          :
- *
+ * License          : 
+ * 
  * Created          : 2011/11/25
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 

@@ -1,6 +1,6 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : fischerPAT2
  * Description      : Fischer's mutual exclusion protocol with 2 processes
  * Correctness      : Not 2 processes together in the critical section (location obs_violation unreachable)
@@ -8,16 +8,16 @@
  * Generated        : no
  * Categories       : Academic ; Protocol ; RTS
  * Source           : PAT library of benchmarks
- * bibkey           :
+ * bibkey           : 
  * Author           : ?
- * Modeling         :
+ * Modeling         : 
  * Input by         : Étienne André
- * License          :
- *
+ * License          : 
+ * 
  * Created          : 2012/10/08
  * Last modified    : 2021/08/30
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.1
  ******************************************************************************)
 
