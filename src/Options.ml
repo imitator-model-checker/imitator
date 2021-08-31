@@ -216,6 +216,10 @@ class imitator_options =
 		(* Merging heuristic for EFsynthminpq *)
 		val mutable merge_heuristic					= Merge_iter10
 
+        (* Merge dev. 2021/08 - DYLAN *)
+        val mutable mergedev : bool option				    = None
+        val mutable merge_dev : AbstractAlgorithm.merge_dev = Merge_visited
+
 		(* Method for NZ algorithms *)
 		val mutable nz_method : AbstractAlgorithm.nz_method option = None
 
@@ -341,6 +345,12 @@ class imitator_options =
 (* 		method merge_before = merge_before *)
 		(* Merging heuristic for EFsynthminpq *)
 		method merge_heuristic						= merge_heuristic
+
+        (* Merge dev 2021 *)
+        method mergedev								= value_of_option "mergedev" mergedev
+        method is_set_mergedev						= mergedev <> None
+        method set_mergedev b						= mergedev <- Some b
+        method merge_dev    						= merge_dev
 
 		method model_file_name						= model_file_name
 		method model_local_file_name				= model_local_file_name
@@ -614,6 +624,21 @@ class imitator_options =
 					exit(1);
 				)
 
+			and set_merge_dev merge_dev_str =
+				(*  *)
+				if merge_dev_str = "visited" then
+					merge_dev <- Merge_visited
+				else if merge_dev_str = "queue" then
+					merge_dev <- Merge_queue
+				else if merge_dev_str = "ordered" then
+					merge_dev <- Merge_ordered
+				else(
+					print_error ("The merge_dev option `" ^ merge_dev_str ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
 			and set_merge_heuristic heuristic =
 				(*  *)
 				if heuristic = "always" then
@@ -871,6 +896,10 @@ class imitator_options =
 				("-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some true), "Use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS");
 				("-no-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some false), " Do not use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS.
 				");
+
+                ("-mergedev", Unit (fun () -> warn_if_set mergedev "mergedev"; mergedev <- Some true), " Use merging dev. Default: False");
+                ("-mergedev-option", String set_merge_dev, " Mergedev option. Possible values are `visited`, `queue`, `ordered`. Default: `visited`.
+                				");
 
 				("-merge-algorithm", String set_merge_algorithm, " Merge algorithm. Possible values are `none`, `static`, `staticl`, `expback`. Default: `none`.
 				");
@@ -1145,7 +1174,7 @@ class imitator_options =
 					);
 			);
 
-
+            (* TODO DYLAN: nothing done for mergedev here *)
 			(* Warn if merge heuristics are used without merging *)
 			if merge = Some false then(
 				if merge_n1 <> AbstractAlgorithm.undefined_merge_n then(
