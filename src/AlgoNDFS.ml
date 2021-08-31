@@ -336,7 +336,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		()
 		
 
-	method private cyclefound (termination_function : unit -> unit) (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+	method private cyclefound_cyclefound (termination_function : unit -> unit) (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 		self#cyclefound_gen termination_function "Blue (cyclefound)" thestate astate astate_depth
 
 
@@ -833,7 +833,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						mark_blue_or_green astate astate_depth;
 						table_rem cyan astate;
 					in
-					(try (rundfs enterdfs predfs withLookahead (self#cyclefound self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
+					(try (rundfs enterdfs predfs withLookahead (self#cyclefound_cyclefound self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
 						with TerminateAnalysis -> ());
 					print_message Verbose_medium("Finished the calls")
 
@@ -854,7 +854,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						printtable "Cyan (predfs)" cyan;
 						find_or_compute_successors astate
 					in
-					let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+					(*let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 						cyclecount <- cyclecount + 1;
 						total_cyclecount <- total_cyclecount + 1;
 						if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
@@ -881,7 +881,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						printtable "Blue (cyclefound)" blue;
 						(* and the current state is popped from the cyan list *)
 						table_rem cyan thestate;
-					in
+					in*)
 					let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
 						not (table_test blue astate) &&
 						test_reexplore_green astate astate_depth &&
@@ -945,7 +945,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						mark_blue_or_green astate astate_depth;
 						table_rem cyan astate;
 					in
-					(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
+					(try (rundfs enterdfs predfs withLookahead (self#cyclefound_cyclefound self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
 						with TerminateAnalysis -> ());
 					print_message Verbose_medium("Finished the calls")
 
