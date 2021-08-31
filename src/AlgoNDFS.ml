@@ -9,7 +9,7 @@
  *
  * File contributors : Laure Petrucci, Jaco van de Pol, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2021/08/20
+ * Last modified     : 2021/08/31
  *
  ************************************************************)
 
@@ -33,12 +33,20 @@ module IntMap = Map.Make(struct type t = int let compare = compare end)
 
 (************************************************************)
 (************************************************************)
-(* Types and exceptions for NDFS *)
+(* Object-independent functions *)
 (************************************************************)
 (************************************************************)
 
+(************************************************************)
+(* Exception for NDFS *)
+(************************************************************)
 
 exception DFS_Limit_detected of bfs_limit_reached
+
+(************************************************************)
+(* Functions *)
+(************************************************************)
+
 
 (************************************************************)
 (************************************************************)
@@ -65,6 +73,9 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 	val mutable max_depth = -1 (* used for iterative deepening *)
 	val mutable min_depth_found = -1 (* minimal depth at which a cycle is found *)
 	val mutable max_depth_reached = 0 (* maximum depth actually reached *)
+	
+	val mutable pzone_table : (State.state_index, LinearConstraint.p_linear_constraint) Hashtbl.t = Hashtbl.create 100
+	val mutable pzone_nc_table : (State.state_index, LinearConstraint.p_nnconvex_constraint) Hashtbl.t = Hashtbl.create 100
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -113,6 +124,31 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+	(***************************************************************************************)
+	(* Compute only once the convex parameter projection of the state, and put it in a hashtable *)
+	(***************************************************************************************)
+	method private find_or_compute_pzone (thestate : State.state_index) : LinearConstraint.p_linear_constraint =
+		try Hashtbl.find pzone_table thestate
+		with Not_found -> (
+			let astate : State.state = StateSpace.get_state state_space thestate in
+			let linear_aconstr : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse astate.px_constraint in
+			Hashtbl.add pzone_table thestate linear_aconstr;
+			linear_aconstr
+		)
+
+	(***************************************************************************************)
+	(* Compute only once the non-convex parameter projecvtion of the state, and put it in a hashtable *)
+	(***************************************************************************************)
+	method private find_or_compute_pzone_nc (thestate : State.state_index) = 
+		try Hashtbl.find pzone_nc_table thestate
+		with Not_found -> (
+			let linear_aconstr : LinearConstraint.p_linear_constraint = self#find_or_compute_pzone thestate in
+			let astate_constr : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint linear_aconstr in
+			Hashtbl.add pzone_nc_table thestate astate_constr;
+			astate_constr
+		)
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run NDFS exploration [WORK IN PROGRESS] *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -133,8 +169,8 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		let greendepth = ref IntMap.empty in
 		let red = Hashtbl.create 100 in
 		let pending = ref [] in (* used in the layered algorithms *)
-		let pzone_table = Hashtbl.create 100 in (* Used as a cache of projected convex parameter zones *)
-		let pzone_nc_table = Hashtbl.create 100 in (* Used as a cache of projected non-convex parameter zones *)
+		pzone_table <- Hashtbl.create 100; (* Used as a cache of projected convex parameter zones *)
+		pzone_nc_table <- Hashtbl.create 100; (* Used as a cache of projected non-convex parameter zones *)
 		
 		(**************************************)
 		(* variable for the synthesis results *)
@@ -152,29 +188,6 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
         let table_test table state_index =
                 List.length (Hashtbl.find_all table state_index) > 0
         in
-		(***************************************************************************************)
-		(* Compute only once the convex parameter projection of the state, and put it in a hashtable *)
-		(***************************************************************************************)
-		let find_or_compute_pzone thestate = 
-			try Hashtbl.find pzone_table thestate
-			with Not_found -> (
-				let astate = StateSpace.get_state state_space thestate in
-				let linear_aconstr = LinearConstraint.px_hide_nonparameters_and_collapse astate.px_constraint in
-				Hashtbl.add pzone_table thestate linear_aconstr;
-				linear_aconstr
-			) in
-
-		(***************************************************************************************)
-		(* Compute only once the non-convex parameter projecvtion of the state, and put it in a hashtable *)
-		(***************************************************************************************)
-		let find_or_compute_pzone_nc thestate = 
-			try Hashtbl.find pzone_nc_table thestate
-			with Not_found -> (
-				let linear_aconstr = find_or_compute_pzone thestate in
-				let astate_constr = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint linear_aconstr in
-				Hashtbl.add pzone_nc_table thestate astate_constr;
-				astate_constr
-			) in
 
 		(***********************)
 		(* printing the queues *)
@@ -239,8 +252,8 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(* Check equality of zone projection on parameters *)
 		(***************************************************)
 		let same_parameter_projection state_index1 state_index2 =
-			let constr1 = find_or_compute_pzone state_index1 in
-			let constr2 = find_or_compute_pzone state_index2 in
+			let constr1 = self#find_or_compute_pzone state_index1 in
+			let constr2 = self#find_or_compute_pzone state_index2 in
 			if verbose_mode_greater Verbose_high then(
 				print_message Verbose_high ("Projected constraint 1: \n"
 					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
@@ -257,8 +270,8 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(* Check inclusion of zone projection on parameters *)
 		(****************************************************)
 		let smaller_parameter_projection state_index1 state_index2 =
-			let constr1 = find_or_compute_pzone state_index1 in
-			let constr2 = find_or_compute_pzone state_index2 in
+			let constr1 = self#find_or_compute_pzone state_index1 in
+			let constr2 = self#find_or_compute_pzone state_index2 in
 			if verbose_mode_greater Verbose_high then(
 				print_message Verbose_high ("Projected constraint 1: \n"
 					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
@@ -277,7 +290,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		let check_parameter_leq_list astate_index =
 			print_highlighted_message Shell_bold Verbose_high
 				("Testing inclusion of parameter zone in list of collected constraints");
-			let astate_constr = find_or_compute_pzone_nc astate_index in
+			let astate_constr = self#find_or_compute_pzone_nc astate_index in
 			if (LinearConstraint.p_nnconvex_constraint_is_leq astate_constr synthesized_constraint) then (
 				print_highlighted_message Shell_bold Verbose_medium("Pruning with inclusion in collected constraints");
 				true
@@ -385,7 +398,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(******************************************)
 		let print_projection verbose_level thestate =
 			if verbose_mode_greater verbose_level then (
-				let constr = find_or_compute_pzone thestate in
+				let constr = self#find_or_compute_pzone thestate in
 				print_message verbose_level ("Projected constraint : \n"
 					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr))
 		in
@@ -657,7 +670,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
 						else termination_status <- Some Target_found;
-						let pzone = find_or_compute_pzone astate in
+						let pzone = self#find_or_compute_pzone astate in
 						LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 						if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 						(* table_add blue astate; *)
@@ -704,7 +717,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								termination_status <- Some Target_found;
-								let pzone = find_or_compute_pzone astate in
+								let pzone = self#find_or_compute_pzone astate in
 								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 							in
@@ -766,7 +779,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
 						else termination_status <- Some Target_found;
-						let pzone = find_or_compute_pzone astate in
+						let pzone = self#find_or_compute_pzone astate in
 						LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 						if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 						(* the state where the lookahead has found a cycle is now set blue *)
@@ -816,7 +829,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
-								let pzone = find_or_compute_pzone astate in
+								let pzone = self#find_or_compute_pzone astate in
 								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 							in
@@ -890,7 +903,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
-								let pzone = find_or_compute_pzone astate in
+								let pzone = self#find_or_compute_pzone astate in
 								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 								(* the state where the lookahead has found a cycle is now set blue *)
@@ -940,7 +953,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
 										else termination_status <- Some Target_found;
-										let pzone = find_or_compute_pzone astate in
+										let pzone = self#find_or_compute_pzone astate in
 										LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 									in
@@ -1017,7 +1030,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
-								let pzone = find_or_compute_pzone astate in
+								let pzone = self#find_or_compute_pzone astate in
 								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 								(* the state where the lookahead has found a cycle is now set blue *)
@@ -1068,7 +1081,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
 										else termination_status <- Some Target_found;
-										let pzone = find_or_compute_pzone astate in
+										let pzone = self#find_or_compute_pzone astate in
 										LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 									in
