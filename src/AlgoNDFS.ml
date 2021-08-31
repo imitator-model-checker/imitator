@@ -73,7 +73,7 @@ let rec in_queue astate thequeue =
 (***********************)
 (* printing the queues *)
 (***********************)
-let printtable (colour : string) thetable =
+let printtable (colour : string) thetable : unit =
 	if verbose_mode_greater Verbose_medium then(
 			let printrecord state_index u rest =
 					(string_of_int state_index) ^ " " ^ rest;
@@ -82,6 +82,32 @@ let printtable (colour : string) thetable =
 	);
 	()
 
+(***********************)
+(* Edit tables *)
+(***********************)
+(* Table add, test and remove; a state is present as it maps to ():unit *)
+let table_add (table : (State.state_index, unit) Hashtbl.t) (state_index : State.state_index) : unit =
+		Hashtbl.replace table state_index ()
+
+let table_rem (table : (State.state_index, unit) Hashtbl.t) (state_index : State.state_index) : unit =
+		Hashtbl.remove table state_index
+
+let table_test (table : (State.state_index, unit) Hashtbl.t) (state_index : State.state_index) : bool =
+		List.length (Hashtbl.find_all table state_index) > 0
+
+
+let printpendingqueue (colour : string) (thequeue : (State.state_index * int) list) : unit =
+	if verbose_mode_greater Verbose_medium then(
+		let rec r_printqueue thequeue = match thequeue with
+			| [] -> "";
+			| (state_index,state_depth)::body  ->
+				"(" ^ (string_of_int state_index)
+					^ ", " ^ (string_of_int state_depth) ^ ") "
+					^ (r_printqueue body);
+		in print_message Verbose_medium("Queue " ^ colour ^ " : [ "
+				^ r_printqueue thequeue ^ "]")
+	);
+	()
 
 
 (************************************************************)
@@ -236,6 +262,51 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		LinearConstraint.px_is_leq constr1 constr2
 
 
+	(******************************************)
+	(* printing zone projection on parameters *)
+	(******************************************)
+	method private print_projection verbose_level (thestate : State.state_index) : unit =
+		if verbose_mode_greater verbose_level then (
+			let constr = self#find_or_compute_pzone thestate in
+			print_message verbose_level ("Projected constraint : \n"
+				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr))
+
+
+	(***************************)
+	(* cyclefound *)
+	(***************************)
+	method private cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+		(* Get the property to check whether we are in synthesis or witness mode *)
+		let property = Input.get_property() in
+
+		cyclecount <- cyclecount + 1;
+		total_cyclecount <- total_cyclecount + 1;
+		if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
+		if (property.synthesis_type = Witness) then
+			print_highlighted_message Shell_bold Verbose_standard
+				("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
+		else print_highlighted_message Shell_bold Verbose_standard
+				("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
+		if verbose_mode_greater Verbose_low then(
+			print_message Verbose_medium
+				(ModelPrinter.string_of_state model
+					(StateSpace.get_state state_space astate));
+			self#print_projection Verbose_low astate);
+		(* For synthesis: we do not stop immediately *)
+		if (property.synthesis_type = Synthesis) then
+			termination_status <- Some Regular_termination
+		else termination_status <- Some Target_found;
+		let pzone = self#find_or_compute_pzone astate in
+		LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
+		if (property.synthesis_type = Witness) then raise TerminateAnalysis;
+		(* table_add blue astate; *)
+		table_add blue thestate;
+		printtable "Blue (cyclefound)" blue;
+		(* and the current state is popped from the cyan list *)
+		table_rem cyan thestate;
+		()
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run NDFS exploration [WORK IN PROGRESS] *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -266,31 +337,6 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(**************************************)
 		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint();
 
-
-        (* Table add, test and remove; a state is present as it maps to ():unit *)
-        let table_add table state_index =
-                Hashtbl.replace table state_index ()
-        in
-        let table_rem table state_index =
-                Hashtbl.remove table state_index
-        in
-        let table_test table state_index =
-                List.length (Hashtbl.find_all table state_index) > 0
-        in
-
-
-		let printpendingqueue colour thequeue =
-			if verbose_mode_greater Verbose_medium then(
-				let rec r_printqueue thequeue = match thequeue with
-					| [] -> "";
-					| (state_index,state_depth)::body  ->
-						"(" ^ (string_of_int state_index)
-							^ ", " ^ (string_of_int state_depth) ^ ") "
-							^ (r_printqueue body);
-				in print_message Verbose_medium("Queue " ^ colour ^ " : [ "
-						^ r_printqueue thequeue ^ "]")
-			);
-		in
 
 		(***************************************)
 		(* put accepting states first in queue *)
@@ -409,16 +455,6 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 							print_message Verbose_high ("layersetsubsumes with " ^ string_of_int (List.length similar_states) ^ " states"));
 						List.exists check_sub similar_states
 					end
-		in
-
-		(******************************************)
-		(* printing zone projection on parameters *)
-		(******************************************)
-		let print_projection verbose_level thestate =
-			if verbose_mode_greater verbose_level then (
-				let constr = self#find_or_compute_pzone thestate in
-				print_message verbose_level ("Projected constraint : \n"
-					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr))
 		in
 
 		(***********************************)
@@ -670,7 +706,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						printtable "Cyan (predfs)" cyan;
 						find_or_compute_successors astate
 					in
-					let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+(*					let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 						cyclecount <- cyclecount + 1;
 						total_cyclecount <- total_cyclecount + 1;
 						if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
@@ -696,7 +732,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						printtable "Blue (cyclefound)" blue;
 						(* and the current state is popped from the cyan list *)
 						table_rem cyan thestate;
-					in
+					in*)
 					let filterdfs (thestate : State.state_index) (astate : State.state_index)
 						(astate_depth : int) : bool =
 						not (table_test blue astate) &&
@@ -732,7 +768,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									print_message Verbose_medium
 										(ModelPrinter.string_of_state model
 											(StateSpace.get_state state_space astate));
-									print_projection Verbose_low astate);
+									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								termination_status <- Some Target_found;
 								let pzone = self#find_or_compute_pzone astate in
@@ -757,8 +793,8 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						);
 						mark_blue_or_green astate astate_depth;
 						table_rem cyan astate;
-						in
-					(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
+					in
+					(try (rundfs enterdfs predfs withLookahead self#cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
 						with TerminateAnalysis -> ());
 					print_message Verbose_medium("Finished the calls")
 
@@ -792,7 +828,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 							print_message Verbose_medium
 								(ModelPrinter.string_of_state model
 									(StateSpace.get_state state_space astate));
-							print_projection Verbose_low astate);
+							self#print_projection Verbose_low astate);
 						(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
@@ -842,7 +878,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									print_message Verbose_medium
 										(ModelPrinter.string_of_state model
 											(StateSpace.get_state state_space astate));
-									print_projection Verbose_low astate);
+									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
@@ -916,7 +952,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									print_message Verbose_medium
 										(ModelPrinter.string_of_state model
 											(StateSpace.get_state state_space astate));
-									print_projection Verbose_low astate);
+									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
@@ -966,7 +1002,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 											print_message Verbose_medium
 												(ModelPrinter.string_of_state model
 													(StateSpace.get_state state_space astate));
-											print_projection Verbose_low astate);
+											self#print_projection Verbose_low astate);
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
@@ -1043,7 +1079,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									print_message Verbose_medium
 										(ModelPrinter.string_of_state model
 											(StateSpace.get_state state_space astate));
-									print_projection Verbose_low astate);
+									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
@@ -1094,7 +1130,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 											print_message Verbose_medium
 												(ModelPrinter.string_of_state model
 													(StateSpace.get_state state_space astate));
-											print_projection Verbose_low astate);
+											self#print_projection Verbose_low astate);
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
