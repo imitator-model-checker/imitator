@@ -1,24 +1,24 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : WFAS_BBLS15
  * Description      : wireless fire alarm system. Note that [BBLS15] only synthesize point valuations, and not the most general constraint satisfying correctness.
  * Correctness      : No failure and no timeout (safety property)
- * Scalable         : 
- * Generated        : 
+ * Scalable         :
+ * Generated        :
  * Categories       : Academic
  * Source           : "Language Emptiness of Continuous-Time Parametric Timed Automata" by Nikola Benes, Peter Bezdek, Kim G. Larsen, and Jiri Srba (the model was described in Sergio Feo-Arenis, Bernd Westphal, Daniel Dietsch, Marco Mun ̃iz, and Siyar An- disha. The wireless fire alarm system: Ensuring conformance to industrial standards through formal verification. In FM'14, volume 8442 of LNCS, pages 658–672. Springer, 2014.) (URL http://arxiv.org/abs/1504.07838v1)
  * bibkey           : BBLS15
  * Author           : cf. above
- * Modeling         : 
+ * Modeling         :
  * Input by         : Étienne André
- * License          : 
- * 
+ * License          :
+ *
  * Created          : 2015/05/13
- * Last modified    : 2020/08/13
- * Model version    : 
- * 
- * IMITATOR version : 3
+ * Last modified    : 2020/08/31
+ * Model version    :
+ *
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -107,45 +107,49 @@ end (* controller *)
 (* Initial state *)
 (************************************************************)
 
-init := True
-	(*------------------------------------------------------------
-	   INITIAL LOCATION
-	  ------------------------------------------------------------*)
-	& loc[sensor1] = idle
-	& loc[sensor2] = idle
-	& loc[controller] = cont_1
+init := {
+  discrete =
+  	(*------------------------------------------------------------
+  	   INITIAL LOCATION
+  	  ------------------------------------------------------------*)
+  	loc[sensor1] := idle,
+  	loc[sensor2] := idle,
+  	loc[controller] := cont_1,
+  ;
 
-	(*------------------------------------------------------------
-	   INITIAL CLOCKS
-	  ------------------------------------------------------------*)
-	& x1 = 0
-	& x2 = 0
-	& x = 0
-	& y = 0
+  continuous =
+  	(*------------------------------------------------------------
+  	   INITIAL CLOCKS
+  	  ------------------------------------------------------------*)
+  	& x1 = 0
+  	& x2 = 0
+  	& x = 0
+  	& y = 0
 
 
-	(*------------------------------------------------------------
-	   PARAMETER CONSTRAINTS
-	  ------------------------------------------------------------*)
-	& p1 >= 0
-	& p2 >= 0
+  	(*------------------------------------------------------------
+  	   PARAMETER CONSTRAINTS
+  	  ------------------------------------------------------------*)
+  	& p1 >= 0
+  	& p2 >= 0
 
-(*	& p1 <= 50
-	& p2 <= 50*)
+    (*	& p1 <= 50
+    	& p2 <= 50*)
 
-(* 	& 0 < p1 & p1 < 5 *)
-(* 	& p1 > 2 *)
+    (* 	& 0 < p1 & p1 < 5 *)
+    (* 	& p1 > 2 *)
 
-	(*------------------------------------------------------------
-	   PARAMETER VALUATIONS
-	  ------------------------------------------------------------*)
-	(* Valuation 1 from [BBLS15]: not satisfactory because, although fail is unreachable, timeout is reachable *)
-(*	& p1 = 5
-	& p2 = 19*)
-	(* Valuation 2 from [BBLS15]: satisfactory *)
-(*	& p1 = 5
-	& p2 = 9*)
-;
+  	(*------------------------------------------------------------
+  	   PARAMETER VALUATIONS
+  	  ------------------------------------------------------------*)
+    	(* Valuation 1 from [BBLS15]: not satisfactory because, although fail is unreachable, timeout is reachable *)
+    (*	& p1 = 5
+    	& p2 = 19*)
+    	(* Valuation 2 from [BBLS15]: satisfactory *)
+    (*	& p1 = 5
+    	& p2 = 9*)
+  ;
+}
 
 
 
