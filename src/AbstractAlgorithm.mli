@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/18
- * Last modified     : 2021/07/28
+ * Last modified     : 2021/08/31
  *
  ************************************************************)
 
@@ -136,6 +136,14 @@ type merge_algorithm =
     (** TODO: description *)
 	| Merge_exponentialbackoff
 
+type merge_dev =
+	(** merge(queue,visited) *)
+	| Merge_visited
+	(** merge(queue,queue) *)
+	| Merge_queue
+    (** merge(queue,queue);merge(queue,visited) *)
+	| Merge_ordered
+
 (** Style of graphical state space to output *)
 type graphical_state_space =
 	(* No graphical state space *)
@@ -210,3 +218,4 @@ val string_of_cycle_algorithm			: cycle_algorithm			-> string
 val string_of_state_comparison_operator	: state_comparison_operator	-> string
 val string_of_merge_heuristic			: merge_heuristic			-> string
 val string_of_merge_algorithm			: merge_algorithm			-> string
+val string_of_merge_dev			        : merge_dev			-> string

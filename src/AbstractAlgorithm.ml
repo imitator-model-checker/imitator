@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/18
- * Last modified     : 2021/07/28
+ * Last modified     : 2021/08/31
  *
  ************************************************************)
 
@@ -140,6 +140,13 @@ type merge_algorithm =
     (** TODO: description *)
 	| Merge_exponentialbackoff
 
+type merge_dev =
+	(** merge(queue,visited) *)
+	| Merge_visited
+	(** merge(queue,queue) *)
+	| Merge_queue
+    (** merge(queue,queue);merge(queue,visited) *)
+	| Merge_ordered
 
 (** Style of graphical state space to output *)
 type graphical_state_space =
@@ -303,3 +310,8 @@ let string_of_merge_algorithm (merge_algorithm : merge_algorithm) : string = mat
 	| Merge_static				-> "static"
 	| Merge_static_per_location	-> "staticl"
 	| Merge_exponentialbackoff	-> "exponential backoff"
+
+let string_of_merge_dev (merge_dev : merge_dev) : string = match merge_dev with
+	| Merge_visited				-> "visited"
+	| Merge_queue	            -> "queue"
+	| Merge_ordered         	-> "ordered"

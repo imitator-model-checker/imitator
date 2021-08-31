@@ -4868,6 +4868,14 @@ class virtual algoStateBased =
 					| _ -> ();
 				)
 			)
+			else if options#mergedev then (
+                queue := StateSpace.merge state_space !queue;
+                (* TODO: update called merge *)
+                (match options#exploration_order with
+                    | Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
+                    | _ -> ();
+                )
+            )
 			else if options#merge212 then(
 				(*raise (NotImplemented "merge v.2.12");*)
 				let new_states_after_merging = queue in
