@@ -309,7 +309,8 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(* and the current state is popped from the cyan list *)
 		table_rem cyan thestate;
 		()
-	
+		
+
 	method private cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 		self#cyclefound_gen "Blue (cyclefound)" thestate astate astate_depth
 
@@ -1077,7 +1078,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								printtable "Cyan (predfs)" cyan;
 								find_or_compute_successors astate
 							in
-							let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+(*							let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 								cyclecount <- cyclecount + 1;
 								total_cyclecount <- total_cyclecount + 1;
 								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
@@ -1104,7 +1105,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								printtable "Blue (cyclecount)" blue;
 								(* and the current state is popped from the cyan list *)
 								table_rem cyan thestate;
-							in
+							in*)
 							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
 								not (table_test blue astate) &&
 								test_reexplore_green astate astate_depth &&
@@ -1119,10 +1120,10 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 							let testrecursivedfs (astate: State.state_index) : bool =
 								true in
 							let postdfs (astate: State.state_index) (astate_depth : int) : unit =
-								(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
+								(* launch red DFS only if not with a smaller constraint than a state marked by a lookahead *)
 								if ((* (not (check_parameter_leq_list astate)) && *)
 										(State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space astate))) then (
-									(* set up the dfs red calls *)
+									(* set up the DFS red calls *)
 									let enterdfs (astate: State.state_index) : bool =
 										not (check_parameter_leq_list astate) in
 									let predfs (astate: State.state_index) : unit =
@@ -1169,7 +1170,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								mark_blue_or_green astate astate_depth;
 								table_rem cyan astate;
 								in
-							rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate thestate_depth;
+							rundfs enterdfs predfs withLookahead self#cyclefound_cyclecount filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate thestate_depth;
 							end;
 					done;)
 
