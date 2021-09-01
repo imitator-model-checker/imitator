@@ -1182,6 +1182,44 @@ or
 output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
 
 
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Accepting cycle with generalized acceptance condition (BFS)}\label{sss:generalized-accepting-loop-BFS}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+Generalized Büchi conditions are supported by \imitator{}.
+The property syntax is as follows:
+
+\styleIMI{property := \#synth CycleThrough(state\_predicate\_1, \dots, state\_predicate\_n);}
+
+The semantics is that each of the $n$ conditions must hold on at least one state of the same cycle, in order for this cycle to be accepting.
+
+%------------------------------------------------------------
+\begin{remark}
+	Only BFS (see \cref{sss:accepting-loop-BFS}) is available for these generalized conditions.
+\end{remark}
+%------------------------------------------------------------
+
+
+%------------------------------------------------------------
+\begin{example}
+	Assume the following condition:
+	
+\styleIMI{property := \#synth CycleThrough(loc[pta1] = l1, loc[pta1] = l2 and loc[pta2] = l2, accepting, i = 2 or i = 3);}
+
+A cycle is accepting if it contains:
+\begin{itemize}
+	\item a state in which \styleIMI{pta1} is in location \styleIMI{l1}; and
+	\item another state in which \styleIMI{pta1} is in location \styleIMI{l1} and at the same time \styleIMI{pta2} is in location \styleIMI{l2}; and
+	\item another state syntactically labeled as \styleIMI{accepting} in the model; and
+	\item another state in which either \styleIMI{i} is equal to~2, \emph{or} \styleIMI{i} is equal to~3.
+\end{itemize}
+
+
+\end{example}
+
+%------------------------------------------------------------
+
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Any cycle synthesis}\label{ss:loop}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1437,6 +1475,8 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			\hline
 			Accepting cycle        & \styleIMI{CycleThrough(state\_predicate)} & \cellYes{} & \cellYes{}  \\
 			\hline
+			Accepting cycle        & \styleIMI{CycleThrough(state\_predicates)} & \cellYes{} & \cellYes{}  \\
+			\hline
 			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellYes{} & \cellNo{}  \\
 
 			% Deadlock-freeness
@@ -1515,6 +1555,8 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			Cycle                  & \styleIMI{Cycle}                            & \cellNo{} & \styleOption{equality}  \\
 			\hline
 			Accepting cycle        & \styleIMI{CycleThrough(state\_predicate)} & \cellNo{} & \styleOption{equality}  \\
+			\hline
+			Accepting cycle        & \styleIMI{CycleThrough(state\_predicates)} & \cellNo{} & \styleOption{equality}  \\
 			\hline
 			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellNo{} & \styleOption{equality}  \\
 
@@ -3439,10 +3481,10 @@ We define each of those two components below.
 	$|$ & \styleIMI{Loop}
 		\commentgrammar{alias for \styleIMI{Cycle}}
 	\\
-	$|$ & \styleIMI{CycleThrough} \nt{state\_predicate}
+	$|$ & \styleIMI{CycleThrough} \nt{state\_predicate\_list}
 	\\
 	% NOTE: alias
-	$|$ & \styleIMI{LoopThrough} \nt{state\_predicate}
+	$|$ & \styleIMI{LoopThrough} \nt{state\_predicate\_list}
 		\commentgrammar{alias for \styleIMI{CycleThrough}}
 	\\
 	$|$ & \styleIMI{NZCycle}                                                                                     \\
@@ -3512,6 +3554,26 @@ We define each of those two components below.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+%------------------------------------------------------------
+\regleGrammaire{state\_predicate\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$ & \nt{non\_empty\_state\_predicate\_list} \\
+	$|$ & \emptystring{}
+	\\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{non\_empty\_state\_predicate\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$ & \nt{state\_predicate} \styleIMI{,} \nt{non\_empty\_state\_predicate\_list} \\ % NOTE: actually non\_empty\_state\_predicate (absent from this document)
+	$|$ & \nt{state\_predicate} \nt{comma\_opt} \\
+\end{tabular}
+
+%% NOTE: the definition seems quite different from the actual grammar
 
 %------------------------------------------------------------
 \regleGrammaire{state\_predicate}

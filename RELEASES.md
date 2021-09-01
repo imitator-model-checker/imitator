@@ -1,4 +1,13 @@
 *******************************************************
+# release 3.2 (202x-XX-XX) Cheese XXXX
+
+### Major features
+* New accepting cycle synthesis with generalized condition. Syntax `property := #synth CycleThrough(condition_1, …, condition_n)` Each of the conditions must hold on at least one state of the same cycle, in order for this cycle to be accepting.
+
+
+
+
+*******************************************************
 # release 3.1 (2021-07-20) Cheese Artichoke
 
 ### Syntax improvement
@@ -13,7 +22,7 @@
 * New syntax for the initial state definition, with a separation between the discrete and the continuous parts (the former syntax remains accepted for backward-compatibility, but a warning is triggered).
 
 ### Syntax changes in the property
-* `property := AcceptingCycle` now allowed as a shortcut for `property := CycleThrough(accepting)`
+* `property := #synth AcceptingCycle` now allowed as a shortcut for `property := #synth CycleThrough(accepting)`
 
 ### Export
 * New translation to the [JANI](https://jani-spec.org/) interchange format
