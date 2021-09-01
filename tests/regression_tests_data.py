@@ -8387,33 +8387,34 @@ Constraint nature                       : good
 
 	,
 
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test since               : 2020/09/09
-		# Last modified            : 2020/09/10
-		# Test for IMITATOR version: 3
-		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (syntax variant without parentheses)',
-		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop-noparen.imiprop'],
-		'options'    : '-cycle-algo BFS',
-		'expectations' : [
-			{'file': 'exLoopIncl.res' , 'content' : """
-BEGIN CONSTRAINT
- p = 2
-END CONSTRAINT
+	##------------------------------------------------------------
+	#{
+		## Test version             : 1
+		## Test since               : 2020/09/09
+		## Last modified            : 2020/09/10
+		## Test deleted             : 2021/09/01
+		## Test for IMITATOR version: 3
+		#'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (syntax variant without parentheses)',
+		#'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop-noparen.imiprop'],
+		#'options'    : '-cycle-algo BFS',
+		#'expectations' : [
+			#{'file': 'exLoopIncl.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #p = 2
+#END CONSTRAINT
 
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
+#------------------------------------------------------------
+#Constraint soundness                    : exact
+#Termination                             : regular termination
+#Constraint nature                       : good
+#------------------------------------------------------------
+#"""
+			#} #end result file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
 
-	,
+	#,
 
 	#------------------------------------------------------------
 	{
