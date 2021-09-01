@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/08/17
+# Last modified     : 2021/09/31
 #************************************************************
 
 
@@ -4994,6 +4994,58 @@ Constraint nature                       : good
 Number of states                        : 14
 Number of transitions                   : 13
 Number of computed states               : 14
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test EF with depth-limit to check the quick reachability (-no-merge)',
+		'input_files': ['quick-reach.imi', 'EFaccepting.imiprop'],
+		'options'    : '-no-merge -depth-limit 3',
+		'expectations' : [
+			{'file': 'quick-reach.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 > 4*p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test EF with depth-limit to check the quick reachability (-merge)',
+		'input_files': ['quick-reach.imi', 'EFaccepting.imiprop'],
+		'options'    : '-merge -depth-limit 3',
+		'expectations' : [
+			{'file': 'quick-reach.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 > 4*p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
 """
 			} #end result file
 		] # end expectations

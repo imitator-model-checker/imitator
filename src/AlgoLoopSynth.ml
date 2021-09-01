@@ -134,7 +134,7 @@ class virtual algoLoopSynth =
 			(* Not added: means this state was already present before *)
 			(* This state can either be a loop or just a state belonging to another branch of a tree *)
 			(* Print some information *)
-			self#print_algo_message Verbose_medium ("State " ^ (StateSpace.string_of_state_index new_state_index) ^ "already met: potential cycle found.");
+			self#print_algo_message Verbose_medium ("State " ^ (StateSpace.string_of_state_index new_state_index) ^ " already met: potential cycle found.");
 		end (* end if possible loop *)
 		;
 		
