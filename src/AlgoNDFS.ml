@@ -9,7 +9,7 @@
  *
  * File contributors : Laure Petrucci, Jaco van de Pol, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2021/08/31
+ * Last modified     : 2021/09/01
  *
  ************************************************************)
 
@@ -955,7 +955,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 					add_pending init_state_index 0;
 					(try (while pending <> [] do
 						match pending with
-						| [] -> print_message Verbose_standard ("Impossible case");
+						| [] -> raise (InternalError "Impossible case in NDFS (Layers, no subsumption)")
 						| (thestate,thestate_depth)::body ->
 							pending <- body;
 							print_message Verbose_medium ("Popped state "
@@ -1082,7 +1082,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 					add_pending init_state_index 0;
 					(try (while pending <> [] do
 						match pending with
-						| [] -> print_message Verbose_standard ("Impossible case");
+						| [] -> raise (InternalError "Impossible case in NDFS (Layers, subsumption)")
 						| (thestate,thestate_depth)::body ->
 							pending <- body;
 							print_message Verbose_medium ("Popped state "
