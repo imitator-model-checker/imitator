@@ -25,8 +25,8 @@ property := #synth CycleThrough(
 	(* Condition 1 *)
 	loc[pta] = l2
 	,
-	(* Condition 2 *)
-	loc[pta] = l3
+	(* Condition 2: add a useless "and" to syntactically test conjunction *)
+	loc[pta] = l3 and loc[pta] = l3
 	,
 	(* Condition 3 *)
 	accepting (* stands for l5 *)
