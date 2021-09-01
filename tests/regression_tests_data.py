@@ -8737,6 +8737,62 @@ Termination                             : regular termination
 	#------------------------------------------------------------
 
 	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test AccLoopSynth with depth-limit to check the quick reachability (NDFS)',
+		'input_files': ['quick-reach.imi', 'acceptingLoop.imiprop'],
+		'options'    : '-depth-limit 3 -cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'quick-reach.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 > 4*p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test AccLoopSynth with depth-limit to check the quick reachability (BFS)',
+		'input_files': ['quick-reach.imi', 'acceptingLoop.imiprop'],
+		'options'    : '-depth-limit 4 -cycle-algo BFS',
+		'expectations' : [
+			{'file': 'quick-reach.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 > 4*p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
