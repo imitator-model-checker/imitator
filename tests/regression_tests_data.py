@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/09/31
+# Last modified     : 2021/09/01
 #************************************************************
 
 
@@ -7705,9 +7705,36 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test LoopSynth: simple example with loop',
+		'purpose'    : 'Test LoopSynth: simple example with loop (BFS)',
 		'input_files': ['PDFC4.imi', 'PDFC-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'PDFC4.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 >= p2
+& p2 >= 0
+& p1 >= 0
+& p1 + 5 >= p2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: simple example with loop (NDFS)',
+		'input_files': ['PDFC4.imi', 'PDFC-loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -7736,9 +7763,37 @@ Constraint nature                       : good
 		# Test since               : 2020/09/24
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: simple example with no real loop (1a)',
+		'purpose'    : 'Test LoopSynth: simple example with no real loop (1a) (BFS)',
 		'input_files': ['testNoCycle-1a.imi', 'loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testNoCycle-1a.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with no real loop (1a) (NDFS)',
+		'input_files': ['testNoCycle-1a.imi', 'loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1a.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -7764,7 +7819,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/24
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: simple example with no real loop (1b)',
+		'purpose'    : 'Test LoopSynth: simple example with no real loop (1b) (BFS)',
 		'input_files': ['testNoCycle-1b.imi', 'loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
@@ -7788,9 +7843,63 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation',
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with no real loop (1b) (NDFS)',
+		'input_files': ['testNoCycle-1b.imi', 'loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'testNoCycle-1b.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation (BFS)',
 		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p3 >= 0
+& p2 >= 0
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation (NDFS)',
+		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -7818,7 +7927,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: witness vs. synthesis (witness)',
+		'purpose'    : 'Test LoopSynth: witness vs. synthesis (witness) (BFS)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop-witness.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
@@ -7846,7 +7955,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis)',
+		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis) (BFS)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
@@ -7874,12 +7983,71 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis) (NDFS)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 > p
+& p >= 0
+OR
+  p = 2046
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: simple example with 1 real loop',
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (BFS)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (NDFS)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8051,9 +8219,40 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (synthesis)',
+		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (synthesis) (BFS)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-accloop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (synthesis) (NDFS)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-accloop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8138,9 +8337,37 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop',
+		'purpose'    : 'Test AccLoopSynth (BFS): simple example with 1 real loop',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth (NDFS): simple example with 1 real loop',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8400,9 +8627,39 @@ Constraint nature                       : good
 		# Test since               : 2019/07/22
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test AccLoopSynth: simple example 3 (accepting for all valuations)',
+		'purpose'    : 'Test AccLoopSynth (BFS): simple example 3 (accepting for all valuations)',
 		'input_files': ['PDFC5.imi', 'PDFC5-accloop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p3 >= 0
+& p2 >= 0
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth (NDFS): simple example 3 (accepting for all valuations)',
+		'input_files': ['PDFC5.imi', 'PDFC5-accloop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8430,7 +8687,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/22
 		# Last modified            : 2020/09/22
 		# Test for IMITATOR version: 3.0
-		'purpose'    : 'Test AccLoopSynth (without option -no-cumulative-pruning)',
+		'purpose'    : 'Test AccLoopSynth (BFS) (without option -no-cumulative-pruning)',
 		'input_files': ['testInclusionEF.imi', 'testInclusionEF-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
@@ -8448,6 +8705,35 @@ Constraint nature                       : good
 Number of states                        : 4
 Number of transitions                   : 4
 Number of computed states               : 5
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/22
+		# Last modified            : 2020/09/22
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test AccLoopSynth (NDFS)',
+		'input_files': ['testInclusionEF.imi', 'testInclusionEF-loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'testInclusionEF.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p
+& p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
