@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2020/09/23
+ * Last modified     : 2021/09/01
  *
  ************************************************************)
 
@@ -189,7 +189,7 @@ class virtual algoLoopSynth =
 
 			| Loop scc ->
 				(* Print some information *)
-				self#print_algo_message Verbose_standard "Found a cycle.";
+				self#print_algo_message Verbose_medium "Found a cycle (that may or not be accepting).";
 
 				(*** NOTE: this method is called AFTER the transition table was updated ***)
 				self#process_loop_constraint ((*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) scc new_state.px_constraint;
@@ -274,6 +274,8 @@ class virtual algoLoopSynth =
 	method process_loop_constraint state_index scc loop_px_constraint =
 		(* Process loop constraint if accepting loop *)
 		if self#is_accepting scc then(
+			self#print_algo_message Verbose_standard "Found an accepting cycle.";
+
 			(* Just update the loop constraint *)
 			self#update_loop_constraint loop_px_constraint;
 			
