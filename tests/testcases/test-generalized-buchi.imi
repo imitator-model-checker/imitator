@@ -1,0 +1,124 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test generalized Büchi condition
+ * Description      : Test generalized Büchi condition
+ * Correctness      : Generalized Büchi
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/09/01
+ * Last modified    : 2021/09/01
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.1
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Discrete *)
+	i,
+		: int;
+
+(* Parameters *)
+	p_1,
+	p_2,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant True
+	(* p_1 <= 10 *)
+	when x <= 10 & x = p_1 do {x := 0} goto l2;
+	
+	(* p_1 >= 2 *)
+	when x >= 2 & x = p_1 do {x := 0} goto l3;
+	
+	(* p_1 = 5 *)
+	when x = 5 & x = p_1 do {x := 0} goto l4;
+	
+	(* p_2 <= 2046 *)
+	when x <= 2046 & x = p_2 do {x := 0} goto l5;
+	
+	(* p_2 >= 2021 *)
+	when x >= 2021 & x = p_2 & i = 0 do {x := 0, i := 2} goto l6;
+
+	(* p_2 = 2000 *)
+	when x = 2000 & x = p_2 & i = 0 do {x := 0, i := 3} goto l7;
+
+urgent loc l2: invariant True
+	when True do {x := 0} goto l1;
+
+urgent loc l3: invariant True
+	when True do {x := 0} goto l1;
+
+urgent loc l4: invariant True
+	when True do {x := 0} goto l1;
+
+accepting loc l5: invariant True
+	when True do {x := 0} goto l1;
+
+loc l6: invariant True
+	when True do {x := 0, i := 0} goto l1;
+
+loc l7: invariant True
+	when True do {x := 0, i := 0} goto l1;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p_1 >= 0
+		& p_2 >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

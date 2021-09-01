@@ -1,0 +1,7 @@
+
+property := #synth CycleThrough(
+	(* Condition 1 *)
+	loc[pta] = l2
+	or
+	i = 3
+);

@@ -5053,7 +5053,7 @@ Constraint soundness                    : possible under-approximation
 	#------------------------------------------------------------
 
 	,
-
+	
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -9074,6 +9074,110 @@ END CONSTRAINT
 Constraint soundness                    : possible under-approximation
 """
 			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test AccLoopSynth (BFS) on a simple example',
+		'input_files': ['test-generalized-buchi.imi', 'test-generalized-buchi-cycle.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'test-generalized-buchi.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 >= p_1
+& p_1 >= 0
+& p_2 >= 0
+OR
+  p_1 >= 0
+& p_2 = 2000
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test AccLoopSynth (NDFS) on a simple example',
+		'input_files': ['test-generalized-buchi.imi', 'test-generalized-buchi-cycle.imiprop'],
+		'options'    : '-cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'test-generalized-buchi.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 >= p_1
+& p_1 >= 0
+& p_2 >= 0
+OR
+  p_1 >= 0
+& p_2 = 2000
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test generalized acceptance condition (BFS)',
+		'input_files': ['test-generalized-buchi.imi', 'test-generalized-buchi.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'test-generalized-buchi.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 >= p_1
+& p_1 >= 2
+& p_2 = 2000
+OR
+  p_2 >= 2021
+& p_1 >= 2
+& 10 >= p_1
+& 2046 >= p_2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+		"""
+			} # end result file
+			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
