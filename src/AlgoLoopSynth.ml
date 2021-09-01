@@ -347,6 +347,13 @@ class virtual algoLoopSynth =
 		let soundness =
 			let dangerous_inclusion = options#comparison_operator = AbstractAlgorithm.Inclusion_check || options#comparison_operator = AbstractAlgorithm.Double_inclusion_check in
 			
+			if dangerous_inclusion then(
+				self#print_algo_message Verbose_high "A dangerous inclusion was used: result will be at least an overapproximation (or invalid)";
+			);
+			if options#merge then(
+				self#print_algo_message Verbose_high "Merging was used: result will be at least an overapproximation (or invalid)";
+			);
+			
 			(* EXACT if termination is normal and no inclusion nor merge *)
 			if termination_status = Regular_termination && (not dangerous_inclusion) && not options#merge then Constraint_exact
 			(* UNDER-APPROXIMATED if termination is NOT normal AND neither merging nor state inclusion was used *)
