@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2021/03/12
+ * Last modified     : 2021/09/01
  *
  ************************************************************/
 
@@ -170,7 +170,13 @@ property:
 	| CT_INFCYCLE { Parsed_Cycle_Through (Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_true))) }
 
 	/* Accepting infinite-run (cycle) through a state predicate */
-	| CT_INFCYCLETHROUGH state_predicate { Parsed_Cycle_Through $2 }
+	| CT_INFCYCLETHROUGH LPAREN state_predicate_list RPAREN {
+		(* Check whether the list is of size <= 1 *)
+		match $3 with
+		| []				-> Parsed_Cycle_Through (Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_false))) (* NOTE: equivalent to False; this case probably cannot happen anyway *)
+		| [state_predicate]	-> Parsed_Cycle_Through state_predicate
+		| _					-> Parsed_Cycle_Through_generalized $3
+		}
 
 	/* Accepting infinite-run (cycle) through accepting locations */
 	| CT_ACCEPTINGCYCLE { Parsed_Cycle_Through (Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_accepting))) }
@@ -271,6 +277,21 @@ pattern:
 	| CT_ALWAYS CT_SEQUENCE name_nonempty_list { Parsed_Sequence_cyclic ($3) }
 	| CT_ALWAYS CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Parsed_Sequence_cyclic ($4) } /* with parentheses */
 
+;
+
+/************************************************************/
+state_predicate_list:
+/************************************************************/
+	| non_empty_state_predicate_list { $1 }
+	/* Also allow empty state predicate, equivalent to False */
+	| { [Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_false))] }
+;
+
+/************************************************************/
+non_empty_state_predicate_list:
+/************************************************************/
+	| non_empty_state_predicate COMMA non_empty_state_predicate_list { $1 :: $3 }
+	| non_empty_state_predicate comma_opt { [$1] }
 ;
 
 /************************************************************/

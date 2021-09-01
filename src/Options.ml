@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/07/17
+ * Last modified     : 2021/09/01
  *
  ************************************************************)
 
@@ -1127,6 +1127,8 @@ class imitator_options =
 					| EFtmin _
 					(** Accepting infinite-run (cycle) through a state predicate *)
 					| Cycle_through _
+					(** Accepting infinite-run (cycle) through a state predicate *)
+					| Cycle_through_generalized _
 					(* Parametric reachability preservation *)
 (* 					| PRP _ *)
 					(* Parametric reachability preservation *)

@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/09/14
+ * Last modified: 2021/09/01
  *
  ************************************************************)
  
@@ -101,6 +101,7 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_EFtmin _
 
 	| Parsed_Cycle_Through _
+	| Parsed_Cycle_Through_generalized _
 	| Parsed_NZ_Cycle
 
 	| Parsed_Deadlock_Freeness
@@ -172,6 +173,7 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_EFtmin _
 
 	| Parsed_Cycle_Through _
+	| Parsed_Cycle_Through_generalized _
 	| Parsed_NZ_Cycle
 
 	| Parsed_Deadlock_Freeness
@@ -231,6 +233,7 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_EFtmin _
 	
 	| Parsed_Cycle_Through _
+	| Parsed_Cycle_Through_generalized _
 	| Parsed_NZ_Cycle
 
 	| Parsed_Deadlock_Freeness

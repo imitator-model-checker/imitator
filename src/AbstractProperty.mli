@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/09/14
+ * Last modified     : 2021/09/01
  *
  ************************************************************)
 
@@ -103,6 +103,9 @@ type property =
 	
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through of state_predicate
+
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized of state_predicate list
 
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle

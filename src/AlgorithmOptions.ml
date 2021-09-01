@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2020/08/25
- * Last modified     : 2020/09/24
+ * Last modified     : 2021/09/09
  *
  ************************************************************)
 
@@ -71,6 +71,9 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 	
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized _
+
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 	
@@ -184,9 +187,8 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
-		(* No inclusion allowed except old <= new *)
-		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
-	
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized _
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 		(* No inclusion allowed *)
@@ -309,6 +311,9 @@ let merge_needed property =
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 	
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized _
+
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 	
@@ -547,6 +552,9 @@ let supports_witness property =
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 	
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized _
+
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 	
@@ -677,6 +685,9 @@ let text_of_property property =
 	
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _ -> "infinite accepting run " ^ synthesis_or_witness
+
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized _ -> "infinite generalized accepting run " ^ synthesis_or_witness
 
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle -> "non-Zeno infinite accepting run " ^ synthesis_or_witness ^ ""

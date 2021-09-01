@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci, Benjamin Loillier
  * Created           : 2009/09/09
- * Last modified     : 2021/07/15
+ * Last modified     : 2021/09/01
  *
  ************************************************************)
 
@@ -3189,6 +3189,10 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_Cycle_Through parsed_state_predicate
 			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
 
+		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+		| Parsed_Cycle_Through_generalized parsed_state_predicate_list
+			-> List.iter (get_variables_in_parsed_state_predicate variables_used_ref) parsed_state_predicate_list
+
 		(** Infinite-run (cycle) with non-Zeno assumption *)
 		| Parsed_NZ_Cycle -> ()
 		
@@ -3899,6 +3903,15 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		| Parsed_Cycle_Through parsed_state_predicate ->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 		
+		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+		| Parsed_Cycle_Through_generalized parsed_state_predicate_list ->
+			(* Do a fold_left to check everything even in case of failure *)
+			List.fold_left (fun current_result parsed_state_predicate ->
+				(* Make sure we do evaluate this part even if current_result is false *)
+				let check = check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate in
+				current_result && check
+				) true parsed_state_predicate_list
+
 		(** Infinite-run (cycle) with non-Zeno assumption *)
 		| Parsed_NZ_Cycle -> true
 
@@ -4212,6 +4225,13 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			Cycle_through (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
+		
+		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+		| Parsed_Cycle_Through_generalized parsed_state_predicate_list ->
+			Cycle_through_generalized (List.map (try_convert_parsed_state_predicate useful_parsing_model_information) parsed_state_predicate_list)
+			,
+			None
+
 		
 		(** Infinite-run (cycle) with non-Zeno assumption *)
 		| Parsed_NZ_Cycle -> NZ_Cycle, None

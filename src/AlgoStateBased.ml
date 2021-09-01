@@ -3047,6 +3047,8 @@ class virtual algoStateBased =
 					);
 	
 				
+				| Cycle_through_generalized _
+
 				| NZ_Cycle
 				
 				| Deadlock_Freeness

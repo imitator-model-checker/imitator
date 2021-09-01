@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2009/09/07
- * Last modified     : 2021/02/24
+ * Last modified     : 2021/09/01
  *
  ************************************************************)
 
@@ -740,8 +740,18 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric =
 				(* Branching depending on the requested algorithm *)
 				match options#cycle_algorithm with
-					| AbstractAlgorithm.BFS -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
+					| AbstractAlgorithm.BFS  -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
 					| AbstractAlgorithm.NDFS -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS state_predicate in myalgo
+				in myalgo
+
+
+			(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+			| Cycle_through_generalized state_predicate_list ->
+				let myalgo :> AlgoGeneric.algoGeneric =
+				(* Branching depending on the requested algorithm *)
+				match options#cycle_algorithm with
+					| AbstractAlgorithm.BFS  -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoGeneralizedAccLoopSynth.algoGeneralizedAccLoopSynth state_predicate_list in myalgo
+					| AbstractAlgorithm.NDFS -> raise (NotImplemented "Cycle_through_generalized + NDFS is not implemented")
 				in myalgo
 
 

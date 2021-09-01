@@ -2,14 +2,13 @@
  *
  *                       IMITATOR
  * 
- * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
- * Module description: AccLoopSynth algorithm (synthesizes valuations for which there exists an accepting cycle in the PTA)
+ * Module description: GeneralizedAccLoopSynth algorithm (synthesizes valuations for which there exists an accepting cycle in the PTA verifying a generalized condition given in the form of a *set* of state predicates)
  * 
  * File contributors : Étienne André
- * Created           : 2019/07/17
- * Last modified     : 2020/09/14
+ * Created           : 2021/09/01
+ * Last modified     : 2021/09/01
  *
  ************************************************************)
 
@@ -32,7 +31,7 @@ open AlgoLoopSynth
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoAccLoopSynth (state_predicate : AbstractProperty.state_predicate) =
+class algoGeneralizedAccLoopSynth (state_predicate_list : AbstractProperty.state_predicate list) =
 	object (self) inherit algoLoopSynth as super
 	
 	(************************************************************)
@@ -53,10 +52,13 @@ class algoAccLoopSynth (state_predicate : AbstractProperty.state_predicate) =
 	(* Detect whether a cycle is accepting *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method is_accepting scc =
-		(* Accepting if at least one state in the SCC matches the state predicate *)
-		List.exists (fun state_index -> 
-			State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space state_index)
-		) scc
+		(* Accepting if each state predicate is matched along the SCC *)
+		List.for_all (fun state_predicate ->
+			(* Accepting if at least one state in the SCC matches the state predicate *)
+			List.exists (fun state_index -> 
+				State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space state_index)
+			) scc
+		) state_predicate_list
 
 
 

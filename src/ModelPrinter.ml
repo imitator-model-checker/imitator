@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2021/06/01
+ * Last modified     : 2021/09/01
  *
  ************************************************************)
 
@@ -790,6 +790,10 @@ let string_of_abstract_property model property =
 		| Cycle_through state_predicate ->
 			if state_predicate = (State_predicate_term (State_predicate_factor (Simple_predicate State_predicate_true))) then "Cycle"
 			else "CycleThrough(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+		
+		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+		| Cycle_through_generalized state_predicate_list ->
+			"CycleThrough(" ^ (string_of_list_of_string_with_sep " , " (List.map (string_of_state_predicate model) state_predicate_list)) ^ ")"
 		
 		(** Infinite-run (cycle) with non-Zeno assumption *)
 		| NZ_Cycle -> "NZCycle"
