@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2021/08/20
+ * Last modified     : 2021/09/01
  *
  ************************************************************)
 
@@ -3014,8 +3014,10 @@ class virtual algoStateBased =
 			(* Statistics *)
 			counter_cut_branch#increment;
 			
+			self#print_algo_message Verbose_medium "Yes! It is included.";
 			true
 		)else(
+			self#print_algo_message Verbose_medium "No. It is not included.";
 			false
 		)
 
