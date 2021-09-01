@@ -276,6 +276,7 @@ begin match property_option, options#imitator_mode with
 			(*** HACK: hard-coded directly ***)
 			let default_cycle_algorithm_option = match property.property with
 				| Cycle_through _ -> Some NDFS
+				| Cycle_through_generalized _ -> Some BFS
 				| _ -> None
 			in
 

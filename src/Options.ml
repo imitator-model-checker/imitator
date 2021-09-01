@@ -1163,6 +1163,26 @@ class imitator_options =
 			(*** TODO: check NDFS options only for NDFS; and NDFS only for Cycle_through ***)
 
 
+			(*------------------------------------------------------------*)
+			(* Only BFS (no NDFS) for generalized acceptance conditions, so far *)
+			(*------------------------------------------------------------*)
+			if imitator_mode = Algorithm then(
+				match (get_property()).property with
+					(** Accepting infinite-run (cycle) through a state predicate *)
+					| Cycle_through_generalized _ ->
+						begin
+						match cycle_algorithm with
+						| Some BFS -> () (* fine *)
+						| Some NDFS -> 
+							print_error ("The only implemented algorithm for generalized acceptance conditions in cycle synthesis is BFS. NDFS is ignored.");
+							cycle_algorithm <- Some BFS
+						| None -> 
+							print_warning ("No algorithm specified for generalized acceptance conditions in cycle synthesis. Default chosen (BFS).");
+							cycle_algorithm <- Some BFS;
+						end;
+					| _ -> ()
+			);
+
 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Recall modes *)
