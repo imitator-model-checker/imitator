@@ -222,14 +222,7 @@ and convert_discrete_bool_expr variable_infos = function
 
     | Parsed_expression (l_expr, relop, r_expr) ->
         let t = TypeChecker.discrete_type_of_parsed_discrete_boolean_expression variable_infos l_expr in
-        print_message Verbose_standard (
-            "check relop "
-            ^ DiscreteValue.string_of_var_type_discrete t
-            ^ "for "
-            ^ ParsingStructureUtilities.string_of_parsed_discrete_boolean_expression variable_infos l_expr
-            ^ ", "
-            ^ ParsingStructureUtilities.string_of_parsed_discrete_boolean_expression variable_infos r_expr
-        );
+
         (match t with
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
@@ -251,7 +244,6 @@ and convert_discrete_bool_expr variable_infos = function
                 binary_word_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
             )
         | DiscreteValue.Var_type_discrete_array _ ->
-            print_message Verbose_standard "found array comparison";
             Array_comparison (
                 array_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
                 convert_parsed_relop relop,

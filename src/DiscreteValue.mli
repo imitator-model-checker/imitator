@@ -73,15 +73,12 @@ val string_of_var_type_constructor : var_type -> string
 
 val is_discrete_type : var_type -> bool
 (* Check if a Var_type is a Var_type_number *)
-val is_number_type : var_type -> bool
 val is_discrete_type_number_type : var_type_discrete -> bool
 
 (* Check if discrete type is a Var_type_unknown_number *)
 val is_discrete_type_unknown_number_type : var_type_discrete -> bool
 (* Check if discrete type is not a Var_type_unknown_number *)
 val is_discrete_type_known_number_type : var_type_discrete -> bool
-(* Check if discrete type is a Var_type_rational *)
-val is_rational_type : var_type -> bool
 
 (* Check if discrete type is a Var_type_discrete_rational *)
 val is_discrete_type_rational_type : var_type_discrete -> bool

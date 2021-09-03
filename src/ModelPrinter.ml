@@ -635,16 +635,6 @@ let string_of_initial_state model =
     ^ "\n"
 	^ "\n" ^ "}"
 
-(*(* Convert initial state to string *)
-(* Keep backward-compatibility between old init zone and new init zone *)
-let string_of_initial_state model =
-    (* If all variable are rational, we can print initial state as old model *)
-    if List.for_all (fun (var_type, _) -> DiscreteValue.is_rational_type var_type) model.discrete_names_by_type_group then
-        string_of_old_initial_state model
-    (* Else, we use the new init zone *)
-    else
-        string_of_initial_state model*)
-
 (************************************************************)
 (** Property *)
 (************************************************************)

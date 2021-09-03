@@ -96,13 +96,6 @@ let is_discrete_type = function
     | Var_type_discrete _ -> true
     | _ -> false
 
-(* Check if a Var_type is a Var_type_nuTOmber *)
-let is_number_type = function
-   | Var_type_clock
-   | Var_type_parameter
-   | Var_type_discrete Var_type_discrete_number _ -> true
-   | _ -> false
-
 let is_discrete_type_number_type = function
    | Var_type_discrete_number _ -> true
    | _ -> false
@@ -116,11 +109,6 @@ let is_discrete_type_unknown_number_type = function
 let is_discrete_type_known_number_type = function
     | Var_type_discrete_number Var_type_discrete_unknown_number -> false
     | Var_type_discrete_number _ -> true
-    | _ -> false
-
-(* Check if discrete type is a Var_type_rational *)
-let is_rational_type = function
-    | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational) -> true
     | _ -> false
 
 (* Check if discrete type is a Var_type_discrete_rational *)
@@ -143,14 +131,6 @@ let is_discrete_type_binary_word_type = function
     | Var_type_discrete_binary_word _ -> true
     | _ -> false
 
-(* Get var type of a discrete value *)
-let rec var_type_of_value = function
-    | Number_value _ -> var_type_unknown_number
-    | Rational_value _ -> var_type_rational
-    | Int_value _ -> var_type_int
-    | Bool_value _ -> var_type_bool
-    | Binary_word_value b -> var_type_binary_word (BinaryWord.length b)
-    | Array_value a -> var_type_of_value (Array.get a 0)
 
 (* Get discrete var type of a discrete value *)
 let rec discrete_type_of_value = function
@@ -165,19 +145,30 @@ let rec discrete_type_of_value = function
         else
             Var_type_discrete_array (discrete_type_of_value (Array.get a 0), Array.length a)
 
+(* Get var type of a discrete value *)
+let rec var_type_of_value = function
+    | Number_value _ -> var_type_unknown_number
+    | Rational_value _ -> var_type_rational
+    | Int_value _ -> var_type_int
+    | Bool_value _ -> var_type_bool
+    | Binary_word_value b -> var_type_binary_word (BinaryWord.length b)
+    | Array_value a -> Var_type_discrete (Var_type_discrete_array (discrete_type_of_value (Array.get a 0), Array.length a))
+
+
 let discrete_type_of_var_type = function
     | Var_type_clock
     | Var_type_parameter -> Var_type_discrete_number Var_type_discrete_rational
     | Var_type_discrete x -> x
 
 (* Check if two discrete types are compatible *)
-let is_discrete_type_compatibles var_type expr_type =
+let rec is_discrete_type_compatibles var_type expr_type =
     match var_type, expr_type with
     (* any number type with literal number *)
     | Var_type_discrete_number _, Var_type_discrete_number Var_type_discrete_unknown_number
     | Var_type_discrete_number Var_type_discrete_unknown_number, Var_type_discrete_number _ -> true
-    (* Two array of same type are compatibles, even if their lengths are differents *)
-    (* | Var_type_discrete_array (l_discrete_type, _), Var_type_discrete_array (r_discrete_type, _) -> l_discrete_type = r_discrete_type *)
+    (* Two array of same type are compatibles *)
+    | Var_type_discrete_array (l_discrete_type, l_length), Var_type_discrete_array (r_discrete_type, r_length) when l_length = r_length ->
+        is_discrete_type_compatibles l_discrete_type r_discrete_type
     (* any equals types *)
     | ta, tb when ta = tb -> true
     (* other are not compatibles *)

@@ -675,10 +675,11 @@ and infer_parsed_discrete_factor variable_infos = function
                         expr, discrete_type
                 ) infer_expr_array
             )
+            (*
             else if contain_only_unknown_numbers then (
                 let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational in
                 Array.map (fun (expr, discrete_type) -> convert_literal_types_of_parsed_boolean_expression variable_infos target_type expr, target_type) infer_expr_array
-            )
+            ) *)
             else
                 infer_expr_array
         in
