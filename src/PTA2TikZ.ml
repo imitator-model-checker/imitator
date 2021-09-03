@@ -27,7 +27,7 @@ open Constants
 (** Constants *)
 (************************************************************)
 
-let tikz_string = { default_string with
+let tikz_boolean_string = { default_string with
     and_operator = " \\land ";
     or_operator = " \\lor ";
     not_operator = "\\neg";
@@ -36,6 +36,8 @@ let tikz_string = { default_string with
 	neq_operator  = "\\neq";
 	ge_operator   = "\\geq";
 }
+
+let tikz_string = { global_default_string with boolean_string = tikz_boolean_string }
 
 (************************************************************
  Functions
@@ -66,14 +68,18 @@ let tikz_string_of_lc_gen lc_fun lc =
 		)
 	^ "$"
 
+let tikz_custom_string =
+    let tikz_boolean_string = { Constants.default_string with or_operator = " || " } in
+    { Constants.global_default_string with boolean_string = tikz_boolean_string }
+
 (** Proper form for constraints *)
 let tikz_string_of_linear_constraint =
-	tikz_string_of_lc_gen (ModelPrinter.customized_string_of_guard { Constants.default_string with or_operator = " || " })
+	tikz_string_of_lc_gen (ModelPrinter.customized_string_of_guard tikz_custom_string)
 
 
 (** Proper form for constraints *)
 let tikz_string_of_guard =
-	tikz_string_of_lc_gen (ModelPrinter.customized_string_of_guard { Constants.default_string with or_operator = " || " })
+	tikz_string_of_lc_gen (ModelPrinter.customized_string_of_guard tikz_custom_string)
 
 
 

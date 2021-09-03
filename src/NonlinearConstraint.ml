@@ -24,17 +24,17 @@ let check_nonlinear_constraint discrete_valuation = function
 
 (* Get string of non-linear constraint inequalities with customized strings *)
 let customized_string_of_nonlinear_constraint customized_string variable_names = function
-    | True_nonlinear_constraint -> customized_string.true_string
-    | False_nonlinear_constraint -> customized_string.false_string
+    | True_nonlinear_constraint -> customized_string.boolean_string.true_string
+    | False_nonlinear_constraint -> customized_string.boolean_string.false_string
     | Nonlinear_constraint nonlinear_constraint ->
 	    " " ^
 	    (string_of_list_of_string_with_sep
-		    customized_string.and_operator
+		    customized_string.boolean_string.and_operator
 		    (List.rev_map (DiscreteExpressions.customized_string_of_discrete_boolean_expression customized_string variable_names) nonlinear_constraint)
 	    )
 
 (* Get string of non-linear constraint inequalities with default strings *)
-let string_of_nonlinear_constraint = customized_string_of_nonlinear_constraint default_string
+let string_of_nonlinear_constraint = customized_string_of_nonlinear_constraint global_default_string
 
 (*JANI*)
 (* Get list of non-linear constraint inequalities with customized strings *)

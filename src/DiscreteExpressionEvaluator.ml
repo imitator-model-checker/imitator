@@ -6,7 +6,7 @@ let rec eval_global_expression discrete_valuation = function
     | Arithmetic_expression expr -> eval_discrete_arithmetic_expression discrete_valuation expr
     | Bool_expression expr -> DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
     | Binary_word_expression expr -> DiscreteValue.Binary_word_value (eval_discrete_binary_word_expression discrete_valuation expr)
-    | Array_expression expr -> eval_array_expression discrete_valuation expr
+    | Array_expression expr -> DiscreteValue.Array_value (eval_array_expression discrete_valuation expr)
 
 and eval_discrete_arithmetic_expression discrete_valuation = function
     | Rational_arithmetic_expression expr ->
@@ -154,6 +154,12 @@ and check_discrete_boolean_expression discrete_valuation = function
             relop
             (eval_discrete_binary_word_expression discrete_valuation l_expr)
             (eval_discrete_binary_word_expression discrete_valuation r_expr)
+    | Array_comparison (l_expr, relop, r_expr) ->
+        eval_discrete_array_relop
+            relop
+            (eval_array_expression discrete_valuation l_expr)
+            (eval_array_expression discrete_valuation r_expr)
+
     (** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
     | Expression_in (discrete_arithmetic_expression_1, discrete_arithmetic_expression_2, discrete_arithmetic_expression_3) ->
         (* Compute the first one to avoid redundancy *)
@@ -169,7 +175,7 @@ and check_discrete_boolean_expression discrete_valuation = function
         is_boolean_expression_satisfied discrete_valuation boolean_expression
     | Not_bool b ->
         not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
-(* TODO benjamin refactor here ! *)
+(* TODO benjamin REFACTOR here, that's ugly ! *)
 and eval_discrete_relop relop value_1 value_2 : bool =
     match relop with
     | OP_L		-> value_1 <  value_2
@@ -194,7 +200,14 @@ and eval_discrete_binary_relop relop value_1 value_2 : bool =
     | OP_NEQ	-> value_1 <> value_2
     | OP_GEQ	-> value_1 >= value_2
     | OP_G		-> value_1 >  value_2
-
+and eval_discrete_array_relop relop value_1 value_2 : bool =
+    match relop with
+    | OP_L		-> value_1 <  value_2
+    | OP_LEQ	-> value_1 <= value_2
+    | OP_EQ		-> value_1 =  value_2
+    | OP_NEQ	-> value_1 <> value_2
+    | OP_GEQ	-> value_1 >= value_2
+    | OP_G		-> value_1 >  value_2
 
 and eval_discrete_binary_word_expression discrete_valuation = function
     | Logical_shift_left (binary_word, expr) ->
@@ -234,7 +247,7 @@ and eval_discrete_binary_word_expression discrete_valuation = function
         DiscreteValue.binary_word_value (discrete_valuation variable_index)
 
 and eval_array_expression discrete_valuation = function
-    | Array_constant expr_array ->
-        Array_value (Array.map (fun expr -> eval_global_expression discrete_valuation expr) expr_array)
+    | Literal_array array ->
+        Array.map (fun expr -> eval_global_expression discrete_valuation expr) array
     | Array_variable variable_index ->
-        Array_value (DiscreteValue.array_value (discrete_valuation variable_index))
+        DiscreteValue.array_value (discrete_valuation variable_index)

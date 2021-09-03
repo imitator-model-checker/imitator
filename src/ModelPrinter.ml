@@ -191,7 +191,7 @@ let customized_string_of_guard customized_boolean_string variable_names = functi
 		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
 
 (** Convert a guard into a string *)
-let string_of_guard = customized_string_of_guard Constants.default_string
+let string_of_guard = customized_string_of_guard Constants.global_default_string
 (*
 let string_of_guard variable_names = function
 	| True_guard -> LinearConstraint.string_of_true

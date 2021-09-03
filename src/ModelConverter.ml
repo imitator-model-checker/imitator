@@ -165,6 +165,8 @@ and convert_parsed_global_expression variable_infos = function
             int_expression_of_parsed_expression variable_infos expr
         | DiscreteValue.Var_type_discrete_binary_word l ->
             Binary_word_expression (binary_word_expression_of_parsed_boolean_expression variable_infos expr)
+        | DiscreteValue.Var_type_discrete_array (discrete_type, length) ->
+            Array_expression (array_expression_of_parsed_boolean_expression variable_infos expr)
         (* Should never happen *)
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
             raise (InternalError "An expression still contains unknown literal number after type checking")
@@ -220,6 +222,14 @@ and convert_discrete_bool_expr variable_infos = function
 
     | Parsed_expression (l_expr, relop, r_expr) ->
         let t = TypeChecker.discrete_type_of_parsed_discrete_boolean_expression variable_infos l_expr in
+        print_message Verbose_standard (
+            "check relop "
+            ^ DiscreteValue.string_of_var_type_discrete t
+            ^ "for "
+            ^ ParsingStructureUtilities.string_of_parsed_discrete_boolean_expression variable_infos l_expr
+            ^ ", "
+            ^ ParsingStructureUtilities.string_of_parsed_discrete_boolean_expression variable_infos r_expr
+        );
         (match t with
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
@@ -239,6 +249,13 @@ and convert_discrete_bool_expr variable_infos = function
                 binary_word_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
                 convert_parsed_relop relop,
                 binary_word_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
+            )
+        | DiscreteValue.Var_type_discrete_array _ ->
+            print_message Verbose_standard "found array comparison";
+            Array_comparison (
+                array_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
+                convert_parsed_relop relop,
+                array_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
             )
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
             raise (InvalidModel) (* should never happen, if type checking failed before *)
@@ -348,7 +365,8 @@ and convert_parsed_discrete_arithmetic_expression variable_infos expr =
 
     (* Other cases mean that type checking has failed *)
     | DiscreteValue.Var_type_discrete_bool
-    | DiscreteValue.Var_type_discrete_binary_word _ as t ->
+    | DiscreteValue.Var_type_discrete_binary_word _
+    | DiscreteValue.Var_type_discrete_array _ as t ->
         raise (InternalError ("An arithmetic expression was deduced as " ^ DiscreteValue.string_of_var_type_discrete t ^ " expression, maybe type checking has failed before"))
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
         raise (InternalError "An arithmetic expression still contains unknown literal numbers after type checking, maybe type checking has failed before")
@@ -401,6 +419,7 @@ and convert_parsed_rational_arithmetic_expression variable_infos (* expr *) =
         | Parsed_pow_function (expr, exp) -> DF_pow (convert_parsed_rational_arithmetic_expression_rec expr, convert_parsed_int_arithmetic_expression variable_infos exp)
         | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_rational_factor factor)
         (* Should never happen, because it was checked by type checker before *)
+        | Parsed_DF_array _
         | Parsed_shift_left _
         | Parsed_shift_right _
         | Parsed_fill_left _
@@ -466,6 +485,7 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
         | Parsed_DF_unary_min factor -> Int_unary_min (convert_parsed_int_factor factor)
 
         (* Should never happen, because it was checked by type checker before *)
+        | Parsed_DF_array _
         | Parsed_rational_of_int_function _
         | Parsed_shift_left _
         | Parsed_shift_right _
@@ -576,6 +596,7 @@ and binary_word_expression_of_parsed_factor variable_infos = function
         )
     | Parsed_DF_expression expression ->
         binary_word_expression_of_parsed_discrete_arithmetic_expression variable_infos expression
+    | Parsed_DF_array _
     | Parsed_DF_unary_min _
     | Parsed_rational_of_int_function _
     | Parsed_pow_function _ as factor ->
@@ -583,6 +604,64 @@ and binary_word_expression_of_parsed_factor variable_infos = function
             "There is a call to \""
             ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
             ^ "\" in a binary expression, although it was checked before by type checking. Maybe something fail in type checking"
+        ))
+
+
+(* Try to convert a parsed boolean expression to abstract binary word expression *)
+and array_expression_of_parsed_boolean_expression variable_infos = function
+    (* A binary word can only be found in parsed factor *)
+    | Parsed_Discrete_boolean_expression expr ->
+        array_expression_of_parsed_discrete_boolean_expression variable_infos expr
+    (* Other cases mean that type checking has failed before *)
+    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+
+(* Try to convert a parsed discrete boolean expression to abstract binary word expression *)
+and array_expression_of_parsed_discrete_boolean_expression variable_infos = function
+    (* A binary word can only be found in parsed factor *)
+    | Parsed_arithmetic_expression expr ->
+        array_expression_of_parsed_discrete_arithmetic_expression variable_infos expr
+    (* Other cases mean that type checking has failed before *)
+    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+
+(* Try to convert a parsed arithmetic expression to abstract binary word expression *)
+and array_expression_of_parsed_discrete_arithmetic_expression variable_infos = function
+    (* A binary word can only be found in parsed factor *)
+    | Parsed_DAE_term term ->
+        array_expression_of_parsed_term variable_infos term
+    (* Other cases mean that type checking has failed before *)
+    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+
+(* Try to convert a parsed term to abstract binary word expression *)
+and array_expression_of_parsed_term variable_infos = function
+    (* A binary word can only be found in parsed factor *)
+    | Parsed_DT_factor factor ->
+        array_expression_of_parsed_factor variable_infos factor
+    (* Other cases mean that type checking has failed before *)
+    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+
+(* Try to convert a parsed factor to abstract binary word expression *)
+and array_expression_of_parsed_factor variable_infos = function
+    | Parsed_DF_variable variable_name ->
+
+        let constants = variable_infos.constants in
+        let index_of_variables = variable_infos.index_of_variables in
+        (* First check whether this is a constant *)
+        if Hashtbl.mem constants variable_name then (
+            let value = Hashtbl.find constants variable_name in
+            let array_value = DiscreteValue.array_value value in
+            Array_constant array_value
+        )
+        (* Otherwise: a variable *)
+        else
+            Array_variable (Hashtbl.find index_of_variables variable_name)
+
+    | Parsed_DF_array expr_array ->
+        Literal_array (Array.map (fun expr -> convert_parsed_global_expression variable_infos (Parsed_global_expression expr)) expr_array)
+    | _ as factor ->
+        raise (InternalError (
+            "Use of \""
+            ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
+            ^ "\" in an array expression, although it was checked before by type checking. Maybe something fail in type checking"
         ))
 
 
@@ -2706,6 +2785,8 @@ let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_info
             update_coef_array_in_parsed_update_factor mult_factor r_factor
         | Parsed_log_not factor ->
             update_coef_array_in_parsed_update_factor mult_factor factor
+        | Parsed_DF_array _ ->
+            raise (InternalError ("Array cannot be used in linear term, something failed before."))
 
 	in
 

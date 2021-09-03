@@ -131,6 +131,7 @@ and discrete_boolean_expression =
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
     | Boolean_comparison of discrete_boolean_expression * relop * discrete_boolean_expression
     | Binary_comparison of binary_word_expression * relop * binary_word_expression
+    | Array_comparison of array_expression * relop * array_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
@@ -144,10 +145,10 @@ and discrete_boolean_expression =
 
 (* TODO benjamin CLEAN to remove *)
 and array_expression =
-    (* Add here some function on array *)
-	| Array_comparison of array_expression * relop * array_expression
-    | Array_constant of global_expression array
+    | Literal_array of global_expression array
+    | Array_constant of DiscreteValue.discrete_value array
     | Array_variable of Automaton.variable_index
+    (* Add here some function on array *)
 
 
 
@@ -163,13 +164,13 @@ val string_of_binary_word_expression_constructor : binary_word_expression -> str
 val customized_string_of_global_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string
 val string_of_global_expression : (Automaton.variable_index -> string) -> global_expression -> string
 
-val customized_string_of_arithmetic_expression : Constants.customized_boolean_string -> (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string
+val customized_string_of_arithmetic_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string
 val string_of_arithmetic_expression : (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string
 
-val customized_string_of_boolean_expression : Constants.customized_boolean_string -> (Automaton.variable_index -> string) -> boolean_expression -> string
+val customized_string_of_boolean_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> boolean_expression -> string
 val string_of_boolean_expression : (Automaton.variable_index -> string) -> boolean_expression -> string
 
-val customized_string_of_discrete_boolean_expression : Constants.customized_boolean_string -> (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
+val customized_string_of_discrete_boolean_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
 val string_of_discrete_boolean_expression : (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
 
 val customized_string_of_global_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string

@@ -657,10 +657,12 @@ and infer_parsed_discrete_factor variable_infos = function
     | Parsed_DF_array expr_array as df_array ->
 
         let infer_expr_array = Array.map (infer_parsed_boolean_expression variable_infos) expr_array in
-
+        let infer_expr_list = Array.to_list infer_expr_array in
 
         (* Check if there is any number in array that is known type *)
-        let known_number = List.filter (fun (_, discrete_type) -> DiscreteValue.is_discrete_type_known_number_type discrete_type) (Array.to_list infer_expr_array) in
+        let known_number = List.filter (fun (_, discrete_type) -> DiscreteValue.is_discrete_type_known_number_type discrete_type) infer_expr_list in
+        let unknown_number = List.filter (fun (_, discrete_type) -> DiscreteValue.is_discrete_type_unknown_number_type discrete_type) infer_expr_list in
+        let contain_only_unknown_numbers = List.length unknown_number = List.length infer_expr_list in
 
         (*  *)
         let infer_expr_array =
@@ -672,7 +674,12 @@ and infer_parsed_discrete_factor variable_infos = function
                     else
                         expr, discrete_type
                 ) infer_expr_array
-            ) else
+            )
+            else if contain_only_unknown_numbers then (
+                let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational in
+                Array.map (fun (expr, discrete_type) -> convert_literal_types_of_parsed_boolean_expression variable_infos target_type expr, target_type) infer_expr_array
+            )
+            else
                 infer_expr_array
         in
 
@@ -693,8 +700,16 @@ and infer_parsed_discrete_factor variable_infos = function
                 ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_discrete_types
                 ^ "]"
             ))
-        ) else
-            Parsed_DF_array converted_expr_array, DiscreteValue.Var_type_discrete_array (first_type, Array.length expr_array)
+        ) else (
+            let infer_type = DiscreteValue.Var_type_discrete_array (first_type, Array.length expr_array) in
+            print_message Verbose_high (
+                "\tInfer expression type of `"
+                ^ string_of_parsed_factor variable_infos df_array
+                ^ "` as "
+                ^ DiscreteValue.string_of_var_type_discrete infer_type
+            );
+            Parsed_DF_array converted_expr_array, infer_type
+        )
 
     | Parsed_DF_expression expr ->
         let infer_expr, expr_type = infer_parsed_discrete_arithmetic_expression variable_infos expr in
@@ -1073,7 +1088,9 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
 
     | Parsed_DF_array expr_array ->
         (* Arbitrary take the first item of array *)
-        discrete_type_of_parsed_boolean_expression variable_infos (Array.get expr_array 0)
+        let inner_type = discrete_type_of_parsed_boolean_expression variable_infos (Array.get expr_array 0) in
+        let length = Array.length expr_array in
+        DiscreteValue.Var_type_discrete_array (inner_type, length)
 
 	| Parsed_DF_unary_min factor ->
 	    discrete_type_of_parsed_discrete_factor variable_infos factor

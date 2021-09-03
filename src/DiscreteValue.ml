@@ -176,6 +176,8 @@ let is_discrete_type_compatibles var_type expr_type =
     (* any number type with literal number *)
     | Var_type_discrete_number _, Var_type_discrete_number Var_type_discrete_unknown_number
     | Var_type_discrete_number Var_type_discrete_unknown_number, Var_type_discrete_number _ -> true
+    (* Two array of same type are compatibles, even if their lengths are differents *)
+    (* | Var_type_discrete_array (l_discrete_type, _), Var_type_discrete_array (r_discrete_type, _) -> l_discrete_type = r_discrete_type *)
     (* any equals types *)
     | ta, tb when ta = tb -> true
     (* other are not compatibles *)
