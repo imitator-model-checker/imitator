@@ -111,6 +111,29 @@ let is_discrete_type_known_number_type = function
     | Var_type_discrete_number _ -> true
     | _ -> false
 
+(* Check if discrete type is, or holding a inner type that is unknown number type *)
+let rec is_discrete_type_holding_unknown_number_type = function
+    | Var_type_discrete_number Var_type_discrete_unknown_number -> true
+    | Var_type_discrete_array (inner_type, _) -> is_discrete_type_holding_unknown_number_type inner_type
+    | _ -> false
+
+let rec is_discrete_type_holding_number_type = function
+    | Var_type_discrete_number _ -> true
+    | Var_type_discrete_array (inner_type, _) -> is_discrete_type_holding_number_type inner_type
+    | _ -> false
+
+let rec extract_inner_type = function
+    | Var_type_discrete_array (inner_type, _) -> extract_inner_type inner_type
+    | _ as discrete_type -> discrete_type
+
+(* Get default discrete type of any type that is, or holding a inner type that is unknown number type *)
+(* For example : 1 is unknown number, it will be a rational, [1,2] is an array of unknown number, it will be *)
+(* an array of rational *)
+let rec default_type_of_type_holding_unknown_number_type = function
+    | Var_type_discrete_number Var_type_discrete_unknown_number -> Var_type_discrete_number Var_type_discrete_rational
+    | Var_type_discrete_array (inner_type, length) -> Var_type_discrete_array (default_type_of_type_holding_unknown_number_type inner_type, length)
+    | _ as discrete_type -> discrete_type
+
 (* Check if discrete type is a Var_type_discrete_rational *)
 let is_discrete_type_rational_type = function
     | Var_type_discrete_number Var_type_discrete_rational -> true

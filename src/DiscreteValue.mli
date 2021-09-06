@@ -80,6 +80,12 @@ val is_discrete_type_unknown_number_type : var_type_discrete -> bool
 (* Check if discrete type is not a Var_type_unknown_number *)
 val is_discrete_type_known_number_type : var_type_discrete -> bool
 
+val is_discrete_type_holding_number_type : var_type_discrete -> bool
+val is_discrete_type_holding_unknown_number_type : var_type_discrete -> bool
+
+
+val extract_inner_type : var_type_discrete -> var_type_discrete
+
 (* Check if discrete type is a Var_type_discrete_rational *)
 val is_discrete_type_rational_type : var_type_discrete -> bool
 (* Check if discrete type is a Var_type_discrete_int *)

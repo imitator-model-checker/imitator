@@ -529,6 +529,7 @@ let string_of_global_expression = customized_string_of_global_expression Constan
 let string_of_arithmetic_expression = customized_string_of_arithmetic_expression Constants.global_default_string
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.global_default_string
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.global_default_string
+let string_of_array_expression = customized_string_of_array_expression Constants.global_default_string
 
 (* JANI *)
 

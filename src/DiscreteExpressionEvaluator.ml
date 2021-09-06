@@ -251,3 +251,5 @@ and eval_array_expression discrete_valuation = function
         Array.map (fun expr -> eval_global_expression discrete_valuation expr) array
     | Array_variable variable_index ->
         DiscreteValue.array_value (discrete_valuation variable_index)
+    | Array_constant values ->
+        values

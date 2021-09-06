@@ -151,7 +151,7 @@ let string_of_discrete model =
 				let inital_global_location  = model.initial_location in
 				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
                 let str_initial_value = DiscreteValue.customized_string_of_value uppaal_boolean_strings initial_value in
-                let str_type = string_of_var_type discrete_type in
+                let str_type = string_of_var_type discrete_type in (* TODO benjamin IMPORTANT create format_with_var_type to format type like array *)
 				(* Assign *)
 				"\n" ^ str_type ^ " " ^ discrete_name ^ " = " ^ str_initial_value ^ ";"
 			) model.discrete

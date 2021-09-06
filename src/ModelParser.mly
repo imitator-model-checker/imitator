@@ -191,11 +191,16 @@ var_type:
 ;
 
 var_type_discrete:
-    | var_type_discrete CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_int $4) }
+    | var_type_discrete_array { $1 }
     | var_type_discrete_number { Var_type_discrete_number $1 }
     | CT_BOOL { Var_type_discrete_bool }
     /* TODO benjamin try to use directly int instead of numconst */
     | CT_BINARY_WORD LPAREN pos_integer RPAREN { Var_type_discrete_binary_word (NumConst.to_int $3) }
+;
+
+var_type_discrete_array:
+  | var_type_discrete CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_int $4) }
+  | var_type_discrete_array CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_int $4) }
 ;
 
 var_type_discrete_number:
