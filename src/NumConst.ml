@@ -321,6 +321,12 @@ let to_int n =
 		raw_to_int n
 	)
 
+let to_bounded_int n =
+    let int_n = to_int n in
+    if int_n > 65536 then
+        failwith ("Max size of array exceeded: " ^ string_of_int int_n ^ ", array size is limited to 65536")
+    else
+        int_n
 
 (** Convert a NumConst to a float thanks to the GMP.Q conversion *)
 let to_float = Gmp.Q.to_float

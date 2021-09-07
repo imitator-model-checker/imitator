@@ -199,8 +199,8 @@ var_type_discrete:
 ;
 
 var_type_discrete_array:
-  | var_type_discrete CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_int $4) }
-  | var_type_discrete_array CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_int $4) }
+  | var_type_discrete CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_bounded_int $4) }
+  | var_type_discrete_array CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_bounded_int $4) }
 ;
 
 var_type_discrete_number:
@@ -520,6 +520,7 @@ arithmetic_term:
 ;
 
 arithmetic_factor:
+  /* | arithmetic_factor LSQBRA pos_integer RSQBRA { Parsed_DF_indexation ($1, NumConst.to_int $3) } */
 	| number { Parsed_DF_constant ($1) }
   | binary_word { Parsed_DF_constant $1 }
   | literal_array { Parsed_DF_array (Array.of_list $1) }
