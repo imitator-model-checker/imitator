@@ -308,7 +308,7 @@ let get_max_bounds bounds guards h =
 		else if operator = Op_l || operator = Op_le then max_const_U.(clock) <- max_inf (compute_gmax (clock, operator, coefs) bounds) max_const_U.(clock)
 		(* If sign is =, the guard counts for L and U *)
 		else begin max_const_L.(clock) <- max_inf (compute_gmax (clock, operator, coefs) bounds) max_const_L.(clock);
-		max_const_U.(clock) <- max_inf (compute_gmax (clock, operator, coefs) bounds) max_const_L.(clock);
+		max_const_U.(clock) <- max_inf (compute_gmax (clock, operator, coefs) bounds) max_const_U.(clock);
 		end
 	) guards;
 	(max_const_L,max_const_U)
