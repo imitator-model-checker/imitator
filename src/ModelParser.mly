@@ -519,8 +519,16 @@ arithmetic_term:
 	| OP_MINUS arithmetic_factor { Parsed_DT_factor(Parsed_DF_unary_min $2) }
 ;
 
+/*
+postfix_arithmetic_factor:
+  | arithmetic_factor { Parsed_DT_factor $1 }
+  | postfix_arithmetic_factor LSQBRA pos_integer RSQBRA { Parsed_DF_access ($1, NumConst.to_int $3) }
+  /* | postfix_arithmetic_factor LPAREN RPAREN */
+;
+*/
+
 arithmetic_factor:
-  /* | arithmetic_factor LSQBRA pos_integer RSQBRA { Parsed_DF_indexation ($1, NumConst.to_int $3) } */
+  /*  */
 	| number { Parsed_DF_constant ($1) }
   | binary_word { Parsed_DF_constant $1 }
   | literal_array { Parsed_DF_array (Array.of_list $1) }
