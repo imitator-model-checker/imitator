@@ -313,6 +313,10 @@ let bool_value = function
     | Bool_value x -> x
     | _ -> raise (InternalError "Unable to get bool value of non-bool discrete value")
 
+let array_value = function
+    | Array_value x -> x
+    | _ -> raise (InternalError "Unable to get array value of non-array discrete value")
+
 (* Convert any discrete value to NumConst.t value, if possible *)
 let to_numconst_value = function
     | Number_value x
@@ -347,12 +351,8 @@ let to_float_value = function
 (* Get binary word value of discrete value *)
 let binary_word_value = function
     | Binary_word_value x -> x
-    | _ -> raise (ComputingException "unable to get binary word value of non binary word")
+    | _ -> raise (ComputingException "Unable to get binary word value of non binary word")
 
-(* Get array value of discrete value *)
-let array_value = function
-    | Array_value x -> x
-    | _ -> raise (ComputingException "unable to get binary word value of non binary word")
 
 (* Get discrete value from NumConst.t *)
 let of_numconst x = Rational_value x
