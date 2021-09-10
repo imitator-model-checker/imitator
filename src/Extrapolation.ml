@@ -137,18 +137,16 @@ let max_array a =
 (* Type for the modified lu_status type *)
 (************************************************************)
 (************************************************************)
-
+	
 type modified_pta_type =
-	(* LU-PTA with bounded lower bound parameters*)
-	| LU_Lbounded
-	(* LU-PTA with bounded upper bound parameters*)
-	| LU_Ubounded
-	(* L-PTA *)
-	| PTA_L
-	(* U-PTA *)
-	| PTA_U
-	(* Any other, bounded or not *)
-	| Other 
+	(* All parameters are bounded or non existant*)
+	| TA
+	(* All unbounded parameters are lower bounds*)
+	| L_PTA
+	(* All unbounded parameters are upper bounds*)
+	| U_PTA
+	(* At least one unbounded parameter is both lower and upper bound*)
+	| PTA 
 
 
 (************************************************************)
@@ -185,26 +183,49 @@ let hide_bounded (guards : (int * op * numconst_or_infinity array) list) (bounds
 		let k = (Array.length coefs) - 1 in
 		for i = 0 to k-1 do
 			let (min,max) = bounds.(i) in
-			(* If the parameter is bounded replace it by its bounds *)
-			if (not (eq_inf max Infinity)) && (not (eq_inf min Minus_infinity)) then begin
-				(* Upper bound for a positive coef *)
-				if greater_inf coefs.(i) (Finite (NumConst.numconst_of_int 0)) then begin
-					(* Add it to the constant part *)
-					coefs.(k) <- add_inf coefs.(k) (mul_inf coefs.(i) max);
-					(* Set coef to zero *)
-					coefs.(i) <- (Finite (NumConst.numconst_of_int 0));
-				end
-				(* Lower bound for a negative coef *)
-				else begin
-					(* Add it to the constant part *)
-					coefs.(k) <- add_inf coefs.(k) (mul_inf coefs.(i) min);
-					(* Set coef to zero *)
-					coefs.(i) <- (Finite (NumConst.numconst_of_int 0));
-				end
-			end
+			(* Replace parameter by its bounds (when bounded) *)
+			(* Upper bound for a positive coef *)
+			if (not (eq_inf max Infinity)) && (greater_inf coefs.(i) (Finite (NumConst.numconst_of_int 0))) then begin
+				(* Add it to the constant part *)
+				coefs.(k) <- add_inf coefs.(k) (mul_inf coefs.(i) max);
+				(* Set coef to zero *)
+				coefs.(i) <- (Finite (NumConst.numconst_of_int 0));
+			end;
+			(* Lower bound for a negative coef *)
+			if (not (eq_inf min Minus_infinity)) && (lesser_inf coefs.(i) (Finite (NumConst.numconst_of_int 0))) then begin
+				(* Add it to the constant part *)
+				coefs.(k) <- add_inf coefs.(k) (mul_inf coefs.(i) min);
+				(* Set coef to zero *)
+				coefs.(i) <- (Finite (NumConst.numconst_of_int 0));
+			end;
 		done;
 	(clock, operator, coefs)
 	in List.map f new_guards
+	
+	
+(* Determine PTA type*)
+let get_pta_type (guards : (int * op * numconst_or_infinity array) list) =
+	let is_lpta = ref(true) in
+	let is_upta = ref(true) in
+	List.iter (
+	fun (clock, operator, coefs) -> 
+		let k = (Array.length coefs) - 1 in
+		for i = 0 to k-1 do
+			if (greater_inf coefs.(i) (Finite (NumConst.numconst_of_int 0))) then begin
+				if (operator <> Op_g) && (operator <> Op_ge) then is_lpta := false;
+				if (operator <> Op_l) && (operator <> Op_le) then is_upta := false;
+				end;	
+			if (lesser_inf coefs.(i) (Finite (NumConst.numconst_of_int 0))) then begin
+				if (operator <> Op_l) && (operator <> Op_le) then is_lpta := false;
+				if (operator <> Op_g) && (operator <> Op_ge) then is_upta := false;
+				end;
+		done;
+	) guards;
+	match (!is_lpta,!is_upta) with
+	| true,true -> print_message Verbose_standard ("Type of reduced model: TA"); TA
+	| true,false -> print_message Verbose_standard ("Type of reduced model : L_PTA"); L_PTA
+	| false,true -> print_message Verbose_standard ("Type of reduced model : U_PTA"); U_PTA
+	| false,false -> print_message Verbose_standard ("Type of reduced model : PTA"); PTA
 	
 
 (* Returns a boolean array indicating for each clock if it is a parametric one *)
@@ -243,7 +264,7 @@ let compute_gmax (clock, operator, coefs) bounds =
 	for i = 0 to k-1 do
 		let (min,max) = bounds.(i) in
 		if greater_inf coefs.(i) (Finite (NumConst.numconst_of_int 0)) then gmax := add_inf !gmax (mul_inf coefs.(i) max)
-		else gmax := add_inf !gmax (mul_inf coefs.(i) min);
+		else if lesser_inf coefs.(i) (Finite (NumConst.numconst_of_int 0)) then gmax := add_inf !gmax (mul_inf coefs.(i) min);
 	done;
 	!gmax
 	
@@ -288,7 +309,7 @@ let compute_n pta_type guards parametric_clocks_number h =
 				(Finite (NumConst.numconst_of_int 1))
 			)
 	) in
-	if pta_type = PTA_U then n := mul_inf !n (Finite (NumConst.numconst_of_int 8));
+	if pta_type = U_PTA then n := mul_inf !n (Finite (NumConst.numconst_of_int 8));
 	add_inf !n (add_inf (max_array gnc) (Finite (NumConst.numconst_of_int 1)))
 	
 	
@@ -314,20 +335,17 @@ let get_max_bounds bounds guards h =
 	(max_const_L,max_const_U)
 
 (* Return for each clock x the value to use for the LU-extrapolation of x (cf. "vec{LU}" paper) *)
-let compute_maximal_constants (pta_type : modified_pta_type) (bounds : (numconst_or_infinity * numconst_or_infinity) array) (guards : (int * op * numconst_or_infinity array) list) (h : int) : (numconst_or_infinity array * numconst_or_infinity array) =
-	(* If LU-PTA with a bounded part, hide bounded parameters to reduce it to L-PTA or U-PTA *)
-	let hide = 
-		if pta_type = LU_Ubounded then (hide_bounded guards bounds , PTA_L )
-		else if pta_type = LU_Lbounded then (hide_bounded guards bounds , PTA_U )
-		else (guards, pta_type)
-	in
+let compute_maximal_constants (bounds : (numconst_or_infinity * numconst_or_infinity) array) (guards : (int * op * numconst_or_infinity array) list) (h : int) : (numconst_or_infinity array * numconst_or_infinity array) =
+	(* Hide bounded parameters *)
+	let transformed_guards = (hide_bounded guards bounds) in
+	(* Determine type of the transformed PTA*)
+	let transformed_type = get_pta_type transformed_guards in
 	(* If L-PTA or U-PTA, compute N and use it to determine the bounds of unbounded parameters *)
-	let new_bounds =
-		let (guards, pta_type) = hide in
-		if pta_type = PTA_L || pta_type = PTA_U then set_bounds 
+	let transformed_bounds =
+		if transformed_type = L_PTA || transformed_type = U_PTA then set_bounds 
 			bounds 
 			(compute_n 
-				pta_type 
+				transformed_type 
 				guards 
 				(compute_parametric_clocks_number 
 					(compute_parametric_clocks_array 
@@ -339,7 +357,7 @@ let compute_maximal_constants (pta_type : modified_pta_type) (bounds : (numconst
 			)
 		else bounds
 	(* Compute the lower and upper maximal constant for each clock in the PTA*)
-	in get_max_bounds new_bounds guards h
+	in get_max_bounds transformed_bounds transformed_guards h
 
 
 (************************************************************)
@@ -503,35 +521,6 @@ let get_guards model =
 	in 
 	List.iter f (get_inequalities model);
 	!guards
-
-
-(** Function to determine the type of pta **)
-
-(* Returns the list of bounded parameters *)
-let get_bounded p_bounds =
-	let bounded_parameters = ref [] in
-	for i=0 to (Array.length p_bounds)-1 do 
-		let (min,max) = p_bounds.(i) in
-		if (greater_inf min Minus_infinity) && (lesser_inf max Infinity) then bounded_parameters := List.append !bounded_parameters [i];
-	done;
-	!bounded_parameters
-
-(* Transform lu_status into modified_pta_type *)
-let get_pta_type pta_type bounded_parameters : modified_pta_type =
-	(* Get the L/U nature *)
-	match pta_type with
-	(* General PTA *)
-	| PTA_notLU -> Other
-	(* L/U-PTA with parameters partitioned into L- and U-parameters *)
-	| PTA_LU (l_parameters, u_parameters) -> 
-		if includes l_parameters bounded_parameters then LU_Lbounded
-		else if includes u_parameters bounded_parameters then LU_Ubounded
-		else Other
-			
-	(* L-PTA *)
-	| PTA_L -> PTA_L
-	(* U-PTA *)
-	| PTA_U -> PTA_U 
 	
 	
 (** Function to set global variables **)
@@ -570,34 +559,33 @@ let prepare_extrapolation () : unit =
 	(* Retrieve parameters bounds *)
 	List.iter (fun (p) -> p_bounds.(p) <- get_p_bounds (model.parameters_bounds p) ) model.parameters;
 	
-	(* Define pta_type *)
-	let pta_type = get_pta_type model.lu_status (get_bounded p_bounds) in
-	
 	(* Compute maximal constants *)
-	let (l,u) = compute_maximal_constants pta_type p_bounds guards nb_clocks in
+	let (l,u) = compute_maximal_constants p_bounds guards nb_clocks in
 	
 	(* Set global variables *)
 	lower_constants := l;
 	upper_constants := u;
-	
-	Array.iter (fun (e) -> 
-		match e with
-		|Finite n -> print_message Verbose_standard ("\n L : " ^ (NumConst.string_of_numconst n))
-		|Minus_infinity -> print_message Verbose_standard ("\n L : - infinity")
-		|Infinity -> print_message Verbose_standard ("\n L : infinity")
-	) l; 
-	
-	Array.iter (fun (e) -> 
-		match e with
-		|Finite n -> print_message Verbose_standard ("\n U : " ^ (NumConst.string_of_numconst n))
-		|Minus_infinity -> print_message Verbose_standard ("\n U : - infinity")
-		|Infinity -> print_message Verbose_standard ("\n U : infinity")
-	) u; 
 
 	set_maximums l u nb_clocks;
 
 	nb_parameters := model.nb_parameters;
 	clocks := model.clocks;
+	
+	(* Print preprocessing resut*)
+	print_message Verbose_standard ("\nL : ");
+	Array.iter (fun (e) -> 
+		match e with
+		|Finite n -> print_message Verbose_standard ((NumConst.string_of_numconst n))
+		|Minus_infinity -> print_message Verbose_standard ("- infinity")
+		|Infinity -> print_message Verbose_standard ("infinity")
+	) l; 
+	print_message Verbose_standard ("\nU : ");
+	Array.iter (fun (e) -> 
+		match e with
+		|Finite n -> print_message Verbose_standard ((NumConst.string_of_numconst n))
+		|Minus_infinity -> print_message Verbose_standard ("- infinity")
+		|Infinity -> print_message Verbose_standard ("infinity")
+	) u; 
 		
 	(* The end *)
 	()
