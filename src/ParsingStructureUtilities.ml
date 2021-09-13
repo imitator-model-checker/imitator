@@ -116,6 +116,7 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
         operator
             (fold_parsed_discrete_factor operator base leaf_fun factor_0)
             (fold_parsed_discrete_factor operator base leaf_fun factor_1)
+    | Parsed_DF_access (factor, _)
 	| Parsed_log_not factor
 	| Parsed_DF_unary_min factor ->
 	    fold_parsed_discrete_factor operator base leaf_fun factor
@@ -238,6 +239,7 @@ let string_of_parsed_factor_constructor = function
 	| Parsed_DF_variable _ -> "variable"
 	| Parsed_DF_constant _ -> "constant"
 	| Parsed_DF_array _ -> "array"
+	| Parsed_DF_access _ -> "array access"
 	| Parsed_DF_expression _ -> "expression"
 	| Parsed_DF_unary_min _ -> "minus"
 	| Parsed_rational_of_int_function _ -> "rational_of_int"
@@ -293,6 +295,8 @@ and string_of_parsed_factor variable_infos = function
     | Parsed_DF_constant value -> DiscreteValue.string_of_value value
     | Parsed_DF_array expr_array ->
         "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (string_of_parsed_boolean_expression variable_infos) expr_array) ^ "]"
+    | Parsed_DF_access (factor, expr) ->
+        string_of_parsed_factor variable_infos factor ^ "[" ^ string_of_parsed_arithmetic_expression variable_infos expr ^ "]"
     | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
     | Parsed_DF_unary_min factor ->
         "-(" ^ (string_of_parsed_factor variable_infos factor) ^ ")"
@@ -504,6 +508,15 @@ and try_reduce_parsed_arithmetic_expression constants expr =
         | Parsed_DF_array expr_array ->
             let values = Array.map (try_reduce_parsed_boolean_expression constants) expr_array in
             DiscreteValue.Array_value values
+        | Parsed_DF_access (factor, index_expr) ->
+            (* factor should be an array (checked by type checker) *)
+            let values = try_reduce_parsed_factor factor in
+            let index = try_reduce_parsed_arithmetic_expression_rec index_expr in
+            (* Get value at index *)
+            let array_values = DiscreteValue.array_value values in
+            let int_index = DiscreteValue.int_value index in
+            Array.get array_values (Int32.to_int int_index)
+
         | Parsed_DF_expression arithmetic_expr -> try_reduce_parsed_arithmetic_expression_rec arithmetic_expr
         | Parsed_DF_unary_min factor ->
             DiscreteValue.neg (try_reduce_parsed_factor factor)

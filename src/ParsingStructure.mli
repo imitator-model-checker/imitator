@@ -100,6 +100,7 @@ and parsed_discrete_factor =
 	| Parsed_DF_variable of variable_name
 	| Parsed_DF_constant of DiscreteValue.discrete_value
 	| Parsed_DF_array of parsed_boolean_expression array
+    | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min of parsed_discrete_factor
 	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
@@ -113,7 +114,6 @@ and parsed_discrete_factor =
 	| Parsed_log_xor of parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_log_not of parsed_discrete_factor
 (*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
-
 
 
 (* We allow for some variables (i.e., parameters and constants) a value *)

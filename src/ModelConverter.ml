@@ -306,6 +306,11 @@ and search_variable_of_discrete_arithmetic_expression variable_infos expr =
         | Parsed_DF_constant var_value ->
             let bool_value = DiscreteValue.bool_value var_value in
             DB_constant bool_value
+        | Parsed_DF_access (factor, index_expr) ->
+            Bool_array_access (
+                array_expression_of_parsed_factor variable_infos factor,
+                convert_parsed_int_arithmetic_expression variable_infos index_expr
+            )
         | Parsed_DF_array expr_array ->
             raise (InternalError (
                 "Search of boolean variable in an array expression, something failed.
@@ -405,6 +410,12 @@ and convert_parsed_rational_arithmetic_expression variable_infos (* expr *) =
             else
                 DF_variable (Hashtbl.find variable_infos.index_of_variables variable_name)
 
+        | Parsed_DF_access (factor, index_expr) ->
+            Rational_array_access (
+                array_expression_of_parsed_factor variable_infos factor,
+                convert_parsed_int_arithmetic_expression variable_infos index_expr
+            )
+
         | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.to_numconst_value var_value)
         | Parsed_DF_expression expr -> DF_expression (convert_parsed_rational_arithmetic_expression_rec expr)
         | Parsed_rational_of_int_function expr -> DF_rational_of_int (convert_parsed_int_arithmetic_expression variable_infos expr)
@@ -451,6 +462,8 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
                 (convert_parsed_int_factor factor)
             )
         | Parsed_DT_div (term, factor) ->
+        (* TODO benjamin IMPROVE add warning message when dividing int *)
+(*            print_warning "";*)
             Int_div (
                 (convert_parsed_int_term term) ,
                 (convert_parsed_int_factor factor)
@@ -475,6 +488,12 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
         | Parsed_pow_function (expr, exp) -> Int_pow (convert_parsed_int_arithmetic_expression_rec expr, convert_parsed_int_arithmetic_expression_rec exp)
 
         | Parsed_DF_unary_min factor -> Int_unary_min (convert_parsed_int_factor factor)
+
+        | Parsed_DF_access (factor, index_expr) ->
+            Int_array_access (
+                array_expression_of_parsed_factor variable_infos factor,
+                convert_parsed_int_arithmetic_expression_rec index_expr
+            )
 
         (* Should never happen, because it was checked by type checker before *)
         | Parsed_DF_array _
@@ -547,6 +566,13 @@ and binary_word_expression_of_parsed_factor variable_infos = function
     | Parsed_DF_constant value ->
         let binary_word_value = DiscreteValue.binary_word_value value in
         Binary_word_constant binary_word_value
+
+    | Parsed_DF_access (factor, index_expr) ->
+        Binary_word_array_access (
+            array_expression_of_parsed_factor variable_infos factor,
+            convert_parsed_int_arithmetic_expression variable_infos index_expr
+        )
+
     | Parsed_shift_left (factor, expr) ->
         Logical_shift_left (
             binary_word_expression_of_parsed_factor variable_infos factor,
@@ -649,6 +675,13 @@ and array_expression_of_parsed_factor variable_infos = function
 
     | Parsed_DF_array expr_array ->
         Literal_array (Array.map (fun expr -> convert_parsed_global_expression variable_infos (Parsed_global_expression expr)) expr_array)
+
+    | Parsed_DF_access (factor, index_expr) ->
+        Array_array_access (
+            array_expression_of_parsed_factor variable_infos factor,
+            convert_parsed_int_arithmetic_expression variable_infos index_expr
+        )
+
     | _ as factor ->
         raise (InternalError (
             "Use of \""

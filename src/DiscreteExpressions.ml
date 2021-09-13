@@ -27,12 +27,24 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (****************************************************************)
 type discrete_valuation = Automaton.discrete_index -> DiscreteValue.discrete_value
 
+(****************************************************************)
+(** Global expression *)
+(****************************************************************)
+type global_expression =
+    (* A typed expression *)
+    | Arithmetic_expression of discrete_arithmetic_expression
+    | Bool_expression of boolean_expression
+    | Binary_word_expression of binary_word_expression
+    | Array_expression of array_expression
 
+and discrete_arithmetic_expression =
+    | Rational_arithmetic_expression of rational_arithmetic_expression
+    | Int_arithmetic_expression of int_arithmetic_expression
 
 (****************************************************************)
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
-type rational_arithmetic_expression =
+and rational_arithmetic_expression =
 	| DAE_plus of rational_arithmetic_expression * rational_term
 	| DAE_minus of rational_arithmetic_expression * rational_term
 	| DAE_term of rational_term
@@ -45,6 +57,7 @@ and rational_term =
 and rational_factor =
 	| DF_variable of Automaton.variable_index
 	| DF_constant of NumConst.t
+    | Rational_array_access of array_expression * int_arithmetic_expression
 	| DF_expression of rational_arithmetic_expression
 	| DF_rational_of_int of int_arithmetic_expression
 	| DF_unary_min of rational_factor
@@ -71,44 +84,11 @@ and int_factor =
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
-
-type discrete_arithmetic_expression =
-    | Rational_arithmetic_expression of rational_arithmetic_expression
-    | Int_arithmetic_expression of int_arithmetic_expression
-
-(************************************************************)
-(************************************************************)
-(************************************************************)
-(** Binary word expressions for discrete variables *)
-(************************************************************)
-(************************************************************)
-
-(** Binary word expression *)
-type binary_word_expression =
-    | Logical_shift_left of binary_word_expression * int_arithmetic_expression
-    | Logical_shift_right of binary_word_expression * int_arithmetic_expression
-    | Logical_fill_left of binary_word_expression * int_arithmetic_expression
-    | Logical_fill_right of binary_word_expression * int_arithmetic_expression
-    | Logical_and of binary_word_expression * binary_word_expression
-    | Logical_or of binary_word_expression * binary_word_expression
-    | Logical_xor of binary_word_expression * binary_word_expression
-    | Logical_not of binary_word_expression
-    | Binary_word_constant of BinaryWord.t
-    | Binary_word_variable of Automaton.variable_index
+    | Int_array_access of array_expression * int_arithmetic_expression
 
 (****************************************************************)
 (** Boolean expressions for discrete variables *)
 (****************************************************************)
-
-(****************************************************************)
-(** Global expression *)
-(****************************************************************)
-type global_expression =
-    (* A typed expression *)
-    | Arithmetic_expression of discrete_arithmetic_expression
-    | Bool_expression of boolean_expression
-    | Binary_word_expression of binary_word_expression
-    | Array_expression of array_expression
 
 (** Boolean expression *)
 and boolean_expression =
@@ -134,11 +114,37 @@ and discrete_boolean_expression =
 	| DB_variable of Automaton.variable_index
 	(** Discrete constant *)
 	| DB_constant of bool
+	(** access to a boolean array **)
+    | Bool_array_access of array_expression * int_arithmetic_expression
+
+
+(************************************************************)
+(************************************************************)
+(************************************************************)
+(** Binary word expressions for discrete variables *)
+(************************************************************)
+(************************************************************)
+
+(** Binary word expression *)
+and binary_word_expression =
+    | Logical_shift_left of binary_word_expression * int_arithmetic_expression
+    | Logical_shift_right of binary_word_expression * int_arithmetic_expression
+    | Logical_fill_left of binary_word_expression * int_arithmetic_expression
+    | Logical_fill_right of binary_word_expression * int_arithmetic_expression
+    | Logical_and of binary_word_expression * binary_word_expression
+    | Logical_or of binary_word_expression * binary_word_expression
+    | Logical_xor of binary_word_expression * binary_word_expression
+    | Logical_not of binary_word_expression
+    | Binary_word_constant of BinaryWord.t
+    | Binary_word_variable of Automaton.variable_index
+    | Binary_word_array_access of array_expression * int_arithmetic_expression
+
 
 and array_expression =
     | Literal_array of global_expression array
     | Array_constant of DiscreteValue.discrete_value array
     | Array_variable of Automaton.variable_index
+    | Array_array_access of array_expression * int_arithmetic_expression
     (* Add here some function on array *)
 
 
@@ -422,6 +428,11 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
             ^ ", "
             ^ string_of_int_arithmetic_expression customized_string exp
             ^ ")"
+        | Int_array_access (array_expr, index_expr) ->
+            customized_string_of_array_expression customized_string variable_names array_expr
+            ^ "["
+            ^ string_of_int_arithmetic_expression customized_string index_expr
+            ^ "]"
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 

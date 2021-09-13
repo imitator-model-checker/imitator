@@ -168,6 +168,11 @@ and convert_literal_types_of_parsed_discrete_factor variable_infos target_type =
             (* Convert array element to the inner type of the array target type *)
             let converted_array = Array.map (convert_literal_types_of_parsed_boolean_expression variable_infos target_type) expr_array in
             Parsed_DF_array converted_array
+    | Parsed_DF_access (factor, index_expr) ->
+        Parsed_DF_access (
+            convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor,
+            index_expr
+        )
     | Parsed_DF_expression expr ->
         Parsed_DF_expression (convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr)
     | Parsed_rational_of_int_function expr ->
@@ -629,34 +634,35 @@ and infer_parsed_discrete_factor variable_infos = function
 
     | Parsed_DF_array expr_array as df_array ->
 
+        (* Infer type of each elements of array and convert to a list *)
         let infer_expr_array = Array.map (infer_parsed_boolean_expression variable_infos) expr_array in
         let infer_expr_list = Array.to_list infer_expr_array in
 
-        (* Check if there is any number in array that is known type *)
-        let known_number = List.filter (fun (_, discrete_type) -> DiscreteValue.is_discrete_type_known_number_type discrete_type) infer_expr_list in
-        let unknown_number = List.filter (fun (_, discrete_type) -> DiscreteValue.is_discrete_type_unknown_number_type discrete_type) infer_expr_list in
+        (* Check if there is any number in array that is known type (or type that holding known type) *)
+        let known_number = List.filter (fun (_, discrete_type) -> DiscreteValue.is_discrete_type_holding_known_number_type discrete_type) infer_expr_list in
+        (* Check if there is any number in array that is unknown type (or type that holding unknown type) *)
+        let unknown_number = List.filter (fun (_, discrete_type) -> DiscreteValue.is_discrete_type_holding_unknown_number_type discrete_type) infer_expr_list in
+        (* Check if there is only unkown type in array *)
         let contain_only_unknown_numbers = List.length unknown_number = List.length infer_expr_list in
 
-        (*  *)
+        (* Infer type of array *)
         let infer_expr_array =
             if List.length known_number > 0 then (
                 let first_known_number_expr, target_type = List.nth known_number 0 in
                 Array.map (fun (expr, discrete_type) ->
-                    if DiscreteValue.is_discrete_type_unknown_number_type discrete_type then
-                        convert_literal_types_of_parsed_boolean_expression variable_infos target_type expr, target_type
+                    if DiscreteValue.is_discrete_type_holding_unknown_number_type discrete_type then (
+                        let inner_target_type = DiscreteValue.extract_inner_type target_type in
+                        convert_literal_types_of_parsed_boolean_expression variable_infos inner_target_type expr, target_type
+                    )
                     else
                         expr, discrete_type
                 ) infer_expr_array
             )
-            (*
-            else if contain_only_unknown_numbers then (
-                let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational in
-                Array.map (fun (expr, discrete_type) -> convert_literal_types_of_parsed_boolean_expression variable_infos target_type expr, target_type) infer_expr_array
-            ) *)
             else
                 infer_expr_array
         in
 
+        (*  *)
         let discrete_types = Array.map (fun (_, discrete_type) -> discrete_type) infer_expr_array in
         let converted_expr_array = Array.map (fun (converted_expr, _) -> converted_expr) infer_expr_array in
 
@@ -674,6 +680,7 @@ and infer_parsed_discrete_factor variable_infos = function
                 ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_discrete_types
                 ^ "]"
             ))
+        (* If all the same type, just convert each elements to the same type of first type *)
         ) else (
             let infer_type = DiscreteValue.Var_type_discrete_array (first_type, Array.length expr_array) in
             print_message Verbose_high (
@@ -684,6 +691,44 @@ and infer_parsed_discrete_factor variable_infos = function
             );
             Parsed_DF_array converted_expr_array, infer_type
         )
+
+    | Parsed_DF_access (factor, index_expr) as access ->
+
+        let infer_factor, discrete_type = infer_parsed_discrete_factor variable_infos factor in
+        let infer_index_expr, index_type = infer_parsed_discrete_arithmetic_expression variable_infos index_expr in
+
+        (* If type is not an array, access is used in wrong context ! *)
+        let infer_type = (
+            match discrete_type with
+            | DiscreteValue.Var_type_discrete_array (inner_type, _) -> inner_type
+            | _ -> raise (TypeError (
+                "Trying to make an access to a non array variable at `"
+                ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos access
+                ^ "`"
+            ))
+        )
+        in
+
+        (* TODO benjamin IMPORTANT type check on index *)
+        let convert_index_expr =
+            if DiscreteValue.is_discrete_type_unknown_number_type index_type then (
+                let index_target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
+                convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos index_target_type infer_index_expr
+            )
+            else if DiscreteValue.is_discrete_type_int_type index_type then
+                infer_index_expr
+            else
+                raise (TypeError (
+                    "Index should be a int expression at `"
+                    ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos access
+                    ^ "`, `"
+                    ^ ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos infer_index_expr
+                    ^ "` is not a int expression: "
+                    ^ DiscreteValue.string_of_var_type_discrete index_type
+                ))
+        in
+
+        Parsed_DF_access (infer_factor, convert_index_expr), infer_type
 
     | Parsed_DF_expression expr ->
         let infer_expr, expr_type = infer_parsed_discrete_arithmetic_expression variable_infos expr in
@@ -1068,6 +1113,13 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
 
 	| Parsed_DF_unary_min factor ->
 	    discrete_type_of_parsed_discrete_factor variable_infos factor
+    | Parsed_DF_access (factor, _) ->
+        let discrete_type = discrete_type_of_parsed_discrete_factor variable_infos factor in
+        (* Unwrap type from array, because of access *)
+        (match discrete_type with
+        | DiscreteValue.Var_type_discrete_array (inner_type, _) -> inner_type
+        | _ -> raise (TypeError (""))
+        )
 	| Parsed_DF_expression expr
 	| Parsed_rational_of_int_function expr ->
 	    DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational

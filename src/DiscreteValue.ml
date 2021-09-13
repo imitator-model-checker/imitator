@@ -117,6 +117,12 @@ let rec is_discrete_type_holding_unknown_number_type = function
     | Var_type_discrete_array (inner_type, _) -> is_discrete_type_holding_unknown_number_type inner_type
     | _ -> false
 
+let rec is_discrete_type_holding_known_number_type = function
+    | Var_type_discrete_number Var_type_discrete_unknown_number -> false
+    | Var_type_discrete_number _ -> true
+    | Var_type_discrete_array (inner_type, _) -> is_discrete_type_holding_known_number_type inner_type
+    | _ -> false
+
 let rec is_discrete_type_holding_number_type = function
     | Var_type_discrete_number _ -> true
     | Var_type_discrete_array (inner_type, _) -> is_discrete_type_holding_number_type inner_type
@@ -311,7 +317,7 @@ let int_value = function
 (* Get bool value of bool discrete value *)
 let bool_value = function
     | Bool_value x -> x
-    | _ -> raise (InternalError "Unable to get bool value of non-bool discrete value")
+    | _ as t -> raise (InternalError ("Unable to get bool value of non-bool discrete value" ^ string_of_value t))
 
 let array_value = function
     | Array_value x -> x

@@ -56,6 +56,11 @@ and eval_rational_expression discrete_valuation expr =
             DiscreteValue.numconst_value (discrete_valuation variable_index)
         | DF_constant variable_value ->
             variable_value;
+        | Rational_array_access (array_expr, index_expr) ->
+            let values = eval_array_expression discrete_valuation array_expr in
+            let index = eval_int_expression discrete_valuation index_expr in
+            let value = Array.get values (Int32.to_int index) in
+            DiscreteValue.numconst_value value
         | DF_expression expr ->
             eval_rational_expression_rec expr
         | DF_rational_of_int expr ->
@@ -117,6 +122,11 @@ and eval_int_expression discrete_valuation (* expr *) =
             Int32.neg (eval_int_factor factor)
         | Int_pow (expr, exp) ->
             OCamlUtilities.pow (eval_int_expression_rec expr) (eval_int_expression_rec exp)
+        | Int_array_access (array_expr, index_expr) ->
+            let values = eval_array_expression discrete_valuation array_expr in
+            let index = eval_int_expression_rec index_expr in
+            let value = Array.get values (Int32.to_int index) in
+            DiscreteValue.int_value value
     in
     eval_int_expression_rec
 
@@ -137,8 +147,13 @@ and check_discrete_boolean_expression discrete_valuation = function
         DiscreteValue.bool_value (discrete_valuation variable_index)
     | DB_constant value ->
         value
+    | Bool_array_access (array_expr, index_expr) ->
+        let values = eval_array_expression discrete_valuation array_expr in
+        let index = eval_int_expression discrete_valuation index_expr in
+        let value = Array.get values (Int32.to_int index) in
+        DiscreteValue.bool_value value
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
-    (* TODO benjamin WARNING here we compare discrete value with operator it's bad *)
+    (* TODO benjamin WARNING here we compare a DiscreteValue.discrete_value type with operator it's bad *)
     | Expression (l_expr, relop, r_expr) ->
         eval_discrete_relop
             relop
@@ -246,6 +261,12 @@ and eval_discrete_binary_word_expression discrete_valuation = function
     | Binary_word_variable variable_index ->
         DiscreteValue.binary_word_value (discrete_valuation variable_index)
 
+    | Binary_word_array_access (array_expr, index_expr) ->
+        let values = eval_array_expression discrete_valuation array_expr in
+        let index = eval_int_expression discrete_valuation index_expr in
+        let value = Array.get values (Int32.to_int index) in
+        DiscreteValue.binary_word_value value
+
 and eval_array_expression discrete_valuation = function
     | Literal_array array ->
         Array.map (fun expr -> eval_global_expression discrete_valuation expr) array
@@ -253,3 +274,8 @@ and eval_array_expression discrete_valuation = function
         DiscreteValue.array_value (discrete_valuation variable_index)
     | Array_constant values ->
         values
+    | Array_array_access (array_expr, index_expr) ->
+        let values = eval_array_expression discrete_valuation array_expr in
+        let index = eval_int_expression discrete_valuation index_expr in
+        let value = Array.get values (Int32.to_int index) in
+        DiscreteValue.array_value value
