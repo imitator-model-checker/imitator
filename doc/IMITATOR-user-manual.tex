@@ -450,26 +450,26 @@ We denote by~$\WVar$ the set of binary word variables.
 		\item \styleIMI{shift\_right(b : binary\_word(l), i : int) : binary\_word(l)}: shift a binary word of length \styleIMI{l} to right
 		\item \styleIMI{fill\_left(b : binary\_word(l), i : const int) : binary\_word(l + i)}: shift a binary word of length \styleIMI{l} to left (non destructive)
 		\item \styleIMI{fill\_right(b : binary\_word(l), i : const int) : binary\_word(l + i)}: shift a binary word of length \styleIMI{l} to right (non destructive)
-		\item \styleIMI{log\_and(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: make AND bitwise operation between two binary words of length \styleIMI{l}
-		\item \styleIMI{log\_or(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: make OR bitwise operation between two binary words of length \styleIMI{l}
-		\item \styleIMI{log\_xor(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: make XOR bitwise operation between two binary words of length \styleIMI{l}
-		\item \styleIMI{log\_not(b : binary\_word(l)) : binary\_word(l)}: make NOT bitwise operation on a binary word of length \styleIMI{l}
+		\item \styleIMI{logand(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: make AND bitwise operation between two binary words of length \styleIMI{l}
+		\item \styleIMI{logor(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: make OR bitwise operation between two binary words of length \styleIMI{l}
+		\item \styleIMI{logxor(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: make XOR bitwise operation between two binary words of length \styleIMI{l}
+		\item \styleIMI{lognot(b : binary\_word(l)) : binary\_word(l)}: make NOT bitwise operation on a binary word of length \styleIMI{l}
 \end{itemize}
 
 %------------------------------------------------------------
 \begin{example}
 	All the following guards in the model fragment below will evaluate to true:
-	
+
 %------------------------------------------------------------
 \begin{lstlisting}[style=IMITATORmodel,numbers=none]
-when shift_left(0b010110, 3)    = XXXX goto l1;
-when shift_right(0b010110, 3)   = XXXX goto l1;
-when fill_left(0b010110, 3)     = XXXX goto l1;
-when fill_right(0b010110, 3)    = XXXX goto l1;
-when logand(0b010110, 0b101010) = XXXX goto l1;
-when logor(0b010110, 0b101010)  = XXXX goto l1;
-when logxor(0b010110, 0b101010) = XXXX goto l1;
-when lognot(0b010110)           = XXXX goto l1;
+when shift_left(0b010110, 3)    = 0b110000    goto l1;
+when shift_right(0b010110, 3)   = 0b000010    goto l1;
+when fill_left(0b010110, 3)     = 0b010110000 goto l1;
+when fill_right(0b010110, 3)    = 0b000010110 goto l1;
+when logand(0b010110, 0b101010) = 0b000010    goto l1;
+when logor(0b010110, 0b101010)  = 0b111110    goto l1;
+when logxor(0b010110, 0b101010) = 0b111100    goto l1;
+when lognot(0b010110)           = 0b101001    goto l1;
 \end{lstlisting}
 %------------------------------------------------------------
 
@@ -1282,7 +1282,7 @@ The semantics is that each of the $n$ conditions must hold on at least one state
 %------------------------------------------------------------
 \begin{example}
 	Assume the following condition:
-	
+
 \begin{IMITATORproperty}
 property := #synth CycleThrough(loc[pta1] = l1, loc[pta1] = l2 and loc[pta2] = l2, accepting, i = 2 or i = 3);
 \end{IMITATORproperty}
