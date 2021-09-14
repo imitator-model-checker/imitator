@@ -395,31 +395,31 @@
 
 \newcommand{\GitHubIMI}{\href{https://github.com/imitator-model-checker/imitator}{GitHub}}
 
-\newcommand{\styleCommand}[1]{
-	\medskip
+% \newcommand{\styleCommand}[1]{
+% 	\medskip
+% 
+% 	% \mbox{}\hspace{.5cm}
+% 	\noindent\fcolorbox{white}{black!90}{
+% 		\textcolor{yellow!30}{\$\ \ \texttt{#1}}
+% 	}
+% 
+% 	\medskip
+% 
+% }
 
-	% \mbox{}\hspace{.5cm}
-	\noindent\fcolorbox{white}{black!90}{
-		\textcolor{yellow!30}{\$\ \ \texttt{#1}}
-	}
-
-	\medskip
-
-}
-
-\newcommand{\styleTerminalOutput}[1]{
-	\medskip
-
-	% \mbox{}\hspace{.5cm}
-	\noindent\fcolorbox{white}{black!90}{
-	\begin{minipage}{.97\textwidth}
-		\textcolor{yellow!30}{\texttt{#1}}
-	\end{minipage}
-	}
-
-	\medskip
-
-}
+% \newcommand{\styleTerminalOutput}[1]{
+% 	\medskip
+% 
+% 	% \mbox{}\hspace{.5cm}
+% 	\noindent\fcolorbox{white}{black!90}{
+% 	\begin{minipage}{.97\textwidth}
+% 		\textcolor{yellow!30}{\texttt{#1}}
+% 	\end{minipage}
+% 	}
+% 
+% 	\medskip
+% 
+% }
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -508,7 +508,7 @@
 	language=caml,                 % the language of the code
 	deletekeywords={done},            % if you want to delete keywords from the given language; WARNING! must be set AFTER the `language=…`
 	morekeywords={
-		and, automaton, binary, clock, constant, continuous, discrete, do, end, False, fill_left, fill_right, flow, forward, from, goto, if, in, init, int, initially, invariant, loc, logand, lognot, logor, logxor, not, or, parameter, rational, shift_left, shift_right, stop, sync, sync, synclabs, True, urgent, var, when, while
+		accepting, and, automaton, binary, clock, constant, continuous, discrete, do, end, False, fill_left, fill_right, flow, forward, from, goto, if, in, init, int, initially, invariant, loc, logand, lognot, logor, logxor, not, or, parameter, rational, shift_left, shift_right, stop, sync, sync, synclabs, True, urgent, var, when, while
 	},
 	numbers=right,                    % where to put the line-numbers; possible values are (none, left, right)
 	numbersep=5pt,                   % how far the line-numbers are from the code
@@ -544,7 +544,7 @@
   keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
   keywordstyle=\bfseries\color{blue},       % keyword style
 %   language=caml,                 % the language of the code
-  morekeywords={always,everytime,eventually,loc,property,sequence,synth,within,witness},            % if you want to add more keywords to the set
+  morekeywords={accepting, AGnot, always, BCcover, BCrandom, BCshuffle, Cycle, CycleThrough, DeadlockFree, EF, EFpmin, EFpmax, EFtmin, everytime,eventually, IM, loc, pattern, PRP, PRPC, property,sequence,synth,within,witness},            % if you want to add more keywords to the set
   numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
 %   numbersep=5pt,                   % how far the line-numbers are from the code
 %   numberstyle=\tiny\color{bggcolor}, % the style that is used for the line-numbers
@@ -558,6 +558,109 @@
 %   title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
 }
 
+
+\definecolor{commentscolor}{rgb}{0.6,0.6,0.6}
+\definecolor{numberscolor}{rgb}{0.3,.3,0.3}
+\definecolor{stringscolor}{rgb}{.6,1,0.6}
+
+\lstdefinestyle{terminal}{
+	backgroundcolor=\color{black},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+	basicstyle=\ttfamily\small\color{yellow},        % the size of the fonts that are used for the code
+	breakatwhitespace=true,         % sets if automatic breaks should only happen at whitespace
+	breaklines=true,                 % sets automatic line breaking
+	%   captionpos=b,                    % sets the caption-position to bottom
+	commentstyle=\color{commentscolor},    % comment style
+	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+	extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+	%   firstnumber=1,                % start line enumeration with line 1000
+	frame=single,	                   % adds a frame around the code
+	keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+	keywordstyle=\bfseries\color{orange},       % keyword style
+	language=bash,                 % the language of the code
+% 	deletekeywords={done},            % if you want to delete keywords from the given language; WARNING! must be set AFTER the `language=…`
+	morekeywords={
+		grep, imitator
+	},
+	numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
+% 	numbersep=5pt,                   % how far the line-numbers are from the code
+% 	numberstyle=\tiny\color{numberscolor}, % the style that is used for the line-numbers
+	rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+	showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+	showstringspaces=false,          % underline spaces within strings only
+	showtabs=false,                  % show tabs within strings adding particular underscores
+	stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+	stringstyle=\color{stringscolor},     % string literal style
+	tabsize=2,	                   % sets default tabsize to 2 spaces
+	sensitive=false,
+	% For UTF-8
+	inputencoding=utf8,
+    extendedchars=true,
+    literate={á}{{\'a}}1 {à}{{\`a}}1 {ã}{{\~a}}1 {é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1,
+}
+
+% Define empty language
+\lstdefinelanguage{none}{
+  identifierstyle=
+}
+
+\lstdefinestyle{terminaloutput}{
+	backgroundcolor=\color{black},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+	basicstyle=\ttfamily\small\color{yellow},        % the size of the fonts that are used for the code
+	breakatwhitespace=true,         % sets if automatic breaks should only happen at whitespace
+	breaklines=true,                 % sets automatic line breaking
+	%   captionpos=b,                    % sets the caption-position to bottom
+	commentstyle=\color{commentscolor},    % comment style
+	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+	extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+	%   firstnumber=1,                % start line enumeration with line 1000
+	frame=single,	                   % adds a frame around the code
+	keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+% 	keywordstyle=\bfseries\color{orange},       % keyword style
+	language=none,                 % the language of the code
+% 	deletekeywords={done},            % if you want to delete keywords from the given language; WARNING! must be set AFTER the `language=…`
+% 	morekeywords={
+% 		imitator
+% 	},
+	numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
+% 	numbersep=5pt,                   % how far the line-numbers are from the code
+% 	numberstyle=\tiny\color{numberscolor}, % the style that is used for the line-numbers
+	rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+	showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+	showstringspaces=false,          % underline spaces within strings only
+	showtabs=false,                  % show tabs within strings adding particular underscores
+	stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+	stringstyle=\color{stringscolor},     % string literal style
+	tabsize=2,	                   % sets default tabsize to 2 spaces
+	sensitive=false,
+	% For UTF-8
+	inputencoding=utf8,
+    extendedchars=true,
+    literate={á}{{\'a}}1 {à}{{\`a}}1 {ã}{{\~a}}1 {é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1,
+}
+
+\lstnewenvironment{terminal}[0]
+	{%
+		\lstset{style=terminal}
+	}%
+	{}
+
+\lstnewenvironment{terminaloutput}[0]
+	{%
+		\lstset{style=terminaloutput}
+	}%
+	{}
+
+\lstnewenvironment{IMITATORmodel}[0]
+	{%
+		\lstset{style=IMITATORmodel}
+	}%
+	{}
+
+\lstnewenvironment{IMITATORproperty}[0]
+	{%
+		\lstset{style=IMITATORproperty}
+	}%
+	{}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
