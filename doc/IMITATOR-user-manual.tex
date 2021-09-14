@@ -377,7 +377,7 @@ a rational variable valuation is a function $\rval : \RVar \rightarrow \setQ$.
 
 \emph{Int variables} are bounded signed integer-valued variables encoded on 32 bits (which is architecture independent).
 
-Int variables are encoded in \imitator{} using the \styleFileContent{int} type of OCaml.
+Int variables are encoded in \imitator{} using the \texttt{int} type of OCaml.
 
 \begin{becareful}[int encoding]
 	All arithmetic operations over the ``int'' variables are taken modulo $2^{32}$.
@@ -413,9 +413,9 @@ Then, if this check is true, one may want to shift the bits of \styleIMI{b1} by 
 This transition would be written as follows in \imitator{} format:
 
 %------------------------------------------------------------
-\begin{lstlisting}[style=IMITATORmodel,numbers=none]
+\begin{IMITATORmodel}
 when logor(bw1, bw2) <> bw1 sync a do {bw1 := shift_left(bw1, 2), bw2 := logand(bw1, bw2)} goto l1;
-\end{lstlisting}
+\end{IMITATORmodel}
 %------------------------------------------------------------
 
 Note that binary words are of fixed length, and operations can only be applied to words of the \emph{same} length.
@@ -460,17 +460,18 @@ We denote by~$\WVar$ the set of binary word variables.
 \begin{example}
 	All the following guards in the model fragment below will evaluate to true:
 
+% HACK: always keep one blank space after a binary value (0b…) to have higlighting using moredelim
 %------------------------------------------------------------
-\begin{lstlisting}[style=IMITATORmodel,numbers=none]
-when shift_left(0b010110, 3)    = 0b110000    goto l1;
-when shift_right(0b010110, 3)   = 0b000010    goto l1;
-when fill_left(0b010110, 3)     = 0b010110000 goto l1;
-when fill_right(0b010110, 3)    = 0b000010110 goto l1;
-when logand(0b010110, 0b101010) = 0b000010    goto l1;
-when logor(0b010110, 0b101010)  = 0b111110    goto l1;
-when logxor(0b010110, 0b101010) = 0b111100    goto l1;
-when lognot(0b010110)           = 0b101001    goto l1;
-\end{lstlisting}
+\begin{IMITATORmodel}
+when shift_left(0b010110 , 3)     = 0b110000    goto l1;
+when shift_right(0b010110 , 3)    = 0b000010    goto l1;
+when fill_left(0b010110 , 3)      = 0b010110000 goto l1;
+when fill_right(0b010110 , 3)     = 0b000010110 goto l1;
+when logand(0b010110 , 0b101010 ) = 0b000010    goto l1;
+when logor(0b010110 , 0b101010 )  = 0b111110    goto l1;
+when logxor(0b010110 , 0b101010 ) = 0b111100    goto l1;
+when lognot(0b010110 )            = 0b101001    goto l1;
+\end{IMITATORmodel}
 %------------------------------------------------------------
 
 \end{example}
@@ -573,8 +574,12 @@ In the following, we explain this definition.
 \paragraph{Guards and invariants}
 Guards and invariants in \imitator{} are linear constraints over all variables.
 For example, the following expression can be used in a guard or an invariant:
-$$ \styleIMI{r1 + .5 x1 + 3 x2 >= 2 p1 - r2 \& p2 < 1/3} $$
-where \styleIMI{r1}, \styleIMI{r2} are discrete rational variables, \styleIMI{x1}, \styleIMI{x2} are clocks and \styleIMI{p1}, \styleIMI{p2} are parameters.
+
+\begin{IMITATORmodel}
+r1 + .5 x1 + 3 x2 >= 2 p1 - r2 & p2 < 1/3
+\end{IMITATORmodel}
+
+\noindent{}where \styleIMI{r1}, \styleIMI{r2} are discrete rational variables, \styleIMI{x1}, \styleIMI{x2} are clocks and \styleIMI{p1}, \styleIMI{p2} are parameters.
 This syntax includes in particular diagonal constraints (\eg{} \styleIMI{x1 - x2 <= 2}), not always supported in other model-checking tools.
 
 \paragraph{Actions}
@@ -730,10 +735,10 @@ Clocks are not necessarily equal to~0, and parameters are not even necessarily p
 
 Parameters and clocks can be initially bound by any linear constraint over parameters, clocks, and discrete variables.
 That is, we can define initial constraints such as:
-\begin{center}
-	\styleIMI{x1 + x2 <= 2 p1 + 0.5 p2 - i}.
-\end{center}
-% TODO: style for sample piece of file
+
+\begin{IMITATORmodel}
+x1 + x2 <= 2 p1 + 0.5 p2 - i
+\end{IMITATORmodel}
 
 However, discrete variables must be initialized to a \emph{constant} compatible with their type.
 Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i := ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to a default value, and will issue a warning.
@@ -773,17 +778,19 @@ If an \IPTA{} declares an action \styleIMI{a} that is never used in this \IPTA{}
 
 \imitator{} supports global constants, \ie{} a variable the value of which is known once for all.
 The syntax is the following one:
-\begin{center}
-	\styleIMI{c = 1: constant;}
-\end{center}
+
+\begin{IMITATORmodel}
+c = 1: constant;
+\end{IMITATORmodel}
+
 Then, any occurrence of \styleIMI{c} in the model is replaced with \styleIMI{1}.
 
 By default, constants are (unbounded, exact) rationals.
 It is possible to define constants of another type by making their type explicit:
 
-\begin{center}
-	\styleIMI{c = 1: int;}
-\end{center}
+\begin{IMITATORmodel}
+c = 1: int;
+\end{IMITATORmodel}
 
 In this case, \styleIMI{c} is a constant of type \styleIMI{int}.
 
@@ -793,9 +800,11 @@ Limited linear expressions over rationals can be used in the definition of a (ra
 %------------------------------------------------------------
 \begin{hint}
 	In fact, a variable (\eg{} a parameter) can be turned to a constant as follows in the definition of the parameters:
-	\begin{center}
-		\styleIMI{p = 2: parameter;}
-	\end{center}
+	
+\begin{IMITATORmodel}
+p = 2: parameter;
+\end{IMITATORmodel}
+
 	This is equivalent to replacing \styleIMI{p} with \styleIMI{2} everywhere in the model; this is particularly useful when some parameters should be instantiated.
 	In contrast, if the parameter is instantiated in the initial definition, \imitator{} still counts it as a parameter, which makes all constraints suffer from an additional dimension.
 \end{hint}
@@ -1032,24 +1041,72 @@ property := #synth pattern(<PROP>);
 \noindent{}where \styleIMI{<PROP>} must follow the syntax of the following patterns, where \styleIMI{a}, \styleIMI{a1}, \styleIMI{a2} are actions, and the deadline \styleIMI{d} is a (possibly parametric) linear expression:
 
 \begin{itemize}
-	\item \styleIMI{if a2 then a1 has happened before}
-	\item \styleIMI{everytime a2 then a1 has happened before}
-	\item \styleIMI{everytime a2 then a1 has happened once before}
-	      % 	\item \styleIMI{if a1 then eventually a2}
+	\item
+\begin{IMITATORproperty}
+if a2 then a1 has happened before
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+everytime a2 then a1 has happened before
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+everytime a2 then a1 has happened once before
+\end{IMITATORproperty}
+
+	% 	\item \styleIMI{if a1 then eventually a2}
 	      % TODO
 	      % 	\item \styleIMI{everytime a1 then eventually a2}
 	      % TODO
 	      % 	\item \styleIMI{everytime a1 then eventually a2 once before next}
 	      % TODO
-	\item \styleIMI{a within d}
-	\item \styleIMI{if a2 then a1 has happened within d before}
-	\item \styleIMI{everytime a2 then a1 has happened within d before}
-	\item \styleIMI{everytime a2 then a1 has happened once within d before}
-	\item \styleIMI{if a1 then eventually a2 within d}
-	\item \styleIMI{everytime a1 then eventually a2 within~d}
-	\item \styleIMI{if a1 then eventually a2 within d once before next}
-	\item \styleIMI{sequence a1, \dots, an}
-	\item \styleIMI{always sequence a1, \dots, an}
+	\item
+\begin{IMITATORproperty}
+a within d
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+if a2 then a1 has happened within d before
+\end{IMITATORproperty}
+
+	\item 
+\begin{IMITATORproperty}
+everytime a2 then a1 has happened within d before
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+everytime a2 then a1 has happened once within d before
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+if a1 then eventually a2 within d
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+everytime a1 then eventually a2 within~d
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+if a1 then eventually a2 within d once before next
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+sequence a1, ..., an
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+always sequence a1, ..., an
+\end{IMITATORproperty}
+
 \end{itemize}
 
 The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
@@ -1808,7 +1865,10 @@ More statistics are obtained with higher levels of verbosity, or with the \style
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The result can be projected onto selected parameters, by using the following syntax at the end of the property file:
 
-\styleIMI{projectresult(param1, \dots, paramn);}
+\begin{IMITATORmodel}
+projectresult(param1, ..., paramn);
+\end{IMITATORmodel}
+
 
 In that case, all parameters not in that set are eliminated using variable elimination, and the result in the result file only contains the selected parameters.
 
@@ -2044,15 +2104,18 @@ We review some points in the following.
 \imitator{} and \jani{} do not have exactly the same semantics in the case of \styleIMI{if}-\styleIMI{then}-\styleIMI{else} updates.
 In order to provide a similar behavior, the translation is performed as follow.
 
-\styleIMI{if (x=1) then (x:=2, y:=3) else (x:=4)}\\ is transformed (and, after, written in \jani{} format) into
+\begin{IMITATORmodel}
+if (x=1) then (x:=2, y:=3) else (x:=4)
+\end{IMITATORmodel}
 
-\styleIMI{
-\begin{tabular}{l l}
-	x := & (if (x=1) then 2 else x)\\
-	y := & (if (x=1) then 3 else y)\\
-	x := & (if (x=1) then x else 4)
-\end{tabular}
-}
+\noindent{}is transformed (and, subsequently, written in \jani{} format) into
+
+\begin{IMITATORmodel}
+x := (if (x=1) then 2 else x);
+y := (if (x=1) then 3 else y);
+x := (if (x=1) then x else 4);
+\end{IMITATORmodel}
+
 
 \paragraph{Stopwatches and multi-rate clocks}
 If no clock of the input model has a rate different from~1, then all of them are declared in the output \jani{} model with the \styleIMI{clock} type.
@@ -2454,7 +2517,7 @@ This will generate file \stylePath{model\_cart.png}.
 % or \stylePath{model\_cart\_patator.png} if the algorithm is the distributed \BC{} and its variants.
 % This option takes an integer which limits the number of generated plots, where each plot represents the projection of the parametric zones on two parameters.
 % TODO: check
-If the model contains more than two parameters, then \code{-draw-cart} will plot the projection of the generated zones on the first two parameters of the model (or on the two \emph{varying} parameters in the case of \BC{}).
+If the model contains more than two parameters, then \styleOption{-draw-cart} will plot the projection of the generated zones on the first two parameters of the model (or on the two \emph{varying} parameters in the case of \BC{}).
 
 This option makes use of the external utility \texttt{graph}, which is
 part of the \emph{GNU plotting utils}, available on most Linux
@@ -2960,7 +3023,7 @@ We define each of those two components below.
 \regleGrammaire{declarations}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \code{var} \nt{var\_lists} \\
+	\   & \styleIMI{var} \nt{var\_lists} \\
 	$|$ & \emptystring
 \end{tabular}
 
@@ -2968,7 +3031,7 @@ We define each of those two components below.
 \regleGrammaire{var\_lists}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \nt{var\_list} \code{:} \nt{var\_type} \code{;} \nt{var\_lists} \\
+	\   & \nt{var\_list} \styleIMI{:} \nt{var\_type} \styleIMI{;} \nt{var\_lists} \\
 	$|$ & \emptystring
 \end{tabular}
 

@@ -377,7 +377,7 @@
 
 
 % Code integre au texte
-\newcommand{\code}[1]{\textbf{\texttt{#1}}}
+% \newcommand{\code}[1]{\textbf{\texttt{#1}}}
 
 
 \definecolor{imicolor}{rgb}{0, .4, .4}
@@ -466,9 +466,12 @@
 % IMITATOR FILES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \definecolor{bggcolor}{rgb}{0.95,0.95,0.95}
-\definecolor{commentscolor}{rgb}{0.6,0.6,0.6}
-\definecolor{numberscolor}{rgb}{0.1,.5,0.1}
-\definecolor{stringscolor}{rgb}{1,0.6,0.6}
+\definecolor{commentscolor}{rgb}{0.5,0.5,0.6}
+% \definecolor{numberscolor}{rgb}{0.1,.5,0.1}
+\definecolor{keywordscolor}{rgb}{0.0, 0.0, 1.0}
+\definecolor{numberscolor}{rgb}{0.6, 0.6, 0.6}
+% \definecolor{stringscolor}{rgb}{1,0.6,0.6}
+\definecolor{binarycolor}{rgb}{1, 0.0, 0.0}
 
 
 \usepackage{listings}
@@ -504,11 +507,11 @@
 	%   firstnumber=1,                % start line enumeration with line 1000
 	frame=single,	                   % adds a frame around the code
 	keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
-	keywordstyle=\bfseries\color{blue},       % keyword style
+	keywordstyle=\bfseries\color{keywordscolor},       % keyword style
 	language=caml,                 % the language of the code
 	deletekeywords={done},            % if you want to delete keywords from the given language; WARNING! must be set AFTER the `language=…`
 	morekeywords={
-		accepting, and, automaton, binary, clock, constant, continuous, discrete, do, end, False, fill_left, fill_right, flow, forward, from, goto, if, in, init, int, initially, invariant, loc, logand, lognot, logor, logxor, not, or, parameter, rational, shift_left, shift_right, stop, sync, sync, synclabs, True, urgent, var, when, while
+		accepting, and, automaton, binary, clock, constant, continuous, discrete, do, end, False, fill_left, fill_right, flow, forward, from, goto, if, in, init, int, initially, invariant, loc, logand, lognot, logor, logxor, not, or, parameter, projectresult, rational, shift_left, shift_right, stop, sync, sync, synclabs, True, urgent, var, when, while
 	},
 	numbers=right,                    % where to put the line-numbers; possible values are (none, left, right)
 	numbersep=5pt,                   % how far the line-numbers are from the code
@@ -518,13 +521,17 @@
 	showstringspaces=false,          % underline spaces within strings only
 	showtabs=false,                  % show tabs within strings adding particular underscores
 	stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
-	stringstyle=\color{stringscolor},     % string literal style
+% 	stringstyle=\color{stringscolor},     % string literal style
 	tabsize=2,	                   % sets default tabsize to 2 spaces
 	sensitive=false,
 % 	morecomment=[l][\color{gray}]{--},
-	morecomment=[s][keywordstyle]{"}{"},
+% 	morecomment=[s][keywordstyle]{"}{"},
 % 	morecomment=[s]{/*}{*/},
-	morecomment=[s][\color{gray!50!blue}]{(*}{*)},
+% 	morestring=[s][\color{red}]{0b}, % values: b,d,m,s(*2?)
+	moredelim=[s][\color{binarycolor}]{0b}{\ },
+	moredelim=[s][\color{red}]{\#}{\ },
+	morecomment=[s][\color{commentscolor}]{(*}{*)},
+		% values: lfdnms
 }
 
 
@@ -542,9 +549,9 @@
 %   firstnumber=1000,                % start line enumeration with line 1000
   frame=single,	                   % adds a frame around the code
   keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
-  keywordstyle=\bfseries\color{blue},       % keyword style
+  keywordstyle=\bfseries\color{keywordscolor},       % keyword style
 %   language=caml,                 % the language of the code
-  morekeywords={accepting, AGnot, always, BCcover, BCrandom, BCshuffle, Cycle, CycleThrough, DeadlockFree, EF, EFpmin, EFpmax, EFtmin, everytime,eventually, IM, loc, pattern, PRP, PRPC, property,sequence,synth,within,witness},            % if you want to add more keywords to the set
+  morekeywords={accepting, AGnot, always, BCcover, BCrandom, BCshuffle, before, Cycle, CycleThrough, DeadlockFree, EF, EFpmin, EFpmax, EFtmin, everytime, eventually, happened, has, IM, loc, next, once, pattern, PRP, PRPC, property,sequence,synth,within,witness},            % if you want to add more keywords to the set
   numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
 %   numbersep=5pt,                   % how far the line-numbers are from the code
 %   numberstyle=\tiny\color{bggcolor}, % the style that is used for the line-numbers
@@ -553,15 +560,20 @@
 %   showstringspaces=false,          % underline spaces within strings only
 %   showtabs=false,                  % show tabs within strings adding particular underscores
 %   stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
-%   stringstyle=\color{bggcolor},     % string literal style
+%   stringstyle=\color{stringscolor},     % string literal style
 %   tabsize=2,	                   % sets default tabsize to 2 spaces
 %   title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+	morecomment=[s][\color{commentscolor}]{(*}{*)},
+	% For UTF-8
+	inputencoding=utf8,
+    extendedchars=true,
+    literate={á}{{\'a}}1 {à}{{\`a}}1 {ã}{{\~a}}1 {é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1,
 }
 
 
-\definecolor{commentscolor}{rgb}{0.6,0.6,0.6}
-\definecolor{numberscolor}{rgb}{0.3,.3,0.3}
-\definecolor{stringscolor}{rgb}{.6,1,0.6}
+\definecolor{commentscolorterminal}{rgb}{0.6,0.6,0.6}
+% \definecolor{numberscolorterminal}{rgb}{0.3,.3,0.3}
+\definecolor{stringscolorterminal}{rgb}{.6,1,0.6}
 
 \lstdefinestyle{terminal}{
 	backgroundcolor=\color{black},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
@@ -569,9 +581,8 @@
 	breakatwhitespace=true,         % sets if automatic breaks should only happen at whitespace
 	breaklines=true,                 % sets automatic line breaking
 	%   captionpos=b,                    % sets the caption-position to bottom
-	commentstyle=\color{commentscolor},    % comment style
+	commentstyle=\color{commentscolorterminal},    % comment style
 	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
-	extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
 	%   firstnumber=1,                % start line enumeration with line 1000
 	frame=single,	                   % adds a frame around the code
 	keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
@@ -583,13 +594,13 @@
 	},
 	numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
 % 	numbersep=5pt,                   % how far the line-numbers are from the code
-% 	numberstyle=\tiny\color{numberscolor}, % the style that is used for the line-numbers
+% 	numberstyle=\tiny\color{numberscolorterminal}, % the style that is used for the line-numbers
 	rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
 	showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
 	showstringspaces=false,          % underline spaces within strings only
 	showtabs=false,                  % show tabs within strings adding particular underscores
 	stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
-	stringstyle=\color{stringscolor},     % string literal style
+	stringstyle=\color{stringscolorterminal},     % string literal style
 	tabsize=2,	                   % sets default tabsize to 2 spaces
 	sensitive=false,
 	% For UTF-8
@@ -609,7 +620,7 @@
 	breakatwhitespace=true,         % sets if automatic breaks should only happen at whitespace
 	breaklines=true,                 % sets automatic line breaking
 	%   captionpos=b,                    % sets the caption-position to bottom
-	commentstyle=\color{commentscolor},    % comment style
+	commentstyle=\color{commentscolorterminal},    % comment style
 	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
 	extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
 	%   firstnumber=1,                % start line enumeration with line 1000
@@ -623,13 +634,13 @@
 % 	},
 	numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
 % 	numbersep=5pt,                   % how far the line-numbers are from the code
-% 	numberstyle=\tiny\color{numberscolor}, % the style that is used for the line-numbers
+% 	numberstyle=\tiny\color{numberscolorterminal}, % the style that is used for the line-numbers
 	rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
 	showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
 	showstringspaces=false,          % underline spaces within strings only
 	showtabs=false,                  % show tabs within strings adding particular underscores
 	stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
-	stringstyle=\color{stringscolor},     % string literal style
+	stringstyle=\color{stringscolorterminal},     % string literal style
 	tabsize=2,	                   % sets default tabsize to 2 spaces
 	sensitive=false,
 	% For UTF-8
