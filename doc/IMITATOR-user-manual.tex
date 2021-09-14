@@ -446,6 +446,26 @@ We denote by~$\WVar$ the set of binary word variables.
 		\item \styleIMI{log\_not(b : binary\_word(l)) : binary\_word(l)}: make NOT bitwise operation on a binary word of length \styleIMI{l}
 \end{itemize}
 
+%------------------------------------------------------------
+\begin{example}
+	All the following guards in the model fragment below will evaluate to true:
+	
+%------------------------------------------------------------
+\begin{lstlisting}[style=IMITATORmodel,numbers=none]
+when shift_left(0b010110, 3)    = XXXX goto l1;
+when shift_right(0b010110, 3)   = XXXX goto l1;
+when fill_left(0b010110, 3)     = XXXX goto l1;
+when fill_right(0b010110, 3)    = XXXX goto l1;
+when logand(0b010110, 0b101010) = XXXX goto l1;
+when logor(0b010110, 0b101010)  = XXXX goto l1;
+when logxor(0b010110, 0b101010) = XXXX goto l1;
+when lognot(0b010110)           = XXXX goto l1;
+\end{lstlisting}
+%------------------------------------------------------------
+
+\end{example}
+%------------------------------------------------------------
+
 
 %------------------------------------------------------------
 \subsubsection{Discrete variables definition}
