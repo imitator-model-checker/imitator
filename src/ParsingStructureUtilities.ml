@@ -176,23 +176,23 @@ let fold_init_state_predicate operator base loc_assignment_leaf_fun linear_expre
 
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
-let for_all_in_parsed_global_expression = fold_parsed_global_expression (&&) true
-let for_all_in_parsed_boolean_expression = fold_parsed_boolean_expression (&&) true
-let for_all_in_parsed_discrete_boolean_expression = fold_parsed_discrete_boolean_expression (&&) true
-let for_all_in_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithmetic_expression (&&) true
-let for_all_in_parsed_discrete_term = fold_parsed_discrete_term (&&) true
-let for_all_in_parsed_discrete_factor = fold_parsed_discrete_factor (&&) true
+let for_all_in_parsed_global_expression = fold_parsed_global_expression (OCamlUtilities.evaluate_and) true
+let for_all_in_parsed_boolean_expression = fold_parsed_boolean_expression (OCamlUtilities.evaluate_and) true
+let for_all_in_parsed_discrete_boolean_expression = fold_parsed_discrete_boolean_expression (OCamlUtilities.evaluate_and) true
+let for_all_in_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithmetic_expression (OCamlUtilities.evaluate_and) true
+let for_all_in_parsed_discrete_term = fold_parsed_discrete_term (OCamlUtilities.evaluate_and) true
+let for_all_in_parsed_discrete_factor = fold_parsed_discrete_factor (OCamlUtilities.evaluate_and) true
 
 (** Check if all leaf of a linear expression satisfy the predicate **)
-let for_all_in_parsed_linear_expression = fold_parsed_linear_expression (&&)
+let for_all_in_parsed_linear_expression = fold_parsed_linear_expression (OCamlUtilities.evaluate_and)
 (** Check if all leaf of a linear term satisfy the predicate **)
-let for_all_in_parsed_linear_term = fold_parsed_linear_term (&&)
+let for_all_in_parsed_linear_term = fold_parsed_linear_term (OCamlUtilities.evaluate_and)
 (** Check if all leaf of a linear constraint satisfy the predicate **)
-let for_all_in_parsed_linear_constraint = fold_parsed_linear_constraint (&&)
+let for_all_in_parsed_linear_constraint = fold_parsed_linear_constraint (OCamlUtilities.evaluate_and)
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
-let for_all_in_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint (&&) true
+let for_all_in_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint (OCamlUtilities.evaluate_and) true
 (** Check if all leaf of a parsed update satisfy the predicate **)
-let for_all_in_parsed_update = fold_parsed_update (&&) true
+let for_all_in_parsed_update = fold_parsed_update (OCamlUtilities.evaluate_and) true
 
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
