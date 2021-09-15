@@ -259,6 +259,7 @@ let string_of_rational_factor_constructor = function
 	| DF_unary_min _ -> "rational minus"
 	| DF_rational_of_int _ -> "rational_of_int"
 	| DF_pow _ -> "pow"
+	| Rational_array_access _ -> "rational array access"
 
 let string_of_int_factor_constructor = function
 	| Int_variable _ -> "int variable"
@@ -266,6 +267,7 @@ let string_of_int_factor_constructor = function
 	| Int_expression _ -> "int expression"
 	| Int_unary_min _ -> "int minus"
 	| Int_pow _ -> "pow"
+	| Int_array_access _ -> "int array access"
 
 let string_of_binary_word_expression_constructor = function
     | Logical_shift_left _ -> "shift_left"
@@ -278,6 +280,7 @@ let string_of_binary_word_expression_constructor = function
     | Logical_not _ -> "log_not"
     | Binary_word_constant _ -> "binary word constant"
     | Binary_word_variable _ -> "binary word variable"
+    | Binary_word_array_access _ -> "binary word array access"
 
 (* Expressions strings *)
 
@@ -339,6 +342,11 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 	and string_of_factor customized_string = function
 		| DF_variable discrete_index -> variable_names discrete_index
 		| DF_constant value -> NumConst.to_string value
+		| Rational_array_access (array_expr, index_expr) ->
+		    customized_string_of_array_expression customized_string variable_names array_expr
+		    ^ "["
+		    ^ customized_string_of_int_arithmetic_expression customized_string variable_names index_expr
+		    ^ "]"
 		| DF_unary_min discrete_factor ->
 		    Constants.default_arithmetic_string.unary_min_string ^
 		    add_parenthesis_to_unary_minus (
@@ -485,6 +493,11 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 	    customized_string.boolean_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
     | DB_variable discrete_index -> variable_names discrete_index
     | DB_constant value -> customized_string_of_bool_value customized_string.boolean_string value
+    | Bool_array_access (array_expr, index_expr) ->
+        customized_string_of_array_expression customized_string variable_names array_expr
+        ^ "["
+        ^ customized_string_of_int_arithmetic_expression customized_string variable_names index_expr
+        ^ "]"
 
 and customized_string_of_boolean_operations customized_string = function
 	| OP_L		-> customized_string.l_operator
@@ -525,6 +538,12 @@ and customized_string_of_binary_word_expression customized_string variable_names
         ^ ")"
     | Binary_word_constant value -> BinaryWord.string_of_binaryword value
     | Binary_word_variable variable_index -> variable_names variable_index
+    | Binary_word_array_access (array_expr, index_expr) ->
+        customized_string_of_array_expression customized_string variable_names array_expr
+        ^ "["
+        ^ customized_string_of_int_arithmetic_expression customized_string variable_names index_expr
+        ^ "]"
+
 
 and customized_string_of_array_expression customized_string variable_names = function
     | Literal_array expr_array ->
@@ -534,7 +553,11 @@ and customized_string_of_array_expression customized_string variable_names = fun
         let str_values = Array.map DiscreteValue.string_of_value values in
         "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ "]"
     | Array_variable variable_index -> variable_names variable_index
-
+    | Array_array_access (array_expr, index_expr) ->
+        customized_string_of_array_expression customized_string variable_names array_expr
+        ^ "["
+        ^ customized_string_of_int_arithmetic_expression customized_string variable_names index_expr
+        ^ "]"
 
 let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
 let string_of_arithmetic_expression = customized_string_of_arithmetic_expression Constants.global_default_string
@@ -636,6 +659,12 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
 	    "{\"op\": \""^ customized_string.boolean_string.not_operator ^"\"" ^ jani_separator ^ "\"exp\": " ^ (customized_string_of_boolean_expression_for_jani customized_string variable_names b) ^ "}"
     | DB_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
     | DB_constant value -> customized_string_of_bool_value customized_string.boolean_string value
+    | Bool_array_access (array_expr, index_expr) ->
+        "{"
+        ^ "\"op\": \"aa\", "
+        ^ "\"exp\": " ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr ^ ", "
+        ^ "\"index\": " ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr
+        ^ "}"
 
 and customized_string_of_arithmetic_expression_for_jani customized_string variable_names = function
     | Rational_arithmetic_expression expr -> customized_string_of_rational_arithmetic_expression_for_jani customized_string variable_names expr
@@ -689,6 +718,12 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
 	and string_of_factor customized_string = function
 		| DF_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
 		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
+        | Rational_array_access (array_expr, index_expr) ->
+            "{"
+            ^ "\"op\": \"aa\", "
+            ^ "\"exp\": " ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr ^ ", "
+            ^ "\"index\": " ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr
+            ^ "}"
 		| DF_unary_min discrete_factor ->
 		    Constants.default_arithmetic_string_without_whitespace.unary_min_string ^
 		    add_parenthesis_to_unary_minus (
@@ -758,6 +793,12 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 	and string_of_int_factor customized_string = function
 		| Int_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
 		| Int_constant value -> Int32.to_string value
+        | Int_array_access (array_expr, index_expr) ->
+            "{"
+            ^ "\"op\": \"aa\", "
+            ^ "\"exp\": " ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr ^ ", "
+            ^ "\"index\": " ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr
+            ^ "}"
 		| Int_unary_min discrete_factor ->
 		    customized_string.arithmetic_string.unary_min_string ^
 		    add_parenthesis_to_unary_minus_int (
@@ -815,6 +856,13 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
 	    ^ (customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word) ^ "}"
     | Binary_word_constant value -> BinaryWord.string_of_binaryword value
     | Binary_word_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
+    | Binary_word_array_access (array_expr, index_expr) ->
+        "{"
+        ^ "\"op\": \"aa\", "
+        ^ "\"exp\": " ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr ^ ", "
+        ^ "\"index\": " ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr
+        ^ "}"
+
 
 and customized_string_of_array_expression_for_jani customized_string variable_names = function
     | Literal_array expr_array ->
@@ -824,6 +872,12 @@ and customized_string_of_array_expression_for_jani customized_string variable_na
         let str_values = Array.map DiscreteValue.string_of_value values in
         "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ "]"
     | Array_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
+    | Array_array_access (array_expr, index_expr) ->
+        "{"
+        ^ "\"op\": \"aa\", "
+        ^ "\"exp\": " ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr ^ ", "
+        ^ "\"index\": " ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr
+        ^ "}"
 
 let string_of_arithmetic_expression_for_jani = customized_string_of_arithmetic_expression_for_jani Constants.global_default_string
 let string_of_discrete_boolean_expression_for_jani = customized_string_of_discrete_boolean_expression_for_jani Constants.global_default_string

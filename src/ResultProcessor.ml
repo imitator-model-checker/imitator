@@ -345,6 +345,7 @@ let export_to_file_errorresult error_type file_name =
 	(* Error message *)
 	let error_message = match error_type with
 		| Division_by_zero msg			-> "division by 0 (" ^ msg ^ ")"
+		| Out_of_bound                  -> "index out of range"
 		| ModelFileNotFound_error		-> "model file not found"
 		| PropertyFileNotFound_error	-> "property file not found"
 		| InvalidModel_error			-> "invalid model"

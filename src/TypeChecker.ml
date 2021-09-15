@@ -641,9 +641,7 @@ and infer_parsed_discrete_factor variable_infos = function
         (* Check if there is any number in array that is known type (or type that holding known type) *)
         let known_number = List.filter (fun (_, discrete_type) -> DiscreteValue.is_discrete_type_holding_known_number_type discrete_type) infer_expr_list in
         (* Check if there is any number in array that is unknown type (or type that holding unknown type) *)
-        let unknown_number = List.filter (fun (_, discrete_type) -> DiscreteValue.is_discrete_type_holding_unknown_number_type discrete_type) infer_expr_list in
-        (* Check if there is only unkown type in array *)
-        let contain_only_unknown_numbers = List.length unknown_number = List.length infer_expr_list in
+(*        let unknown_number = List.filter (fun (_, discrete_type) -> DiscreteValue.is_discrete_type_holding_unknown_number_type discrete_type) infer_expr_list in*)
 
         (* Infer type of array *)
         let infer_expr_array =

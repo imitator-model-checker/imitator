@@ -2290,9 +2290,9 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
         (* Nested expression used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
         | Parsed_DF_expression expr ->
             raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
-        (* TODO benjamin REFACTOR maybe mix with below *)
-        | Parsed_DF_array expr_array ->
-            raise (InvalidExpression ("Use of an array is forbidden in an expression involving clock(s) or parameter(s)"))
+
+        | Parsed_DF_array _
+        | Parsed_DF_access _
         | Parsed_rational_of_int_function _
         | Parsed_pow_function _
         | Parsed_shift_left _
@@ -2810,8 +2810,9 @@ let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_info
             update_coef_array_in_parsed_update_factor mult_factor r_factor
         | Parsed_log_not factor ->
             update_coef_array_in_parsed_update_factor mult_factor factor
-        | Parsed_DF_array _ ->
-            raise (InternalError ("Array cannot be used in linear term, something failed before."))
+        | Parsed_DF_array _
+        | Parsed_DF_access _ as factor ->
+            raise (InternalError ("Use of " ^ ParsingStructureUtilities.string_of_parsed_factor_constructor factor ^ " is forbidden in linear term, something failed before."))
 
 	in
 

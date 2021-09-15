@@ -1,5 +1,5 @@
 open DiscreteExpressions
-
+open Exceptions
 
 
 let rec eval_global_expression discrete_valuation = function
@@ -57,9 +57,7 @@ and eval_rational_expression discrete_valuation expr =
         | DF_constant variable_value ->
             variable_value;
         | Rational_array_access (array_expr, index_expr) ->
-            let values = eval_array_expression discrete_valuation array_expr in
-            let index = eval_int_expression discrete_valuation index_expr in
-            let value = Array.get values (Int32.to_int index) in
+            let value = get_array_value_at discrete_valuation array_expr index_expr in
             DiscreteValue.numconst_value value
         | DF_expression expr ->
             eval_rational_expression_rec expr
@@ -123,9 +121,7 @@ and eval_int_expression discrete_valuation (* expr *) =
         | Int_pow (expr, exp) ->
             OCamlUtilities.pow (eval_int_expression_rec expr) (eval_int_expression_rec exp)
         | Int_array_access (array_expr, index_expr) ->
-            let values = eval_array_expression discrete_valuation array_expr in
-            let index = eval_int_expression_rec index_expr in
-            let value = Array.get values (Int32.to_int index) in
+            let value = get_array_value_at discrete_valuation array_expr index_expr in
             DiscreteValue.int_value value
     in
     eval_int_expression_rec
@@ -148,9 +144,7 @@ and check_discrete_boolean_expression discrete_valuation = function
     | DB_constant value ->
         value
     | Bool_array_access (array_expr, index_expr) ->
-        let values = eval_array_expression discrete_valuation array_expr in
-        let index = eval_int_expression discrete_valuation index_expr in
-        let value = Array.get values (Int32.to_int index) in
+        let value = get_array_value_at discrete_valuation array_expr index_expr in
         DiscreteValue.bool_value value
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
     (* TODO benjamin WARNING here we compare a DiscreteValue.discrete_value type with operator it's bad *)
@@ -262,9 +256,7 @@ and eval_discrete_binary_word_expression discrete_valuation = function
         DiscreteValue.binary_word_value (discrete_valuation variable_index)
 
     | Binary_word_array_access (array_expr, index_expr) ->
-        let values = eval_array_expression discrete_valuation array_expr in
-        let index = eval_int_expression discrete_valuation index_expr in
-        let value = Array.get values (Int32.to_int index) in
+        let value = get_array_value_at discrete_valuation array_expr index_expr in
         DiscreteValue.binary_word_value value
 
 and eval_array_expression discrete_valuation = function
@@ -275,7 +267,19 @@ and eval_array_expression discrete_valuation = function
     | Array_constant values ->
         values
     | Array_array_access (array_expr, index_expr) ->
-        let values = eval_array_expression discrete_valuation array_expr in
-        let index = eval_int_expression discrete_valuation index_expr in
-        let value = Array.get values (Int32.to_int index) in
+        let value = get_array_value_at discrete_valuation array_expr index_expr in
         DiscreteValue.array_value value
+
+and get_array_value_at discrete_valuation array_expr index_expr =
+
+    let values = eval_array_expression discrete_valuation array_expr in
+    let index = eval_int_expression discrete_valuation index_expr in
+    let int_index = Int32.to_int index in
+
+    if int_index >= Array.length values then (
+        let str_index = string_of_int int_index in
+        let str_values = OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (fun value -> DiscreteValue.string_of_value value) values) in
+        raise (Out_of_bound ("Array index out of range: `" ^ str_index ^ "` for array " ^ str_values))
+    );
+
+    Array.get values int_index
