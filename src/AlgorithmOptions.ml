@@ -42,13 +42,6 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	
 	
 	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify _
-	
-	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
@@ -156,13 +149,6 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	(* Safety *)
 	| AGnot _
 	
-	
-	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify _
 	
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -282,13 +268,6 @@ let merge_needed property =
 	
 	
 	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify _
-	
-	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
@@ -399,13 +378,6 @@ let merge_needed property =
 	(* Safety *)
 	| AGnot _
 	
-	
-	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify _
 	
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -519,15 +491,6 @@ let supports_witness property =
 	| AGnot _
 		-> true
 	
-	
-	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify _
-		(*** TODO ***)
-		-> false
 	
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -681,13 +644,6 @@ let text_of_property property =
 	
 	
 	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify _ -> "reachability counterexample exemplification"
-	
-	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
@@ -777,7 +733,6 @@ let text_of_property property =
 				| EF_synth_min -> "EF-synth with minimization"
 				| EF_synth_max -> "EF-synth with maximization"
 				| EF_synth_min_priority_queue -> "EF-synth with minimal reachability"
-				| EFexemplify -> "EF-exemplify"
 				| AF_synthesis -> "AF-synthesis"
 				| Loop_synthesis -> "infinite run synthesis"
 				| Acc_loop_synthesis -> "accepting infinite run synthesis"

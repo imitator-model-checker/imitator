@@ -61,7 +61,7 @@ let resolve_property l =
 	CT_BCBORDER CT_BCLEARN CT_BCRANDOM CT_BCRANDOMSEQ CT_BCSHUFFLE CT_BEFORE
 	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
-	CT_EF CT_EFEXEMPLIFY CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXEMPLIFY CT_EXHIBIT
+	CT_EF CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXEMPLIFY CT_EXHIBIT
 	CT_FALSE
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN /* CT_INFACCCYCLE */ CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
@@ -137,14 +137,6 @@ property:
 
 	/* Reachability */
 	| CT_AGnot state_predicate { Parsed_AGnot $2 }
-
-
-	/*------------------------------------------------------------*/
-	/* Reachability and specification illustration */
-	/*------------------------------------------------------------*/
-
-	/* EF-synthesis with examples of (un)safe words */
-	| CT_EFEXEMPLIFY state_predicate { Parsed_EFexemplify $2 }
 
 
 	/*------------------------------------------------------------*/

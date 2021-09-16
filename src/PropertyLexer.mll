@@ -62,7 +62,6 @@ rule token = parse
 	| "Cycle"          { CT_INFCYCLE }
 	| "CycleThrough"   { CT_INFCYCLETHROUGH }
 	| "EF"             { CT_EF }
-	| "EFexemplify"    { CT_EFEXEMPLIFY }
 	| "EFpmax"         { CT_EFpmax }
 	| "EFpmin"         { CT_EFpmin }
 	| "EFtmin"         { CT_EFtmin }

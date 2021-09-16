@@ -3156,15 +3156,6 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 			
 		
 		(*------------------------------------------------------------*)
-		(* Reachability and specification illustration *)
-		(*------------------------------------------------------------*)
-		
-		(** EF-synthesis with examples of (un)safe words *)
-		| Parsed_EFexemplify parsed_state_predicate
-			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
-		
-		
-		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)
 		
@@ -3868,15 +3859,6 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		
 		
 		(*------------------------------------------------------------*)
-		(* Reachability and specification illustration *)
-		(*------------------------------------------------------------*)
-		
-		(** EF-synthesis with examples of (un)safe words *)
-		| Parsed_EFexemplify parsed_state_predicate
-			-> check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-
-		
-		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)
 		
@@ -4174,17 +4156,6 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			,
 			None
 		
-		
-		(*------------------------------------------------------------*)
-		(* Reachability and specification illustration *)
-		(*------------------------------------------------------------*)
-		
-		(** EF-synthesis with examples of (un)safe words *)
-		| Parsed_EFexemplify parsed_state_predicate ->
-			EFexemplify (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
-			,
-			None
-
 		
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)

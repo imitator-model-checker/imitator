@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2021/09/01
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
  
@@ -151,7 +151,6 @@ let get_v0_option () =
 		match (Input.get_property()).property with
 			| EF _
 			| AGnot _
-			| EFexemplify _
 			| EFpmin _
 			| EFpmax _
 			| EFtmin _
@@ -1345,7 +1344,6 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 			match (Input.get_property()).property with
 				| EF state_predicate
 				| AGnot state_predicate
-				| EFexemplify state_predicate
 				| EFpmin (state_predicate , _)
 				| EFpmax (state_predicate , _)
 				| EFtmin state_predicate

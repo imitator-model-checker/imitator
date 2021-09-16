@@ -76,13 +76,6 @@ type property =
 *)
 	
 	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify of state_predicate
-	
-	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	

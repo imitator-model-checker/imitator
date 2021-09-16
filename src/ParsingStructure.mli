@@ -321,14 +321,6 @@ type parsed_property_type =
 	
 	
 	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
- 	| Parsed_EFexemplify of parsed_state_predicate
-	
-
-	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	

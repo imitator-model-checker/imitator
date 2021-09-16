@@ -1130,8 +1130,6 @@ class imitator_options =
 					| EF _
 					(* Safety *)
 					| AGnot _
-					(** EF-synthesis with examples of (un)safe words *)
-					| EFexemplify _
 					(* Reachability with minimization of a parameter valuation *)
 					| EFpmin _
 					(* Reachability with maximization of a parameter valuation *)

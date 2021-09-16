@@ -20,6 +20,8 @@
 open AlgoEFsynth
 open State
 
+THIS FILE IS REMOVED AND SHOULD NOT COMPILE
+
 
 (************************************************************)
 (* Class definition *)

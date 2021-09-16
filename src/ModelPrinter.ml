@@ -759,14 +759,6 @@ let string_of_abstract_property model property =
 
 		
 		(*------------------------------------------------------------*)
-		(* Reachability and specification illustration *)
-		(*------------------------------------------------------------*)
-		
-		(** EF-synthesis with examples of (un)safe words *)
-		| EFexemplify state_predicate -> "EFexemplify(" ^ (string_of_state_predicate model state_predicate) ^ ")"
-
-
-		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)
 		

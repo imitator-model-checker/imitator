@@ -3049,7 +3049,6 @@ class virtual algoStateBased =
 				(* Reachability *)
 				| EF state_predicate
 				| AGnot state_predicate
-				| EFexemplify state_predicate
 				| EFpmin (state_predicate, _)
 				| EFpmax (state_predicate, _)
 				| EFtmin state_predicate

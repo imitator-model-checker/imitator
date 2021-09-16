@@ -693,13 +693,6 @@ match options#imitator_mode with
 
 
 		(*------------------------------------------------------------*)
-		(* Reachability and specification illustration *)
-		(*------------------------------------------------------------*)
-(*			| EF state_predicate when abstract_property.synthesis_type = Exemplification ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFexemplify.algoEFexemplify state_predicate in myalgo*)
-
-
-		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)
 			(************************************************************)
