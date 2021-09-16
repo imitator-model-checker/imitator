@@ -631,8 +631,8 @@ let supports_exemplification property =
 	(* Reachability *)
 	| EF _
 	
-	(* Safety *)
-	| AGnot _
+(*	(* Safety *)
+	| AGnot _*)
 		-> true
 	(*------------------------------------------------------------*)
 	(* Any other *)
