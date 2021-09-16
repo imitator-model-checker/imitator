@@ -676,7 +676,7 @@ match options#imitator_mode with
 			(************************************************************)
 			| EF state_predicate ->
 
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEF state_predicate in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEF state_predicate in myalgo
 
 
 			(************************************************************)
@@ -689,7 +689,7 @@ match options#imitator_mode with
 					print_warning "Exhibition of a subset of parameter valuations is not yet supported by this algorithm; either the whole set of valuations will be computed, or an over-approximation of this set.";
 				);
 
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGnot state_predicate in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGnot.algoAGnot state_predicate in myalgo
 
 
 		(*------------------------------------------------------------*)

@@ -25,7 +25,7 @@ open Exceptions
 open AbstractModel
 open AbstractProperty
 open Result
-open AlgoEFsynth
+open AlgoEFgen
 
 
 

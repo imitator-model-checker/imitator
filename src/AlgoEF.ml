@@ -26,7 +26,7 @@ open AbstractAlgorithm
 open AbstractModel
 open AbstractProperty
 open Result
-open AlgoEFsynth
+open AlgoEFgen
 
 
 
