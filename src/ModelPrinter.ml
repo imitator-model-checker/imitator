@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2021/09/01
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -729,8 +729,9 @@ let string_of_abstract_property model property =
 	(* Handle synthesis_type *)
 	(
 	match property.synthesis_type with
-	| Witness -> "#exhibit"
-	| Synthesis -> "#synth"
+	| Exemplification	-> "#exemplify"
+	| Synthesis			-> "#synth"
+	| Witness			-> "#exhibit"
 	)
 	
 	^

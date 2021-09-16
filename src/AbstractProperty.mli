@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2021/09/01
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -18,7 +18,6 @@
 (* Modules *)
 (************************************************************)
 open Automaton
-(* open AbstractModel *)
 
 
 (****************************************************************)
@@ -170,10 +169,12 @@ type property =
 
 
 type synthesis_type =
-	(* (tentative) exhibition of at least one valuation for which a property holds *)
-	| Witness
+	(* (tentative) exemplification of concrete runs *)
+	| Exemplification
 	(* (tentative) synthesis of all valuations for which a property holds *)
 	| Synthesis
+	(* (tentative) exhibition of at least one valuation for which a property holds *)
+	| Witness
 
 
 type projection = (parameter_index list) option

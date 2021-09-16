@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2020/08/25
- * Last modified     : 2021/09/09
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -618,6 +618,27 @@ let supports_witness property =
 		-> false
 
 
+(*------------------------------------------------------------*)
+(* Does the property support the #exemplification mode? *)
+(*------------------------------------------------------------*)
+
+let supports_exemplification property =
+	match property.property with
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL *)
+	(*------------------------------------------------------------*)
+
+	(* Reachability *)
+	| EF _
+	
+	(* Safety *)
+	| AGnot _
+		-> true
+	(*------------------------------------------------------------*)
+	(* Any other *)
+	(*------------------------------------------------------------*)
+	| _ -> false
+
 
 (*------------------------------------------------------------*)
 let is_cartography property =
@@ -642,8 +663,9 @@ let is_cartography property =
 (* Gives a textual description of a property *)
 let text_of_property property =
 	let synthesis_or_witness = match property.synthesis_type with
-		| Synthesis -> "synthesis"
-		| Witness -> "witness"
+		| Exemplification	-> "exemplification"
+		| Synthesis			-> "synthesis"
+		| Witness			-> "witness"
 	in
 	
 	match property.property with

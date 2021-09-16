@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2021/03/12
+ * Last modified     : 2021/09/16
 *****************************************************************)
 
 {
@@ -39,6 +39,8 @@ rule token = parse
  	| "special_0_clock"                     { CT_SPECIAL_RESET_CLOCK_NAME} (* to forbid this keyword, used when a special reset clock is defined *)
 
 	(* Synthesis type *)
+ 	| "#exemplification"{ CT_EXEMPLIFY }
+ 	| "#exemplify"     { CT_EXEMPLIFY }
  	| "#exhibit"       { CT_EXHIBIT }
  	| "#witness"       { CT_EXHIBIT }
  	| "#synth"         { CT_SYNTH }

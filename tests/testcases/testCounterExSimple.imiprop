@@ -1,1 +1,1 @@
-property := #synth EFexemplify(loc[pta] = lbad);
+property := #exemplify EF(loc[pta] = lbad);

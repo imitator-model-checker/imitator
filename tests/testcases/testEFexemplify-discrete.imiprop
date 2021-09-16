@@ -1,8 +1,8 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Test model for EFexemplify
- * Description      : Test model for EFexemplify
+ * Title            : Test model for #exemplify EF
+ * Description      : Test model for #exemplify EF
  * Correctness      : N/A
  * Scalable         : no
  * Generated        : no
@@ -15,10 +15,10 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created          : 2021/04/01
- * Last modified    : 2021/04/01
+ * Last modified    : 2021/09/16
  * Model version    : 0.1
  *
  * IMITATOR version : 3
  ************************************************************)
 
-property := #synth EFexemplify(loc[pta] = lTarget);
+property := #exemplify EF(loc[pta] = lTarget);

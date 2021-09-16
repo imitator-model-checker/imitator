@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/09/01
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -1085,6 +1085,19 @@ class imitator_options =
 				| Some property ->
 					if property.synthesis_type = Witness && not (AlgorithmOptions.supports_witness property) then(
 						print_warning ("The mode #witness is not supported by this property. Normal synthesis will be run.");
+					);
+			end;
+
+
+			(*------------------------------------------------------------*)
+			(* Check if #exemplification is supported for this algorithm *)
+			(*------------------------------------------------------------*)
+			begin
+			match property_option with
+				| None -> ()
+				| Some property ->
+					if property.synthesis_type = Exemplification && not (AlgorithmOptions.supports_exemplification property) then(
+						print_warning ("The mode #exemplification is not supported by this property. Normal synthesis will be run.");
 					);
 			end;
 

@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci, Benjamin Loillier
  * Created           : 2009/09/09
- * Last modified     : 2021/09/01
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -4104,8 +4104,9 @@ let convert_parsed_hyper_rectangle variable_infos (parsed_hyper_rectangle : Pars
 
 
 let convert_synthesis_type = function
-	| Parsed_witness	-> Witness
+	| Parsed_exemplify	-> Exemplification
 	| Parsed_synthesis	-> Synthesis
+	| Parsed_witness	-> Witness
 
 
 

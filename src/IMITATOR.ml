@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2009/09/07
- * Last modified     : 2021/09/01
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -627,8 +627,10 @@ match options#imitator_mode with
 
 		let emptiness_only =
 			match abstract_property.synthesis_type with
-			| Witness   -> true
-			| Synthesis -> false
+			(*** NOTE: not sure what exemplification would result in, in this case? (ÉA, 2021/09) ***)
+			| Exemplification	-> false
+			| Synthesis			-> false
+			| Witness			-> true
 		in
 
 
@@ -637,17 +639,19 @@ match options#imitator_mode with
 		(************************************************************)
 
 		begin
-		match abstract_property.property with
-		| EFexemplify _ | EFtmin _ ->
-			begin
+		let algorithm_requires_abstract_clock =
+			match abstract_property.property with
+			| EFexemplify _ | EFtmin _ -> true
+			| _ -> false
+		in
+		(* Abstract clock required for selected algorithms OR for exemplification *)
+		if algorithm_requires_abstract_clock || abstract_property.synthesis_type = Exemplification then(
 			match model.global_time_clock with
 				| Some _ -> ()
 				| _ ->
 					print_error ("An absolute time clock `" ^ Constants.global_time_clock_name ^ "` must be defined in the model to run this algorithm.");
 					abort_program();
-			end;
-
-		| _ -> ()
+		);
 
 		end;
 
@@ -670,7 +674,13 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Reachability *)
 			(************************************************************)
-			| EF state_predicate ->
+			
+			
+			(*** TODO: remove check `abstract_property.synthesis_type <> Exemplification` ***)
+			
+			
+			
+			| EF state_predicate when abstract_property.synthesis_type <> Exemplification ->
 
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth state_predicate in myalgo
 
@@ -691,7 +701,7 @@ match options#imitator_mode with
 		(*------------------------------------------------------------*)
 		(* Reachability and specification illustration *)
 		(*------------------------------------------------------------*)
-			| EFexemplify state_predicate ->
+			| EF state_predicate when abstract_property.synthesis_type = Exemplification ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFexemplify.algoEFexemplify state_predicate in myalgo
 
 
