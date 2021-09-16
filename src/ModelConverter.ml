@@ -3252,41 +3252,41 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		(* Observer patterns *)
 		(*------------------------------------------------------------*)
 		(* if a2 then a1 has happened before *)
-		| Parsed_action_precedence_acyclic _
+		| Parsed_pattern (Parsed_action_precedence_acyclic _)
 		(* everytime a2 then a1 has happened before *)
-		| Parsed_action_precedence_cyclic _
+		| Parsed_pattern (Parsed_action_precedence_cyclic _)
 		(* everytime a2 then a1 has happened once before *)
-		| Parsed_action_precedence_cyclicstrict _
+		| Parsed_pattern (Parsed_action_precedence_cyclicstrict _)
 			-> ()
 
 		(* a within d *)
-		| Parsed_action_deadline (_ , duration) ->
+		| Parsed_pattern (Parsed_action_deadline (_ , duration)) ->
 (*			get_variables_in_linear_expression variables_used_ref duration*)
             variables_used_ref := ParsingStructureUtilities.get_variables_in_linear_expression duration
 
 
 		(* if a2 then a1 happened within d before *)
-		| Parsed_TB_Action_precedence_acyclic ((*sync_name*)_, (*sync_name*)_, duration)
+		| Parsed_pattern (Parsed_TB_Action_precedence_acyclic ((*sync_name*)_, (*sync_name*)_, duration))
 		(* everytime a2 then a1 happened within d before *)
-		| Parsed_TB_Action_precedence_cyclic ((*sync_name*)_, (*sync_name*)_, duration)
+		| Parsed_pattern (Parsed_TB_Action_precedence_cyclic ((*sync_name*)_, (*sync_name*)_, duration))
 		(* everytime a2 then a1 happened once within d before *)
-		| Parsed_TB_Action_precedence_cyclicstrict ((*sync_name*)_, (*sync_name*)_, duration) ->
+		| Parsed_pattern (Parsed_TB_Action_precedence_cyclicstrict ((*sync_name*)_, (*sync_name*)_, duration)) ->
 (*			get_variables_in_linear_expression variables_used_ref duration*)
 				variables_used_ref := ParsingStructureUtilities.get_variables_in_linear_expression duration
 
 		(* if a1 then eventually a2 within d *)
-		| Parsed_TB_response_acyclic (_, _, parsed_duration)
+		| Parsed_pattern (Parsed_TB_response_acyclic (_, _, parsed_duration))
 		(* everytime a1 then eventually a2 within d *)
-		| Parsed_TB_response_cyclic (_, _, parsed_duration)
+		| Parsed_pattern (Parsed_TB_response_cyclic (_, _, parsed_duration))
 		(* everytime a1 then eventually a2 within d once before next *)
-		| Parsed_TB_response_cyclicstrict (_, _, parsed_duration) ->
+		| Parsed_pattern (Parsed_TB_response_cyclicstrict (_, _, parsed_duration)) ->
 (*		    get_variables_in_linear_expression variables_used_ref parsed_duration*)
             variables_used_ref := ParsingStructureUtilities.get_variables_in_linear_expression parsed_duration;
 
 		(* sequence a1, …, an *)
-		| Parsed_Sequence_acyclic _
+		| Parsed_pattern (Parsed_Sequence_acyclic _)
 		(* always sequence a1, …, an *)
-		| Parsed_Sequence_cyclic _
+		| Parsed_pattern (Parsed_Sequence_cyclic _)
 			-> ()
 
 	
@@ -3968,11 +3968,11 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(* CASE TWO ACTIONS *)
 		
 		(* if a2 then a1 has happened before *)
-		| ParsingStructure.Parsed_action_precedence_acyclic ( a1 , a2 )
+		| Parsed_pattern (ParsingStructure.Parsed_action_precedence_acyclic ( a1 , a2 ))
 		(* everytime a2 then a1 has happened before *)
-		| ParsingStructure.Parsed_action_precedence_cyclic ( a1 , a2 )
+		| Parsed_pattern (ParsingStructure.Parsed_action_precedence_cyclic ( a1 , a2 ))
 		(* everytime a2 then a1 has happened once before *)
-		| ParsingStructure.Parsed_action_precedence_cyclicstrict ( a1 , a2 )
+		| Parsed_pattern (ParsingStructure.Parsed_action_precedence_cyclicstrict ( a1 , a2 ))
 			->
 			(* Check action names (perform 2 even if one fails) *)
 			evaluate_and
@@ -3983,7 +3983,7 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(* CASE ACTION + DEADLINE *)
 		
 		(* a within d *)
-		| ParsingStructure.Parsed_action_deadline ( a , d )
+		| Parsed_pattern (ParsingStructure.Parsed_action_deadline ( a , d ))
 			->
 			(* Check action name and deadline (perform all even if one fails) *)
 			let check1 = check_action_name index_of_actions a in
@@ -3998,18 +3998,18 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(* CASE 2 ACTIONS + DEADLINE *)
 		
 		(* if a2 then a1 happened within d before *)
-		| ParsingStructure.Parsed_TB_Action_precedence_acyclic (a1, a2, d)
+		| Parsed_pattern (ParsingStructure.Parsed_TB_Action_precedence_acyclic (a1, a2, d))
 		(* everytime a2 then a1 happened within d before *)
-		| ParsingStructure.Parsed_TB_Action_precedence_cyclic (a1, a2, d)
+		| Parsed_pattern (ParsingStructure.Parsed_TB_Action_precedence_cyclic (a1, a2, d))
 		(* everytime a2 then a1 happened once within d before *)
-		| ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict (a1, a2, d)
+		| Parsed_pattern (ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict (a1, a2, d))
 		
 		(* if a1 then eventually a2 within d *)
-		| ParsingStructure.Parsed_TB_response_acyclic (a1, a2, d)
+		| Parsed_pattern (ParsingStructure.Parsed_TB_response_acyclic (a1, a2, d))
 		(* everytime a1 then eventually a2 within d *)
-		| ParsingStructure.Parsed_TB_response_cyclic (a1, a2, d)
+		| Parsed_pattern (ParsingStructure.Parsed_TB_response_cyclic (a1, a2, d))
 		(* everytime a1 then eventually a2 within d once before next *)
-		| ParsingStructure.Parsed_TB_response_cyclicstrict (a1, a2, d)
+		| Parsed_pattern (ParsingStructure.Parsed_TB_response_cyclicstrict (a1, a2, d))
 			->
 			(* Check action names and deadline (perform 3 even if one fails) *)
 			let check1 = check_action_name index_of_actions a1 in
@@ -4025,9 +4025,9 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(* CASE SEQUENCES (list of actions) *)
 
 		(* sequence a1, …, an *)
-		| ParsingStructure.Parsed_Sequence_acyclic (actions_list)
+		| Parsed_pattern (ParsingStructure.Parsed_Sequence_acyclic (actions_list))
 		(* always sequence a1, …, an *)
-		| ParsingStructure.Parsed_Sequence_cyclic (actions_list)
+		| Parsed_pattern (ParsingStructure.Parsed_Sequence_cyclic (actions_list))
 			->
 			(* Check action names (use a fold_left instead of forall to ensure that all actions will be checked) *)
 			List.fold_left (fun current_result a ->
@@ -4306,39 +4306,39 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		(* CASE TWO ACTIONS *)
 		
 		(* if a2 then a1 has happened before *)
-		| ParsingStructure.Parsed_action_precedence_acyclic _
+		| Parsed_pattern (ParsingStructure.Parsed_action_precedence_acyclic _)
 		(* everytime a2 then a1 has happened before *)
-		| ParsingStructure.Parsed_action_precedence_cyclic _
+		| Parsed_pattern (ParsingStructure.Parsed_action_precedence_cyclic _)
 		(* everytime a2 then a1 has happened once before *)
-		| ParsingStructure.Parsed_action_precedence_cyclicstrict _
+		| Parsed_pattern (ParsingStructure.Parsed_action_precedence_cyclicstrict _)
 
 		(* CASE ACTION + DEADLINE *)
 		
 		(* a within d *)
-		| ParsingStructure.Parsed_action_deadline _
+		| Parsed_pattern (ParsingStructure.Parsed_action_deadline _)
 		
 		(* CASE 2 ACTIONS + DEADLINE *)
 		
 		(* if a2 then a1 happened within d before *)
-		| ParsingStructure.Parsed_TB_Action_precedence_acyclic _
+		| Parsed_pattern (ParsingStructure.Parsed_TB_Action_precedence_acyclic _)
 		(* everytime a2 then a1 happened within d before *)
-		| ParsingStructure.Parsed_TB_Action_precedence_cyclic _
+		| Parsed_pattern (ParsingStructure.Parsed_TB_Action_precedence_cyclic _)
 		(* everytime a2 then a1 happened once within d before *)
-		| ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict _
+		| Parsed_pattern (ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict _)
 		
 		(* if a1 then eventually a2 within d *)
-		| Parsed_TB_response_acyclic _
+		| Parsed_pattern (Parsed_TB_response_acyclic _)
 		(* everytime a1 then eventually a2 within d *)
-		| Parsed_TB_response_cyclic _
+		| Parsed_pattern (Parsed_TB_response_cyclic _)
 		(* everytime a1 then eventually a2 within d once before next *)
-		| Parsed_TB_response_cyclicstrict _
+		| Parsed_pattern (Parsed_TB_response_cyclicstrict _)
 		
 		(* CASE SEQUENCES *)
 		
 		(* sequence a1, …, an *)
-		| Parsed_Sequence_acyclic _
+		| Parsed_pattern (Parsed_Sequence_acyclic _)
 		(* always sequence a1, …, an *)
-		| Parsed_Sequence_cyclic _
+		| Parsed_pattern (Parsed_Sequence_cyclic _)
 		
 			->
 			

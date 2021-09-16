@@ -231,7 +231,7 @@ property:
 	/*------------------------------------------------------------*/
 	/* Observer patterns */
 	/*------------------------------------------------------------*/
-	| CT_PATTERN LPAREN pattern RPAREN { $3 }
+	| CT_PATTERN LPAREN pattern RPAREN { Parsed_pattern ($3) }
 
 ;
 

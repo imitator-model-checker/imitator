@@ -298,6 +298,38 @@ type parsed_synthesis_type =
 	| Parsed_exemplify
 
 
+(* Observer patterns [Andre13] *)
+type parsed_pattern =
+	(* if a2 then a1 has happened before *)
+	| Parsed_action_precedence_acyclic of sync_name * sync_name
+	(* everytime a2 then a1 has happened before *)
+	| Parsed_action_precedence_cyclic of sync_name * sync_name
+	(* everytime a2 then a1 has happened once before *)
+	| Parsed_action_precedence_cyclicstrict of sync_name * sync_name
+
+	(* a within d *)
+	| Parsed_action_deadline of sync_name * parsed_duration
+	
+	(* if a2 then a1 happened within d before *)
+	| Parsed_TB_Action_precedence_acyclic of sync_name * sync_name * parsed_duration
+	(* everytime a2 then a1 happened within d before *)
+	| Parsed_TB_Action_precedence_cyclic of sync_name * sync_name * parsed_duration
+	(* everytime a2 then a1 happened once within d before *)
+	| Parsed_TB_Action_precedence_cyclicstrict of sync_name * sync_name * parsed_duration
+
+	(* if a1 then eventually a2 within d *)
+	| Parsed_TB_response_acyclic of sync_name * sync_name * parsed_duration
+	(* everytime a1 then eventually a2 within d *)
+	| Parsed_TB_response_cyclic of sync_name * sync_name * parsed_duration
+	(* everytime a1 then eventually a2 within d once before next *)
+	| Parsed_TB_response_cyclicstrict of sync_name * sync_name * parsed_duration
+
+	(* sequence a1, …, an *)
+	| Parsed_Sequence_acyclic of sync_name list
+	(* always sequence a1, …, an *)
+	| Parsed_Sequence_cyclic of sync_name list
+
+
 
 type parsed_property_type =
 
@@ -404,35 +436,8 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 	(* Observer patterns *)
 	(*------------------------------------------------------------*)
-
-	(* if a2 then a1 has happened before *)
-	| Parsed_action_precedence_acyclic of sync_name * sync_name
-	(* everytime a2 then a1 has happened before *)
-	| Parsed_action_precedence_cyclic of sync_name * sync_name
-	(* everytime a2 then a1 has happened once before *)
-	| Parsed_action_precedence_cyclicstrict of sync_name * sync_name
-
-	(* a within d *)
-	| Parsed_action_deadline of sync_name * parsed_duration
 	
-	(* if a2 then a1 happened within d before *)
-	| Parsed_TB_Action_precedence_acyclic of sync_name * sync_name * parsed_duration
-	(* everytime a2 then a1 happened within d before *)
-	| Parsed_TB_Action_precedence_cyclic of sync_name * sync_name * parsed_duration
-	(* everytime a2 then a1 happened once within d before *)
-	| Parsed_TB_Action_precedence_cyclicstrict of sync_name * sync_name * parsed_duration
-
-	(* if a1 then eventually a2 within d *)
-	| Parsed_TB_response_acyclic of sync_name * sync_name * parsed_duration
-	(* everytime a1 then eventually a2 within d *)
-	| Parsed_TB_response_cyclic of sync_name * sync_name * parsed_duration
-	(* everytime a1 then eventually a2 within d once before next *)
-	| Parsed_TB_response_cyclicstrict of sync_name * sync_name * parsed_duration
-
-	(* sequence a1, …, an *)
-	| Parsed_Sequence_acyclic of sync_name list
-	(* always sequence a1, …, an *)
-	| Parsed_Sequence_cyclic of sync_name list
+	| Parsed_pattern of parsed_pattern
 
 
 
