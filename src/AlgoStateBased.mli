@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2021/08/20
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -241,7 +241,18 @@ class virtual algoStateBased :
 		(* Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
 		val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint
 
+		(*** NOTE: only used for exemplification purpose ***)
+		(* Positive examples spotted (positive examples: concrete runs to the target state) *)
+		val mutable positive_examples : Result.valuation_and_concrete_run list
 		
+		(*** NOTE: only used for exemplification purpose ***)
+		(* Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
+		val mutable negative_examples : Result.valuation_and_concrete_run list
+		
+		(*** NOTE: only used for exemplification purpose ***)
+		val nb_POSITIVE_EXAMPLES_MAX : int
+		val nb_NEGATIVE_EXAMPLES_MAX : int
+
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)

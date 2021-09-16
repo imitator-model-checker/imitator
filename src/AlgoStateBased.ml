@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2021/09/01
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -2875,6 +2875,19 @@ class virtual algoStateBased =
 	
 
 	
+	(*** NOTE: only used for exemplification purpose ***)
+	(* Positive examples spotted (positive examples: concrete runs to the target state) *)
+	val mutable positive_examples : Result.valuation_and_concrete_run list = []
+	
+	(*** NOTE: only used for exemplification purpose ***)
+	(* Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
+	val mutable negative_examples : Result.valuation_and_concrete_run list = []
+	
+	(*** NOTE: only used for exemplification purpose ***)
+	val nb_POSITIVE_EXAMPLES_MAX : int = 6
+	val nb_NEGATIVE_EXAMPLES_MAX : int = 6
+
+
 	(* Counters *)
 	(*** NOTE: if the algorithm is called several times sequentially, then each call will create a counter ***)
 
@@ -2922,6 +2935,9 @@ class virtual algoStateBased =
 			time_past_polyhedron 		:= Some time_pa_polyhedron;
 		
 		);*)
+
+		positive_examples <- [];
+		negative_examples <- [];
 
 		()
 		(* The end *)

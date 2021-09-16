@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2021/07/05
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -60,15 +60,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	val counter_process_state = create_hybrid_counter_and_register "EFsynth.process_state" States_counter Verbose_experiments
 	val counter_add_a_new_state = create_hybrid_counter_and_register "EFsynth.add_a_new_state" States_counter Verbose_experiments
 
-	
-	
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 	method algorithm_name = "EF virtual" *)
-	
-	
+
 	
 	(************************************************************)
 	(* Class methods *)
@@ -201,7 +193,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	(* Generate counter-example(s) if required by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-	method process_counterexample target_state_index =
+	method construct_counterexamples target_state_index =
 		()
 		
 		(*** NOTE: temporarily (?) disabled 2021/07 by ÉA, because merging is used by default, but not sound for counterexample reconstruction ***)
@@ -310,7 +302,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		(* Case accepting state *)
 		if !is_target then(
 			(* 1. Construct counterexample if requested by the algorithm (and stop termination by raising a TerminateAnalysis exception, if needed) *)
-			self#process_counterexample new_state_index;
+			self#construct_counterexamples new_state_index;
 			
 			(* 2. If #witness mode, then we will throw an exception *)
 			self#terminate_if_witness;

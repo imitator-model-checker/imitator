@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2021/08/20
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -52,15 +52,6 @@ class algoEFexemplify (state_predicate : AbstractProperty.state_predicate) =
 	(* Class variables *)
 	(************************************************************)
 	
-	(* Positive examples spotted (positive examples: concrete runs to the target state) *)
-	val mutable positive_examples : Result.valuation_and_concrete_run list = []
-	
-	(* Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
-	val mutable negative_examples : Result.valuation_and_concrete_run list = []
-	
-	val nb_POSITIVE_EXAMPLES_MAX = 6
-	val nb_NEGATIVE_EXAMPLES_MAX = 6
-
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -78,19 +69,16 @@ class algoEFexemplify (state_predicate : AbstractProperty.state_predicate) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
 		super#initialize_variables;
-
-		positive_examples <- [];
-		negative_examples <- [];
-
+		
 		(* The end *)
 		()
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Generate counter-example(s) if required by the algorithm *)
+	(* Generate counter-example(s) from a target state if required by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-	method process_counterexample (target_state_index : State.state_index) =
+	method construct_counterexamples (target_state_index : State.state_index) =
 		(* Print some information *)
 		let nb_positive_examples = List.length positive_examples + 1 in
 		self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int nb_positive_examples) ^ " found!");

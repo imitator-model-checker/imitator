@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2020/04/16
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -40,7 +40,7 @@ class algoEFexemplify : AbstractProperty.state_predicate ->
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Generate counter-example(s) if required by the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_counterexample : state_index -> unit
+		method construct_counterexamples : state_index -> unit
 
 		
 		method compute_result : Result.imitator_result
