@@ -7,7 +7,7 @@
  // Author:        Etienne Andre
  // 
  // Created:       2017/03/08
- // Last modified: 2019/08/22
+ // Last modified: 2021/09/16
  //
 //###############################################################
 
@@ -18,8 +18,8 @@
 	
 	AF [label = "{AF|}"]
 	
-	AGsafeSynth [
-			label = "{AGsafeSynth|}"
+	AGnot [
+			label = "{AGnot|}"
 	]
 
 	BCCover [label = "{BCCover|}"]
@@ -38,8 +38,6 @@
 
 	DeadlockFree [label = "{DeadlockFree|}"]
 
-	EFexemplify [label = "{EFexemplify|}"]
-	
 	EFmax [label = "{EFmax|}"]
 	
 	EFmin [label = "{EFmin|}"]
@@ -48,11 +46,11 @@
 	
 	EFoptQueue [label = "{EFoptQueue|}", fillcolor=yellow, style=filled]
 	
-	EFsynth [label = "{EFsynth|}", fillcolor=yellow, style=filled]
+	EFgen [label = "{EFgen|}", fillcolor=yellow, style=filled]
 	
-	EFsynthOld [label = "{EFsynthOld|}"]
+	EF [label = "{EF|}"]
 	
-	EFunsafeSynth [label = "{EFunsafeSynth|}"]
+	GeneralizedAccLoopSynth [label = "{GeneralizedAccLoopSynth|}"]
 	
 	Generic [label = "{Generic|+ algorithm_name\l|+ run(): Result.imitator_result}", fillcolor=yellow, style=filled]
 	
@@ -79,7 +77,7 @@
 	
 	AccLoopSynth -> LoopSynth
 	AF -> PostStar
-	AGsafeSynth -> EFsynth
+	AGnot -> EFgen
 	BCCover -> CartoGeneric
 	
 	BCCoverLearning -> BCCover
@@ -89,14 +87,13 @@
 // 	BFS -> StateBased
 	CartoGeneric -> Generic
 	DeadlockFree -> PostStar
-	EFexemplify -> EFsynth
 	EFmax -> EFopt
 	EFmin -> EFopt
 	EFopt -> StateBased
 	EFoptQueue -> StateBased
-	EFsynth -> StateBased
-	EFsynthOld -> StateBased
-	EFunsafeSynth -> EFsynth
+	EFgen -> StateBased
+	EF -> EFgen
+	GeneralizedAccLoopSynth -> AccLoopSynth
 	IM -> IMK
 	IMcomplete -> IMK
 	IMK -> StateBased
