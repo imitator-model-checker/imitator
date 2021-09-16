@@ -641,7 +641,7 @@ match options#imitator_mode with
 		begin
 		let algorithm_requires_abstract_clock =
 			match abstract_property.property with
-			| EFexemplify _ | EFtmin _ -> true
+			| EFtmin _ -> true
 			| _ -> false
 		in
 		(* Abstract clock required for selected algorithms OR for exemplification *)
@@ -674,13 +674,7 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Reachability *)
 			(************************************************************)
-			
-			
-			(*** TODO: remove check `abstract_property.synthesis_type <> Exemplification` ***)
-			
-			
-			
-			| EF state_predicate when abstract_property.synthesis_type <> Exemplification ->
+			| EF state_predicate ->
 
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth state_predicate in myalgo
 
@@ -701,8 +695,8 @@ match options#imitator_mode with
 		(*------------------------------------------------------------*)
 		(* Reachability and specification illustration *)
 		(*------------------------------------------------------------*)
-			| EF state_predicate when abstract_property.synthesis_type = Exemplification ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFexemplify.algoEFexemplify state_predicate in myalgo
+(*			| EF state_predicate when abstract_property.synthesis_type = Exemplification ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFexemplify.algoEFexemplify state_predicate in myalgo*)
 
 
 		(*------------------------------------------------------------*)

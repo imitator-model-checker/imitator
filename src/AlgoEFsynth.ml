@@ -189,9 +189,11 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	method process_initial_state initial_state = self#process_state initial_state
 
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Generate counter-example(s) if required by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	(*** NOTE: old version from EFSynth ***)
 
 	method construct_counterexamples target_state_index =
 		()
@@ -216,8 +218,66 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		
 		(* The end *)
 		()
-		*)
-	
+		*)*)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Generate counter-example(s) from a target state if required by the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	method construct_counterexamples (target_state_index : State.state_index) =
+		(* Print some information *)
+		let nb_positive_examples = List.length positive_examples + 1 in
+		self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int nb_positive_examples) ^ " found!");
+		
+		(*------------------------------------------------------------*)
+		(* Call generic function *)
+		(*------------------------------------------------------------*)
+		let positive_valuation_and_concrete_run, negative_valuation_and_concrete_run_option_otherpval, negative_valuation_and_concrete_run_option_samepval = self#exhibit_3_counterexamples target_state_index in
+
+		(*------------------------------------------------------------*)
+		(* Update the lists *)
+		(*------------------------------------------------------------*)
+		
+		(* Update the positive counterexample processed *)
+		positive_examples <- positive_valuation_and_concrete_run :: positive_examples;
+
+		begin
+		match negative_valuation_and_concrete_run_option_otherpval with 
+		| None ->
+			print_message Verbose_standard "\n\nFound no parameter valuation allowing a negative counterexample for this run";
+		| Some negative_valuation_and_concrete_run ->
+				negative_examples <- negative_valuation_and_concrete_run :: negative_examples;
+		end;
+		
+		begin
+		match negative_valuation_and_concrete_run_option_samepval with
+		| None ->
+			print_message Verbose_standard "\n\nFound no clock valuation allowing a negative counterexample for the same parameter valuaton for this run";
+		| Some valuation_and_concrete_run ->
+			(* Update the counterexamples processed *)
+			negative_examples <- valuation_and_concrete_run :: negative_examples;
+		end;
+		
+		(*------------------------------------------------------------*)
+		(* Check termination *)
+		(*------------------------------------------------------------*)
+		
+		(* If maximum number of counterexamples processed: stop *)
+		if List.length positive_examples >= nb_POSITIVE_EXAMPLES_MAX then(
+			(* Update termination status *)
+			self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int (List.length positive_examples)) ^ " is the maximum number sought. Terminating…");
+			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
+			termination_status <- Some Target_found;
+		
+			raise TerminateAnalysis;
+		)else(
+			(* Add the target state to the set of states to explore (a bit a hack); indeed, for exemplification, we may be interested in exploring beyond bad states, as we may find more! *)
+			new_states_indexes <- target_state_index :: new_states_indexes;
+		);
+
+		(* The end *)
+		()
+
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -302,7 +362,10 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		(* Case accepting state *)
 		if !is_target then(
 			(* 1. Construct counterexample if requested by the algorithm (and stop termination by raising a TerminateAnalysis exception, if needed) *)
-			self#construct_counterexamples new_state_index;
+			let property = Input.get_property() in
+			if property.synthesis_type = Exemplification then(
+				self#construct_counterexamples new_state_index;
+			);
 			
 			(* 2. If #witness mode, then we will throw an exception *)
 			self#terminate_if_witness;
