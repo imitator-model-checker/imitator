@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2020/04/16
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -23,8 +23,8 @@ open AlgoEFsynth
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoAGsafeSynth : AbstractProperty.state_predicate ->
-	object inherit algoEFsynth
+class algoAGnot : AbstractProperty.state_predicate ->
+	object inherit algoEFgen
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)

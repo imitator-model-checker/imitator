@@ -5,7 +5,7 @@
  * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
- * Module description: EFsynth algorithm [JLR15]
+ * Module description: generic EFsynth algorithm [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
@@ -37,7 +37,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
+class virtual algoEFgen (state_predicate : AbstractProperty.state_predicate) =
 	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
