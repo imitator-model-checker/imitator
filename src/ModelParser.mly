@@ -447,26 +447,32 @@ update_nonempty_list:
 
 /************************************************************/
 
+/* Variable or variable access */
+variable_access:
+  | NAME { Variable_name $1 }
+  | variable_access LSQBRA arithmetic_expression RSQBRA { Variable_access ($1, $3) }
+;
+
 /** Normal updates */
 update:
 	/*** NOTE: deprecated syntax ***/
 	| NAME APOSTROPHE OP_EQ expression {
 		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
-		($1, $4)
+		(Variable_name $1, $4)
 		}
 
 	/*** NOTE: deprecated syntax ***/
 	| NAME APOSTROPHE OP_ASSIGN expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
-		($1, $4)
+		(Variable_name $1, $4)
 	}
 	/*** NOTE: deprecated syntax ***/
 	| NAME OP_EQ expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
-		($1, $3)
+		(Variable_name $1, $3)
 	}
 
-	| NAME OP_ASSIGN expression { ($1, $3) }
+	| variable_access OP_ASSIGN expression { ($1, $3) }
 ;
 
 /** List containing only normal updates.

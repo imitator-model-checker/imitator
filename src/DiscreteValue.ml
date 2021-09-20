@@ -132,6 +132,10 @@ let rec extract_inner_type = function
     | Var_type_discrete_array (inner_type, _) -> extract_inner_type inner_type
     | _ as discrete_type -> discrete_type
 
+let extract_child_type = function
+    | Var_type_discrete_array (inner_type, _) -> inner_type
+    | _ as discrete_type -> discrete_type
+
 (* Get default discrete type of any type that is, or holding a inner type that is unknown number type *)
 (* For example : 1 is unknown number, it will be a rational, [1,2] is an array of unknown number, it will be *)
 (* an array of rational *)

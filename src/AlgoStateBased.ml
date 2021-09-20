@@ -1504,43 +1504,45 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		let clock_updates, discrete_updates = get_updates source_location updates in
       
 		(* Update discrete *)
-		List.iter (fun (discrete_index, global_expression) ->
+		List.iter (fun (discrete_variable_access, global_expression) ->
 
-			(* Compute its new value *)
-			let new_value =
-			DiscreteExpressionEvaluator.eval_global_expression (Location.get_discrete_value source_location) global_expression
-			in
+            (* Compute its new value *)
+            let new_value =
+            DiscreteExpressionEvaluator.eval_global_expression (Location.get_discrete_value source_location) global_expression
+            in
 
-			(* Check if already updated *)
-			if Hashtbl.mem updated_discrete discrete_index then (
-				(* Find its value *)
-				let previous_new_value = Hashtbl.find updated_discrete discrete_index in
-				(* Compare with the new one *)
-				if DiscreteValue.neq previous_new_value new_value then (
-				(* If different: warning *)
-					let action_index = StateSpace.get_action_from_combined_transition combined_transition in
-					print_warning ("The discrete variable '" ^ (model.variable_names discrete_index) ^ "' is updated several times with different values for the same synchronized action '" ^ (model.action_names action_index) ^ "'. The behavior of the system is now unspecified.");
-				);
-			) else (
-				(* Else keep it in memory for update *)
-				Hashtbl.add updated_discrete discrete_index new_value;
-			);
-		) discrete_updates;
-		(* Update the global location *)
-		Location.update_location_with [automaton_index, target_index] [] location;
-		(* Update the update flag *)
-		begin
-		match clock_updates with
-			(* Some updates? *)
-			| Resets (_ :: _)
-			| Updates (_ :: _) -> has_updates := true
-			(* Otherwise: no update *)
-			| No_update
-			| Resets []
-			| Updates [] -> ()
-		end;
-		(* Keep the guard and updates  *)
-		(guard, clock_updates)
+            (* Check if already updated *)
+            if Hashtbl.mem updated_discrete discrete_index then (
+                (* Find its value *)
+                let previous_new_value = Hashtbl.find updated_discrete discrete_index in
+                (* Compare with the new one *)
+                if DiscreteValue.neq previous_new_value new_value then (
+                (* If different: warning *)
+                    let action_index = StateSpace.get_action_from_combined_transition combined_transition in
+                    print_warning ("The discrete variable '" ^ (model.variable_names discrete_index) ^ "' is updated several times with different values for the same synchronized action '" ^ (model.action_names action_index) ^ "'. The behavior of the system is now unspecified.");
+                );
+            ) else (
+                (* Else keep it in memory for update *)
+                Hashtbl.add updated_discrete discrete_index new_value;
+            );
+
+        ) discrete_updates;
+        (* Update the global location *)
+        Location.update_location_with [automaton_index, target_index] [] location;
+        (* Update the update flag *)
+        begin
+        match clock_updates with
+            (* Some updates? *)
+            | Resets (_ :: _)
+            | Updates (_ :: _) -> has_updates := true
+            (* Otherwise: no update *)
+            | No_update
+            | Resets []
+            | Updates [] -> ()
+        end;
+        (* Keep the guard and updates  *)
+        (guard, clock_updates)
+
 	) combined_transition in
 	
 	(* Split the list of guards and updates *)

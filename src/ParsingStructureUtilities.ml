@@ -415,7 +415,6 @@ let string_of_parsed_nonlinear_constraint variable_infos = function
     | Parsed_false_nonlinear_constraint -> "False"
     | Parsed_nonlinear_constraint expr -> string_of_parsed_discrete_boolean_expression variable_infos expr
 
-
 (* Try to reduce a parsed global expression, cannot take into account variables ! *)
 (* This function is used for computing constant values *)
 let rec try_reduce_parsed_global_expression constants = function
@@ -756,6 +755,14 @@ let get_variables_in_linear_constraint =
 
 let get_variables_in_nonlinear_constraint =
     wrap_accumulator get_variables_in_nonlinear_constraint_with_accumulator
+
+let rec variable_name_of_variable_access = function
+    | Variable_name variable_name -> variable_name
+    | Variable_access (variable_access, _) -> variable_name_of_variable_access variable_access
+
+let is_variable_access_is_a_variable_name = function
+    | Variable_name _ -> true
+    | Variable_access _ -> false
 
 let variable_infos_of_parsed_model (parsed_model : useful_parsing_model_information) =
     {

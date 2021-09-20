@@ -85,6 +85,7 @@ val is_discrete_type_holding_unknown_number_type : var_type_discrete -> bool
 val is_discrete_type_holding_known_number_type : var_type_discrete -> bool
 
 val extract_inner_type : var_type_discrete -> var_type_discrete
+val extract_child_type : var_type_discrete -> var_type_discrete
 
 (* Check if discrete type is a Var_type_discrete_rational *)
 val is_discrete_type_rational_type : var_type_discrete -> bool

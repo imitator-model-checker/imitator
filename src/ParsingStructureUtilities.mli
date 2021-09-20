@@ -143,4 +143,7 @@ val get_variables_in_linear_expression : linear_expression -> StringSet.t
 val get_variables_in_linear_constraint : linear_constraint -> StringSet.t
 val get_variables_in_nonlinear_constraint : nonlinear_constraint -> StringSet.t
 
+val variable_name_of_variable_access : variable_access -> variable_name
+val is_variable_access_is_a_variable_name : variable_access -> bool
+
 val variable_infos_of_parsed_model : useful_parsing_model_information -> variable_infos

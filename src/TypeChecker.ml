@@ -10,7 +10,7 @@
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/17
- * Last modified     : 2021/07/12
+ * Last modified     : 2021/09/20
  *
  ************************************************************)
 
@@ -1171,20 +1171,58 @@ let check_guard variable_infos guard =
     uniformly_typed_nonlinear_constraints, List.hd nonlinear_constraint_types
 
 
+let rec infer_variable_access variable_infos = function
+    | Variable_name variable_name ->
+        (* Get assigned variable type *)
+        let var_type = get_type_of_variable_by_name variable_infos variable_name in
+        let discrete_var_type = DiscreteValue.discrete_type_of_var_type var_type in
+        Variable_name variable_name, discrete_var_type
+
+    | Variable_access (variable_access, index_expr) ->
+
+        let converted_variable_access, var_type_discrete = infer_variable_access variable_infos variable_access in
+        let infer_index_expr, index_expr_type = infer_parsed_discrete_arithmetic_expression variable_infos index_expr in
+
+        (* If a number convert *)
+        let converted_index_expr =
+            if DiscreteValue.is_discrete_type_unknown_number_type index_expr_type then (
+                (* *)
+                let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
+                convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type infer_index_expr
+            ) else (
+                infer_index_expr
+            )
+        in
+
+        (* Check is an array *)
+        let infer_var_type = (
+            match var_type_discrete with
+            | DiscreteValue.Var_type_discrete_array (inner_type, _) -> inner_type
+            | _ -> raise (TypeError "Trying to make an acces to a non-array or a non-list variable")
+        )
+        in
+        Variable_access (converted_variable_access, converted_index_expr), infer_var_type
+
+
+
 (* Type check an update *)
 (* return a tuple containing the update uniformly typed and the resolved type of the expression *)
-let check_update variable_infos variable_name expr =
+let check_update variable_infos variable_access expr =
 
     (* Resolve expression type and get uniformly typed expression *)
     let uniformly_typed_expr, expr_type = infer_expression variable_infos expr in
     (* Get assigned variable type *)
+    let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     let var_type = get_type_of_variable_by_name variable_infos variable_name in
     let var_type_discrete = DiscreteValue.discrete_type_of_var_type var_type in
+
+    let converted_variable_access, inner_var_type_discrete = infer_variable_access variable_infos variable_access in
+
 
     (*  *)
     let typed_expr =
         (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
-         if not (DiscreteValue.is_discrete_type_compatibles var_type_discrete expr_type) then (
+         if not (DiscreteValue.is_discrete_type_compatibles inner_var_type_discrete expr_type) then (
             raise (TypeError (
                 "Variable `"
                 ^ variable_name
@@ -1215,7 +1253,7 @@ let check_update variable_infos variable_name expr =
         ) else
             uniformly_typed_expr
     in
-    variable_name, typed_expr
+    converted_variable_access, typed_expr
 
 
 (* Type check a conditional expression *)

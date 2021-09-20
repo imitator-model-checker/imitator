@@ -172,12 +172,18 @@ let update_location locations_per_automaton discrete_values location =
 	(* Return the new location *)
 	locations, discrete
 
+let bob = function
+    | Discrete_variable_index discrete_index -> discrete.(discrete_index - !min_discrete_index)
+    | Discrete_variable_access (variable_access, index_expr) ->
+        let discrete_variable = bob variable_access in
+        discrete_variable.(index_expr)
+
 (** Side-effet version of 'update_location'. *)
 let update_location_with locations_per_automaton discrete_values (locations, discrete) =
 	(* Iterate on locations *)
 	List.iter (fun (automaton_index, location_index) -> locations.(automaton_index) <- location_index) locations_per_automaton;
 	(* Iterate on discrete *)
-	List.iter (fun (discrete_index, value) -> discrete.(discrete_index - !min_discrete_index) <- value) discrete_values
+	List.iter (fun (discrete_variable_access, value) ->  <- value) discrete_values
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

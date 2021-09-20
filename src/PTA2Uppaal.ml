@@ -395,12 +395,12 @@ let string_of_clock_updates model = function
 
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_index, global_expression) ->
-		(* Convert the variable name *)
-		(model.variable_names variable_index)
+	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_access, global_expression) ->
+        (* Convert the variable access to string *)
+		ModelPrinter.string_of_variable_access model variable_access
 		^ uppaal_assignment
 		(* Convert the arithmetic_expression *)
-		^ (DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names global_expression)
+		^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names global_expression
 	) updates)
 
 

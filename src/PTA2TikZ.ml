@@ -116,13 +116,13 @@ let string_of_clock_updates model clock_updates =
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, global_expression) ->
+	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_access, global_expression) ->
 			"\n\t\t & $"
-			(* Convert the variable name *)
-			^ (variable_names_with_style variable_index)
+			(* Convert the variable access to string *)
+			^ ModelPrinter.string_of_variable_access model variable_access
 			^ ":="
 			(* Convert the arithmetic_expression *)
-			^ (ModelPrinter.string_of_global_expression variable_names_with_style global_expression)
+			^ ModelPrinter.string_of_global_expression variable_names_with_style global_expression
 			(*** HACK!!! without the "%", a strange "\n" that occurs immediately after leads to a LaTeX compiling error when strictly >= 2 updates ***)
 			^ "$\\\\% "
 	) updates)

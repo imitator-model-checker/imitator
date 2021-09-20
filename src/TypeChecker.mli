@@ -56,7 +56,7 @@ val check_guard : variable_infos -> ParsingStructure.convex_predicate -> Parsing
 
 (* Type check an update *)
 (* return a tuple containing the update uniformly typed and the resolved type of the expression *)
-val check_update : variable_infos -> string -> ParsingStructure.global_expression -> string * ParsingStructure.global_expression
+val check_update : variable_infos -> variable_access -> ParsingStructure.global_expression -> variable_access * ParsingStructure.global_expression
 
 (* Type check a conditional expression *)
 (* return a tuple containing the conditional expression uniformly typed and the resolved type of the expression *)

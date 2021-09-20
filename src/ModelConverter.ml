@@ -1514,73 +1514,80 @@ let check_update (useful_parsing_model_information : useful_parsing_model_inform
 
     let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
 
-    let check_update_normal (variable_name, global_expression) =
+    let check_update_normal (variable_access, global_expression) =
 
-        (* Check whether this variable is to be removed because unused elswhere than in resets *)
-        let to_be_removed = List.mem variable_name removed_variable_names in
+        let rec check_variable_access = function
+            | Variable_name variable_name ->
 
-        (* TODO benjamin REFACTOR conditional ugly ! *)
-        if to_be_removed then
-            true
-        else (
+                (* Check whether this variable is to be removed because unused elswhere than in resets *)
+                let to_be_removed = List.mem variable_name removed_variable_names in
 
-            let all_variables_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
+                (* TODO benjamin REFACTOR conditional ugly ! *)
+                if to_be_removed then
+                    true
+                else (
 
-            if not all_variables_defined then (
-                (* TODO benjamin IMPROVE get variable name as before ! *)
-                print_error ("A variable used in update \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression ^ "\" in automaton `" ^ automaton_name ^ "` was not declared.");
-                false
-            ) else (
+                    let all_variables_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
 
-                (* Get variable type, if possible *)
-                let variable_type =
-                    if List.mem variable_name variable_names then (
-                        let index = Hashtbl.find index_of_variables variable_name in
-                        Some (type_of_variables index)
-                    ) else if Hashtbl.mem constants variable_name then (
-                        let value = Hashtbl.find constants variable_name in
-                        Some (DiscreteValue.var_type_of_value value)
-                    ) else (
-                        None
-                    )
-                in
-
-
-
-                match variable_type with
-                (* Type clock: allow any linear term in updates: so just check that variables have been declared *)
-                | Some DiscreteValue.Var_type_clock ->
-                    print_message Verbose_total ("                A clock!");
-                    (* TODO benjamin REFACTOR change to true, because it was checked before *)
-                    ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression
-
-                (* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
-                | Some DiscreteValue.Var_type_discrete var_type_discrete ->
-                    let string_of_var_type = DiscreteValue.string_of_var_type_discrete var_type_discrete in
-                    print_message Verbose_total ("                A " ^ string_of_var_type ^ "!");
-
-                    (* TODO benjamin REFACTOR change to true, because it was checked before *)
-                    let all_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
-
-                    if not all_defined then
+                    if not all_variables_defined then (
+                        (* TODO benjamin IMPROVE get variable name as before ! *)
+                        print_error ("A variable used in update \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression ^ "\" in automaton `" ^ automaton_name ^ "` was not declared.");
                         false
-                    else (
-                        let result = check_only_discretes_in_parsed_global_expression index_of_variables type_of_variables constants global_expression in
-                        if not result then (
-                            print_error ("The variable `" ^ variable_name ^ "` is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton `" ^ automaton_name ^ "`."); false
-                        )
-                        else (
-                            print_message Verbose_total ("                Check passed.");
-                            true
-                        )
+                    ) else (
+
+                        (* Get variable type, if possible *)
+                        let variable_type =
+                            if List.mem variable_name variable_names then (
+                                let index = Hashtbl.find index_of_variables variable_name in
+                                Some (type_of_variables index)
+                            ) else if Hashtbl.mem constants variable_name then (
+                                let value = Hashtbl.find constants variable_name in
+                                Some (DiscreteValue.var_type_of_value value)
+                            ) else (
+                                None
+                            )
+                        in
+
+
+
+                        match variable_type with
+                        (* Type clock: allow any linear term in updates: so just check that variables have been declared *)
+                        | Some DiscreteValue.Var_type_clock ->
+                            print_message Verbose_total ("                A clock!");
+                            (* TODO benjamin REFACTOR change to true, because it was checked before *)
+                            ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression
+
+                        (* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
+                        | Some DiscreteValue.Var_type_discrete var_type_discrete ->
+                            let string_of_var_type = DiscreteValue.string_of_var_type_discrete var_type_discrete in
+                            print_message Verbose_total ("                A " ^ string_of_var_type ^ "!");
+
+                            (* TODO benjamin REFACTOR change to true, because it was checked before *)
+                            let all_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
+
+                            if not all_defined then
+                                false
+                            else (
+                                let result = check_only_discretes_in_parsed_global_expression index_of_variables type_of_variables constants global_expression in
+                                if not result then (
+                                    print_error ("The variable `" ^ variable_name ^ "` is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton `" ^ automaton_name ^ "`."); false
+                                )
+                                else (
+                                    print_message Verbose_total ("                Check passed.");
+                                    true
+                                )
+                            )
+                        (* Case of a parameter: forbidden! *)
+                        | Some DiscreteValue.Var_type_parameter ->
+                            print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
+                        | None ->
+                            print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); false
                     )
-                (* Case of a parameter: forbidden! *)
-                | Some DiscreteValue.Var_type_parameter ->
-                    print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
-                | None ->
-                    print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); false
-            )
-        )
+                )
+            | Variable_access (variable_access, _) -> check_variable_access variable_access
+        in
+        check_variable_access variable_access
+
     in
 
     (* Function that check the condition of the conditional update *)
@@ -2853,7 +2860,8 @@ let linear_term_of_global_expression useful_parsing_model_information = function
 
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filtered_updates removed_variable_names updates =
-  let not_removed_variable (variable_name, _) =
+  let not_removed_variable (variable_access, _) =
+    let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     not (List.mem variable_name removed_variable_names)
   in
   List.fold_left (fun acc u ->
@@ -2868,17 +2876,30 @@ let filtered_updates removed_variable_names updates =
 
 
 (** Translate a parsed discrete update into its abstract model *)
-let to_abstract_discrete_update variable_infos (variable_name, parsed_update_expression) =
+let to_abstract_discrete_update variable_infos (variable_access, parsed_update_expression) =
+
+    let rec to_abstract_variable_access = function
+        | Variable_name variable_name ->
+            let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+            Discrete_variable_index variable_index
+        | Variable_access (variable_access, index_expr) ->
+            Discrete_variable_access (
+                to_abstract_variable_access variable_access,
+                convert_parsed_int_arithmetic_expression variable_infos index_expr
+            )
+    in
+
     (* Convert *)
-    let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+    let abstract_variable_access = to_abstract_variable_access variable_access in
     let global_expression = convert_parsed_global_expression variable_infos parsed_update_expression in
-    (variable_index, global_expression)
+    (abstract_variable_access, global_expression)
 
 (** Translate a parsed clock update into its abstract model *)
 let to_abstract_clock_update variable_infos only_resets updates_list =
 
   (** Translate parsed clock update into the tuple clock_index, linear_term *)
-  let to_intermediate_abstract_clock_update (variable_name, parsed_update_expression) =
+  let to_intermediate_abstract_clock_update (variable_access, parsed_update_expression) =
+    let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
     let linear_term = linear_term_of_global_expression variable_infos parsed_update_expression in
     (variable_index, linear_term)
@@ -2908,7 +2929,9 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
 (** Split normal updates into clock, discrete updates *)
 let split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates =
   (** Check if a normal update is a clock update *)
-  let is_clock_update (variable_name, parsed_update_expression) =
+  let is_clock_update (variable_access, parsed_update_expression) =
+
+    let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     (* Retrieve variable type *)
     if type_of_variables (Hashtbl.find index_of_variables variable_name) = DiscreteValue.Var_type_clock then (
       (* Update flag *)

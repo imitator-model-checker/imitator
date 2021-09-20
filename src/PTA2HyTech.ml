@@ -211,12 +211,14 @@ let string_of_clock_updates model = function
 (*** WARNING: calling string_of_arithmetic_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
 (*** TODO: fix or print warning ***)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, global_expression) ->
-		(* Convert the variable name *)
-		(model.variable_names variable_index)
+
+	string_of_list_of_string_with_sep ", " (List.map (fun (variable_access, global_expression) ->
+	    (* Convert the variable access to string *)
+	    let variable_name = ModelPrinter.string_of_variable_access model variable_access in
+		variable_name
 		^ "' = "
 		(* Convert the global_expression *)
-		^ (ModelPrinter.string_of_global_expression model.variable_names global_expression)
+		^ ModelPrinter.string_of_global_expression model.variable_names global_expression
 	) updates)
 
 
