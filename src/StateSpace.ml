@@ -1518,6 +1518,36 @@ let add_transition state_space (source_state_index, combined_transition, target_
 
 	()
 
+(** Merge transitions *)
+let merge_transitions state_space merger_index merged_index =
+	(* Remove merged_index from transitions, replaced with merger_index*)
+	let rec update_target src successors merger_index merged_index =
+		match successors with
+		| []->[]
+		| (combined_transition, target_index)::tail ->
+ 			if target_index = merged_index
+			then
+				begin
+					add_transition state_space (src, combined_transition, merger_index);
+					update_target src tail merger_index merged_index
+				end
+			else (combined_transition, target_index) :: (update_target src tail merger_index merged_index)
+ 	in
+
+	let transitions_merged = get_successors_with_combined_transitions state_space merged_index in
+
+	(** Transitions with merged as source **)
+	List.iter (
+		fun (combined_transition , target_state_index) ->
+			 add_transition state_space (merger_index, combined_transition, target_state_index)
+	) transitions_merged;
+	Hashtbl.remove state_space.transitions_table merged_index;
+
+	(** Transitions with merged as target **)
+	Hashtbl.iter (fun src successors -> update_target src successors merger_index merged_index; ()) state_space.transitions_table;
+
+	()
+
 
 (** Add an inequality to all the states of the state space *)
 (*** NOTE: it is assumed that the p_constraint does not render some states inconsistent! ***)
@@ -2073,3 +2103,119 @@ let merge212 state_space new_states =
 
 		(* return eaten states *)
 		(*list_diff new_states*) eaten
+
+
+
+(* Merge 2021 - DYLAN *)
+(*TODO DYLAN: check statistics*)
+let merge2021 state_space queue =
+		(* Statistics *)
+		tcounter_merge#start;
+
+    let options = Input.get_options () in
+
+    (* Check if two states can be merged *)
+    (*** NOTE: with side-effects! ***)
+    let are_mergeable (c : LinearConstraint.px_linear_constraint) (c' : LinearConstraint.px_linear_constraint) : bool =
+        (* Call dedicated function *)
+        let merged = LinearConstraint.px_hull_assign_if_exact c c' in
+        (* Return result *)
+        merged
+    in
+
+    (* Get states sharing the same location and discrete values from hash_table, excluding s *)
+    let get_siblings state_space (si : state_index) queue (look_in_queue : bool) =
+        let s = get_state state_space si in
+        let location = s.global_location in
+        let location_index = new_location_index state_space location in
+
+        let sibs = Hashtbl.find_all state_space.states_for_comparison location_index in
+
+        (* lookup px_constraints and exclude si itself *)
+        let result = (List.fold_left (fun siblings sj ->
+            (* Remove sj if sj=si or if look  *)
+            if sj = si || (look_in_queue && not(List.mem sj queue))
+                then siblings
+                else begin
+                    let state = get_state state_space sj in
+                    let c' = state.px_constraint in
+                    (sj,c') :: siblings
+                end
+        ) [] sibs) in
+
+        print_message Verbose_high ("Siblings (" ^ string_of_int si ^ ") : " ^ string_of_list_of_int (List.map fst result));
+        result
+    in
+
+    (* function for merging one state with its siblings *)
+    let merge_state (si : state_index) (look_in_queue : bool) =
+        print_message Verbose_total ("[Merge] Try to merge state " ^ (string_of_int si));
+
+        let merging_states (s_merger : state_index) (s_merged : state_index) =
+        (* Merge si and sj. Note that C(si) = siUsj from the test *)
+
+            (* Transitions: Replace  s-->s_merged with s-->s_merger and s_merged-->s with s_merger-->s  *)
+            merge_transitions state_space s_merger s_merged
+        in
+
+        let state = get_state state_space si in
+        let (c : LinearConstraint.px_linear_constraint) = state.px_constraint in
+
+        (* get merge candidates as pairs (index, state) *)
+        let candidates = get_siblings state_space si queue look_in_queue in
+
+        (* try to merge with siblings, restart if merge found, return merged states *)
+        let rec merging merged_states candidates = begin
+            match candidates with
+                | [] -> [] (* here, we are really done *)
+                | m :: tail -> begin
+                    let sj,c' = m in
+                    let global_location : Location.global_location = state.global_location in
+                    if are_mergeable c c'
+                    then begin
+                            (*Here, si = siUsj from the test / IRL c = cUc', transitions not performed etc.'*)
+
+                            merging_states si sj;
+
+                            (* Print some information *)
+                            print_message Verbose_high ("[Merge] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
+
+                            (* we remove sj, start over with new bigger state, removing sj *)
+                            let merged' = List.filter (fun (sk, _) -> sk <> sj) merged_states in
+                            sj :: merging merged' tail
+                        end
+                    else begin
+                            (* try to eat the rest of them *)
+                            merging merged_states tail
+                        end
+                end
+        end
+        in
+        merging candidates candidates
+    in
+
+    (* Iterate list of states and try to merge them in the state space *)
+    let rec main_merger states (look_in_queue : bool) =
+        match states with
+            | [] -> ()
+            | s :: tail -> begin
+                    main_merger tail;
+                    if Hashtbl.mem state_space.all_states s then (* treat s only if it is still reachable *)
+                    let merged = merge_state s look_in_queue in
+                    if merged <> [] then(
+                        (*Check if init was not merged*)
+												let init = get_initial_state_index state_space in
+								        if List.mem init merged then state_space.initial <- Some s;
+                    )
+                    end
+    in
+
+    (*Main*)
+    main_merger queue;
+    let new_queue = List.filter (test_state_index state_space) queue in
+
+    (* Statistics *)
+    tcounter_merge#stop;
+
+    (* return *)
+    new_queue
