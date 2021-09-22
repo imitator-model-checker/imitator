@@ -322,6 +322,9 @@ val merge : state_space -> state_index list -> state_index list
 (* Merge of v2.12 (ULRICH) *)
 val merge212 : state_space -> state_index list -> state_index list
 
+(* Merge dev. 2021 - DYLAN *)
+val merge2021 : state_space -> state_index list -> state_index list
+
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
 val empty_states_for_comparison : state_space -> unit
 
