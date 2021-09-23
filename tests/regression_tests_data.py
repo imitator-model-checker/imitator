@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/09/16
+# Last modified     : 2021/09/23
 #************************************************************
 
 
@@ -9184,6 +9184,27 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 
 	,
+	
+	##------------------------------------------------------------
+	#{
+		## Test version             : 1
+		## Test since               : 2021/09/23
+		## Last modified            : 2021/09/23
+		## Test for IMITATOR version: 3.2
+		#'purpose'    : 'Test cycle exemplification [temporarily disabled]',
+		#'input_files': ['testExemplify-loop-single.imi', 'exemplify-loop.imiprop'],
+		#'options'    : '-cycle-algo BFS',
+		#'expectations' : [
+			#{'file': 'testExemplify-loop-single.res' , 'content' : """
+#TODO
+		#""" # TODO
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+
+	#,
 
 	#------------------------------------------------------------
 	{
