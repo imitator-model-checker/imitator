@@ -858,11 +858,11 @@ class imitator_options =
 				("-no-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm.
 				");
 
-				("-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some true), "Use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS");
+				("-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some true; merge <- Some false), "Use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS");
 				("-no-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some false), " Do not use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS.
 				");
 
-                ("-mergedev", Unit (fun () -> warn_if_set mergedev "mergedev"; mergedev <- Some true), " Use merging dev. Default: False");
+                ("-mergedev", Unit (fun () -> warn_if_set mergedev "mergedev"; mergedev <- Some true ; merge <- Some false), " Use merging dev. Default: False");
                 ("-mergedev-option", String set_merge_dev, " Mergedev option. Possible values are `visited`, `queue`, `ordered`. Default: `visited`.
                 				");
 
