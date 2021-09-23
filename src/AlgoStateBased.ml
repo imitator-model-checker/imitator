@@ -4999,35 +4999,35 @@ class virtual algoStateBased =
 
 			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
 			if options#merge (*|| options#merge_before*) then (
-				queue := StateSpace.merge state_space !queue;
-				(* TODO: the following code belongs in StateSpace *)
-				(match options#exploration_order with
-					| Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
-					| _ -> ();
-				)
-			)
-			else if options#mergedev then (
-                queue := StateSpace.merge2021 state_space !queue;
+                queue := StateSpace.merge state_space !queue;
+                (* TODO: the following code belongs in StateSpace *)
                 (match options#exploration_order with
                     | Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
                     | _ -> ();
                 )
             )
-			else if options#merge212 then(
-				(*raise (NotImplemented "merge v.2.12");*)
-				let new_states_after_merging = queue in
-				let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
-				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
+            else if options#merge212 then(
+                (*raise (NotImplemented "merge v.2.12");*)
+                let new_states_after_merging = queue in
+                let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
+                new_states_after_merging := list_diff !new_states_after_merging eaten_states;
 
-				(match options#exploration_order with
-					| Exploration_queue_BFS_RS ->
-													List.iter ( fun state_index ->
-														Hashtbl.remove rank_hashtable state_index;
+                (match options#exploration_order with
+                    | Exploration_queue_BFS_RS ->
+                                                    List.iter ( fun state_index ->
+                                                        Hashtbl.remove rank_hashtable state_index;
 
-													) eaten_states;
-					| _ -> ();
-				)
-			);
+                                                    ) eaten_states;
+                    | _ -> ();
+                )
+            )
+			else if options#mergedev then (
+                 queue := StateSpace.merge2021 state_space !queue;
+                 (match options#exploration_order with
+                     | Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
+                     | _ -> ();
+                 )
+             );
 			(*** END OLD MIXED VERSION (2020-09) ***)
 
 			(* Check if the limit has been reached *)
@@ -5223,7 +5223,9 @@ class virtual algoStateBased =
 				(*raise (NotImplemented "merge v.2.12");*)
 				let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
-			);
+			) else if options#mergedev then(
+                new_states_after_merging := StateSpace.merge2021 state_space !new_states_after_merging;
+            );
 			(*** END OLD MIXED VERSION (2020-09) ***)
 
 			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)

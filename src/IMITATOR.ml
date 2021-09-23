@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2009/09/07
- * Last modified     : 2021/09/16
+ * Last modified     : 2021/09/23
  *
  ************************************************************)
 
@@ -215,6 +215,13 @@ begin match property_option, options#imitator_mode with
 
 			options#set_merge212(false);
 		);
+		(* Update if not yet set *)
+        if not options#is_set_mergedev then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-mergedev` not set");
+
+            options#set_mergedev(false);
+        );
 
 	| _, State_space_computation
 		->
@@ -240,6 +247,13 @@ begin match property_option, options#imitator_mode with
 
 			options#set_merge212(false);
 		);
+		(* Update if not yet set *)
+        if not options#is_set_mergedev then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-mergedev` not set");
+
+            options#set_mergedev(false);
+        );
 	| None, _ -> ()
 end;
 
