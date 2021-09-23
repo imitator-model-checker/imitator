@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne, Dylan Marinho
  * Created           : 2009/12/08
- * Last modified     : 2021/04/28
+ * Last modified     : 2021/09/23
  *
  ************************************************************)
 
@@ -2128,14 +2128,16 @@ let merge212 state_space new_states =
 (* Merge 2021 - DYLAN *)
 (*TODO DYLAN: check statistics*)
 let merge2021 state_space queue =
-		(* Statistics *)
-		tcounter_merge#start;
+    (* Statistics *)
+    tcounter_merge#start;
 
     let options = Input.get_options () in
 
     (* Check if two states can be merged *)
     (*** NOTE: with side-effects! ***)
     let are_mergeable (c : LinearConstraint.px_linear_constraint) (c' : LinearConstraint.px_linear_constraint) : bool =
+        (* Statistics *)
+        nb_merging_attempts#increment;
         (* Call dedicated function *)
         let merged = LinearConstraint.px_hull_assign_if_exact c c' in
         (* Return result *)
@@ -2192,17 +2194,20 @@ let merge2021 state_space queue =
                     let global_location : Location.global_location = state.global_location in
                     if are_mergeable c c'
                     then begin
-                            (*Here, si = siUsj from the test / IRL c = cUc', transitions not performed etc.'*)
+                        (*Statistics*)
+                        nb_merged#increment;
 
-                            merging_states si sj;
+                        (*Here, si = siUsj from the test / IRL c = cUc', transitions not performed etc.'*)
 
-                            (* Print some information *)
-                            print_message Verbose_high ("[Merge] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
+                        merging_states si sj;
 
-                            (* we remove sj, start over with new bigger state, removing sj *)
-                            let merged' = List.filter (fun (sk, _) -> sk <> sj) merged_states in
-                            sj :: merging merged' tail
-                        end
+                        (* Print some information *)
+                        print_message Verbose_high ("[Merge] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
+
+                        (* we remove sj, start over with new bigger state, removing sj *)
+                        let merged' = List.filter (fun (sk, _) -> sk <> sj) merged_states in
+                        sj :: merging merged' tail
+                    end
                     else begin
                             (* try to eat the rest of them *)
                             merging merged_states tail
@@ -2214,17 +2219,26 @@ let merge2021 state_space queue =
     in
 
     (* Iterate list of states and try to merge them in the state space *)
-    let rec main_merger states (look_in_queue : bool) =
+    let rec main_merger states =
         match states with
             | [] -> ()
             | s :: tail -> begin
                     main_merger tail;
                     if Hashtbl.mem state_space.all_states s then (* treat s only if it is still reachable *)
-                    let merged = merge_state s look_in_queue in
+
+                    let merged =
+                        match options#merge_dev with
+                        | Merge_visited -> merge_state s false
+                        | Merge_queue -> merge_state s true
+                        | Merge_ordered -> (merge_state s true)@(merge_state s false)
+                    in
+
                     if merged <> [] then(
                         (*Check if init was not merged*)
-												let init = get_initial_state_index state_space in
-								        if List.mem init merged then state_space.initial <- Some s;
+                        tcounter_merge_statespace#start;
+						    let init = get_initial_state_index state_space in
+							if List.mem init merged then state_space.initial <- Some s;
+                        tcounter_merge_statespace#stop;
                     )
                     end
     in
