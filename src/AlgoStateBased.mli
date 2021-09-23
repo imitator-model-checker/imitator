@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2021/09/16
+ * Last modified     : 2021/09/23
  *
  ************************************************************)
 
@@ -328,6 +328,12 @@ class virtual algoStateBased :
 		method virtual process_initial_state : State.state -> bool
 		
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Generate counter-example(s) if required by the algorithm *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method construct_counterexamples : state_index -> unit
+		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Create 1 positive and (up to) 2 negative examples (of type `option` in case could not be exhibited) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

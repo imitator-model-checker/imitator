@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2021/09/01
+ * Last modified     : 2021/09/23
  *
  ************************************************************)
 
@@ -279,6 +279,12 @@ class virtual algoLoopSynth =
 			(* Just update the loop constraint *)
 			self#update_loop_constraint loop_px_constraint;
 			
+			(* Construct counterexample if requested by the algorithm *)
+			let property = Input.get_property() in
+			if property.synthesis_type = Exemplification then(
+				self#construct_counterexamples state_index;
+			);
+
 			(* If witness: raise TerminateAnalysis! *)
 			self#terminate_if_witness;
 		);
