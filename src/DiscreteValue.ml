@@ -10,15 +10,12 @@
  *
  * File contributors : Benjamin L., Étienne André
  * Created           : 2021/03/01
- * Last modified     : 2021/07/08
+ * Last modified     : 2021/09/23
  *
  ************************************************************)
 
 open Constants
 open Exceptions
-
-(* Should never happen, if correctly checked before in ModelConverter *)
-exception ComputingException of string
 
 (************************************************************)
 (** Types  *)
@@ -292,13 +289,13 @@ let bool_value_true = Bool_value true
 let zero_of = function
     | Rational_value _ -> Rational_value NumConst.zero
     | Int_value _ -> Int_value Int32.zero
-    | _ -> raise (ComputingException "zero_of")
+    | _ as value -> raise (InternalError ("Computing exception at `zero_of " ^ string_of_value value ^ "`"))
 
 (* Get a one discrete value according to given discrete value type *)
 let one_of = function
     | Rational_value _ -> Rational_value NumConst.one
     | Int_value _ -> Int_value Int32.one
-    | _ -> raise (ComputingException "one_of")
+    | _ as value -> raise (InternalError ("Computing exception at `one_of " ^ string_of_value value ^ "`"))
 
 (** Convert values  **)
 (* TODO benjamin for functions below, maybe we had to raise an exception if conversion is an implicit conversion *)
@@ -357,7 +354,7 @@ let to_float_value = function
 (* Get binary word value of discrete value *)
 let binary_word_value = function
     | Binary_word_value x -> x
-    | _ -> raise (ComputingException "Unable to get binary word value of non binary word")
+    | _ as value -> raise (InternalError ("Unable to get binary word value of non binary word `" ^ string_of_value value ^ "`"))
 
 
 (* Get discrete value from NumConst.t *)
@@ -398,38 +395,6 @@ let convert_value_to_discrete_type value target_type =
         ^ " type is not supported"
     )
 
-(*
-(* TODO benjamin LOOK really necessary ? *)
-(* Convert discrete value to another discrete type *)
-let convert_value_to_discrete_type value target_type =
-    match value, target_type with
-    (* Source and target type are identical *)
-    | Rational_value _, Var_type_discrete_number Var_type_discrete_rational
-    | Int_value _, Var_type_discrete_number Var_type_discrete_int
-    | Bool_value _, Var_type_discrete_bool
-    | Number_value _, Var_type_discrete_number Var_type_discrete_unknown_number -> value
-    (* Source binary word and target binary word type are of the same length *)
-    | Binary_word_value (l, _), Var_type_discrete_binary_word tl when l = tl -> value
-    (* Number_value to Rational_value *)
-    | Number_value _, Var_type_discrete_number Var_type_discrete_rational
-    (* Int_value to Rational_value *)
-    | Int_value _, Var_type_discrete_number Var_type_discrete_rational ->
-        Rational_value (to_numconst_value value)
-    (* Number_value to Int_value *)
-    | Number_value _, Var_type_discrete_number Var_type_discrete_int
-    (* Rational_value to Int_value *)
-    | Rational_value _, Var_type_discrete_number Var_type_discrete_int ->
-        Int_value (to_int_value value)
-    (* Other are not supported *)
-    | x, t -> failwith (
-        "Conversion of value "
-        ^ (string_of_value x)
-        ^ " to "
-        ^ (string_of_var_type_discrete t)
-        ^ " type is not supported"
-    )
-*)
-
 (* Hash code of discrete value *)
 let rec hash = function
     | Number_value x
@@ -450,11 +415,13 @@ let equal a b =
     | Bool_value a, Bool_value b -> a = b
     | Int_value a, Int_value b -> Int32.equal a b
     | Binary_word_value a, Binary_word_value b -> BinaryWord.equal a b
+    | Array_value a, Array_value b -> a = b
     | lt, rt -> raise (
-        ComputingException (
-            (string_of_var_type_discrete (discrete_type_of_value lt))
+        InternalError ("Computing exception on `"
+            ^ string_of_var_type_discrete (discrete_type_of_value lt)
             ^ " = "
-            ^ (string_of_var_type_discrete (discrete_type_of_value rt))
+            ^ string_of_var_type_discrete (discrete_type_of_value rt)
+            ^ "`"
         )
     )
 
@@ -468,7 +435,7 @@ let add a b =
         | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Rational_value (NumConst.add a b)
         | Int_value a, Int_value b -> Int_value (Int32.add a b)
-        | _ -> raise (ComputingException ("add : " ^ (string_of_var_type_discrete (discrete_type_of_value a)) ^ "," ^ (string_of_var_type_discrete (discrete_type_of_value b))))
+        | _ -> raise (InternalError ("Computing exception at `add " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Subtract two discrete value *)
 let sub a b =
@@ -476,7 +443,7 @@ let sub a b =
         | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Rational_value (NumConst.sub a b)
         | Int_value a, Int_value b -> Int_value (Int32.sub a b)
-        | x, y -> raise (ComputingException ("sub " ^ (string_of_var_type_discrete (discrete_type_of_value y)) ))
+        | _ -> raise (InternalError ("Computing exception at `sub " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Multiply two discrete value *)
 let mul a b =
@@ -484,7 +451,7 @@ let mul a b =
         | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Rational_value (NumConst.mul a b)
         | Int_value a, Int_value b -> Int_value (Int32.mul a b)
-        | _ -> raise (ComputingException ("try to multiply: " ^ string_of_value a ^ " : " ^ string_of_var_type_discrete (discrete_type_of_value a) ^ "," ^ string_of_value b ^ " : " ^ string_of_var_type_discrete (discrete_type_of_value b)))
+        | _ -> raise (InternalError ("Computing exception at `mul " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Divide two discrete value *)
 let div a b =
@@ -492,31 +459,31 @@ let div a b =
         | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Rational_value (NumConst.div a b)
         | Int_value a, Int_value  b -> Int_value  (Int32.div a b)
-        | _ -> raise (ComputingException ("try to divide: " ^ string_of_value a ^ " : " ^ string_of_var_type_discrete (discrete_type_of_value a) ^ "," ^ string_of_value b ^ " : " ^ string_of_var_type_discrete (discrete_type_of_value b)))
+        | _ -> raise (InternalError ("Computing exception at `div " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Negate a discrete value *)
 let neg = function
     | Number_value x
     | Rational_value x -> Rational_value (NumConst.neg x)
     | Int_value x -> Int_value (Int32.neg x)
-    | _ -> raise (ComputingException "neg")
+    | _ as value -> raise (InternalError ("Computing exception at `neg " ^ string_of_value value ^ "`"))
 
 (* Logical and on two discrete value *)
 let _and a b =
     match a, b with
         | Bool_value a, Bool_value b -> Bool_value (a && b)
-        | _ -> raise (ComputingException "and")
+        | _ -> raise (InternalError ("Computing exception at `and " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Logical or on two discrete value *)
 let _or a b =
     match a, b with
         | Bool_value a, Bool_value b -> Bool_value (a || b)
-        | _ -> raise (ComputingException "or")
+        | _ -> raise (InternalError ("Computing exception at `or " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Logical not on a discrete value *)
 let not = function
     | Bool_value a -> Bool_value (not (a))
-    | _ -> raise (ComputingException "not")
+    | _ as value -> raise (InternalError ("Computing exception at `not " ^ string_of_value value ^ "`"))
 
 (* Logical equality on two discrete value *)
 let bool_equal a b = Bool_value (equal a b)
@@ -529,68 +496,72 @@ let l a b =
     match a, b with
         | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Bool_value (NumConst.l a b)
-        | Int_value a, Int_value  b -> Bool_value  (a < b)
-        | _ -> raise (ComputingException "l")
+        | Int_value a, Int_value b -> Bool_value (a < b)
+        | Array_value a, Array_value b -> Bool_value (a < b)
+        | _ -> raise (InternalError ("Computing exception at `l " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Comparison, less or equal between two discrete value *)
 let leq a b =
     match a, b with
         | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Bool_value (NumConst.le a b)
-        | Int_value a, Int_value  b -> Bool_value  (a <= b)
-        | _ -> raise (ComputingException "leq")
+        | Int_value a, Int_value  b -> Bool_value (a < b)
+        | Array_value a, Array_value b -> Bool_value  (a <= b)
+        | _ -> raise (InternalError ("Computing exception at `leq " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Comparison, greater between two discrete value *)
 let g a b =
     match a, b with
         | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Bool_value (NumConst.g a b)
-        | Int_value a, Int_value  b -> Bool_value  (a > b)
-        | _ -> raise (ComputingException "g")
+        | Int_value a, Int_value  b -> Bool_value (a < b)
+        | Array_value a, Array_value b -> Bool_value  (a > b)
+        | _ -> raise (InternalError ("Computing exception at `g " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Comparison, greater or equal between two discrete value *)
 let geq a b =
     match a, b with
         | Number_value a, Number_value b
         | Rational_value a, Rational_value b -> Bool_value (NumConst.ge a b)
-        | Int_value a, Int_value  b -> Bool_value  (a >= b)
-        | _ -> raise (ComputingException "geq")
+        | Int_value a, Int_value  b -> Bool_value (a < b)
+        | Array_value a, Array_value b -> Bool_value  (a >= b)
+        | _ -> raise (InternalError ("Computing exception at `geq " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 let access i = function
     | Array_value a -> a.(i)
-    | _ -> raise (ComputingException "access")
+    | _ as value -> raise (InternalError ("Computing exception at `access " ^ string_of_value value ^ "`"))
 
 let shift_left i = function
     | Binary_word_value x -> Binary_word_value (BinaryWord.shift_left x i)
-    | _ -> raise (ComputingException "shift_left")
+    | _ as value -> raise (InternalError ("Computing exception at `shift_left " ^ string_of_value value ^ "`"))
 
 let shift_right i = function
     | Binary_word_value x -> Binary_word_value (BinaryWord.shift_right x i)
-    | _ -> raise (ComputingException "shift_right")
+    | _ as value -> raise (InternalError ("Computing exception at `shift_right " ^ string_of_value value ^ "`"))
 
 let fill_left i = function
     | Binary_word_value x -> Binary_word_value (BinaryWord.fill_left x i)
-    | _ -> raise (ComputingException "fill_left")
+    | _ as value -> raise (InternalError ("Computing exception at `fill_left " ^ string_of_value value ^ "`"))
 
 let fill_right i = function
     | Binary_word_value x -> Binary_word_value (BinaryWord.fill_right x i)
-    | _ -> raise (ComputingException "fill_right")
+    | _ as value -> raise (InternalError ("Computing exception at `fill_right " ^ string_of_value value ^ "`"))
 
-let log_and x y =
-    match x, y with
+let log_and a b =
+    match a, b with
     | Binary_word_value b1, Binary_word_value b2 -> Binary_word_value (BinaryWord.log_and b1 b2)
-    | _ -> raise (ComputingException "log_and")
+    | _ -> raise (InternalError ("Computing exception at `log_and " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
-let log_or x y =
-    match x, y with
+let log_or a b =
+    match a, b with
     | Binary_word_value b1, Binary_word_value b2 -> Binary_word_value (BinaryWord.log_or b1 b2)
-    | _ -> raise (ComputingException "log_or")
+    | _ -> raise (InternalError ("Computing exception at `log_or " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
-let log_xor x y =
-    match x, y with
+let log_xor a b =
+    match a, b with
     | Binary_word_value b1, Binary_word_value b2 -> Binary_word_value (BinaryWord.log_xor b1 b2)
-    | _ -> raise (ComputingException "log_xor")
+    | _ -> raise (InternalError ("Computing exception at `log_xor " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 let log_not = function
     | Binary_word_value b -> Binary_word_value (BinaryWord.log_not b)
-    | _ -> raise (ComputingException "log_not")
+    | _ as value -> raise (InternalError ("Computing exception at `log_not " ^ string_of_value value ^ "`"))
