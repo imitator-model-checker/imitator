@@ -283,3 +283,29 @@ and get_array_value_at discrete_valuation array_expr index_expr =
     );
 
     Array.get values int_index
+
+
+(* Wrap a scalar value to an array value in function of the modified index of an old value *)
+(* For example old_value[0] = 1 with old value = [0, 1] would wrap new_value into an array as new_value = [1, 1] *)
+(* This function is used to assign an element of an array at a given index *)
+let pack_value discrete_valuation old_value new_value variable_access =
+
+    let rec pack_value_rec old_value = function
+        | Discrete_variable_index discrete_index -> new_value
+        | Discrete_variable_access (variable_access, index_expr) ->
+            (* Compute index *)
+            let index = Int32.to_int (eval_int_expression discrete_valuation index_expr) in
+            (* Get inner array of discrete value of old value *)
+            let old_array = DiscreteValue.array_value old_value in
+            (* Copy the old value array *)
+            let old_array_cpy = Array.copy old_array in
+            (* Get element at given index *)
+            let unpacked_old_array = old_array_cpy.(index) in
+            (* Get packed new value *)
+            let packed_new_value = pack_value_rec unpacked_old_array variable_access in
+            (**)
+            old_array_cpy.(index) <- packed_new_value;
+            (**)
+            Array_value old_array_cpy
+    in
+    pack_value_rec old_value variable_access

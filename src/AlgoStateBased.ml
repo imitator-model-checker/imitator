@@ -27,6 +27,7 @@ open AbstractAlgorithm
 open AbstractModel
 open AbstractProperty
 open DiscreteExpressions
+open DiscreteExpressionEvaluator
 open AlgoGeneric
 open State
 open Result
@@ -1444,7 +1445,7 @@ let get_updates (source_location : Location.global_location) (updates : Abstract
 	List.fold_left (
 	fun (acc_clock, acc_discrete) (conditional_update : AbstractModel.conditional_update) ->
 		let boolean_expr, if_updates, else_updates = conditional_update in
-		let filter_updates = if (DiscreteExpressionEvaluator.is_boolean_expression_satisfied (Location.get_discrete_value source_location) boolean_expr) then if_updates else else_updates in
+		let filter_updates = if (is_boolean_expression_satisfied (Location.get_discrete_value source_location) boolean_expr) then if_updates else else_updates in
 		(merge_clock_updates acc_clock filter_updates.clock, list_append acc_discrete filter_updates.discrete)
 	) (updates.clock, updates.discrete) updates.conditional
 
@@ -1485,6 +1486,12 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
+
+    let rec discrete_index_of_variable_access = function
+        | Discrete_variable_index discrete_index -> discrete_index
+        | Discrete_variable_access (variable_access, _) -> discrete_index_of_variable_access variable_access
+    in
+
 	(* make a copy of the location *)
 	let location = Location.copy_location source_location in
 	(* Create a temporary hashtbl for discrete values *)
@@ -1506,10 +1513,23 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		(* Update discrete *)
 		List.iter (fun (discrete_variable_access, global_expression) ->
 
+            let discrete_valuation = Location.get_discrete_value source_location in
+            let discrete_index = discrete_index_of_variable_access discrete_variable_access in
+
+            let old_value = discrete_valuation discrete_index in
+
             (* Compute its new value *)
-            let new_value =
-            DiscreteExpressionEvaluator.eval_global_expression (Location.get_discrete_value source_location) global_expression
-            in
+            let new_value = eval_global_expression discrete_valuation global_expression in
+            let new_value = pack_value discrete_valuation old_value new_value discrete_variable_access in
+
+            (*
+            print_message Verbose_standard (
+                "old value: "
+                ^ DiscreteValue.string_of_value old_value
+                ^ " replace by: "
+                ^ DiscreteValue.string_of_value new_value
+            );
+            *)
 
             (* Check if already updated *)
             if Hashtbl.mem updated_discrete discrete_index then (

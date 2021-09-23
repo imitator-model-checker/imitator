@@ -30,8 +30,6 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (************************************************************)
 type discrete_valuation = Automaton.discrete_index -> DiscreteValue.discrete_value
 
-
-
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
@@ -154,7 +152,9 @@ and array_expression =
     | Array_array_access of array_expression * int_arithmetic_expression
     (* Add here some function on array *)
 
-
+type discrete_variable_access =
+    | Discrete_variable_index of Automaton.discrete_index
+    | Discrete_variable_access of discrete_variable_access * int_arithmetic_expression
 
 (* String *)
 
