@@ -146,6 +146,21 @@ let check_only_discretes_in_parsed_global_expression index_of_variables type_of_
 (** Converting discrete arithmetic expressions *)
 (************************************************************)
 
+type variable_kind =
+    | Variable_kind of discrete_index
+    | Constant_kind of DiscreteValue.discrete_value
+
+let variable_kind_of_variable_name variable_infos variable_name =
+
+    (* First check whether this is a constant *)
+    if Hashtbl.mem variable_infos.constants variable_name then (
+        let value = Hashtbl.find variable_infos.constants variable_name in
+        Constant_kind value
+    )
+    (* Otherwise: a variable *)
+    else
+        Variable_kind (Hashtbl.find variable_infos.index_of_variables variable_name)
+
 (* Convert parsed_discrete_arithmetic_expression *)
 let rec convert_parsed_discrete_arithmetic_expression_with_model variable_infos =
     convert_parsed_discrete_arithmetic_expression variable_infos
@@ -267,7 +282,6 @@ and search_variable_of_discrete_arithmetic_expression variable_infos expr =
 
     (* Extract values from parsed model *)
     let index_of_variables = variable_infos.index_of_variables in
-    let constants = variable_infos.constants in
 
     let rec search_variable_of_discrete_arithmetic_expression_rec = function
         | Parsed_DAE_plus _
@@ -295,14 +309,11 @@ and search_variable_of_discrete_arithmetic_expression variable_infos expr =
                 Maybe an arithmetic expression was resolved as boolean expression before"
             ))
         | Parsed_DF_variable variable_name ->
-            (* First check whether this is a constant *)
-            if Hashtbl.mem constants variable_name then
-                let discrete_value = Hashtbl.find constants variable_name in
-                let bool_value = DiscreteValue.bool_value discrete_value in
-                DB_constant bool_value
-            (* Otherwise: a variable *)
-            else
-                DB_variable (Hashtbl.find index_of_variables variable_name)
+            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+            (match variable_kind with
+            | Constant_kind value -> DB_constant (DiscreteValue.bool_value value)
+            | Variable_kind discrete_index -> DB_variable discrete_index
+            )
         | Parsed_DF_constant var_value ->
             let bool_value = DiscreteValue.bool_value var_value in
             DB_constant bool_value
@@ -400,15 +411,11 @@ and convert_parsed_rational_arithmetic_expression variable_infos (* expr *) =
 
     and convert_parsed_rational_factor = function
         | Parsed_DF_variable variable_name ->
-            (* First check whether this is a constant *)
-            if Hashtbl.mem variable_infos.constants variable_name then (
-                let value = Hashtbl.find variable_infos.constants variable_name in
-                let numconst_value = DiscreteValue.to_numconst_value value in
-                DF_constant numconst_value
+            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+            (match variable_kind with
+            | Constant_kind value -> DF_constant (DiscreteValue.to_numconst_value value)
+            | Variable_kind discrete_index -> DF_variable discrete_index
             )
-            (* Otherwise: a variable *)
-            else
-                DF_variable (Hashtbl.find variable_infos.index_of_variables variable_name)
 
         | Parsed_DF_access (factor, index_expr) ->
             Rational_array_access (
@@ -473,15 +480,12 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
 
     and convert_parsed_int_factor = function
         | Parsed_DF_variable variable_name ->
-            (* First check whether this is a constant *)
-            if Hashtbl.mem variable_infos.constants variable_name then (
-                let value = Hashtbl.find variable_infos.constants variable_name in
-                let int_value = DiscreteValue.int_value value in
-                Int_constant int_value
+
+            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+            (match variable_kind with
+            | Constant_kind value -> Int_constant (DiscreteValue.int_value value)
+            | Variable_kind discrete_index -> Int_variable discrete_index
             )
-            (* Otherwise: a variable *)
-            else
-                Int_variable (Hashtbl.find variable_infos.index_of_variables variable_name)
 
         | Parsed_DF_constant var_value -> Int_constant (DiscreteValue.int_value var_value)
         | Parsed_DF_expression expr -> Int_expression (convert_parsed_int_arithmetic_expression_rec expr)
@@ -550,18 +554,12 @@ and binary_word_expression_of_parsed_term variable_infos = function
 (* Try to convert a parsed factor to abstract binary word expression *)
 and binary_word_expression_of_parsed_factor variable_infos = function
     | Parsed_DF_variable variable_name ->
-        (* TODO benjamin refactor this into function, similar in other cases *)
-        let constants = variable_infos.constants in
-        let index_of_variables = variable_infos.index_of_variables in
-        (* First check whether this is a constant *)
-        if Hashtbl.mem constants variable_name then (
-            let value = Hashtbl.find constants variable_name in
-            let binary_word_value = DiscreteValue.binary_word_value value in
-            Binary_word_constant binary_word_value
+
+        let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+        (match variable_kind with
+        | Constant_kind value -> Binary_word_constant (DiscreteValue.binary_word_value value)
+        | Variable_kind discrete_index -> Binary_word_variable discrete_index
         )
-        (* Otherwise: a variable *)
-        else
-            Binary_word_variable (Hashtbl.find index_of_variables variable_name)
 
     | Parsed_DF_constant value ->
         let binary_word_value = DiscreteValue.binary_word_value value in
@@ -661,17 +659,11 @@ and array_expression_of_parsed_term variable_infos = function
 and array_expression_of_parsed_factor variable_infos = function
     | Parsed_DF_variable variable_name ->
 
-        let constants = variable_infos.constants in
-        let index_of_variables = variable_infos.index_of_variables in
-        (* First check whether this is a constant *)
-        if Hashtbl.mem constants variable_name then (
-            let value = Hashtbl.find constants variable_name in
-            let array_value = DiscreteValue.array_value value in
-            Array_constant array_value
+        let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+        (match variable_kind with
+        | Constant_kind value -> Array_constant (DiscreteValue.array_value value)
+        | Variable_kind discrete_index -> Array_variable discrete_index
         )
-        (* Otherwise: a variable *)
-        else
-            Array_variable (Hashtbl.find index_of_variables variable_name)
 
     | Parsed_DF_array expr_array ->
         Literal_array (Array.map (fun expr -> convert_parsed_global_expression variable_infos (Parsed_global_expression expr)) expr_array)
