@@ -52,7 +52,7 @@ type discrete_value =
     | Number_value of NumConst.t
     | Rational_value of NumConst.t
     | Int_value of Int32.t
-    | Bool_value of bool
+    | Bool_value of Bool.t
     | Binary_word_value of BinaryWord.t
     | Array_value of discrete_value array
 
@@ -565,3 +565,8 @@ let log_xor a b =
 let log_not = function
     | Binary_word_value b -> Binary_word_value (BinaryWord.log_not b)
     | _ as value -> raise (InternalError ("Computing exception at `log_not " ^ string_of_value value ^ "`"))
+
+let array_concat a b =
+    match a, b with
+    | Array_value a, Array_value b -> Array_value (Array.append a b)
+    | _ -> raise (InternalError ("Computing exception at `array_concat " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))

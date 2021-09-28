@@ -280,9 +280,6 @@ and convert_discrete_bool_expr variable_infos = function
 (* Search of boolean variables / constants in parsed discrete arithmetic expression *)
 and search_variable_of_discrete_arithmetic_expression variable_infos expr =
 
-    (* Extract values from parsed model *)
-    let index_of_variables = variable_infos.index_of_variables in
-
     let rec search_variable_of_discrete_arithmetic_expression_rec = function
         | Parsed_DAE_plus _
         | Parsed_DAE_minus _ ->
@@ -336,7 +333,8 @@ and search_variable_of_discrete_arithmetic_expression variable_infos expr =
         | Parsed_log_and _
         | Parsed_log_or _
         | Parsed_log_xor _
-        | Parsed_log_not _ ->
+        | Parsed_log_not _
+        | Parsed_array_concat _ ->
             raise (InternalError (
                 "Search of boolean variable in binary word expression, something failed.
                 Maybe an arithmetic expression was resolved as binary expression before"
@@ -437,7 +435,8 @@ and convert_parsed_rational_arithmetic_expression variable_infos (* expr *) =
         | Parsed_log_and _
         | Parsed_log_or _
         | Parsed_log_xor _
-        | Parsed_log_not _ as factor ->
+        | Parsed_log_not _
+        | Parsed_array_concat _ as factor ->
             raise (InternalError (
                 "There is a call to \""
                 ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
@@ -509,7 +508,8 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
         | Parsed_log_and _
         | Parsed_log_or _
         | Parsed_log_xor _
-        | Parsed_log_not _ as factor ->
+        | Parsed_log_not _
+        | Parsed_array_concat _ as factor ->
             raise (InternalError (
                 "There is a call to \""
                 ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
@@ -615,7 +615,8 @@ and binary_word_expression_of_parsed_factor variable_infos = function
     | Parsed_DF_array _
     | Parsed_DF_unary_min _
     | Parsed_rational_of_int_function _
-    | Parsed_pow_function _ as factor ->
+    | Parsed_pow_function _
+    | Parsed_array_concat _ as factor ->
         raise (InternalError (
             "There is a call to \""
             ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
@@ -673,7 +674,11 @@ and array_expression_of_parsed_factor variable_infos = function
             array_expression_of_parsed_factor variable_infos factor,
             convert_parsed_int_arithmetic_expression variable_infos index_expr
         )
-
+    | Parsed_array_concat (factor_0, factor_1) ->
+        Array_concat (
+            array_expression_of_parsed_factor variable_infos factor_0,
+            array_expression_of_parsed_factor variable_infos factor_1
+        )
     | _ as factor ->
         raise (InternalError (
             "Use of \""
@@ -2301,7 +2306,8 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
         | Parsed_log_and _
         | Parsed_log_or _
         | Parsed_log_xor _
-        | Parsed_log_not _ as factor ->
+        | Parsed_log_not _
+        | Parsed_array_concat _ as factor ->
             raise (InvalidExpression ("Use of \"" ^ ParsingStructureUtilities.string_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
 
 let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
@@ -2810,7 +2816,8 @@ let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_info
         | Parsed_log_not factor ->
             update_coef_array_in_parsed_update_factor mult_factor factor
         | Parsed_DF_array _
-        | Parsed_DF_access _ as factor ->
+        | Parsed_DF_access _
+        | Parsed_array_concat _ as factor ->
             raise (InternalError ("Use of " ^ ParsingStructureUtilities.string_of_parsed_factor_constructor factor ^ " is forbidden in linear term, something failed before."))
 
 	in

@@ -42,7 +42,7 @@ and discrete_arithmetic_expression =
     | Int_arithmetic_expression of int_arithmetic_expression
 
 (****************************************************************)
-(** Arithmetic expressions for discrete variables *)
+(** Rational arithmetic expressions for discrete variables *)
 (****************************************************************)
 and rational_arithmetic_expression =
 	| DAE_plus of rational_arithmetic_expression * rational_term
@@ -139,13 +139,21 @@ and binary_word_expression =
     | Binary_word_variable of Automaton.variable_index
     | Binary_word_array_access of array_expression * int_arithmetic_expression
 
+(************************************************************)
+(************************************************************)
+(************************************************************)
+(** Array expressions for discrete variables *)
+(************************************************************)
+(************************************************************)
 
+(** Array expression *)
 and array_expression =
     | Literal_array of global_expression array
     | Array_constant of DiscreteValue.discrete_value array
     | Array_variable of Automaton.variable_index
     | Array_array_access of array_expression * int_arithmetic_expression
     (* Add here some function on array *)
+    | Array_concat of array_expression * array_expression
 
 type discrete_variable_access =
     | Discrete_variable_index of Automaton.discrete_index
@@ -254,7 +262,7 @@ let add_parenthesis_to_unary_minus_int str = function
 
 (* Constructors strings *)
 
-let string_of_rational_factor_constructor = function
+let label_of_rational_factor = function
 	| DF_variable _ -> "rational variable"
 	| DF_constant _ -> "rational constant"
 	| DF_expression _ -> "rational expression"
@@ -263,7 +271,7 @@ let string_of_rational_factor_constructor = function
 	| DF_pow _ -> "pow"
 	| Rational_array_access _ -> "rational array access"
 
-let string_of_int_factor_constructor = function
+let label_of_int_factor = function
 	| Int_variable _ -> "int variable"
 	| Int_constant _ -> "int constant"
 	| Int_expression _ -> "int expression"
@@ -271,7 +279,7 @@ let string_of_int_factor_constructor = function
 	| Int_pow _ -> "pow"
 	| Int_array_access _ -> "int array access"
 
-let string_of_binary_word_expression_constructor = function
+let label_of_binary_word_expression = function
     | Logical_shift_left _ -> "shift_left"
     | Logical_shift_right _ -> "shift_right"
     | Logical_fill_left _ -> "fill_left"
@@ -283,6 +291,13 @@ let string_of_binary_word_expression_constructor = function
     | Binary_word_constant _ -> "binary word constant"
     | Binary_word_variable _ -> "binary word variable"
     | Binary_word_array_access _ -> "binary word array access"
+
+let label_of_array_expression = function
+    | Literal_array _ -> "literal array"
+    | Array_constant _ -> "array constant"
+    | Array_variable _ -> "array variable"
+    | Array_array_access _ -> "array_access"
+    | Array_concat _ -> "array_concat"
 
 (* Expressions strings *)
 
@@ -355,12 +370,12 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 		         (string_of_factor customized_string discrete_factor)
 		    ) discrete_factor
 		| DF_rational_of_int discrete_arithmetic_expression as factor ->
-		    string_of_rational_factor_constructor factor
+		    label_of_rational_factor factor
 		    ^ "("
 		    ^ customized_string_of_int_arithmetic_expression customized_string variable_names discrete_arithmetic_expression
 		    ^ ")"
         | DF_pow (expr, exp) as factor ->
-            string_of_rational_factor_constructor factor
+            label_of_rational_factor factor
             ^ "("
             ^ string_of_arithmetic_expression customized_string expr
             ^ ", "
@@ -432,7 +447,7 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 		| Int_expression expr ->
 			string_of_int_arithmetic_expression customized_string expr
         | Int_pow (expr, exp) as factor ->
-            string_of_int_factor_constructor factor
+            label_of_int_factor factor
             ^ "("
             ^ string_of_int_arithmetic_expression customized_string expr
             ^ ", "
@@ -518,7 +533,7 @@ and customized_string_of_binary_word_expression customized_string variable_names
     | Logical_shift_right (binary_word, expr)
     | Logical_fill_left (binary_word, expr)
     | Logical_fill_right (binary_word, expr) as binary_word_expression ->
-        string_of_binary_word_expression_constructor binary_word_expression
+        label_of_binary_word_expression binary_word_expression
         ^ "("
         ^ customized_string_of_binary_word_expression customized_string variable_names binary_word
         ^ ", "
@@ -527,14 +542,14 @@ and customized_string_of_binary_word_expression customized_string variable_names
     | Logical_and (l_binary_word, r_binary_word)
     | Logical_or (l_binary_word, r_binary_word)
     | Logical_xor (l_binary_word, r_binary_word) as binary_word_expression ->
-        string_of_binary_word_expression_constructor binary_word_expression
+        label_of_binary_word_expression binary_word_expression
         ^ "("
         ^ customized_string_of_binary_word_expression customized_string variable_names l_binary_word
         ^ ", "
         ^ customized_string_of_binary_word_expression customized_string variable_names r_binary_word
         ^ ")"
     | Logical_not binary_word as binary_word_expression ->
-        string_of_binary_word_expression_constructor binary_word_expression
+        label_of_binary_word_expression binary_word_expression
         ^ "("
         ^ customized_string_of_binary_word_expression customized_string variable_names binary_word
         ^ ")"
@@ -560,6 +575,13 @@ and customized_string_of_array_expression customized_string variable_names = fun
         ^ "["
         ^ customized_string_of_int_arithmetic_expression customized_string variable_names index_expr
         ^ "]"
+    | Array_concat (array_expr_0, array_expr_1) as func ->
+        label_of_array_expression func
+        ^ "("
+        ^ customized_string_of_array_expression customized_string variable_names array_expr_0
+        ^ ", "
+        ^ customized_string_of_array_expression customized_string variable_names array_expr_1
+        ^ ")"
 
 let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
 let string_of_arithmetic_expression = customized_string_of_arithmetic_expression Constants.global_default_string
@@ -739,7 +761,7 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
 		    customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
         | DF_pow (expr, exp) as factor ->
             "{\"op\": \""
-            ^ string_of_rational_factor_constructor factor
+            ^ label_of_rational_factor factor
             ^ "\", \"left\":"
             ^ string_of_arithmetic_expression customized_string expr
             ^ ", \"right\":"
@@ -812,7 +834,7 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 			string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression
         | Int_pow (expr, exp) as factor ->
             "{\"op\": \""
-            ^ string_of_int_factor_constructor factor
+            ^ label_of_int_factor factor
             ^ "\", \"left\":"
             ^ string_of_int_arithmetic_expression customized_string expr
             ^ ", \"right\":"
@@ -825,7 +847,7 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
     | Logical_fill_left (binary_word, expr)
     | Logical_shift_left (binary_word, expr) as binary_word_expression ->
         "{\"op\": \""
-        ^ string_of_binary_word_expression_constructor binary_word_expression
+        ^ label_of_binary_word_expression binary_word_expression
         ^ "\", \"left\":"
         ^ customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word
         ^ ", \"right\":"
@@ -834,7 +856,7 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
     | Logical_fill_right (binary_word, expr)
     | Logical_shift_right (binary_word, expr) as binary_word_expression ->
         "{\"op\": \""
-        ^ string_of_binary_word_expression_constructor binary_word_expression
+        ^ label_of_binary_word_expression binary_word_expression
         ^ "\", \"left\":"
         ^ customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word
         ^ ", \"right\":"
@@ -844,7 +866,7 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
     | Logical_or (l_binary_word, r_binary_word)
     | Logical_xor (l_binary_word, r_binary_word) as binary_word_expression ->
         "{\"op\": \""
-        ^ string_of_binary_word_expression_constructor binary_word_expression
+        ^ label_of_binary_word_expression binary_word_expression
         ^ "\", \"left\":"
         ^ customized_string_of_binary_word_expression_for_jani customized_string variable_names l_binary_word
         ^ ", \"right\":"
@@ -852,7 +874,7 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
         ^ "}"
     | Logical_not binary_word as binary_word_expression ->
 	    "{\"op\": \""
-	    ^ string_of_binary_word_expression_constructor binary_word_expression
+	    ^ label_of_binary_word_expression binary_word_expression
 	    ^ "\""
 	    ^ jani_separator
 	    ^ "\"exp\": "
@@ -881,6 +903,16 @@ and customized_string_of_array_expression_for_jani customized_string variable_na
         ^ "\"exp\": " ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr ^ ", "
         ^ "\"index\": " ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr
         ^ "}"
+    | Array_concat (array_expr_0, array_expr_1) as func ->
+        "{"
+        ^ "\"op\": \"call\", "
+        ^ "\"function\": " ^ label_of_array_expression func ^ ", "
+        ^ "\"args\": Array.of("
+        ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr_0 ^ ", "
+        ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr_1
+        ^ ")"
+        ^ "}"
+
 
 let string_of_arithmetic_expression_for_jani = customized_string_of_arithmetic_expression_for_jani Constants.global_default_string
 let string_of_discrete_boolean_expression_for_jani = customized_string_of_discrete_boolean_expression_for_jani Constants.global_default_string

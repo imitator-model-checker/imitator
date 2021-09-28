@@ -222,7 +222,11 @@ and convert_literal_types_of_parsed_discrete_factor variable_infos target_type =
     | Parsed_log_not factor ->
         Parsed_log_not
             (convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor)
-
+    | Parsed_array_concat (l_factor, r_factor) ->
+        Parsed_array_concat (
+            convert_literal_types_of_parsed_discrete_factor variable_infos target_type l_factor,
+            convert_literal_types_of_parsed_discrete_factor variable_infos target_type r_factor
+        )
     | Parsed_DF_unary_min factor ->
         Parsed_DF_unary_min (convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor)
 
@@ -707,7 +711,6 @@ and infer_parsed_discrete_factor variable_infos = function
         )
         in
 
-        (* TODO benjamin IMPORTANT type check on index *)
         let convert_index_expr =
             if DiscreteValue.is_discrete_type_unknown_number_type index_type then (
                 let index_target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
@@ -994,6 +997,64 @@ and infer_parsed_discrete_factor variable_infos = function
         ) else (
             Parsed_log_not infer_factor, discrete_type
         )
+    | Parsed_array_concat (factor_0, factor_1) as func ->
+
+        let infer_factor_0, discrete_type_0 = infer_parsed_discrete_factor variable_infos factor_0 in
+        let infer_factor_1, discrete_type_1 = infer_parsed_discrete_factor variable_infos factor_1 in
+
+        (* Check that the two factor are arrays *)
+        (
+        match discrete_type_0, discrete_type_1 with
+        | DiscreteValue.Var_type_discrete_array (inner_type_0, length_0),  DiscreteValue.Var_type_discrete_array (inner_type_1, length_1) ->
+
+            let check = check_something inner_type_0 inner_type_1 in
+
+            let convert_factor_0, convert_factor_1, convert_type = (
+                match check with
+                | No_error_relop
+                | Both_unknown_number_error_relop ->
+                    infer_factor_0, infer_factor_1, inner_type_0
+                | Not_compatible ->
+                    raise (TypeError (
+                        "Expression `"
+                        ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos func
+                        ^ "` mixes different types: "
+                        ^ DiscreteValue.string_of_var_type_discrete discrete_type_0
+                        ^ ", "
+                        ^ DiscreteValue.string_of_var_type_discrete discrete_type_1
+                    ))
+                | Left_unknown_number_error_relop ->
+                    convert_literal_types_of_parsed_discrete_factor variable_infos inner_type_1 infer_factor_0,
+                    infer_factor_1,
+                    inner_type_1
+                | Right_unknown_number_error_relop ->
+                    infer_factor_0,
+                    convert_literal_types_of_parsed_discrete_factor variable_infos inner_type_0 infer_factor_1,
+                    inner_type_0
+            )
+            in
+
+            let array_type = DiscreteValue.Var_type_discrete_array (convert_type, length_0 + length_1) in
+
+            print_message Verbose_high (
+                "\tInfer expression type of `"
+                ^ (string_of_parsed_factor variable_infos func)
+                ^ "` as "
+                ^ (DiscreteValue.string_of_var_type_discrete array_type)
+            );
+
+            Parsed_array_concat (convert_factor_0, convert_factor_1), array_type
+        | _ ->
+            raise (TypeError (
+                "Left or right member of expression `"
+                ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos func
+                ^ "` is not an array: "
+                ^ DiscreteValue.string_of_var_type_discrete discrete_type_0
+                ^ ", "
+                ^ DiscreteValue.string_of_var_type_discrete discrete_type_1
+            ))
+        )
+
     | Parsed_DF_unary_min factor ->
         let infer_factor, factor_type = infer_parsed_discrete_factor variable_infos factor in
         Parsed_DF_unary_min infer_factor, factor_type
@@ -1012,7 +1073,7 @@ and infer_nonlinear_constraint variable_infos = function
 let rec infer_parsed_simple_predicate variable_infos = function
 	| Parsed_discrete_boolean_expression expr ->
 	    let convert_expr, discrete_type = infer_parsed_discrete_boolean_expression variable_infos expr in
-        (* TODO benjamin check types are bool *)
+
         if not (DiscreteValue.is_discrete_type_bool_type discrete_type) then (
             raise (TypeError (
                 "Expression `"
@@ -1135,6 +1196,16 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
         (* Shift result type is a binary word of length depending on the left member length *)
         (* Logical and, or, xor, not depend on one member length (arbitrary, because already type checked!) *)
         discrete_type_of_parsed_discrete_factor variable_infos factor
+    | Parsed_array_concat (factor_0, factor_1) ->
+        let parameter_type_0 = discrete_type_of_parsed_discrete_factor variable_infos factor_0 in
+        let parameter_type_1 = discrete_type_of_parsed_discrete_factor variable_infos factor_1 in
+        match parameter_type_0, parameter_type_1 with
+        | DiscreteValue.Var_type_discrete_array (inner_type_0, length_0), DiscreteValue.Var_type_discrete_array (inner_type_1, length_1) ->
+            (* Arbitrary use inner_type of parameter 0, because already type checked!) *)
+            (* But array length of array concatenation is equal to length of first array plus length of second array *)
+            DiscreteValue.Var_type_discrete_array (inner_type_0, length_0 + length_1)
+        | _ -> raise (TypeError "")
+
 
 
 (** Checking functions **)

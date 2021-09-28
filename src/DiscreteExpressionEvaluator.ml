@@ -101,6 +101,8 @@ and eval_int_expression discrete_valuation (* expr *) =
                 raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (Int32.to_string numerator) ^ " / " ^ (Int32.to_string denominator) ^ ""))
             );
 
+            ImitatorUtilities.print_warning ("Division in an int expression can leads to a ceiling result on `" ^ Int32.to_string numerator ^ " / " ^ Int32.to_string denominator ^ "`");
+
             (* Divide *)
             Int32.div
                 numerator
@@ -269,6 +271,10 @@ and eval_array_expression discrete_valuation = function
     | Array_array_access (array_expr, index_expr) ->
         let value = get_array_value_at discrete_valuation array_expr index_expr in
         DiscreteValue.array_value value
+    | Array_concat (array_expr_0, array_expr_1) ->
+        let array_0 = eval_array_expression discrete_valuation array_expr_0 in
+        let array_1 = eval_array_expression discrete_valuation array_expr_1 in
+        Array.append array_0 array_1
 
 and get_array_value_at discrete_valuation array_expr index_expr =
 

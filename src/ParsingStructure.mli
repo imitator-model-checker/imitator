@@ -113,6 +113,7 @@ and parsed_discrete_factor =
 	| Parsed_log_or of parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_log_xor of parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_log_not of parsed_discrete_factor
+	| Parsed_array_concat of parsed_discrete_factor * parsed_discrete_factor
 (*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
 
 

@@ -112,7 +112,8 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
             (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
 	| Parsed_log_and (factor_0, factor_1)
 	| Parsed_log_or (factor_0, factor_1)
-	| Parsed_log_xor (factor_0, factor_1) ->
+	| Parsed_log_xor (factor_0, factor_1)
+	| Parsed_array_concat (factor_0, factor_1) ->
         operator
             (fold_parsed_discrete_factor operator base leaf_fun factor_0)
             (fold_parsed_discrete_factor operator base leaf_fun factor_1)
@@ -252,6 +253,7 @@ let string_of_parsed_factor_constructor = function
     | Parsed_log_or _ -> "log_or"
     | Parsed_log_xor _ -> "log_xor"
     | Parsed_log_not _ -> "log_not"
+    | Parsed_array_concat _ -> "array_concat"
 
 (* String of a parsed expression *)
 (* Used for error message on type checking *)
@@ -322,15 +324,16 @@ and string_of_parsed_factor variable_infos = function
         ^ ")"
     | Parsed_log_and (l_factor, r_factor)
     | Parsed_log_or (l_factor, r_factor)
-    | Parsed_log_xor (l_factor, r_factor) as log_op ->
-        string_of_parsed_factor_constructor log_op
+    | Parsed_log_xor (l_factor, r_factor)
+    | Parsed_array_concat (l_factor, r_factor) as func ->
+        string_of_parsed_factor_constructor func
         ^ "("
         ^ string_of_parsed_factor variable_infos l_factor
         ^ ", "
         ^ string_of_parsed_factor variable_infos r_factor
         ^ ")"
-    | Parsed_log_not factor as log_op ->
-        string_of_parsed_factor_constructor log_op
+    | Parsed_log_not factor as func ->
+        string_of_parsed_factor_constructor func
         ^ "("
         ^ string_of_parsed_factor variable_infos factor
         ^ ")"
@@ -591,6 +594,12 @@ and try_reduce_parsed_arithmetic_expression constants expr =
             let reduced_l_factor = try_reduce_parsed_factor l_factor in
             let reduced_r_factor = try_reduce_parsed_factor r_factor in
             DiscreteValue.log_xor reduced_l_factor reduced_r_factor
+
+        | Parsed_array_concat (l_factor, r_factor) ->
+
+            let reduced_l_factor = try_reduce_parsed_factor l_factor in
+            let reduced_r_factor = try_reduce_parsed_factor r_factor in
+            DiscreteValue.array_concat reduced_l_factor reduced_r_factor
 
         | Parsed_log_not factor ->
 

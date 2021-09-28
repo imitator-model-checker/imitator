@@ -151,6 +151,7 @@ and array_expression =
     | Array_variable of Automaton.variable_index
     | Array_array_access of array_expression * int_arithmetic_expression
     (* Add here some function on array *)
+    | Array_concat of array_expression * array_expression
 
 type discrete_variable_access =
     | Discrete_variable_index of Automaton.discrete_index
@@ -159,9 +160,9 @@ type discrete_variable_access =
 (* String *)
 
 (* Constructors strings *)
-val string_of_rational_factor_constructor : rational_factor -> string
-val string_of_int_factor_constructor : int_factor -> string
-val string_of_binary_word_expression_constructor : binary_word_expression -> string
+val label_of_rational_factor : rational_factor -> string
+val label_of_int_factor : int_factor -> string
+val label_of_binary_word_expression : binary_word_expression -> string
 
 (* Expressions strings *)
 

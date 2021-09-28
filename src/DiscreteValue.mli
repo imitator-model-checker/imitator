@@ -50,7 +50,7 @@ type discrete_value =
     | Number_value of NumConst.t
     | Rational_value of NumConst.t
     | Int_value of Int32.t
-    | Bool_value of bool
+    | Bool_value of Bool.t
     | Binary_word_value of BinaryWord.t
     | Array_value of discrete_value array
 
@@ -251,3 +251,4 @@ val log_and : discrete_value -> discrete_value -> discrete_value
 val log_or : discrete_value -> discrete_value -> discrete_value
 val log_xor : discrete_value -> discrete_value -> discrete_value
 val log_not : discrete_value -> discrete_value
+val array_concat : discrete_value -> discrete_value -> discrete_value
