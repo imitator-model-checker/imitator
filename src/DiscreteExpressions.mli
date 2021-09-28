@@ -38,7 +38,7 @@ type global_expression =
     | Arithmetic_expression of discrete_arithmetic_expression
     | Bool_expression of boolean_expression
     | Binary_word_expression of binary_word_expression
-    | Array_expression of array_expression (* TODO benjamin CLEAN to remove *)
+    | Array_expression of array_expression
 
 and discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression

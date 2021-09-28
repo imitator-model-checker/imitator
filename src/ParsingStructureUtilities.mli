@@ -127,8 +127,13 @@ val all_variables_defined_in_parsed_global_expression : variable_infos -> global
 val all_variables_defined_in_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
 val all_variables_defined_in_linear_expression : variable_infos -> (variable_name -> unit) -> linear_expression -> bool
 val all_variables_defined_in_linear_constraint : variable_infos -> (variable_name -> unit) -> linear_constraint -> bool
+val all_variables_defined_in_nonlinear_constraint : variable_infos -> (variable_name -> unit) option -> nonlinear_constraint -> bool
+val all_variables_defined_in_nonlinear_convex_predicate : variable_infos -> (variable_name -> unit) option -> nonlinear_constraint list -> bool
 
-val only_discrete_in_nonlinear_term : variable_infos -> parsed_discrete_boolean_expression -> bool
+val only_discrete_in_parsed_global_expression : variable_infos -> global_expression -> bool
+val only_discrete_in_nonlinear_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
+
+val no_variables_in_linear_expression : variable_infos -> linear_expression -> bool
 
 val is_parsed_linear_expression_constant : variable_infos -> linear_expression -> bool
 
@@ -142,6 +147,8 @@ val get_variables_in_parsed_discrete_boolean_expression : parsed_discrete_boolea
 val get_variables_in_linear_expression : linear_expression -> StringSet.t
 val get_variables_in_linear_constraint : linear_constraint -> StringSet.t
 val get_variables_in_nonlinear_constraint : nonlinear_constraint -> StringSet.t
+val get_variables_in_init_state_predicate : parsed_init_state_predicate -> StringSet.t
+val get_variables_in_nonlinear_convex_predicate : nonlinear_constraint list -> StringSet.t
 
 val variable_name_of_variable_access : variable_access -> variable_name
 val is_variable_access_is_a_variable_name : variable_access -> bool

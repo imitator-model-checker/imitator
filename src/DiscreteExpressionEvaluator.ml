@@ -1,6 +1,14 @@
 open DiscreteExpressions
 open Exceptions
 
+(* Get operator function from relop *)
+let operator_of_relop = function
+    | OP_L -> (<)
+    | OP_LEQ -> (<=)
+    | OP_EQ -> (=)
+    | OP_NEQ -> (<>)
+    | OP_GEQ -> (>=)
+    | OP_G -> (>)
 
 let rec eval_global_expression discrete_valuation = function
     | Arithmetic_expression expr -> eval_discrete_arithmetic_expression discrete_valuation expr
@@ -10,10 +18,8 @@ let rec eval_global_expression discrete_valuation = function
 
 and eval_discrete_arithmetic_expression discrete_valuation = function
     | Rational_arithmetic_expression expr ->
-(*        ImitatorUtilities.print_message Verbose_standard "Evaluate a rational expression !!!";*)
         DiscreteValue.Rational_value (eval_rational_expression discrete_valuation expr)
     | Int_arithmetic_expression expr ->
-(*        ImitatorUtilities.print_message Verbose_standard "Evaluate a int expression !!!";*)
         DiscreteValue.Int_value (eval_int_expression discrete_valuation expr)
 
 and eval_rational_expression discrete_valuation expr =
@@ -97,11 +103,13 @@ and eval_int_expression discrete_valuation (* expr *) =
             let denominator	= (eval_int_factor factor) in
 
             (* Check for 0-denominator *)
-            if Int32.equal denominator Int32.zero then(
+            if Int32.equal denominator Int32.zero then (
                 raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (Int32.to_string numerator) ^ " / " ^ (Int32.to_string denominator) ^ ""))
             );
 
-            ImitatorUtilities.print_warning ("Division in an int expression can leads to a ceiling result on `" ^ Int32.to_string numerator ^ " / " ^ Int32.to_string denominator ^ "`");
+            (* Check for non-int division *)
+            if OCamlUtilities.modulo numerator denominator <> Int32.zero then
+                ImitatorUtilities.print_warning ("Non-int division found on int expression: `" ^ Int32.to_string numerator ^ " / " ^ Int32.to_string denominator ^ "`");
 
             (* Divide *)
             Int32.div
@@ -128,9 +136,6 @@ and eval_int_expression discrete_valuation (* expr *) =
     in
     eval_int_expression_rec
 
-
-
-
 (** Check if a boolean expression is satisfied *)
 and is_boolean_expression_satisfied discrete_valuation = function
     | True_bool -> true
@@ -150,24 +155,21 @@ and check_discrete_boolean_expression discrete_valuation = function
         DiscreteValue.bool_value value
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
     (* TODO benjamin WARNING here we compare a DiscreteValue.discrete_value type with operator it's bad *)
+    (* We just have to create a Rational_comparison and a Int_comparison to solve this *)
     | Expression (l_expr, relop, r_expr) ->
-        eval_discrete_relop
-            relop
+        (operator_of_relop relop)
             (eval_discrete_arithmetic_expression discrete_valuation l_expr)
             (eval_discrete_arithmetic_expression discrete_valuation r_expr)
     | Boolean_comparison (l_expr, relop, r_expr) ->
-         eval_discrete_boolean_relop
-             relop
+         (operator_of_relop relop)
              (check_discrete_boolean_expression discrete_valuation l_expr)
              (check_discrete_boolean_expression discrete_valuation r_expr)
     | Binary_comparison (l_expr, relop, r_expr) ->
-        eval_discrete_binary_relop
-            relop
+        (operator_of_relop relop)
             (eval_discrete_binary_word_expression discrete_valuation l_expr)
             (eval_discrete_binary_word_expression discrete_valuation r_expr)
     | Array_comparison (l_expr, relop, r_expr) ->
-        eval_discrete_array_relop
-            relop
+        (operator_of_relop relop)
             (eval_array_expression discrete_valuation l_expr)
             (eval_array_expression discrete_valuation r_expr)
 
@@ -186,39 +188,6 @@ and check_discrete_boolean_expression discrete_valuation = function
         is_boolean_expression_satisfied discrete_valuation boolean_expression
     | Not_bool b ->
         not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
-(* TODO benjamin REFACTOR here, that's ugly ! *)
-and eval_discrete_relop relop value_1 value_2 : bool =
-    match relop with
-    | OP_L		-> value_1 <  value_2
-    | OP_LEQ	-> value_1 <= value_2
-    | OP_EQ		-> value_1 =  value_2
-    | OP_NEQ	-> value_1 <> value_2
-    | OP_GEQ	-> value_1 >= value_2
-    | OP_G		-> value_1 >  value_2
-and eval_discrete_boolean_relop relop value_1 value_2 : bool =
-    match relop with
-    | OP_L		-> value_1 <  value_2
-    | OP_LEQ	-> value_1 <= value_2
-    | OP_EQ		-> value_1 =  value_2
-    | OP_NEQ	-> value_1 <> value_2
-    | OP_GEQ	-> value_1 >= value_2
-    | OP_G		-> value_1 >  value_2
-and eval_discrete_binary_relop relop value_1 value_2 : bool =
-    match relop with
-    | OP_L		-> value_1 <  value_2
-    | OP_LEQ	-> value_1 <= value_2
-    | OP_EQ		-> value_1 =  value_2
-    | OP_NEQ	-> value_1 <> value_2
-    | OP_GEQ	-> value_1 >= value_2
-    | OP_G		-> value_1 >  value_2
-and eval_discrete_array_relop relop value_1 value_2 : bool =
-    match relop with
-    | OP_L		-> value_1 <  value_2
-    | OP_LEQ	-> value_1 <= value_2
-    | OP_EQ		-> value_1 =  value_2
-    | OP_NEQ	-> value_1 <> value_2
-    | OP_GEQ	-> value_1 >= value_2
-    | OP_G		-> value_1 >  value_2
 
 and eval_discrete_binary_word_expression discrete_valuation = function
     | Logical_shift_left (binary_word, expr) ->

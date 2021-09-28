@@ -227,3 +227,5 @@ val write_to_file : string -> string -> unit
 
 (* pow of x by e *)
 val pow : Int32.t -> Int32.t -> Int32.t
+
+val modulo : Int32.t -> Int32.t -> Int32.t

@@ -577,3 +577,5 @@ let pow x e =
         | e when Int32.equal e Int32.one -> r
         | e -> pow_rec (Int32.mul x r) (Int32.sub e Int32.one)
     in pow_rec x e
+
+let modulo x y = Int32.sub x (Int32.mul (Int32.div x y) y)

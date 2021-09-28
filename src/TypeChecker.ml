@@ -1415,6 +1415,9 @@ let check_constant_expression initialized_constants (name, expr, var_type) =
     let converted_expr, converted_type = convert_literal_types_of_expression variable_infos target_inner_type infer_expr, target_var_type in
     converted_expr, converted_type
 
+type yo =
+    | YO1 of int
+    | YO2 of int
 
 (* Check that a discrete variable initialization is well typed *)
 let check_discrete_init variable_infos variable_name expr =

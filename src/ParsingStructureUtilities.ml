@@ -629,20 +629,21 @@ let is_linear_constant variable_infos = function
     | Leaf_linear_constant _ -> true
 
 
-let is_variable_defined variable_infos = function
+let is_variable_defined_with_callback variable_infos callback = function
     | Leaf_variable variable_name ->
         if not (List.mem variable_name variable_infos.variable_names) && not (Hashtbl.mem variable_infos.constants variable_name) then(
-            (* TODO benjamin message or not message ? *)
-            (* ImitatorUtilities.print_error (
-                "The variable \"" ^ variable_name ^ "\" used in expression \""
-                ^ string_of_parsed_boolean_expression variable_infos expr
-                ^ "\" was not declared."
-            ); *)
+            (
+            match callback with
+            | Some func -> func variable_name
+            | None -> ()
+            );
             false
         )
         else
             true
     | Leaf_constant _ -> true
+
+let is_variable_defined variable_infos = is_variable_defined_with_callback variable_infos None
 
 let is_variable_defined_in_linear_expression variable_infos callback_fail = function
     | Leaf_linear_constant _ -> true
@@ -670,6 +671,16 @@ let is_only_discrete variable_infos = function
             false
         )
 
+let no_variables variable_infos = function
+    | Leaf_linear_constant _ -> true
+    | Leaf_linear_variable (_, variable_name) ->
+        (* Constants are allowed *)
+        (Hashtbl.mem variable_infos.constants variable_name)
+        (* Or parameter *)
+        ||
+        let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+        variable_infos.type_of_variables variable_index = DiscreteValue.Var_type_parameter
+
 let is_parsed_global_expression_constant variable_infos =
     for_all_in_parsed_global_expression (is_constant variable_infos)
 
@@ -694,9 +705,29 @@ let all_variables_defined_in_linear_constraint variable_infos callback_fail expr
         (is_variable_defined_in_linear_expression variable_infos callback_fail)
         (function | Leaf_false_linear_constraint | Leaf_true_linear_constraint -> true) expr
 
-(* Check that there is only discrete variables in a parsed parsed discrete boolean expression *)
-let only_discrete_in_nonlinear_term variable_infos expr =
+let all_variables_defined_in_nonlinear_constraint variable_infos callback expr =
+    for_all_in_parsed_nonlinear_constraint
+        (is_variable_defined_with_callback variable_infos callback)
+        (function | Leaf_false_nonlinear_constraint | Leaf_true_nonlinear_constraint -> true) expr
+
+let all_variables_defined_in_nonlinear_convex_predicate variable_infos callback non_linear_convex_predicate =
+  List.fold_left
+    (fun all_defined nonlinear_constraint ->
+       OCamlUtilities.evaluate_and all_defined (all_variables_defined_in_nonlinear_constraint variable_infos callback nonlinear_constraint)
+    )
+    true
+    non_linear_convex_predicate
+
+(* Check that there is only discrete variables in a parsed global expression *)
+let only_discrete_in_parsed_global_expression variable_infos expr =
+    for_all_in_parsed_global_expression (is_only_discrete variable_infos) expr
+
+(* Check that there is only discrete variables in a parsed discrete boolean expression *)
+let only_discrete_in_nonlinear_expression variable_infos expr =
     for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos) expr
+
+let no_variables_in_linear_expression variable_infos expr =
+    for_all_in_parsed_linear_expression (no_variables variable_infos) expr
 
 let is_parsed_linear_expression_constant variable_infos expr =
     for_all_in_parsed_linear_expression (is_linear_constant variable_infos) expr
@@ -717,29 +748,35 @@ let add_variable_of_discrete_boolean_expression variables_used_ref = function
         (* Add the variable name to the set and update the reference *)
         variables_used_ref := StringSet.add variable_name !variables_used_ref
 
-
+(* Gather all variable names used in a global expression in a given accumulator *)
 let get_variables_in_parsed_global_expression_with_accumulator variables_used_ref =
     iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
 
+(* Gather all variable names used in a parsed boolean expression in a given accumulator *)
 let get_variables_in_parsed_boolean_expression_with_accumulator variables_used_ref =
     iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
 
+(* Gather all variable names used in a parsed discrete boolean expression in a given accumulator *)
 let get_variables_in_parsed_discrete_boolean_expression_with_accumulator variables_used_ref =
     iterate_parsed_discrete_boolean_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
 
+(* Gather all variable names used in a linear expression in a given accumulator *)
 let get_variables_in_linear_expression_with_accumulator variables_used_ref =
     iterate_parsed_linear_expression (add_variable_of_linear_expression variables_used_ref)
 
+(* Gather all variable names used in a linear constraint in a given accumulator *)
 let get_variables_in_linear_constraint_with_accumulator variables_used_ref =
     iterate_parsed_linear_constraint
         (add_variable_of_linear_expression variables_used_ref)
         (function | Leaf_true_linear_constraint | Leaf_false_linear_constraint -> ())
 
+(* Gather all variable names used in a non-linear constraint in a given accumulator *)
 let get_variables_in_nonlinear_constraint_with_accumulator variables_used_ref =
     iterate_parsed_nonlinear_constraint
         (add_variable_of_discrete_boolean_expression variables_used_ref)
         (function | Leaf_true_nonlinear_constraint | Leaf_false_nonlinear_constraint -> ())
 
+(* Gather all variable names used in an update in a given accumulator *)
 let get_variables_in_parsed_update_with_accumulator variables_used_ref =
     iterate_parsed_update
         (add_variable_of_discrete_boolean_expression variables_used_ref)
@@ -750,29 +787,50 @@ let wrap_accumulator f expr =
     f variables_used_ref expr;
     !variables_used_ref
 
+(* Gather all variable names used in a global expression *)
 let get_variables_in_parsed_global_expression =
     wrap_accumulator get_variables_in_parsed_global_expression_with_accumulator
 
+(* Gather all variable names used in a parsed discrete boolean expression *)
 let get_variables_in_parsed_discrete_boolean_expression =
     wrap_accumulator get_variables_in_parsed_discrete_boolean_expression_with_accumulator
 
+(* Gather all variable names used in a linear expression *)
 let get_variables_in_linear_expression =
     wrap_accumulator get_variables_in_linear_expression_with_accumulator
 
+(* Gather all variable names used in a linear constraint *)
 let get_variables_in_linear_constraint =
     wrap_accumulator get_variables_in_linear_constraint_with_accumulator
 
+(* Gather all variable names used in a non-linear constraint *)
 let get_variables_in_nonlinear_constraint =
     wrap_accumulator get_variables_in_nonlinear_constraint_with_accumulator
 
+(* Gather all variable names used in a parsed init state predicate *)
+let get_variables_in_init_state_predicate = function
+	| Parsed_loc_assignment _ -> StringSet.empty
+	| Parsed_linear_predicate linear_constraint -> get_variables_in_linear_constraint linear_constraint
+	| Parsed_discrete_predicate (_, expr) -> get_variables_in_parsed_global_expression expr
+
+(* Gather all variable names used in a non-linear convex predicate (non-linear constraint list) *)
+let get_variables_in_nonlinear_convex_predicate convex_predicate =
+    List.map (get_variables_in_nonlinear_constraint) convex_predicate |>
+    List.fold_left (fun variables acc -> StringSet.union acc variables) StringSet.empty
+
+(* Get variable name from a variable access *)
+(* ex : my_var[0][0] -> my_var *)
 let rec variable_name_of_variable_access = function
     | Variable_name variable_name -> variable_name
     | Variable_access (variable_access, _) -> variable_name_of_variable_access variable_access
 
+(* Check if variable access is a variable name directly *)
+(* ex : my_var -> true, my_var[i] -> false *)
 let is_variable_access_is_a_variable_name = function
     | Variable_name _ -> true
     | Variable_access _ -> false
 
+(* Extract variable infos from useful_parsing_model_information *)
 let variable_infos_of_parsed_model (parsed_model : useful_parsing_model_information) =
     {
         constants = parsed_model.constants;

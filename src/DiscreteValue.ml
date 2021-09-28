@@ -298,7 +298,6 @@ let one_of = function
     | _ as value -> raise (InternalError ("Computing exception at `one_of " ^ string_of_value value ^ "`"))
 
 (** Convert values  **)
-(* TODO benjamin for functions below, maybe we had to raise an exception if conversion is an implicit conversion *)
 
 (* Get NumConst.t value of rational discrete value *)
 let numconst_value = function
@@ -316,6 +315,7 @@ let bool_value = function
     | Bool_value x -> x
     | _ as t -> raise (InternalError ("Unable to get bool value of non-bool discrete value" ^ string_of_value t))
 
+(* Get array value of discrete value *)
 let array_value = function
     | Array_value x -> x
     | _ -> raise (InternalError "Unable to get array value of non-array discrete value")
@@ -349,7 +349,6 @@ let to_float_value = function
     | Int_value x -> Int32.to_float x
     | Binary_word_value x -> float_of_int (BinaryWord.hash x)
     | Array_value _ -> raise (InternalError "Unable to convert array to float value")
-
 
 (* Get binary word value of discrete value *)
 let binary_word_value = function
