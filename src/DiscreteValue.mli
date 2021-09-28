@@ -50,7 +50,7 @@ type discrete_value =
     | Number_value of NumConst.t
     | Rational_value of NumConst.t
     | Int_value of Int32.t
-    | Bool_value of Bool.t
+    | Bool_value of bool
     | Binary_word_value of BinaryWord.t
     | Array_value of discrete_value array
 
