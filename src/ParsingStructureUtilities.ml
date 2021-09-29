@@ -8,7 +8,7 @@
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/05
- * Last modified     : 2021/07/29
+ * Last modified     : 2021/09/29
  *
  ************************************************************)
 
@@ -616,19 +616,20 @@ let try_reduce_parsed_factor constants factor =
     let expr = Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor factor)))) in
     try_reduce_parsed_global_expression constants expr
 
-
-
 (** Utils **)
 
+(* Check if leaf is a constant *)
 let is_constant variable_infos = function
     | Leaf_variable variable_name -> Hashtbl.mem variable_infos.constants variable_name
     | Leaf_constant _ -> true
 
+(* Check if linear leaf is a constant *)
 let is_linear_constant variable_infos = function
     | Leaf_linear_variable (_, variable_name) -> Hashtbl.mem variable_infos.constants variable_name
     | Leaf_linear_constant _ -> true
 
-
+(* Check if leaf is a variable that is defined *)
+(* A given callback is executed if it's not a defined variable *)
 let is_variable_defined_with_callback variable_infos callback = function
     | Leaf_variable variable_name ->
         if not (List.mem variable_name variable_infos.variable_names) && not (Hashtbl.mem variable_infos.constants variable_name) then(
@@ -645,6 +646,7 @@ let is_variable_defined_with_callback variable_infos callback = function
 
 let is_variable_defined variable_infos = is_variable_defined_with_callback variable_infos None
 
+(* Check if leaf is a variable that is defined *)
 let is_variable_defined_in_linear_expression variable_infos callback_fail = function
     | Leaf_linear_constant _ -> true
     | Leaf_linear_variable (_, variable_name) ->
@@ -654,6 +656,7 @@ let is_variable_defined_in_linear_expression variable_infos callback_fail = func
         else
             true
 
+(* Check if leaf is only a discrete variable *)
 let is_only_discrete variable_infos = function
     | Leaf_constant _ -> true
     | Leaf_variable variable_name ->
@@ -671,6 +674,7 @@ let is_only_discrete variable_infos = function
             false
         )
 
+(* Check if leaf isn't a variable *)
 let no_variables variable_infos = function
     | Leaf_linear_constant _ -> true
     | Leaf_linear_variable (_, variable_name) ->
@@ -681,9 +685,11 @@ let no_variables variable_infos = function
         let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
         variable_infos.type_of_variables variable_index = DiscreteValue.Var_type_parameter
 
+(* Check if a global expression is constant *)
 let is_parsed_global_expression_constant variable_infos =
     for_all_in_parsed_global_expression (is_constant variable_infos)
 
+(* Check if an arithmetic expression is constant *)
 let is_parsed_arithmetic_expression_constant variable_infos =
     for_all_in_parsed_discrete_arithmetic_expression (is_constant variable_infos)
 
@@ -705,11 +711,13 @@ let all_variables_defined_in_linear_constraint variable_infos callback_fail expr
         (is_variable_defined_in_linear_expression variable_infos callback_fail)
         (function | Leaf_false_linear_constraint | Leaf_true_linear_constraint -> true) expr
 
+(* Check that all variables in a non-linear constraint are effectivily be defined *)
 let all_variables_defined_in_nonlinear_constraint variable_infos callback expr =
     for_all_in_parsed_nonlinear_constraint
         (is_variable_defined_with_callback variable_infos callback)
         (function | Leaf_false_nonlinear_constraint | Leaf_true_nonlinear_constraint -> true) expr
 
+(* Check that all variables in a non-linear convex predicate (non-linear constraint list) are effectivily be defined *)
 let all_variables_defined_in_nonlinear_convex_predicate variable_infos callback non_linear_convex_predicate =
   List.fold_left
     (fun all_defined nonlinear_constraint ->
@@ -726,16 +734,15 @@ let only_discrete_in_parsed_global_expression variable_infos expr =
 let only_discrete_in_nonlinear_expression variable_infos expr =
     for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos) expr
 
+(* Check if there is no variables in a linear expression *)
 let no_variables_in_linear_expression variable_infos expr =
     for_all_in_parsed_linear_expression (no_variables variable_infos) expr
 
+(* Check if a linear expression is constant *)
 let is_parsed_linear_expression_constant variable_infos expr =
     for_all_in_parsed_linear_expression (is_linear_constant variable_infos) expr
 
-
-(*------------------------------------------------------------*)
 (* Gather all variable names used in a linear_expression *)
-(*------------------------------------------------------------*)
 let add_variable_of_linear_expression variables_used_ref = function
     | Leaf_linear_constant _ -> ()
     | Leaf_linear_variable (_, variable_name) ->
