@@ -1,5 +1,5 @@
 *******************************************************
-# release 3.2 (202x-XX-XX) Cheese XXXX
+# release 3.2 (202x-XX-XX) Cheese Blueberries
 
 ### Syntax improvement
 * New type: "binary words", of the form `0b00111`, for bitwise binary operations. Can be used in guards, invariants, updates. Example: `when logor(bw1, 0b1011) <> bw1 do {shift_left(bw1, 2)}`
