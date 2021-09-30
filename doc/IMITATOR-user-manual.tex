@@ -52,9 +52,10 @@
 \imitator{} addresses several variants of the following problem:
 ``given a concurrent timed system, what are the values of the timing constants that guarantee that the model of the system satisfies some property?''
 Among other algorithms, \imitator{} implements
-parametric safety analysis~\cite{AHV93,JLR15},
-the inverse method \cite{ACEF09,AM15},
+parametric safety and reachability analysis~\cite{AHV93,JLR15},
+parametric liveness synthesis (with Büchi conditions)~\cite{NPP18,AAPP21},
 parametric deadlock-freeness synthesis~\cite{Andre16},
+robustness analysis (also known as the inverse method) \cite{ACEF09,ALM20},
 the behavioral cartography~\cite{AF10},
 and
 parametric reachability preservation~\cite{ALNS15}.
@@ -1445,8 +1446,8 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given an \NIPTA{} and a reference parameter valuation, the inverse method~\IM{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
-This problem is known as the trace-preservation synthesis, and formalized in~\cite{AM15}.
-The trace-preservation emptiness problem being undecidable~\cite{AM15}, the analysis is not guaranteed to terminate (although it often does in practice).
+This problem is known as the trace-preservation synthesis, and formalized in~\cite{ALM20}.
+The trace-preservation emptiness problem being undecidable~\cite{ALM20}, the analysis is not guaranteed to terminate (although it often does in practice).
 
 The property syntax is of the following form:
 
@@ -4257,7 +4258,7 @@ However, in this latter case, the non-linear power of arithmetic expressions (mu
 
 \imitator{} does not implement specific algorithms for lower-bound / upper-bound PTA (L/U-PTA).
 This subclass of PTA, introduced in~\cite{HRSV02}, constrains parameters to appear either always as upper-bounds in inequalities comparing them with clocks, or always as lower-bounds.
-L/U-PTA benefit from some decidability results (see \eg{} \cite{HRSV02,BlT09,JLR15,AM15,ALime17}); however, exact synthesis seems to be intractable in practice~\cite{JLR15,ALR16ICFEM}.
+L/U-PTA benefit from some decidability results (see \eg{} \cite{HRSV02,BlT09,JLR15,ALime17,ALM20}); however, exact synthesis seems to be intractable in practice~\cite{JLR15,ALR16ICFEM}.
 Still, some subclasses for which exact synthesis can be performed were proposed~\cite{BlT09,ALR18FORMATS}.
 
 However, \imitator{} does detect whether an input model is an L/U-PTA, in which case a message is printed with the list of lower-bounds parameters and upper-bounds parameters.
