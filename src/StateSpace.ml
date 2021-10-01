@@ -1160,29 +1160,6 @@ let states_equal   = states_compare LinearConstraint.px_is_equal "equality"
 let state_included = states_compare LinearConstraint.px_is_leq   "inclusion"
 
 
-(*(* Check dynamically if two states are equal*)
-let states_equal_dyn (state1 : state) (state2 : state) constr : bool =
-	let (loc1, constr1) = state1.global_location, state1.px_constraint in
-	let (loc2, constr2) = state2.global_location, state2.px_constraint in
-	if not (Location.location_equal loc1 loc2) then false else (
-		(* Statistics *)
-		print_message Verbose_high ("About to compare (dynamic) equality between two constraints.");
-
-		(* Statistics *)
-		statespace_dcounter_nb_constraint_comparisons#increment;
-
-		if verbose_mode_greater Verbose_high then(
-			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
-			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
-		);
-
-		(*** WARNING!!! Really sure that one wants do MODIFY the constraints here?!!! ***)
-		LinearConstraint.px_intersection_assign constr1  [constr];
-		LinearConstraint.px_intersection_assign constr2 [constr];
-		LinearConstraint.px_is_equal constr1 constr2
-	)*)
-
-
 let new_location_index state_space location =
         let new_index = try (
 	Hashtbl.find state_space.index_of_locations location

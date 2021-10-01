@@ -251,11 +251,6 @@ val all_p_constraints : state_space -> LinearConstraint.p_linear_constraint list
 (*------------------------------------------------------------*)
 val states_equal: state -> state -> bool
 
-(*------------------------------------------------------------*)
-(** Check dynamically if two states are equal, i.e., if the first one + constraint equals second one + constraint *)
-(*------------------------------------------------------------*)
-(* val states_equal_dyn: state -> state -> LinearConstraint.px_linear_constraint -> bool *)
-
 (*(** Test if a state exists satisfying predicate s *)
 val exists_state: (state -> bool) -> state_space -> bool
 
