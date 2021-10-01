@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Description of the symbolic states and of the state space
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2020/09/23
+ * Last modified     : 2021/10/01
  *
  ************************************************************)
 
@@ -253,7 +254,7 @@ val states_equal: state -> state -> bool
 (*------------------------------------------------------------*)
 (** Check dynamically if two states are equal, i.e., if the first one + constraint equals second one + constraint *)
 (*------------------------------------------------------------*)
-val states_equal_dyn: state -> state -> LinearConstraint.px_linear_constraint -> bool
+(* val states_equal_dyn: state -> state -> LinearConstraint.px_linear_constraint -> bool *)
 
 (*(** Test if a state exists satisfying predicate s *)
 val exists_state: (state -> bool) -> state_space -> bool

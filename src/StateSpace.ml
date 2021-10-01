@@ -4,12 +4,13 @@
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Description of the symbolic states and of the state space
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2021/03/19
+ * Last modified     : 2021/10/01
  *
  ************************************************************)
 
@@ -1153,7 +1154,7 @@ let states_equal (state1 : state) (state2 : state) : bool =
 		LinearConstraint.px_is_equal constr1 constr2
 	)
 
-(* Check dynamically if two states are equal*)
+(*(* Check dynamically if two states are equal*)
 let states_equal_dyn (state1 : state) (state2 : state) constr : bool =
 	let (loc1, constr1) = state1.global_location, state1.px_constraint in
 	let (loc2, constr2) = state2.global_location, state2.px_constraint in
@@ -1173,7 +1174,7 @@ let states_equal_dyn (state1 : state) (state2 : state) constr : bool =
 		LinearConstraint.px_intersection_assign constr1  [constr];
 		LinearConstraint.px_intersection_assign constr2 [constr];
 		LinearConstraint.px_is_equal constr1 constr2
-	)
+	)*)
 
 
 (** Check if a state is included in another one *)
