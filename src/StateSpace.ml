@@ -1135,13 +1135,13 @@ let increment_nb_gen_states state_space =
 	state_space.nb_generated_states := !(state_space.nb_generated_states) + 1
 
 
-(** Check if two states are equal *)
-let states_equal (state1 : state) (state2 : state) : bool =
+(** Compare two states (generic version) *)
+let states_compare (constraint_comparison_function : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint -> bool) (comparison_name : string) (state1 : state) (state2 : state) : bool =
 	let (loc1, constr1) = state1.global_location, state1.px_constraint in
 	let (loc2, constr2) = state2.global_location, state2.px_constraint in
 	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
-		print_message Verbose_high ("About to compare equality between two constraints.");
+		print_message Verbose_high ("About to compare " ^ comparison_name ^ " between two constraints.");
 
 		(* Statistics *)
 		statespace_dcounter_nb_constraint_comparisons#increment;
@@ -1151,8 +1151,14 @@ let states_equal (state1 : state) (state2 : state) : bool =
 			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
 		);
 
-		LinearConstraint.px_is_equal constr1 constr2
+		(* Perform the actual comparison *)
+		constraint_comparison_function constr1 constr2
 	)
+
+(** Concrete implementations *)
+let states_equal   = states_compare LinearConstraint.px_is_equal "equality"
+let state_included = states_compare LinearConstraint.px_is_leq   "inclusion"
+
 
 (*(* Check dynamically if two states are equal*)
 let states_equal_dyn (state1 : state) (state2 : state) constr : bool =
@@ -1176,24 +1182,6 @@ let states_equal_dyn (state1 : state) (state2 : state) constr : bool =
 		LinearConstraint.px_is_equal constr1 constr2
 	)*)
 
-
-(** Check if a state is included in another one *)
-(* (Despite the test based on the hash table, this is still necessary in case of hash collisions) *)
-let state_included (state1 : state) (state2 : state) : bool =
-	let (loc1, constr1) = state1.global_location, state1.px_constraint in
-	let (loc2, constr2) = state2.global_location, state2.px_constraint in
-	if not (Location.location_equal loc1 loc2) then false else (
-
-		(* Statistics *)
-		statespace_dcounter_nb_constraint_comparisons#increment;
-
-		if verbose_mode_greater Verbose_high then(
-			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
-			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
-		);
-
-		LinearConstraint.px_is_leq constr1 constr2
-	)
 
 let new_location_index state_space location =
         let new_index = try (
