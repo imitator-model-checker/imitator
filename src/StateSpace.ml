@@ -1151,6 +1151,30 @@ let states_compare (constraint_comparison_function : LinearConstraint.px_linear_
 			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
 		);
 
+		(* Retrieve the model *)
+		let model = Input.get_model() in
+		
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+		
+		let constr1, constr2 =
+		(* Specific option to remove the global time clock *)
+		if options#no_global_time_in_comparison then(
+			match model.global_time_clock with
+			(* Nothing to do *)
+			| None -> constr1, constr2
+			(* Nothing to do *)
+			| Some global_time_clock ->
+				(* Remove the global time clock in both constraints *)
+				(*** NOTE: expensive! ***)
+				LinearConstraint.px_hide [global_time_clock] constr1
+				,
+				LinearConstraint.px_hide [global_time_clock] constr2
+		)else(
+			(* Check with standard constraints *)
+			constr1, constr2
+		) in
+		
 		(* Perform the actual comparison *)
 		constraint_comparison_function constr1 constr2
 	)
