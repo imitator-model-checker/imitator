@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Common definitions for linear terms and constraints (interface to PPL)
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/08/16
+ * Last modified     : 2021/10/01
  *
  ************************************************************)
 

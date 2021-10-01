@@ -4,6 +4,7 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Common definitions for linear terms and constraints (interface to PPL)
  * 
@@ -465,6 +466,7 @@ val pxd_hide_assign : variable list -> pxd_linear_constraint -> unit
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint, without side effects *)
 val p_hide : variable list -> p_linear_constraint -> p_linear_constraint
+val px_hide : variable list -> px_linear_constraint -> px_linear_constraint
 
 (** Add nb_dimensions to a linear_constraint *)
 (* val add_dimensions : int -> linear_constraint -> unit *)
