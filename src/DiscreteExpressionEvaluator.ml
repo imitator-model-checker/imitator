@@ -272,8 +272,15 @@ let pack_value discrete_valuation old_value new_value variable_access =
             let index = Int32.to_int (eval_int_expression discrete_valuation index_expr) in
             (* Get inner array of discrete value of old value *)
             let old_array = DiscreteValue.array_value old_value in
-            (* Copy the old value array *)
-            let old_array_cpy = Array.copy old_array in
+            (* Get or copy the old value array *)
+            (* Only copy when it's the 'root' array *)
+            (* If we don't make a copy we change a value of the array that is a reference of the old array *)
+            (* this change of state make issues, but *)
+            (* If it's not the root array we can keep the reference to the old array *)
+            let old_array_cpy = match variable_access with
+            | Discrete_variable_index _ -> Array.copy old_array
+            | Discrete_variable_access _ -> old_array
+            in
             (* Get element at given index *)
             let unpacked_old_array = old_array_cpy.(index) in
             (* Get packed new value *)
