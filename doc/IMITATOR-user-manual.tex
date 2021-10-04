@@ -405,7 +405,7 @@ a Boolean variable valuation is a function $\bval : \BVar \rightarrow \setB$, wh
 %------------------------------------------------------------
 
 % \emph{Binary word variables}
-Binary word variables are sequences of bits of fixed length.
+Binary word variables are sequences of bits of fixed length - the maximum size of a binary word is $2^{16}$.
 Bitwise operations can be defined on these variables (on same length).
 
 For example, defining two binary words \styleIMI{bw1} and \styleIMI{bw2} both of size~4 (type : \styleIMI{binary(4)}), such that initially \styleIMI{bw1 := 0b1010} and \styleIMI{bw2 := 0b1011}, we can use a guard \styleIMI{logor(bw1, bw2) <> bw1} that checks whether the result of the bitwise (logical) ``or'' operation on both variables differs from \styleIMI{bw1}.
@@ -801,7 +801,7 @@ Limited linear expressions over rationals can be used in the definition of a (ra
 %------------------------------------------------------------
 \begin{hint}
 	In fact, a variable (\eg{} a parameter) can be turned to a constant as follows in the definition of the parameters:
-	
+
 \begin{IMITATORmodel}
 p = 2: parameter;
 \end{IMITATORmodel}
@@ -1073,7 +1073,7 @@ a within d
 if a2 then a1 has happened within d before
 \end{IMITATORproperty}
 
-	\item 
+	\item
 \begin{IMITATORproperty}
 everytime a2 then a1 has happened within d before
 \end{IMITATORproperty}
