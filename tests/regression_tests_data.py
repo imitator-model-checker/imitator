@@ -3834,7 +3834,7 @@ Error                                   : invalid model
 		'author': 'lbinria',
 		'purpose'    : 'Test that properties support type checking',
 		'input_files': ['type_checking/typed-property.imi', 'type_checking/typed-property.imiprop'],
-		'tags':'type checking',
+		'tags':'type checking, property',
 		'options'    : '',
 		'expectations' : [
 			{'file': 'typed-property.res' , 'content' : """

@@ -370,8 +370,22 @@ discrete_factor:
   | CT_TRUE { Parsed_DF_constant (DiscreteValue.Bool_value true) }
   | CT_FALSE { Parsed_DF_constant (DiscreteValue.Bool_value false) }
   | binary_word { Parsed_DF_constant $1 }
+  | literal_array { Parsed_DF_array (Array.of_list $1) }
+  | discrete_factor LSQBRA discrete_expression RSQBRA { Parsed_DF_access ($1, $3) }
 	| RPAREN discrete_expression LPAREN { Parsed_DF_expression $2 }
 	| OP_MINUS discrete_factor { Parsed_DF_unary_min $2 }
+;
+
+literal_array:
+  /* Empty array */
+  | LSQBRA RSQBRA { [] }
+  /* Non-empty array */
+  | LSQBRA literal_array_fol RSQBRA { $2 }
+;
+
+literal_array_fol:
+	| discrete_boolean_predicate COMMA literal_array_fol { Parsed_Discrete_boolean_expression $1 :: $3 }
+	| discrete_boolean_predicate { [Parsed_Discrete_boolean_expression $1] }
 ;
 
 
