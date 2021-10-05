@@ -25,6 +25,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open LinearConstraint
 open DiscreteExpressions
+open NonlinearConstraint
 open AbstractModel
 open Result
 
@@ -41,7 +42,7 @@ let jani_boolean_strings : customized_boolean_string = {
 	l_operator    = "<";
 	le_operator   = "≤";
 	eq_operator   = "=";
-	neq_operator   = "≠";
+	neq_operator   = "<>";
 	ge_operator   = ">";
 	g_operator    = "≥";
 	not_operator  = "¬";
@@ -49,7 +50,7 @@ let jani_boolean_strings : customized_boolean_string = {
 }
 
 let jani_strings = {
-    arithmetic_string = Constants.default_arithmetic_string;
+    arithmetic_string = Constants.default_arithmetic_string_without_whitespace;
     boolean_string = jani_boolean_strings;
 }
 
@@ -60,6 +61,342 @@ let jani_assignment = "="
 let jani_version = "1"
 let jani_type = "sha"
 let jani_features = "[\"derived-operators\"]"
+
+(* JANI *)
+
+(************** Jani translation **************)
+(* Convert an arithmetic expression into a string *)
+(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
+let jani_separator = ", "
+
+let string_of_jani_binary_expression str_operator str_left str_right =
+    "{"
+    ^ "\"op\": \"" ^ str_operator ^ "\"" ^ jani_separator
+    ^ "\"left\": " ^ str_left ^ jani_separator
+    ^ "\"right\": " ^ str_right
+    ^ "}"
+
+let string_of_jani_unary_expression str_operator str_expr =
+    "{"
+    ^ "\"op\": \"" ^ str_operator ^"\"" ^ jani_separator
+    ^ "\"exp\": " ^ str_expr
+    ^ "}"
+
+let jani_quoted str =
+    "\"" ^ str ^ "\""
+
+(* TODO benjamin REFACTOR duplicate from DiscreteExpression *)
+let customized_string_of_boolean_operations customized_string = function
+	| OP_L		-> customized_string.l_operator
+	| OP_LEQ	-> customized_string.le_operator
+	| OP_EQ		-> customized_string.eq_operator
+	| OP_NEQ	-> customized_string.neq_operator
+	| OP_GEQ	-> customized_string.ge_operator
+	| OP_G		-> customized_string.g_operator
+
+(* TODO benjamin REFACTOR duplicate from DiscreteExpression *)
+let customized_string_of_bool_value customized_string = function
+    | true -> customized_string.true_string
+    | false -> customized_string.false_string
+
+let rec customized_string_of_global_expression_for_jani customized_string variable_names = function
+    | Arithmetic_expression expr -> customized_string_of_arithmetic_expression_for_jani customized_string variable_names expr
+    | Bool_expression expr -> customized_string_of_boolean_expression_for_jani customized_string variable_names expr
+    | Binary_word_expression expr -> customized_string_of_binary_word_expression_for_jani customized_string variable_names expr
+    | Array_expression expr -> customized_string_of_array_expression_for_jani customized_string variable_names expr
+
+and customized_string_of_boolean_expression_for_jani customized_string variable_names = function
+	| True_bool -> customized_string.boolean_string.true_string
+	| False_bool -> customized_string.boolean_string.false_string
+	| And_bool (b1, b2) ->
+	    string_of_jani_binary_expression
+            customized_string.boolean_string.and_operator
+            (customized_string_of_boolean_expression_for_jani customized_string variable_names b1)
+            (customized_string_of_boolean_expression_for_jani customized_string variable_names b2)
+
+	| Or_bool (b1, b2) ->
+	    string_of_jani_binary_expression
+		    customized_string.boolean_string.or_operator
+            (customized_string_of_boolean_expression_for_jani customized_string variable_names b1)
+		    (customized_string_of_boolean_expression_for_jani customized_string variable_names b2)
+
+	| Discrete_boolean_expression discrete_boolean_expression ->
+		customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names discrete_boolean_expression
+
+(** Convert a discrete_boolean_expression into a string *)
+and customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Expression (l_expr, relop, r_expr) ->
+	    string_of_jani_binary_expression
+	        (customized_string_of_boolean_operations customized_string.boolean_string relop)
+		    (customized_string_of_arithmetic_expression_for_jani customized_string variable_names l_expr)
+		    (customized_string_of_arithmetic_expression_for_jani customized_string variable_names r_expr)
+
+    | Boolean_comparison (l_expr, relop, r_expr) ->
+        string_of_jani_binary_expression
+            (customized_string_of_boolean_operations customized_string.boolean_string relop)
+		    (customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names l_expr)
+		    (customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names r_expr)
+
+    | Binary_comparison (l_expr, relop, r_expr) ->
+        string_of_jani_binary_expression
+            (customized_string_of_boolean_operations customized_string.boolean_string relop)
+		    (customized_string_of_binary_word_expression_for_jani customized_string variable_names l_expr)
+		    (customized_string_of_binary_word_expression_for_jani customized_string variable_names r_expr)
+
+    | Array_comparison (l_expr, relop, r_expr) ->
+        string_of_jani_binary_expression
+            (customized_string_of_boolean_operations customized_string.boolean_string relop)
+            (customized_string_of_array_expression_for_jani customized_string variable_names l_expr)
+            (customized_string_of_array_expression_for_jani customized_string variable_names r_expr)
+
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	(*Done for jani, but without test*)
+	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
+		let expr1 = (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression1) in
+		let expr2 = (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression2) in
+		let expr3 = (customized_string_of_arithmetic_expression_for_jani customized_string variable_names discrete_arithmetic_expression3) in
+		string_of_jani_binary_expression
+		    customized_string.boolean_string.and_operator
+		    (string_of_jani_binary_expression customized_string.boolean_string.le_operator expr2 expr1 )
+		    (string_of_jani_binary_expression customized_string.boolean_string.le_operator expr1 expr3 )
+
+    | Boolean_expression expr ->
+        customized_string_of_boolean_expression_for_jani customized_string variable_names expr
+	| Not_bool b ->
+	    string_of_jani_unary_expression
+	        customized_string.boolean_string.not_operator
+	        (customized_string_of_boolean_expression_for_jani customized_string variable_names b)
+
+    | DB_variable discrete_index -> jani_quoted (variable_names discrete_index)
+    | DB_constant value -> customized_string_of_bool_value customized_string.boolean_string value
+    | Bool_array_access (array_expr, index_expr) ->
+        "{"
+        ^ "\"op\": \"aa\", "
+        ^ "\"exp\": " ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr ^ ", "
+        ^ "\"index\": " ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr
+        ^ "}"
+
+and customized_string_of_arithmetic_expression_for_jani customized_string variable_names = function
+    | Rational_arithmetic_expression expr -> customized_string_of_rational_arithmetic_expression_for_jani customized_string variable_names expr
+    | Int_arithmetic_expression expr -> customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
+
+and customized_string_of_rational_arithmetic_expression_for_jani customized_string variable_names =
+    let rec string_of_arithmetic_expression customized_string = function
+        (* Shortcut: Remove the "+0" / -"0" cases *)
+        | DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
+        | DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
+            string_of_arithmetic_expression customized_string discrete_arithmetic_expression
+
+        | DAE_plus (discrete_arithmetic_expression, discrete_term) ->
+            string_of_jani_binary_expression
+                Constants.default_arithmetic_string_without_whitespace.plus_string
+                (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
+                (string_of_term customized_string discrete_term)
+
+
+        | DAE_minus (discrete_arithmetic_expression, discrete_term) ->
+            string_of_jani_binary_expression
+                Constants.default_arithmetic_string_without_whitespace.minus_string
+                (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
+                (string_of_term customized_string discrete_term)
+
+
+        | DAE_term discrete_term ->
+            string_of_term customized_string discrete_term
+
+	and string_of_term customized_string = function
+		(* Eliminate the '1' coefficient *)
+		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
+			string_of_factor customized_string discrete_factor
+		| DT_mul (discrete_term, discrete_factor) ->
+            string_of_jani_binary_expression
+                Constants.default_arithmetic_string_without_whitespace.mul_string
+                (string_of_term customized_string discrete_term)
+                (string_of_factor customized_string discrete_factor)
+
+
+		| DT_div (discrete_term, discrete_factor) ->
+		    string_of_jani_binary_expression
+		        Constants.default_arithmetic_string_without_whitespace.div_string
+		        (string_of_term customized_string discrete_term)
+                (string_of_factor customized_string discrete_factor)
+
+
+		| DT_factor discrete_factor ->
+		    string_of_factor customized_string discrete_factor
+
+	and string_of_factor customized_string = function
+		| DF_variable discrete_index -> jani_quoted (variable_names discrete_index)
+		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
+        | Rational_array_access (array_expr, index_expr) ->
+            "{"
+            ^ "\"op\": \"aa\", "
+            ^ "\"exp\": " ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr ^ ", "
+            ^ "\"index\": " ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr
+            ^ "}"
+		| DF_unary_min discrete_factor ->
+		    string_of_jani_unary_expression
+		        Constants.default_arithmetic_string_without_whitespace.unary_min_string
+                (string_of_factor customized_string discrete_factor)
+
+		| DF_expression expr ->
+			(*** TODO: simplify a bit? ***)
+			string_of_arithmetic_expression customized_string expr
+		| DF_rational_of_int expr ->
+		    customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
+        | DF_pow (expr, exp) as factor ->
+            string_of_jani_binary_expression
+                (label_of_rational_factor factor)
+                (string_of_arithmetic_expression customized_string expr)
+                (customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names exp)
+
+	(* Call top-level *)
+	in string_of_arithmetic_expression customized_string
+
+and customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names =
+    let rec string_of_int_arithmetic_expression customized_string = function
+        (* Shortcut: Remove the "+0" / -"0" cases *)
+        | Int_plus (discrete_arithmetic_expression, Int_factor (Int_constant c))
+        | Int_minus (discrete_arithmetic_expression, Int_factor (Int_constant c)) when Int32.equal c Int32.zero ->
+            string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression
+
+	| Int_plus (discrete_arithmetic_expression, discrete_term) ->
+	    string_of_jani_binary_expression
+		    customized_string.arithmetic_string.plus_string
+            (string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression)
+            (string_of_int_term customized_string discrete_term)
+
+
+	| Int_minus (discrete_arithmetic_expression, discrete_term) ->
+	    string_of_jani_binary_expression
+		    customized_string.arithmetic_string.minus_string
+            (string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression)
+            (string_of_int_term customized_string discrete_term)
+
+
+        | Int_term discrete_term -> string_of_int_term customized_string discrete_term
+
+	and string_of_int_term customized_string = function
+		(* Eliminate the '1' coefficient *)
+		| Int_mul (Int_factor (Int_constant c), discrete_factor) when Int32.equal c Int32.one ->
+			string_of_int_factor customized_string discrete_factor
+		| Int_mul (discrete_term, discrete_factor) ->
+		    string_of_jani_binary_expression
+                Constants.default_arithmetic_string_without_whitespace.mul_string
+                (string_of_int_term customized_string discrete_term)
+                (string_of_int_factor customized_string discrete_factor)
+
+
+		| Int_div (discrete_term, discrete_factor) ->
+		    string_of_jani_binary_expression
+                Constants.default_arithmetic_string_without_whitespace.div_string
+                (string_of_int_term customized_string discrete_term)
+                (string_of_int_factor customized_string discrete_factor)
+
+
+		| Int_factor discrete_factor -> string_of_int_factor customized_string discrete_factor
+
+	and string_of_int_factor customized_string = function
+		| Int_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
+		| Int_constant value -> Int32.to_string value
+        | Int_array_access (array_expr, index_expr) ->
+            "{"
+            ^ "\"op\": \"aa\", "
+            ^ "\"exp\": " ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr ^ ", "
+            ^ "\"index\": " ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr
+            ^ "}"
+		| Int_unary_min discrete_factor ->
+		    string_of_jani_unary_expression
+                Constants.default_arithmetic_string_without_whitespace.unary_min_string
+                (string_of_int_factor customized_string discrete_factor)
+
+		| Int_expression discrete_arithmetic_expression ->
+			(*** TODO: simplify a bit? ***)
+			string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression
+        | Int_pow (expr, exp) as factor ->
+            string_of_jani_binary_expression
+                (label_of_int_factor factor)
+                (string_of_int_arithmetic_expression customized_string expr)
+                (string_of_int_arithmetic_expression customized_string exp)
+
+	(* Call top-level *)
+	in string_of_int_arithmetic_expression customized_string
+
+and customized_string_of_binary_word_expression_for_jani customized_string variable_names = function
+    | Logical_fill_left (binary_word, expr)
+    | Logical_shift_left (binary_word, expr) as binary_word_expression ->
+        string_of_jani_binary_expression
+            (label_of_binary_word_expression binary_word_expression)
+            (customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word)
+            (customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr)
+
+
+    | Logical_fill_right (binary_word, expr)
+    | Logical_shift_right (binary_word, expr) as binary_word_expression ->
+        string_of_jani_binary_expression
+            (label_of_binary_word_expression binary_word_expression)
+            (customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word)
+            (customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr)
+
+
+    | Logical_and (l_binary_word, r_binary_word)
+    | Logical_or (l_binary_word, r_binary_word)
+    | Logical_xor (l_binary_word, r_binary_word) as binary_word_expression ->
+        string_of_jani_binary_expression
+            (label_of_binary_word_expression binary_word_expression)
+            (customized_string_of_binary_word_expression_for_jani customized_string variable_names l_binary_word)
+            (customized_string_of_binary_word_expression_for_jani customized_string variable_names r_binary_word)
+
+
+    | Logical_not binary_word as binary_word_expression ->
+        string_of_jani_unary_expression
+	        (label_of_binary_word_expression binary_word_expression)
+	        (customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word)
+
+
+    | Binary_word_constant value -> BinaryWord.string_of_binaryword value
+    | Binary_word_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
+    | Binary_word_array_access (array_expr, index_expr) ->
+        "{"
+        ^ "\"op\": \"aa\", "
+        ^ "\"exp\": " ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr ^ ", "
+        ^ "\"index\": " ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr
+        ^ "}"
+
+
+and customized_string_of_array_expression_for_jani customized_string variable_names = function
+    | Literal_array expr_array ->
+        let str_expr = Array.map (customized_string_of_global_expression_for_jani customized_string variable_names ) expr_array in
+        "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_expr ^ "]"
+    | Array_constant values ->
+        let str_values = Array.map DiscreteValue.string_of_value values in
+        "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ "]"
+    | Array_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
+    | Array_array_access (array_expr, index_expr) ->
+        "{"
+        ^ "\"op\": \"aa\", "
+        ^ "\"exp\": " ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr ^ ", "
+        ^ "\"index\": " ^ customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr
+        ^ "}"
+    | Array_concat (array_expr_0, array_expr_1) as func ->
+        "{"
+        ^ "\"op\": \"call\", "
+        ^ "\"function\": " ^ label_of_array_expression func ^ ", "
+        ^ "\"args\": Array.of("
+        ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr_0 ^ ", "
+        ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr_1
+        ^ ")"
+        ^ "}"
+
+(*JANI*)
+(* Get list of non-linear constraint inequalities with customized strings *)
+let customized_strings_of_nonlinear_constraint_for_jani customized_string variable_names = function
+    | True_nonlinear_constraint -> [customized_string.boolean_string.true_string]
+    | False_nonlinear_constraint -> [customized_string.boolean_string.false_string]
+    | Nonlinear_constraint nonlinear_constraint ->
+	(List.rev_map (customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names ) nonlinear_constraint)
+
 
 
 (************************************************************)
@@ -229,7 +566,7 @@ let rec string_of_strings_with_sep_and string_list =
 				^ "\t\t\t\t\t\t\t\"left\": " ^ elem ^ jani_separator ^ "\n"
 				^ "\t\t\t\t\t\t\t\"right\": " ^ string_of_strings_with_sep_and q ^ "\n\t\t\t\t\t\t}"
 
-let jani_string_of_strings_with_sep_and = string_of_strings_with_sep_and
+
 
 (** Convert a guard or an invariant into a string *)
 let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = function
@@ -237,15 +574,13 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 	| True_guard -> ""
 
 	(* False *)
-	| False_guard -> "\t\t\t\t\t\t{\"exp\":" ^ jani_boolean_strings.false_string ^ "}\n"
+	| False_guard -> "\t\t\t\t\t\t\"exp\": {" ^ jani_boolean_strings.false_string ^ "}" ^ "\n"
 
 	| Discrete_guard discrete_guard ->
 
-        let list_discrete_guard = (NonlinearConstraint.customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_guard) in
-        if list_discrete_guard = [jani_boolean_strings.true_string] then
-            ""
-        else
-            "\t\t\t\t\t\t{\"exp\":" ^ string_of_strings_with_sep_and list_discrete_guard ^ "}\n"
+        let list_discrete_guard = (customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_guard) in
+        let list_discrete_guard_without_true = if list_discrete_guard = [jani_boolean_strings.true_string] then [""] else list_discrete_guard in
+        string_of_strings_with_sep_and list_discrete_guard_without_true
 
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
@@ -262,16 +597,15 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 					in
 					let left = LinearConstraint.string_of_left_term_of_pxd_linear_inequality variable_names inequality in
 					let right = LinearConstraint.string_of_right_term_of_pxd_linear_inequality variable_names inequality in
-					  "\t\t\t\t\t\t\t{\"exp\":"
-					^ "\t\t\t\t\t\t\t{\"op\": \"" ^ op ^ "\"" ^ jani_separator ^ "\n"
+					  "\t\t\t\t\t\t\t{\"op\": \"" ^ op ^ "\"" ^ jani_separator ^ "\n"
 					^ "\t\t\t\t\t\t\t\"left\": " ^ left ^ "" ^ jani_separator ^ "\n"
 					^ "\t\t\t\t\t\t\t\"right\": " ^ right ^ "}"
-					^ "}\n"
 				) list_of_inequalities)
+
 			)
 
 	| Discrete_continuous_guard discrete_continuous_guard ->
-		let non_linear_constraint_list = NonlinearConstraint.customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_continuous_guard.discrete_guard in
+		let non_linear_constraint_list = customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_continuous_guard.discrete_guard in
 		let linear_constraint_string = (string_of_guard_or_invariant actions_and_nb_automata variable_names (Continuous_guard discrete_continuous_guard.continuous_guard)) in
 		let list = List.append non_linear_constraint_list [linear_constraint_string] in
 	    let content = string_of_strings_with_sep_and list in
@@ -385,7 +719,7 @@ let string_of_discrete_updates model updates =
 		(* Convert variable access to string *)
 		^ ModelPrinter.string_of_variable_access model variable_access
 		^ "\"" ^ jani_separator ^ " \"value\" : "
-		^ (DiscreteExpressions.customized_string_of_global_expression_for_jani jani_strings model.variable_names global_expression)
+		^ (customized_string_of_global_expression_for_jani jani_strings model.variable_names global_expression)
 		^ "}"
 	) updates)
 (*
@@ -416,20 +750,27 @@ let no_clock_updates clock_updates =
 
 (** Convert a discrete_boolean_expression into a string *)
 let string_of_discrete_boolean_expression variable_names =
-	DiscreteExpressions.customized_string_of_discrete_boolean_expression_for_jani jani_strings variable_names
+	customized_string_of_discrete_boolean_expression_for_jani jani_strings variable_names
 
+(* TODO benjamin CLEAN look if really necessary ? duplicate ? *)
 (** Convert a Boolean expression into a string *)
 let rec string_of_boolean variable_names = function
 	| True_bool -> string_of_true
 	| False_bool -> string_of_false
 	| And_bool (b1, b2) ->
-		"{\"op\": \"" ^ jani_boolean_strings.and_operator ^ "\"" ^ jani_separator
-		^ "\"left\": " ^ (string_of_boolean variable_names b1) ^ jani_separator
-		^ "\"right\": " ^ (string_of_boolean variable_names b2) ^ "}"
+	    string_of_jani_binary_expression
+		    jani_boolean_strings.and_operator
+		    (string_of_boolean variable_names b1)
+		    (string_of_boolean variable_names b2)
+
+
 	| Or_bool (b1, b2) ->
-		"{\"op\": \"" ^ jani_boolean_strings.or_operator ^ "\"" ^ jani_separator
-		^ "\"left\": " ^ (string_of_boolean variable_names b1) ^ jani_separator
-		^ "\"right\": " ^ (string_of_boolean variable_names b2) ^"}"
+	    string_of_jani_binary_expression
+		    jani_boolean_strings.or_operator
+		    (string_of_boolean variable_names b1)
+		    (string_of_boolean variable_names b2)
+
+
 	| Discrete_boolean_expression discrete_boolean_expression ->
 		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
 
@@ -463,7 +804,7 @@ let string_of_conditional_clock_updates model boolean_expr order = function
 let string_of_conditional_discrete_updates model boolean_expr order updates =
 	string_of_list_of_string_with_sep (jani_separator^"\n") (List.rev_map (fun (variable_access, global_expression) ->
 
-		let expression = (DiscreteExpressions.customized_string_of_global_expression_for_jani jani_strings model.variable_names global_expression) in
+		let expression = (customized_string_of_global_expression_for_jani jani_strings model.variable_names global_expression) in
 		let variable_name = "\"" ^ ModelPrinter.string_of_variable_access model variable_access ^ "\"" in
 		"\t\t\t\t\t\t\t{\"ref\": " ^ variable_name ^ jani_separator
 		^ " \"value\" : "
@@ -677,3 +1018,13 @@ let string_of_model model =
   ^ string_of_automata model actions_and_nb_automata
   ^ string_of_system model
   ^ "}"
+  (* TODO benjamin CLEAN here use prettify_json and remove all \n and \t *)
+
+
+
+
+
+
+(* TODO benjamin CLEAN to remove *)
+(* Get string of non-linear constraint inequalities with default strings *)
+(*let strings_of_nonlinear_constraint_for_jani = customized_strings_of_nonlinear_constraint_for_jani global_default_string*)

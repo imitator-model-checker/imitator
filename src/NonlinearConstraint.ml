@@ -36,13 +36,3 @@ let customized_string_of_nonlinear_constraint customized_string variable_names =
 (* Get string of non-linear constraint inequalities with default strings *)
 let string_of_nonlinear_constraint = customized_string_of_nonlinear_constraint global_default_string
 
-(*JANI*)
-(* Get list of non-linear constraint inequalities with customized strings *)
-let customized_strings_of_nonlinear_constraint_for_jani customized_string variable_names = function
-    | True_nonlinear_constraint -> [customized_string.boolean_string.true_string]
-    | False_nonlinear_constraint -> [customized_string.boolean_string.false_string]
-    | Nonlinear_constraint nonlinear_constraint ->
-	(List.rev_map (DiscreteExpressions.customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names) nonlinear_constraint)
-
-(* Get string of non-linear constraint inequalities with default strings *)
-let strings_of_nonlinear_constraint_for_jani = customized_strings_of_nonlinear_constraint_for_jani global_default_string

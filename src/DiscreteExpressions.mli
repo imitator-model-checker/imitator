@@ -163,6 +163,7 @@ type discrete_variable_access =
 val label_of_rational_factor : rational_factor -> string
 val label_of_int_factor : int_factor -> string
 val label_of_binary_word_expression : binary_word_expression -> string
+val label_of_array_expression : array_expression -> string
 
 (* Expressions strings *)
 
@@ -186,7 +187,8 @@ val string_of_array_expression : (Automaton.variable_index -> string) -> array_e
 
 val string_of_discrete_variable_access : (Automaton.variable_index -> string) -> discrete_variable_access -> string
 
-val customized_string_of_global_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string
-val customized_string_of_discrete_boolean_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
-val customized_string_of_arithmetic_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string
-val string_of_arithmetic_expression_for_jani : (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string
+(* TODO benjamin CLEAN to remove *)
+(*val customized_string_of_global_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string*)
+(*val customized_string_of_discrete_boolean_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_boolean_expression -> string*)
+(*val customized_string_of_arithmetic_expression_for_jani : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string*)
+(*val string_of_arithmetic_expression_for_jani : (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string*)

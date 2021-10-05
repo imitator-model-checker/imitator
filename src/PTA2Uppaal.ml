@@ -66,7 +66,6 @@ let rec string_of_var_type_discrete = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | DiscreteValue.Var_type_discrete_bool -> "bool"
     | DiscreteValue.Var_type_discrete_binary_word _ -> "binary_word"
-    (* TODO benjamin IMPORTANT, set length after name of variable for UPPAAL *)
     | DiscreteValue.Var_type_discrete_array (discrete_type, length) -> string_of_var_type_discrete discrete_type
 
 (* Customized string of var_type *)
@@ -74,6 +73,19 @@ let string_of_var_type = function
 	| DiscreteValue.Var_type_clock -> "clock"
 	| DiscreteValue.Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
 	| DiscreteValue.Var_type_parameter -> "parameter"
+
+
+let rec string_of_discrete_name_from_var_type discrete_name = function
+    | DiscreteValue.Var_type_discrete discrete_type -> string_of_discrete_name_from_var_type_discrete discrete_name discrete_type
+    | _ -> discrete_name
+
+and string_of_discrete_name_from_var_type_discrete discrete_name = function
+    | DiscreteValue.Var_type_discrete_array (inner_type, length) ->
+        string_of_discrete_name_from_var_type_discrete discrete_name inner_type
+        ^ "["
+        ^ string_of_int length
+        ^ "]"
+    | _ -> discrete_name
 
 (************************************************************)
 (** Header *)
@@ -148,12 +160,16 @@ let string_of_discrete model =
 				let discrete_name = model.variable_names discrete_index in
                 let discrete_type = model.type_of_variables discrete_index in
 				(* Get the initial value *)
-				let inital_global_location  = model.initial_location in
-				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
+				let initial_global_location  = model.initial_location in
+				let initial_value = Location.get_discrete_value initial_global_location discrete_index in
+				(* TODO benjamin IMPORTANT here change brackets to braces for literal array *)
                 let str_initial_value = DiscreteValue.customized_string_of_value uppaal_boolean_strings initial_value in
-                let str_type = string_of_var_type discrete_type in (* TODO benjamin IMPORTANT create format_with_var_type to format type like array *)
+                let str_type = string_of_var_type discrete_type in
+                (* case of arrays: format name with length of array *)
+                let format_discrete_name = string_of_discrete_name_from_var_type discrete_name discrete_type in
+
 				(* Assign *)
-				"\n" ^ str_type ^ " " ^ discrete_name ^ " = " ^ str_initial_value ^ ";"
+				"\n" ^ str_type ^ " " ^ format_discrete_name ^ " = " ^ str_initial_value ^ ";"
 			) model.discrete
 			)
 		)
@@ -615,8 +631,8 @@ let string_of_locations model actions_and_nb_automata automaton_index =
 (* Convert the initial location of an automaton *)
 let string_of_initial_location model automaton_index =
 	(* Get initial location *)
-	let inital_global_location  = model.initial_location in
-	let initial_location = Location.get_location inital_global_location automaton_index in
+	let initial_global_location  = model.initial_location in
+	let initial_location = Location.get_location initial_global_location automaton_index in
 	"<init ref=\"" ^ (id_of_location model automaton_index initial_location) ^ "\"/>"
 
 (* Convert an automaton into a string *)

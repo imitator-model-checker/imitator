@@ -249,10 +249,10 @@ let string_of_parsed_factor_constructor = function
 	| Parsed_shift_right _ -> "shift_right"
 	| Parsed_fill_left _ -> "fill_left"
 	| Parsed_fill_right _ -> "fill_right"
-    | Parsed_log_and _ -> "log_and"
-    | Parsed_log_or _ -> "log_or"
-    | Parsed_log_xor _ -> "log_xor"
-    | Parsed_log_not _ -> "log_not"
+    | Parsed_log_and _ -> "logand"
+    | Parsed_log_or _ -> "logor"
+    | Parsed_log_xor _ -> "logxor"
+    | Parsed_log_not _ -> "lognot"
     | Parsed_array_concat _ -> "array_concat"
 
 (* String of a parsed expression *)

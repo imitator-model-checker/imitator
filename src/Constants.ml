@@ -163,6 +163,11 @@ type customized_arithmetic_string = {
     unary_min_string : string;
 }
 
+type customized_array_string = {
+    array_literal_delimiter : string * string;
+    array_access_delimiter : string * string;
+}
+
 (** Data structure allowing for customizing string conversions of symbols *)
 type customized_string = {
     arithmetic_string : customized_arithmetic_string;
