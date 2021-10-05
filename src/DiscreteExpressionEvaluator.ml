@@ -251,7 +251,7 @@ and get_array_value_at discrete_valuation array_expr index_expr =
     let index = eval_int_expression discrete_valuation index_expr in
     let int_index = Int32.to_int index in
 
-    if int_index >= Array.length values then (
+    if int_index >= Array.length values || int_index < 0 then (
         let str_index = string_of_int int_index in
         let str_values = OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (fun value -> DiscreteValue.string_of_value value) values) in
         raise (Out_of_bound ("Array index out of range: `" ^ str_index ^ "` for array " ^ str_values))
@@ -263,11 +263,11 @@ and get_array_value_at discrete_valuation array_expr index_expr =
 (* Wrap a scalar value to an array value in function of the modified index of an old value *)
 (* For example old_value[0] = 1 with old value = [0, 1] would wrap new_value into an array as new_value = [1, 1] *)
 (* This function is used to assign an element of an array at a given index *)
-let pack_value discrete_valuation old_value new_value variable_access =
+let pack_value variable_names discrete_valuation old_value new_value variable_access =
 
     let rec pack_value_rec old_value = function
         | Discrete_variable_index discrete_index -> new_value
-        | Discrete_variable_access (variable_access, index_expr) ->
+        | Discrete_variable_access (inner_variable_access, index_expr) ->
             (* Compute index *)
             let index = Int32.to_int (eval_int_expression discrete_valuation index_expr) in
             (* Get inner array of discrete value of old value *)
@@ -277,14 +277,21 @@ let pack_value discrete_valuation old_value new_value variable_access =
             (* If we don't make a copy we change a value of the array that is a reference of the old array *)
             (* this change of state make issues, but *)
             (* If it's not the root array we can keep the reference to the old array *)
-            let old_array_cpy = match variable_access with
+            let old_array_cpy = match inner_variable_access with
             | Discrete_variable_index _ -> Array.copy old_array
             | Discrete_variable_access _ -> old_array
             in
+
+            (* Check bounds *)
+            if index >= Array.length old_array_cpy || index < 0 then (
+                let str_variable_access = DiscreteExpressions.string_of_discrete_variable_access variable_names variable_access in
+                raise (Out_of_bound ("Array index out of range: `" ^ str_variable_access ^ "`"))
+            );
+
             (* Get element at given index *)
             let unpacked_old_array = old_array_cpy.(index) in
             (* Get packed new value *)
-            let packed_new_value = pack_value_rec unpacked_old_array variable_access in
+            let packed_new_value = pack_value_rec unpacked_old_array inner_variable_access in
             (**)
             old_array_cpy.(index) <- packed_new_value;
             (**)

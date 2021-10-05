@@ -1520,7 +1520,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
             (* Compute its new value *)
             let new_value = eval_global_expression discrete_valuation global_expression in
-            let new_value = pack_value discrete_valuation old_value new_value discrete_variable_access in
+            let new_value = pack_value model.variable_names discrete_valuation old_value new_value discrete_variable_access in
 
             (*
             print_message Verbose_standard (

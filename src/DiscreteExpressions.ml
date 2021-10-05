@@ -583,12 +583,23 @@ and customized_string_of_array_expression customized_string variable_names = fun
         ^ customized_string_of_array_expression customized_string variable_names array_expr_1
         ^ ")"
 
+
+
 let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
 let string_of_arithmetic_expression = customized_string_of_arithmetic_expression Constants.global_default_string
 let string_of_int_arithmetic_expression = customized_string_of_int_arithmetic_expression Constants.global_default_string
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.global_default_string
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.global_default_string
 let string_of_array_expression = customized_string_of_array_expression Constants.global_default_string
+
+let rec string_of_discrete_variable_access variable_names = function
+    | Discrete_variable_index discrete_index ->
+        variable_names discrete_index
+    | Discrete_variable_access (variable_access, index_expr) ->
+        string_of_discrete_variable_access variable_names variable_access
+        ^ "["
+        ^ string_of_int_arithmetic_expression variable_names index_expr
+        ^ "]"
 
 (* JANI *)
 

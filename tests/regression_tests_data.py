@@ -3029,6 +3029,25 @@ Error                                   : invalid model
 
 	,
 
+    #------------------------------------------------------------
+    {
+        'author': 'lbinria',
+        'purpose'    : 'Test that accessing an out of bound index raise a controlled error',
+        'tags':'array, semantic, error',
+        'input_files': ['array_expressions/array_out_of_bound_error.imi'],
+        'options'    : '-mode statespace -states-description',
+        'expectations' : [
+            {'file': 'array_out_of_bound_error.res' , 'content' : """
+Error                                   : index out of range
+		"""
+             } # end result file
+            ,
+        ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
 	#------------------------------------------------------------
 	# END : Test array expressions
 	#------------------------------------------------------------
