@@ -434,10 +434,10 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
             )
         | Parsed_DT_div (term, factor) as div ->
 
-            ImitatorUtilities.print_warning (
-                "Int division at `"
+            ImitatorUtilities.print_message Verbose_low (
+                "Non-integer division of type int may happen in the following expression `"
                 ^ ParsingStructureUtilities.string_of_parsed_term variable_infos div
-                ^ "` may lead to a floor result."
+                ^ "`: this may lead to a truncated integer (rounded down), with a potentially invalid result. This will be checked at runtime, and a warning will be triggered if this happens."
             );
 
             Int_div (

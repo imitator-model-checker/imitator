@@ -109,7 +109,11 @@ and eval_int_expression discrete_valuation (* expr *) =
 
             (* Check for non-int division *)
             if OCamlUtilities.modulo numerator denominator <> Int32.zero then
-                ImitatorUtilities.print_warning ("Non-int division found on int expression: `" ^ Int32.to_string numerator ^ " / " ^ Int32.to_string denominator ^ "`");
+                ImitatorUtilities.print_warning (
+                    "Non-integer division of type int was spotted! This means that an int variable was rounded down to the nearest integer instead of a rational result (`"
+                    ^ Int32.to_string numerator ^ " / " ^ Int32.to_string denominator
+                    ^ "`). The overall result may now be invalid."
+                );
 
             (* Divide *)
             Int32.div
