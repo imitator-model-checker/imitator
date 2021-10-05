@@ -15,7 +15,7 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  * 
  * Created          : ? (< 09/2007)
- * Last modified    : 2021/07/26
+ * Last modified    : 2021/10/05
  * Model version    : 
  * 
  * IMITATOR version : 3.1
@@ -27,12 +27,13 @@ var
 
 	i,	(* subscript of the chunk currently beeing processed (1<=i<=N) *)
 	rc, 	(* nb of attempt undertaken by S to retransmit d_i (0<=rc<=MAX) *)
-	b1,bN, rb1,rbN, (* these Boolean variables are used for communication between S-K-L-R *)
-	ab, rab, exp_ab	(* to be sent/received/expected alternating bit *)
-		: discrete;
-
 	MAX = 2, 	(* maximal number of retransmissions *)
 	N = 2, 		(* number of chunks of a file *)
+		: int;
+	b1,bN, rb1,rbN, (* these Boolean variables are used for communication between S-K-L-R *)
+	ab, rab, exp_ab	(* to be sent/received/expected alternating bit *)
+		: bool;
+
 	SYNC,		(* delay added after a failure in order to assure
 					that S does not start transmitting a new file before
 					the receiver has properly reacted to the failure *)
@@ -59,24 +60,24 @@ automaton sender
 synclabs: S_in, rcvA, sndD, S_DK, S_NOK, S_OK;
 
 loc idleS: invariant x>=0
-	when True sync S_in do {b1:=1,x:=0} goto next_frame;
+	when True sync S_in do {b1:=True,x:=0} goto next_frame;
 
 urgent loc next_frame: invariant True
-	when i=N sync sndD do {bN:=1} goto wait_ack;
-	when i<N sync sndD do {bN:=0} goto wait_ack;
+	when i=N sync sndD do {bN:=True} goto wait_ack;
+	when i<N sync sndD do {bN:=False} goto wait_ack;
 
 loc wait_ack: invariant x<=TS
 	when x=TS & rc=MAX & i=N sync S_DK do {x:=0,rc:=0,i:=1} goto error;
 	when x=TS & rc=MAX & i<N sync S_NOK do {x:=0,rc:=0,i:=1} goto error;
-	when x<TS sync rcvA do {ab:=1-ab,x:=0,rc:=0} goto success;
+	when x<TS sync rcvA do {ab:=not(ab),x:=0,rc:=0} goto success;
 	when x=TS & rc<MAX sync sndD do {rc:=rc+1,x:=0} goto wait_ack;
 
 urgent loc success: invariant True
-	when i<N do {i:=i+1,b1:=0} goto next_frame;
+	when i<N do {i:=i+1,b1:=False} goto next_frame;
 	when i=N sync S_OK do {i:=1} goto idleS;
 
 loc error: invariant x <= SYNC
-	when x=SYNC do {ab:=0} goto idleS;
+	when x=SYNC do {ab:=False} goto idleS;
 
 end (* sender *)
 
@@ -90,26 +91,26 @@ loc new_file: invariant True
 	when True sync rcvD do {z:=0} goto fst_safe;
 
 urgent loc fst_safe: invariant True
-	when rb1=1 do {exp_ab:=rab} goto frame_received;
-	when rb1=0 do {rab:=0,rbN:=0} goto FailureR;
+	when rb1 do {exp_ab:=rab} goto frame_received;
+	when not(rb1) do {rab:=False,rbN:=False} goto FailureR;
 
 urgent loc frame_received: invariant True
-	when rab=exp_ab & rb1=1 & rbN=0 sync R_FST
-			do {rb1:=0,rab:=0} goto frame_reported;
-	when rab=exp_ab & rb1=0 & rbN=0 sync R_INC
-			do {rb1:=0,rab:=0} goto frame_reported;
-	when rab=exp_ab & rbN=1 sync R_OK
-			do {rb1:=0,rab:=0} goto frame_reported;
-	when rab=1-exp_ab sync sndA do {rb1:=0,rab:=0} goto idleR;
+	when rab=exp_ab & rb1 & not(rbN) sync R_FST
+			do {rb1:=False,rab:=False} goto frame_reported;
+	when rab=exp_ab & not(rb1) & not(rbN) sync R_INC
+			do {rb1:=False,rab:=False} goto frame_reported;
+	when rab=exp_ab & rbN sync R_OK
+			do {rb1:=False,rab:=False} goto frame_reported;
+	when rab=not(exp_ab) sync sndA do {rb1:=False,rab:=False} goto idleR;
 
 
 urgent loc frame_reported: invariant True
-	when True sync sndA do {exp_ab:=1-exp_ab,z:=0} goto idleR;
+	when True sync sndA do {exp_ab:=not(exp_ab),z:=0} goto idleR;
 
 loc idleR: invariant z<=TR
 	when z<TR sync rcvD do {} goto frame_received;
-	when z=TR & rbN=0 sync R_NOK do {rbN:=0,exp_ab:=0} goto new_file;
-	when z=TR & rbN=1 do {rbN:=0,exp_ab:=0} goto new_file;
+	when z=TR & not(rbN) sync R_NOK do {rbN:=False,exp_ab:=False} goto new_file;
+	when z=TR & rbN do {rbN:=False,exp_ab:=False} goto new_file;
 
 accepting loc FailureR: invariant True
     	when True goto FailureR;
@@ -163,15 +164,15 @@ init :=    {
 		loc[channelL]:=startL,
 
 		(* Initial discrete variables assignments *)
-		rc:=0,
-		i:=1,
-		ab:=0,
-		b1:=0,
-		bN:=0,
-		rb1:=0,
-		rbN:=0,
-		rab:=0,
-		exp_ab:=0,
+		rc		:= 0,
+		i		:= 1,
+		ab		:= False,
+		b1		:= False,
+		bN		:= False,
+		rb1		:= False,
+		rbN		:= False,
+		rab		:= False,
+		exp_ab	:= False,
 	;
 
 	continuous =

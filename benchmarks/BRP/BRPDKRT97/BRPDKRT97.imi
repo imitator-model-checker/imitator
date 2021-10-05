@@ -15,7 +15,7 @@
  * License          : 
  * 
  * Created          : ? (< 09/2007)
- * Last modified    : 2021/07/26
+ * Last modified    : 2021/10/05
  * Model version    : 
  * 
  * IMITATOR version : 3.1
@@ -31,21 +31,25 @@ var
     : clock;
 
 	i,	(*subscript of the chunk currently beeing processed (1<=i<=N)*)
-	ab,	(* alternating bit accompanying the next chunk to be sent*)
 	rc, (* nb of attempt undertaken by S to retransmit d_i (0<=rc<=MAX)*)
+
+  MAX = 2, 	(*maximal number of retransmissions*)
+	N = 2, 	(*number of chunks of a file*)
+
+	retry, (*specifique ici (borne le nombre de retentatives du sender lors d'une erreur a Maxr)*)
+	Maxr,
+	: int;
+	
+	ab,	(* alternating bit accompanying the next chunk to be sent*)
 
 	b1,bN, rb1,rbN,
 
 
-	retry, (*specifique ici (borne le nombre de retentatives du sender lors d'une erreur a Maxr)*)
-	Maxr,
 
 	rab, exp_ab
-    : discrete;
+    : bool;
 
 
-  MAX = 2, 	(*maximal number of retransmissions*)
-	N = 2, 	(*number of chunks of a file*)
 	SYNC = 17, 	(*delay added after a failure in order to assure that S does not start transmitting a new file before the receiver has properly reacted to the failure *)
 	T1 = 3,	(*time-out of the sender for initiating a retransmission when S has not received an ack from S*)
 	TR,	(*time-out of the receiver for indicating failure when R has not received the last chunk of a file*)
@@ -62,14 +66,14 @@ synclabs: Sin, B, F, Sout_DK, Sout_NOK, Sout_OK;
 
 
 loc idleS: invariant x>=0
-	when True sync Sin do {b1 := 1,i := 1,x := 0} goto next_frame;
+	when True sync Sin do {b1 := True,i := 1,x := 0} goto next_frame;
 
 
 urgent loc next_frame: invariant True
 
-	when i=N sync F do {bN := 1, rc := 0,x := 0}
+	when i=N sync F do {bN := True, rc := 0,x := 0}
 			goto wait_ack;
-	when i<N sync F do {bN := 0, rc := 0,x := 0}
+	when i<N sync F do {bN := False, rc := 0,x := 0}
 			goto wait_ack;
 
 
@@ -77,20 +81,20 @@ loc wait_ack: invariant x<=T1
 	when x=T1 & rc=MAX & i=N sync Sout_DK do {x := 0} goto error;
 	when x=T1 & rc=MAX & i<N sync Sout_NOK do {x := 0} goto error;
 
-	when x<T1 & ab=1 sync B do {ab := 0,x := 0} goto success;
-	when x<T1 & ab=0 sync B do {ab := 1,x := 0} goto success;
+	when x<T1 & ab sync B do {ab := False,x := 0} goto success;
+	when x<T1 & not(ab) sync B do {ab := True,x := 0} goto success;
 
 	when x=T1 & rc<MAX sync F do {rc := rc+1,x := 0} goto wait_ack;
 
 
 urgent loc success: invariant True
-	when i<N do {i := i+1,b1 := 0,x := 0} goto next_frame;
+	when i<N do {i := i+1,b1 := False,x := 0} goto next_frame;
 	when i=N sync Sout_OK do {x := 0} goto EndS; (*idleS;*)
 
 
 urgent loc error: invariant True
 (* --	when x=0 & retry<Maxr do {ab := 0, retry := retry+1} goto idleS; *)
-	when x=0  do {ab := 0} goto idleS;
+	when x=0  do {ab := False} goto idleS;
 (* --	invariant x<=SYNC *)
 (* --	when x=SYNC do {ab := 0} goto idleS; *)
 
@@ -113,47 +117,47 @@ loc new_file: invariant z>=0
 
 urgent loc fst_safe: invariant True (* originally w=0, but turned into urgent *)
 
-	when rab=0 & rb1=1 do {exp_ab := 0} goto frame_received;
-	when rab=1 & rb1=1 do {exp_ab := 1} goto frame_received;
-	when rb1=0 goto FailureR;
+	when not(rab) & rb1 do {exp_ab := False} goto frame_received;
+	when rab & rb1 do {exp_ab := True} goto frame_received;
+	when not(rb1) goto FailureR;
 
 loc frame_received: invariant True (* originally w=0, but turned into urgent *)
 
-	when rab=0 & exp_ab=0 & rb1=1 & rbN=0 sync Rout_FST
+	when not(rab) & not(exp_ab) & rb1 & not(rbN) sync Rout_FST
 			do {} goto frame_reported;
 
-	when rab=0 & exp_ab=0 & rb1=0 & rbN=0 sync Rout_INC
+	when not(rab) & not(exp_ab) & rb1 & not(rbN) sync Rout_INC
 			do {} goto frame_reported;
 
-	when rab=0 & exp_ab=0 & rbN=1 sync Rout_OK
+	when not(rab) & not(exp_ab) & rbN sync Rout_OK
 			do {} goto frame_reported;
 
-	when rab=1 & exp_ab=1 & rb1=1 & rbN=0 sync Rout_FST
+	when rab & exp_ab & rb1 & not(rbN) sync Rout_FST
 			do {} goto frame_reported;
 
-	when rab=1 & exp_ab=1 & rb1=0 & rbN=0 sync Rout_INC
+	when rab & exp_ab & not(rb1) & not(rbN) sync Rout_INC
 			do {} goto frame_reported;
 
-	when rab=1 & exp_ab=1 & rbN=1 sync Rout_OK
+	when rab & exp_ab & rbN sync Rout_OK
 			do {} goto frame_reported;
 
 
-	when rab=1 & exp_ab=0 sync A do {} goto idleR;	(*-- do {z := 0} ???*)
-	when rab=0 & exp_ab=1 sync A do {} goto idleR;	(*-- do {z := 0} ???*)
+	when rab & not(exp_ab) sync A do {} goto idleR;	(*-- do {z := 0} ???*)
+	when not(rab) & exp_ab sync A do {} goto idleR;	(*-- do {z := 0} ???*)
 
 
 
 loc frame_reported: invariant True (* originally w=0, but turned into urgent *)
 
-	when exp_ab=0 sync A do {exp_ab := 1,z := 0} goto idleR;
-	when exp_ab=1 sync A do {exp_ab := 0,z := 0} goto idleR;
+	when not(exp_ab) sync A do {exp_ab := True, z := 0} goto idleR;
+	when exp_ab sync A do {exp_ab := False, z := 0} goto idleR;
 
 
 loc idleR: invariant z<=TR
 
 	when z<TR sync G do {(*w := 0*)} goto frame_received;
-	when z=TR & rbN=0 sync Rout_NOK do {} goto new_file;
-	when z=TR & rbN=1 goto new_file;
+	when z=TR & not(rbN) sync Rout_NOK do {} goto new_file;
+	when z=TR & rbN goto new_file;
 
 
 loc FailureR: invariant z>=0
@@ -177,29 +181,29 @@ loc in_transitK: invariant u<=TD
 
 	when u<=TD & u>0 goto startK;  (*lost ??? (proba 0.02)*)
 
-	when u<=TD & u>0 & b1=0 & bN=0 & ab=0
-		do {rb1 := 0, rbN := 0, rab := 0}
+	when u<=TD & u>0 & not(b1) & not(bN) & not(ab)
+		do {rb1 := False, rbN := False, rab := False}
 		sync G  goto startK;
-	when u<=TD & u>0 & b1=0 & bN=0 & ab=1
-		do {rb1 := 0, rbN := 0, rab := 1}
+	when u<=TD & u>0 & not(b1) & not(bN) & ab
+		do {rb1 := False, rbN := False, rab := True}
 		sync G  goto startK;
-	when u<=TD & u>0 & b1=0 & bN=1 & ab=0
-		do {rb1 := 0, rbN := 1, rab := 0}
+	when u<=TD & u>0 & not(b1) & bN & not(ab)
+		do {rb1 := False, rbN := True, rab := False}
 		sync G  goto startK;
-	when u<=TD & u>0 & b1=0 & bN=1 & ab=1
-		do {rb1 := 0, rbN := 1, rab := 1}
+	when u<=TD & u>0 & not(b1) & bN & ab
+		do {rb1 := False, rbN := True, rab := True}
 		sync G  goto startK;
-	when u<=TD & u>0 & b1=1 & bN=0 & ab=0
-		do {rb1 := 1, rbN := 0, rab := 0}
+	when u<=TD & u>0 & b1 & not(bN) & not(ab)
+		do {rb1 := True, rbN := False, rab := False}
 		sync G  goto startK;
-	when u<=TD & u>0 & b1=1 & bN=0 & ab=1
-		do {rb1 := 1, rbN := 0, rab := 1}
+	when u<=TD & u>0 & b1 & not(bN) & ab
+		do {rb1 := True, rbN := False, rab := True}
 		sync G  goto startK;
-	when u<=TD & u>0 & b1=1 & bN=1 & ab=0
-		do {rb1 := 1, rbN := 1, rab := 0}
+	when u<=TD & u>0 & b1 & bN & not(ab)
+		do {rb1 := True, rbN := True, rab := False}
 		sync G  goto startK;
-	when u<=TD & u>0 & b1=1 & bN=1 & ab=1
-		do {rb1 := 1, rbN := 1, rab := 1}
+	when u<=TD & u>0 & b1 & bN & ab
+		do {rb1 := True, rbN := True, rab := True}
 		sync G  goto startK;
 
 	when True sync F  goto BadK;
@@ -287,9 +291,9 @@ init := {
   	loc[Rclient]:=startRC,
 
     (* Initial discrete variables assignments *)
-  	rc:=0 , i:=0 , ab:=0,
-  	b1:=0 , bN:=0 , rb1:=0 , rbN:=0,
-  	rab:=0 , exp_ab:=0,
+  	rc:=0 , i:=0 , ab:=False,
+  	b1:=False , bN:=False , rb1:=False , rbN:=False,
+  	rab:=False , exp_ab:=False,
   	retry:=0 , Maxr:=0 	(*Maxr=1*)
   ;
 
