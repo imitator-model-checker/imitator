@@ -1,9 +1,9 @@
 (*******************************************************************************
- *                                IMITATOR MODEL                               
- * 
+ *                                IMITATOR MODEL
+ *
  * Title            : BRPAAPP21_GFSinRC
  * Description      : Bounded Retransmission Protocol [version slightly modified]
- * Correctness      : 
+ * Correctness      :
  * Scalable         : no
  * Generated        : no
  * Categories       : Protocol
@@ -13,11 +13,11 @@
  * Modeling         : Laurent Fribourg
  * Input by         : Étienne André, Laure Petrucci, Jaco van de Pol
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- * 
+ *
  * Created          : ? (< 09/2007)
  * Last modified    : 2021/10/05
- * Model version    : 
- * 
+ * Model version    :
+ *
  * IMITATOR version : 3.1
  ******************************************************************************)
 
@@ -113,7 +113,7 @@ urgent loc frame_received: invariant True
 			do {rb1:=False,rab:=False} goto frame_reported;
 	when rab=exp_ab & not(rb1) & not(rbN) sync R_INC
 			do {rb1:=False,rab:=False} goto frame_reported;
-	when rab=exp_ab & not(rbN) sync R_OK
+	when rab=exp_ab & rbN sync R_OK
 			do {rb1:=False,rab:=False} goto frame_reported;
 	when rab=not(exp_ab) sync sndA do {rb1:=False,rab:=False} goto idleR;
 
