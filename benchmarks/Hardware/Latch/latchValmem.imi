@@ -12,7 +12,7 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2007/12
- * Last modified   : 2021/08/30
+ * Last modified   : 2021/10/07
  *
  * IMITATOR version: 3.1
  ************************************************************)
@@ -26,7 +26,7 @@ var 	s, ckClock, ckD, ckNot1, ckNot2, ckXor, ckAnd, ckLatch
  	tAndUp1, tAndDown1,
  	tLatchUp1,*)
 	q
-		: discrete;
+		: bool;
 
 	dClockHigh, dClockLow,
 	dSetup, dHold,
@@ -171,7 +171,7 @@ loc LatchD1E0: invariant ckLatch >= 0
 	when True sync dDown1 do {} goto LatchD0E0;
 
 loc LatchD1E1: invariant ckLatch <= dLatchUp
-	when ckLatch >= dLatchUp sync latchUp1 do {(*tLatchUp1 := s, *) q := 1}
+	when ckLatch >= dLatchUp sync latchUp1 do {(*tLatchUp1 := s, *) q := (*1*)True}
 			goto LatchD1E1B;
 	when True sync dDown1 do {} goto LatchD0E1;
 	when True sync andDown1 do {} goto LatchD1E0;
@@ -204,7 +204,7 @@ init := {
   	(*------------------------------------------------------------*)
   	(* Initial discrete assignments *)
   	(*------------------------------------------------------------*)
-  	q := 2,
+  	q := (*2*)False,
   ;
 
   continuous =
