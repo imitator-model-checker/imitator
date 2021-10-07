@@ -9260,6 +9260,27 @@ Number of transitions                   : 2
 
 	#,
 
+	##------------------------------------------------------------
+	#{
+		## Test version             : 1
+		## Test since               : 2021/10/07
+		## Last modified            : 2021/10/07
+		## Test for IMITATOR version: 3.2
+		#'purpose'    : 'Test cycle exemplification [temporarily disabled]',
+		#'input_files': ['testExemplify-loop-single2.imi', 'exemplify-loop.imiprop'],
+		#'options'    : '-cycle-algo BFS',
+		#'expectations' : [
+			#{'file': 'testExemplify-loop-single2.res' , 'content' : """
+#TODO
+		#""" # TODO
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+
+	#,
+
 	#------------------------------------------------------------
 	{
 		# Test version             : 1

@@ -1,0 +1,78 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test model for loop exemplification (single deterministic run)
+ * Description      : Test model for loop exemplification (single deterministic run)
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : 
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/10/07
+ * Last modified    : 2021/10/07
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.2
+ ************************************************************)
+
+var
+
+(* Clocks *)
+	x,
+ 	global_time,
+		: clock;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant x <= 2
+	when x = 2 do { x := x} goto l2;
+
+loc l2: invariant x <= 3
+	when x = 3 do { x := 0} goto l3;
+
+loc l3: invariant x <= 1
+	when x = 1 do { x := 50} goto l4;
+
+loc l4: invariant x >=50 & x <= 99
+	when x = 99 do { x := 0} goto l2;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x				= 0
+		& global_time	= 0
+	;
+}
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
