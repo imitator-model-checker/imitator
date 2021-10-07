@@ -282,7 +282,7 @@ class virtual algoLoopSynth =
 				
 				let global_location : Location.global_location = (StateSpace.get_state state_space state_index).global_location in
 				
-				self#print_algo_message Verbose_low ("Cycling through location: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display global_location) ^ "");
+				self#print_algo_message Verbose_low ("Cycling along a SCC of length " ^ (string_of_int (List.length scc)) ^ " through location: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display global_location) ^ "");
 			);
 
 			(* Just update the loop constraint *)
