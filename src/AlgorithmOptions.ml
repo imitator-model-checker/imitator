@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2020/08/25
- * Last modified     : 2021/09/16
+ * Last modified     : 2021/10/07
  *
  ************************************************************)
 
@@ -597,6 +597,18 @@ let supports_exemplification property =
 (*	(* Safety *)
 	| AGnot _*)
 		-> true
+	(*------------------------------------------------------------*)
+	(* Cycles *)
+	(*------------------------------------------------------------*)
+	
+	(** Accepting infinite-run (cycle) through a state predicate *)
+	| Cycle_through _
+	
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized _
+
+		-> true
+
 	(*------------------------------------------------------------*)
 	(* Any other *)
 	(*------------------------------------------------------------*)
