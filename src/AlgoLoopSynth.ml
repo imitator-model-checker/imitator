@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2021/09/23
+ * Last modified     : 2021/10/07
  *
  ************************************************************)
 
@@ -275,6 +275,15 @@ class virtual algoLoopSynth =
 		(* Process loop constraint if accepting loop *)
 		if self#is_accepting scc then(
 			self#print_algo_message Verbose_standard "Found an accepting cycle.";
+			
+			if verbose_mode_greater Verbose_low then(
+				(* Retrieve the model *)
+				let model = Input.get_model () in
+				
+				let global_location : Location.global_location = (StateSpace.get_state state_space state_index).global_location in
+				
+				self#print_algo_message Verbose_low ("Cycling through location: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display global_location) ^ "");
+			);
 
 			(* Just update the loop constraint *)
 			self#update_loop_constraint loop_px_constraint;
@@ -344,51 +353,77 @@ class virtual algoLoopSynth =
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
 		
+		(* Retrieve the property *)
+		let abstract_property = Input.get_property() in
+
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
 			| None -> raise (InternalError "Termination status not set in LoopSynth.compute_result")
 			| Some status -> status
 		in
 
-		let soundness =
-			let dangerous_inclusion = options#comparison_operator = AbstractAlgorithm.Inclusion_check || options#comparison_operator = AbstractAlgorithm.Double_inclusion_check in
-			
-			if dangerous_inclusion then(
-				self#print_algo_message Verbose_high "A dangerous inclusion was used: result will be at least an overapproximation (or invalid)";
-			);
-			if options#merge then(
-				self#print_algo_message Verbose_high "Merging was used: result will be at least an overapproximation (or invalid)";
-			);
-			
-			(* EXACT if termination is normal and no inclusion nor merge *)
-			if termination_status = Regular_termination && (not dangerous_inclusion) && not options#merge then Constraint_exact
-			(* UNDER-APPROXIMATED if termination is NOT normal AND neither merging nor state inclusion was used *)
-			else if termination_status <> Regular_termination && (not dangerous_inclusion) && not options#merge then Constraint_maybe_under
-			(* OVER-APPROXIMATED if termination is normal AND merging or state inclusion was used *)
-			else if termination_status = Regular_termination && (dangerous_inclusion || options#merge) then Constraint_maybe_over
-			(* UNKNOWN otherwise *)
-			else Constraint_maybe_invalid
-		in
+		(* Branching between Witness/Synthesis and Exemplification *)
+		if abstract_property.synthesis_type = Exemplification then(
+			(* Return the result *)
+			Runs_exhibition_result
+			{
+				(* Non-necessarily convex constraint guaranteeing the reachability of the bad location *)
+				(*** NOTE: use rev since we added the runs by reversed order ***)
+				runs				= List.rev_append positive_examples (List.rev negative_examples);
+				
+				(* Explored state space *)
+				state_space			= state_space;
+				
+				(* Total computation time of the algorithm *)
+				computation_time	= time_from start_time;
+				
+				(* Termination *)
+				termination			= termination_status;
+			}
+		
+		(* Normal mode: Witness/Synthesis *)
+		)else(
 
-			
-		(* Return the result *)
-		Single_synthesis_result
-		{
-			(* Non-necessarily convex constraint guaranteeing the existence of at least one loop *)
-			result				= Good_constraint (synthesized_constraint, soundness);
-			
-			(* English description of the constraint *)
-			constraint_description = "constraint for detecting cycles";
-	
-			(* Explored state space *)
-			state_space			= state_space;
-			
-			(* Total computation time of the algorithm *)
-			computation_time	= time_from start_time;
-			
-			(* Termination *)
-			termination			= termination_status;
-		}
+			let soundness =
+				let dangerous_inclusion = options#comparison_operator = AbstractAlgorithm.Inclusion_check || options#comparison_operator = AbstractAlgorithm.Double_inclusion_check in
+				
+				if dangerous_inclusion then(
+					self#print_algo_message Verbose_high "A dangerous inclusion was used: result will be at least an overapproximation (or invalid)";
+				);
+				if options#merge then(
+					self#print_algo_message Verbose_high "Merging was used: result will be at least an overapproximation (or invalid)";
+				);
+				
+				(* EXACT if termination is normal and no inclusion nor merge *)
+				if termination_status = Regular_termination && (not dangerous_inclusion) && not options#merge then Constraint_exact
+				(* UNDER-APPROXIMATED if termination is NOT normal AND neither merging nor state inclusion was used *)
+				else if termination_status <> Regular_termination && (not dangerous_inclusion) && not options#merge then Constraint_maybe_under
+				(* OVER-APPROXIMATED if termination is normal AND merging or state inclusion was used *)
+				else if termination_status = Regular_termination && (dangerous_inclusion || options#merge) then Constraint_maybe_over
+				(* UNKNOWN otherwise *)
+				else Constraint_maybe_invalid
+			in
+
+			(* Return the result *)
+			Single_synthesis_result
+			{
+				(* Non-necessarily convex constraint guaranteeing the existence of at least one loop *)
+				result				= Good_constraint (synthesized_constraint, soundness);
+				
+				(* English description of the constraint *)
+				constraint_description = "constraint for detecting cycles";
+		
+				(* Explored state space *)
+				state_space			= state_space;
+				
+				(* Total computation time of the algorithm *)
+				computation_time	= time_from start_time;
+				
+				(* Termination *)
+				termination			= termination_status;
+			}
+		
+		)
 
 
 	
