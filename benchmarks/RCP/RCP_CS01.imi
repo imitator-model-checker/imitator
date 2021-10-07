@@ -41,12 +41,12 @@ var 	x1, x2, x12, y12, x21, y21
 	s1, s2,
 	s12, sprime12,
 	s21, sprime21,
-		: discrete;
+		: int;
 
 	ack  = 0,
 	idle = 1,
 	req  = 2,
-		: constant;
+		: int;
 
 
 (************************************************************)
@@ -280,12 +280,12 @@ init := {
 		(* Initial discrete assignments *)
 		(*------------------------------------------------------------*)
 			(* It seems these values are not relevant in the beginning *)
-		s1 := 0,
-		s2 := 0,
-		s12 := 0,
-		sprime12 := 0,
-		s21 := 0,
-		sprime21 := 0,
+		s1			:= 0,
+		s2			:= 0,
+		s12			:= 0,
+		sprime12	:= 0,
+		s21			:= 0,
+		sprime21	:= 0,
 	;
 
 	continuous =
