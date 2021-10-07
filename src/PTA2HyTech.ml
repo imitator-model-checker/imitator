@@ -98,11 +98,27 @@ let find_stopwatches () =
 	(* Return only one each variable *)
 	list_only_once !list_of_stopwatches
 
+(* Check IMITATOR / HyTech compatibility on declaration types *)
+(* If compatibility fail, print a warning *)
+let check_declaration_compatibility model =
+	List.iter (fun i ->
+	    let variable_name = model.variable_names i in
+	    match model.type_of_variables i with
+	    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
+	    | DiscreteValue.Var_type_clock
+	    | DiscreteValue.Var_type_parameter -> ()
+	    | var_type -> print_warning ("Variable `" ^ variable_name ^ " : " ^ DiscreteValue.string_of_var_type var_type ^ "` is not a rational, HyTech only support rational-valued variable.")
+	) model.discrete
 
 (* Convert the initial variable declarations into a string *)
 let string_of_declarations model stopwatches clocks =
+
+    (* Check IMITATOR / HyTech compatibility on types *)
+    check_declaration_compatibility model;
+
 	let string_of_variables list_of_variables =
-		string_of_list_of_string_with_sep ", " (List.map model.variable_names list_of_variables) in
+		string_of_list_of_string_with_sep ", " (List.map model.variable_names list_of_variables)
+    in
 
 		"var "
 	^
@@ -152,10 +168,10 @@ let string_of_initially model automaton_index =
 
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model automaton_index location_index stopwatches clocks =
+
+    (* TODO benjamin check if guard is linear or not, if not print warning ! *)
 	(* Invariant *)
 	"while "
-	(* TODO benjamin HyTech doesn't support arithmetic expression in invariant, we should print a warning *)
-	(* or should we use only the continuous part ? *)
 	^ (ModelPrinter.string_of_guard model.variable_names (model.invariants automaton_index location_index))
 
 	(* Handle stopwatches *)

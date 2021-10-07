@@ -152,10 +152,17 @@ type customized_arithmetic_string = {
     unary_min_string : string;
 }
 
+(** Data structure allowing for customizing string conversions of array delimiters symbols *)
+type customized_array_string = {
+    array_literal_delimiter : string * string;
+    array_access_delimiter : string * string;
+}
+
 (** Data structure allowing for customizing string conversions of symbols *)
 type customized_string = {
     arithmetic_string : customized_arithmetic_string;
     boolean_string : customized_boolean_string;
+    array_string : customized_array_string;
 }
 
 val global_default_string : customized_string
@@ -167,5 +174,8 @@ val default_string_without_whitespace : customized_boolean_string
 val default_arithmetic_string : customized_arithmetic_string
 (** Default string values of arithmetic symbols without white spaces around operators *)
 val default_arithmetic_string_without_whitespace : customized_arithmetic_string
+(** Default string values of array delimiters symbols without white spaces around operators *)
+val default_array_string : customized_array_string
+
 (** Default string of symbols *)
 val global_default_string : customized_string

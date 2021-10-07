@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/03/01
- * Last modified     : 2020/12/15
+ * Last modified     : 2021/10/07
  *
  ************************************************************)
 
@@ -42,9 +42,12 @@ let uppaal_boolean_strings : customized_boolean_string = {
 	in_operator     = " in ";
 }
 
+let uppaal_array_strings = { Constants.default_array_string with array_literal_delimiter = "{", "}" }
+
 let all_uppaal_strings : customized_string = {
     arithmetic_string = default_arithmetic_string;
     boolean_string = uppaal_boolean_strings;
+    array_string = uppaal_array_strings;
 }
 
 let uppaal_update_separator = ", "
@@ -74,6 +77,15 @@ let string_of_var_type = function
 	| DiscreteValue.Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
 	| DiscreteValue.Var_type_parameter -> "parameter"
 
+let rec string_of_value = function
+    | DiscreteValue.Number_value x
+    | DiscreteValue.Rational_value x -> NumConst.string_of_numconst x
+    | DiscreteValue.Bool_value x -> if x then uppaal_boolean_strings.true_string else uppaal_boolean_strings.false_string
+    | DiscreteValue.Int_value x -> Int32.to_string x
+    | DiscreteValue.Binary_word_value b -> BinaryWord.string_of_binaryword b
+    | DiscreteValue.Array_value a ->
+        let string_array = Array.map (fun x -> string_of_value x) a in
+        "{" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "}"
 
 let rec string_of_discrete_name_from_var_type discrete_name = function
     | DiscreteValue.Var_type_discrete discrete_type -> string_of_discrete_name_from_var_type_discrete discrete_name discrete_type
@@ -162,8 +174,8 @@ let string_of_discrete model =
 				(* Get the initial value *)
 				let initial_global_location  = model.initial_location in
 				let initial_value = Location.get_discrete_value initial_global_location discrete_index in
-				(* TODO benjamin IMPORTANT here change brackets to braces for literal array *)
-                let str_initial_value = DiscreteValue.customized_string_of_value uppaal_boolean_strings initial_value in
+
+                let str_initial_value = string_of_value initial_value in
                 let str_type = string_of_var_type discrete_type in
                 (* case of arrays: format name with length of array *)
                 let format_discrete_name = string_of_discrete_name_from_var_type discrete_name discrete_type in

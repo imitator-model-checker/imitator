@@ -214,17 +214,18 @@ let check_value_compatible_with_type value var_type =
 (************************************************************)
 
 (** String of values  **)
-let rec customized_string_of_value customized_boolean_string = function
+let rec customized_string_of_value customized_string = function
     | Number_value x
     | Rational_value x -> NumConst.string_of_numconst x
-    | Bool_value x -> if x then customized_boolean_string.true_string else customized_boolean_string.false_string
+    | Bool_value x -> if x then customized_string.boolean_string.true_string else customized_string.boolean_string.false_string
     | Int_value x -> Int32.to_string x
     | Binary_word_value b -> BinaryWord.string_of_binaryword b
     | Array_value a ->
-        let string_array = Array.map (fun x -> customized_string_of_value customized_boolean_string x) a in
-        "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "]"
+        let string_array = Array.map (fun x -> customized_string_of_value customized_string x) a in
+        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
+        l_delimiter ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ r_delimiter
 
-let string_of_value = customized_string_of_value default_string
+let string_of_value = customized_string_of_value global_default_string
 
 (** Check value type  **)
 

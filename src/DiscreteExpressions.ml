@@ -565,10 +565,12 @@ and customized_string_of_binary_word_expression customized_string variable_names
 and customized_string_of_array_expression customized_string variable_names = function
     | Literal_array expr_array ->
         let str_expr = Array.map (customized_string_of_global_expression customized_string variable_names) expr_array in
-        "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_expr ^ "]"
+        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
+        l_delimiter ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_expr ^ r_delimiter
     | Array_constant values ->
         let str_values = Array.map DiscreteValue.string_of_value values in
-        "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ "]"
+        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
+        l_delimiter ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ r_delimiter
     | Array_variable variable_index -> variable_names variable_index
     | Array_array_access (array_expr, index_expr) ->
         customized_string_of_array_expression customized_string variable_names array_expr

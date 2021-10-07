@@ -124,7 +124,7 @@ val discrete_type_of_var_type : var_type -> var_type_discrete
 (************************************************************)
 
 (** String of values  **)
-val customized_string_of_value : customized_boolean_string -> discrete_value -> string
+val customized_string_of_value : customized_string -> discrete_value -> string
 val string_of_value : discrete_value -> string
 
 (** Check value type  **)
