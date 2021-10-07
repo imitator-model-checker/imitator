@@ -229,3 +229,6 @@ val write_to_file : string -> string -> unit
 val pow : Int32.t -> Int32.t -> Int32.t
 
 val modulo : Int32.t -> Int32.t -> Int32.t
+
+(* Render a beautiful and cute json from an ugly horrible json *)
+val prettify_json : string -> string

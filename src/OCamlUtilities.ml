@@ -579,3 +579,53 @@ let pow x e =
     in pow_rec x e
 
 let modulo x y = Int32.sub x (Int32.mul (Int32.div x y) y)
+
+(* Render a beautiful and cute json from an ugly horrible json *)
+let prettify_json json =
+
+    (* Set start indent level *)
+    let indent_level_ref = ref 0 in
+
+    let prettify_json_char c (* char *) pc (* previous char *) =
+
+        let indent_level = !indent_level_ref in
+
+        (* Generate tabulations at different levels *)
+        let tabs = string_n_times indent_level "\t" in
+        let tabs_0 = if indent_level >= 1 then string_n_times (indent_level - 1) "\t" else "" in
+        let tabs_1 = string_n_times (indent_level + 1) "\t" in
+
+        (* Check current char *)
+        match c with
+        | '{'
+        | '[' as c ->
+            indent_level_ref := indent_level + 1;
+            "\n" ^ tabs ^ String.make 1 c ^ "\n" ^ tabs_1
+        | '}'
+        | ']' as c ->
+            indent_level_ref := indent_level - 1;
+            "\n" ^ tabs_0 ^ String.make 1 c ^ "\n"
+        | ',' ->
+            begin
+            match pc with
+            | '}'
+            | ']' ->
+                tabs ^ ",\n" ^ tabs
+            | _ ->
+                ",\n" ^ tabs
+            end
+        | c ->
+            String.make 1 c
+    in
+
+    (* *)
+    let pretty_json = ref (prettify_json_char (String.get json 0) ' ') in
+
+    (* Generate pretty json iterating through ugly json *)
+    for i = 1 to (String.length json) - 1 do
+        pretty_json := !pretty_json ^ prettify_json_char (String.get json i) (String.get json (i - 1))
+    done;
+
+    (* Return pretty json *)
+    !pretty_json
+
