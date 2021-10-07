@@ -41,10 +41,10 @@ loc l2: invariant x <= 3
 	when x = 3 do { x := 0} goto l3;
 
 loc l3: invariant x <= 1
-	when x = 1 do { x := 50} goto l4;
+	when x = 1 do { x := 5} goto l4;
 
-loc l4: invariant x >=50 & x <= 99
-	when x = 99 do { x := 0} goto l2;
+loc l4: invariant x >=5 & x <= 9
+	when x = 9 do { x := 0} goto l2;
 
 end (* pta *)
 
