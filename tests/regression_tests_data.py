@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/09/23
+# Last modified     : 2021/10/07
 #************************************************************
 
 
@@ -33,7 +33,7 @@ tests = [
 		## Test version             : 1
 		## Test since               : 2021/03/33
 		## Last modified            : 2021/03/33
-		## Test for IMITATOR version: 3.1
+		## Test for IMITATOR version: 3.2
 		#'purpose'    : 'Test something',
 		#'input_files': ['somemodel.imi'],
 		#'options'    : '-mode checksyntax',
@@ -9176,6 +9176,60 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/10/07
+		# Last modified            : 2021/10/07
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Test option: -no-global-time-clock-in-comparison (without)',
+		'input_files': ['testExemplify-loop-single.imi', 'loop.imiprop'],
+		'options'    : '-cycle-algo BFS -depth-limit 10',
+		'expectations' : [
+			{'file': 'testExemplify-loop-single.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/10/07
+		# Last modified            : 2021/10/07
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Test option: -no-global-time-clock-in-comparison (with)',
+		'input_files': ['testExemplify-loop-single.imi', 'loop.imiprop'],
+		'options'    : '-cycle-algo BFS -no-global-time-clock-in-comparison -depth-limit 10',
+		'expectations' : [
+			{'file': 'testExemplify-loop-single.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 2
+Number of transitions                   : 2
 		"""
 			} # end result file
 			,
