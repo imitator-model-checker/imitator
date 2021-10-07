@@ -12,7 +12,7 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : < 2011/10/25
- * Last modified   : 2021/08/30
+ * Last modified   : 2021/10/07
  *
  * IMITATOR version: 3.1
  ************************************************************)
@@ -27,7 +27,7 @@ var 	x1, x2, x3, s
 		: clock;
 
 	m1,m2,m3,m4
-		: discrete;
+		: bool;
 
 (************************************************************)
   automaton job1
@@ -35,28 +35,28 @@ var 	x1, x2, x3, s
 synclabs: b1;
 
 loc I1: invariant True
-	when  m3=0  sync b1 do {x1 :=  0, m3 := 1} goto J1;
+	when  not(m3)  sync b1 do {x1 :=  0, m3 := True} goto J1;
 
 loc J1: invariant x1<= 6
-	when  x1 = 6 sync b1 do {m3 := 0} goto K1;
+	when  x1 = 6 sync b1 do {m3 := False} goto K1;
 
 loc K1: invariant True
-	when  m1=0 sync b1 do {x1 := 0,m1 := 1} goto L1;
+	when  not(m1) sync b1 do {x1 := 0,m1 := True} goto L1;
 
 loc L1: invariant x1 <= 1
-	when  x1=1 sync b1 do {m1 := 0} goto M1;
+	when  x1=1 sync b1 do {m1 := False} goto M1;
 
 loc M1: invariant True
-	when  m2=0 sync b1 do {x1 := 0,m2 := 1} goto N1;
+	when  not(m2) sync b1 do {x1 := 0,m2 := True} goto N1;
 
 loc N1: invariant x1 <= 3
-	when  x1=3 sync b1 do {m3 := 0} goto P1;
+	when  x1=3 sync b1 do {m3 := False} goto P1;
 
 loc P1: invariant True
-	when  m4=0 sync b1 do {x1 := 0,m4 := 1} goto Q1;
+	when  not(m4) sync b1 do {x1 := 0,m4 := True} goto Q1;
 
 loc Q1: invariant x1 <= 7
-	when  x1=7 sync b1 do {m3 := 0} goto End1;
+	when  x1=7 sync b1 do {m3 := False} goto End1;
 
 loc End1: invariant True
 
@@ -68,28 +68,28 @@ end (*job1*)
 synclabs: b2;
 
 loc I2: invariant True
-	when  m2=0 sync b2 do {x2 := 0,m2 := 1} goto J2;
+	when  not(m2) sync b2 do {x2 := 0,m2 := True} goto J2;
 
 loc J2: invariant x2<= 5
-	when  x2 = 5 sync b2 do {m2 := 0} goto K2;
+	when  x2 = 5 sync b2 do {m2 := False} goto K2;
 
 loc K2: invariant True
-	when  m3=0 sync b2 do {x2 := 0,m3 := 1} goto L2;
+	when  not(m3) sync b2 do {x2 := 0,m3 := True} goto L2;
 
 loc L2: invariant x2 <= 10
-	when  x2=10 sync b2 do {m3 := 0} goto M2;
+	when  x2=10 sync b2 do {m3 := False} goto M2;
 
 loc M2: invariant True
-	when  m1=0 sync b2 do {x2 := 0,m1 := 1} goto N2;
+	when  not(m1) sync b2 do {x2 := 0,m1 := True} goto N2;
 
 loc N2: invariant x2 <= 8
-	when  x2=8 sync b2 do {m1 := 0} goto P2;
+	when  x2=8 sync b2 do {m1 := False} goto P2;
 
 loc P2: invariant True
-	when  m4=0 sync b2 do {x2 := 0,m4 := 1} goto Q2;
+	when  not(m4) sync b2 do {x2 := 0,m4 := True} goto Q2;
 
 loc Q2: invariant x2 <= 4
-	when  x2=4 sync b2 do {m4 := 0} goto End2;
+	when  x2=4 sync b2 do {m4 := False} goto End2;
 
 loc End2: invariant True
 
@@ -101,28 +101,28 @@ end (*job2*)
 synclabs: b3;
 
 loc I3: invariant True
-	when  m3=0 sync b3 do {x3 := 0,m3 := 1} goto J3;
+	when  not(m3) sync b3 do {x3 := 0,m3 := True} goto J3;
 
 loc J3: invariant x3<= 9
-	when  x3 = 9 sync b3 do {m3 := 0} goto K3;
+	when  x3 = 9 sync b3 do {m3 := False} goto K3;
 
 loc K3: invariant True
-	when  m4=0 sync b3 do {x3 := 0,m4 := 1} goto L3;
+	when  not(m4) sync b3 do {x3 := 0,m4 := True} goto L3;
 
 loc L3: invariant x3 <= 1
-	when  x3=1 sync b3 do {m4 := 0} goto M3;
+	when  x3=1 sync b3 do {m4 := False} goto M3;
 
 loc M3: invariant True
-	when  m1=0 sync b3 do {x3 := 0,m1 := 1} goto N3;
+	when  not(m1) sync b3 do {x3 := 0,m1 := True} goto N3;
 
 loc N3: invariant x3 <= 5
-	when  x3=5 sync b3 do {m1 := 0} goto P3;
+	when  x3=5 sync b3 do {m1 := False} goto P3;
 
 loc P3: invariant True
-	when  m2=0 sync b3 do {x3 := 0,m2 := 1} goto Q3;
+	when  not(m2) sync b3 do {x3 := 0,m2 := True} goto Q3;
 
 loc Q3: invariant x3 <= 4
-	when  x3=4 sync b3 do {m2 := 0} goto End3;
+	when  x3=4 sync b3 do {m2 := False} goto End3;
 
 loc End3: invariant True
 
@@ -143,10 +143,10 @@ init := {
   	loc[job2] := I2,
   	loc[job3] := I3,
 
-  	m1 := 0,
-    m2 := 0,
-    m3 := 0,
-    m4 := 0,
+  	m1 := False,
+    m2 := False,
+    m3 := False,
+    m4 := False,
   ;
 
   continuous =
