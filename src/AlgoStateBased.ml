@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2021/09/23
+ * Last modified     : 2021/10/08
  *
  ************************************************************)
 
@@ -2655,7 +2655,7 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 	let initial_state_index = StateSpace.get_initial_state_index state_space in
 	
 	(* Get the symbolic run, i.e., a list of a pair of a symbolic state *followed* by a combined transition *)
-	let symbolic_run : StateSpace.symbolic_run = StateSpace.backward_symbolic_run state_space target_state_index initial_state_index (Some predecessors) in
+	let symbolic_run : StateSpace.symbolic_run = StateSpace.backward_symbolic_run state_space target_state_index [] (* temporary *) initial_state_index (Some predecessors) in
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_low then (
@@ -4033,7 +4033,7 @@ class virtual algoStateBased =
 		let initial_state_index = StateSpace.get_initial_state_index state_space in
 		
 		(* Get the symbolic run, i.e., a list of a pair of a symbolic state *followed* by a combined transition *)
-		let symbolic_run : StateSpace.symbolic_run = StateSpace.backward_symbolic_run state_space target_state_index initial_state_index (Some predecessors) in
+		let symbolic_run : StateSpace.symbolic_run = StateSpace.backward_symbolic_run state_space target_state_index [] (* temporary *) initial_state_index (Some predecessors) in
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then (

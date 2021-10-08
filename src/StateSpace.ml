@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2021/10/01
+ * Last modified     : 2021/10/08
  *
  ************************************************************)
 
@@ -416,7 +416,7 @@ let get_transitions_table state_space =
 
 
 (** Compte and return the list of pairs (combined transition, index successor of a state) (if entry undefined in the hashtable, then []) *)
-let get_successors_with_combined_transitions state_space state_index =
+let get_successors_with_combined_transitions (state_space : state_space) (state_index : state_index) : (combined_transition * state_index) list =
 	(* Get all successors with their combined transition *)
 	hashtbl_get_or_default state_space.transitions_table state_index []
 
@@ -453,7 +453,7 @@ let get_transitions_of_state state_space state_index =
 
 
 (** Get the (unique) action associated with a combined_transition (if entry undefined in the hashtable, then []) *)
-let get_action_from_combined_transition combined_transition =
+let get_action_from_combined_transition (combined_transition : combined_transition) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* The action is the same for any transition of a combined_transition, therefore pick up the first one *)
@@ -468,6 +468,24 @@ let get_action_from_combined_transition combined_transition =
 	) with Failure msg -> raise (InternalError ("Empty list of transitions in a combined_transition found in get_action_from_combined_transition, although this should not have been the case: `" ^ msg ^ "`."))
 	in
 	action_index
+
+(** Get the combined_transition between a state_index and its successor. Raise Not_found if no such transition exists. If several combined transitions exist, only the first one is retrieved. *)
+(* local exception *)
+exception Found_transition of combined_transition
+
+let get_combined_transition_between_states (state_space : state_space) (source_state_index : state_index) (target_state_index : state_index) : combined_transition =
+	(* Get all successors of source_state_index *)
+	let successors = get_successors_with_combined_transitions state_space source_state_index in
+
+	try(
+		(* Iterate *)
+
+		List.iter (fun (combined_transition, state_index) -> if state_index = target_state_index then raise (Found_transition combined_transition)) successors;
+		
+		(* If not found *)
+		raise Not_found
+	) with Found_transition combined_transition -> combined_transition
+
 
 
 (*(** Compte and return the list of pairs (index successor of a state, corresponding action) (if entry undefined in the hashtable, then []) *)
@@ -1041,10 +1059,10 @@ let is_marked colortable element : bool =
 
 
 (*------------------------------------------------------------*)
-(** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; the target state is not included. Raise Not_found if run not found. *)
+(** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; optionally one can pass a list of states "a lasso" for which we already know the succession of state indices. the final (target) state is not included. Raise Not_found if run not found. *)
 (*------------------------------------------------------------*)
 
-let backward_symbolic_run state_space (target_state_index : state_index) (source_state_index : state_index) (predecessors_table_option : predecessors_table option) : symbolic_run =
+let backward_symbolic_run state_space (target_state_index : state_index) (lasso : state_index list) (source_state_index : state_index) (predecessors_table_option : predecessors_table option) : symbolic_run =
 	(* First manage the predecessors_table *)
 	let predecessors_table = match predecessors_table_option with
 		(* If given: keep it *)
@@ -1105,9 +1123,46 @@ let backward_symbolic_run state_space (target_state_index : state_index) (source
 
 	in
 	(*------------------------------------------------------------*)
-
+	
+	(* If a lasso is provided, first reconstruct the final symbolic steps for the lasso *)
+	let final_symbolic_steps, target_state_index_for_backward_reconstruction = match lasso with
+		| [] ->
+			(* No lasso *)
+			[] , target_state_index
+		| first_state_of_the_lasso :: rest_of_the_lasso -> 
+			(* Non-essential verification *)
+(*			if first_state_of_the_lasso <> target_state_index then(
+				raise (InternalError ("The first state of the lasso (" ^ (string_of_int first) ^ ") should be identical to the target state (" ^ (string_of_int target_state_index) ^ ")."));
+			);*)
+			
+			(*** BADPROG: mix imperative and functional programming… ***)
+			let current_state_index : state_index ref = ref first_state_of_the_lasso in
+			(* Iterate on the successor of each state of the lasso except the first one *)
+			List.map (fun current_successor : state_index ->
+				(* Retrieve the transition (state, successor) *)
+				let combined_transition = get_combined_transition_between_states state_space !current_state_index current_successor in
+				
+				raise (NotImplemented "lasso");
+				
+				(* Update current index *)
+				current_state_index := current_successor;
+				
+				(* Replace *)
+				(*** TODO: add state ***)
+				combined_transition;
+				
+				
+				raise (NotImplemented "lasso");
+			) rest_of_the_lasso;
+			
+			
+			raise (NotImplemented "lasso")
+			
+			(* first_state_of_the_lasso, TODO *)
+	in
+	
 	(* Call the recursive procedure and reverse the result *)
-	match backward_symbolic_run_rec target_state_index with
+	match backward_symbolic_run_rec target_state_index_for_backward_reconstruction with
 	(* Oops! *)
 	| None -> raise Not_found
 	| Some symbolic_steps ->
