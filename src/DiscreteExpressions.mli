@@ -157,6 +157,8 @@ type discrete_variable_access =
     | Discrete_variable_index of Automaton.discrete_index
     | Discrete_variable_access of discrete_variable_access * int_arithmetic_expression
 
+val is_linear_discrete_boolean_expression : discrete_boolean_expression -> bool
+
 (* String *)
 
 (* Constructors strings *)

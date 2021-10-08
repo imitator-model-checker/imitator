@@ -165,14 +165,25 @@ let string_of_initially model automaton_index =
 	^ (model.location_names automaton_index initial_location)
 	^ ";"
 
+let is_linear_guard = function
+	| True_guard
+	| False_guard
+	| Continuous_guard _ -> true
+	| Discrete_guard guard -> NonlinearConstraint.is_linear_nonlinear_constraint guard
+	| Discrete_continuous_guard guard -> NonlinearConstraint.is_linear_nonlinear_constraint guard.discrete_guard
 
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model automaton_index location_index stopwatches clocks =
 
-    (* TODO benjamin check if guard is linear or not, if not print warning ! *)
+    let invariant = model.invariants automaton_index location_index in
+    let str_invariant = ModelPrinter.string_of_guard model.variable_names invariant in
+
+    if not (is_linear_guard invariant) then
+        print_warning ("Invariant `" ^ str_invariant ^ "` contains non-linear expression(s) or are not rational-valued, HyTech doesn't support such expressions.");
+
 	(* Invariant *)
 	"while "
-	^ (ModelPrinter.string_of_guard model.variable_names (model.invariants automaton_index location_index))
+	^ str_invariant
 
 	(* Handle stopwatches *)
 	^
@@ -244,11 +255,16 @@ let string_of_transition model automaton_index transition =
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
 	let conditional_updates = transition.updates.conditional in
+
+    let str_guard = ModelPrinter.string_of_guard model.variable_names transition.guard in
+
+    if not (is_linear_guard transition.guard) then
+        print_warning ("Guard `" ^ str_guard ^ "` contains non-linear expression(s) or are not rational-valued, HyTech doesn't such expressions.");
+
 	(if conditional_updates <> [] then print_warning "Conditional updates are not supported by HyTech. Ignoring…" );
 	"\n\t" ^ "when "
 	(* Convert the guard *)
-	^ (ModelPrinter.string_of_guard model.variable_names transition.guard)
-
+	^ str_guard
 	(* Convert the updates *)
 	^ " do {"
 	(* Clock updates *)

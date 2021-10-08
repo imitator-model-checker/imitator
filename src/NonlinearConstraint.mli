@@ -21,6 +21,8 @@ val check_nonlinear_constraint : DiscreteExpressions.discrete_valuation -> nonli
 (*(** Compute the intersection of nonlinear constraints **)*)
 (*val intersection : nonlinear_constraint list -> nonlinear_constraint*)
 
+val is_linear_nonlinear_constraint : nonlinear_constraint -> bool
+
 (* Strings *)
 val customized_string_of_nonlinear_constraint : Constants.customized_string -> (Automaton.variable_index -> string) -> nonlinear_constraint -> string
 val string_of_nonlinear_constraint : (Automaton.variable_index -> string) -> nonlinear_constraint -> string

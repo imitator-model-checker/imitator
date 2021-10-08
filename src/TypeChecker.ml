@@ -892,7 +892,7 @@ and infer_parsed_discrete_factor variable_infos = function
             if not (ParsingStructureUtilities.is_parsed_arithmetic_expression_constant variable_infos converted_expr) then
                 raise (TypeError (
                     "Shift parameter of "
-                    ^ string_of_parsed_factor_constructor shift
+                    ^ label_of_parsed_factor_constructor shift
                     ^ " function should be a constant expression."
                     ^ " Expression `"
                     ^ ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos converted_expr
@@ -910,7 +910,7 @@ and infer_parsed_discrete_factor variable_infos = function
             if not (ParsingStructureUtilities.is_parsed_arithmetic_expression_constant variable_infos converted_expr) then
                 raise (TypeError (
                     "Shift parameter of "
-                    ^ string_of_parsed_factor_constructor shift
+                    ^ label_of_parsed_factor_constructor shift
                     ^ " should be a constant expression."
                     ^ " Expression `"
                     ^ ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos converted_expr

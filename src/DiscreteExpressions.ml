@@ -159,6 +159,83 @@ type discrete_variable_access =
     | Discrete_variable_index of Automaton.discrete_index
     | Discrete_variable_access of discrete_variable_access * int_arithmetic_expression
 
+
+(** Check linearity of a discrete expression **)
+
+let rec is_variable_rational_arithmetic_expression = function
+    | DAE_plus _
+    | DAE_minus _ -> false
+    | DAE_term term ->
+        is_variable_rational_term term
+
+and is_variable_rational_term = function
+    | DT_mul _
+    | DT_div _ -> false
+    | DT_factor factor -> is_variable_rational_factor factor
+
+and is_variable_rational_factor = function
+    | DF_variable _ -> true
+    | DF_unary_min factor -> is_variable_rational_factor factor
+    | DF_expression expr -> is_variable_rational_arithmetic_expression expr
+    | _ -> false
+
+let rec is_linear_global_expression = function
+    | Arithmetic_expression expr -> is_linear_arithmetic_expression expr
+    | Bool_expression expr -> is_linear_boolean_expression expr
+    | _ -> false
+
+and is_linear_boolean_expression = function
+	| True_bool
+	| False_bool
+	| And_bool _ -> true
+	| Or_bool _ -> false
+	| Discrete_boolean_expression expr ->
+		is_linear_discrete_boolean_expression expr
+
+and is_linear_discrete_boolean_expression = function
+	| Expression (l_expr, _, r_expr) ->
+	    is_linear_arithmetic_expression l_expr &&
+	    is_linear_arithmetic_expression r_expr
+	| Expression_in (expr_1, expr_2, expr_3) ->
+	    is_linear_arithmetic_expression expr_1 && (
+	        is_linear_arithmetic_expression expr_2 &&
+	        is_linear_arithmetic_expression expr_3
+	    )
+    | _ -> false
+
+and is_linear_arithmetic_expression = function
+    | Rational_arithmetic_expression expr -> is_linear_rational_arithmetic_expression expr
+    | Int_arithmetic_expression expr -> false
+
+and is_linear_rational_arithmetic_expression = function
+    | DAE_plus (expr, term) ->
+        is_linear_rational_arithmetic_expression expr &&
+        is_linear_rational_term term
+    | DAE_minus (expr, term) ->
+        is_linear_rational_arithmetic_expression expr &&
+        is_linear_rational_term term
+    | DAE_term term ->
+        is_linear_rational_term term
+
+and is_linear_rational_term = function
+    | DT_mul (term, factor) ->
+        (* Two variable ? false, otherwise true *)
+        not (is_variable_rational_term term && is_variable_rational_factor factor)
+    | DT_div _ -> false
+    | DT_factor factor -> is_linear_rational_factor factor
+
+and is_linear_rational_factor = function
+    | DF_variable _
+    | DF_constant _ -> true
+    | DF_unary_min factor -> is_linear_rational_factor factor
+    | DF_expression expr -> is_linear_rational_arithmetic_expression expr
+    | Rational_array_access _
+    | DF_rational_of_int _
+    | DF_pow _ -> false
+
+
+
+
 (****************************************************************)
 (** Strings *)
 (****************************************************************)
@@ -560,7 +637,6 @@ and customized_string_of_binary_word_expression customized_string variable_names
         ^ "["
         ^ customized_string_of_int_arithmetic_expression customized_string variable_names index_expr
         ^ "]"
-
 
 and customized_string_of_array_expression customized_string variable_names = function
     | Literal_array expr_array ->

@@ -18,9 +18,15 @@ let check_nonlinear_inequalities discrete_valuation =
 
 (* Check if a nonlinear constraint is satisfied *)
 let check_nonlinear_constraint discrete_valuation = function
-  | True_nonlinear_constraint -> true
-  | False_nonlinear_constraint -> false
-  | Nonlinear_constraint nonlinear_inequalities -> check_nonlinear_inequalities discrete_valuation nonlinear_inequalities
+    | True_nonlinear_constraint -> true
+    | False_nonlinear_constraint -> false
+    | Nonlinear_constraint nonlinear_inequalities -> check_nonlinear_inequalities discrete_valuation nonlinear_inequalities
+
+let is_linear_nonlinear_constraint = function
+    | True_nonlinear_constraint
+    | False_nonlinear_constraint -> true
+    | Nonlinear_constraint nonlinear_inequalities ->
+        List.for_all DiscreteExpressions.is_linear_discrete_boolean_expression nonlinear_inequalities
 
 (* Get string of non-linear constraint inequalities with customized strings *)
 let customized_string_of_nonlinear_constraint customized_string variable_names = function

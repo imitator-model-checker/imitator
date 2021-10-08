@@ -236,7 +236,9 @@ let iterate_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint binun
 
 let iterate_parsed_update = fold_parsed_update binunit ()
 
-let string_of_parsed_factor_constructor = function
+(* Labels of a parsed factors *)
+
+let label_of_parsed_factor_constructor = function
 	| Parsed_DF_variable _ -> "variable"
 	| Parsed_DF_constant _ -> "constant"
 	| Parsed_DF_array _ -> "array"
@@ -303,10 +305,10 @@ and string_of_parsed_factor variable_infos = function
     | Parsed_DF_unary_min factor ->
         "-(" ^ (string_of_parsed_factor variable_infos factor) ^ ")"
     | Parsed_rational_of_int_function arithmetic_expr as factor ->
-        string_of_parsed_factor_constructor factor
+        label_of_parsed_factor_constructor factor
         ^ "(" ^ string_of_parsed_arithmetic_expression variable_infos arithmetic_expr ^ ")"
     | Parsed_pow_function (expr, exp_expr) as factor ->
-        string_of_parsed_factor_constructor factor
+        label_of_parsed_factor_constructor factor
         ^ "("
         ^ string_of_parsed_arithmetic_expression variable_infos expr
         ^ ","
@@ -316,7 +318,7 @@ and string_of_parsed_factor variable_infos = function
     | Parsed_shift_right (factor, expr)
     | Parsed_fill_left (factor, expr)
     | Parsed_fill_right (factor, expr) as shift ->
-        string_of_parsed_factor_constructor shift
+        label_of_parsed_factor_constructor shift
         ^ "("
         ^ string_of_parsed_factor variable_infos factor
         ^ ", "
@@ -326,14 +328,14 @@ and string_of_parsed_factor variable_infos = function
     | Parsed_log_or (l_factor, r_factor)
     | Parsed_log_xor (l_factor, r_factor)
     | Parsed_array_concat (l_factor, r_factor) as func ->
-        string_of_parsed_factor_constructor func
+        label_of_parsed_factor_constructor func
         ^ "("
         ^ string_of_parsed_factor variable_infos l_factor
         ^ ", "
         ^ string_of_parsed_factor variable_infos r_factor
         ^ ")"
     | Parsed_log_not factor as func ->
-        string_of_parsed_factor_constructor func
+        label_of_parsed_factor_constructor func
         ^ "("
         ^ string_of_parsed_factor variable_infos factor
         ^ ")"

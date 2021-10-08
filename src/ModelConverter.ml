@@ -2138,7 +2138,7 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
         | Parsed_log_xor _
         | Parsed_log_not _
         | Parsed_array_concat _ as factor ->
-            raise (InvalidExpression ("Use of \"" ^ ParsingStructureUtilities.string_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
+            raise (InvalidExpression ("Use of \"" ^ ParsingStructureUtilities.label_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
 
 let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
     | Parsed_arithmetic_expression _ ->
@@ -2648,7 +2648,7 @@ let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_info
         | Parsed_DF_array _
         | Parsed_DF_access _
         | Parsed_array_concat _ as factor ->
-            raise (InternalError ("Use of " ^ ParsingStructureUtilities.string_of_parsed_factor_constructor factor ^ " is forbidden in linear term, something failed before."))
+            raise (InternalError ("Use of " ^ ParsingStructureUtilities.label_of_parsed_factor_constructor factor ^ " is forbidden in linear term, something failed before."))
 
 	in
 
