@@ -61,7 +61,7 @@ let jani_assignment = "="
 
 let jani_version = "1"
 let jani_type = "sha"
-let jani_features = "[\"derived-operators\"]"
+let jani_features = "[\"derived-operators\",\"arrays\"]"
 
 (* JANI *)
 
@@ -370,12 +370,12 @@ and customized_string_of_array_expression_for_jani customized_string variable_na
     | Literal_array expr_array ->
         let str_expr = Array.map (customized_string_of_global_expression_for_jani customized_string variable_names ) expr_array in
         let str_values = OCamlUtilities.string_of_array_of_string_with_sep "," str_expr in
-        "{\"op\":\"av\",\"elements\":Array.of(" ^ str_values ^ ")}"
+        "{\"op\":\"av\",\"elements\":[" ^ str_values ^ "]}"
 
     | Array_constant values ->
         let str_values = Array.map DiscreteValue.string_of_value values in
         let str_values = OCamlUtilities.string_of_array_of_string_with_sep "," str_values in
-        "{\"op\":\"av\",\"elements\":Array.of(" ^ str_values ^ ")}"
+        "{\"op\":\"av\",\"elements\":[" ^ str_values ^ "]}"
 
     | Array_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
     | Array_array_access (array_expr, index_expr) ->
@@ -386,12 +386,12 @@ and customized_string_of_array_expression_for_jani customized_string variable_na
         ^ "}"
     | Array_concat (array_expr_0, array_expr_1) as func ->
         "{"
-        ^ "\"op\": \"call\","
-        ^ "\"function\": " ^ label_of_array_expression func ^ ","
-        ^ "\"args\": Array.of("
+        ^ "\"op\":\"call\","
+        ^ "\"function\":" ^ label_of_array_expression func ^ ","
+        ^ "\"args\":["
         ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr_0 ^ ","
         ^ customized_string_of_array_expression_for_jani customized_string variable_names array_expr_1
-        ^ ")"
+        ^ "]"
         ^ "}"
 
 (*JANI*)
@@ -465,7 +465,7 @@ let string_of_clocks model =
           "{"
         ^ "\"name\": \"" ^ model.variable_names var ^ "\"" ^ jani_separator
         ^ "\"type\": \""^ clocks_type ^"\"" ^ jani_separator
-        ^ "\"initial_value\": 0"
+        ^ "\"initial-value\": 0"
         ^ "}"
       )
       list_of_variables
@@ -477,16 +477,17 @@ let string_of_clocks model =
 
 (* String of number var type *)
 let string_of_var_type_discrete_number_for_jani = function
-    | DiscreteValue.Var_type_discrete_rational -> "real"
-    | DiscreteValue.Var_type_discrete_int -> "int"
-    | DiscreteValue.Var_type_discrete_unknown_number -> "number"
+    | DiscreteValue.Var_type_discrete_rational -> jani_quoted "real"
+    | DiscreteValue.Var_type_discrete_int -> jani_quoted "int"
+    | DiscreteValue.Var_type_discrete_unknown_number -> jani_quoted "number"
 
 (* String of discrete var type *)
 let rec string_of_var_type_discrete_for_jani = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
-    | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ -> "binary_word" (* TODO benjamin type name is good for Jani ? *)
-    | DiscreteValue.Var_type_discrete_array (discrete_type, length) -> string_of_var_type_discrete_for_jani discrete_type ^ " array(" ^ string_of_int length ^ ")" (* TODO benjamin type name is good for Jani ? *)
+    | DiscreteValue.Var_type_discrete_bool -> jani_quoted "bool"
+    | DiscreteValue.Var_type_discrete_binary_word _ -> jani_quoted "binary_word" (* TODO benjamin type name is good for Jani ? *)
+    | DiscreteValue.Var_type_discrete_array (discrete_type, _) ->
+        "{\"kind\":\"array\",\"base\":" ^ string_of_var_type_discrete_for_jani discrete_type ^ "}"
 
 (* Convert the initial discrete var declarations into a string *)
 let string_of_discrete model =
@@ -496,11 +497,7 @@ let string_of_discrete model =
             let array_value = DiscreteValue.array_value initial_value in
             let str_values = Array.map DiscreteValue.string_of_value array_value in
             let str_array = OCamlUtilities.string_of_array_of_string_with_sep "," str_values in
-            "{\"op\":\"ac\",\"var\":"
-            ^ discrete_name
-            ^ ",\"length\":"
-            ^ string_of_int length ^ ",\"exp\":"
-            ^ "{\"op\":\"av\",\"elements\":Array.of(" ^ str_array ^ ")}"
+            "{\"op\":\"av\",\"elements\":[" ^ str_array ^ "]}"
         | _ ->
             DiscreteValue.string_of_value initial_value
     in
@@ -525,8 +522,8 @@ let string_of_discrete model =
 				(* Assign *)
                 "{"
                 ^ "\"name\": \"" ^ discrete_name ^ "\"" ^ jani_separator
-                ^ "\"type\": \"" ^ str_discrete_type ^ "\"" ^ jani_separator
-                ^ "\"initial_value\": " ^ str_initial_value
+                ^ "\"type\":" ^ str_discrete_type ^ jani_separator
+                ^ "\"initial-value\": " ^ str_initial_value
                 ^ "}"
             ) model.discrete
 			)
@@ -594,13 +591,14 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 	| True_guard -> ""
 
 	(* False *)
-	| False_guard -> "\"exp\": {" ^ jani_boolean_strings.false_string ^ "}"
+	| False_guard -> "{\"exp\":" ^ jani_boolean_strings.false_string ^ "}"
 
 	| Discrete_guard discrete_guard ->
 
         let list_discrete_guard = (customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_guard) in
         let list_discrete_guard_without_true = if list_discrete_guard = [jani_boolean_strings.true_string] then [""] else list_discrete_guard in
-        string_of_strings_with_sep_and list_discrete_guard_without_true
+        let content = string_of_strings_with_sep_and list_discrete_guard_without_true in
+        if content = "" then "" else "{\"exp\":" ^ content ^ "}"
 
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
@@ -617,9 +615,11 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 					in
 					let left = LinearConstraint.string_of_left_term_of_pxd_linear_inequality variable_names inequality in
 					let right = LinearConstraint.string_of_right_term_of_pxd_linear_inequality variable_names inequality in
-                    "{\"op\": \"" ^ op ^ "\"" ^ jani_separator
-					^ "\"left\": " ^ left ^ "" ^ jani_separator
+					"{\"exp\":"
+                    ^ "{\"op\": \"" ^ op ^ "\"" ^ jani_separator
+					^ "\"left\": " ^ left ^ jani_separator
 					^ "\"right\": " ^ right ^ "}"
+					^ "}"
 				) list_of_inequalities)
 
 			)
@@ -629,7 +629,7 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 		let linear_constraint_string = (string_of_guard_or_invariant actions_and_nb_automata variable_names (Continuous_guard discrete_continuous_guard.continuous_guard)) in
 		let list = List.append non_linear_constraint_list [linear_constraint_string] in
 	    let content = string_of_strings_with_sep_and list in
-	    if content = "" then "" else content
+	    if content = "" then "" else "{\"exp\":" ^ content ^ "}"
 
 
 (* Convert the invariant of a location into a string *)
@@ -724,7 +724,7 @@ let string_of_clock_updates model = function
 			^ "\"" ^ jani_separator ^ " \"value\" : 0}"
 		) list_of_clocks)
 	| Updates list_of_clocks_lt ->
-		string_of_list_of_string_with_sep (jani_separator^"") (List.map (fun (variable_index, linear_term) ->
+		string_of_list_of_string_with_sep jani_separator (List.map (fun (variable_index, linear_term) ->
 			"{\"ref\": \""
 			^ (model.variable_names variable_index)
 			^ "\"" ^ jani_separator ^ " \"value\" : "
@@ -734,7 +734,7 @@ let string_of_clock_updates model = function
 
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep (jani_separator^"") (List.map (fun (variable_access, global_expression) ->
+	string_of_list_of_string_with_sep jani_separator (List.map (fun (variable_access, global_expression) ->
 		"{\"ref\": \""
 		(* Convert variable access to string *)
 		^ ModelPrinter.string_of_variable_access model variable_access
@@ -946,7 +946,7 @@ let string_of_automaton model actions_and_nb_automata automaton_index =
   	"{"
     ^ "\"name\": \"" ^ (model.automata_names automaton_index) ^ "\"" ^ jani_separator
   	^ "\"locations\": [" ^ (string_of_locations model actions_and_nb_automata automaton_index) ^ "]" ^ jani_separator
-  	^ "\"initial_locations\": [" ^ (string_of_initial_location model automaton_index) ^ "]" ^ jani_separator
+  	^ "\"initial-locations\": [" ^ (string_of_initial_location model automaton_index) ^ "]" ^ jani_separator
   	^ "\"edges\": [" ^ (string_of_transitions model actions_and_nb_automata automaton_index) ^ "]"
     ^ "}"
 
