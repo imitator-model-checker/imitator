@@ -26,31 +26,41 @@ type variable_index = int
 (** Error messages **)
 
 (* Error message when mixin of different types *)
-let get_type_mixin_error_message l_type r_type str_expr =
-    "The expression `"
+let type_mixin_error_message str_expr types =
+    let str_types_array = Array.map DiscreteValue.string_of_var_type_discrete types in
+    let str_types = OCamlUtilities.string_of_array_of_string_with_sep ", " str_types_array in
+    "Expression `"
     ^ str_expr
     ^ "` mixes different types: "
-    ^ (DiscreteValue.string_of_var_type_discrete l_type)
-    ^ ", "
-    ^ (DiscreteValue.string_of_var_type_discrete r_type)
+    ^ str_types
+    ^ "."
 
-(* Error message when mixin of different types *)
-let get_triplet_type_mixin_error_message type1 type2 type3 str_expr =
+let not_arithmetic_expr_message str_expr types =
+    let str_types_array = Array.map DiscreteValue.string_of_var_type_discrete types in
+    let str_types = OCamlUtilities.string_of_array_of_string_with_sep ", " str_types_array in
     "The expression `"
     ^ str_expr
-    ^ "` mixes different types: "
-    ^ (DiscreteValue.string_of_var_type_discrete type1)
-    ^ ", "
-    ^ (DiscreteValue.string_of_var_type_discrete type2)
-    ^ ", "
-    ^ (DiscreteValue.string_of_var_type_discrete type3)
+    ^ "` is not an arithmetic expression: "
+    ^ str_types
+    ^ "."
 
-let get_infer_message str_expr target_type =
+let print_infer_expr_message str_expr discrete_type =
     print_message Verbose_high (
-        "\tInfer literals of expression "
+        "\tInfer expression `"
         ^ str_expr
-        ^ " as "
+        ^ "` as "
+        ^ DiscreteValue.string_of_var_type_discrete discrete_type
+        ^ "."
+    )
+
+(* Print inference message *)
+let print_infer_message str_expr target_type =
+    print_message Verbose_high (
+        "\tInfer literals of expression `"
+        ^ str_expr
+        ^ "` as "
         ^ DiscreteValue.string_of_var_type_discrete target_type
+        ^ "."
     )
 
 (** Get variables types **)
@@ -365,19 +375,13 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
         let infer_r_expr, r_type = infer_parsed_discrete_boolean_expression variable_infos r_expr in
 
         (* Prepare inference message *)
-        let get_infer_expr_message = get_infer_message (string_of_parsed_discrete_boolean_expression variable_infos expr) in
+        let get_infer_expr_message = print_infer_message (string_of_parsed_discrete_boolean_expression variable_infos expr) in
 
-        print_message Verbose_high (
-            "\tInfer expression type of `"
-            ^ string_of_parsed_discrete_boolean_expression variable_infos expr
-            ^ "` as "
-            ^ DiscreteValue.string_of_var_type_discrete DiscreteValue.Var_type_discrete_bool
-        );
-
+        print_infer_expr_message (string_of_parsed_discrete_boolean_expression variable_infos expr) DiscreteValue.Var_type_discrete_bool;
 
         (* Check if two types are compatibles : bool, bool or int, int or number, int; etc. *)
         if not (DiscreteValue.is_discrete_type_compatibles l_type r_type) then
-            raise (TypeError (get_type_mixin_error_message l_type r_type (string_of_parsed_discrete_boolean_expression variable_infos expr)))
+            raise (TypeError (type_mixin_error_message (string_of_parsed_discrete_boolean_expression variable_infos expr) [|l_type; r_type|]))
         (* Check if two types are unknown number *)
         else if (DiscreteValue.is_discrete_type_holding_unknown_number_type l_type && DiscreteValue.is_discrete_type_holding_unknown_number_type r_type) then (
             (* No number type are deduced from tree, because there is only literal numbers *)
@@ -432,29 +436,13 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
         let is_all_unknown_number = lazy (List.for_all (fun t -> DiscreteValue.is_discrete_type_unknown_number_type t) all_types) in
         let is_type_conflict = lazy (List.exists (fun (t1, t2) -> not (DiscreteValue.is_discrete_type_unknown_number_type t1 || DiscreteValue.is_discrete_type_unknown_number_type t2) && t1 <> t2) types_combination) in
 
+        (* One of theses are not a number *)
         if not (Lazy.force is_all_number) then
-            raise (TypeError (
-                "One term of `"
-                ^ string_of_parsed_discrete_boolean_expression variable_infos in_expr
-                ^ "` expression, is not an arithmetic expression: "
-                ^ DiscreteValue.string_of_var_type_discrete expr_type
-                ^ ", "
-                ^ DiscreteValue.string_of_var_type_discrete lower_type
-                ^ ", "
-                ^ DiscreteValue.string_of_var_type_discrete upper_type
-            )) (* One of theses are not a number *)
+            raise (TypeError (not_arithmetic_expr_message (string_of_parsed_discrete_boolean_expression variable_infos in_expr) [|expr_type; lower_type; upper_type|]))
 
+        (* Types are differents *)
         else if Lazy.force is_type_conflict then
-            raise (TypeError (
-                "The expression `"
-                ^ string_of_parsed_discrete_boolean_expression variable_infos in_expr
-                ^ "` mixes different types: "
-                ^ (DiscreteValue.string_of_var_type_discrete expr_type)
-                ^ ", "
-                ^ (DiscreteValue.string_of_var_type_discrete lower_type)
-                ^ ", "
-                ^ (DiscreteValue.string_of_var_type_discrete upper_type)
-            )) (* Types are differents *)
+            raise (TypeError (type_mixin_error_message (string_of_parsed_discrete_boolean_expression variable_infos in_expr) [|expr_type; lower_type; upper_type|]))
 
         (* All are unknown numbers *)
         else if (Lazy.force is_all_unknown_number) then (
@@ -462,12 +450,7 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
             (* So at this point, we convert all literals to rationals *)
             let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational in
 
-            print_message Verbose_high (
-                "\tInfer literals of expression `" ^
-                string_of_parsed_discrete_boolean_expression variable_infos in_expr ^
-                "` as " ^
-                DiscreteValue.string_of_var_type_discrete target_type
-            );
+            print_infer_message (string_of_parsed_discrete_boolean_expression variable_infos in_expr) target_type;
 
             let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type infer_expr in
             let convert_lower_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type infer_lower_expr in
@@ -477,12 +460,7 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
         )
         else if not (DiscreteValue.is_discrete_type_unknown_number_type expr_type) then (
 
-            print_message Verbose_high (
-                "\tInfer literals of expression `" ^
-                string_of_parsed_discrete_boolean_expression variable_infos in_expr ^
-                "` as " ^
-                DiscreteValue.string_of_var_type_discrete expr_type
-            );
+            print_infer_message (string_of_parsed_discrete_boolean_expression variable_infos in_expr) expr_type;
 
             (* Convert lower and upper expression to expr_type *)
             let convert_lower_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos expr_type infer_lower_expr in
@@ -492,12 +470,7 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
         )
         else if not (DiscreteValue.is_discrete_type_unknown_number_type lower_type) then (
 
-            print_message Verbose_high (
-                "\tInfer literals of expression `" ^
-                string_of_parsed_discrete_boolean_expression variable_infos in_expr ^
-                "` as " ^
-                DiscreteValue.string_of_var_type_discrete lower_type
-            );
+            print_infer_message (string_of_parsed_discrete_boolean_expression variable_infos in_expr) lower_type;
 
             (* Convert expr and upper expression to lower_type *)
             let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos lower_type infer_expr in
@@ -507,12 +480,7 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
         )
         else (
 
-            print_message Verbose_high (
-                "\tInfer literals of expression `" ^
-                string_of_parsed_discrete_boolean_expression variable_infos in_expr ^
-                "` as " ^
-                DiscreteValue.string_of_var_type_discrete upper_type
-            );
+            print_infer_message (string_of_parsed_discrete_boolean_expression variable_infos in_expr) upper_type;
 
             (* Convert expr and lower expression to upper_type *)
             let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos upper_type infer_expr in
@@ -546,16 +514,9 @@ and infer_parsed_discrete_arithmetic_expression variable_infos =
             let error_type = check_arithmetic_expression l_type r_type in
             match error_type with
             | Not_arithmetic_error ->
-                raise (TypeError (
-                    "The expression `"
-                    ^ (string_of_parsed_arithmetic_expression variable_infos arithmetic_expr)
-                    ^ "` is not an arithmetic expression: "
-                    ^ (DiscreteValue.string_of_var_type_discrete l_type)
-                    ^ ", "
-                    ^ (DiscreteValue.string_of_var_type_discrete r_type)
-                ))
+                raise (TypeError (not_arithmetic_expr_message (string_of_parsed_arithmetic_expression variable_infos arithmetic_expr) [|l_type; r_type|]))
             | Mixin_type_error ->
-                raise (TypeError (get_type_mixin_error_message l_type r_type (string_of_parsed_arithmetic_expression variable_infos arithmetic_expr)))
+                raise (TypeError (type_mixin_error_message (string_of_parsed_arithmetic_expression variable_infos arithmetic_expr) [|l_type; r_type|]))
             | Both_unknown_number_error ->
                 (infer_expr, infer_term), DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number
             | Left_unknown_number_error ->
@@ -604,16 +565,9 @@ and check_and_convert_term variable_infos term factor expr_term =
         let error_type = check_arithmetic_expression l_type r_type in
         match error_type with
         | Not_arithmetic_error ->
-            raise (TypeError (
-                "The term `"
-                ^ (string_of_parsed_term variable_infos expr_term)
-                ^ "` is not an arithmetic expression: "
-                ^ (DiscreteValue.string_of_var_type_discrete l_type)
-                ^ ", "
-                ^ (DiscreteValue.string_of_var_type_discrete r_type)
-            ))
+            raise (TypeError (not_arithmetic_expr_message (string_of_parsed_term variable_infos expr_term) [|l_type; r_type|]))
         | Mixin_type_error ->
-            raise (TypeError (get_type_mixin_error_message l_type r_type (string_of_parsed_term variable_infos expr_term)))
+            raise (TypeError (type_mixin_error_message (string_of_parsed_term variable_infos expr_term) [|l_type; r_type|]))
         | Both_unknown_number_error ->
             (infer_term, infer_factor), DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number
         | Left_unknown_number_error ->
@@ -674,23 +628,14 @@ and infer_parsed_discrete_factor variable_infos = function
 
         (* If not all the same, type error ! *)
         if not all_same then (
-            let str_discrete_types = Array.map (fun discrete_type -> DiscreteValue.string_of_var_type_discrete discrete_type) discrete_types in
-            raise (TypeError (
-                "The array `"
-                ^ string_of_parsed_factor variable_infos df_array
-                ^ "` mixes different types: ["
-                ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_discrete_types
-                ^ "]"
-            ))
+            raise (TypeError (type_mixin_error_message (string_of_parsed_factor variable_infos df_array) discrete_types))
+
         (* If all the same type, just convert each elements to the same type of first type *)
         ) else (
             let infer_type = DiscreteValue.Var_type_discrete_array (first_type, Array.length expr_array) in
-            print_message Verbose_high (
-                "\tInfer expression type of `"
-                ^ string_of_parsed_factor variable_infos df_array
-                ^ "` as "
-                ^ DiscreteValue.string_of_var_type_discrete infer_type
-            );
+
+            print_infer_expr_message (string_of_parsed_factor variable_infos df_array) infer_type;
+
             Parsed_DF_array converted_expr_array, infer_type
         )
 
@@ -752,19 +697,9 @@ and infer_parsed_discrete_factor variable_infos = function
             (* Set target type to int *)
             let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
 
-            print_message Verbose_high (
-                "\tInfer expression type of `"
-                ^ string_of_parsed_factor variable_infos int_expr
-                ^ "` as "
-                ^ DiscreteValue.string_of_var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
-            );
+            print_infer_expr_message (string_of_parsed_factor variable_infos int_expr) (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational);
 
-            print_message Verbose_high (
-                "\tInfer literals of expression `" ^
-                string_of_parsed_factor variable_infos int_expr ^
-                "` as " ^
-                DiscreteValue.string_of_var_type_discrete target_type
-            );
+            print_infer_message (string_of_parsed_factor variable_infos int_expr) target_type;
 
             (* Convert all literal of the expression to int *)
             let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr in
@@ -779,14 +714,7 @@ and infer_parsed_discrete_factor variable_infos = function
 
         (* Check that two expression are arithmetic *)
         if not (DiscreteValue.is_discrete_type_number_type l_type && DiscreteValue.is_discrete_type_number_type r_type) then (
-            raise (TypeError (
-                "The left or right expression contained `"
-                ^ (string_of_parsed_factor variable_infos pow_expr)
-                ^ "` is not an arithmetic expression: "
-                ^ (DiscreteValue.string_of_var_type_discrete l_type)
-                ^ ", "
-                ^ (DiscreteValue.string_of_var_type_discrete r_type)
-            ));
+            raise (TypeError (not_arithmetic_expr_message (string_of_parsed_factor variable_infos pow_expr) [|l_type; r_type|]))
         )
         (* Check that right expression (exponent) is int, otherwise raise an error *)
         else if not (DiscreteValue.is_discrete_type_unknown_number_type r_type || DiscreteValue.is_discrete_type_int_type r_type) then (
@@ -823,12 +751,7 @@ and infer_parsed_discrete_factor variable_infos = function
 
         let converted_expr, result_type = infer_expr, l_type in
 
-        print_message Verbose_high (
-            "\tInfer expression type of `"
-            ^ (string_of_parsed_factor variable_infos pow_expr)
-            ^ "` as "
-            ^ (DiscreteValue.string_of_var_type_discrete result_type)
-        );
+        print_infer_expr_message (string_of_parsed_factor variable_infos pow_expr) result_type;
 
         (* Return converted expression and it's type *)
         Parsed_pow_function (converted_expr, converted_exp), result_type
@@ -864,12 +787,7 @@ and infer_parsed_discrete_factor variable_infos = function
             (* convert *)
             let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
 
-            print_message Verbose_high (
-                "\tInfer expression `"
-                ^ (string_of_parsed_arithmetic_expression variable_infos expr)
-                ^ "` as "
-                ^ (DiscreteValue.string_of_var_type_discrete target_type)
-            );
+            print_infer_expr_message (string_of_parsed_arithmetic_expression variable_infos expr) target_type;
 
             convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr
         ) else
@@ -927,12 +845,8 @@ and infer_parsed_discrete_factor variable_infos = function
         in
 
         let _, t = typed_shift in
-        print_message Verbose_high (
-            "\tInfer expression `"
-            ^ (string_of_parsed_factor variable_infos shift)
-            ^ "` as "
-            ^ (DiscreteValue.string_of_var_type_discrete t)
-        );
+
+        print_infer_expr_message (string_of_parsed_factor variable_infos shift) t;
 
         typed_shift
 
@@ -956,22 +870,10 @@ and infer_parsed_discrete_factor variable_infos = function
         );
 
         if l_type <> r_type then (
-            raise (TypeError (
-                "Expression `"
-                ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos log_op
-                ^ "` mixes different types: "
-                ^ DiscreteValue.string_of_var_type_discrete l_type
-                ^ ", "
-                ^ DiscreteValue.string_of_var_type_discrete r_type
-            ))
+            raise (TypeError (type_mixin_error_message (string_of_parsed_factor variable_infos log_op) [|l_type; r_type|]))
         );
 
-        print_message Verbose_high (
-            "\tInfer expression `"
-            ^ (string_of_parsed_factor variable_infos log_op)
-            ^ "` as "
-            ^ (DiscreteValue.string_of_var_type_discrete l_type)
-        );
+        print_infer_expr_message (string_of_parsed_factor variable_infos log_op) l_type;
 
         (match log_op with
         | Parsed_log_and _ ->
@@ -1015,14 +917,7 @@ and infer_parsed_discrete_factor variable_infos = function
                 | Both_unknown_number_error_relop ->
                     infer_factor_0, infer_factor_1, inner_type_0
                 | Not_compatible ->
-                    raise (TypeError (
-                        "Expression `"
-                        ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos func
-                        ^ "` mixes different types: "
-                        ^ DiscreteValue.string_of_var_type_discrete discrete_type_0
-                        ^ ", "
-                        ^ DiscreteValue.string_of_var_type_discrete discrete_type_1
-                    ))
+                    raise (TypeError (type_mixin_error_message (string_of_parsed_factor variable_infos func) [|discrete_type_0; discrete_type_1|]))
                 | Left_unknown_number_error_relop ->
                     convert_literal_types_of_parsed_discrete_factor variable_infos inner_type_1 infer_factor_0,
                     infer_factor_1,
@@ -1036,12 +931,7 @@ and infer_parsed_discrete_factor variable_infos = function
 
             let array_type = DiscreteValue.Var_type_discrete_array (convert_type, length_0 + length_1) in
 
-            print_message Verbose_high (
-                "\tInfer expression type of `"
-                ^ (string_of_parsed_factor variable_infos func)
-                ^ "` as "
-                ^ (DiscreteValue.string_of_var_type_discrete array_type)
-            );
+            print_infer_expr_message (string_of_parsed_factor variable_infos func) array_type;
 
             Parsed_array_concat (convert_factor_0, convert_factor_1), array_type
         | _ ->
@@ -1444,6 +1334,7 @@ let check_discrete_init variable_infos variable_name expr =
     (* we should convert expression type to variable type *)
     let converted_expr =
         if DiscreteValue.is_discrete_type_holding_unknown_number_type expr_type then (
+
             print_message Verbose_high (
                 "\tInfer expression type of `"
                 ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos infer_expr
