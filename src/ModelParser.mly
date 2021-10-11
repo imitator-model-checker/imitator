@@ -557,10 +557,10 @@ literal_array_fol:
 function_call:
 	| CT_BUILTIN_FUNC_RATIONAL_OF_INT LPAREN arithmetic_expression RPAREN { Parsed_rational_of_int_function $3 }
 	| CT_POW LPAREN arithmetic_expression COMMA arithmetic_expression RPAREN { Parsed_pow_function ($3, $5) }
-	| CT_SHIFT_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_left ($3, $5) }
-	| CT_SHIFT_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_right ($3, $5) }
-	| CT_FILL_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_fill_left ($3, $5) }
-	| CT_FILL_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_fill_right ($3, $5) }
+	| CT_SHIFT_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_function_factor_arithmetic_expr (Parsed_shift_left, $3, $5) }
+	| CT_SHIFT_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_function_factor_arithmetic_expr (Parsed_shift_right, $3, $5) }
+	| CT_FILL_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_function_factor_arithmetic_expr (Parsed_fill_left, $3, $5) }
+	| CT_FILL_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_function_factor_arithmetic_expr (Parsed_fill_right, $3, $5) }
 	| CT_LOG_AND LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_and ($3, $5) }
 	| CT_LOG_OR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_or ($3, $5) }
 	| CT_LOG_XOR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_xor ($3, $5) }

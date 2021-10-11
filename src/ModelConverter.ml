@@ -298,10 +298,7 @@ and search_variable_of_discrete_arithmetic_expression variable_infos expr =
             ))
         | Parsed_rational_of_int_function _
         | Parsed_pow_function _
-        | Parsed_shift_left _
-        | Parsed_shift_right _
-        | Parsed_fill_left _
-        | Parsed_fill_right _
+        | Parsed_function_factor_arithmetic_expr _
         | Parsed_log_and _
         | Parsed_log_or _
         | Parsed_log_xor _
@@ -393,10 +390,7 @@ and convert_parsed_rational_arithmetic_expression variable_infos (* expr *) =
         | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_rational_factor factor)
         (* Should never happen, because it was checked by type checker before *)
         | Parsed_DF_array _
-        | Parsed_shift_left _
-        | Parsed_shift_right _
-        | Parsed_fill_left _
-        | Parsed_fill_right _
+        | Parsed_function_factor_arithmetic_expr _
         | Parsed_log_and _
         | Parsed_log_or _
         | Parsed_log_xor _
@@ -471,10 +465,7 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
         (* Should never happen, because it was checked by type checker before *)
         | Parsed_DF_array _
         | Parsed_rational_of_int_function _
-        | Parsed_shift_left _
-        | Parsed_shift_right _
-        | Parsed_fill_left _
-        | Parsed_fill_right _
+        | Parsed_function_factor_arithmetic_expr _
         | Parsed_log_and _
         | Parsed_log_or _
         | Parsed_log_xor _
@@ -541,26 +532,16 @@ and binary_word_expression_of_parsed_factor variable_infos = function
             convert_parsed_int_arithmetic_expression variable_infos index_expr
         )
 
-    | Parsed_shift_left (factor, expr) ->
-        Logical_shift_left (
-            binary_word_expression_of_parsed_factor variable_infos factor,
-            convert_parsed_int_arithmetic_expression variable_infos expr
-        )
-    | Parsed_shift_right (factor, expr) ->
-        Logical_shift_right (
-            binary_word_expression_of_parsed_factor variable_infos factor,
-            convert_parsed_int_arithmetic_expression variable_infos expr
-        )
-    | Parsed_fill_left (factor, expr) ->
-        Logical_fill_left (
-            binary_word_expression_of_parsed_factor variable_infos factor,
-            convert_parsed_int_arithmetic_expression variable_infos expr
-        )
-    | Parsed_fill_right (factor, expr) ->
-        Logical_fill_right (
-            binary_word_expression_of_parsed_factor variable_infos factor,
-            convert_parsed_int_arithmetic_expression variable_infos expr
-        )
+    | Parsed_function_factor_arithmetic_expr (fun_type, factor, expr) ->
+        let binary_word_expr = binary_word_expression_of_parsed_factor variable_infos factor in
+        let int_expr = convert_parsed_int_arithmetic_expression variable_infos expr in
+        begin
+        match fun_type with
+        | Parsed_shift_left -> Logical_shift_left (binary_word_expr, int_expr)
+        | Parsed_shift_right -> Logical_shift_right (binary_word_expr, int_expr)
+        | Parsed_fill_left -> Logical_fill_left (binary_word_expr, int_expr)
+        | Parsed_fill_right -> Logical_fill_right (binary_word_expr, int_expr)
+        end
     | Parsed_log_and (l_factor, r_factor) ->
         Logical_and (
             binary_word_expression_of_parsed_factor variable_infos l_factor,
@@ -2129,10 +2110,7 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
         | Parsed_DF_access _
         | Parsed_rational_of_int_function _
         | Parsed_pow_function _
-        | Parsed_shift_left _
-        | Parsed_shift_right _
-        | Parsed_fill_left _
-        | Parsed_fill_right _
+        | Parsed_function_factor_arithmetic_expr _
         | Parsed_log_and _
         | Parsed_log_or _
         | Parsed_log_xor _
@@ -2632,10 +2610,7 @@ let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_info
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor expr;
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor exp_expr
         (* Same comment for case above *)
-        | Parsed_shift_left (factor, expr)
-        | Parsed_shift_right (factor, expr)
-        | Parsed_fill_left (factor, expr)
-        | Parsed_fill_right (factor, expr) ->
+        | Parsed_function_factor_arithmetic_expr (_, factor, expr) ->
 		    update_coef_array_in_parsed_update_factor mult_factor factor;
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor expr
         | Parsed_log_and (l_factor, r_factor)

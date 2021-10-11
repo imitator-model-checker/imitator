@@ -103,10 +103,7 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
         operator
             (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr_0)
             (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr_1)
-	| Parsed_shift_left (factor, expr)
-	| Parsed_shift_right (factor, expr)
-	| Parsed_fill_left (factor, expr)
-	| Parsed_fill_right (factor, expr) ->
+	| Parsed_function_factor_arithmetic_expr (_, factor, expr) ->
         operator
             (fold_parsed_discrete_factor operator base leaf_fun factor)
             (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
@@ -238,6 +235,12 @@ let iterate_parsed_update = fold_parsed_update binunit ()
 
 (* Labels of a parsed factors *)
 
+let label_of_parsed_function_factor_expr_type = function
+	| Parsed_shift_left -> "shift_left"
+	| Parsed_shift_right -> "shift_right"
+	| Parsed_fill_left -> "fill_left"
+	| Parsed_fill_right -> "fill_right"
+
 let label_of_parsed_factor_constructor = function
 	| Parsed_DF_variable _ -> "variable"
 	| Parsed_DF_constant _ -> "constant"
@@ -247,15 +250,14 @@ let label_of_parsed_factor_constructor = function
 	| Parsed_DF_unary_min _ -> "minus"
 	| Parsed_rational_of_int_function _ -> "rational_of_int"
 	| Parsed_pow_function _ -> "pow"
-	| Parsed_shift_left _ -> "shift_left"
-	| Parsed_shift_right _ -> "shift_right"
-	| Parsed_fill_left _ -> "fill_left"
-	| Parsed_fill_right _ -> "fill_right"
+	| Parsed_function_factor_arithmetic_expr (fun_type, _, _) -> label_of_parsed_function_factor_expr_type fun_type
     | Parsed_log_and _ -> "logand"
     | Parsed_log_or _ -> "logor"
     | Parsed_log_xor _ -> "logxor"
     | Parsed_log_not _ -> "lognot"
     | Parsed_array_concat _ -> "array_concat"
+
+
 
 (* String of a parsed expression *)
 (* Used for error message on type checking *)
@@ -314,10 +316,7 @@ and string_of_parsed_factor variable_infos = function
         ^ ","
         ^ string_of_parsed_arithmetic_expression variable_infos exp_expr
         ^ ")"
-    | Parsed_shift_left (factor, expr)
-    | Parsed_shift_right (factor, expr)
-    | Parsed_fill_left (factor, expr)
-    | Parsed_fill_right (factor, expr) as shift ->
+    | Parsed_function_factor_arithmetic_expr (_, factor, expr) as shift ->
         label_of_parsed_factor_constructor shift
         ^ "("
         ^ string_of_parsed_factor variable_infos factor
@@ -555,30 +554,16 @@ and try_reduce_parsed_arithmetic_expression constants expr =
                     ^ " expression, altough it was checked before by the type checker. Maybe type checking has failed before"
                 ))
             )
-        | Parsed_shift_left (factor, expr) ->
-
+        | Parsed_function_factor_arithmetic_expr (fun_type, factor, expr) ->
             let reduced_factor = try_reduce_parsed_factor factor in
             let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
-            DiscreteValue.shift_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
-
-        | Parsed_shift_right (factor, expr) ->
-
-            let reduced_factor = try_reduce_parsed_factor factor in
-            let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
-            DiscreteValue.shift_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
-
-        | Parsed_fill_left (factor, expr) ->
-
-            let reduced_factor = try_reduce_parsed_factor factor in
-            let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
-            DiscreteValue.fill_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
-
-        | Parsed_fill_right (factor, expr) ->
-
-            let reduced_factor = try_reduce_parsed_factor factor in
-            let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
-            DiscreteValue.fill_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
-
+            begin
+            match fun_type with
+            | Parsed_shift_left -> DiscreteValue.shift_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
+            | Parsed_shift_right -> DiscreteValue.shift_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
+            | Parsed_fill_left -> DiscreteValue.fill_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
+            | Parsed_fill_right -> DiscreteValue.fill_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
+            end
         | Parsed_log_and (l_factor, r_factor) ->
 
             let reduced_l_factor = try_reduce_parsed_factor l_factor in

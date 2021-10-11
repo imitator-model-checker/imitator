@@ -194,23 +194,9 @@ and convert_literal_types_of_parsed_discrete_factor variable_infos target_type =
             convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr,
             convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type exp_expr
         )
-    | Parsed_shift_left (factor, expr) ->
-        Parsed_shift_left (
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor,
-            convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr
-        )
-    | Parsed_shift_right (factor, expr) ->
-        Parsed_shift_right (
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor,
-            convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr
-        )
-    | Parsed_fill_left (factor, expr) ->
-        Parsed_fill_left (
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor,
-            convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr
-        )
-    | Parsed_fill_right (factor, expr) ->
-        Parsed_fill_right (
+    | Parsed_function_factor_arithmetic_expr (fun_type, factor, expr) ->
+        Parsed_function_factor_arithmetic_expr (
+            fun_type,
             convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor,
             convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr
         )
@@ -756,10 +742,8 @@ and infer_parsed_discrete_factor variable_infos = function
         (* Return converted expression and it's type *)
         Parsed_pow_function (converted_expr, converted_exp), result_type
 
-    | Parsed_shift_left (factor, expr)
-    | Parsed_shift_right (factor, expr)
-    | Parsed_fill_left (factor, expr)
-    | Parsed_fill_right (factor, expr) as shift ->
+
+    | Parsed_function_factor_arithmetic_expr (fun_type, factor, expr) as shift ->
 
         let infer_factor, l_type = infer_parsed_discrete_factor variable_infos factor in
         let infer_expr, r_type = infer_parsed_discrete_arithmetic_expression variable_infos expr in
@@ -797,13 +781,14 @@ and infer_parsed_discrete_factor variable_infos = function
 
 
         let typed_shift =
-        (match shift with
-        | Parsed_shift_left _ ->
-            Parsed_shift_left (infer_factor, converted_expr), l_type
-        | Parsed_shift_right _ ->
-            Parsed_shift_right (infer_factor, converted_expr), l_type
-        (* TODO benjamin REFACTOR ugly copy / paste *)
-        | Parsed_fill_left _ ->
+        (match fun_type with
+        | Parsed_shift_left
+        | Parsed_shift_right ->
+            Parsed_function_factor_arithmetic_expr (fun_type, infer_factor, converted_expr), l_type
+
+        | Parsed_fill_left
+        | Parsed_fill_right ->
+
             (* As we have to deduce length of binary word according to it's shifting value, *)
             (* only constant expression can be use as value of shifting *)
 
@@ -820,27 +805,8 @@ and infer_parsed_discrete_factor variable_infos = function
             let shift_value = ParsingStructureUtilities.try_reduce_parsed_arithmetic_expression variable_infos.constants converted_expr in
             let base_length = (match l_type with DiscreteValue.Var_type_discrete_binary_word l -> l | _ -> raise (InternalError "never happen")) in
             let length = base_length + Int32.to_int (DiscreteValue.int_value shift_value) in
-            Parsed_fill_left (infer_factor, converted_expr), DiscreteValue.Var_type_discrete_binary_word length
-        | Parsed_fill_right _ ->
-            (* As we have to deduce length of binary word according to it's shifting value, *)
-            (* only constant expression can be use as value of shifting *)
+            Parsed_function_factor_arithmetic_expr (fun_type, infer_factor, converted_expr), DiscreteValue.Var_type_discrete_binary_word length
 
-            if not (ParsingStructureUtilities.is_parsed_arithmetic_expression_constant variable_infos converted_expr) then
-                raise (TypeError (
-                    "Shift parameter of "
-                    ^ label_of_parsed_factor_constructor shift
-                    ^ " should be a constant expression."
-                    ^ " Expression `"
-                    ^ ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos converted_expr
-                    ^ "` is not constant."
-                ));
-
-            let shift_value = ParsingStructureUtilities.try_reduce_parsed_arithmetic_expression variable_infos.constants converted_expr in
-            let base_length = (match l_type with DiscreteValue.Var_type_discrete_binary_word l -> l | _ -> raise (InternalError "never happen")) in
-            let length = base_length + Int32.to_int (DiscreteValue.int_value shift_value) in
-            Parsed_fill_right (infer_factor, converted_expr), DiscreteValue.Var_type_discrete_binary_word length
-        | _ ->
-            raise (InternalError "Never happen!")
         )
         in
 
@@ -1075,10 +1041,7 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
     | Parsed_pow_function (expr, exp) ->
         (* Pow function result type depends of the left member type *)
         discrete_type_of_parsed_discrete_arithmetic_expression variable_infos expr
-    | Parsed_shift_left (factor, _)
-    | Parsed_shift_right (factor, _)
-    | Parsed_fill_left (factor, _)
-    | Parsed_fill_right (factor, _)
+    | Parsed_function_factor_arithmetic_expr (_, factor, _)
     | Parsed_log_and (factor, _)
     | Parsed_log_or (factor, _)
     | Parsed_log_xor (factor, _)
@@ -1089,13 +1052,14 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
     | Parsed_array_concat (factor_0, factor_1) ->
         let parameter_type_0 = discrete_type_of_parsed_discrete_factor variable_infos factor_0 in
         let parameter_type_1 = discrete_type_of_parsed_discrete_factor variable_infos factor_1 in
+        begin
         match parameter_type_0, parameter_type_1 with
         | DiscreteValue.Var_type_discrete_array (inner_type_0, length_0), DiscreteValue.Var_type_discrete_array (inner_type_1, length_1) ->
             (* Arbitrary use inner_type of parameter 0, because already type checked!) *)
             (* But array length of array concatenation is equal to length of first array plus length of second array *)
             DiscreteValue.Var_type_discrete_array (inner_type_0, length_0 + length_1)
         | _ -> raise (TypeError "")
-
+        end
 
 
 (** Checking functions **)
