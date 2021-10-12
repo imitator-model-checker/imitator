@@ -2,23 +2,23 @@
  *                                IMITATOR MODEL                               
  * 
  * Title            : FMTV_1_A3
- * Description      : 
+ * Description      : Solution to Thales' FMTV challenge
  * Correctness      : 
- * Scalable         : 
- * Generated        : 
+ * Scalable         : No
+ * Generated        : No
  * Categories       : Industrial ; Protocol ; RTS
  * Source           : 
  * bibkey           : SAL15
  * Author           : Étienne André and Youcheng Sun
- * Modeling         : 
- * Input by         : 
+ * Modeling         : Étienne André and Youcheng Sun
+ * Input by         : Étienne André
  * License          : 
  * 
  * Created          : 2015/03/19
- * Last modified    : 2021/08/30
+ * Last modified    : 2021/10/12
  * Model version    : 
  * 
- * IMITATOR version : 3.1
+ * IMITATOR version : 3.2
  ******************************************************************************)
 
 
@@ -35,6 +35,7 @@ var
     FRAME_OTHER = 1,
     FRAME_OTHER2 = 2,
     FRAME_OTHER3 = 3,
+		: int;
 
     (* Timings from the specification *)
     T1WCET = 28,
@@ -82,7 +83,7 @@ var
     (* Highest frame number in the buffer (n=1) between T3 and T4 (because "if the buffer has already stored a frame with a given index, any additional frame with the same index is discarded") *)
     buffer34_highest,
 
-    : discrete;
+    : int;
 
     (** PARAMETERS **)
 
