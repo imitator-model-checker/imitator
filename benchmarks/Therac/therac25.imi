@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2017/03/10
- * Last modified   : 2021/08/30
+ * Last modified   : 2021/10/12
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.2
  ************************************************************)
 
 var
@@ -24,7 +24,7 @@ var
 (* Modes for the machine *)
 MODE25MV = 1,
 MODE25MeV = 2,
-	: constant;
+	: int;
 
 (* Clocks *)
  	x_engineer,
@@ -36,7 +36,7 @@ MODE25MeV = 2,
 	buffer_VT100,
 (* The buffer for the PDP-11 *)
 	buffer_PDP11
-		: discrete;
+		: int;
 
 (* Parameters *)
 (* Time between 2 consecutive key strokes *)
