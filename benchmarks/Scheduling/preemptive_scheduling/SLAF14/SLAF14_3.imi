@@ -15,10 +15,10 @@
  * License          : 
  * 
  * Created          : < 2015/10/30
- * Last modified    : 2021/08/30
+ * Last modified    : 2021/10/12
  * Model version    : 
  * 
- * IMITATOR version : 3.1
+ * IMITATOR version : 3.2
  ******************************************************************************)
 
 
@@ -26,7 +26,7 @@
 
 var
     t1_c, t1_d, t1_urgent, t1_arr_x, t2_c, t2_d, t2_urgent, t2_arr_x, t3_c, t3_d, t3_urgent, t3_arr_x, CPU1_urgent : clock;
-    t1_inst, t2_inst, t3_inst, max_inst=5: discrete;
+    t1_inst, t2_inst, t3_inst, max_inst=5: rational;
     t1_D = 40, t1_arr_P=40, t2_D , t2_arr_P , t3_D = 100, t3_arr_P=100 : parameter;
 
 
