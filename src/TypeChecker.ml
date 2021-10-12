@@ -44,23 +44,41 @@ let not_arithmetic_expr_message str_expr types =
     ^ str_types
     ^ "."
 
-let print_infer_expr_message str_expr discrete_type =
+let not_boolean_expr_message str_expr types =
+    let str_types_array = Array.map DiscreteValue.string_of_var_type_discrete types in
+    let str_types = OCamlUtilities.string_of_array_of_string_with_sep ", " str_types_array in
+    "The expression `"
+    ^ str_expr
+    ^ "` is not a boolean expression: "
+    ^ str_types
+    ^ "."
+
+let infer_expr_as_message str_expr target_type =
+    "`"
+    ^ str_expr
+    ^ "` as "
+    ^ DiscreteValue.string_of_var_type_discrete target_type
+    ^ "."
+
+(* Print expression inference message *)
+let print_infer_expr_message str_expr target_type =
     print_message Verbose_high (
-        "\tInfer expression `"
-        ^ str_expr
-        ^ "` as "
-        ^ DiscreteValue.string_of_var_type_discrete discrete_type
-        ^ "."
+        "\tInfer expression "
+        ^ infer_expr_as_message str_expr target_type
     )
 
 (* Print inference message *)
 let print_infer_message str_expr target_type =
     print_message Verbose_high (
-        "\tInfer literals of expression `"
-        ^ str_expr
-        ^ "` as "
-        ^ DiscreteValue.string_of_var_type_discrete target_type
-        ^ "."
+        "\tInfer literals of expression "
+        ^ infer_expr_as_message str_expr target_type
+    )
+
+(* Print number value inference message *)
+let print_infer_literal_number_message value target_type =
+    print_message Verbose_high (
+        "\tInfer literal number value "
+        ^ infer_expr_as_message (DiscreteValue.string_of_value value) target_type
     )
 
 (** Get variables types **)
@@ -99,192 +117,164 @@ let get_discrete_type_of_variable_by_name variable_infos variable_name =
 
 
 (* Convert literals types of an expression to a given target type *)
-let rec convert_literal_types_of_expression variable_infos target_type = function
+let rec convert_literals_of_expression variable_infos target_type = function
     | Parsed_global_expression expr ->
-        Parsed_global_expression (convert_literal_types_of_parsed_boolean_expression variable_infos target_type expr)
+        Parsed_global_expression (convert_literals_of_parsed_boolean_expression variable_infos target_type expr)
 
 (* Convert literals types of a Boolean expression to a given target type *)
-and convert_literal_types_of_parsed_boolean_expression variable_infos target_type = function
+and convert_literals_of_parsed_boolean_expression variable_infos target_type = function
     | Parsed_True -> Parsed_True
     | Parsed_False -> Parsed_False
     | Parsed_And (l_expr, r_expr) ->
-        let convert_l_expr = convert_literal_types_of_parsed_boolean_expression variable_infos target_type l_expr in
-        let convert_r_expr = convert_literal_types_of_parsed_boolean_expression variable_infos target_type r_expr in
+        let convert_l_expr = convert_literals_of_parsed_boolean_expression variable_infos target_type l_expr in
+        let convert_r_expr = convert_literals_of_parsed_boolean_expression variable_infos target_type r_expr in
         Parsed_And (convert_l_expr, convert_r_expr)
     | Parsed_Or (l_expr, r_expr) ->
-        let convert_l_expr = convert_literal_types_of_parsed_boolean_expression variable_infos target_type l_expr in
-        let convert_r_expr = convert_literal_types_of_parsed_boolean_expression variable_infos target_type r_expr in
+        let convert_l_expr = convert_literals_of_parsed_boolean_expression variable_infos target_type l_expr in
+        let convert_r_expr = convert_literals_of_parsed_boolean_expression variable_infos target_type r_expr in
         Parsed_Or (convert_l_expr, convert_r_expr)
     | Parsed_Discrete_boolean_expression expr ->
-        Parsed_Discrete_boolean_expression (convert_literal_types_of_parsed_discrete_boolean_expression variable_infos target_type expr)
+        Parsed_Discrete_boolean_expression (convert_literals_of_parsed_discrete_boolean_expression variable_infos target_type expr)
 
 (* Convert literals types of a discrete Boolean expression to a given target type *)
-and convert_literal_types_of_parsed_discrete_boolean_expression variable_infos target_type = function
+and convert_literals_of_parsed_discrete_boolean_expression variable_infos target_type = function
     | Parsed_arithmetic_expression expr ->
-        Parsed_arithmetic_expression (convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr)
+        Parsed_arithmetic_expression (convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type expr)
     | Parsed_boolean_expression expr ->
-        Parsed_boolean_expression (convert_literal_types_of_parsed_boolean_expression variable_infos target_type expr)
+        Parsed_boolean_expression (convert_literals_of_parsed_boolean_expression variable_infos target_type expr)
     | Parsed_Not expr ->
-        Parsed_Not (convert_literal_types_of_parsed_boolean_expression variable_infos target_type expr)
+        Parsed_Not (convert_literals_of_parsed_boolean_expression variable_infos target_type expr)
     | Parsed_expression (l_expr, relop, r_expr) ->
-        let convert_l_expr = convert_literal_types_of_parsed_discrete_boolean_expression variable_infos target_type l_expr in
-        let convert_r_expr = convert_literal_types_of_parsed_discrete_boolean_expression variable_infos target_type r_expr in
+        let convert_l_expr = convert_literals_of_parsed_discrete_boolean_expression variable_infos target_type l_expr in
+        let convert_r_expr = convert_literals_of_parsed_discrete_boolean_expression variable_infos target_type r_expr in
         Parsed_expression (convert_l_expr, relop, convert_r_expr)
     | Parsed_expression_in (expr, lower_expr, upper_expr) ->
-        let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr in
-        let convert_lower = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type lower_expr in
-        let convert_upper = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type upper_expr  in
+        let convert_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type expr in
+        let convert_lower = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type lower_expr in
+        let convert_upper = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type upper_expr  in
         Parsed_expression_in (convert_expr, convert_lower, convert_upper)
 
 (* Convert literals types of an arithmetic expression to a given target type *)
-and convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type = function
+and convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type = function
     | Parsed_DAE_plus (expr, term) ->
-        let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr in
-        let convert_term = convert_literal_types_of_parsed_discrete_term variable_infos target_type term in
+        let convert_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type expr in
+        let convert_term = convert_literals_of_parsed_discrete_term variable_infos target_type term in
         Parsed_DAE_plus (convert_expr, convert_term)
     | Parsed_DAE_minus (expr, term) ->
-        let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr in
-        let convert_term = convert_literal_types_of_parsed_discrete_term variable_infos target_type term in
+        let convert_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type expr in
+        let convert_term = convert_literals_of_parsed_discrete_term variable_infos target_type term in
         Parsed_DAE_minus (convert_expr, convert_term)
     | Parsed_DAE_term term ->
-        Parsed_DAE_term (convert_literal_types_of_parsed_discrete_term variable_infos target_type term)
+        Parsed_DAE_term (convert_literals_of_parsed_discrete_term variable_infos target_type term)
 
 (* Convert literals types of a term to a given target type *)
-and convert_literal_types_of_parsed_discrete_term variable_infos target_type = function
+and convert_literals_of_parsed_discrete_term variable_infos target_type = function
     | Parsed_DT_mul (term, factor) ->
-        let convert_term = convert_literal_types_of_parsed_discrete_term variable_infos target_type term in
-        let convert_factor = convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor in
+        let convert_term = convert_literals_of_parsed_discrete_term variable_infos target_type term in
+        let convert_factor = convert_literals_of_parsed_discrete_factor variable_infos target_type factor in
         Parsed_DT_mul (convert_term, convert_factor)
     | Parsed_DT_div (term, factor) ->
-        let convert_term = convert_literal_types_of_parsed_discrete_term variable_infos target_type term in
-        let convert_factor = convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor in
+        let convert_term = convert_literals_of_parsed_discrete_term variable_infos target_type term in
+        let convert_factor = convert_literals_of_parsed_discrete_factor variable_infos target_type factor in
         Parsed_DT_div (convert_term, convert_factor)
     | Parsed_DT_factor factor ->
-        Parsed_DT_factor (convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor)
+        Parsed_DT_factor (convert_literals_of_parsed_discrete_factor variable_infos target_type factor)
 
 (* Convert literals types of a factor to a given target type *)
-and convert_literal_types_of_parsed_discrete_factor variable_infos target_type = function
+and convert_literals_of_parsed_discrete_factor variable_infos target_type = function
     | Parsed_DF_variable _ as variable -> variable
     | Parsed_DF_constant var_value as constant ->
         let discrete_type = DiscreteValue.discrete_type_of_value var_value in
-        (* TODO benjamin quick fix because it seems that certain converted value are re-converted by top expression *)
+
         (* for example a * pow(a, 2) with a rational, reconvert 2 to rational, it's bad, check if there is another way to avoid it! *)
         if DiscreteValue.is_discrete_type_unknown_number_type discrete_type then (
-            print_message Verbose_high ("\tInfer literal number value " ^ (DiscreteValue.string_of_value var_value) ^ " as " ^ (DiscreteValue.string_of_var_type_discrete target_type));
+            print_infer_literal_number_message var_value target_type;
             Parsed_DF_constant (DiscreteValue.convert_value_to_discrete_type var_value target_type)
         ) else
             constant
+
     | Parsed_DF_array expr_array ->
-            (* Convert array element to the inner type of the array target type *)
-            let converted_array = Array.map (convert_literal_types_of_parsed_boolean_expression variable_infos target_type) expr_array in
+            (* Convert array elements to the inner type of the array target type *)
+            let converted_array = Array.map (convert_literals_of_parsed_boolean_expression variable_infos target_type) expr_array in
             Parsed_DF_array converted_array
     | Parsed_DF_access (factor, index_expr) ->
         Parsed_DF_access (
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor,
+            convert_literals_of_parsed_discrete_factor variable_infos target_type factor,
             index_expr
         )
     | Parsed_DF_expression expr ->
-        Parsed_DF_expression (convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr)
+        Parsed_DF_expression (convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type expr)
     | Parsed_rational_of_int_function expr ->
         (* As it was already type checked, we can convert inner expression literal numbers of the function to int *)
         let inner_target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
-        Parsed_rational_of_int_function (convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos inner_target_type expr)
+        Parsed_rational_of_int_function (convert_literals_of_parsed_discrete_arithmetic_expression variable_infos inner_target_type expr)
     | Parsed_pow_function (expr, exp_expr) ->
         Parsed_pow_function (
-            convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr,
-            convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type exp_expr
+            convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type expr,
+            convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type exp_expr
         )
     | Parsed_function_factor_arithmetic_expr (fun_type, factor, expr) ->
         Parsed_function_factor_arithmetic_expr (
             fun_type,
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor,
-            convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr
+            convert_literals_of_parsed_discrete_factor variable_infos target_type factor,
+            convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type expr
         )
     | Parsed_log_and (l_factor, r_factor) ->
         Parsed_log_and (
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type l_factor,
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type r_factor
+            convert_literals_of_parsed_discrete_factor variable_infos target_type l_factor,
+            convert_literals_of_parsed_discrete_factor variable_infos target_type r_factor
         )
     | Parsed_log_or (l_factor, r_factor) ->
         Parsed_log_or (
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type l_factor,
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type r_factor
+            convert_literals_of_parsed_discrete_factor variable_infos target_type l_factor,
+            convert_literals_of_parsed_discrete_factor variable_infos target_type r_factor
         )
     | Parsed_log_xor (l_factor, r_factor) ->
         Parsed_log_xor (
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type l_factor,
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type r_factor
+            convert_literals_of_parsed_discrete_factor variable_infos target_type l_factor,
+            convert_literals_of_parsed_discrete_factor variable_infos target_type r_factor
         )
     | Parsed_log_not factor ->
         Parsed_log_not
-            (convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor)
+            (convert_literals_of_parsed_discrete_factor variable_infos target_type factor)
     | Parsed_array_concat (l_factor, r_factor) ->
         Parsed_array_concat (
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type l_factor,
-            convert_literal_types_of_parsed_discrete_factor variable_infos target_type r_factor
+            convert_literals_of_parsed_discrete_factor variable_infos target_type l_factor,
+            convert_literals_of_parsed_discrete_factor variable_infos target_type r_factor
         )
     | Parsed_DF_unary_min factor ->
-        Parsed_DF_unary_min (convert_literal_types_of_parsed_discrete_factor variable_infos target_type factor)
+        Parsed_DF_unary_min (convert_literals_of_parsed_discrete_factor variable_infos target_type factor)
 
 (* Convert literals types of a non-linear constraint to a given target type *)
-let convert_literal_types_of_nonlinear_constraint variable_infos target_type = function
+let convert_literals_of_nonlinear_constraint variable_infos target_type = function
     (* It's ok non-linear constraint is of Boolean type *)
     | Parsed_true_nonlinear_constraint -> Parsed_true_nonlinear_constraint
     | Parsed_false_nonlinear_constraint -> Parsed_false_nonlinear_constraint
     | Parsed_nonlinear_constraint expr ->
-        Parsed_nonlinear_constraint (convert_literal_types_of_parsed_discrete_boolean_expression variable_infos target_type expr)
+        Parsed_nonlinear_constraint (convert_literals_of_parsed_discrete_boolean_expression variable_infos target_type expr)
 
 (** Type checking and inference **)
 
 (* Type checking error types that can arise on arithmetic expression *)
-type arithmetic_expression_type_error =
-    | Not_arithmetic_error
-    | Mixin_type_error
+type number_type_compatibility_error =
+    | No_number_error
+    | Number_type_mixin_error
     | Both_unknown_number_error
     | Left_unknown_number_error
     | Right_unknown_number_error
 
-type relop_expression_type_error =
-    | No_error_relop
-    | Not_compatible
-    | Both_unknown_number_error_relop
-    | Left_unknown_number_error_relop
-    | Right_unknown_number_error_relop
-
-(* Check arithmetic expression types and return convenient error type *)
-let check_arithmetic_expression l_type r_type =
-    if not (DiscreteValue.is_discrete_type_number_type l_type && DiscreteValue.is_discrete_type_number_type r_type) then
-        Not_arithmetic_error
-    else if DiscreteValue.is_discrete_type_known_number_type l_type && DiscreteValue.is_discrete_type_known_number_type r_type && l_type <> r_type then
-        Mixin_type_error
-    else if DiscreteValue.is_discrete_type_unknown_number_type l_type && DiscreteValue.is_discrete_type_unknown_number_type r_type then
+(* Check number types compatibility and return convenient error type *)
+let check_number_type_compatibility l_type r_type =
+    if not (DiscreteValue.is_discrete_type_holding_number_type l_type && DiscreteValue.is_discrete_type_holding_number_type r_type) then
+        No_number_error
+    else if DiscreteValue.is_discrete_type_holding_known_number_type l_type && DiscreteValue.is_discrete_type_holding_known_number_type r_type && l_type <> r_type then
+        Number_type_mixin_error
+    else if DiscreteValue.is_discrete_type_holding_unknown_number_type l_type && DiscreteValue.is_discrete_type_holding_unknown_number_type r_type then
         Both_unknown_number_error
-    else if DiscreteValue.is_discrete_type_unknown_number_type l_type then
+    else if DiscreteValue.is_discrete_type_holding_unknown_number_type l_type then
         Left_unknown_number_error
     else
         Right_unknown_number_error
-
-
-let check_something l_type r_type =
-    (* Check if two types are compatibles : bool, bool or int, int or number, int; etc. *)
-    if not (DiscreteValue.is_discrete_type_compatibles l_type r_type) then
-        Not_compatible
-    (* Check if two types are unknown number *)
-    else if (DiscreteValue.is_discrete_type_unknown_number_type l_type && DiscreteValue.is_discrete_type_unknown_number_type r_type) then
-        Both_unknown_number_error_relop
-    (* Check if only left type is unknown number *)
-    else if (DiscreteValue.is_discrete_type_unknown_number_type l_type) then
-        Left_unknown_number_error_relop
-    (* Check if only right type is unknown number *)
-    else if (DiscreteValue.is_discrete_type_unknown_number_type r_type) then
-        Right_unknown_number_error_relop
-    (* Here left and right types are compatible and not literals unknown number type, so just return *)
-    else
-        No_error_relop
-
-
-
-
 
 
 (* Type check and infer literal numbers of global expression *)
@@ -295,36 +285,30 @@ let rec infer_expression variable_infos = function
 
 (* Type check and infer literal numbers of Boolean expression *)
 and infer_parsed_boolean_expression variable_infos = function
-
     | Parsed_True
     | Parsed_False as expr -> expr, DiscreteValue.Var_type_discrete_bool
 
     | Parsed_And (l_expr, r_expr) as expr ->
-        let (convert_l_expr, convert_r_expr), discrete_type = check_bool_operation variable_infos l_expr r_expr expr in
+        let (convert_l_expr, convert_r_expr), discrete_type = type_check_bool_operation variable_infos l_expr r_expr expr in
         Parsed_And (convert_l_expr, convert_r_expr), discrete_type
 
     | Parsed_Or (l_expr, r_expr) as expr ->
-        let (convert_l_expr, convert_r_expr), discrete_type = check_bool_operation variable_infos l_expr r_expr expr in
+        let (convert_l_expr, convert_r_expr), discrete_type = type_check_bool_operation variable_infos l_expr r_expr expr in
         Parsed_Or (convert_l_expr, convert_r_expr), discrete_type
 
     | Parsed_Discrete_boolean_expression expr ->
         let infer_expr, discrete_type = infer_parsed_discrete_boolean_expression variable_infos expr in
         Parsed_Discrete_boolean_expression infer_expr, discrete_type
 
-and check_bool_operation variable_infos l_expr r_expr expr =
+(* Type check and return inferred bool components *)
+and type_check_bool_operation variable_infos l_expr r_expr expr =
+        (* Infer left / right expressions *)
         let infer_l_expr, l_type = infer_parsed_boolean_expression variable_infos l_expr in
         let infer_r_expr, r_type = infer_parsed_boolean_expression variable_infos r_expr in
 
         (* Check if two types are bool *)
         if not (DiscreteValue.is_discrete_type_bool_type l_type && DiscreteValue.is_discrete_type_bool_type r_type) then
-            raise (TypeError (
-                "The expression `"
-                ^ (string_of_parsed_boolean_expression variable_infos expr)
-                ^ "` is not of type bool: "
-                ^ (DiscreteValue.string_of_var_type_discrete l_type)
-                ^ ", "
-                ^ (DiscreteValue.string_of_var_type_discrete r_type)
-            ))
+            raise (TypeError (not_boolean_expr_message (string_of_parsed_boolean_expression variable_infos expr) [|l_type; r_type|]))
         else
             (infer_l_expr, infer_r_expr), DiscreteValue.Var_type_discrete_bool
 
@@ -339,18 +323,12 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
         Parsed_boolean_expression (infer_expr), discrete_type
 
     | Parsed_Not expr as not_expr ->
+        (* Infer inner expression *)
         let infer_expr, discrete_type = infer_parsed_boolean_expression variable_infos expr in
 
         (* Check if 'not' contains a bool expression *)
         if not (DiscreteValue.is_discrete_type_bool_type discrete_type) then
-            raise (TypeError (
-                "The expression `"
-                ^ string_of_parsed_boolean_expression variable_infos expr
-                ^ "` contained in `"
-                ^ string_of_parsed_discrete_boolean_expression variable_infos not_expr
-                ^ "` expression, is not of type bool: "
-                ^ DiscreteValue.string_of_var_type_discrete discrete_type
-            ))
+            raise (TypeError (not_boolean_expr_message (string_of_parsed_discrete_boolean_expression variable_infos not_expr) [|discrete_type|]))
         else
             Parsed_Not (infer_expr), discrete_type
 
@@ -362,51 +340,57 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
 
         (* Prepare inference message *)
         let get_infer_expr_message = print_infer_message (string_of_parsed_discrete_boolean_expression variable_infos expr) in
-
+        (* Print expression inference message *)
         print_infer_expr_message (string_of_parsed_discrete_boolean_expression variable_infos expr) DiscreteValue.Var_type_discrete_bool;
 
-        (* Check if two types are compatibles : bool, bool or int, int or number, int; etc. *)
         if not (DiscreteValue.is_discrete_type_compatibles l_type r_type) then
             raise (TypeError (type_mixin_error_message (string_of_parsed_discrete_boolean_expression variable_infos expr) [|l_type; r_type|]))
-        (* Check if two types are unknown number *)
-        else if (DiscreteValue.is_discrete_type_holding_unknown_number_type l_type && DiscreteValue.is_discrete_type_holding_unknown_number_type r_type) then (
-            (* No number type are deduced from tree, because there is only literal numbers *)
-            (* So at this point, we convert all literals to rationals *)
-            let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational in
-            get_infer_expr_message target_type;
+        else (
 
-            (* Convert left / right expression to rational *)
-            let convert_l_expr = convert_literal_types_of_parsed_discrete_boolean_expression variable_infos target_type infer_l_expr in
-            let convert_r_expr = convert_literal_types_of_parsed_discrete_boolean_expression variable_infos target_type infer_r_expr in
+            let convert_l_expr, convert_r_expr = (
 
+                match check_number_type_compatibility l_type r_type with
+
+                | Both_unknown_number_error ->
+                    (* No number type are deduced from tree, because there is only literal numbers *)
+                    (* So at this point, we convert all literals to rationals *)
+                    let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational in
+                    get_infer_expr_message target_type;
+
+                    (* Convert left / right expression to rational *)
+                    let convert_l_expr = convert_literals_of_parsed_discrete_boolean_expression variable_infos target_type infer_l_expr in
+                    let convert_r_expr = convert_literals_of_parsed_discrete_boolean_expression variable_infos target_type infer_r_expr in
+
+                    convert_l_expr, convert_r_expr
+
+                | Left_unknown_number_error ->
+                    (* Convert all literals of left expression to inner type of right expression *)
+                    let target_type = DiscreteValue.extract_inner_type r_type in
+                    get_infer_expr_message r_type;
+
+                    (* Convert left expression to right expression type *)
+                    let convert_l_expr = convert_literals_of_parsed_discrete_boolean_expression variable_infos target_type infer_l_expr in
+                    convert_l_expr, infer_r_expr
+
+                | Right_unknown_number_error ->
+                    (* Convert all literals of right expression to inner type of left expression *)
+                    let target_type = DiscreteValue.extract_inner_type l_type in
+                    get_infer_expr_message l_type;
+
+                    (* Convert right expression to left expression type *)
+                    let convert_r_expr = convert_literals_of_parsed_discrete_boolean_expression variable_infos target_type infer_r_expr in
+                    infer_l_expr, convert_r_expr
+
+                | No_number_error
+                | Number_type_mixin_error ->
+                    infer_l_expr, infer_r_expr
+            )
+            in
             Parsed_expression (convert_l_expr, relop, convert_r_expr), DiscreteValue.Var_type_discrete_bool
         )
-        (* Check if only left type is unknown number *)
-        else if (DiscreteValue.is_discrete_type_holding_unknown_number_type l_type) then (
 
-            (* Convert all literal of left expression to inner type of right expression *)
-            let target_type = DiscreteValue.extract_inner_type r_type in
-            get_infer_expr_message r_type;
 
-            (* Convert left expression to right expression type *)
-            let convert_l_expr = convert_literal_types_of_parsed_discrete_boolean_expression variable_infos target_type infer_l_expr in
-            Parsed_expression (convert_l_expr, relop, infer_r_expr), DiscreteValue.Var_type_discrete_bool
-        )
-        (* Check if only right type is unknown number *)
-        else if (DiscreteValue.is_discrete_type_holding_unknown_number_type r_type) then (
 
-            (* Convert all literal of right expression to inner type of left expression *)
-            let target_type = DiscreteValue.extract_inner_type l_type in
-            get_infer_expr_message l_type;
-
-            (* Convert right expression to left expression type *)
-            let convert_r_expr = convert_literal_types_of_parsed_discrete_boolean_expression variable_infos target_type infer_r_expr in
-            Parsed_expression (infer_l_expr, relop, convert_r_expr), DiscreteValue.Var_type_discrete_bool
-        )
-        (* Here left and right types are compatible and not literals unknown number type, so just return *)
-        else (
-            Parsed_expression (infer_l_expr, relop, infer_r_expr), DiscreteValue.Var_type_discrete_bool
-        )
 
     | Parsed_expression_in (expr, lower_expr, upper_expr) as in_expr ->
 
@@ -438,9 +422,9 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
 
             print_infer_message (string_of_parsed_discrete_boolean_expression variable_infos in_expr) target_type;
 
-            let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type infer_expr in
-            let convert_lower_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type infer_lower_expr in
-            let convert_upper_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type infer_upper_expr in
+            let convert_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type infer_expr in
+            let convert_lower_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type infer_lower_expr in
+            let convert_upper_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type infer_upper_expr in
 
             Parsed_expression_in (convert_expr, convert_lower_expr, convert_upper_expr), DiscreteValue.Var_type_discrete_bool
         )
@@ -449,8 +433,8 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
             print_infer_message (string_of_parsed_discrete_boolean_expression variable_infos in_expr) expr_type;
 
             (* Convert lower and upper expression to expr_type *)
-            let convert_lower_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos expr_type infer_lower_expr in
-            let convert_upper_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos expr_type infer_upper_expr in
+            let convert_lower_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos expr_type infer_lower_expr in
+            let convert_upper_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos expr_type infer_upper_expr in
 
             Parsed_expression_in (infer_expr, convert_lower_expr, convert_upper_expr), DiscreteValue.Var_type_discrete_bool
         )
@@ -459,8 +443,8 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
             print_infer_message (string_of_parsed_discrete_boolean_expression variable_infos in_expr) lower_type;
 
             (* Convert expr and upper expression to lower_type *)
-            let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos lower_type infer_expr in
-            let convert_upper_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos lower_type infer_upper_expr in
+            let convert_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos lower_type infer_expr in
+            let convert_upper_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos lower_type infer_upper_expr in
 
             Parsed_expression_in (convert_expr, infer_lower_expr, convert_upper_expr), DiscreteValue.Var_type_discrete_bool
         )
@@ -469,8 +453,8 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
             print_infer_message (string_of_parsed_discrete_boolean_expression variable_infos in_expr) upper_type;
 
             (* Convert expr and lower expression to upper_type *)
-            let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos upper_type infer_expr in
-            let convert_lower_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos upper_type infer_lower_expr in
+            let convert_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos upper_type infer_expr in
+            let convert_lower_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos upper_type infer_lower_expr in
 
             Parsed_expression_in (convert_expr, convert_lower_expr, infer_upper_expr), DiscreteValue.Var_type_discrete_bool
         )
@@ -481,37 +465,36 @@ and infer_parsed_discrete_arithmetic_expression variable_infos =
 
     let rec inner_infer_parsed_discrete_arithmetic_expression = function
         | Parsed_DAE_plus (expr, term) as arithmetic_expr ->
-
-            let (convert_l_expr, convert_r_expr), discrete_type = check_and_convert_arithmetic_expression variable_infos expr term arithmetic_expr in
+            let (convert_l_expr, convert_r_expr), discrete_type = type_check_and_convert_arithmetic_expression variable_infos expr term arithmetic_expr in
             Parsed_DAE_plus (convert_l_expr, convert_r_expr), discrete_type
 
         | Parsed_DAE_minus (expr, term) as arithmetic_expr ->
-            let (convert_l_expr, convert_r_expr), discrete_type = check_and_convert_arithmetic_expression variable_infos expr term arithmetic_expr in
+            let (convert_l_expr, convert_r_expr), discrete_type = type_check_and_convert_arithmetic_expression variable_infos expr term arithmetic_expr in
             Parsed_DAE_minus (convert_l_expr, convert_r_expr), discrete_type
 
         | Parsed_DAE_term term ->
             let infer_term, discrete_type = infer_parsed_discrete_term variable_infos term in
             Parsed_DAE_term infer_term, discrete_type
 
-    and check_and_convert_arithmetic_expression variable_infos expr term arithmetic_expr =
+    and type_check_and_convert_arithmetic_expression variable_infos expr term arithmetic_expr =
             let infer_expr, l_type = infer_parsed_discrete_arithmetic_expression variable_infos expr in
             let infer_term, r_type = infer_parsed_discrete_term variable_infos term in
 
-            let error_type = check_arithmetic_expression l_type r_type in
+            let error_type = check_number_type_compatibility l_type r_type in
             match error_type with
-            | Not_arithmetic_error ->
+            | No_number_error ->
                 raise (TypeError (not_arithmetic_expr_message (string_of_parsed_arithmetic_expression variable_infos arithmetic_expr) [|l_type; r_type|]))
-            | Mixin_type_error ->
+            | Number_type_mixin_error ->
                 raise (TypeError (type_mixin_error_message (string_of_parsed_arithmetic_expression variable_infos arithmetic_expr) [|l_type; r_type|]))
             | Both_unknown_number_error ->
                 (infer_expr, infer_term), DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number
             | Left_unknown_number_error ->
                 (* Convert *)
-                let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos r_type infer_expr in
+                let convert_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos r_type infer_expr in
                 (convert_expr, infer_term), r_type
             | Right_unknown_number_error ->
                 (* Convert *)
-                let convert_term = convert_literal_types_of_parsed_discrete_term variable_infos l_type infer_term in
+                let convert_term = convert_literals_of_parsed_discrete_term variable_infos l_type infer_term in
                 (infer_expr, convert_term), l_type
 
     in
@@ -520,7 +503,7 @@ and infer_parsed_discrete_arithmetic_expression variable_infos =
 (* Type checking and infer literal numbers of term *)
 and infer_parsed_discrete_term variable_infos = function
     | Parsed_DT_mul (term, factor) as expr_term ->
-        let (convert_l_expr, convert_r_expr), discrete_type = check_and_convert_term variable_infos term factor expr_term in
+        let (convert_l_expr, convert_r_expr), discrete_type = type_check_and_convert_term variable_infos term factor expr_term in
 
         Parsed_DT_mul (convert_l_expr, convert_r_expr), discrete_type
 
@@ -535,34 +518,32 @@ and infer_parsed_discrete_term variable_infos = function
         Parsed_DT_factor (Parsed_DF_constant discrete_value), target_type
 
     | Parsed_DT_div (term, factor) as expr_term ->
-        let (convert_l_expr, convert_r_expr), discrete_type = check_and_convert_term variable_infos term factor expr_term in
+        let (convert_l_expr, convert_r_expr), discrete_type = type_check_and_convert_term variable_infos term factor expr_term in
         Parsed_DT_div (convert_l_expr, convert_r_expr), discrete_type
 
     | Parsed_DT_factor factor ->
         let infer_factor, factor_type = infer_parsed_discrete_factor variable_infos factor in
         Parsed_DT_factor infer_factor, factor_type
 
-
-
-and check_and_convert_term variable_infos term factor expr_term =
+and type_check_and_convert_term variable_infos term factor expr_term =
         let infer_term, l_type = infer_parsed_discrete_term variable_infos term in
         let infer_factor, r_type = infer_parsed_discrete_factor variable_infos factor in
 
-        let error_type = check_arithmetic_expression l_type r_type in
+        let error_type = check_number_type_compatibility l_type r_type in
         match error_type with
-        | Not_arithmetic_error ->
+        | No_number_error ->
             raise (TypeError (not_arithmetic_expr_message (string_of_parsed_term variable_infos expr_term) [|l_type; r_type|]))
-        | Mixin_type_error ->
+        | Number_type_mixin_error ->
             raise (TypeError (type_mixin_error_message (string_of_parsed_term variable_infos expr_term) [|l_type; r_type|]))
         | Both_unknown_number_error ->
             (infer_term, infer_factor), DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number
         | Left_unknown_number_error ->
             (* Convert *)
-            let convert_term = convert_literal_types_of_parsed_discrete_term variable_infos r_type infer_term in
+            let convert_term = convert_literals_of_parsed_discrete_term variable_infos r_type infer_term in
             (convert_term, infer_factor), r_type
         | Right_unknown_number_error ->
             (* Convert *)
-            let convert_factor = convert_literal_types_of_parsed_discrete_factor variable_infos l_type infer_factor in
+            let convert_factor = convert_literals_of_parsed_discrete_factor variable_infos l_type infer_factor in
             (infer_term, convert_factor), l_type
 
 (* Type checking and infer literal numbers of factor *)
@@ -594,7 +575,7 @@ and infer_parsed_discrete_factor variable_infos = function
                 Array.map (fun (expr, discrete_type) ->
                     if DiscreteValue.is_discrete_type_holding_unknown_number_type discrete_type then (
                         let inner_target_type = DiscreteValue.extract_inner_type target_type in
-                        convert_literal_types_of_parsed_boolean_expression variable_infos inner_target_type expr, target_type
+                        convert_literals_of_parsed_boolean_expression variable_infos inner_target_type expr, target_type
                     )
                     else
                         expr, discrete_type
@@ -645,7 +626,7 @@ and infer_parsed_discrete_factor variable_infos = function
         let convert_index_expr =
             if DiscreteValue.is_discrete_type_unknown_number_type index_type then (
                 let index_target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
-                convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos index_target_type infer_index_expr
+                convert_literals_of_parsed_discrete_arithmetic_expression variable_infos index_target_type infer_index_expr
             )
             else if DiscreteValue.is_discrete_type_int_type index_type then
                 infer_index_expr
@@ -688,7 +669,7 @@ and infer_parsed_discrete_factor variable_infos = function
             print_infer_message (string_of_parsed_factor variable_infos int_expr) target_type;
 
             (* Convert all literal of the expression to int *)
-            let convert_expr = convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr in
+            let convert_expr = convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type expr in
 
             (* Return converted expression and it's type *)
             Parsed_rational_of_int_function convert_expr, DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational
@@ -717,23 +698,10 @@ and infer_parsed_discrete_factor variable_infos = function
             (* convert *)
             print_message Verbose_high "\tInfer exponent as int";
             let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
-            convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type exp
+            convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type exp
         ) else
             infer_exp
         in
-        (* TODO benjamin analyse and eventually remove this comment, i think i should remove that ! *)
-        (* If left expression unknown convert auto to rational *)
-        (* Moreover result type depend on the type of left expression: *)
-        (* it has the same number type as left expression type *)
-        (*
-        let converted_expr, result_type = if DiscreteValue.is_discrete_type_unknown_number_type l_type then (
-            (* convert *)
-            let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational in
-            convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr, target_type
-        ) else
-            infer_expr, l_type
-        in
-        *)
 
         let converted_expr, result_type = infer_expr, l_type in
 
@@ -773,7 +741,7 @@ and infer_parsed_discrete_factor variable_infos = function
 
             print_infer_expr_message (string_of_parsed_arithmetic_expression variable_infos expr) target_type;
 
-            convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type expr
+            convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type expr
         ) else
             infer_expr
         in
@@ -875,31 +843,32 @@ and infer_parsed_discrete_factor variable_infos = function
         match discrete_type_0, discrete_type_1 with
         | DiscreteValue.Var_type_discrete_array (inner_type_0, length_0),  DiscreteValue.Var_type_discrete_array (inner_type_1, length_1) ->
 
-            let check = check_something inner_type_0 inner_type_1 in
+            if not (DiscreteValue.is_discrete_type_compatibles inner_type_0 inner_type_1) then
+                raise (TypeError (type_mixin_error_message (string_of_parsed_factor variable_infos func) [|discrete_type_0; discrete_type_1|]))
+            else (
 
-            let convert_factor_0, convert_factor_1, convert_type = (
-                match check with
-                | No_error_relop
-                | Both_unknown_number_error_relop ->
-                    infer_factor_0, infer_factor_1, inner_type_0
-                | Not_compatible ->
-                    raise (TypeError (type_mixin_error_message (string_of_parsed_factor variable_infos func) [|discrete_type_0; discrete_type_1|]))
-                | Left_unknown_number_error_relop ->
-                    convert_literal_types_of_parsed_discrete_factor variable_infos inner_type_1 infer_factor_0,
-                    infer_factor_1,
-                    inner_type_1
-                | Right_unknown_number_error_relop ->
-                    infer_factor_0,
-                    convert_literal_types_of_parsed_discrete_factor variable_infos inner_type_0 infer_factor_1,
-                    inner_type_0
+                let convert_factor_0, convert_factor_1, convert_type = (
+                    match check_number_type_compatibility inner_type_0 inner_type_1 with
+                    | No_number_error
+                    | Both_unknown_number_error ->
+                        infer_factor_0, infer_factor_1, inner_type_0
+                    | Left_unknown_number_error ->
+                        convert_literals_of_parsed_discrete_factor variable_infos inner_type_1 infer_factor_0,
+                        infer_factor_1,
+                        inner_type_1
+                    | Right_unknown_number_error ->
+                        infer_factor_0,
+                        convert_literals_of_parsed_discrete_factor variable_infos inner_type_0 infer_factor_1,
+                        inner_type_0
+                )
+                in
+
+                let array_type = DiscreteValue.Var_type_discrete_array (convert_type, length_0 + length_1) in
+                print_infer_expr_message (string_of_parsed_factor variable_infos func) array_type;
+                Parsed_array_concat (convert_factor_0, convert_factor_1), array_type
+
             )
-            in
 
-            let array_type = DiscreteValue.Var_type_discrete_array (convert_type, length_0 + length_1) in
-
-            print_infer_expr_message (string_of_parsed_factor variable_infos func) array_type;
-
-            Parsed_array_concat (convert_factor_0, convert_factor_1), array_type
         | _ ->
             raise (TypeError (
                 "Left or right member of expression `"
@@ -1113,7 +1082,7 @@ let rec infer_variable_access variable_infos = function
             if DiscreteValue.is_discrete_type_unknown_number_type index_expr_type then (
                 (* *)
                 let target_type = DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int in
-                convert_literal_types_of_parsed_discrete_arithmetic_expression variable_infos target_type infer_index_expr
+                convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type infer_index_expr
             ) else (
                 infer_index_expr
             )
@@ -1174,7 +1143,7 @@ let check_update variable_infos variable_access expr =
             (* Extract target type for conversion *)
 
             let target_type = DiscreteValue.extract_inner_type var_type_discrete in
-            convert_literal_types_of_expression variable_infos target_type uniformly_typed_expr
+            convert_literals_of_expression variable_infos target_type uniformly_typed_expr
         ) else
             uniformly_typed_expr
     in
@@ -1266,7 +1235,7 @@ let check_constant_expression initialized_constants (name, expr, var_type) =
     let target_inner_type = DiscreteValue.extract_inner_type target_var_type in
 
     (* If no type was deduce from expression, so it's a rational *)
-    let converted_expr, converted_type = convert_literal_types_of_expression variable_infos target_inner_type infer_expr, target_var_type in
+    let converted_expr, converted_type = convert_literals_of_expression variable_infos target_inner_type infer_expr, target_var_type in
     converted_expr, converted_type
 
 type yo =
@@ -1305,7 +1274,7 @@ let check_discrete_init variable_infos variable_name expr =
                 ^ "` as the same as assigned variable type: " ^ DiscreteValue.string_of_var_type_discrete var_discrete_type
             );
             let target_type = DiscreteValue.extract_inner_type var_discrete_type in
-            convert_literal_types_of_expression variable_infos target_type infer_expr
+            convert_literals_of_expression variable_infos target_type infer_expr
         )
         else
             infer_expr
