@@ -7,12 +7,12 @@
  * Source : Thales
  * Author : Baptiste Parquier
  * Modeling : Baptiste Parquier
- * Input by : Baptiste Parquier
+ * Input by : Baptiste Parquier, Étienne André
  *
  * Created : 2016/08/29
- * Last modified : 2021/08/30
+ * Last modified : 2021/10/12
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.2
 ************************************************************)
 
 var
@@ -28,8 +28,8 @@ var
 
 (* Discrete *)
 	c2, c61, c5, c62, c63, c7, (* for each task: compute the number of activations waiting *)
-	chemin_T6_1, chemin_T7_1
-		: discrete;
+	chemin_T6_1, chemin_T7_1 (* NOTE: could be replaced with bool? *)
+		: int;
 
 (* Parameters *)
 	 WT
@@ -64,8 +64,7 @@ loc m20: invariant True
 
 urgent loc m21: invariant True
 	when c2 = 1 sync lance_T2_1 goto m20;
-	when c2 > 1 goto m20;
-	when c2 < 1 goto m20;
+	when c2 <> 1 goto m20;
 
 end (* memoire_lancement_T2_1 *)
 
@@ -95,8 +94,7 @@ loc m610: invariant True
 
 urgent loc m611: invariant True
 	when c61 = 1 sync lance_T6_1 goto m610;
-	when c61 > 1 goto m610;
-	when c61 < 1 goto m610;
+	when c61 <> 1 goto m610;
 
 urgent loc obs61: invariant True
 	when chemin_T6_1 = 1 do {chemin_T6_1 := 2} goto m611;
@@ -116,8 +114,7 @@ loc m510: invariant True
 
 urgent loc m511: invariant True
 	when c5 = 1 sync lance_T5_1 goto m510;
-	when c5 > 1 goto m510;
-	when c5 < 1 goto m510;
+	when c5 <> 1 goto m510;
 
 end (* memoire_lancement_T5_1 *)
 
@@ -133,8 +130,7 @@ loc m620: invariant True
 
 urgent loc m621: invariant True
 	when c62 = 1 sync lance_T6_2 goto m620;
-	when c62 > 1 goto m620;
-	when c62 < 1 goto m620;
+	when c62 <> 1 goto m620;
 
 end (* memoire_lancement_T6_2 *)
 
@@ -150,8 +146,7 @@ loc m630: invariant True
 
 urgent loc m631: invariant True
 	when c63 = 1 sync lance_T6_3 goto m630;
-	when c63 > 1 goto m630;
-	when c63 < 1 goto m630;
+	when c63 <> 1 goto m630;
 
 end (* memoire_lancement_T6_3 *)
 
@@ -167,8 +162,7 @@ loc m70: invariant True
 
 urgent loc m71: invariant True
 	when c7 = 1 sync lance_T7_1 goto m70;
-	when c7 > 1 goto m70;
-	when c7 < 1 goto m70;
+	when c7 <> 1 goto m70;
 
 urgent loc obs7: invariant True
 	when chemin_T7_1 = 1 do {chemin_T7_1 := 2} goto m71;
@@ -307,14 +301,12 @@ synclabs: lance_T6_1, fin_T7_1, obs1_bloc;
 
 loc obs10: invariant True stop {t1}
 	when chemin_T6_1 = 1 sync lance_T6_1 do {t1 := 0} goto obs11;
-	when chemin_T6_1 > 1 sync lance_T6_1 goto obs10;
-	when chemin_T6_1 < 1 sync lance_T6_1 goto obs10;
+	when chemin_T6_1 <> 1 sync lance_T6_1 goto obs10;
 	when True sync fin_T7_1 goto obs10;
 
 loc obs11: invariant True
 	when chemin_T7_1 = 1 sync fin_T7_1 goto obs13;
-	when chemin_T7_1 > 1 sync fin_T7_1 goto obs11;
-	when chemin_T7_1 < 1 sync fin_T7_1 goto obs11;
+	when chemin_T7_1 <> 1 sync fin_T7_1 goto obs11;
 	when True sync lance_T6_1 goto obs11;
 
 urgent loc obs13: invariant True stop {t1}
@@ -332,14 +324,12 @@ synclabs: lance_T6_1, fin_T7_1, obs2_bloc;
 
 loc obs20: invariant True stop {t2}
 	when chemin_T6_1 = 2 sync lance_T6_1 do {t2 := 0} goto obs21;
-	when chemin_T6_1 > 2 sync lance_T6_1 goto obs20;
-	when chemin_T6_1 < 2 sync lance_T6_1 goto obs20;
+	when chemin_T6_1 <> 2 sync lance_T6_1 goto obs20;
 	when True sync fin_T7_1 goto obs20;
 
 loc obs21: invariant True
 	when chemin_T7_1 = 2 sync fin_T7_1 goto obs23;
-	when chemin_T7_1 > 2 sync fin_T7_1 goto obs21;
-	when chemin_T7_1 < 2 sync fin_T7_1 goto obs21;
+	when chemin_T7_1 <> 2 sync fin_T7_1 goto obs21;
 	when True sync lance_T6_1 goto obs21;
 
 urgent loc obs23: invariant True stop {t2}
