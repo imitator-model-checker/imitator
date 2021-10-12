@@ -9,14 +9,15 @@
  *                  Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
  *
  * Created: < 2015/10/30
- * Last modified: 2021/08/30
- * IMITATOR version: 3.1
+ * Last modified: 2021/10/12
+ * IMITATOR version: 3.2
  * Others: The analysis for this model will never terminate.
  ************************************************************)
 
 var
     t1_c, t1_d, t1_urgent, t1_arr_x, t2_c, t2_d, t2_urgent, t2_arr_x, CPU1_urgent : clock;
-    t1_inst, t2_inst, stop_flag : discrete;
+    t1_inst, t2_inst: rational;
+    stop_flag : bool;
     t1_arr_P, t2_arr_P: parameter;
 
 
@@ -117,8 +118,8 @@ end
 automaton OBS_dline
 synclabs : t1_miss , t2_miss;
 loc dline_loc_nomiss : invariant True
-    when True sync t1_miss do { stop_flag := 1 } goto dline_loc_miss;
-    when True sync t2_miss do { stop_flag := 1 } goto dline_loc_miss;
+    when True sync t1_miss do { stop_flag := True } goto dline_loc_miss;
+    when True sync t2_miss do { stop_flag := True } goto dline_loc_miss;
 loc dline_loc_miss : invariant True
 end
 
@@ -139,7 +140,8 @@ init := {
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
 		t1_inst := 0,
-		t2_inst := 0
+		t2_inst := 0,
+		stop_flag := False,
 	;
 
 	(*------------------------------------------------------------*)
