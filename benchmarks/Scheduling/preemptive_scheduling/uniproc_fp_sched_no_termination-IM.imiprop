@@ -1,0 +1,20 @@
+(************************************************************
+ *                      IMITATOR MODEL
+ *
+ *        IMITATOR uniproc-fp-sched-no-termination.imi uniproc-fp-sched-no-termination.pi0 -mode inversemethod -incl -merge
+ *
+ * Author: Giuseppe Lipari
+ * Date: January 2014
+ * References: ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by
+ *                  Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
+ *
+ * Created: 2020/08/18
+ * Last modified: 2020/08/18
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth IM(
+
+t1_arr_P = 5
+& t2_arr_P = 7
+);
