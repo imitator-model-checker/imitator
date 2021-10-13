@@ -1,19 +1,25 @@
-(************************************************************
- * IMITATOR MODEL
- *
- * Aerial Video Tracking Sytem
- *
- * Description : Preemptive model
- * Source : Thales
- * Author : Baptiste Parquier
- * Modeling : Baptiste Parquier
- * Input by : Baptiste Parquier, Étienne André
- *
- * Created : 2016/08/29
- * Last modified : 2021/10/12
- *
- * IMITATOR version: 3.2
-************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : AVTS_imitator
+ * Description      : Preemptive model
+ * Correctness      : 
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : 
+ * Source           : Thales
+ * bibkey           : 
+ * Author           : Baptiste Parquier
+ * Modeling         : Baptiste Parquier
+ * Input by         : Baptiste Parquier, Étienne André
+ * License          : 
+ * 
+ * Created          : 2016/08/29
+ * Last modified    : 2021/10/12
+ * Model version    : 
+ * 
+ * IMITATOR version : 3.2
+ ******************************************************************************)
 
 var
 

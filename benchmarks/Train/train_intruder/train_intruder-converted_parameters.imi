@@ -1,20 +1,25 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * Railroad Gate Controller
- *
- * Description     : Railway crossing with an intruder that can disable some sensor (preventing the gate do detect that the train is approaching), possibly provoking a crash. Simple model with few symbolic states reachable.
- * Correctness     : "Crash" cannot happen
- * Source          : Own work
- * Author          : Étienne André, Michał Knapik
- * Modeling        : Étienne André
- * Input by        : Étienne André
- *
- * Created         : 2015/09/24
- * Last modified   : 2021/07/09
- *
- * IMITATOR version: 3.1
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : train_intruder-converted_parameters
+ * Description      : Railway crossing with an intruder that can disable some sensor (preventing the gate do detect that the train is approaching), possibly provoking a crash. Simple model with few symbolic states reachable.
+ * Correctness      : "Crash" cannot happen
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : 
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André, Michał Knapik
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2015/09/24
+ * Last modified    : 2021/07/09
+ * Model version    : 
+ * 
+ * IMITATOR version : 
+ ******************************************************************************)
 
 var
 
@@ -38,9 +43,15 @@ var
 	p_lowering,    (* time to lower the gate *)
 	
 (* Intruder parameters *)
-	p_walking_sensor (* time to walk to (and disable) the sensor *)
+	p_walking_sensor, (* time to walk to (and disable) the sensor *)
 
+(* Action parameters *)
+p_sensor_far, p_pass, p_start_lowering, p_end_lowering, p_break_sensor
 		: parameter;
+
+(* Constants *)
+	ACTIVE = 0,
+		: rational;
 
 
 (************************************************************)
@@ -50,15 +61,15 @@ synclabs: sensor_far, pass;
 
 loc far: invariant x_train <= p_far
 	(* Normal mode: sensors are on *)
-	when x_train = p_far & sensors_active sync sensor_far do {x_train := 0} goto approaching;
+	when x_train = p_far & sensors_active & p_sensor_far = ACTIVE sync sensor_far do {x_train := 0} goto approaching;
 	(* Failure: sensors are off *)
 	when x_train = p_far & not(sensors_active) do {x_train := 0} goto approaching;
 
 loc approaching: invariant x_train <= p_approaching
 	(* Normal situation *)
-	when x_train = p_approaching & gate_down do {x_train := 0} sync pass goto gone;
+	when x_train = p_approaching & gate_down & p_pass = ACTIVE  do {x_train := 0} sync pass goto gone;
 	(* Gate not closed! *)
-	when x_train = p_approaching & not(gate_down) do {x_train := 0} sync pass goto crash;
+	when x_train = p_approaching & not(gate_down) & p_pass = ACTIVE do {x_train := 0} sync pass goto crash;
 	
 (** HACK: stop time to reduce state space *)
 loc gone: invariant x_train <= 0
@@ -78,21 +89,21 @@ synclabs: pass, sensor_far, start_lowering, end_lowering;
 loc up: invariant True
 	when True sync sensor_far do {x_gate := 0} goto waiting;
 	(* Gate is reinitialized whenever the train passes *)
-	when True sync pass do {x_gate := 0} goto up;
+	when p_pass = ACTIVE sync pass do {x_gate := 0} goto up;
 
 loc waiting: invariant x_gate <= p_waiting
 	when x_gate = p_waiting sync start_lowering do {x_gate := 0} goto lowering;
 	(* Gate is reinitialized whenever the train passes *)
-	when True sync pass do {x_gate := 0} goto up;
+	when p_pass = ACTIVE sync pass do {x_gate := 0} goto up;
 
 loc lowering: invariant x_gate <= p_lowering
-	when x_gate = p_lowering sync end_lowering do {x_gate := 0, gate_down := True} goto down;
+	when x_gate = p_lowering & p_end_lowering = ACTIVE sync end_lowering do {x_gate := 0, gate_down := True} goto down;
 	(* Gate is reinitialized whenever the train passes *)
-	when True sync pass do {x_gate := 0} goto up;
+	when p_pass = ACTIVE sync pass do {x_gate := 0} goto up;
 
 loc down: invariant True
 	(* Gate is reinitialized whenever the train passes *)
-	when True sync pass do {x_gate := 0} goto up;
+	when p_pass = ACTIVE sync pass do {x_gate := 0} goto up;
 
 end (* gate *)
 
@@ -103,7 +114,7 @@ end (* gate *)
 synclabs: break_sensor;
 
 loc walking_sensor: invariant x_intruder <= p_walking_sensor
-	when x_intruder = p_walking_sensor sync break_sensor do {sensors_active := False, x_intruder := 0} goto intruder_done;
+	when x_intruder = p_walking_sensor & p_break_sensor = ACTIVE sync break_sensor do {sensors_active := False, x_intruder := 0} goto intruder_done;
 
 loc intruder_done: invariant True
 
@@ -114,7 +125,6 @@ end (* intruder *)
 (************************************************************)
 (* Initial state *)
 (************************************************************)
-
 init := {
 	
     discrete =
@@ -148,6 +158,12 @@ init := {
 		& p_waiting        >= 0
 		& p_lowering       >= 0
 		& p_walking_sensor >= 0
+		
+		& p_sensor_far >= 0
+		& p_pass >= 0
+		& p_start_lowering >= 0
+		& p_end_lowering >= 0
+		& p_break_sensor >= 0
 	;
 }
 
