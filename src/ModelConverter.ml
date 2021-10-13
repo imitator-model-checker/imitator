@@ -298,10 +298,8 @@ and search_variable_of_discrete_arithmetic_expression variable_infos expr =
             ))
         | Parsed_rational_of_int_function _
         | Parsed_pow_function _
-        | Parsed_function_factor_arithmetic_expr _
-        | Parsed_log_and _
-        | Parsed_log_or _
-        | Parsed_log_xor _
+        | Parsed_shift_function _
+        | Parsed_bin_log_function _
         | Parsed_log_not _
         | Parsed_array_concat _ ->
             raise (InternalError (
@@ -390,10 +388,8 @@ and convert_parsed_rational_arithmetic_expression variable_infos (* expr *) =
         | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_rational_factor factor)
         (* Should never happen, because it was checked by type checker before *)
         | Parsed_DF_array _
-        | Parsed_function_factor_arithmetic_expr _
-        | Parsed_log_and _
-        | Parsed_log_or _
-        | Parsed_log_xor _
+        | Parsed_shift_function _
+        | Parsed_bin_log_function _
         | Parsed_log_not _
         | Parsed_array_concat _ as factor ->
             raise (InternalError (
@@ -465,10 +461,8 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
         (* Should never happen, because it was checked by type checker before *)
         | Parsed_DF_array _
         | Parsed_rational_of_int_function _
-        | Parsed_function_factor_arithmetic_expr _
-        | Parsed_log_and _
-        | Parsed_log_or _
-        | Parsed_log_xor _
+        | Parsed_shift_function _
+        | Parsed_bin_log_function _
         | Parsed_log_not _
         | Parsed_array_concat _ as factor ->
             raise (InternalError (
@@ -532,7 +526,7 @@ and binary_word_expression_of_parsed_factor variable_infos = function
             convert_parsed_int_arithmetic_expression variable_infos index_expr
         )
 
-    | Parsed_function_factor_arithmetic_expr (fun_type, factor, expr) ->
+    | Parsed_shift_function (fun_type, factor, expr) ->
         let binary_word_expr = binary_word_expression_of_parsed_factor variable_infos factor in
         let int_expr = convert_parsed_int_arithmetic_expression variable_infos expr in
         begin
@@ -542,21 +536,15 @@ and binary_word_expression_of_parsed_factor variable_infos = function
         | Parsed_fill_left -> Logical_fill_left (binary_word_expr, int_expr)
         | Parsed_fill_right -> Logical_fill_right (binary_word_expr, int_expr)
         end
-    | Parsed_log_and (l_factor, r_factor) ->
-        Logical_and (
-            binary_word_expression_of_parsed_factor variable_infos l_factor,
-            binary_word_expression_of_parsed_factor variable_infos r_factor
-        )
-    | Parsed_log_or (l_factor, r_factor) ->
-        Logical_or (
-            binary_word_expression_of_parsed_factor variable_infos l_factor,
-            binary_word_expression_of_parsed_factor variable_infos r_factor
-        )
-    | Parsed_log_xor (l_factor, r_factor) ->
-        Logical_xor (
-            binary_word_expression_of_parsed_factor variable_infos l_factor,
-            binary_word_expression_of_parsed_factor variable_infos r_factor
-        )
+    | Parsed_bin_log_function (fun_type, l_factor, r_factor) ->
+        let l_binary_word_expr = binary_word_expression_of_parsed_factor variable_infos l_factor in
+        let r_binary_word_expr = binary_word_expression_of_parsed_factor variable_infos r_factor in
+        begin
+        match fun_type with
+        | Parsed_log_and -> Logical_and (l_binary_word_expr, r_binary_word_expr)
+        | Parsed_log_or -> Logical_or (l_binary_word_expr, r_binary_word_expr)
+        | Parsed_log_xor -> Logical_xor (l_binary_word_expr, r_binary_word_expr)
+        end
     | Parsed_log_not factor ->
         Logical_not (
             binary_word_expression_of_parsed_factor variable_infos factor
@@ -2110,10 +2098,8 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
         | Parsed_DF_access _
         | Parsed_rational_of_int_function _
         | Parsed_pow_function _
-        | Parsed_function_factor_arithmetic_expr _
-        | Parsed_log_and _
-        | Parsed_log_or _
-        | Parsed_log_xor _
+        | Parsed_shift_function _
+        | Parsed_bin_log_function _
         | Parsed_log_not _
         | Parsed_array_concat _ as factor ->
             raise (InvalidExpression ("Use of \"" ^ ParsingStructureUtilities.label_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
@@ -2610,16 +2596,12 @@ let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_info
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor expr;
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor exp_expr
         (* Same comment for case above *)
-        | Parsed_function_factor_arithmetic_expr (_, factor, expr) ->
+        | Parsed_shift_function (_, factor, expr) ->
 		    update_coef_array_in_parsed_update_factor mult_factor factor;
 		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor expr
-        | Parsed_log_and (l_factor, r_factor)
-        | Parsed_log_or (l_factor, r_factor)
-        | Parsed_log_xor (l_factor, r_factor) ->
-            update_coef_array_in_parsed_update_factor mult_factor l_factor;
-            update_coef_array_in_parsed_update_factor mult_factor r_factor
         | Parsed_log_not factor ->
             update_coef_array_in_parsed_update_factor mult_factor factor
+        | Parsed_bin_log_function _
         | Parsed_DF_array _
         | Parsed_DF_access _
         | Parsed_array_concat _ as factor ->

@@ -103,13 +103,11 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
         operator
             (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr_0)
             (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr_1)
-	| Parsed_function_factor_arithmetic_expr (_, factor, expr) ->
+	| Parsed_shift_function (_, factor, expr) ->
         operator
             (fold_parsed_discrete_factor operator base leaf_fun factor)
             (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
-	| Parsed_log_and (factor_0, factor_1)
-	| Parsed_log_or (factor_0, factor_1)
-	| Parsed_log_xor (factor_0, factor_1)
+	| Parsed_bin_log_function (_, factor_0, factor_1)
 	| Parsed_array_concat (factor_0, factor_1) ->
         operator
             (fold_parsed_discrete_factor operator base leaf_fun factor_0)
@@ -235,11 +233,16 @@ let iterate_parsed_update = fold_parsed_update binunit ()
 
 (* Labels of a parsed factors *)
 
-let label_of_parsed_function_factor_expr_type = function
+let label_of_parsed_shift_function_type = function
 	| Parsed_shift_left -> "shift_left"
 	| Parsed_shift_right -> "shift_right"
 	| Parsed_fill_left -> "fill_left"
 	| Parsed_fill_right -> "fill_right"
+
+let label_of_parsed_bin_log_function_type = function
+    | Parsed_log_and -> "logand"
+    | Parsed_log_or -> "logor"
+    | Parsed_log_xor -> "logxor"
 
 let label_of_parsed_factor_constructor = function
 	| Parsed_DF_variable _ -> "variable"
@@ -250,10 +253,9 @@ let label_of_parsed_factor_constructor = function
 	| Parsed_DF_unary_min _ -> "minus"
 	| Parsed_rational_of_int_function _ -> "rational_of_int"
 	| Parsed_pow_function _ -> "pow"
-	| Parsed_function_factor_arithmetic_expr (fun_type, _, _) -> label_of_parsed_function_factor_expr_type fun_type
-    | Parsed_log_and _ -> "logand"
-    | Parsed_log_or _ -> "logor"
-    | Parsed_log_xor _ -> "logxor"
+	| Parsed_shift_function (fun_type, _, _) -> label_of_parsed_shift_function_type fun_type
+	| Parsed_bin_log_function (fun_type, _, _) -> label_of_parsed_bin_log_function_type fun_type
+
     | Parsed_log_not _ -> "lognot"
     | Parsed_array_concat _ -> "array_concat"
 
@@ -316,16 +318,14 @@ and string_of_parsed_factor variable_infos = function
         ^ ","
         ^ string_of_parsed_arithmetic_expression variable_infos exp_expr
         ^ ")"
-    | Parsed_function_factor_arithmetic_expr (_, factor, expr) as shift ->
+    | Parsed_shift_function (_, factor, expr) as shift ->
         label_of_parsed_factor_constructor shift
         ^ "("
         ^ string_of_parsed_factor variable_infos factor
         ^ ", "
         ^ string_of_parsed_arithmetic_expression variable_infos expr
         ^ ")"
-    | Parsed_log_and (l_factor, r_factor)
-    | Parsed_log_or (l_factor, r_factor)
-    | Parsed_log_xor (l_factor, r_factor)
+    | Parsed_bin_log_function (_, l_factor, r_factor)
     | Parsed_array_concat (l_factor, r_factor) as func ->
         label_of_parsed_factor_constructor func
         ^ "("
@@ -554,7 +554,7 @@ and try_reduce_parsed_arithmetic_expression constants expr =
                     ^ " expression, altough it was checked before by the type checker. Maybe type checking has failed before"
                 ))
             )
-        | Parsed_function_factor_arithmetic_expr (fun_type, factor, expr) ->
+        | Parsed_shift_function (fun_type, factor, expr) ->
             let reduced_factor = try_reduce_parsed_factor factor in
             let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
             begin
@@ -564,23 +564,16 @@ and try_reduce_parsed_arithmetic_expression constants expr =
             | Parsed_fill_left -> DiscreteValue.fill_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
             | Parsed_fill_right -> DiscreteValue.fill_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
             end
-        | Parsed_log_and (l_factor, r_factor) ->
 
+        | Parsed_bin_log_function (fun_type, l_factor, r_factor) ->
             let reduced_l_factor = try_reduce_parsed_factor l_factor in
             let reduced_r_factor = try_reduce_parsed_factor r_factor in
-            DiscreteValue.log_and reduced_l_factor reduced_r_factor
-
-        | Parsed_log_or (l_factor, r_factor) ->
-
-            let reduced_l_factor = try_reduce_parsed_factor l_factor in
-            let reduced_r_factor = try_reduce_parsed_factor r_factor in
-            DiscreteValue.log_or reduced_l_factor reduced_r_factor
-
-        | Parsed_log_xor (l_factor, r_factor) ->
-
-            let reduced_l_factor = try_reduce_parsed_factor l_factor in
-            let reduced_r_factor = try_reduce_parsed_factor r_factor in
-            DiscreteValue.log_xor reduced_l_factor reduced_r_factor
+            begin
+            match fun_type with
+            | Parsed_log_and -> DiscreteValue.log_and reduced_l_factor reduced_r_factor
+            | Parsed_log_or -> DiscreteValue.log_or reduced_l_factor reduced_r_factor
+            | Parsed_log_xor -> DiscreteValue.log_xor reduced_l_factor reduced_r_factor
+            end
 
         | Parsed_array_concat (l_factor, r_factor) ->
 

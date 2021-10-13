@@ -103,24 +103,29 @@ and parsed_discrete_factor =
     | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min of parsed_discrete_factor
+	(* Functions *)
 	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
 	| Parsed_pow_function of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
 
-    (* all function of the form : factor * arithmetic_expression *)
-	| Parsed_function_factor_arithmetic_expr of parsed_function_factor_expr_type * parsed_discrete_factor * parsed_discrete_arithmetic_expression
-
-	| Parsed_log_and of parsed_discrete_factor * parsed_discrete_factor
-	| Parsed_log_or of parsed_discrete_factor * parsed_discrete_factor
-	| Parsed_log_xor of parsed_discrete_factor * parsed_discrete_factor
+    (* All shift functions of the form : factor * arithmetic_expression *)
+	| Parsed_shift_function of parsed_shift_function_type * parsed_discrete_factor * parsed_discrete_arithmetic_expression
+    (* All binary log functions of the form : factor * factor *)
+    | Parsed_bin_log_function of parsed_bin_log_function_type * parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_log_not of parsed_discrete_factor
+
 	| Parsed_array_concat of parsed_discrete_factor * parsed_discrete_factor
 (*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
 
-and parsed_function_factor_expr_type =
+and parsed_shift_function_type =
     | Parsed_shift_left
     | Parsed_shift_right
     | Parsed_fill_left
     | Parsed_fill_right
+
+and parsed_bin_log_function_type =
+    | Parsed_log_and
+    | Parsed_log_or
+    | Parsed_log_xor
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
 type variable_declaration = var_type * (variable_name * global_expression option) list

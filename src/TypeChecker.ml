@@ -213,24 +213,15 @@ and convert_literals_of_parsed_discrete_factor variable_infos target_type = func
             convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type expr,
             convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type exp_expr
         )
-    | Parsed_function_factor_arithmetic_expr (fun_type, factor, expr) ->
-        Parsed_function_factor_arithmetic_expr (
+    | Parsed_shift_function (fun_type, factor, expr) ->
+        Parsed_shift_function (
             fun_type,
             convert_literals_of_parsed_discrete_factor variable_infos target_type factor,
             convert_literals_of_parsed_discrete_arithmetic_expression variable_infos target_type expr
         )
-    | Parsed_log_and (l_factor, r_factor) ->
-        Parsed_log_and (
-            convert_literals_of_parsed_discrete_factor variable_infos target_type l_factor,
-            convert_literals_of_parsed_discrete_factor variable_infos target_type r_factor
-        )
-    | Parsed_log_or (l_factor, r_factor) ->
-        Parsed_log_or (
-            convert_literals_of_parsed_discrete_factor variable_infos target_type l_factor,
-            convert_literals_of_parsed_discrete_factor variable_infos target_type r_factor
-        )
-    | Parsed_log_xor (l_factor, r_factor) ->
-        Parsed_log_xor (
+    | Parsed_bin_log_function (fun_type, l_factor, r_factor) ->
+        Parsed_bin_log_function (
+            fun_type,
             convert_literals_of_parsed_discrete_factor variable_infos target_type l_factor,
             convert_literals_of_parsed_discrete_factor variable_infos target_type r_factor
         )
@@ -711,7 +702,7 @@ and infer_parsed_discrete_factor variable_infos = function
         Parsed_pow_function (converted_expr, converted_exp), result_type
 
 
-    | Parsed_function_factor_arithmetic_expr (fun_type, factor, expr) as shift ->
+    | Parsed_shift_function (fun_type, factor, expr) as shift ->
 
         let infer_factor, l_type = infer_parsed_discrete_factor variable_infos factor in
         let infer_expr, r_type = infer_parsed_discrete_arithmetic_expression variable_infos expr in
@@ -752,7 +743,7 @@ and infer_parsed_discrete_factor variable_infos = function
         (match fun_type with
         | Parsed_shift_left
         | Parsed_shift_right ->
-            Parsed_function_factor_arithmetic_expr (fun_type, infer_factor, converted_expr), l_type
+            Parsed_shift_function (fun_type, infer_factor, converted_expr), l_type
 
         | Parsed_fill_left
         | Parsed_fill_right ->
@@ -773,7 +764,7 @@ and infer_parsed_discrete_factor variable_infos = function
             let shift_value = ParsingStructureUtilities.try_reduce_parsed_arithmetic_expression variable_infos.constants converted_expr in
             let base_length = (match l_type with DiscreteValue.Var_type_discrete_binary_word l -> l | _ -> raise (InternalError "never happen")) in
             let length = base_length + Int32.to_int (DiscreteValue.int_value shift_value) in
-            Parsed_function_factor_arithmetic_expr (fun_type, infer_factor, converted_expr), DiscreteValue.Var_type_discrete_binary_word length
+            Parsed_shift_function (fun_type, infer_factor, converted_expr), DiscreteValue.Var_type_discrete_binary_word length
 
         )
         in
@@ -784,9 +775,7 @@ and infer_parsed_discrete_factor variable_infos = function
 
         typed_shift
 
-    | Parsed_log_and (l_factor, r_factor)
-    | Parsed_log_or (l_factor, r_factor)
-    | Parsed_log_xor (l_factor, r_factor) as log_op ->
+    | Parsed_bin_log_function (fun_type, l_factor, r_factor) as log_op ->
 
         let infer_l_factor, l_type = infer_parsed_discrete_factor variable_infos l_factor in
         let infer_r_factor, r_type = infer_parsed_discrete_factor variable_infos r_factor in
@@ -808,17 +797,8 @@ and infer_parsed_discrete_factor variable_infos = function
         );
 
         print_infer_expr_message (string_of_parsed_factor variable_infos log_op) l_type;
+        Parsed_bin_log_function (fun_type, infer_l_factor, infer_r_factor), l_type
 
-        (match log_op with
-        | Parsed_log_and _ ->
-            Parsed_log_and (infer_l_factor, infer_r_factor), l_type
-        | Parsed_log_or _ ->
-            Parsed_log_or (infer_l_factor, infer_r_factor), l_type
-        | Parsed_log_xor _ ->
-            Parsed_log_xor (infer_l_factor, infer_r_factor), l_type
-        | _ ->
-            raise (InternalError "Never happen!")
-        )
     | Parsed_log_not factor as log_op ->
         let infer_factor, discrete_type = infer_parsed_discrete_factor variable_infos factor in
 
@@ -860,6 +840,8 @@ and infer_parsed_discrete_factor variable_infos = function
                         infer_factor_0,
                         convert_literals_of_parsed_discrete_factor variable_infos inner_type_0 infer_factor_1,
                         inner_type_0
+                    | Number_type_mixin_error ->
+                        raise (InternalError "Compatibility type should be checked previously")
                 )
                 in
 
@@ -1010,10 +992,8 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
     | Parsed_pow_function (expr, exp) ->
         (* Pow function result type depends of the left member type *)
         discrete_type_of_parsed_discrete_arithmetic_expression variable_infos expr
-    | Parsed_function_factor_arithmetic_expr (_, factor, _)
-    | Parsed_log_and (factor, _)
-    | Parsed_log_or (factor, _)
-    | Parsed_log_xor (factor, _)
+    | Parsed_shift_function (_, factor, _)
+    | Parsed_bin_log_function (_, factor, _)
     | Parsed_log_not factor ->
         (* Shift result type is a binary word of length depending on the left member length *)
         (* Logical and, or, xor, not depend on one member length (arbitrary, because already type checked!) *)
