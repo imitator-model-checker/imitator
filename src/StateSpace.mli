@@ -288,7 +288,7 @@ val find_transitions_in : state_space -> scc -> (state_index * combined_transiti
 
 
 (*------------------------------------------------------------*)
-(** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; optionally one can pass a list of states "a lasso" for which we already know the succession of state indices. the final (target) state is not included. Raise Not_found if run not found. *)
+(** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; optionally one can pass a list of states (a "lasso") for which we already know the succession of state indices. the final (target) state is not included. Raise Not_found if run not found. *)
 (*------------------------------------------------------------*)
 val backward_symbolic_run : state_space -> state_index -> state_index list -> state_index -> predecessors_table option -> symbolic_run
 

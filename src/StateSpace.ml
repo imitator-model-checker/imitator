@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2021/10/08
+ * Last modified     : 2021/10/14
  *
  ************************************************************)
 
@@ -1059,7 +1059,7 @@ let is_marked colortable element : bool =
 
 
 (*------------------------------------------------------------*)
-(** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; optionally one can pass a list of states "a lasso" for which we already know the succession of state indices. the final (target) state is not included. Raise Not_found if run not found. *)
+(** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; optionally one can pass a list of states (a "lasso") for which we already know the succession of state indices. the final (target) state is not included. Raise Not_found if run not found. *)
 (*------------------------------------------------------------*)
 
 let backward_symbolic_run state_space (target_state_index : state_index) (lasso : state_index list) (source_state_index : state_index) (predecessors_table_option : predecessors_table option) : symbolic_run =
@@ -1080,7 +1080,7 @@ let backward_symbolic_run state_space (target_state_index : state_index) (lasso 
 
 	(*------------------------------------------------------------*)
 	(* Use a recursive procedure returning a (list of (state, combined transition))'option ; None denotes the current run is useless. The states are returned in reversed order. *)
-	let rec backward_symbolic_run_rec current_state_index =
+	let rec backward_symbolic_run_rec (current_state_index : state_index) : (symbolic_step list) option =
 		(* If target is reached: return *)
 		if current_state_index = source_state_index then Some [] (*** NOTE: do not add index, it will be added during the recursion together with the transition ***)
 
@@ -1099,7 +1099,7 @@ let backward_symbolic_run state_space (target_state_index : state_index) (lasso 
 			let sorted_predecessors = sort_predecessors predecessors in
 
 			(* Iterate on the predecessors *)
-			let symbolic_steps = List.fold_left (fun current_steps (combined_transition, predecessor_index) ->
+			let symbolic_steps : (symbolic_step list) option = List.fold_left (fun current_steps (combined_transition, predecessor_index) ->
 				(* If predecessor is marked: skip and go to next predecessor *)
 				if is_marked colortable predecessor_index then current_steps
 
@@ -1125,51 +1125,53 @@ let backward_symbolic_run state_space (target_state_index : state_index) (lasso 
 	(*------------------------------------------------------------*)
 	
 	(* If a lasso is provided, first reconstruct the final symbolic steps for the lasso *)
-	let final_symbolic_steps, target_state_index_for_backward_reconstruction = match lasso with
+	let (final_symbolic_steps , target_state_index_for_backward_reconstruction) = match lasso with
+		(* No lasso *)
 		| [] ->
-			(* No lasso *)
 			[] , target_state_index
+
+		(* A non-empty lasso *)
 		| first_state_of_the_lasso :: rest_of_the_lasso -> 
-			(* Non-essential verification *)
-(*			if first_state_of_the_lasso <> target_state_index then(
-				raise (InternalError ("The first state of the lasso (" ^ (string_of_int first) ^ ") should be identical to the target state (" ^ (string_of_int target_state_index) ^ ")."));
-			);*)
 			
 			(*** BADPROG: mix imperative and functional programming… ***)
 			let current_state_index : state_index ref = ref first_state_of_the_lasso in
+			
+			(* Convert each state of the lasso (except the last one) into a pair (state, combined_transition) *)
+			let final_symbolic_steps : symbolic_step list =
 			(* Iterate on the successor of each state of the lasso except the first one *)
-			List.map (fun current_successor : state_index ->
+			List.map (fun (current_successor : state_index) : symbolic_step ->
 				(* Retrieve the transition (state, successor) *)
-				let combined_transition = get_combined_transition_between_states state_space !current_state_index current_successor in
+				let combined_transition : combined_transition = get_combined_transition_between_states state_space !current_state_index current_successor in
 				
-				raise (NotImplemented "lasso");
+				(* Compute *)
+				let symbolic_step : symbolic_step=
+					{source = !current_state_index ; transition = combined_transition }
+				in
 				
-				(* Update current index *)
+				(* Update current index for next step *)
 				current_state_index := current_successor;
 				
-				(* Replace *)
-				(*** TODO: add state ***)
-				combined_transition;
-				
-				
-				raise (NotImplemented "lasso");
-			) rest_of_the_lasso;
+				(* Replace with the previously computed symbolic_step *)
+				symbolic_step
+			) rest_of_the_lasso
+			in
 			
-			
-			raise (NotImplemented "lasso")
-			
-			(* first_state_of_the_lasso, TODO *)
+			(*** NOTE: the last state of the lasso is actually the current value of !current_state_index ***)
+			final_symbolic_steps, !current_state_index
 	in
 	
 	(* Call the recursive procedure and reverse the result *)
 	match backward_symbolic_run_rec target_state_index_for_backward_reconstruction with
+	
 	(* Oops! *)
+	(*** NOTE: what if the lasso is non-empty in this situation?! ***)
 	| None -> raise Not_found
+	
 	| Some symbolic_steps ->
 		(* Construct the structure symbolic_run *)
 		{
 			(* Reverse because states were added in reversed order *)
-			symbolic_steps = List.rev symbolic_steps;
+			symbolic_steps = OCamlUtilities.list_append ( List.rev symbolic_steps) final_symbolic_steps;
 			(* Add final state *)
 			final_state = target_state_index;
 		}
