@@ -147,7 +147,7 @@ This model contains two clocks: \styleIMI{x1} is process~1's clock, and \styleIM
 
 This model contains two parameters: \styleIMI{delta} is the parametric duration specifying how long a process is idle at most, whereas \styleIMI{gamma} is the parametric duration specifying the minimum duration between the time a process checks for the availability of the critical section and the time the same process indeed enters the critical section (if it is still available).
 
-Two rational-valued variables (\ie{} global, discrete variables, see \cref{section:discrete}) are used:
+Two integer-valued variables (\ie{} global, discrete variables, see \cref{section:discrete}) are used:
 \styleIMI{turn} checks which process is attempting to enter the critical section;
 \styleIMI{counter} records how many processes are in the critical section (this variable will not be used for the verification, but was used in the original \pat{} model, and we choose to keep it).
 % TODO: use it for verification since IMITATOR supports global variables in properties
