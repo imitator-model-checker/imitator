@@ -23,10 +23,19 @@ let check_nonlinear_constraint discrete_valuation = function
     | Nonlinear_constraint nonlinear_inequalities -> check_nonlinear_inequalities discrete_valuation nonlinear_inequalities
 
 let is_linear_nonlinear_constraint = function
+    (* TODO benjamin CLEAN Here replace by a pattern matching, not delete else the behavior isn't the same *)
     | True_nonlinear_constraint
     | False_nonlinear_constraint -> true
     | Nonlinear_constraint nonlinear_inequalities ->
         List.for_all DiscreteExpressions.is_linear_discrete_boolean_expression nonlinear_inequalities
+
+(* Get True non-linear constraint *)
+let true_nonlinear_constraint =
+    Nonlinear_constraint [DB_constant true]
+
+(* Get False non-linear constraint *)
+let false_nonlinear_constraint =
+    Nonlinear_constraint [DB_constant false]
 
 (* Get string of non-linear constraint inequalities with customized strings *)
 let customized_string_of_nonlinear_constraint customized_string variable_names = function

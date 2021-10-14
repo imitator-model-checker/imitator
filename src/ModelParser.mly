@@ -534,12 +534,14 @@ postfix_arithmetic_factor:
 
 arithmetic_factor:
   | arithmetic_factor LSQBRA arithmetic_expression RSQBRA { Parsed_DF_access ($1, $3) }
-	| number { Parsed_DF_constant ($1) }
+  | number { Parsed_DF_constant ($1) }
+  | CT_TRUE { Parsed_DF_constant (DiscreteValue.Bool_value true) }
+  | CT_FALSE { Parsed_DF_constant (DiscreteValue.Bool_value false) }
   | binary_word { Parsed_DF_constant $1 }
   | literal_array { Parsed_DF_array (Array.of_list $1) }
-	| NAME { Parsed_DF_variable $1 }
-	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
-	| function_call { $1 }
+  | NAME { Parsed_DF_variable $1 }
+  | LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+  | function_call { $1 }
 ;
 
 literal_array:
@@ -610,8 +612,6 @@ linear_constraint:
 
 nonlinear_constraint:
 	| discrete_boolean_expression { Parsed_nonlinear_constraint $1 }
-    | CT_TRUE { Parsed_true_nonlinear_constraint }
-    | CT_FALSE { Parsed_false_nonlinear_constraint }
 ;
 
 relop:
@@ -695,8 +695,6 @@ boolean_expression:
 	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
-	| CT_TRUE { Parsed_True }
-	| CT_FALSE { Parsed_False }
 ;
 
 discrete_boolean_expression:

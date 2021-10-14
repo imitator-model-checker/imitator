@@ -201,6 +201,7 @@ and is_linear_discrete_boolean_expression = function
 	        is_linear_arithmetic_expression expr_2 &&
 	        is_linear_arithmetic_expression expr_3
 	    )
+    | DB_constant _ -> true
     | _ -> false
 
 and is_linear_arithmetic_expression = function

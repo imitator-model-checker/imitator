@@ -77,8 +77,6 @@ and parsed_discrete_boolean_expression =
 
 
 and parsed_boolean_expression =
-	| Parsed_True (** True *)
-	| Parsed_False (** False *)
 	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
 	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
 	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
@@ -154,10 +152,8 @@ type linear_constraint =
 	| Parsed_linear_constraint of linear_expression * parsed_relop * linear_expression
 
 (** Non-linear expressions *)
-
+(* TODO benjamin CLEAN remove Variant type : nonlinear_constraint = parsed_discrete_boolean_expression *)
 type nonlinear_constraint =
-    | Parsed_true_nonlinear_constraint (* True *)
-    | Parsed_false_nonlinear_constraint (* False *)
     | Parsed_nonlinear_constraint of parsed_discrete_boolean_expression
 
 type convex_predicate = nonlinear_constraint list

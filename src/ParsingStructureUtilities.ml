@@ -47,8 +47,6 @@ let rec fold_parsed_global_expression operator base leaf_fun = function
      | Parsed_global_expression expr -> fold_parsed_boolean_expression operator base leaf_fun expr
 
 and fold_parsed_boolean_expression operator base leaf_fun = function
-	| Parsed_True -> leaf_fun (Leaf_constant (DiscreteValue.Bool_value true))
-	| Parsed_False -> leaf_fun (Leaf_constant (DiscreteValue.Bool_value false))
 	| Parsed_And (l_expr, r_expr)
 	| Parsed_Or (l_expr, r_expr) ->
 	    operator
@@ -143,10 +141,6 @@ and fold_parsed_linear_term operator leaf_fun = function
 
 (** Fold a parsed linear constraint using operator applying custom function on leafs **)
 let fold_parsed_nonlinear_constraint operator base leaf_fun nonlinear_constraint_leaf_fun = function
-    | Parsed_false_nonlinear_constraint ->
-        nonlinear_constraint_leaf_fun Leaf_false_nonlinear_constraint
-    | Parsed_true_nonlinear_constraint ->
-        nonlinear_constraint_leaf_fun Leaf_true_nonlinear_constraint
     | Parsed_nonlinear_constraint expr ->
         fold_parsed_discrete_boolean_expression operator base leaf_fun expr
 
@@ -340,8 +334,6 @@ and string_of_parsed_factor variable_infos = function
         ^ ")"
 
 and string_of_parsed_boolean_expression variable_infos = function
-    | Parsed_True -> "True"
-    | Parsed_False -> "False"
     | Parsed_And (l_expr, r_expr) ->
             (string_of_parsed_boolean_expression variable_infos l_expr) ^
             " & " ^
@@ -415,8 +407,6 @@ let string_of_parsed_init_state_predicate variable_infos = function
 	    ^ string_of_parsed_global_expression variable_infos expr
 
 let string_of_parsed_nonlinear_constraint variable_infos = function
-    | Parsed_true_nonlinear_constraint -> "True"
-    | Parsed_false_nonlinear_constraint -> "False"
     | Parsed_nonlinear_constraint expr -> string_of_parsed_discrete_boolean_expression variable_infos expr
 
 (* Try to reduce a parsed global expression, cannot take into account variables ! *)
@@ -427,8 +417,6 @@ let rec try_reduce_parsed_global_expression constants = function
 and try_reduce_parsed_boolean_expression constants expr =
 
     let rec try_reduce_parsed_boolean_expression_rec = function
-	    | Parsed_True -> DiscreteValue.bool_value_true
-	    | Parsed_False -> DiscreteValue.bool_value_false
 	    | Parsed_And (l_expr, r_expr) ->
 	        DiscreteValue._and
                 (try_reduce_parsed_boolean_expression_rec l_expr)

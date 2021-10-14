@@ -7,6 +7,7 @@ type variable = int
 type nonlinear_inequality = DiscreteExpressions.discrete_arithmetic_expression * DiscreteExpressions.relop * DiscreteExpressions.discrete_arithmetic_expression
 
 (*type nonlinear_constraint = nonlinear_inequality list*)
+(* TODO benjamin CLEAN remove True_nonlinear_constraint & False_nonlinear_constraint *)
 type nonlinear_constraint =
   | True_nonlinear_constraint
   | False_nonlinear_constraint

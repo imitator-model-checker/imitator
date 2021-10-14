@@ -123,8 +123,6 @@ let rec convert_literals_of_expression variable_infos target_type = function
 
 (* Convert literals types of a Boolean expression to a given target type *)
 and convert_literals_of_parsed_boolean_expression variable_infos target_type = function
-    | Parsed_True -> Parsed_True
-    | Parsed_False -> Parsed_False
     | Parsed_And (l_expr, r_expr) ->
         let convert_l_expr = convert_literals_of_parsed_boolean_expression variable_infos target_type l_expr in
         let convert_r_expr = convert_literals_of_parsed_boolean_expression variable_infos target_type r_expr in
@@ -239,8 +237,6 @@ and convert_literals_of_parsed_discrete_factor variable_infos target_type = func
 (* Convert literals types of a non-linear constraint to a given target type *)
 let convert_literals_of_nonlinear_constraint variable_infos target_type = function
     (* It's ok non-linear constraint is of Boolean type *)
-    | Parsed_true_nonlinear_constraint -> Parsed_true_nonlinear_constraint
-    | Parsed_false_nonlinear_constraint -> Parsed_false_nonlinear_constraint
     | Parsed_nonlinear_constraint expr ->
         Parsed_nonlinear_constraint (convert_literals_of_parsed_discrete_boolean_expression variable_infos target_type expr)
 
@@ -276,8 +272,6 @@ let rec infer_expression variable_infos = function
 
 (* Type check and infer literal numbers of Boolean expression *)
 and infer_parsed_boolean_expression variable_infos = function
-    | Parsed_True
-    | Parsed_False as expr -> expr, DiscreteValue.Var_type_discrete_bool
 
     | Parsed_And (l_expr, r_expr) as expr ->
         let (convert_l_expr, convert_r_expr), discrete_type = type_check_bool_operation variable_infos l_expr r_expr expr in
@@ -869,8 +863,6 @@ and infer_parsed_discrete_factor variable_infos = function
 (* Type checking and infer literal numbers of non-linear constraint *)
 and infer_nonlinear_constraint variable_infos = function
     (* It's ok non-linear constraint is of Boolean type *)
-    | Parsed_true_nonlinear_constraint -> Parsed_true_nonlinear_constraint, DiscreteValue.Var_type_discrete_bool
-    | Parsed_false_nonlinear_constraint -> Parsed_false_nonlinear_constraint, DiscreteValue.Var_type_discrete_bool
     | Parsed_nonlinear_constraint expr ->
         let convert_expr, discrete_type = infer_parsed_discrete_boolean_expression variable_infos expr in
         Parsed_nonlinear_constraint convert_expr, discrete_type
@@ -936,8 +928,6 @@ let rec discrete_type_of_expression variable_infos = function
         discrete_type_of_parsed_boolean_expression variable_infos expr
 
 and discrete_type_of_parsed_boolean_expression variable_infos = function
-	| Parsed_True
-	| Parsed_False
 	| Parsed_And _
 	| Parsed_Or _ -> DiscreteValue.Var_type_discrete_bool
 	| Parsed_Discrete_boolean_expression expr ->
@@ -986,7 +976,8 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
         | DiscreteValue.Var_type_discrete_array (inner_type, _) -> inner_type
         | _ -> raise (TypeError (""))
         )
-	| Parsed_DF_expression expr
+	| Parsed_DF_expression expr ->
+	    discrete_type_of_parsed_discrete_arithmetic_expression variable_infos expr
 	| Parsed_rational_of_int_function expr ->
 	    DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational
     | Parsed_pow_function (expr, exp) ->
