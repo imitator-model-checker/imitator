@@ -405,13 +405,13 @@ a Boolean variable valuation is a function $\bval : \BVar \rightarrow \setB$, wh
 %------------------------------------------------------------
 
 % \emph{Binary word variables}
-Binary word variables are sequences of bits of fixed length - the maximum size of a binary word is $2^{16}$.
+Binary word variables are sequences of bits of fixed length---the maximum size of a binary word is $2^{16}$.
 Bitwise operations can be defined on these variables (on same length).
 
 For example, defining two binary words \styleIMI{bw1} and \styleIMI{bw2} both of size~4 (type : \styleIMI{binary(4)}), such that initially \styleIMI{bw1 := 0b1010} and \styleIMI{bw2 := 0b1011}, we can use a guard \styleIMI{logor(bw1, bw2) <> bw1} that checks whether the result of the bitwise (logical) ``or'' operation on both variables differs from \styleIMI{bw1}.
 Then, if this check is true, one may want to shift the bits of \styleIMI{b1} by 2~positions, and set \styleIMI{bw2} to the result of the bitwise ``and'' operation on~\styleIMI{bw1} and~\styleIMI{bw2}.
 %
-This transition would be written as follows in \imitator{} format:
+A transition featuring such a guard and such updates would be written as follows in \imitator{} syntax:
 
 %------------------------------------------------------------
 \begin{IMITATORmodel}
@@ -451,15 +451,15 @@ We denote by~$\WVar$ the set of binary word variables.
 		\item \styleIMI{shift\_right(b : binary\_word(l), i : int) : binary\_word(l)}: shift a binary word of length \styleIMI{l} to right
 		\item \styleIMI{fill\_left(b : binary\_word(l), i : const int) : binary\_word(l + i)}: shift a binary word of length \styleIMI{l} to left (non destructive)
 		\item \styleIMI{fill\_right(b : binary\_word(l), i : const int) : binary\_word(l + i)}: shift a binary word of length \styleIMI{l} to right (non destructive)
-		\item \styleIMI{logand(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: make AND bitwise operation between two binary words of length \styleIMI{l}
-		\item \styleIMI{logor(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: make OR bitwise operation between two binary words of length \styleIMI{l}
-		\item \styleIMI{logxor(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: make XOR bitwise operation between two binary words of length \styleIMI{l}
-		\item \styleIMI{lognot(b : binary\_word(l)) : binary\_word(l)}: make NOT bitwise operation on a binary word of length \styleIMI{l}
+		\item \styleIMI{logand(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: apply AND bitwise operation to two binary words of length \styleIMI{l}
+		\item \styleIMI{logor(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: apply OR bitwise operation to two binary words of length \styleIMI{l}
+		\item \styleIMI{logxor(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: apply XOR bitwise operation to two binary words of length \styleIMI{l}
+		\item \styleIMI{lognot(b : binary\_word(l)) : binary\_word(l)}: apply NOT bitwise operation to a binary word of length \styleIMI{l}
 \end{itemize}
 
 %------------------------------------------------------------
 \begin{example}
-	All the following guards in the model fragment below will evaluate to true:
+	To illustrate the binary words operations, note that all the following guards in the model fragment below will evaluate to true:
 
 % HACK: always keep one blank space after a binary value (0b…) to have higlighting using moredelim
 %------------------------------------------------------------
