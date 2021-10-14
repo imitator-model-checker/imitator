@@ -3117,15 +3117,22 @@ We define each of those two components below.
 \end{tabular}
 
 %------------------------------------------------------------
+\regleGrammaire{location\_attribute}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$ & \emptystring{} \\
+	$|$ & \styleIMI{urgent} \\
+	$|$ & \styleIMI{accepting}        \\
+	$|$ & \styleIMI{accepting urgent} \\
+	$|$ & \styleIMI{urgent accepting} \\
+\end{tabular}
+
+%------------------------------------------------------------
 \regleGrammaire{location}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}                  \\
-	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}           \\
-	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}        \\
-	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
-	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
-	% 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{nonlinear\_convex\_predicate} \nt{transitions} \\
+	\   & \nt{location\_attribute} \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate}  \\
+	& \quad{} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
 \end{tabular}
 
 % \smallskip
