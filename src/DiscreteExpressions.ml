@@ -681,7 +681,3 @@ let rec string_of_discrete_variable_access variable_names = function
         ^ "]"
 
 
-
-(* TODO benjamin CLEAN to remove *)
-(*let string_of_arithmetic_expression_for_jani = customized_string_of_arithmetic_expression_for_jani Constants.global_default_string*)
-(*let string_of_discrete_boolean_expression_for_jani = customized_string_of_discrete_boolean_expression_for_jani Constants.global_default_string*)

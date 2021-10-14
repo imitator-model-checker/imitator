@@ -1040,11 +1040,3 @@ let string_of_model model =
     in
     OCamlUtilities.prettify_json ugly_json_model
 
-
-
-
-
-
-(* TODO benjamin CLEAN to remove *)
-(* Get string of non-linear constraint inequalities with default strings *)
-(*let strings_of_nonlinear_constraint_for_jani = customized_strings_of_nonlinear_constraint_for_jani global_default_string*)
