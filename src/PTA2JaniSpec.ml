@@ -59,7 +59,7 @@ let jani_assignment = "="
 
 let jani_version = "1"
 let jani_type = "sha"
-let jani_features = "[\"derived-operators\"]"
+let jani_features = "[\"derived-operators\", \"datatypes\"]"
 
 
 (************************************************************)
@@ -82,6 +82,9 @@ let string_of_header model =
   ^  "\t\"name\": " ^ "\"" ^ options#model_file_name ^ "\"" ^ jani_separator ^ "\n"
   ^  "\t\"type\": " ^ "\"" ^ jani_type ^ "\"" ^ jani_separator ^ "\n"
   ^  "\t\"features\": " ^ jani_features ^ jani_separator ^ "\n"
+  ^ "\"datatypes\":[{\"name\":\"binary_word\",\"members\":[{\"name\":\"elements\", \"type\":{\"kind\":\"array\", \"base\":\"bool\"}}]}]" ^ jani_separator ^ "\n"
+
+
 
 (************************************************************
  Declarations
@@ -123,7 +126,7 @@ let string_of_clocks model =
           "\t\t{\n"
         ^ "\t\t\t\"name\": \"" ^ model.variable_names var ^ "\"" ^ jani_separator ^ "\n"
         ^ "\t\t\t\"type\": \""^ clocks_type ^"\"" ^ jani_separator ^ "\n"
-        ^ "\t\t\t\"initial_value\": 0" ^ "\n"
+        ^ "\t\t\t\"initial-value\": 0" ^ "\n"
         ^ "\t\t}"
       )
       list_of_variables
@@ -141,9 +144,9 @@ let string_of_var_type_discrete_number_for_jani = function
 
 (* String of discrete var type *)
 let string_of_var_type_discrete_for_jani = function
-    | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
-    | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ -> "binary_word" (* TODO benjamin type name is good for Jani ? *)
+    | DiscreteValue.Var_type_discrete_number x -> "\"" ^ string_of_var_type_discrete_number_for_jani x ^ "\""
+    | DiscreteValue.Var_type_discrete_bool -> "\"int\""
+    | DiscreteValue.Var_type_discrete_binary_word _ -> "{\"kind\": \"datatype\",\"ref\":\"binary_word\"}"
 
 (* Convert the initial discrete var declarations into a string *)
 let string_of_discrete model =
@@ -161,14 +164,23 @@ let string_of_discrete model =
 (*				let initial_value = Location.get_discrete_rational_value inital_global_location discrete_index in*)
 				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
 
-				let str_initial_value = DiscreteValue.string_of_value initial_value in
+                let str_initial_value =
+                match discrete_type with
+                | DiscreteValue.Var_type_discrete_binary_word _ ->
+                    let a = BinaryWord.to_array (DiscreteValue.binary_word_value initial_value) in
+                    let str_elements = Array.map (fun x -> if x then "true" else "false") a in
+                    let str_elements = OCamlUtilities.string_of_array_of_string_with_sep ", " str_elements in
+                    "{\"op\":\"dv\", \"type\":\"binary_word\", \"values\":[{\"member\":\"elements\", \"value\":{\"op\":\"av\",\"elements\":[" ^ str_elements ^ "]}}]}"
+
+                | _ -> DiscreteValue.string_of_value initial_value
+                in
+
 
 				(* Assign *)
           "\t\t{\n"
         ^ "\t\t\t\"name\": \"" ^ discrete_name ^ "\"" ^ jani_separator ^ "\n"
-        ^ "\t\t\t\"type\": \"" ^ str_discrete_type ^ "\"" ^ jani_separator ^ "\n"
-(*        ^ "\t\t\t\"initial_value\": " ^ NumConst.jani_string_of_numconst initial_value ^ "\n"*)
-        ^ "\t\t\t\"initial_value\": " ^ str_initial_value ^ "\n"
+        ^ "\t\t\t\"type\": " ^ str_discrete_type ^ jani_separator ^ "\n"
+        ^ "\t\t\t\"initial-value\": " ^ str_initial_value ^ "\n"
         ^ "\t\t}"
       ) model.discrete
 			)
@@ -580,7 +592,7 @@ let string_of_automaton model actions_and_nb_automata automaton_index =
   	"\n\t\t{\n"
     ^ "\t\t\t\"name\": \"" ^ (model.automata_names automaton_index) ^ "\"" ^ jani_separator
   	^ "\n\t\t\t\"locations\": [\n" ^ (string_of_locations model actions_and_nb_automata automaton_index) ^ "\n\t\t\t]" ^ jani_separator
-  	^ "\n\t\t\t\"initial_locations\": [" ^ (string_of_initial_location model automaton_index) ^ "]" ^ jani_separator
+  	^ "\n\t\t\t\"initial-locations\": [" ^ (string_of_initial_location model automaton_index) ^ "]" ^ jani_separator
   	^ "\n\t\t\t\"edges\": [\n" ^ (string_of_transitions model actions_and_nb_automata automaton_index) ^ "\n\t\t\t]"
     ^ "\n\t\t}"
 
