@@ -61,7 +61,7 @@ let jani_assignment = "="
 
 let jani_version = "1"
 let jani_type = "sha"
-let jani_features = "[\"derived-operators\",\"arrays\"]"
+let jani_features = "[\"derived-operators\",\"arrays\",\"datatypes\"]"
 
 (* JANI *)
 
@@ -429,6 +429,17 @@ let string_of_header model =
  Declarations
 ************************************************************)
 
+let string_of_binary_word_datatype =
+    "{"
+    ^ "\"name\":\"binary_word\","
+    ^ "\"members\":[{\"name\":\"elements\","
+    ^ "\"type\":{\"kind\":\"array\",\"base\":\"bool\"}}]"
+    ^ "}"
+
+let string_of_custom_datatype =
+    "\"datatypes\":[" ^ string_of_binary_word_datatype ^ "]" ^ jani_separator
+
+
 (* Declaration of actions *)
 let string_of_actions model =
   "\"actions\": ["
@@ -485,7 +496,7 @@ let string_of_var_type_discrete_number_for_jani = function
 let rec string_of_var_type_discrete_for_jani = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
     | DiscreteValue.Var_type_discrete_bool -> jani_quoted "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ -> jani_quoted "binary_word" (* TODO benjamin type name is good for Jani ? *)
+    | DiscreteValue.Var_type_discrete_binary_word _ -> "{\"kind\":\"datatype\",\"ref\":" ^ jani_quoted "binary_word" ^ "}"
     | DiscreteValue.Var_type_discrete_array (discrete_type, _) ->
         "{\"kind\":\"array\",\"base\":" ^ string_of_var_type_discrete_for_jani discrete_type ^ "}"
 
@@ -498,6 +509,13 @@ let string_of_discrete model =
             let str_values = Array.map DiscreteValue.string_of_value array_value in
             let str_array = OCamlUtilities.string_of_array_of_string_with_sep "," str_values in
             "{\"op\":\"av\",\"elements\":[" ^ str_array ^ "]}"
+        | DiscreteValue.Var_type_discrete_binary_word _ ->
+            let array_value = BinaryWord.to_array (DiscreteValue.binary_word_value initial_value) in
+            let str_values = Array.map (fun x -> if x then "true" else "false") array_value in
+            let str_array = OCamlUtilities.string_of_array_of_string_with_sep "," str_values in
+            "{\"op\":\"dv\",\"type\":\"binary_word\",\"values\":[{\"member\":\"elements\",\"value\":"
+            ^ "{\"op\":\"av\",\"elements\":[" ^ str_array ^ "]}"
+            ^ "}]}"
         | _ ->
             DiscreteValue.string_of_value initial_value
     in
@@ -1031,6 +1049,7 @@ let string_of_model model =
     "{"
     (*Header*)
     ^ string_of_header model
+    ^ string_of_custom_datatype
     ^ string_of_actions model
     ^ (if variables = "" then "" else variables ^ jani_separator ^ "")
     ^ string_of_properties
