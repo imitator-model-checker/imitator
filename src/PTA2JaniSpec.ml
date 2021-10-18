@@ -444,8 +444,6 @@ and customized_string_of_array_expression_for_jani customized_string variable_na
 (*JANI*)
 (* Get list of non-linear constraint inequalities with customized strings *)
 let customized_strings_of_nonlinear_constraint_for_jani customized_string variable_names = function
-    | True_nonlinear_constraint -> [customized_string.boolean_string.true_string]
-    | False_nonlinear_constraint -> [customized_string.boolean_string.false_string]
     | Nonlinear_constraint nonlinear_constraint ->
 	(List.rev_map (customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names ) nonlinear_constraint)
 

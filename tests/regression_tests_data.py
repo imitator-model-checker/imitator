@@ -2787,19 +2787,19 @@ bool b = true;
  
 <location id="id_pta0_loc2" x="400" y="0">
 	<name x="400" y="-40">lend</name>
-	<label kind="invariant" x="400" y="40"> b</label></location>
+	<label kind="invariant" x="400" y="40">b</label></location>
  <init ref="id_pta0_loc0"/>
  
 	<transition>
 		<source ref="id_pta0_loc0"/>
 		<target ref="id_pta0_loc1"/>
-		<label kind="guard" x="100" y="40"> b</label>
+		<label kind="guard" x="100" y="40">b</label>
 		<label kind="assignment" x="100" y="-40">b = false</label>
 	</transition>
 	<transition>
 		<source ref="id_pta0_loc1"/>
 		<target ref="id_pta0_loc2"/>
-		<label kind="guard" x="300" y="40"> (! (b))</label>
+		<label kind="guard" x="300" y="40">(! (b))</label>
 		<label kind="assignment" x="300" y="-40">b = 1 &lt; 2</label>
 	</transition>
  </template>

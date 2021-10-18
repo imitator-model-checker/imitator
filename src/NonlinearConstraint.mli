@@ -7,10 +7,7 @@ type variable = int
 type nonlinear_inequality = DiscreteExpressions.discrete_arithmetic_expression * DiscreteExpressions.relop * DiscreteExpressions.discrete_arithmetic_expression
 
 (*type nonlinear_constraint = nonlinear_inequality list*)
-(* TODO benjamin CLEAN remove True_nonlinear_constraint & False_nonlinear_constraint *)
 type nonlinear_constraint =
-  | True_nonlinear_constraint
-  | False_nonlinear_constraint
   | Nonlinear_constraint of DiscreteExpressions.discrete_boolean_expression list
 
 (* Evaluations *)
@@ -21,6 +18,8 @@ val check_nonlinear_constraint : DiscreteExpressions.discrete_valuation -> nonli
 
 (*(** Compute the intersection of nonlinear constraints **)*)
 (*val intersection : nonlinear_constraint list -> nonlinear_constraint*)
+val true_nonlinear_constraint : nonlinear_constraint
+val false_nonlinear_constraint : nonlinear_constraint
 
 val is_linear_nonlinear_constraint : nonlinear_constraint -> bool
 

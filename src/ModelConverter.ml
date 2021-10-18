@@ -999,11 +999,11 @@ let nonlinear_constraint_of_nonlinear_convex_predicate variable_infos convex_pre
 
 
         match nonlinear_inequalities with
-        | [] -> NonlinearConstraint.True_nonlinear_constraint
+        | [] -> NonlinearConstraint.true_nonlinear_constraint
         | _ -> NonlinearConstraint.Nonlinear_constraint nonlinear_inequalities
         (* Stop if any false constraint is found *)
     )
-    with False_exception -> NonlinearConstraint.False_nonlinear_constraint
+    with False_exception -> NonlinearConstraint.false_nonlinear_constraint
 
 
 (************************************************************)
