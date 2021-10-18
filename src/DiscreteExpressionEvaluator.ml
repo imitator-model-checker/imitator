@@ -263,7 +263,7 @@ and get_array_value_at discrete_valuation array_expr index_expr =
 
     Array.get values int_index
 
-
+(*
 (* Wrap a scalar value to an array value in function of the modified index of an old value *)
 (* For example old_value[0] = 1 with old value = [0, 1] would wrap new_value into an array as new_value = [1, 1] *)
 (* This function is used to assign an element of an array at a given index *)
@@ -272,33 +272,71 @@ let pack_value variable_names discrete_valuation old_value new_value variable_ac
     let rec pack_value_rec old_value = function
         | Discrete_variable_index discrete_index -> new_value
         | Discrete_variable_access (inner_variable_access, index_expr) ->
+
             (* Compute index *)
             let index = Int32.to_int (eval_int_expression discrete_valuation index_expr) in
+            ImitatorUtilities.print_message Verbose_standard ("access to index: " ^ string_of_int index);
             (* Get inner array of discrete value of old value *)
             let old_array = DiscreteValue.array_value old_value in
-            (* Get or copy the old value array *)
-            (* Only copy when it's the 'root' array *)
-            (* If we don't make a copy we change a value of the array that is a reference of the old array *)
-            (* this change of state make issues, but *)
-            (* If it's not the root array we can keep the reference to the old array *)
-            let old_array_cpy = match inner_variable_access with
-            | Discrete_variable_index _ -> old_array
-            | Discrete_variable_access _ -> old_array
-            in
 
             (* Check bounds *)
-            if index >= Array.length old_array_cpy || index < 0 then (
+            if index >= Array.length old_array || index < 0 then (
                 let str_variable_access = DiscreteExpressions.string_of_discrete_variable_access variable_names variable_access in
                 raise (Out_of_bound ("Array index out of range: `" ^ str_variable_access ^ "`"))
             );
 
             (* Get element at given index *)
-            let unpacked_old_array = old_array_cpy.(index) in
+            let unpacked_old_array = old_array.(index) in
             (* Get packed new value *)
             let packed_new_value = pack_value_rec unpacked_old_array inner_variable_access in
             (**)
-            old_array_cpy.(index) <- packed_new_value;
+            old_array.(index) <- packed_new_value;
             (**)
-            Array_value old_array_cpy
+            Array_value old_array
     in
     pack_value_rec old_value variable_access
+*)
+
+
+(* Wrap a scalar value to an array value in function of the modified index of an old value *)
+(* For example old_value[0] = 1 with old value = [0, 1] would wrap new_value into an array as new_value = [1, 1] *)
+(* This function is used to assign an element of an array at a given index *)
+(* a = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]] *)
+(* a[1][1][0] = 0 *)
+(* new_value = [[[1, 2], [3, 4]], [[5, 6], [0, 8]]] *)
+(* a[1] = [[5, 6], [7, 8]] *)
+(* a[1][1] = [7, 8] *)
+(* a[1][1][0] = 7 *)
+
+let pack_value variable_names discrete_valuation old_value new_value variable_access =
+
+    let rec pack_value_rec = function
+        | Discrete_variable_index discrete_index -> old_value, [||], None
+        | Discrete_variable_access (inner_variable_access, index_expr) ->
+
+            let old_value, _, _ = pack_value_rec inner_variable_access in
+
+            (* Compute index *)
+            let index = Int32.to_int (eval_int_expression discrete_valuation index_expr) in
+(*            ImitatorUtilities.print_message Verbose_standard ("access index: " ^ string_of_int index ^ "for " ^ DiscreteValue.string_of_value old_value);*)
+            (* Get inner array of discrete value of old value *)
+            let old_array = DiscreteValue.array_value old_value in
+
+            (* Check bounds *)
+            if index >= Array.length old_array || index < 0 then (
+                let str_variable_access = DiscreteExpressions.string_of_discrete_variable_access variable_names variable_access in
+                raise (Out_of_bound ("Array index out of range: `" ^ str_variable_access ^ "`"))
+            );
+
+            (* Get element at given index *)
+            let unpacked_old_array = old_array.(index) in
+(*            ImitatorUtilities.print_message Verbose_standard ("unpacked old array: " ^ DiscreteValue.string_of_value unpacked_old_array);*)
+            unpacked_old_array, old_array, Some index
+    in
+    let unpacked_old_array, old_array, some_index = pack_value_rec variable_access in
+    match some_index with
+    | Some index ->
+        old_array.(index) <- new_value;
+(*        ImitatorUtilities.print_message Verbose_standard ("packed new value is: " ^ DiscreteValue.string_of_value old_value);*)
+        old_value
+    | None -> new_value

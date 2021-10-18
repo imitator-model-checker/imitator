@@ -3000,26 +3000,26 @@ Error                                   : invalid model
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'array-statespace.states' , 'content' : """
-/************************************************************/
-INITIAL
-STATE 0:
-P: s0, r = 0, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 4]], [[5, 1], [7, 4]]], uninitialized_nested = [[0, 0, 0], [0, 0, 0]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [0, 0, 0], my_bool_array = [False, False], my_int_array = [1, 2, 3, 4] ==> 
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  P: s0, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [0, 0, 0], my_bool_array = [False, False] ==> 
 &True
 
-Projection onto the parameters:
-True
+  Projection onto the parameters:
+  True
 
-/************************************************************/
-STATE 1:
-P: lend, r = 0, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 4]], [[5, 1], [0, 4]]], uninitialized_nested = [[0, 0, 0], [0, 0, 0]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [1, 0, 0], my_bool_array = [False, True], my_int_array = [1, 2, 3, 4] ==> 
+  /************************************************************/
+  STATE 1:
+  P: lend, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 0]], [[5, 6], [0, 0]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [1, 0, 0], my_bool_array = [False, True] ==> 
 &True
 
-Projection onto the parameters:
-True
+  Projection onto the parameters:
+  True
 
-/************************************************************/
-DESCRIPTION OF THE TRANSITIONS
-s_0 -> s_1
+  /************************************************************/
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1
 		"""
 			 } # end result file
 			,

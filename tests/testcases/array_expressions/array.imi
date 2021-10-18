@@ -15,10 +15,10 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created          : 2021/10/04
- * Last modified    : 2021/10/04
+ * Last modified    : 2021/10/18
  * Model version    : 1.0
  *
- * IMITATOR version : 3.1
+ * IMITATOR version : 3.2
  ************************************************************)
 
 var
@@ -64,7 +64,7 @@ automaton P
     & nested[0][0] = 1
     & my_bool_array[1] = (False)
     & my_rat_array[0] = 0
-    & super_nested[1][1][1] = 4
+    & super_nested[1][1][0] = 7
 
     (* Check function call on array element access *)
     & logxor(my_bin_array[0], my_bin_array[1]) = 0b1100
@@ -78,11 +78,12 @@ automaton P
 
     (* Update array elements *)
     my_rat_array[0] := 1,
+    super_nested[1][1] := [0, 0],
     super_nested[0][1][1] := 0
   }
   goto lend;
 
-  accepting loc lend : invariant my_bool_array = [False, True] (* Check invariant array equality *)
+  accepting loc lend : invariant my_bool_array = [False, True] & super_nested = [[[1, 2], [3, 0]], [[5, 6], [0, 0]]]  (* Check invariant array equality *)
 
 end
 
@@ -93,7 +94,7 @@ init := {
     my_int_array := [1,2,3,4],
     nested := [[1, 2], [3, 4]],
     my_int_array_to_update := [1, 0],
-    super_nested := [[[1,2], [3,4]], [[5, 1], [7, 4]]],
+    super_nested := [[[1, 2], [3, 4]], [[5, 6], [7, 8]]],
     my_bin_array := [0b1001, 0b0101]
   ;
 
