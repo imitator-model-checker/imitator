@@ -1513,7 +1513,8 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		(* Update discrete *)
 		List.iter (fun (discrete_variable_access, global_expression) ->
 
-            let discrete_valuation = Location.get_discrete_value source_location in
+(*            let discrete_valuation = Location.get_discrete_value source_location in*)
+            let discrete_valuation = Location.get_discrete_value location in
             let discrete_index = discrete_index_of_variable_access discrete_variable_access in
 
             let old_value = discrete_valuation discrete_index in

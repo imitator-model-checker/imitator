@@ -282,7 +282,7 @@ let pack_value variable_names discrete_valuation old_value new_value variable_ac
             (* this change of state make issues, but *)
             (* If it's not the root array we can keep the reference to the old array *)
             let old_array_cpy = match inner_variable_access with
-            | Discrete_variable_index _ -> Array.copy old_array
+            | Discrete_variable_index _ -> old_array
             | Discrete_variable_access _ -> old_array
             in
 
