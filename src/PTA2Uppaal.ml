@@ -65,7 +65,7 @@ let string_of_var_type_discrete_number = function
 let string_of_var_type_discrete = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ -> "binary_word"
+    | DiscreteValue.Var_type_discrete_binary_word _ -> "bool"
 
 (* Customized string of var_type *)
 let string_of_var_type = function
@@ -148,10 +148,28 @@ let string_of_discrete model =
 				(* Get the initial value *)
 				let inital_global_location  = model.initial_location in
 				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
-                let str_initial_value = DiscreteValue.customized_string_of_value uppaal_strings initial_value in
-                let str_type = string_of_var_type discrete_type in
+
+				let str_type = string_of_var_type discrete_type in
+
+				let str_initial_value =
+				    match discrete_type with
+				    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_binary_word length) ->
+				        let binary_word = DiscreteValue.binary_word_value initial_value in
+				        let bool_array = BinaryWord.to_array binary_word in
+				        let str_bool_array = Array.map (fun x -> if x then "true" else "false") bool_array in
+				        "{" ^ OCamlUtilities.string_of_array_of_string_with_sep "," str_bool_array ^ "}"
+				    | _ -> DiscreteValue.customized_string_of_value uppaal_strings initial_value
+                in
+
+                let format_discrete_name =
+                    match discrete_type with
+                    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_binary_word length) ->
+                        discrete_name ^ "[" ^ string_of_int length ^ "]"
+                    | _ -> discrete_name
+                in
+
 				(* Assign *)
-				"\n" ^ str_type ^ " " ^ discrete_name ^ " = " ^ str_initial_value ^ ";"
+				"\n" ^ str_type ^ " " ^ format_discrete_name ^ " = " ^ str_initial_value ^ ";"
 			) model.discrete
 			)
 		)
@@ -215,6 +233,47 @@ let string_of_declared_actions model =
 		)
 	)
 
+let string_of_shift_function direction length =
+
+    let str_length = string_of_int length in
+
+    let str_sign, function_way, str_compare =
+        match direction with
+        | false -> "+", "left", "&lt; " ^ str_length
+        | true -> "-", "right", "&gt;= 0"
+    in
+
+    "void shift_" ^ function_way ^ "_" ^ str_length ^ "(bool in[" ^ str_length ^ "], int n, bool &amp;out[" ^ str_length ^ "])\n"
+    ^ "{\n"
+    ^ "   for (i : int[0, " ^ string_of_int (length - 1) ^ "])\n"
+    ^ "   {\n"
+    ^ "     int offset = i " ^ str_sign ^ " n;\n"
+    ^ "     if (offset " ^ str_compare ^ ")\n"
+    ^ "        out[i] = in[offset];\n"
+    ^ "   }\n"
+    ^ "}\n\n"
+
+let string_of_shift_left_function = string_of_shift_function false
+let string_of_shift_right_function = string_of_shift_function true
+
+let string_of_builtin_functions model =
+
+    (* Get all length of declared binary word *)
+    let binary_word_lengths = List.filter_map (fun discrete_index ->
+        let discrete_type = model.type_of_variables discrete_index in
+        match discrete_type with
+        | DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_binary_word length -> Some length
+        | _ -> None
+    ) model.discrete
+    in
+    (* Remove duplicates *)
+    let binary_word_lengths_set = list_only_once binary_word_lengths in
+    (* Write a shift function for each length of declared binary word *)
+    List.fold_left (fun acc length ->
+        acc
+        ^ string_of_shift_left_function length
+        ^ string_of_shift_right_function length
+    ) "\n" binary_word_lengths_set
 
 
 (* Convert the initial variable declarations into a string *)
@@ -247,6 +306,9 @@ let string_of_declarations model actions_and_nb_automata =
 	(* Declare actions *)
 	^ (string_of_declared_actions model)
 
+    (* Declare built-in functions *)
+
+    ^ string_of_builtin_functions model
 
 	(*** TODO: get the initial value of clocks from the initial constraint and, if not 0, then issue a warning ***)
 
