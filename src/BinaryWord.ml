@@ -77,4 +77,4 @@ let (<=) = leq
 let (>) = g
 let (>=) = geq
 
-
+let to_array b = let _, a = b in a

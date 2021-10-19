@@ -41,7 +41,7 @@ let jani_boolean_strings : customized_boolean_string = {
 	l_operator    = "<";
 	le_operator   = "≤";
 	eq_operator   = "=";
-	neq_operator   = "<>";
+	neq_operator   = "≠";
 	ge_operator   = ">";
 	g_operator    = "≥";
 	not_operator  = "¬";
@@ -59,7 +59,7 @@ let jani_assignment = "="
 
 let jani_version = "1"
 let jani_type = "sha"
-let jani_features = "[\"derived-operators\"]"
+let jani_features = "[\"derived-operators\", \"datatypes\"]"
 
 
 (************************************************************)
@@ -82,6 +82,9 @@ let string_of_header model =
   ^  "\t\"name\": " ^ "\"" ^ options#model_file_name ^ "\"" ^ jani_separator ^ "\n"
   ^  "\t\"type\": " ^ "\"" ^ jani_type ^ "\"" ^ jani_separator ^ "\n"
   ^  "\t\"features\": " ^ jani_features ^ jani_separator ^ "\n"
+  ^ "\"datatypes\":[{\"name\":\"binary_word\",\"members\":[{\"name\":\"elements\", \"type\":{\"kind\":\"array\", \"base\":\"bool\"}}]}]" ^ jani_separator ^ "\n"
+
+
 
 (************************************************************
  Declarations
@@ -123,7 +126,7 @@ let string_of_clocks model =
           "\t\t{\n"
         ^ "\t\t\t\"name\": \"" ^ model.variable_names var ^ "\"" ^ jani_separator ^ "\n"
         ^ "\t\t\t\"type\": \""^ clocks_type ^"\"" ^ jani_separator ^ "\n"
-        ^ "\t\t\t\"initial_value\": 0" ^ "\n"
+        ^ "\t\t\t\"initial-value\": 0" ^ "\n"
         ^ "\t\t}"
       )
       list_of_variables
@@ -141,9 +144,9 @@ let string_of_var_type_discrete_number_for_jani = function
 
 (* String of discrete var type *)
 let string_of_var_type_discrete_for_jani = function
-    | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
-    | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ -> "binary_word" (* TODO benjamin type name is good for Jani ? *)
+    | DiscreteValue.Var_type_discrete_number x -> "\"" ^ string_of_var_type_discrete_number_for_jani x ^ "\""
+    | DiscreteValue.Var_type_discrete_bool -> "\"int\""
+    | DiscreteValue.Var_type_discrete_binary_word _ -> "{\"kind\": \"datatype\",\"ref\":\"binary_word\"}"
 
 (* Convert the initial discrete var declarations into a string *)
 let string_of_discrete model =
@@ -161,14 +164,23 @@ let string_of_discrete model =
 (*				let initial_value = Location.get_discrete_rational_value inital_global_location discrete_index in*)
 				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
 
-				let str_initial_value = DiscreteValue.string_of_value initial_value in
+                let str_initial_value =
+                match discrete_type with
+                | DiscreteValue.Var_type_discrete_binary_word _ ->
+                    let a = BinaryWord.to_array (DiscreteValue.binary_word_value initial_value) in
+                    let str_elements = Array.map (fun x -> if x then "true" else "false") a in
+                    let str_elements = OCamlUtilities.string_of_array_of_string_with_sep ", " str_elements in
+                    "{\"op\":\"dv\", \"type\":\"binary_word\", \"values\":[{\"member\":\"elements\", \"value\":{\"op\":\"av\",\"elements\":[" ^ str_elements ^ "]}}]}"
+
+                | _ -> DiscreteValue.string_of_value initial_value
+                in
+
 
 				(* Assign *)
           "\t\t{\n"
         ^ "\t\t\t\"name\": \"" ^ discrete_name ^ "\"" ^ jani_separator ^ "\n"
-        ^ "\t\t\t\"type\": \"" ^ str_discrete_type ^ "\"" ^ jani_separator ^ "\n"
-(*        ^ "\t\t\t\"initial_value\": " ^ NumConst.jani_string_of_numconst initial_value ^ "\n"*)
-        ^ "\t\t\t\"initial_value\": " ^ str_initial_value ^ "\n"
+        ^ "\t\t\t\"type\": " ^ str_discrete_type ^ jani_separator ^ "\n"
+        ^ "\t\t\t\"initial-value\": " ^ str_initial_value ^ "\n"
         ^ "\t\t}"
       ) model.discrete
 			)
@@ -236,13 +248,15 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 	| True_guard -> ""
 
 	(* False *)
-	| False_guard -> "\t\t\t\t\t\t\"exp\": {" ^ jani_boolean_strings.false_string ^ "}" ^ "\n"
+	| False_guard -> "\t\t\t\t\t\t{\"exp\":" ^ jani_boolean_strings.false_string ^ "}\n"
 
 	| Discrete_guard discrete_guard ->
 
         let list_discrete_guard = (NonlinearConstraint.customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_guard) in
-        let list_discrete_guard_without_true = if list_discrete_guard = [jani_boolean_strings.true_string] then [""] else list_discrete_guard in
-        string_of_strings_with_sep_and list_discrete_guard_without_true
+        if list_discrete_guard = [jani_boolean_strings.true_string] then
+            ""
+        else
+            "\t\t\t\t\t\t{\"exp\":" ^ string_of_strings_with_sep_and list_discrete_guard ^ "}\n"
 
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
@@ -259,9 +273,11 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 					in
 					let left = LinearConstraint.string_of_left_term_of_pxd_linear_inequality variable_names inequality in
 					let right = LinearConstraint.string_of_right_term_of_pxd_linear_inequality variable_names inequality in
-					  "\t\t\t\t\t\t\t{\"op\": \"" ^ op ^ "\"" ^ jani_separator ^ "\n"
+					  "\t\t\t\t\t\t\t{\"exp\":"
+					^ "\t\t\t\t\t\t\t{\"op\": \"" ^ op ^ "\"" ^ jani_separator ^ "\n"
 					^ "\t\t\t\t\t\t\t\"left\": " ^ left ^ "" ^ jani_separator ^ "\n"
 					^ "\t\t\t\t\t\t\t\"right\": " ^ right ^ "}"
+					^ "}\n"
 				) list_of_inequalities)
 			)
 
@@ -580,7 +596,7 @@ let string_of_automaton model actions_and_nb_automata automaton_index =
   	"\n\t\t{\n"
     ^ "\t\t\t\"name\": \"" ^ (model.automata_names automaton_index) ^ "\"" ^ jani_separator
   	^ "\n\t\t\t\"locations\": [\n" ^ (string_of_locations model actions_and_nb_automata automaton_index) ^ "\n\t\t\t]" ^ jani_separator
-  	^ "\n\t\t\t\"initial_locations\": [" ^ (string_of_initial_location model automaton_index) ^ "]" ^ jani_separator
+  	^ "\n\t\t\t\"initial-locations\": [" ^ (string_of_initial_location model automaton_index) ^ "]" ^ jani_separator
   	^ "\n\t\t\t\"edges\": [\n" ^ (string_of_transitions model actions_and_nb_automata automaton_index) ^ "\n\t\t\t]"
     ^ "\n\t\t}"
 

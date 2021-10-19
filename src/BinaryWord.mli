@@ -34,3 +34,5 @@ val (>=) : t -> t -> bool
 
 
 val hash : t -> int
+
+val to_array : t -> bool array
