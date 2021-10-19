@@ -577,3 +577,8 @@ let pow x e =
         | e when Int32.equal e Int32.one -> r
         | e -> pow_rec (Int32.mul x r) (Int32.sub e Int32.one)
     in pow_rec x e
+
+let rev_filter_map f l =
+    List.map f l |>
+    List.filter (fun x -> match x with | None -> false | Some _ -> true) |>
+    List.fold_left (fun acc x -> match x with | None -> acc | Some x -> x :: acc) []

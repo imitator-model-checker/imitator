@@ -259,7 +259,7 @@ let string_of_shift_right_function = string_of_shift_function true
 let string_of_builtin_functions model =
 
     (* Get all length of declared binary word *)
-    let binary_word_lengths = List.filter_map (fun discrete_index ->
+    let binary_word_lengths = OCamlUtilities.rev_filter_map (fun discrete_index ->
         let discrete_type = model.type_of_variables discrete_index in
         match discrete_type with
         | DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_binary_word length -> Some length

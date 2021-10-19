@@ -227,3 +227,6 @@ val write_to_file : string -> string -> unit
 
 (* pow of x by e *)
 val pow : Int32.t -> Int32.t -> Int32.t
+
+(* equivalent to List.filter_map of OCaml 4.08, but reverse the list *)
+val rev_filter_map : ('a -> 'b option) -> 'a list -> 'b list
