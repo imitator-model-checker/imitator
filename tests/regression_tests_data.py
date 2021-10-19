@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/10/07
+# Last modified     : 2021/10/19
 #************************************************************
 
 
@@ -2615,12 +2615,12 @@ when  z * x / y > x do {}  sync a1 goto lend;
 	,
 
 	#------------------------------------------------------------
-	# BEGIN : Test boolean expressions
+	# BEGIN : Test Boolean expressions
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test boolean True constant (computing)',
+		'purpose'    : 'Test Boolean True constant (computing)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2640,7 +2640,7 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test boolean False constant (computing)',
+		'purpose'    : 'Test Boolean False constant (computing)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2660,7 +2660,7 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test boolean negation (computing)',
+		'purpose'    : 'Test Boolean negation (computing)',
 		'tags':'boolean, computing, semantic',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-negation.imi', 'acceptingReachable.imiprop'],
@@ -2682,7 +2682,7 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean variable is correctly updated (computing)',
+		'purpose'    : 'Test that a Boolean variable is correctly updated (computing)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-discrete-var-update.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2702,7 +2702,7 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test boolean variable update conversion to Uppaal (printing)',
+		'purpose'    : 'Test Boolean variable update conversion to Uppaal (printing)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-discrete-var-update.imi'],
 		'options'    : '-imi2Uppaal',
@@ -2766,7 +2766,7 @@ system pta;
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean constant is initialized with consistant type',
+		'purpose'    : 'Test that a Boolean constant is initialized with consistant type',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-constant-init-type-error.imi'],
 		'options'    : '',
@@ -2784,7 +2784,7 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean variable is initialized with consistant type',
+		'purpose'    : 'Test that a Boolean variable is initialized with consistant type',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2808,7 +2808,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a boolean variable is updated with a consistent typed expression',
+		'purpose'    : 'Test that a Boolean variable is updated with a consistent typed expression',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2831,7 +2831,7 @@ Error                                   : invalid model
         ## Last modified            : 2021/05/31
         ## Test for IMITATOR version: 3.1.0
         ## Author 					: lbinria
-        'purpose'    : 'Test that "not" boolean operator is effective and correct (computing)',
+        'purpose'    : 'Test that "not" Boolean operator is effective and correct (computing)',
 		'tags':'boolean, computing, semantic',
         'input_files': ['boolean_expressions/not-operator.imi'],
         'options'    : '-mode statespace -states-description',
@@ -2863,7 +2863,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test a complex boolean comparison (computing)',
+		'purpose'    : 'Test a complex Boolean comparison (computing)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/complex-bool-comparison.imi'],
 		'options'    : '-mode statespace -states-description',
@@ -2931,7 +2931,7 @@ Error                                   : invalid model
 	,
 
 	#------------------------------------------------------------
-	# END : Test boolean expressions
+	# END : Test Boolean expressions
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
