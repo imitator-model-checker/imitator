@@ -367,6 +367,32 @@ L/U subclass                            : L-PTA
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test since               : 2021/10/19
+		# Last modified            : 2021/10/19
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Test discrete dependent updates',
+		'input_files': ['test-discrete-dependent-updates.imi'],
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'test-discrete-dependent-updates-statespace.states' , 'content' : """
+  pta: l1, i = 1, j = 10 ==> 
+		"""
+			} # end result file
+			,
+			{'file': 'test-discrete-dependent-updates-statespace.states' , 'content' : """
+  pta: l2, i = 0, j = 2 ==> 
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2019/07/09
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the detection of silent actions: no',

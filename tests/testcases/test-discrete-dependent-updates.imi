@@ -35,7 +35,7 @@ var
 synclabs: a;
 
 loc l1: invariant True
-	when True sync a do {i := j, j := i} goto l2;
+	when True sync a do {i := i - 1, j := i + 1} goto l2;
 
 loc l2: invariant True
 
@@ -59,7 +59,7 @@ init := {
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
 		i := 1,
-		j := 2,
+		j := 10,
 
     ;
 
