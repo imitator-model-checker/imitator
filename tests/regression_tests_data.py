@@ -337,6 +337,33 @@ L/U subclass                            : L-PTA
 
 	#,
 
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/10/19
+		# Last modified            : 2021/10/19
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Test discrete swap',
+		'input_files': ['test-swap-discrete.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'test-swap-discrete-statespace.states' , 'content' : """
+  pta: l1, i = 1, j = 2 ==> 
+		"""
+			} # end result file
+			,
+			{'file': 'test-swap-discrete-statespace.states' , 'content' : """
+  pta: l2, i = 2, j = 1 ==> 
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
