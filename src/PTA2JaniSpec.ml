@@ -42,7 +42,7 @@ let jani_boolean_strings : customized_boolean_string = {
 	l_operator    = "<";
 	le_operator   = "≤";
 	eq_operator   = "=";
-	neq_operator   = "<>";
+	neq_operator   = "≠";
 	ge_operator   = ">";
 	g_operator    = "≥";
 	not_operator  = "¬";
@@ -82,6 +82,8 @@ let json_struct str_properties =
 let json_array str_values =
     "[" ^ OCamlUtilities.string_of_array_of_string_with_sep jani_separator str_values ^ "]"
 
+let json_empty_array = "[]"
+
 let jani_operator_dv =
     json_property "op" (json_quoted "dv")
 
@@ -100,6 +102,11 @@ let jani_unary_operator str_operator str_expr =
     json_struct [|
         json_property "op" (json_quoted str_operator);
         json_property "exp" str_expr
+    |]
+
+let jani_expression str_expression =
+    json_struct [|
+        json_property "exp" str_expression
     |]
 
 let jani_array_value str_values =
@@ -298,7 +305,6 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
                 (string_of_factor customized_string discrete_factor)
 
 		| DF_expression expr ->
-			(*** TODO: simplify a bit? ***)
 			string_of_arithmetic_expression customized_string expr
 		| DF_rational_of_int expr ->
 		    customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
@@ -368,7 +374,6 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
                 (string_of_int_factor customized_string discrete_factor)
 
 		| Int_expression discrete_arithmetic_expression ->
-			(*** TODO: simplify a bit? ***)
 			string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression
         | Int_pow (expr, exp) as factor ->
             jani_binary_operator
@@ -465,10 +470,10 @@ let string_of_list_of_string_with_sep sep list =
 (* Add a header to the model *)
 let string_of_header model =
     let options = Input.get_options () in
-    "\"jani-version\": " ^ jani_version ^ jani_separator ^ ""
-    ^  "\"name\": " ^ "\"" ^ options#model_file_name ^ "\"" ^ jani_separator ^ ""
-    ^  "\"type\": " ^ "\"" ^ jani_type ^ "\"" ^ jani_separator ^ ""
-    ^  "\"features\": " ^ jani_features ^ jani_separator ^ ""
+    json_property "jani-version" jani_version ^ jani_separator
+    ^ json_property "name" (json_quoted options#model_file_name) ^ jani_separator
+    ^ json_property "type" (json_quoted jani_type) ^ jani_separator
+    ^ json_property "features" jani_features ^ jani_separator
 
 (************************************************************
  Declarations
@@ -549,9 +554,17 @@ let string_of_var_type_discrete_number_for_jani = function
 let rec string_of_var_type_discrete_for_jani = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
     | DiscreteValue.Var_type_discrete_bool -> json_quoted "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ -> "{\"kind\":\"datatype\",\"ref\":" ^ json_quoted "binary_word" ^ "}"
+    | DiscreteValue.Var_type_discrete_binary_word _ ->
+        json_struct [|
+            json_property "kind" (json_quoted "datatype");
+            json_property "ref" (json_quoted "binary_word")
+        |]
+
     | DiscreteValue.Var_type_discrete_array (discrete_type, _) ->
-        "{\"kind\":\"array\",\"base\":" ^ string_of_var_type_discrete_for_jani discrete_type ^ "}"
+        json_struct [|
+            json_property "kind" (json_quoted "array");
+            json_property "base" (string_of_var_type_discrete_for_jani discrete_type)
+        |]
 
 (* Convert the initial discrete var declarations into a string *)
 let string_of_discrete model =
@@ -585,11 +598,12 @@ let string_of_discrete model =
 				let str_initial_value = string_of_initial_value discrete_name initial_value initial_value_type in
 
 				(* Assign *)
-                "{"
-                ^ "\"name\": \"" ^ discrete_name ^ "\"" ^ jani_separator
-                ^ "\"type\":" ^ str_discrete_type ^ jani_separator
-                ^ "\"initial-value\": " ^ str_initial_value
-                ^ "}"
+                json_struct [|
+                    json_property "name" (json_quoted discrete_name);
+                    json_property "type" str_discrete_type;
+                    json_property "initial-value" str_initial_value
+                |]
+
             ) model.discrete
 			)
 		)
@@ -644,9 +658,10 @@ let rec string_of_strings_with_sep_and string_list =
 	| [] -> ""
 	| (elem::[]) -> elem
 	| (elem::q) ->
-        "{\"op\": \"" ^ jani_boolean_strings.and_operator ^ "\"" ^ jani_separator
-        ^ "\"left\": " ^ elem ^ jani_separator
-        ^ "\"right\": " ^ string_of_strings_with_sep_and q ^ "}"
+	    jani_binary_operator
+	        jani_boolean_strings.and_operator
+	        elem
+	        (string_of_strings_with_sep_and q)
 
 
 
@@ -656,14 +671,15 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 	| True_guard -> ""
 
 	(* False *)
-	| False_guard -> "{\"exp\":" ^ jani_boolean_strings.false_string ^ "}"
+	| False_guard ->
+	    jani_expression jani_boolean_strings.false_string
 
 	| Discrete_guard discrete_guard ->
 
         let list_discrete_guard = (customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_guard) in
         let list_discrete_guard_without_true = if list_discrete_guard = [jani_boolean_strings.true_string] then [""] else list_discrete_guard in
         let content = string_of_strings_with_sep_and list_discrete_guard_without_true in
-        if content = "" then "" else "{\"exp\":" ^ content ^ "}"
+        if content = "" then "" else jani_expression content
 
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
@@ -680,11 +696,8 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 					in
 					let left = LinearConstraint.string_of_left_term_of_pxd_linear_inequality variable_names inequality in
 					let right = LinearConstraint.string_of_right_term_of_pxd_linear_inequality variable_names inequality in
-					"{\"exp\":"
-                    ^ "{\"op\": \"" ^ op ^ "\"" ^ jani_separator
-					^ "\"left\": " ^ left ^ jani_separator
-					^ "\"right\": " ^ right ^ "}"
-					^ "}"
+                    jani_expression (jani_binary_operator op left right)
+
 				) list_of_inequalities)
 
 			)
@@ -694,20 +707,20 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 		let linear_constraint_string = (string_of_guard_or_invariant actions_and_nb_automata variable_names (Continuous_guard discrete_continuous_guard.continuous_guard)) in
 		let list = List.append non_linear_constraint_list [linear_constraint_string] in
 	    let content = string_of_strings_with_sep_and list in
-	    if content = "" then "" else "{\"exp\":" ^ content ^ "}"
+	    if content = "" then "" else jani_expression content
 
 
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model actions_and_nb_automata automaton_index location_index =
-  let invariant = string_of_guard_or_invariant actions_and_nb_automata model.variable_names (model.invariants automaton_index location_index) in
-	(* Invariant *)
-	"" ^ invariant
+    let invariant = string_of_guard_or_invariant actions_and_nb_automata model.variable_names (model.invariants automaton_index location_index) in
+    (* Invariant *)
+    invariant
 
 (* Convert the guard of an edge into a string *)
 let string_of_guard model actions_and_nb_automata model_variable_names transition_guard =
-  let guard = string_of_guard_or_invariant actions_and_nb_automata model.variable_names (transition_guard) in
-  (* Guard *)
-  "" ^ guard
+    let guard = string_of_guard_or_invariant actions_and_nb_automata model.variable_names (transition_guard) in
+    (* Guard *)
+    guard
 
 let string_of_clock_rate model actions_and_nb_automata automaton_index location_index =
 	let rec clock_is_1rate clock_index flow_list =
@@ -1075,7 +1088,7 @@ let string_of_model model =
     "{"
     (*Header*)
     ^ string_of_header model
-    ^ string_of_custom_datatype
+    ^ string_of_custom_datatype ^ jani_separator
     ^ string_of_actions model
     ^ (if variables = "" then "" else variables ^ jani_separator ^ "")
     ^ string_of_properties
