@@ -68,7 +68,7 @@ let string_of_var_type_discrete_number = function
 let rec string_of_var_type_discrete = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ -> "binary_word"
+    | DiscreteValue.Var_type_discrete_binary_word _ -> "bool"
     | DiscreteValue.Var_type_discrete_array (discrete_type, length) -> string_of_var_type_discrete discrete_type
 
 (* Customized string of var_type *)
@@ -77,27 +77,39 @@ let string_of_var_type = function
 	| DiscreteValue.Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
 	| DiscreteValue.Var_type_parameter -> "parameter"
 
+(* Get the UPPAAL string representation of a value according to it's IMITATOR type *)
+(* For example a literal array is translated from `[1,2,..,n]` to `{1,2,..,n}` *)
 let rec string_of_value = function
     | DiscreteValue.Number_value x
     | DiscreteValue.Rational_value x -> NumConst.string_of_numconst x
     | DiscreteValue.Bool_value x -> if x then uppaal_boolean_strings.true_string else uppaal_boolean_strings.false_string
     | DiscreteValue.Int_value x -> Int32.to_string x
-    | DiscreteValue.Binary_word_value b -> BinaryWord.string_of_binaryword b
+    | DiscreteValue.Binary_word_value b ->
+        let bool_array = BinaryWord.to_array b in
+        let str_array = OCamlUtilities.string_of_array_of_string_with_sep "," (Array.map (fun x -> if x then "true" else "false") bool_array) in
+        "{" ^ str_array ^ "}"
     | DiscreteValue.Array_value a ->
         let string_array = Array.map (fun x -> string_of_value x) a in
         "{" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "}"
 
+(* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
+(* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
 let rec string_of_discrete_name_from_var_type discrete_name = function
     | DiscreteValue.Var_type_discrete discrete_type -> string_of_discrete_name_from_var_type_discrete discrete_name discrete_type
     | _ -> discrete_name
 
+(* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
+(* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
 and string_of_discrete_name_from_var_type_discrete discrete_name = function
+    | DiscreteValue.Var_type_discrete_binary_word length ->
+        discrete_name ^ "[" ^ string_of_int length ^ "]"
     | DiscreteValue.Var_type_discrete_array (inner_type, length) ->
         string_of_discrete_name_from_var_type_discrete discrete_name inner_type
         ^ "["
         ^ string_of_int length
         ^ "]"
     | _ -> discrete_name
+
 
 (************************************************************)
 (** Header *)
@@ -245,6 +257,51 @@ let string_of_declared_actions model =
 		)
 	)
 
+(* Get UPPAAL string representation of IMITATOR shift built-in functions *)
+let string_of_shift_function direction length =
+
+    let str_length = string_of_int length in
+
+    let str_sign, function_way, str_compare =
+        match direction with
+        | false -> "+", "left", "&lt; " ^ str_length
+        | true -> "-", "right", "&gt;= 0"
+    in
+
+    "void shift_" ^ function_way ^ "_" ^ str_length ^ "(bool in[" ^ str_length ^ "], int n, bool &amp;out[" ^ str_length ^ "])\n"
+    ^ "{\n"
+    ^ "   for (i : int[0, " ^ string_of_int (length - 1) ^ "])\n"
+    ^ "   {\n"
+    ^ "     int offset = i " ^ str_sign ^ " n;\n"
+    ^ "     if (offset " ^ str_compare ^ ")\n"
+    ^ "        out[i] = in[offset];\n"
+    ^ "   }\n"
+    ^ "}\n\n"
+
+(* Get UPPAAL string representation of IMITATOR shift left built-in functions *)
+let string_of_shift_left_function = string_of_shift_function false
+(* Get UPPAAL string representation of IMITATOR shift right built-in functions *)
+let string_of_shift_right_function = string_of_shift_function true
+
+(* Get UPPAAL string representation of IMITATOR built-in functions *)
+let string_of_builtin_functions model =
+
+    (* Get all length of declared binary word *)
+    let binary_word_lengths = List.filter_map (fun discrete_index ->
+        let discrete_type = model.type_of_variables discrete_index in
+        match discrete_type with
+        | DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_binary_word length -> Some length
+        | _ -> None
+    ) model.discrete
+    in
+    (* Remove duplicates *)
+    let binary_word_lengths_set = list_only_once binary_word_lengths in
+    (* Write a shift function for each length of declared binary word *)
+    List.fold_left (fun acc length ->
+        acc
+        ^ string_of_shift_left_function length
+        ^ string_of_shift_right_function length
+    ) "\n" binary_word_lengths_set
 
 
 (* Convert the initial variable declarations into a string *)
@@ -277,6 +334,9 @@ let string_of_declarations model actions_and_nb_automata =
 	(* Declare actions *)
 	^ (string_of_declared_actions model)
 
+    (* Declare built-in functions *)
+
+    ^ string_of_builtin_functions model
 
 	(*** TODO: get the initial value of clocks from the initial constraint and, if not 0, then issue a warning ***)
 
