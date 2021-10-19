@@ -256,10 +256,14 @@ let string_of_shift_function direction length =
 let string_of_shift_left_function = string_of_shift_function false
 let string_of_shift_right_function = string_of_shift_function true
 
+module IntSet = Set.Make(Int)
+
 let string_of_builtin_functions model =
 
     (* Get all length of declared binary word *)
     let binary_word_lengths = List.filter_map (fun discrete_index ->
+        (* Get the name *)
+        let discrete_name = model.variable_names discrete_index in
         let discrete_type = model.type_of_variables discrete_index in
         match discrete_type with
         | DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_binary_word length -> Some length
@@ -267,13 +271,13 @@ let string_of_builtin_functions model =
     ) model.discrete
     in
     (* Remove duplicates *)
-    let binary_word_lengths_set = list_only_once binary_word_lengths in
+    let binary_word_lengths_set = IntSet.of_list binary_word_lengths in
     (* Write a shift function for each length of declared binary word *)
-    List.fold_left (fun acc length ->
+    IntSet.fold (fun length acc ->
         acc
         ^ string_of_shift_left_function length
         ^ string_of_shift_right_function length
-    ) "\n" binary_word_lengths_set
+    ) binary_word_lengths_set "\n"
 
 
 (* Convert the initial variable declarations into a string *)
