@@ -90,7 +90,7 @@ Error                                   : property file not found
 			} # end result file
 			,
 		] # end expectations
-	} # end test casearithmetic_expressions
+	} # end test case
 	#------------------------------------------------------------
 
 	,
@@ -2515,6 +2515,32 @@ END CONSTRAINT
 			{'file': 'unary-minus-linear-expression-regenerated.imi' , 'content' : """
 when  y + 7 > 2*x
 & x + y = 5 + i
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/10/20
+		## Last modified            : 2021/10/20
+		## Test for IMITATOR version: 3.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'tags': 'parsing, arithmetic, float',
+		'purpose'    : 'Test that literal floats are parsed as literal rationals',
+		'input_files': ['arithmetic_expressions/literal_float.imi'],
+		'options'    : '-no-var-autoremove -mode checksyntax',
+		'expectations' : [
+			{'file': 'literal_float.res' , 'content' : """
+ ************************************************************)
+------------------------------------------------------------
+Number of IPTAs                         : 1
 		"""
 			 } # end result file
 			,

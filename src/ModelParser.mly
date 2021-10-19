@@ -87,7 +87,7 @@ let unzip l = List.fold_left
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
-    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT    
+    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT
 
 
 %token EOF
@@ -116,7 +116,7 @@ main:
 		let declarations	= $1 in
 		let automata		= $2 in
 		let init_definition	= $3 in
-		
+
 		let main_model =
 		{
 			variable_declarations	= declarations;
@@ -124,7 +124,7 @@ main:
 			init_definition			= init_definition;
 		}
 		in
-		
+
 		let included_model = unzip !include_list in
 
 		(* Return the parsed model *)
@@ -536,7 +536,7 @@ function_call:
 
 number:
 	| integer { DiscreteValue.Number_value $1 }
-	| float { DiscreteValue.Number_value $1 }
+	| float { DiscreteValue.Rational_value $1 }
 	/*| integer OP_DIV pos_integer { ( DiscreteValue.Rational_value (NumConst.div $1 $3)) }*/
 ;
 
