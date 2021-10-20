@@ -51,6 +51,7 @@ let jani_boolean_strings : customized_boolean_string = {
 let jani_strings = {
     arithmetic_string = Constants.default_arithmetic_string;
     boolean_string = jani_boolean_strings;
+    binary_word_representation = Standard;
 }
 
 let jani_separator = ", "

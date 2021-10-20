@@ -45,6 +45,7 @@ let uppaal_strings : customized_boolean_string = {
 let all_uppaal_strings : customized_string = {
     arithmetic_string = default_arithmetic_string;
     boolean_string = uppaal_strings;
+    binary_word_representation = Int;
 }
 
 let uppaal_update_separator = ", "
@@ -65,7 +66,7 @@ let string_of_var_type_discrete_number = function
 let string_of_var_type_discrete = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ -> "bool"
+    | DiscreteValue.Var_type_discrete_binary_word _ -> "int"
 
 (* Customized string of var_type *)
 let string_of_var_type = function
@@ -153,23 +154,16 @@ let string_of_discrete model =
 
 				let str_initial_value =
 				    match discrete_type with
-				    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_binary_word length) ->
+				    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_binary_word _) ->
 				        let binary_word = DiscreteValue.binary_word_value initial_value in
-				        let bool_array = BinaryWord.to_array binary_word in
-				        let str_bool_array = Array.map (fun x -> if x then "true" else "false") bool_array in
-				        "{" ^ OCamlUtilities.string_of_array_of_string_with_sep "," str_bool_array ^ "}"
+				        let binary_word_int_value = BinaryWord.to_int binary_word in
+				        string_of_int binary_word_int_value
+
 				    | _ -> DiscreteValue.customized_string_of_value uppaal_strings initial_value
                 in
 
-                let format_discrete_name =
-                    match discrete_type with
-                    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_binary_word length) ->
-                        discrete_name ^ "[" ^ string_of_int length ^ "]"
-                    | _ -> discrete_name
-                in
-
 				(* Assign *)
-				"\n" ^ str_type ^ " " ^ format_discrete_name ^ " = " ^ str_initial_value ^ ";"
+				"\n" ^ str_type ^ " " ^ discrete_name ^ " = " ^ str_initial_value ^ ";"
 			) model.discrete
 			)
 		)
@@ -233,47 +227,36 @@ let string_of_declared_actions model =
 		)
 	)
 
-let string_of_shift_function direction length =
-
-    let str_length = string_of_int length in
-
-    let str_sign, function_way, str_compare =
-        match direction with
-        | false -> "+", "left", "&lt; " ^ str_length
-        | true -> "-", "right", "&gt;= 0"
-    in
-
-    "void shift_" ^ function_way ^ "_" ^ str_length ^ "(bool in[" ^ str_length ^ "], int n, bool &amp;out[" ^ str_length ^ "])\n"
+let string_of_shift_left_function =
+    "int shift_left(int b, int k, int l)\n"
     ^ "{\n"
-    ^ "   for (i : int[0, " ^ string_of_int (length - 1) ^ "])\n"
-    ^ "   {\n"
-    ^ "     int offset = i " ^ str_sign ^ " n;\n"
-    ^ "     if (offset " ^ str_compare ^ ")\n"
-    ^ "        out[i] = in[offset];\n"
-    ^ "   }\n"
+    ^ "    return (b &lt;&lt; k) - ((b &gt;&gt; l - k) &lt;&lt; l);\n"
     ^ "}\n\n"
 
-let string_of_shift_left_function = string_of_shift_function false
-let string_of_shift_right_function = string_of_shift_function true
+let string_of_shift_right_function =
+    "int shift_right(int b, int k, int l)\n"
+    ^ "{\n"
+    ^ "    return b &gt;&gt; k;\n"
+    ^ "}\n\n"
+
+let string_of_fill_left_function =
+    "int fill_left(int b, int k)\n"
+    ^ "{\n"
+    ^ "    return b &lt;&lt; k;\n"
+    ^ "}\n\n"
+
+let string_of_fill_right_function =
+    "int fill_right(int b, int k)\n"
+    ^ "{\n"
+    ^ "    return b &gt;&gt; k;\n"
+    ^ "}\n\n"
 
 let string_of_builtin_functions model =
-
-    (* Get all length of declared binary word *)
-    let binary_word_lengths = OCamlUtilities.rev_filter_map (fun discrete_index ->
-        let discrete_type = model.type_of_variables discrete_index in
-        match discrete_type with
-        | DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_binary_word length -> Some length
-        | _ -> None
-    ) model.discrete
-    in
-    (* Remove duplicates *)
-    let binary_word_lengths_set = list_only_once binary_word_lengths in
-    (* Write a shift function for each length of declared binary word *)
-    List.fold_left (fun acc length ->
-        acc
-        ^ string_of_shift_left_function length
-        ^ string_of_shift_right_function length
-    ) "\n" binary_word_lengths_set
+    "/* Functions declarations */\n\n"
+    ^ string_of_shift_left_function
+    ^ string_of_shift_right_function
+    ^ string_of_fill_left_function
+    ^ string_of_fill_right_function
 
 
 (* Convert the initial variable declarations into a string *)

@@ -574,8 +574,16 @@ let write_to_file file_name file_content =
 (* pow of x by e *)
 let pow x e =
     let rec pow_rec r = function
+        | e when Int32.equal e Int32.zero -> Int32.one
         | e when Int32.equal e Int32.one -> r
         | e -> pow_rec (Int32.mul x r) (Int32.sub e Int32.one)
+    in pow_rec x e
+
+let pow_int x e =
+    let rec pow_rec r = function
+        | e when e = 0 -> 1
+        | e when e = 1 -> r
+        | e -> pow_rec (x * r) (e - 1)
     in pow_rec x e
 
 let rev_filter_map f l =
