@@ -77,4 +77,17 @@ let (<=) = leq
 let (>) = g
 let (>=) = geq
 
-let to_array b = let _, a = b in a
+let to_array b = let _, array = b in array
+
+let to_int b =
+    let array = to_array b in
+    let length = (Array.length array) - 1 in
+
+    let m = Array.mapi (fun i x ->
+        if x then OCamlUtilities.pow_int 2 (length - i) else 0
+    ) array
+    in
+
+    Array.fold_left (fun acc i ->
+        acc + i
+    ) 0 m

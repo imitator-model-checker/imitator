@@ -53,6 +53,7 @@ let jani_strings = {
     arithmetic_string = Constants.default_arithmetic_string_without_whitespace;
     boolean_string = jani_boolean_strings;
     array_string = Constants.default_array_string;
+    binary_word_representation = Standard;
 }
 
 let jani_separator = ","

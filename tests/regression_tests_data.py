@@ -2761,10 +2761,31 @@ END CONSTRAINT
 		'options'    : '-imi2Uppaal',
 		'expectations' : [
 			{'file': 'bool-discrete-var-update-uppaal.xml' , 'content' : """
-/* Discrete variables declarations (WARNING: these variables can be rational-valued in IMITATOR, but they become integer-valued in Uppaal) */
 bool b = true;
 
 /* Action declarations */
+
+/* Functions declarations */
+
+int shift_left(int b, int k, int l)
+{
+    return (b &lt;&lt; k) - ((b &gt;&gt; l - k) &lt;&lt; l);
+}
+
+int shift_right(int b, int k, int l)
+{
+    return b &gt;&gt; k;
+}
+
+int fill_left(int b, int k)
+{
+    return b &lt;&lt; k;
+}
+
+int fill_right(int b, int k)
+{
+    return b &gt;&gt; k;
+}
 
 
 
@@ -2997,7 +3018,7 @@ Error                                   : invalid model
 		'purpose'    : 'Test general behavior of array expressions (computing)',
 		'tags':'array, computing, semantic',
 		'input_files': ['array_expressions/array.imi', 'acceptingReachable.imiprop'],
-		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'array-statespace.states' , 'content' : """
   /************************************************************/
@@ -16473,7 +16494,29 @@ int nb__a = 3;
 /* Action declarations */
 broadcast chan a; /* This action is used in 3 automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the correctness is ensured thanks to variable 'nb__a' */
 chan b;
-broadcast chan c;
+broadcast chan c;/* Functions declarations */
+
+int shift_left(int b, int k, int l)
+{
+    return (b &lt;&lt; k) - ((b &gt;&gt; l - k) &lt;&lt; l);
+}
+
+int shift_right(int b, int k, int l)
+{
+    return b &gt;&gt; k;
+}
+
+int fill_left(int b, int k)
+{
+    return b &lt;&lt; k;
+}
+
+int fill_right(int b, int k)
+{
+    return b &gt;&gt; k;
+}
+
+
 
 	/*------------------------------------------------------------*/
 	/* Initial constraint (not interpreted by Uppaal)             */
@@ -16483,16 +16526,16 @@ broadcast chan c;
 
 <template><name x="0" y="0">pta1</name><declaration>// No local declaration for automaton 'pta1'
 </declaration>
-
+ 
 <location id="id_pta0_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
-
+ 
 <location id="id_pta0_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
  <init ref="id_pta0_loc0"/>
-
+ 
 	<transition>
 		<source ref="id_pta0_loc0"/>
 		<target ref="id_pta0_loc0"/>
@@ -16505,23 +16548,23 @@ broadcast chan c;
 		<target ref="id_pta0_loc1"/>
 		<label kind="synchronisation" x="100" y="80">b!</label>
 		<label kind="guard" x="100" y="40"> x == 4</label>
-
+		
 	</transition>
  </template>
 
 
 <template><name x="1" y="1">pta2</name><declaration>// No local declaration for automaton 'pta2'
 </declaration>
-
+ 
 <location id="id_pta1_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
-
+ 
 <location id="id_pta1_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
  <init ref="id_pta1_loc0"/>
-
+ 
 	<transition>
 		<source ref="id_pta1_loc0"/>
 		<target ref="id_pta1_loc0"/>
@@ -16534,27 +16577,27 @@ broadcast chan c;
 		<target ref="id_pta1_loc1"/>
 		<label kind="synchronisation" x="100" y="80">b?</label>
 		<label kind="guard" x="100" y="40">true</label>
-
+		
 	</transition>
  </template>
 
 
 <template><name x="2" y="2">pta3</name><declaration>// No local declaration for automaton 'pta3'
 </declaration>
-
+ 
 <location id="id_pta2_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
-
+ 
 <location id="id_pta2_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
-
+ 
 <location id="id_pta2_loc2" x="400" y="0">
 	<name x="400" y="-40">l3</name>
 	<label kind="invariant" x="400" y="40">nb__a == 3</label></location>
  <init ref="id_pta2_loc0"/>
-
+ 
 	<transition>
 		<source ref="id_pta2_loc0"/>
 		<target ref="id_pta2_loc1"/>
