@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne, Dylan Marinho
  * Created           : 2009/12/08
- * Last modified     : 2021/10/18
+ * Last modified     : 2021/10/21
  *
  ************************************************************)
 
@@ -2283,29 +2283,53 @@ let merge2021 state_space queue =
                 | m :: tail -> begin
                     let sj,c' = m in
                     let global_location : Location.global_location = state.global_location in
-                    if are_mergeable c c'
+
+                    if not(List.mem sj merged_states)
                     then begin
-                        (*Statistics*)
-                        nb_merged#increment;
+                        if are_mergeable c c'
+                        then begin
+                            (*Statistics*)
+                            nb_merged#increment;
 
-                        (*Here, si = siUsj from the test / IRL c = cUc', transitions not performed etc.'*)
+                            (*Here, si = siUsj from the test / IRL c = cUc', transitions not performed etc.'*)
 
-                        merging_states si sj;
+                            merging_states si sj;
 
-                        (* Print some information *)
-                        print_message Verbose_high ("[Merge] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
+                            (* Print some information *)
+                            print_message Verbose_high ("[Merge] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
 
-                        let merged' = List.filter (fun (sk, _) -> sk <> sj) merged_states in
-                        sj :: merging merged' tail
-                    end
-                    else begin
-                            (* try to eat the rest of them *)
-                            merging merged_states tail
+                            let merged' = sj :: merged_states in
+                            sj :: merging merged' tail
                         end
+                        else begin
+                                (* try to eat the rest of them *)
+                                merging merged_states tail
+                            end
+                    end
+                    else
+                        merging merged_states tail
                 end
         end
         in
-        merging candidates candidates
+        let merged = ref [] in
+        let result = ref [] in
+        let did_something = ref true in
+
+        while !did_something do
+            result := merging !merged candidates;
+            if !result <> []
+            then
+                begin
+                did_something := true;
+                merged := !merged @ !result;
+                end
+            else
+                begin
+                did_something := false;
+                end
+        done;
+
+        !merged
     in
 
     (* Iterate list of states and try to merge them in the state space *)
