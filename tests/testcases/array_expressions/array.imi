@@ -1,0 +1,101 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Quick test for array general behavior
+ * Description      : Quick test for array, array function, array access behaviors
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/10/04
+ * Last modified    : 2021/10/18
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.2
+ ************************************************************)
+
+var
+
+  (* Declare different array types *)
+  my_int_array : int array(4);
+  my_bool_array : bool array(2);
+  my_rat_array : rational array(3);
+  my_bin_array : binary(4) array(2);
+  k = 1 : int;
+  (* Constant array with size initialized with constant integer *)
+  my_const_array = [1, 2 + 2 + k] : int array(2);
+
+  (* Declare some nested arrays *)
+  nested : int array(2) array(2);
+  uninitialized_nested : int array(3) array(2);
+  super_nested : rational array(2) array(2) array(2);
+
+  my_int_array_to_update : int array(2);
+
+  i : int;
+  r : rational;
+  j = 10 : int;
+
+automaton P
+
+  loc s0: invariant True
+  when
+    (* Check array equality *)
+    & my_int_array_to_update = [1, 0]
+    & my_bool_array = [False, False]
+    & my_const_array = [1, 5]
+
+    & i = 1 - 1
+
+    (* Check nested array equality *)
+    & nested = [[1, 2], [3, 4]]
+    & [2, 1] > [1, 2]
+
+    (* Check array access equality *)
+    & my_int_array_to_update[1] = 0
+    & my_int_array_to_update[nested[0][0]] = 0
+    & nested[0][0] = 1
+    & my_bool_array[1] = (False)
+    & my_rat_array[0] = 0
+    & super_nested[1][1][0] = 7
+
+    (* Check function call on array element access *)
+    & logxor(my_bin_array[0], my_bin_array[1]) = 0b1100
+
+  do {
+
+    (* Update arrays *)
+    my_bool_array := [False, True],
+    my_int_array := [1,2,3,4],
+    my_int_array := [1,2,3,4], (* double update check behavior *)
+
+    (* Update array elements *)
+    my_rat_array[0] := 1,
+    super_nested[1][1] := [0, 0],
+    super_nested[0][1][1] := 0
+  }
+  goto lend;
+
+  accepting loc lend : invariant my_bool_array = [False, True] & super_nested = [[[1, 2], [3, 0]], [[5, 6], [0, 0]]]  (* Check invariant array equality *)
+
+end
+
+
+init := {
+  discrete =
+    loc[P]:=s0,
+    my_int_array := [1,2,3,4],
+    nested := [[1, 2], [3, 4]],
+    my_int_array_to_update := [1, 0],
+    super_nested := [[[1, 2], [3, 4]], [[5, 6], [7, 8]]],
+    my_bin_array := [0b1001, 0b0101]
+  ;
+
+}

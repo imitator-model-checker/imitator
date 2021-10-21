@@ -1,1 +1,13 @@
-property := #synth EF(loc[P] = lend & i = 1 & b & j = 0 & b = True & w = 0b0001)
+property := #synth EF(
+  loc[P] = lend
+  & i = 1
+  & b
+  & j = 0
+  & b = True
+  & w = 0b0001
+  & int_array = [1, 2, 3]
+  & int_array[0] = 1
+  & int_array[1] = 2
+  & int_array[2] = 3
+  & nested_array[1][1] = 4
+)

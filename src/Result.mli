@@ -20,6 +20,7 @@
 (************************************************************)
 type error_type =
 	| Division_by_zero				of string
+	| Out_of_bound
 
 	| ModelFileNotFound_error
 	| PropertyFileNotFound_error

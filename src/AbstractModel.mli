@@ -75,11 +75,11 @@ type clock_updates =
 	| Updates of (clock_update * LinearConstraint.pxd_linear_term) list
 
 
+
+
 (** update: variable_index := linear_term *)
-
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
-
-type discrete_update = discrete_index * DiscreteExpressions.global_expression
+type discrete_update = DiscreteExpressions.discrete_variable_access * DiscreteExpressions.global_expression
 
 
 

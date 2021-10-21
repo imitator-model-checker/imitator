@@ -2787,10 +2787,31 @@ END CONSTRAINT
 		'options'    : '-imi2Uppaal',
 		'expectations' : [
 			{'file': 'bool-discrete-var-update-uppaal.xml' , 'content' : """
-/* Discrete variables declarations (WARNING: these variables can be rational-valued in IMITATOR, but they become integer-valued in Uppaal) */
 bool b = true;
 
 /* Action declarations */
+
+/* Functions declarations */
+
+int shift_left(int b, int k, int l)
+{
+    return (b &lt;&lt; k) - ((b &gt;&gt; l - k) &lt;&lt; l);
+}
+
+int shift_right(int b, int k, int l)
+{
+    return b &gt;&gt; k;
+}
+
+int fill_left(int b, int k)
+{
+    return b &lt;&lt; k;
+}
+
+int fill_right(int b, int k)
+{
+    return b &gt;&gt; k;
+}
 
 
 
@@ -2813,19 +2834,19 @@ bool b = true;
  
 <location id="id_pta0_loc2" x="400" y="0">
 	<name x="400" y="-40">lend</name>
-	<label kind="invariant" x="400" y="40"> b</label></location>
+	<label kind="invariant" x="400" y="40">b</label></location>
  <init ref="id_pta0_loc0"/>
  
 	<transition>
 		<source ref="id_pta0_loc0"/>
 		<target ref="id_pta0_loc1"/>
-		<label kind="guard" x="100" y="40"> b</label>
+		<label kind="guard" x="100" y="40">b</label>
 		<label kind="assignment" x="100" y="-40">b = false</label>
 	</transition>
 	<transition>
 		<source ref="id_pta0_loc1"/>
 		<target ref="id_pta0_loc2"/>
-		<label kind="guard" x="300" y="40"> (! (b))</label>
+		<label kind="guard" x="300" y="40">(! (b))</label>
 		<label kind="assignment" x="300" y="-40">b = 1 &lt; 2</label>
 	</transition>
  </template>
@@ -3011,6 +3032,71 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	# END : Test Boolean expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test array expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		'author': 'lbinria',
+		'purpose'    : 'Test general behavior of array expressions (computing)',
+		'tags':'array, computing, semantic',
+		'input_files': ['array_expressions/array.imi', 'acceptingReachable.imiprop'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'array-statespace.states' , 'content' : """
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  P: s0, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [0, 0, 0], my_bool_array = [False, False] ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  P: lend, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 0]], [[5, 6], [0, 0]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [1, 0, 0], my_bool_array = [False, True] ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+    #------------------------------------------------------------
+    {
+        'author': 'lbinria',
+        'purpose'    : 'Test that accessing an out of bound index raise a controlled error',
+        'tags':'array, semantic, error',
+        'input_files': ['array_expressions/array_out_of_bound_error.imi'],
+        'options'    : '-mode statespace -states-description',
+        'expectations' : [
+            {'file': 'array_out_of_bound_error.res' , 'content' : """
+Error                                   : index out of range
+		"""
+             } # end result file
+            ,
+        ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+	#------------------------------------------------------------
+	# END : Test array expressions
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
@@ -3814,7 +3900,7 @@ Error                                   : invalid model
 		'author': 'lbinria',
 		'purpose'    : 'Test that properties support type checking',
 		'input_files': ['type_checking/typed-property.imi', 'type_checking/typed-property.imiprop'],
-		'tags':'type checking',
+		'tags':'type checking, property',
 		'options'    : '',
 		'expectations' : [
 			{'file': 'typed-property.res' , 'content' : """
@@ -16434,7 +16520,29 @@ int nb__a = 3;
 /* Action declarations */
 broadcast chan a; /* This action is used in 3 automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the correctness is ensured thanks to variable 'nb__a' */
 chan b;
-broadcast chan c;
+broadcast chan c;/* Functions declarations */
+
+int shift_left(int b, int k, int l)
+{
+    return (b &lt;&lt; k) - ((b &gt;&gt; l - k) &lt;&lt; l);
+}
+
+int shift_right(int b, int k, int l)
+{
+    return b &gt;&gt; k;
+}
+
+int fill_left(int b, int k)
+{
+    return b &lt;&lt; k;
+}
+
+int fill_right(int b, int k)
+{
+    return b &gt;&gt; k;
+}
+
+
 
 	/*------------------------------------------------------------*/
 	/* Initial constraint (not interpreted by Uppaal)             */
@@ -16444,16 +16552,16 @@ broadcast chan c;
 
 <template><name x="0" y="0">pta1</name><declaration>// No local declaration for automaton 'pta1'
 </declaration>
-
+ 
 <location id="id_pta0_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
-
+ 
 <location id="id_pta0_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
  <init ref="id_pta0_loc0"/>
-
+ 
 	<transition>
 		<source ref="id_pta0_loc0"/>
 		<target ref="id_pta0_loc0"/>
@@ -16466,23 +16574,23 @@ broadcast chan c;
 		<target ref="id_pta0_loc1"/>
 		<label kind="synchronisation" x="100" y="80">b!</label>
 		<label kind="guard" x="100" y="40"> x == 4</label>
-
+		
 	</transition>
  </template>
 
 
 <template><name x="1" y="1">pta2</name><declaration>// No local declaration for automaton 'pta2'
 </declaration>
-
+ 
 <location id="id_pta1_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
-
+ 
 <location id="id_pta1_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
  <init ref="id_pta1_loc0"/>
-
+ 
 	<transition>
 		<source ref="id_pta1_loc0"/>
 		<target ref="id_pta1_loc0"/>
@@ -16495,27 +16603,27 @@ broadcast chan c;
 		<target ref="id_pta1_loc1"/>
 		<label kind="synchronisation" x="100" y="80">b?</label>
 		<label kind="guard" x="100" y="40">true</label>
-
+		
 	</transition>
  </template>
 
 
 <template><name x="2" y="2">pta3</name><declaration>// No local declaration for automaton 'pta3'
 </declaration>
-
+ 
 <location id="id_pta2_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
-
+ 
 <location id="id_pta2_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
-
+ 
 <location id="id_pta2_loc2" x="400" y="0">
 	<name x="400" y="-40">l3</name>
 	<label kind="invariant" x="400" y="40">nb__a == 3</label></location>
  <init ref="id_pta2_loc0"/>
-
+ 
 	<transition>
 		<source ref="id_pta2_loc0"/>
 		<target ref="id_pta2_loc1"/>

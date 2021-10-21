@@ -53,6 +53,7 @@ def check_syntax(sandbox_dir):
 
         print("----------------------------------")
         # input('press key next')
+        count+=1
 
     print(str(len(error_models)) + "/" + str(count) + " syntax error(s)")
     print("list of models with errors:")

@@ -31,6 +31,7 @@ type var_type_discrete =
     | Var_type_discrete_bool
     | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_binary_word of int
+    | Var_type_discrete_array of var_type_discrete * int
 
 (* Type of variable in declarations *)
 type var_type =
@@ -51,6 +52,7 @@ type discrete_value =
     | Int_value of Int32.t
     | Bool_value of bool
     | Binary_word_value of BinaryWord.t
+    | Array_value of discrete_value array
 
 (************************************************************)
 (** Type functions  *)
@@ -71,15 +73,18 @@ val string_of_var_type_constructor : var_type -> string
 
 val is_discrete_type : var_type -> bool
 (* Check if a Var_type is a Var_type_number *)
-val is_number_type : var_type -> bool
 val is_discrete_type_number_type : var_type_discrete -> bool
 
 (* Check if discrete type is a Var_type_unknown_number *)
 val is_discrete_type_unknown_number_type : var_type_discrete -> bool
 (* Check if discrete type is not a Var_type_unknown_number *)
 val is_discrete_type_known_number_type : var_type_discrete -> bool
-(* Check if discrete type is a Var_type_rational *)
-val is_rational_type : var_type -> bool
+
+val is_discrete_type_holding_number_type : var_type_discrete -> bool
+val is_discrete_type_holding_unknown_number_type : var_type_discrete -> bool
+val is_discrete_type_holding_known_number_type : var_type_discrete -> bool
+
+val extract_inner_type : var_type_discrete -> var_type_discrete
 
 (* Check if discrete type is a Var_type_discrete_rational *)
 val is_discrete_type_rational_type : var_type_discrete -> bool
@@ -119,7 +124,7 @@ val discrete_type_of_var_type : var_type -> var_type_discrete
 (************************************************************)
 
 (** String of values  **)
-val customized_string_of_value : customized_boolean_string -> discrete_value -> string
+val customized_string_of_value : customized_string -> discrete_value -> string
 val string_of_value : discrete_value -> string
 
 (** Check value type  **)
@@ -168,6 +173,8 @@ val int_value : discrete_value -> Int32.t
 val bool_value : discrete_value -> bool
 (* Get binary word value of discrete value *)
 val binary_word_value : discrete_value -> BinaryWord.t
+(* Get array value of discrete value *)
+val array_value : discrete_value -> discrete_value array
 
 (* Convert any discrete value to NumConst.t value, if possible *)
 val to_numconst_value : discrete_value -> NumConst.t
@@ -234,6 +241,8 @@ val g : discrete_value -> discrete_value -> discrete_value
 (* Comparison, greater or equal between two discrete value *)
 val geq : discrete_value -> discrete_value -> discrete_value
 
+val access : int -> discrete_value -> discrete_value
+
 val shift_left : int -> discrete_value -> discrete_value
 val shift_right : int -> discrete_value -> discrete_value
 val fill_left : int -> discrete_value -> discrete_value
@@ -242,3 +251,4 @@ val log_and : discrete_value -> discrete_value -> discrete_value
 val log_or : discrete_value -> discrete_value -> discrete_value
 val log_xor : discrete_value -> discrete_value -> discrete_value
 val log_not : discrete_value -> discrete_value
+val array_concat : discrete_value -> discrete_value -> discrete_value

@@ -52,7 +52,7 @@ val string_of_concrete_state : AbstractModel.abstract_model -> State.concrete_st
 (************************************************************)
 (** Convert a guard into a string *)
 val string_of_guard : (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
-val customized_string_of_guard : Constants.customized_boolean_string -> (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
+val customized_string_of_guard : Constants.customized_string -> (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
 
 (************************************************************)
 (** Transitions *)
@@ -100,6 +100,8 @@ val string_of_conditional_updates_template : AbstractModel.abstract_model -> con
 (** Convert conditional updates into a string *)
 val string_of_conditional_updates : AbstractModel.abstract_model -> conditional_update list -> string
 
+val customized_string_of_variable_access : Constants.customized_string -> AbstractModel.abstract_model -> discrete_variable_access -> string
+val string_of_variable_access : AbstractModel.abstract_model -> discrete_variable_access -> string
 
 (************************************************************)
 (** Points and hyperrectangles *)

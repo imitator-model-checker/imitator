@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/03/01
- * Last modified     : 2020/12/15
+ * Last modified     : 2021/10/07
  *
  ************************************************************)
 
@@ -27,7 +27,7 @@ open Result
 (** Customized values for constraint conversion *)
 (************************************************************)
 
-let uppaal_strings : customized_boolean_string = {
+let uppaal_boolean_strings : customized_boolean_string = {
 	true_string     = "true";
 	false_string    = "false";
 	and_operator    = " &amp;&amp; ";
@@ -42,9 +42,12 @@ let uppaal_strings : customized_boolean_string = {
 	in_operator     = " in ";
 }
 
+let uppaal_array_strings = { Constants.default_array_string with array_literal_delimiter = "{", "}" }
+
 let all_uppaal_strings : customized_string = {
     arithmetic_string = default_arithmetic_string;
-    boolean_string = uppaal_strings;
+    boolean_string = uppaal_boolean_strings;
+    array_string = uppaal_array_strings;
     binary_word_representation = Int;
 }
 
@@ -63,16 +66,50 @@ let string_of_var_type_discrete_number = function
     | DiscreteValue.Var_type_discrete_int -> "int"
 
 (* Customized string of discrete var type *)
-let string_of_var_type_discrete = function
+let rec string_of_var_type_discrete = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | DiscreteValue.Var_type_discrete_bool -> "bool"
     | DiscreteValue.Var_type_discrete_binary_word _ -> "int"
+    | DiscreteValue.Var_type_discrete_array (discrete_type, length) -> string_of_var_type_discrete discrete_type
 
 (* Customized string of var_type *)
 let string_of_var_type = function
 	| DiscreteValue.Var_type_clock -> "clock"
 	| DiscreteValue.Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
 	| DiscreteValue.Var_type_parameter -> "parameter"
+
+(* Get the UPPAAL string representation of a value according to it's IMITATOR type *)
+(* For example a literal array is translated from `[1,2,..,n]` to `{1,2,..,n}` *)
+let rec string_of_value = function
+    | DiscreteValue.Number_value x
+    | DiscreteValue.Rational_value x -> NumConst.string_of_numconst x
+    | DiscreteValue.Bool_value x -> if x then uppaal_boolean_strings.true_string else uppaal_boolean_strings.false_string
+    | DiscreteValue.Int_value x -> Int32.to_string x
+    | DiscreteValue.Binary_word_value binary_word ->
+        let binary_word_int_value = BinaryWord.to_int binary_word in
+        string_of_int binary_word_int_value
+    | DiscreteValue.Array_value a ->
+        let string_array = Array.map (fun x -> string_of_value x) a in
+        "{" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "}"
+
+(* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
+(* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
+let rec string_of_discrete_name_from_var_type discrete_name = function
+    | DiscreteValue.Var_type_discrete discrete_type -> string_of_discrete_name_from_var_type_discrete discrete_name discrete_type
+    | _ -> discrete_name
+
+(* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
+(* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
+and string_of_discrete_name_from_var_type_discrete discrete_name = function
+    | DiscreteValue.Var_type_discrete_binary_word length ->
+        discrete_name ^ "[" ^ string_of_int length ^ "]"
+    | DiscreteValue.Var_type_discrete_array (inner_type, length) ->
+        string_of_discrete_name_from_var_type_discrete discrete_name inner_type
+        ^ "["
+        ^ string_of_int length
+        ^ "]"
+    | _ -> discrete_name
+
 
 (************************************************************)
 (** Header *)
@@ -147,23 +184,16 @@ let string_of_discrete model =
 				let discrete_name = model.variable_names discrete_index in
                 let discrete_type = model.type_of_variables discrete_index in
 				(* Get the initial value *)
-				let inital_global_location  = model.initial_location in
-				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
+				let initial_global_location  = model.initial_location in
+				let initial_value = Location.get_discrete_value initial_global_location discrete_index in
 
-				let str_type = string_of_var_type discrete_type in
-
-				let str_initial_value =
-				    match discrete_type with
-				    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_binary_word _) ->
-				        let binary_word = DiscreteValue.binary_word_value initial_value in
-				        let binary_word_int_value = BinaryWord.to_int binary_word in
-				        string_of_int binary_word_int_value
-
-				    | _ -> DiscreteValue.customized_string_of_value uppaal_strings initial_value
-                in
+                let str_initial_value = string_of_value initial_value in
+                let str_type = string_of_var_type discrete_type in
+                (* case of arrays: format name with length of array *)
+                let format_discrete_name = string_of_discrete_name_from_var_type discrete_name discrete_type in
 
 				(* Assign *)
-				"\n" ^ str_type ^ " " ^ discrete_name ^ " = " ^ str_initial_value ^ ";"
+				"\n" ^ str_type ^ " " ^ format_discrete_name ^ " = " ^ str_initial_value ^ ";"
 			) model.discrete
 			)
 		)
@@ -301,7 +331,7 @@ let string_of_declarations model actions_and_nb_automata =
 	^ "\n" ^ "\t/*------------------------------------------------------------*/"
 	^ "\n" ^ "\t/* Initial constraint (not interpreted by Uppaal)             */"
 	^ "\n" ^ "\t/*------------------------------------------------------------*/"
-	^ "\n\t /* " ^ (LinearConstraint.customized_string_of_px_linear_constraint uppaal_strings model.variable_names model.initial_constraint) ^ " */"
+	^ "\n\t /* " ^ (LinearConstraint.customized_string_of_px_linear_constraint uppaal_boolean_strings model.variable_names model.initial_constraint) ^ " */"
 
 
 	(* Footer *)
@@ -332,23 +362,23 @@ let string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_c
 
 	| Discrete_guard discrete_guard ->
 
-        let str_discrete_guard = (NonlinearConstraint.customized_string_of_nonlinear_constraint uppaal_strings variable_names discrete_guard) in
+        let str_discrete_guard = NonlinearConstraint.customized_string_of_nonlinear_constraint all_uppaal_strings variable_names discrete_guard in
         let str_discrete_guard_without_true = if kind = "invariant" && str_discrete_guard = "true" then "" else str_discrete_guard in
         str_discrete_guard_without_true
 
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
 		if LinearConstraint.pxd_is_true continuous_guard then "" else
-		(LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names continuous_guard)
+		(LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_boolean_strings variable_names continuous_guard)
 
 	| Discrete_continuous_guard discrete_continuous_guard ->
 	    let content = (
-            (NonlinearConstraint.customized_string_of_nonlinear_constraint uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
+            (NonlinearConstraint.customized_string_of_nonlinear_constraint all_uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
             ^
             (
                 (* Remove true guard *)
                 if LinearConstraint.pxd_is_true discrete_continuous_guard.continuous_guard then ""
-                else uppaal_strings.and_operator ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names discrete_continuous_guard.continuous_guard)
+                else uppaal_boolean_strings.and_operator ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_boolean_strings variable_names discrete_continuous_guard.continuous_guard)
             )
         ) in
         content
@@ -393,9 +423,9 @@ let string_of_invariant model actions_and_nb_automata automaton_index location_i
 	(*** NOTE: of course, it would be better to only add these invariants to the locations target of such an action ***)
 	(*** TODO: simplify some day ***)
 	let strong_broadcast_invariant =
-		(string_of_list_of_string_with_sep uppaal_strings.and_operator (List.map (fun (action_index , nb_automata) ->
+		(string_of_list_of_string_with_sep uppaal_boolean_strings.and_operator (List.map (fun (action_index , nb_automata) ->
 			let discrete_name = string_of_nb_strongbroadcast model action_index in
-			discrete_name ^ uppaal_strings.eq_operator ^ (string_of_int nb_automata)
+			discrete_name ^ uppaal_boolean_strings.eq_operator ^ (string_of_int nb_automata)
 		) actions_and_nb_automata))
 	in
 
@@ -413,7 +443,7 @@ let string_of_invariant model actions_and_nb_automata automaton_index location_i
 	let invariant_and_strong_broadcast_invariant =
 		if invariant = "" then strong_broadcast_invariant
 		else if actions_and_nb_automata = [] then invariant
-		else invariant ^ uppaal_strings.and_operator ^ strong_broadcast_invariant
+		else invariant ^ uppaal_boolean_strings.and_operator ^ strong_broadcast_invariant
 	in
 	(* Invariant *)
 	"\n\t" ^ get_uppaal_label_tag_string "invariant" x_coord_str y_coord_str invariant_and_strong_broadcast_invariant
@@ -438,12 +468,12 @@ let string_of_clock_updates model = function
 
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_index, global_expression) ->
-		(* Convert the variable name *)
-		(model.variable_names variable_index)
+	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_access, global_expression) ->
+        (* Convert the variable access to string *)
+		ModelPrinter.string_of_variable_access model variable_access
 		^ uppaal_assignment
 		(* Convert the arithmetic_expression *)
-		^ (DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names global_expression)
+		^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names global_expression
 	) updates)
 
 
@@ -658,8 +688,8 @@ let string_of_locations model actions_and_nb_automata automaton_index =
 (* Convert the initial location of an automaton *)
 let string_of_initial_location model automaton_index =
 	(* Get initial location *)
-	let inital_global_location  = model.initial_location in
-	let initial_location = Location.get_location inital_global_location automaton_index in
+	let initial_global_location  = model.initial_location in
+	let initial_location = Location.get_location initial_global_location automaton_index in
 	"<init ref=\"" ^ (id_of_location model automaton_index initial_location) ^ "\"/>"
 
 (* Convert an automaton into a string *)

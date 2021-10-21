@@ -191,7 +191,7 @@ let customized_string_of_guard customized_boolean_string variable_names = functi
 		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
 
 (** Convert a guard into a string *)
-let string_of_guard = customized_string_of_guard Constants.default_string
+let string_of_guard = customized_string_of_guard Constants.global_default_string
 (*
 let string_of_guard variable_names = function
 	| True_guard -> LinearConstraint.string_of_true
@@ -294,9 +294,18 @@ let string_of_clock_updates model clock_updates =
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_index, arithmetic_expression) ->
+
+    let rec string_of_discrete_variable_access = function
+        | Discrete_variable_index (variable_index) ->
+            model.variable_names variable_index
+        | Discrete_variable_access (variable_access, index_expr) ->
+            string_of_discrete_variable_access variable_access
+            ^ "[" ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names index_expr  ^ "]"
+    in
+
+	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_access, arithmetic_expression) ->
 		(* Convert the variable name *)
-		(model.variable_names variable_index)
+		string_of_discrete_variable_access variable_access
 		^ " := "
 		(* Convert the arithmetic_expression *)
 		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
@@ -507,6 +516,14 @@ let string_of_automata model =
 		List.map (fun automaton_index -> string_of_automaton model automaton_index
 	) model.automata)
 
+
+let rec customized_string_of_variable_access customized_string model = function
+    | Discrete_variable_index variable_index -> model.variable_names variable_index
+    | Discrete_variable_access (variable_access, index_expr) ->
+        customized_string_of_variable_access customized_string model variable_access ^ "[" ^ DiscreteExpressions.customized_string_of_int_arithmetic_expression customized_string model.variable_names index_expr ^ "]"
+
+let string_of_variable_access = customized_string_of_variable_access Constants.global_default_string
+
 (* Convert initial state of locations to string *)
 let string_of_new_initial_locations ?indent_level:(i=1) model =
 	(*** WARNING: Do not print the observer ***)
@@ -634,16 +651,6 @@ let string_of_initial_state model =
     ^ "\n" ^ "\t;"
     ^ "\n"
 	^ "\n" ^ "}"
-
-(*(* Convert initial state to string *)
-(* Keep backward-compatibility between old init zone and new init zone *)
-let string_of_initial_state model =
-    (* If all variable are rational, we can print initial state as old model *)
-    if List.for_all (fun (var_type, _) -> DiscreteValue.is_rational_type var_type) model.discrete_names_by_type_group then
-        string_of_old_initial_state model
-    (* Else, we use the new init zone *)
-    else
-        string_of_initial_state model*)
 
 (************************************************************)
 (** Property *)
