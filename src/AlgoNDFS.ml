@@ -1225,6 +1225,10 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 					self#print_algo_message Verbose_low ("Current constraint: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint));
 				);
 
+				(* Display stats *)
+				self#print_stats;
+				
+				
 				current_depth <- current_depth + the_depth_step;
 				()
 			);
@@ -1310,15 +1314,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method check_termination_at_post_n = false
 
-
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
+	(** Print stats *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
-		self#print_algo_message_newline Verbose_standard (
-			"State space exploration completed " ^ (after_seconds ()) ^ "."
-		);
-
+	method private print_stats : unit =
 		let nb_states = StateSpace.nb_states state_space in
 		print_message Verbose_standard ("Number of computed states: " ^ (string_of_int nb_states));
 		print_message Verbose_standard ("Number of processed states: " ^ (string_of_int processed_blue));
@@ -1330,6 +1330,19 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		if (min_depth_found <> -1) then
 			print_message Verbose_standard ("Minimum depth at which a cycle was found: " ^ (string_of_int min_depth_found));
 		print_message Verbose_standard ("Maximal depth actually reached: " ^ (string_of_int max_depth_reached));
+		()
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Method packaging the result output by the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method compute_result =
+		self#print_algo_message_newline Verbose_standard (
+			"State space exploration completed " ^ (after_seconds ()) ^ "."
+		);
+		
+		(* Print stats *)
+		self#print_stats;
 
 		(* Get the termination status *)
 		let termination_status = match termination_status with
