@@ -9,7 +9,7 @@
  *
  * File contributors : Laure Petrucci, Jaco van de Pol, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2021/09/01
+ * Last modified     : 2021/10/21
  *
  ************************************************************)
 
@@ -1219,7 +1219,12 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 			total_processed_blue <- total_processed_blue + processed_blue;
 
 			if execute_again then(
-				ResultProcessor.process_result self#compute_result "Iterative deepening" None;
+(* 				ResultProcessor.process_result self#compute_result "Iterative deepening" None; *)
+				(* Print some information *)
+				if verbose_mode_greater Verbose_low then(
+					self#print_algo_message Verbose_low ("Current constraint: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint));
+				);
+
 				current_depth <- current_depth + the_depth_step;
 				()
 			);
