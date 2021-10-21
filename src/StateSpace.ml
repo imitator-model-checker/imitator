@@ -2028,18 +2028,20 @@ let merge_states_ulrich state_space merger_state_index merged =
 	(* Remove merged from hash table *)
 	print_message Verbose_high "Merging: update hash table";
 	let the_state = get_state state_space merger_state_index in
-	let h = location_hash_code the_state in
+	let l = the_state.global_location in
+	let li = new_location_index state_space l in
 	(* Get all states with that hash *)
-	let bucket = Hashtbl.find_all state_space.states_for_comparison h in
-	print_message Verbose_high ("Merging: got " ^ (string_of_int (List.length bucket)) ^ " states with hash " ^ (string_of_int h));
+
+	let bucket = Hashtbl.find_all state_space.states_for_comparison li in
+	print_message Verbose_high ("Merging: got " ^ (string_of_int (List.length bucket)) ^ " states with hash " ^ (string_of_int li));
 	(* Remove them all *)
-	while Hashtbl.mem state_space.states_for_comparison h do
-		Hashtbl.remove state_space.states_for_comparison h;
+	while Hashtbl.mem state_space.states_for_comparison li do
+		Hashtbl.remove state_space.states_for_comparison li;
 	done;
 	(* Add them back *)
 	List.iter (fun y ->
 		(* Only add if not to be merged *)
-		if not (List.mem y merged) then Hashtbl.add state_space.states_for_comparison h y;
+		if not (List.mem y merged) then Hashtbl.add state_space.states_for_comparison li y;
 	) bucket;
 
 	(* Remove merged from state table *)
@@ -2060,22 +2062,21 @@ let merge_states_ulrich state_space merger_state_index merged =
 
 (* Try to merge new states with existing ones. Returns list of merged states (ULRICH) *)
 let merge212 state_space new_states =
-
 	(* Get states sharing the same location and discrete values from hash_table, excluding s *)
 		let get_siblings state_space si =
-			let s = get_state state_space si in
-			let l = s.global_location in
-			let h = location_hash_code s in
-			let sibs = Hashtbl.find_all state_space.states_for_comparison h in
+
+		    let s = get_state state_space si in
+            let l = s.global_location in
+            let location_index = new_location_index state_space l in
+
+            let sibs = Hashtbl.find_all state_space.states_for_comparison location_index in
+
 			(* check for exact correspondence (=> hash collisions!), and exclude si *)
 			List.fold_left (fun siblings sj ->
 				if sj = si then siblings else begin
 					let state = get_state state_space sj in
-					let l', c' = state.global_location, state.px_constraint in
-					if (Location.location_equal l l') then
-						(sj, (l',c')) :: siblings
-					else
-						siblings
+					let c' = state.px_constraint in
+                    (sj, c') :: siblings
 				end
 			) [] sibs
 		in
@@ -2102,7 +2103,7 @@ let merge212 state_space new_states =
 				match rest_mc with
 					| [] -> [] (* here, we are really done *)
 					| m :: tail_mc -> begin
-						let sj, (_, c') = m in
+						let sj, c' = m in
 						if are_mergeable c c' then begin
 							(* Statistics *)
 							nb_merged#increment;
