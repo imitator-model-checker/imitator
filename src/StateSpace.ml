@@ -1569,7 +1569,7 @@ let merge_transitions state_space merger_index merged_index =
  			if target_index = merged_index
 			then
 			    begin
-                    print_message Verbose_standard ("Merge transitions: update target in transition " ^ (string_of_list_of_int combined_transition)
+                    print_message Verbose_high ("Merge transitions: update target in transition " ^ (string_of_list_of_int combined_transition)
                             ^ " (previous: " ^ string_of_int target_index ^ ", new: " ^ string_of_int merger_index ^ ")");
                     (combined_transition, merger_index) :: (update_target src tail merger_index merged_index)
                 end
@@ -1592,7 +1592,7 @@ let merge_transitions state_space merger_index merged_index =
     Hashtbl.remove state_space.transitions_table merged_index;
     List.iter (
         fun (combined_transition , target_state_index) ->
-            print_message Verbose_standard ("Merge transitions: update source in transition " ^ (string_of_list_of_int combined_transition)
+            print_message Verbose_high ("Merge transitions: update source in transition " ^ (string_of_list_of_int combined_transition)
                                         ^ " (previous: " ^ string_of_int merged_index ^ ", new: " ^ string_of_int merger_index ^ ")");
              add_transition state_space (merger_index, combined_transition, target_state_index)
     ) transitions_merged;
@@ -1600,11 +1600,11 @@ let merge_transitions state_space merger_index merged_index =
     (* If the state was the initial state: replace with the merger state_index *)
 	let init = get_initial_state_index state_space in
     if merged_index = init then(
-        print_message Verbose_standard ("The initial state in the reachability state_space has been merged with another one.");(*TODO: Verbose low*)
+        print_message Verbose_low ("The initial state in the reachability state_space has been merged with another one.");
         state_space.initial <- Some merger_index;
     );
 
-    print_message Verbose_standard ("Merging: remove state " ^ (string_of_int merged_index)); (*TODO: Verbose high*)
+    print_message Verbose_high ("Merging: remove state " ^ (string_of_int merged_index));
     (*Remove state from all_states and states_for_comparison*)
     Hashtbl.remove state_space.all_states merged_index;
     Hashtbl.filter_map_inplace (
@@ -2252,7 +2252,7 @@ let merge2021 state_space queue =
                 end
         ) [] sibs) in
 
-        print_message Verbose_standard ("Siblings (" ^ string_of_int si ^ ") : " ^ string_of_list_of_int (List.map fst result)); (*TODO: Verbose high*)
+        print_message Verbose_high ("Siblings (" ^ string_of_int si ^ ") : " ^ string_of_list_of_int (List.map fst result));
         result
     in
 
