@@ -1616,7 +1616,22 @@ let merge_transitions state_space merger_index merged_index =
              add_transition state_space (merger_index, combined_transition, target_state_index)
     ) transitions_merged;
 
-	()
+    (* If the state was the initial state: replace with the merger state_index *)
+	let init = get_initial_state_index state_space in
+    if merged_index = init then(
+        print_message Verbose_standard ("The initial state in the reachability state_space has been merged with another one.");(*TODO: Verbose low*)
+        state_space.initial <- Some merger_index;
+    );
+
+    print_message Verbose_standard ("Merging: remove state " ^ (string_of_int merged_index)); (*TODO: Verbose high*)
+    (*Remove state from all_states and states_for_comparison*)
+    Hashtbl.remove state_space.all_states merged_index;
+    Hashtbl.filter_map_inplace (
+            fun location_index state_index -> if state_index = merged_index then None else Some state_index
+            (*filter_map_inplace discard binding associated to None, update if Some*)
+        ) state_space.states_for_comparison;
+
+    ()
 
 
 (** Add an inequality to all the states of the state space *)
@@ -2347,32 +2362,8 @@ let merge2021 state_space queue =
                         | Merge_queue -> merge_state s true
                         | Merge_ordered -> (merge_state s true)@(merge_state s false)
                     in
-
-                    if merged <> [] then(
-                        (*Check if init was not merged*)
-                        tcounter_merge_statespace#start;
-                            let init = get_initial_state_index state_space in
-
-                            print_message Verbose_standard "Merging: update state table";(*TODO: Verbose high*)
-                            List.iter (fun state ->
-                                print_message Verbose_standard ("Merging: remove state " ^ (string_of_int state)); (*TODO: Verbose high*)
-                                (*Remove state from all_states and states_for_comparison*)
-                                Hashtbl.remove state_space.all_states state;
-                                Hashtbl.filter_map_inplace (
-                                        fun location_index state_index -> if state_index = state then None else Some state_index
-                                        (*filter_map_inplace discard binding associated to None, update if Some*)
-                                    ) state_space.states_for_comparison;
-
-                                (* If the state was the initial state: replace with the merger state_index *)
-                                if state = init then(
-                                    print_message Verbose_standard ("The initial state in the reachability state_space has been merged with another one.");(*TODO: Verbose low*)
-                                    state_space.initial <- Some s;
-                                );
-                            ) merged
-                            ;
-                        tcounter_merge_statespace#stop;
-                    )
-                    end
+                    () (*TODO DYLAN: merged variable could be removed and merge_state not return anything*)
+            end
     in
 
     (*Main*)
