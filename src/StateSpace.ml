@@ -2270,19 +2270,19 @@ let merge2021 state_space queue =
         let state = get_state state_space si in
         let (c : LinearConstraint.px_linear_constraint) = state.px_constraint in
 
-        (* get merge candidates as pairs (index, state) *)
-        let candidates = get_siblings state_space si queue look_in_queue in
+        let main_merging si look_in_queue =
+            (* get merge candidates as pairs (index, state) *)
+            let candidates = get_siblings state_space si queue look_in_queue in
 
-        (* try to merge with siblings, restart if merge found, return merged states *)
-        let rec merging merged_states candidates = begin
-            match candidates with
-                | [] -> [] (* here, we are really done *)
-                | m :: tail -> begin
-                    let sj,c' = m in
-                    let global_location : Location.global_location = state.global_location in
+            (* try to merge with siblings, restart if merge found, return merged states *)
+            let rec merging merged_states candidates = begin
+                match candidates with
+                    | [] -> false (* here, we are really done *)
+                    | m :: tail -> begin
+                        let sj,c' = m in
+                        let global_location : Location.global_location = state.global_location in
 
-                    if not(List.mem sj merged_states)
-                    then begin
+
                         if are_mergeable c c'
                         then begin
                             (*Statistics*)
@@ -2296,37 +2296,22 @@ let merge2021 state_space queue =
                             print_message Verbose_high ("[Merge] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
 
                             let merged' = sj :: merged_states in
-                            sj :: merging merged' tail
+                            true || (merging merged' tail)
                         end
                         else begin
                                 (* try to eat the rest of them *)
                                 merging merged_states tail
                             end
                     end
-                    else
-                        merging merged_states tail
-                end
-        end
+            end
+            in
+            merging [] candidates;
         in
-        let merged = ref [] in
-        let result = ref [] in
+
         let did_something = ref true in
-
         while !did_something do
-            result := merging !merged candidates;
-            if !result <> []
-            then
-                begin
-                did_something := true;
-                merged := !merged @ !result;
-                end
-            else
-                begin
-                did_something := false;
-                end
+            did_something := main_merging si look_in_queue
         done;
-
-        !merged
     in
 
     (* Iterate list of states and try to merge them in the state space *)
@@ -2337,13 +2322,11 @@ let merge2021 state_space queue =
                     main_merger tail;
                     if Hashtbl.mem state_space.all_states s then (* treat s only if it is still reachable *)
 
-                    let merged =
                         match options#merge_dev with
                         | Merge_visited -> merge_state s false
                         | Merge_queue -> merge_state s true
-                        | Merge_ordered -> (merge_state s true)@(merge_state s false)
-                    in
-                    () (*TODO DYLAN: merged variable could be removed and merge_state not return anything*)
+                        | Merge_ordered -> begin (merge_state s true) ; (merge_state s false) end
+
             end
     in
 
