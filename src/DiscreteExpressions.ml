@@ -234,6 +234,33 @@ and is_linear_rational_factor = function
     | DF_rational_of_int _
     | DF_pow _ -> false
 
+(*
+(* Get length of a binary word expression *)
+let rec length_of_binary_word_expression = function
+    | Logical_shift_left (binary_word_expression, _)
+    | Logical_shift_right (binary_word_expression, _)
+    | Logical_and (binary_word_expression, _)
+    | Logical_or (binary_word_expression, _)
+    | Logical_xor (binary_word_expression, _)
+    | Logical_not binary_word_expression ->
+        length_of_binary_word_expression binary_word_expression
+    | Logical_fill_left (binary_word_expression, i)
+    | Logical_fill_right (binary_word_expression, i) ->
+        (length_of_binary_word_expression binary_word_expression) + i
+    | Binary_word_constant value -> BinaryWord.length value
+    | Binary_word_variable discrete_index ->
+        4
+        (*
+        let var_type = type_of_variables discrete_index in
+        match var_type with
+        | DiscreteValue.Var_type_discrete DiscreteValue.Var_type_discrete_binary_word length -> length
+        | _ -> raise (InternalError "Binary word variable hold other type than binary word.")
+        *)
+    | Binary_word_array_access (array_expression, _) ->
+        (* Get inner type of array *)
+        (* Extract length *)
+        4
+*)
 
 
 
@@ -607,7 +634,22 @@ and customized_string_of_bool_value customized_string = function
     | false -> customized_string.false_string
 
 and customized_string_of_binary_word_expression customized_string variable_names = function
-    | Logical_shift_left (binary_word, expr)
+    | Logical_shift_left (binary_word, expr) as binary_word_expression ->
+        let length_arg =
+        begin
+        match customized_string.binary_word_representation with
+        | Binary_word_representation_standard -> ""
+        | Binary_word_representation_int -> ", " ^ "/* here, replace by the length of shifted binary word */" (* length_of_binary_word_expression binary_word *)
+        end
+        in
+        label_of_binary_word_expression binary_word_expression
+        ^ "("
+        ^ customized_string_of_binary_word_expression customized_string variable_names binary_word
+        ^ ", "
+        ^ customized_string_of_int_arithmetic_expression customized_string variable_names expr
+        ^ length_arg
+        ^ ")"
+
     | Logical_shift_right (binary_word, expr)
     | Logical_fill_left (binary_word, expr)
     | Logical_fill_right (binary_word, expr) as binary_word_expression ->
@@ -617,6 +659,7 @@ and customized_string_of_binary_word_expression customized_string variable_names
         ^ ", "
         ^ customized_string_of_int_arithmetic_expression customized_string variable_names expr
         ^ ")"
+
     | Logical_and (l_binary_word, r_binary_word)
     | Logical_or (l_binary_word, r_binary_word)
     | Logical_xor (l_binary_word, r_binary_word) as binary_word_expression ->
@@ -631,7 +674,13 @@ and customized_string_of_binary_word_expression customized_string variable_names
         ^ "("
         ^ customized_string_of_binary_word_expression customized_string variable_names binary_word
         ^ ")"
-    | Binary_word_constant value -> BinaryWord.string_of_binaryword value
+    | Binary_word_constant value ->
+        begin
+        match customized_string.binary_word_representation with
+        | Binary_word_representation_standard -> BinaryWord.string_of_binaryword value
+        | Binary_word_representation_int -> string_of_int (BinaryWord.to_int value)
+        end
+
     | Binary_word_variable variable_index -> variable_names variable_index
     | Binary_word_array_access (array_expr, index_expr) ->
         customized_string_of_array_expression customized_string variable_names array_expr

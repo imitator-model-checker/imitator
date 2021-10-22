@@ -53,7 +53,7 @@ let jani_strings = {
     arithmetic_string = Constants.default_arithmetic_string_without_whitespace;
     boolean_string = jani_boolean_strings;
     array_string = Constants.default_array_string;
-    binary_word_representation = Standard;
+    binary_word_representation = Binary_word_representation_int;
 }
 
 let jani_separator = ","
@@ -62,7 +62,7 @@ let jani_assignment = "="
 
 let jani_version = "1"
 let jani_type = "sha"
-let jani_features = "[\"derived-operators\",\"arrays\",\"datatypes\"]"
+
 
 (* JANI *)
 
@@ -97,7 +97,6 @@ let jani_binary_operator str_operator str_left str_right =
         json_property "left" str_left;
         json_property "right" str_right
     |]
-
 
 let jani_unary_operator str_operator str_expr =
     json_struct [|
@@ -150,6 +149,51 @@ let jani_function_call str_function_name str_args =
         json_property "args" (json_array str_args)
     |]
 
+let jani_function_declaration str_function_name str_type parameters str_body =
+    json_struct [|
+        json_property "name" (json_quoted str_function_name);
+        json_property "type" (json_quoted str_type);
+        json_property "parameters" (json_array parameters);
+        json_property "body" str_body
+    |]
+
+let jani_function_parameter str_parameter_name str_type =
+    json_struct [|
+        json_property "name" (json_quoted str_parameter_name);
+        json_property "type" (json_quoted str_type)
+    |]
+
+
+let jani_features =
+    json_array [|
+        json_quoted "derived-operators";
+        json_quoted "arrays";
+        json_quoted "datatypes";
+        json_quoted "functions";
+    |]
+
+(* Get string representation of a discrete value in Jani *)
+let rec string_of_value = function
+
+    | DiscreteValue.Number_value value
+    | DiscreteValue.Rational_value value ->
+        NumConst.to_string value
+
+    | DiscreteValue.Int_value value ->
+        Int32.to_string value
+
+    | DiscreteValue.Bool_value value ->
+        if value then
+            jani_strings.boolean_string.true_string
+        else
+            jani_strings.boolean_string.false_string
+
+    | DiscreteValue.Array_value value ->
+        let str_values = Array.map string_of_value value in
+        jani_array_value str_values
+
+    | DiscreteValue.Binary_word_value value ->
+        string_of_int (BinaryWord.to_int value)
 
 
 (* TODO benjamin REFACTOR duplicate from DiscreteExpression *)
@@ -387,20 +431,23 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 
 and customized_string_of_binary_word_expression_for_jani customized_string variable_names = function
     | Logical_fill_left (binary_word, expr)
-    | Logical_shift_left (binary_word, expr) as binary_word_expression ->
-        jani_binary_operator
-            (label_of_binary_word_expression binary_word_expression)
-            (customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word)
-            (customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr)
-
-
     | Logical_fill_right (binary_word, expr)
     | Logical_shift_right (binary_word, expr) as binary_word_expression ->
-        jani_binary_operator
+        jani_function_call
             (label_of_binary_word_expression binary_word_expression)
-            (customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word)
-            (customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr)
+            [|
+                customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word;
+                customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
+            |]
 
+    | Logical_shift_left (binary_word, expr) as binary_word_expression ->
+        jani_function_call
+            (label_of_binary_word_expression binary_word_expression)
+            [|
+                customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word;
+                customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr;
+                (json_quoted "/* here, replace by the length of shifted binary word */")
+            |]
 
     | Logical_and (l_binary_word, r_binary_word)
     | Logical_or (l_binary_word, r_binary_word)
@@ -417,7 +464,7 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
 	        (customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word)
 
 
-    | Binary_word_constant value -> BinaryWord.string_of_binaryword value
+    | Binary_word_constant value -> string_of_int (BinaryWord.to_int value)
     | Binary_word_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
     | Binary_word_array_access (array_expr, index_expr) ->
         let str_array_expr = customized_string_of_array_expression_for_jani customized_string variable_names array_expr in
@@ -427,11 +474,11 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
 
 and customized_string_of_array_expression_for_jani customized_string variable_names = function
     | Literal_array expr_array ->
-        let str_values = Array.map (customized_string_of_global_expression_for_jani customized_string variable_names ) expr_array in
+        let str_values = Array.map (customized_string_of_global_expression_for_jani customized_string variable_names) expr_array in
         jani_array_value str_values
 
     | Array_constant values ->
-        let str_values = Array.map DiscreteValue.string_of_value values in
+        let str_values = Array.map string_of_value values in
         jani_array_value str_values
 
     | Array_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
@@ -480,7 +527,7 @@ let string_of_header model =
  Declarations
 ************************************************************)
 
-let string_of_custom_datatype =
+let string_of_custom_datatypes =
 
     json_property "datatypes" (json_array [|
         json_struct [|
@@ -497,7 +544,83 @@ let string_of_custom_datatype =
         |]
     |])
 
+(*  *)
+let jani_shift_right_or_left to_left str_binary str_k =
+    let direction_op = if to_left then "*" else "/" in
+    json_struct [|
+        json_property "op" (json_quoted "floor");
+        json_property "exp" (json_struct [|
+            json_property "op" (json_quoted direction_op);
+            json_property "left" str_binary;
+            json_property "right" (json_struct [|
+                json_property "op" (json_quoted "pow");
+                json_property "left" "2";
+                json_property "right" str_k
+            |])
+        |])
+    |]
 
+let jani_shift_left = jani_shift_right_or_left true
+let jani_shift_right = jani_shift_right_or_left false
+
+let jani_shift_left_truncate str_binary str_k str_length_of_binary =
+    jani_binary_operator
+        jani_strings.arithmetic_string.minus_string
+        (jani_shift_left str_binary str_k)
+        (
+            jani_shift_left
+            (
+                jani_shift_right
+                    str_binary
+                    (
+                        jani_binary_operator
+                            jani_strings.arithmetic_string.minus_string
+                            str_length_of_binary
+                            str_k
+                    )
+            )
+            str_length_of_binary
+        )
+
+
+let string_of_shift_or_fill_right_function is_shift to_left =
+
+    let str_prefix = if is_shift then "shift" else "fill" in
+    let str_suffix = if to_left then "left" else "right" in
+    let str_function_name = str_prefix ^ "_" ^ str_suffix in
+
+    let body =
+        match is_shift, to_left with
+        | true, true -> jani_shift_left_truncate (json_quoted "b") (json_quoted "k") (json_quoted "l")
+        | true, false -> jani_shift_right (json_quoted "b") (json_quoted "k")
+        | false, true -> jani_shift_left (json_quoted "b") (json_quoted "k")
+        | false, false -> jani_shift_right (json_quoted "b") (json_quoted "k")
+    in
+
+    let parameters = [|jani_function_parameter "b" "int"; jani_function_parameter "k" "int"|] in
+    let all_parameters = if is_shift && to_left then Array.append parameters [|jani_function_parameter "l" "int"|] else parameters in
+
+    jani_function_declaration
+        str_function_name
+        "int"
+        all_parameters
+        body
+        (* fill left : floor(b * pow(2, k)) *)
+        (* shift / fill right : floor(b / pow(2, k)) *)
+        (* shift left : floor(b * pow(2, k)) - () *) (*floor(b / pow(2, l - k))*)
+
+let string_of_shift_left_function = string_of_shift_or_fill_right_function true true
+let string_of_shift_right_function = string_of_shift_or_fill_right_function true false
+let string_of_fill_right_function = string_of_shift_or_fill_right_function false false
+let string_of_fill_left_function = string_of_shift_or_fill_right_function false true
+
+let string_of_custom_functions = 
+    json_property "functions" (json_array [|
+        string_of_shift_left_function;
+        string_of_shift_right_function;
+        string_of_fill_left_function;
+        string_of_fill_right_function
+    |])
 
 (* Declaration of actions *)
 let string_of_actions model =
@@ -555,11 +678,7 @@ let string_of_var_type_discrete_number_for_jani = function
 let rec string_of_var_type_discrete_for_jani = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
     | DiscreteValue.Var_type_discrete_bool -> json_quoted "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ ->
-        json_struct [|
-            json_property "kind" (json_quoted "datatype");
-            json_property "ref" (json_quoted "binary_word")
-        |]
+    | DiscreteValue.Var_type_discrete_binary_word _ -> json_quoted "int"
 
     | DiscreteValue.Var_type_discrete_array (discrete_type, _) ->
         json_struct [|
@@ -570,16 +689,7 @@ let rec string_of_var_type_discrete_for_jani = function
 (* Convert the initial discrete var declarations into a string *)
 let string_of_discrete model =
 
-    let string_of_initial_value discrete_name initial_value = function
-        | DiscreteValue.Var_type_discrete_array (inner_type, length) ->
-            let array_value = DiscreteValue.array_value initial_value in
-            let str_values = Array.map DiscreteValue.string_of_value array_value in
-            jani_array_value str_values
-        | DiscreteValue.Var_type_discrete_binary_word _ ->
-            jani_binary_word_datavalue initial_value
-        | _ ->
-            DiscreteValue.string_of_value initial_value
-    in
+
 
 	if model.nb_discrete > 0 then(
 		(string_of_list_of_string_with_sep jani_separator
@@ -594,9 +704,8 @@ let string_of_discrete model =
 				let inital_global_location  = model.initial_location in
 
 				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
-                let initial_value_type = DiscreteValue.discrete_type_of_value initial_value in
 
-				let str_initial_value = string_of_initial_value discrete_name initial_value initial_value_type in
+				let str_initial_value = string_of_value initial_value in
 
 				(* Assign *)
                 json_struct [|
@@ -1089,7 +1198,8 @@ let string_of_model model =
     "{"
     (*Header*)
     ^ string_of_header model
-    ^ string_of_custom_datatype ^ jani_separator
+    ^ string_of_custom_datatypes ^ jani_separator
+    ^ string_of_custom_functions ^ jani_separator
     ^ string_of_actions model
     ^ (if variables = "" then "" else variables ^ jani_separator ^ "")
     ^ string_of_properties

@@ -170,8 +170,8 @@ type customized_array_string = {
 }
 
 type customized_binary_word_representation =
-    | Standard
-    | Int
+    | Binary_word_representation_standard
+    | Binary_word_representation_int
 
 (** Data structure allowing for customizing string conversions of symbols *)
 type customized_string = {
@@ -242,5 +242,5 @@ let global_default_string = {
     arithmetic_string = default_arithmetic_string;
     boolean_string = default_string;
     array_string = default_array_string;
-    binary_word_representation = Standard;
+    binary_word_representation = Binary_word_representation_standard;
 }

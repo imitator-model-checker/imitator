@@ -48,7 +48,7 @@ let all_uppaal_strings : customized_string = {
     arithmetic_string = default_arithmetic_string;
     boolean_string = uppaal_boolean_strings;
     array_string = uppaal_array_strings;
-    binary_word_representation = Int;
+    binary_word_representation = Binary_word_representation_int;
 }
 
 let uppaal_update_separator = ", "
@@ -69,7 +69,7 @@ let string_of_var_type_discrete_number = function
 let rec string_of_var_type_discrete = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ -> "int"
+    | DiscreteValue.Var_type_discrete_binary_word length -> "int /* binary(" ^ string_of_int length ^ ") */ "
     | DiscreteValue.Var_type_discrete_array (discrete_type, length) -> string_of_var_type_discrete discrete_type
 
 (* Customized string of var_type *)
@@ -101,8 +101,6 @@ let rec string_of_discrete_name_from_var_type discrete_name = function
 (* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
 (* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
 and string_of_discrete_name_from_var_type_discrete discrete_name = function
-    | DiscreteValue.Var_type_discrete_binary_word length ->
-        discrete_name ^ "[" ^ string_of_int length ^ "]"
     | DiscreteValue.Var_type_discrete_array (inner_type, length) ->
         string_of_discrete_name_from_var_type_discrete discrete_name inner_type
         ^ "["
@@ -264,7 +262,7 @@ let string_of_shift_left_function =
     ^ "}\n\n"
 
 let string_of_shift_right_function =
-    "int shift_right(int b, int k, int l)\n"
+    "int shift_right(int b, int k)\n"
     ^ "{\n"
     ^ "    return b &gt;&gt; k;\n"
     ^ "}\n\n"
