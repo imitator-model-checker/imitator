@@ -258,6 +258,7 @@ let string_of_declared_actions model =
 let string_of_shift_left_function =
     "int shift_left(int b, int k, int l)\n"
     ^ "{\n"
+    ^ "    /* Simulate shift_left of IMITATOR by truncating binary word at length l */\n"
     ^ "    return (b &lt;&lt; k) - ((b &gt;&gt; l - k) &lt;&lt; l);\n"
     ^ "}\n\n"
 
@@ -279,12 +280,50 @@ let string_of_fill_right_function =
     ^ "    return b &gt;&gt; k;\n"
     ^ "}\n\n"
 
+let string_of_logand_function =
+    "int logand(int a, int b)\n"
+    ^ "{\n"
+    ^ "    return a &amp; b;\n"
+    ^ "}\n\n"
+
+let string_of_logor_function =
+    "int logor(int a, int b)\n"
+    ^ "{\n"
+    ^ "    return a | b;\n"
+    ^ "}\n\n"
+
+let string_of_logxor_function =
+    "int logxor(int a, int b)\n"
+    ^ "{\n"
+    ^ "    return a ^ b;\n"
+    ^ "}\n\n"
+
+(* *)
+let string_of_lognot_function =
+    (* Simulate lognot on int using following formula: *)
+    (* b - f, with: *)
+    (* b an arbitrary binary word of length l *)
+    (* f a binary word of length l holding max value (full of ones), eg: f = 0b1111 for a binary word of length l=4  *)
+    "int lognot(int b, int l)\n"
+    ^ "{\n"
+    ^ "    /* Simulate not bitwise operator */\n"
+    ^ "    /* by generating binary word of length l with all bit at one, eg: 0b1111 */\n"
+    ^ "    /* Then inverse by subtracting b */\n"
+    ^ "    /* Power of two is simulated using 1 &lt;&lt; exponent */\n"
+    ^ "    return ((1 &lt;&lt; l) - 1)  /* pow(2, l) - 1 */ - b; \n"
+    ^ "}\n\n"
+
+
 let string_of_builtin_functions model =
     "/* Functions declarations */\n\n"
     ^ string_of_shift_left_function
     ^ string_of_shift_right_function
     ^ string_of_fill_left_function
     ^ string_of_fill_right_function
+    ^ string_of_logand_function
+    ^ string_of_logor_function
+    ^ string_of_logxor_function
+    ^ string_of_lognot_function
 
 
 (* Convert the initial variable declarations into a string *)
