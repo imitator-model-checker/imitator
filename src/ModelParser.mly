@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Benjamin Loillier, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2021/06/01
+ * Last modified     : 2021/10/26
  *
  ************************************************************/
 
@@ -461,11 +461,11 @@ update:
 		(Variable_name $1, $4)
 		}
 
-	/*** NOTE: deprecated syntax ***/
-	| NAME APOSTROPHE OP_ASSIGN expression {
+		/** NOT ALLOWED FROM 3.2 (2021/10) */
+/*	| NAME APOSTROPHE OP_ASSIGN expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
 		(Variable_name $1, $4)
-	}
+	}*/
 	/*** NOTE: deprecated syntax ***/
 	| NAME OP_EQ expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");

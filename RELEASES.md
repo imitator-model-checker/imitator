@@ -3,6 +3,7 @@
 
 ### Syntax improvement
 * New type: "binary words", of the form `0b00111`, for bitwise binary operations. Can be used in guards, invariants, updates. Example: `when logor(bw1, 0b1011) <> bw1 do {shift_left(bw1, 2)}`
+* The syntax `var' := expr` in updates is discontinued. Official syntax remains `var := expr` (backward-compatibility for `var' = expr` remains ensured until further notice)
 
 ### Major features
 * New accepting cycle synthesis with generalized condition. Syntax `property := #synth CycleThrough(condition_1, …, condition_n)` Each of the conditions must hold on at least one state of the same cycle, in order for this cycle to be accepting.
