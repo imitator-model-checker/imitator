@@ -430,9 +430,9 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 	in string_of_int_arithmetic_expression customized_string
 
 and customized_string_of_binary_word_expression_for_jani customized_string variable_names = function
-    | Logical_fill_left (binary_word, expr)
-    | Logical_fill_right (binary_word, expr)
-    | Logical_shift_right (binary_word, expr) as binary_word_expression ->
+    | Logical_fill_left (binary_word, expr, _)
+    | Logical_fill_right (binary_word, expr, _)
+    | Logical_shift_right (binary_word, expr, _) as binary_word_expression ->
         jani_function_call
             (label_of_binary_word_expression binary_word_expression)
             [|
@@ -440,33 +440,36 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
                 customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
             |]
 
-    | Logical_shift_left (binary_word, expr) as binary_word_expression ->
+    | Logical_shift_left (binary_word, expr, length) as binary_word_expression ->
         jani_function_call
             (label_of_binary_word_expression binary_word_expression)
             [|
                 customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word;
                 customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr;
-                (json_quoted "/* here, replace by the length of shifted binary word */")
+                (string_of_int length)
             |]
 
-    | Logical_and (l_binary_word, r_binary_word)
-    | Logical_or (l_binary_word, r_binary_word)
-    | Logical_xor (l_binary_word, r_binary_word) as binary_word_expression ->
+    | Logical_and (l_binary_word, r_binary_word, _)
+    | Logical_or (l_binary_word, r_binary_word, _)
+    | Logical_xor (l_binary_word, r_binary_word, _) as binary_word_expression ->
         jani_binary_operator
             (label_of_binary_word_expression binary_word_expression)
             (customized_string_of_binary_word_expression_for_jani customized_string variable_names l_binary_word)
             (customized_string_of_binary_word_expression_for_jani customized_string variable_names r_binary_word)
 
 
-    | Logical_not binary_word as binary_word_expression ->
-        jani_unary_operator
-	        (label_of_binary_word_expression binary_word_expression)
-	        (customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word)
+    | Logical_not (binary_word, length) as binary_word_expression ->
+        jani_function_call
+            (label_of_binary_word_expression binary_word_expression)
+            [|
+                customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word;
+                (string_of_int length)
+            |]
 
 
     | Binary_word_constant value -> string_of_int (BinaryWord.to_int value)
-    | Binary_word_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
-    | Binary_word_array_access (array_expr, index_expr) ->
+    | Binary_word_variable (variable_index, _) -> "\"" ^ variable_names variable_index ^ "\""
+    | Binary_word_array_access (array_expr, index_expr, _) ->
         let str_array_expr = customized_string_of_array_expression_for_jani customized_string variable_names array_expr in
         let str_index_expr = customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr in
         jani_array_access str_array_expr str_index_expr
@@ -614,12 +617,36 @@ let string_of_shift_right_function = string_of_shift_or_fill_right_function true
 let string_of_fill_right_function = string_of_shift_or_fill_right_function false false
 let string_of_fill_left_function = string_of_shift_or_fill_right_function false true
 
+(* String representation of lognot function in Jani *)
+(* Simulate not bitwise using following formula : pow(2, l) - 1 - b with b the int binary word and l the length of b *)
+let string_of_lognot_function =
+    jani_function_declaration
+        "lognot"
+        "int"
+        [|
+            jani_function_parameter "b" "int";
+            jani_function_parameter "l" "int"
+        |]
+        (jani_unary_operator
+            "floor"
+            (jani_binary_operator
+                jani_strings.arithmetic_string.minus_string
+                (jani_binary_operator
+                    jani_strings.arithmetic_string.minus_string
+                    (jani_binary_operator "pow" "2" (json_quoted "l"))
+                    "1"
+                )
+                (json_quoted "b")
+            )
+        )
+
 let string_of_custom_functions = 
     json_property "functions" (json_array [|
         string_of_shift_left_function;
         string_of_shift_right_function;
         string_of_fill_left_function;
-        string_of_fill_right_function
+        string_of_fill_right_function;
+        string_of_lognot_function
     |])
 
 (* Declaration of actions *)
@@ -782,14 +809,14 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 
 	(* False *)
 	| False_guard ->
-	    jani_expression jani_boolean_strings.false_string
+	    jani_boolean_strings.false_string
 
 	| Discrete_guard discrete_guard ->
 
         let list_discrete_guard = (customized_strings_of_nonlinear_constraint_for_jani jani_strings variable_names discrete_guard) in
         let list_discrete_guard_without_true = if list_discrete_guard = [jani_boolean_strings.true_string] then [""] else list_discrete_guard in
         let content = string_of_strings_with_sep_and list_discrete_guard_without_true in
-        if content = "" then "" else jani_expression content
+        if content = "" then "" else content
 
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
@@ -806,7 +833,7 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 					in
 					let left = LinearConstraint.string_of_left_term_of_pxd_linear_inequality variable_names inequality in
 					let right = LinearConstraint.string_of_right_term_of_pxd_linear_inequality variable_names inequality in
-                    jani_expression (jani_binary_operator op left right)
+                    (jani_binary_operator op left right)
 
 				) list_of_inequalities)
 
@@ -817,7 +844,7 @@ let rec string_of_guard_or_invariant actions_and_nb_automata variable_names = fu
 		let linear_constraint_string = (string_of_guard_or_invariant actions_and_nb_automata variable_names (Continuous_guard discrete_continuous_guard.continuous_guard)) in
 		let list = List.append non_linear_constraint_list [linear_constraint_string] in
 	    let content = string_of_strings_with_sep_and list in
-	    if content = "" then "" else jani_expression content
+	    if content = "" then "" else content
 
 
 (* Convert the invariant of a location into a string *)
@@ -881,11 +908,18 @@ let string_of_location model actions_and_nb_automata automaton_index location_in
 
 	(* Invariant and stopwatches *)
 	^ (if not_display_timeprogress then "" else (
-		  jani_separator ^ "\"time-progress\": {\"exp\": "
-		^ (if twoparts then ("{\"op\": \"" ^ jani_boolean_strings.and_operator ^ "\"" ^ jani_separator) else "")
-		^ (if twoparts then "\"left\": " else "") ^ invariant ^ (if twoparts then "" ^ jani_separator else "")
-		^ (if twoparts then "\"right\": " else "") ^ der_clock ^ (if twoparts then "}" else "")
-		^ "}"
+	    jani_separator ^
+	    json_property "time-progress" (
+	        jani_expression (
+                if twoparts then
+                    jani_binary_operator
+                        jani_boolean_strings.and_operator
+                        invariant
+                        der_clock
+                else
+                    invariant ^ jani_separator ^ der_clock
+            )
+        )
 	))
 
 	(* Footer *)
@@ -1065,7 +1099,7 @@ let string_of_updates model automaton_index action_index clock_updates discrete_
 let string_of_transition model actions_and_nb_automata automaton_index source_location transition =
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
-	let guard = (string_of_guard model actions_and_nb_automata model.variable_names transition.guard) in
+	let guard = string_of_guard model actions_and_nb_automata model.variable_names transition.guard in
 	let assignments = (string_of_updates model automaton_index transition.action clock_updates discrete_updates transition) in
 	(* Header *)
 	"{"
@@ -1076,7 +1110,7 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 	(* Guard *)
 	^ (if guard = "" then "" else
 		((
-			"\"guard\": " ^ guard ^ ""
+			"\"guard\": " ^ jani_expression guard ^ ""
 		) ^ jani_separator))
 
 	(* Target *)

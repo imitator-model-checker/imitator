@@ -150,7 +150,7 @@ and convert_parsed_global_expression variable_infos = function
             rational_expression_of_parsed_expression variable_infos expr
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
             int_expression_of_parsed_expression variable_infos expr
-        | DiscreteValue.Var_type_discrete_binary_word l ->
+        | DiscreteValue.Var_type_discrete_binary_word _ ->
             Binary_word_expression (binary_word_expression_of_parsed_boolean_expression variable_infos expr)
         | DiscreteValue.Var_type_discrete_array (discrete_type, length) ->
             Array_expression (array_expression_of_parsed_boolean_expression variable_infos expr)
@@ -506,13 +506,22 @@ and binary_word_expression_of_parsed_term variable_infos = function
     | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
 
 (* Try to convert a parsed factor to abstract binary word expression *)
-and binary_word_expression_of_parsed_factor variable_infos = function
+and binary_word_expression_of_parsed_factor variable_infos factor =
+
+    let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
+    let binary_word_length =
+        match discrete_type with
+        | DiscreteValue.Var_type_discrete_binary_word length -> length
+        | _ -> raise (InternalError "Binary word expression hold another type than binary word, although it was type checked before.")
+    in
+
+    let binary_word_expression_of_parsed_factor_inner = function
     | Parsed_DF_variable variable_name ->
 
         let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
         (match variable_kind with
         | Constant_kind value -> Binary_word_constant (DiscreteValue.binary_word_value value)
-        | Variable_kind discrete_index -> Binary_word_variable discrete_index
+        | Variable_kind discrete_index -> Binary_word_variable (discrete_index, binary_word_length)
         )
 
     | Parsed_DF_constant value ->
@@ -522,31 +531,33 @@ and binary_word_expression_of_parsed_factor variable_infos = function
     | Parsed_DF_access (factor, index_expr) ->
         Binary_word_array_access (
             array_expression_of_parsed_factor variable_infos factor,
-            convert_parsed_int_arithmetic_expression variable_infos index_expr
+            convert_parsed_int_arithmetic_expression variable_infos index_expr,
+            binary_word_length
         )
 
     | Parsed_shift_function (fun_type, factor, expr) ->
         let binary_word_expr = binary_word_expression_of_parsed_factor variable_infos factor in
         let int_expr = convert_parsed_int_arithmetic_expression variable_infos expr in
-        begin
-        match fun_type with
-        | Parsed_shift_left -> Logical_shift_left (binary_word_expr, int_expr)
-        | Parsed_shift_right -> Logical_shift_right (binary_word_expr, int_expr)
-        | Parsed_fill_left -> Logical_fill_left (binary_word_expr, int_expr)
-        | Parsed_fill_right -> Logical_fill_right (binary_word_expr, int_expr)
-        end
+
+        (match fun_type with
+        | Parsed_shift_left -> Logical_shift_left (binary_word_expr, int_expr, binary_word_length)
+        | Parsed_shift_right -> Logical_shift_right (binary_word_expr, int_expr, binary_word_length)
+        | Parsed_fill_left -> Logical_fill_left (binary_word_expr, int_expr, binary_word_length)
+        | Parsed_fill_right -> Logical_fill_right (binary_word_expr, int_expr, binary_word_length)
+        )
     | Parsed_bin_log_function (fun_type, l_factor, r_factor) ->
         let l_binary_word_expr = binary_word_expression_of_parsed_factor variable_infos l_factor in
         let r_binary_word_expr = binary_word_expression_of_parsed_factor variable_infos r_factor in
-        begin
-        match fun_type with
-        | Parsed_log_and -> Logical_and (l_binary_word_expr, r_binary_word_expr)
-        | Parsed_log_or -> Logical_or (l_binary_word_expr, r_binary_word_expr)
-        | Parsed_log_xor -> Logical_xor (l_binary_word_expr, r_binary_word_expr)
-        end
+
+        (match fun_type with
+        | Parsed_log_and -> Logical_and (l_binary_word_expr, r_binary_word_expr, binary_word_length)
+        | Parsed_log_or -> Logical_or (l_binary_word_expr, r_binary_word_expr, binary_word_length)
+        | Parsed_log_xor -> Logical_xor (l_binary_word_expr, r_binary_word_expr, binary_word_length)
+        )
     | Parsed_log_not factor ->
         Logical_not (
-            binary_word_expression_of_parsed_factor variable_infos factor
+            binary_word_expression_of_parsed_factor variable_infos factor,
+            binary_word_length
         )
     | Parsed_DF_expression expression ->
         binary_word_expression_of_parsed_discrete_arithmetic_expression variable_infos expression
@@ -560,6 +571,8 @@ and binary_word_expression_of_parsed_factor variable_infos = function
             ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
             ^ "\" in a binary expression, although it was checked before by type checking. Maybe something fail in type checking"
         ))
+    in
+    binary_word_expression_of_parsed_factor_inner factor
 
 
 (* Try to convert a parsed boolean expression to abstract binary word expression *)

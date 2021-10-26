@@ -194,43 +194,43 @@ and check_discrete_boolean_expression discrete_valuation = function
         not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
 
 and eval_discrete_binary_word_expression discrete_valuation = function
-    | Logical_shift_left (binary_word, expr) ->
+    | Logical_shift_left (binary_word, expr, _) ->
         BinaryWord.shift_left
             (eval_discrete_binary_word_expression discrete_valuation binary_word)
             (Int32.to_int (eval_int_expression discrete_valuation expr))
-    | Logical_shift_right (binary_word, expr) ->
+    | Logical_shift_right (binary_word, expr, _) ->
         BinaryWord.shift_right
             (eval_discrete_binary_word_expression discrete_valuation binary_word)
             (Int32.to_int (eval_int_expression discrete_valuation expr))
-    | Logical_fill_left (binary_word, expr) ->
+    | Logical_fill_left (binary_word, expr, _) ->
         BinaryWord.fill_left
             (eval_discrete_binary_word_expression discrete_valuation binary_word)
             (Int32.to_int (eval_int_expression discrete_valuation expr))
-    | Logical_fill_right (binary_word, expr) ->
+    | Logical_fill_right (binary_word, expr, _) ->
         BinaryWord.fill_right
             (eval_discrete_binary_word_expression discrete_valuation binary_word)
             (Int32.to_int (eval_int_expression discrete_valuation expr))
-    | Logical_and (l_binary_word, r_binary_word) ->
+    | Logical_and (l_binary_word, r_binary_word, _) ->
         BinaryWord.log_and
             (eval_discrete_binary_word_expression discrete_valuation l_binary_word)
             (eval_discrete_binary_word_expression discrete_valuation r_binary_word)
-    | Logical_or (l_binary_word, r_binary_word) ->
+    | Logical_or (l_binary_word, r_binary_word, _) ->
         BinaryWord.log_or
             (eval_discrete_binary_word_expression discrete_valuation l_binary_word)
             (eval_discrete_binary_word_expression discrete_valuation r_binary_word)
-    | Logical_xor (l_binary_word, r_binary_word) ->
+    | Logical_xor (l_binary_word, r_binary_word, _) ->
         BinaryWord.log_xor
             (eval_discrete_binary_word_expression discrete_valuation l_binary_word)
             (eval_discrete_binary_word_expression discrete_valuation r_binary_word)
-    | Logical_not binary_word ->
+    | Logical_not (binary_word, _) ->
         BinaryWord.log_not
             (eval_discrete_binary_word_expression discrete_valuation binary_word)
 
     | Binary_word_constant value -> value
-    | Binary_word_variable variable_index ->
+    | Binary_word_variable (variable_index, _) ->
         DiscreteValue.binary_word_value (discrete_valuation variable_index)
 
-    | Binary_word_array_access (array_expr, index_expr) ->
+    | Binary_word_array_access (array_expr, index_expr, _) ->
         let value = get_array_value_at discrete_valuation array_expr index_expr in
         DiscreteValue.binary_word_value value
 

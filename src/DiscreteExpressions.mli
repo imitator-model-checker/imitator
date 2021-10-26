@@ -133,17 +133,17 @@ and discrete_boolean_expression =
 
 (** Binary word expression *)
 and binary_word_expression =
-    | Logical_shift_left of binary_word_expression * int_arithmetic_expression
-    | Logical_shift_right of binary_word_expression * int_arithmetic_expression
-    | Logical_fill_left of binary_word_expression * int_arithmetic_expression
-    | Logical_fill_right of binary_word_expression * int_arithmetic_expression
-    | Logical_and of binary_word_expression * binary_word_expression
-    | Logical_or of binary_word_expression * binary_word_expression
-    | Logical_xor of binary_word_expression * binary_word_expression
-    | Logical_not of binary_word_expression
+    | Logical_shift_left of binary_word_expression * int_arithmetic_expression * int
+    | Logical_shift_right of binary_word_expression * int_arithmetic_expression * int
+    | Logical_fill_left of binary_word_expression * int_arithmetic_expression * int
+    | Logical_fill_right of binary_word_expression * int_arithmetic_expression * int
+    | Logical_and of binary_word_expression * binary_word_expression * int
+    | Logical_or of binary_word_expression * binary_word_expression * int
+    | Logical_xor of binary_word_expression * binary_word_expression * int
+    | Logical_not of binary_word_expression * int
     | Binary_word_constant of BinaryWord.t
-    | Binary_word_variable of Automaton.variable_index
-    | Binary_word_array_access of array_expression * int_arithmetic_expression
+    | Binary_word_variable of Automaton.variable_index * int
+    | Binary_word_array_access of array_expression * int_arithmetic_expression * int
 
 and array_expression =
     | Literal_array of global_expression array
