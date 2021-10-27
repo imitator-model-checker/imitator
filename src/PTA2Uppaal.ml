@@ -69,7 +69,10 @@ let string_of_var_type_discrete_number = function
 let rec string_of_var_type_discrete = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_binary_word length -> "int /* binary(" ^ string_of_int length ^ ") */ "
+    | DiscreteValue.Var_type_discrete_binary_word length ->
+        let warning_in_comment = if length > 31 then ", WARNING: length > 31 can lead to overflow !" else "" in
+        let comment = "/* binary(" ^ string_of_int length ^ ")" ^ warning_in_comment ^ " */" in
+        "int " ^ comment
     | DiscreteValue.Var_type_discrete_array (discrete_type, length) -> string_of_var_type_discrete discrete_type
 
 (* Customized string of var_type *)
@@ -85,9 +88,14 @@ let rec string_of_value = function
     | DiscreteValue.Rational_value x -> NumConst.string_of_numconst x
     | DiscreteValue.Bool_value x -> if x then uppaal_boolean_strings.true_string else uppaal_boolean_strings.false_string
     | DiscreteValue.Int_value x -> Int32.to_string x
-    | DiscreteValue.Binary_word_value binary_word ->
-        let binary_word_int_value = BinaryWord.to_int binary_word in
-        string_of_int binary_word_int_value
+    | DiscreteValue.Binary_word_value value ->
+        let length = BinaryWord.length value in
+
+        if length > 31 then
+            ImitatorUtilities.print_warning ("Encoding a binary word of length `" ^ string_of_int length ^ "` on an integer can leads to an overflow.");
+
+        string_of_int (BinaryWord.to_int value)
+
     | DiscreteValue.Array_value a ->
         let string_array = Array.map (fun x -> string_of_value x) a in
         "{" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "}"

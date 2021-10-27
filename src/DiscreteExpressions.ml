@@ -374,6 +374,14 @@ let label_of_array_expression = function
     | Array_array_access _ -> "array_access"
     | Array_concat _ -> "array_concat"
 
+(* Check if a binary word encoded on an integer have length greater than 31 bits *)
+(* If it's the case, print a warning *)
+let print_binary_word_overflow_warning_if_needed expr length = function
+    | Binary_word_representation_standard -> ()
+    | Binary_word_representation_int ->
+        if length > 31 then
+            ImitatorUtilities.print_warning ("Encoding a `" ^ label_of_binary_word_expression expr ^ "` of length `" ^ string_of_int length ^ "` on an integer can leads to an overflow.")
+
 (* Expressions strings *)
 
 let rec customized_string_of_global_expression customized_string variable_names = function
@@ -605,6 +613,8 @@ and customized_string_of_bool_value customized_string = function
 
 and customized_string_of_binary_word_expression customized_string variable_names = function
     | Logical_shift_left (binary_word, expr, length) as binary_word_expression ->
+        print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
+
         let length_arg =
             match customized_string.binary_word_representation with
             | Binary_word_representation_standard -> ""
@@ -618,9 +628,11 @@ and customized_string_of_binary_word_expression customized_string variable_names
         ^ length_arg
         ^ ")"
 
-    | Logical_shift_right (binary_word, expr, _)
-    | Logical_fill_left (binary_word, expr, _)
-    | Logical_fill_right (binary_word, expr, _) as binary_word_expression ->
+    | Logical_shift_right (binary_word, expr, length)
+    | Logical_fill_left (binary_word, expr, length)
+    | Logical_fill_right (binary_word, expr, length) as binary_word_expression ->
+        print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
+
         label_of_binary_word_expression binary_word_expression
         ^ "("
         ^ customized_string_of_binary_word_expression customized_string variable_names binary_word
@@ -628,9 +640,11 @@ and customized_string_of_binary_word_expression customized_string variable_names
         ^ customized_string_of_int_arithmetic_expression customized_string variable_names expr
         ^ ")"
 
-    | Logical_and (l_binary_word, r_binary_word, _)
-    | Logical_or (l_binary_word, r_binary_word, _)
-    | Logical_xor (l_binary_word, r_binary_word, _) as binary_word_expression ->
+    | Logical_and (l_binary_word, r_binary_word, length)
+    | Logical_or (l_binary_word, r_binary_word, length)
+    | Logical_xor (l_binary_word, r_binary_word, length) as binary_word_expression ->
+        print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
+
         label_of_binary_word_expression binary_word_expression
         ^ "("
         ^ customized_string_of_binary_word_expression customized_string variable_names l_binary_word
@@ -638,6 +652,8 @@ and customized_string_of_binary_word_expression customized_string variable_names
         ^ customized_string_of_binary_word_expression customized_string variable_names r_binary_word
         ^ ")"
     | Logical_not (binary_word, length) as binary_word_expression ->
+        print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
+
         let length_arg =
             match customized_string.binary_word_representation with
             | Binary_word_representation_standard -> ""
@@ -648,14 +664,23 @@ and customized_string_of_binary_word_expression customized_string variable_names
         ^ customized_string_of_binary_word_expression customized_string variable_names binary_word
         ^ length_arg
         ^ ")"
-    | Binary_word_constant value ->
+    | Binary_word_constant value as binary_word_expression ->
+
+        let length = BinaryWord.length value in
+        print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
+
         (match customized_string.binary_word_representation with
         | Binary_word_representation_standard -> BinaryWord.string_of_binaryword value
         | Binary_word_representation_int -> string_of_int (BinaryWord.to_int value)
         )
 
-    | Binary_word_variable (variable_index, _) -> variable_names variable_index
-    | Binary_word_array_access (array_expr, index_expr, _) ->
+    | Binary_word_variable (variable_index, length) as binary_word_expression ->
+        print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
+        variable_names variable_index
+
+    | Binary_word_array_access (array_expr, index_expr, length) as binary_word_expression ->
+        print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
+
         customized_string_of_array_expression customized_string variable_names array_expr
         ^ "["
         ^ customized_string_of_int_arithmetic_expression customized_string variable_names index_expr
