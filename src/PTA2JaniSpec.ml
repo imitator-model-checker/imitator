@@ -141,12 +141,13 @@ let jani_binary_word_datavalue binary_word =
         |])
     |]
 
-let jani_function_call str_function_name str_args =
+let jani_function_call ?(str_comment="") str_function_name str_args =
 
     json_struct [|
         json_property "op" (json_quoted "call");
         json_property "function" (json_quoted str_function_name);
-        json_property "args" (json_array str_args)
+        json_property "args" (json_array str_args);
+        json_property "comment" (json_quoted str_comment)
     |]
 
 let jani_function_declaration str_function_name str_type parameters str_body =
@@ -177,7 +178,7 @@ let rec string_of_value = function
 
     | DiscreteValue.Number_value value
     | DiscreteValue.Rational_value value ->
-        NumConst.to_string value
+        NumConst.jani_string_of_numconst value
 
     | DiscreteValue.Int_value value ->
         Int32.to_string value
@@ -193,8 +194,17 @@ let rec string_of_value = function
         jani_array_value str_values
 
     | DiscreteValue.Binary_word_value value ->
-        string_of_int (BinaryWord.to_int value)
+        let bool_array = BinaryWord.to_array value in
+        let str_values = Array.map (fun x -> if x then "true" else "false") bool_array in
+        jani_array_value str_values
 
+
+(* Print and get a warning for undeclared functions in Jani *)
+let undeclared_function_warning expression_label =
+    (* Prepare and print warning message *)
+    let message = "`" ^ expression_label ^ "` function is not implemented in Jani." in
+    ImitatorUtilities.print_warning message;
+    message
 
 (* TODO benjamin REFACTOR duplicate from DiscreteExpression *)
 let customized_string_of_boolean_operations customized_string = function
@@ -299,14 +309,14 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
 
         | DAE_plus (discrete_arithmetic_expression, discrete_term) ->
             jani_binary_operator
-                Constants.default_arithmetic_string_without_whitespace.plus_string
+                customized_string.arithmetic_string.plus_string
                 (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
                 (string_of_term customized_string discrete_term)
 
 
         | DAE_minus (discrete_arithmetic_expression, discrete_term) ->
             jani_binary_operator
-                Constants.default_arithmetic_string_without_whitespace.minus_string
+                customized_string.arithmetic_string.minus_string
                 (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
                 (string_of_term customized_string discrete_term)
 
@@ -320,14 +330,14 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
 			string_of_factor customized_string discrete_factor
 		| DT_mul (discrete_term, discrete_factor) ->
             jani_binary_operator
-                Constants.default_arithmetic_string_without_whitespace.mul_string
+                customized_string.arithmetic_string.mul_string
                 (string_of_term customized_string discrete_term)
                 (string_of_factor customized_string discrete_factor)
 
 
 		| DT_div (discrete_term, discrete_factor) ->
 		    jani_binary_operator
-		        Constants.default_arithmetic_string_without_whitespace.div_string
+		        customized_string.arithmetic_string.div_string
 		        (string_of_term customized_string discrete_term)
                 (string_of_factor customized_string discrete_factor)
 
@@ -337,7 +347,7 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
 
 	and string_of_factor customized_string = function
 		| DF_variable discrete_index -> json_quoted (variable_names discrete_index)
-		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
+		| DF_constant value -> NumConst.jani_string_of_numconst value
         | Rational_array_access (array_expr, index_expr) ->
             let str_array_expr = customized_string_of_array_expression_for_jani customized_string variable_names array_expr in
             let str_index_expr = customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr in
@@ -345,7 +355,7 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
 
 		| DF_unary_min discrete_factor ->
 		    jani_binary_operator
-		        Constants.default_arithmetic_string_without_whitespace.unary_min_string
+		        customized_string.arithmetic_string.unary_min_string
 		        "0"
                 (string_of_factor customized_string discrete_factor)
 
@@ -391,14 +401,14 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 			string_of_int_factor customized_string discrete_factor
 		| Int_mul (discrete_term, discrete_factor) ->
 		    jani_binary_operator
-                Constants.default_arithmetic_string_without_whitespace.mul_string
+                customized_string.arithmetic_string.mul_string
                 (string_of_int_term customized_string discrete_term)
                 (string_of_int_factor customized_string discrete_factor)
 
 
 		| Int_div (discrete_term, discrete_factor) ->
 		    jani_binary_operator
-                Constants.default_arithmetic_string_without_whitespace.div_string
+                customized_string.arithmetic_string.div_string
                 (string_of_int_term customized_string discrete_term)
                 (string_of_int_factor customized_string discrete_factor)
 
@@ -415,7 +425,7 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 
 		| Int_unary_min discrete_factor ->
 		    jani_unary_operator
-                Constants.default_arithmetic_string_without_whitespace.unary_min_string
+                customized_string.arithmetic_string.unary_min_string
                 (string_of_int_factor customized_string discrete_factor)
 
 		| Int_expression discrete_arithmetic_expression ->
@@ -429,51 +439,55 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 
-and customized_string_of_binary_word_expression_for_jani customized_string variable_names = function
-    | Logical_fill_left (binary_word, expr, _)
-    | Logical_fill_right (binary_word, expr, _)
-    | Logical_shift_right (binary_word, expr, _) as binary_word_expression ->
-        jani_function_call
-            (label_of_binary_word_expression binary_word_expression)
-            [|
-                customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word;
-                customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
-            |]
+and customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word_expr =
 
-    | Logical_shift_left (binary_word, expr, length) as binary_word_expression ->
-        jani_function_call
-            (label_of_binary_word_expression binary_word_expression)
-            [|
-                customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word;
-                customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr;
-                (string_of_int length)
-            |]
+    (* Get label of expression *)
+    let label = label_of_binary_word_expression binary_word_expr in
+    (* Prepare undeclared_function_warning function with given label *)
+    let undeclared_function_warning = lazy(undeclared_function_warning label) in
 
-    | Logical_and (l_binary_word, r_binary_word, _)
-    | Logical_or (l_binary_word, r_binary_word, _)
-    | Logical_xor (l_binary_word, r_binary_word, _) as binary_word_expression ->
-        jani_binary_operator
-            (label_of_binary_word_expression binary_word_expression)
-            (customized_string_of_binary_word_expression_for_jani customized_string variable_names l_binary_word)
-            (customized_string_of_binary_word_expression_for_jani customized_string variable_names r_binary_word)
+    (* Convert a binary word expression into a string *)
+    let customized_string_of_binary_word_expression_for_jani = function
+        | Logical_fill_left (binary_word, expr, _)
+        | Logical_fill_right (binary_word, expr, _)
+        | Logical_shift_left (binary_word, expr, _)
+        | Logical_shift_right (binary_word, expr, _) ->
+            jani_function_call
+                label
+                [|
+                    customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word;
+                    customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
+                |]
+                ~str_comment:(Lazy.force undeclared_function_warning)
 
+        | Logical_and (l_binary_word, r_binary_word, _)
+        | Logical_or (l_binary_word, r_binary_word, _)
+        | Logical_xor (l_binary_word, r_binary_word, _) ->
+            jani_function_call
+                label
+                [|
+                    customized_string_of_binary_word_expression_for_jani customized_string variable_names l_binary_word;
+                    customized_string_of_binary_word_expression_for_jani customized_string variable_names r_binary_word
+                |]
+                ~str_comment:(Lazy.force undeclared_function_warning)
 
-    | Logical_not (binary_word, length) as binary_word_expression ->
-        jani_function_call
-            (label_of_binary_word_expression binary_word_expression)
-            [|
-                customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word;
-                (string_of_int length)
-            |]
+        | Logical_not (binary_word, length) ->
+            jani_function_call
+                label
+                [|
+                    customized_string_of_binary_word_expression_for_jani customized_string variable_names binary_word;
+                    (string_of_int length)
+                |]
+                ~str_comment:(Lazy.force undeclared_function_warning)
 
-
-    | Binary_word_constant value -> string_of_int (BinaryWord.to_int value)
-    | Binary_word_variable (variable_index, _) -> "\"" ^ variable_names variable_index ^ "\""
-    | Binary_word_array_access (array_expr, index_expr, _) ->
-        let str_array_expr = customized_string_of_array_expression_for_jani customized_string variable_names array_expr in
-        let str_index_expr = customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr in
-        jani_array_access str_array_expr str_index_expr
-
+        | Binary_word_constant value -> string_of_value (DiscreteValue.Binary_word_value value)
+        | Binary_word_variable (variable_index, _) -> "\"" ^ variable_names variable_index ^ "\""
+        | Binary_word_array_access (array_expr, index_expr, _) ->
+            let str_array_expr = customized_string_of_array_expression_for_jani customized_string variable_names array_expr in
+            let str_index_expr = customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names index_expr in
+            jani_array_access str_array_expr str_index_expr
+    in
+    customized_string_of_binary_word_expression_for_jani binary_word_expr
 
 and customized_string_of_array_expression_for_jani customized_string variable_names = function
     | Literal_array expr_array ->
@@ -491,10 +505,13 @@ and customized_string_of_array_expression_for_jani customized_string variable_na
         jani_array_access str_array_expr str_index_expr
 
     | Array_concat (array_expr_0, array_expr_1) as func ->
+        (* Get label of expression *)
         let function_name = label_of_array_expression func in
+        (* Prepare undeclared_function_warning function with given function name *)
+        let undeclared_function_warning = lazy(undeclared_function_warning function_name) in
         let str_arg_array_expr_0 = customized_string_of_array_expression_for_jani customized_string variable_names array_expr_0 in
         let str_arg_array_expr_1 = customized_string_of_array_expression_for_jani customized_string variable_names array_expr_1 in
-        jani_function_call function_name [|str_arg_array_expr_0;str_arg_array_expr_1|]
+        jani_function_call function_name [|str_arg_array_expr_0;str_arg_array_expr_1|] ~str_comment:(Lazy.force undeclared_function_warning)
 
 
 (*JANI*)
@@ -530,6 +547,7 @@ let string_of_header model =
  Declarations
 ************************************************************)
 
+(* Declarations of custom datatype *)
 let string_of_custom_datatypes =
 
     json_property "datatypes" (json_array [|
@@ -547,106 +565,10 @@ let string_of_custom_datatypes =
         |]
     |])
 
-(*  *)
-let jani_shift_right_or_left to_left str_binary str_k =
-    let direction_op = if to_left then "*" else "/" in
-    json_struct [|
-        json_property "op" (json_quoted "floor");
-        json_property "exp" (json_struct [|
-            json_property "op" (json_quoted direction_op);
-            json_property "left" str_binary;
-            json_property "right" (json_struct [|
-                json_property "op" (json_quoted "pow");
-                json_property "left" "2";
-                json_property "right" str_k
-            |])
-        |])
-    |]
-
-let jani_shift_left = jani_shift_right_or_left true
-let jani_shift_right = jani_shift_right_or_left false
-
-let jani_shift_left_truncate str_binary str_k str_length_of_binary =
-    jani_binary_operator
-        jani_strings.arithmetic_string.minus_string
-        (jani_shift_left str_binary str_k)
-        (
-            jani_shift_left
-            (
-                jani_shift_right
-                    str_binary
-                    (
-                        jani_binary_operator
-                            jani_strings.arithmetic_string.minus_string
-                            str_length_of_binary
-                            str_k
-                    )
-            )
-            str_length_of_binary
-        )
-
-
-let string_of_shift_or_fill_right_function is_shift to_left =
-
-    let str_prefix = if is_shift then "shift" else "fill" in
-    let str_suffix = if to_left then "left" else "right" in
-    let str_function_name = str_prefix ^ "_" ^ str_suffix in
-
-    let body =
-        match is_shift, to_left with
-        | true, true -> jani_shift_left_truncate (json_quoted "b") (json_quoted "k") (json_quoted "l")
-        | true, false -> jani_shift_right (json_quoted "b") (json_quoted "k")
-        | false, true -> jani_shift_left (json_quoted "b") (json_quoted "k")
-        | false, false -> jani_shift_right (json_quoted "b") (json_quoted "k")
-    in
-
-    let parameters = [|jani_function_parameter "b" "int"; jani_function_parameter "k" "int"|] in
-    let all_parameters = if is_shift && to_left then Array.append parameters [|jani_function_parameter "l" "int"|] else parameters in
-
-    jani_function_declaration
-        str_function_name
-        "int"
-        all_parameters
-        body
-        (* fill left : floor(b * pow(2, k)) *)
-        (* shift / fill right : floor(b / pow(2, k)) *)
-        (* shift left : floor(b * pow(2, k)) - () *) (*floor(b / pow(2, l - k))*)
-
-let string_of_shift_left_function = string_of_shift_or_fill_right_function true true
-let string_of_shift_right_function = string_of_shift_or_fill_right_function true false
-let string_of_fill_right_function = string_of_shift_or_fill_right_function false false
-let string_of_fill_left_function = string_of_shift_or_fill_right_function false true
-
-(* String representation of lognot function in Jani *)
-(* Simulate not bitwise using following formula : pow(2, l) - 1 - b with b the int binary word and l the length of b *)
-let string_of_lognot_function =
-    jani_function_declaration
-        "lognot"
-        "int"
-        [|
-            jani_function_parameter "b" "int";
-            jani_function_parameter "l" "int"
-        |]
-        (jani_unary_operator
-            "floor"
-            (jani_binary_operator
-                jani_strings.arithmetic_string.minus_string
-                (jani_binary_operator
-                    jani_strings.arithmetic_string.minus_string
-                    (jani_binary_operator "pow" "2" (json_quoted "l"))
-                    "1"
-                )
-                (json_quoted "b")
-            )
-        )
-
+(* Declarations of custom functions *)
 let string_of_custom_functions = 
     json_property "functions" (json_array [|
-        string_of_shift_left_function;
-        string_of_shift_right_function;
-        string_of_fill_left_function;
-        string_of_fill_right_function;
-        string_of_lognot_function
+
     |])
 
 (* Declaration of actions *)
@@ -705,7 +627,11 @@ let string_of_var_type_discrete_number_for_jani = function
 let rec string_of_var_type_discrete_for_jani = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
     | DiscreteValue.Var_type_discrete_bool -> json_quoted "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ -> json_quoted "int"
+    | DiscreteValue.Var_type_discrete_binary_word _ ->
+        json_struct [|
+            json_property "kind" (json_quoted "array");
+            json_property "base" (json_quoted "bool");
+        |]
 
     | DiscreteValue.Var_type_discrete_array (discrete_type, _) ->
         json_struct [|
