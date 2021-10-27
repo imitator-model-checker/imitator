@@ -364,10 +364,12 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
 		| DF_rational_of_int expr ->
 		    customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
         | DF_pow (expr, exp) as factor ->
-            jani_binary_operator
+            jani_function_call
                 (label_of_rational_factor factor)
-                (string_of_arithmetic_expression customized_string expr)
-                (customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names exp)
+                [|
+                    string_of_arithmetic_expression customized_string expr;
+                    customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names exp
+                |]
 
 	(* Call top-level *)
 	in string_of_arithmetic_expression customized_string
@@ -431,10 +433,12 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 		| Int_expression discrete_arithmetic_expression ->
 			string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression
         | Int_pow (expr, exp) as factor ->
-            jani_binary_operator
+            jani_function_call
                 (label_of_int_factor factor)
-                (string_of_int_arithmetic_expression customized_string expr)
-                (string_of_int_arithmetic_expression customized_string exp)
+                [|
+                    string_of_int_arithmetic_expression customized_string expr;
+                    string_of_int_arithmetic_expression customized_string exp
+                |]
 
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
