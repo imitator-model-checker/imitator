@@ -2027,7 +2027,12 @@ Rational variables in \imitator{} are rational-valued with an exact value.
 In \uppaal{}, they are interpreted as (bounded) integers: overflows may occur and, if their value becomes non-integer, it seems \uppaal{} will just round them to the nearest integer, thus creating a difference in semantics.
 
 \paragraph{Binary variables}
-Binary words are not translated.
+
+\begin{becareful}
+Binary words translation into \uppaal{} formalism is an experimental feature. Binary words are translated and encoded into 32 bits integer variables.
+For this reason, translating binary words of length greater than 31 bits or shifting a binary word of an arbitrary length can lead to unexpected behaviors and results.
+\end{becareful}
+
 
 
 \paragraph{Strong broadcast synchronization}

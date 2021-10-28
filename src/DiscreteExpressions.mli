@@ -133,17 +133,17 @@ and discrete_boolean_expression =
 
 (** Binary word expression *)
 and binary_word_expression =
-    | Logical_shift_left of binary_word_expression * int_arithmetic_expression
-    | Logical_shift_right of binary_word_expression * int_arithmetic_expression
-    | Logical_fill_left of binary_word_expression * int_arithmetic_expression
-    | Logical_fill_right of binary_word_expression * int_arithmetic_expression
-    | Logical_and of binary_word_expression * binary_word_expression
-    | Logical_or of binary_word_expression * binary_word_expression
-    | Logical_xor of binary_word_expression * binary_word_expression
-    | Logical_not of binary_word_expression
+    | Logical_shift_left of binary_word_expression * int_arithmetic_expression * int
+    | Logical_shift_right of binary_word_expression * int_arithmetic_expression * int
+    | Logical_fill_left of binary_word_expression * int_arithmetic_expression * int
+    | Logical_fill_right of binary_word_expression * int_arithmetic_expression * int
+    | Logical_and of binary_word_expression * binary_word_expression * int
+    | Logical_or of binary_word_expression * binary_word_expression * int
+    | Logical_xor of binary_word_expression * binary_word_expression * int
+    | Logical_not of binary_word_expression * int
     | Binary_word_constant of BinaryWord.t
-    | Binary_word_variable of Automaton.variable_index
-    | Binary_word_array_access of array_expression * int_arithmetic_expression
+    | Binary_word_variable of Automaton.variable_index * int
+    | Binary_word_array_access of array_expression * int_arithmetic_expression * int
 
 and array_expression =
     | Literal_array of global_expression array
@@ -166,6 +166,11 @@ val label_of_rational_factor : rational_factor -> string
 val label_of_int_factor : int_factor -> string
 val label_of_binary_word_expression : binary_word_expression -> string
 val label_of_array_expression : array_expression -> string
+
+(* String representation of boolean according to customized string *)
+val customized_string_of_bool_value : Constants.customized_boolean_string -> bool -> string
+(* String representation of boolean operations according to customized string *)
+val customized_string_of_boolean_operations : Constants.customized_boolean_string -> relop -> string
 
 (* Expressions strings *)
 

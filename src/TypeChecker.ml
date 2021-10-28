@@ -974,7 +974,7 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
         (* Unwrap type from array, because of access *)
         (match discrete_type with
         | DiscreteValue.Var_type_discrete_array (inner_type, _) -> inner_type
-        | _ -> raise (TypeError (""))
+        | _ -> raise (TypeError ("")) (* TODO benjamin CLEAN set message *)
         )
 	| Parsed_DF_expression expr ->
 	    discrete_type_of_parsed_discrete_arithmetic_expression variable_infos expr
@@ -998,7 +998,7 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
             (* Arbitrary use inner_type of parameter 0, because already type checked!) *)
             (* But array length of array concatenation is equal to length of first array plus length of second array *)
             DiscreteValue.Var_type_discrete_array (inner_type_0, length_0 + length_1)
-        | _ -> raise (TypeError "")
+        | _ -> raise (TypeError "") (* TODO benjamin CLEAN set message *)
         end
 
 
@@ -1063,7 +1063,7 @@ let rec infer_variable_access variable_infos = function
         let infer_var_type = (
             match var_type_discrete with
             | DiscreteValue.Var_type_discrete_array (inner_type, _) -> inner_type
-            | _ -> raise (TypeError "Trying to make an acces to a non-array or a non-list variable")
+            | _ -> raise (TypeError "Trying to make an access to a non-array or a non-list variable")
         )
         in
         Variable_access (converted_variable_access, converted_index_expr), infer_var_type

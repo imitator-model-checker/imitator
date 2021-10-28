@@ -48,7 +48,7 @@ let all_uppaal_strings : customized_string = {
     arithmetic_string = default_arithmetic_string;
     boolean_string = uppaal_boolean_strings;
     array_string = uppaal_array_strings;
-    binary_word_representation = Int;
+    binary_word_representation = Binary_word_representation_int;
 }
 
 let uppaal_update_separator = ", "
@@ -69,7 +69,10 @@ let string_of_var_type_discrete_number = function
 let rec string_of_var_type_discrete = function
     | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ -> "int"
+    | DiscreteValue.Var_type_discrete_binary_word length ->
+        let warning_in_comment = if length > 31 then ", WARNING: length > 31 can lead to overflow !" else "" in
+        let comment = "/* binary(" ^ string_of_int length ^ ")" ^ warning_in_comment ^ " */" in
+        "int " ^ comment
     | DiscreteValue.Var_type_discrete_array (discrete_type, length) -> string_of_var_type_discrete discrete_type
 
 (* Customized string of var_type *)
@@ -85,9 +88,14 @@ let rec string_of_value = function
     | DiscreteValue.Rational_value x -> NumConst.string_of_numconst x
     | DiscreteValue.Bool_value x -> if x then uppaal_boolean_strings.true_string else uppaal_boolean_strings.false_string
     | DiscreteValue.Int_value x -> Int32.to_string x
-    | DiscreteValue.Binary_word_value binary_word ->
-        let binary_word_int_value = BinaryWord.to_int binary_word in
-        string_of_int binary_word_int_value
+    | DiscreteValue.Binary_word_value value ->
+        let length = BinaryWord.length value in
+
+        if length > 31 then
+            ImitatorUtilities.print_warning ("Encoding a binary word of length `" ^ string_of_int length ^ "` on an integer can leads to an overflow.");
+
+        string_of_int (BinaryWord.to_int value)
+
     | DiscreteValue.Array_value a ->
         let string_array = Array.map (fun x -> string_of_value x) a in
         "{" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "}"
@@ -101,8 +109,6 @@ let rec string_of_discrete_name_from_var_type discrete_name = function
 (* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
 (* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
 and string_of_discrete_name_from_var_type_discrete discrete_name = function
-    | DiscreteValue.Var_type_discrete_binary_word length ->
-        discrete_name ^ "[" ^ string_of_int length ^ "]"
     | DiscreteValue.Var_type_discrete_array (inner_type, length) ->
         string_of_discrete_name_from_var_type_discrete discrete_name inner_type
         ^ "["
@@ -257,36 +263,82 @@ let string_of_declared_actions model =
 		)
 	)
 
+(* `shift_left` function string in Uppaal *)
 let string_of_shift_left_function =
     "int shift_left(int b, int k, int l)\n"
     ^ "{\n"
+    ^ "    /* Simulate shift_left of IMITATOR by truncating binary word at length l */\n"
     ^ "    return (b &lt;&lt; k) - ((b &gt;&gt; l - k) &lt;&lt; l);\n"
     ^ "}\n\n"
 
+(* `shift_right` function string in Uppaal *)
 let string_of_shift_right_function =
-    "int shift_right(int b, int k, int l)\n"
+    "int shift_right(int b, int k)\n"
     ^ "{\n"
     ^ "    return b &gt;&gt; k;\n"
     ^ "}\n\n"
 
+(* `fill_left` function string in Uppaal *)
 let string_of_fill_left_function =
     "int fill_left(int b, int k)\n"
     ^ "{\n"
     ^ "    return b &lt;&lt; k;\n"
     ^ "}\n\n"
 
+(* `fill_right` function string in Uppaal *)
 let string_of_fill_right_function =
     "int fill_right(int b, int k)\n"
     ^ "{\n"
     ^ "    return b &gt;&gt; k;\n"
     ^ "}\n\n"
 
+(* `logand` function string in Uppaal *)
+let string_of_logand_function =
+    "int logand(int a, int b)\n"
+    ^ "{\n"
+    ^ "    return a &amp; b;\n"
+    ^ "}\n\n"
+
+(* `logor` function string in Uppaal *)
+let string_of_logor_function =
+    "int logor(int a, int b)\n"
+    ^ "{\n"
+    ^ "    return a | b;\n"
+    ^ "}\n\n"
+
+(* `logxor` function string in Uppaal *)
+let string_of_logxor_function =
+    "int logxor(int a, int b)\n"
+    ^ "{\n"
+    ^ "    return a ^ b;\n"
+    ^ "}\n\n"
+
+(* `lognot` function string in Uppaal *)
+let string_of_lognot_function =
+    (* Simulate lognot on int using following formula: *)
+    (* b - f, with: *)
+    (* b an arbitrary binary word of length l *)
+    (* f a binary word of length l holding max value (full of ones), eg: f = 0b1111 for a binary word of length l=4  *)
+    "int lognot(int b, int l)\n"
+    ^ "{\n"
+    ^ "    /* Simulate not bitwise operator */\n"
+    ^ "    /* by generating binary word of length l with all bit at one, eg: 0b1111 */\n"
+    ^ "    /* Then inverse by subtracting b */\n"
+    ^ "    /* Power of two is simulated using 1 &lt;&lt; exponent */\n"
+    ^ "    return ((1 &lt;&lt; l) - 1)  /* pow(2, l) - 1 */ - b; \n"
+    ^ "}\n\n"
+
+(* List of function declarations in Uppaal *)
 let string_of_builtin_functions model =
     "/* Functions declarations */\n\n"
     ^ string_of_shift_left_function
     ^ string_of_shift_right_function
     ^ string_of_fill_left_function
     ^ string_of_fill_right_function
+    ^ string_of_logand_function
+    ^ string_of_logor_function
+    ^ string_of_logxor_function
+    ^ string_of_lognot_function
 
 
 (* Convert the initial variable declarations into a string *)
