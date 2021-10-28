@@ -167,6 +167,11 @@ val label_of_int_factor : int_factor -> string
 val label_of_binary_word_expression : binary_word_expression -> string
 val label_of_array_expression : array_expression -> string
 
+(* String representation of boolean according to customized string *)
+val customized_string_of_bool_value : Constants.customized_boolean_string -> bool -> string
+(* String representation of boolean operations according to customized string *)
+val customized_string_of_boolean_operations : Constants.customized_boolean_string -> relop -> string
+
 (* Expressions strings *)
 
 val customized_string_of_global_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string

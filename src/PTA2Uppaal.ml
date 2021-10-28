@@ -263,6 +263,7 @@ let string_of_declared_actions model =
 		)
 	)
 
+(* `shift_left` function string in Uppaal *)
 let string_of_shift_left_function =
     "int shift_left(int b, int k, int l)\n"
     ^ "{\n"
@@ -270,43 +271,49 @@ let string_of_shift_left_function =
     ^ "    return (b &lt;&lt; k) - ((b &gt;&gt; l - k) &lt;&lt; l);\n"
     ^ "}\n\n"
 
+(* `shift_right` function string in Uppaal *)
 let string_of_shift_right_function =
     "int shift_right(int b, int k)\n"
     ^ "{\n"
     ^ "    return b &gt;&gt; k;\n"
     ^ "}\n\n"
 
+(* `fill_left` function string in Uppaal *)
 let string_of_fill_left_function =
     "int fill_left(int b, int k)\n"
     ^ "{\n"
     ^ "    return b &lt;&lt; k;\n"
     ^ "}\n\n"
 
+(* `fill_right` function string in Uppaal *)
 let string_of_fill_right_function =
     "int fill_right(int b, int k)\n"
     ^ "{\n"
     ^ "    return b &gt;&gt; k;\n"
     ^ "}\n\n"
 
+(* `logand` function string in Uppaal *)
 let string_of_logand_function =
     "int logand(int a, int b)\n"
     ^ "{\n"
     ^ "    return a &amp; b;\n"
     ^ "}\n\n"
 
+(* `logor` function string in Uppaal *)
 let string_of_logor_function =
     "int logor(int a, int b)\n"
     ^ "{\n"
     ^ "    return a | b;\n"
     ^ "}\n\n"
 
+(* `logxor` function string in Uppaal *)
 let string_of_logxor_function =
     "int logxor(int a, int b)\n"
     ^ "{\n"
     ^ "    return a ^ b;\n"
     ^ "}\n\n"
 
-(* *)
+(* `lognot` function string in Uppaal *)
 let string_of_lognot_function =
     (* Simulate lognot on int using following formula: *)
     (* b - f, with: *)
@@ -321,7 +328,7 @@ let string_of_lognot_function =
     ^ "    return ((1 &lt;&lt; l) - 1)  /* pow(2, l) - 1 */ - b; \n"
     ^ "}\n\n"
 
-
+(* List of function declarations in Uppaal *)
 let string_of_builtin_functions model =
     "/* Functions declarations */\n\n"
     ^ string_of_shift_left_function
