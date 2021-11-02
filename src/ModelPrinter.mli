@@ -130,3 +130,11 @@ val string_of_model : AbstractModel.abstract_model -> string
 (** Convert an string_of_abstract_property to a string, using the naming functions of an AbstractModel.abstract_model *)
 val string_of_abstract_property : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> string
 
+
+(************************************************************)
+(** Getting the flows of a location *)
+(************************************************************)
+
+(*** BADPROG: very, very bad programming: this function should be in AlgoStateBased BUT ModelPrinter doesn't have access to AlgoStateBased (but the other way is possible); and it is called from both modules, so defined here (ÉA, 2021/11/02) ***)
+
+val compute_flows : Location.global_location -> (Automaton.clock_index * NumConst.t) list

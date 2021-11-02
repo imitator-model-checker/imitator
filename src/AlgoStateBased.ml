@@ -851,79 +851,6 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 	) (* if no stopwatch in the model *)
 
 
-(*------------------------------------------------------------*)
-(* Compute the list of clocks with their flow in a location   *)
-(* Returns a list of pairs (clock_index, flow)                *)
-(* Raises a warning whenever a clock is assigned to TWO different flows *)
-(*------------------------------------------------------------*)
-let compute_flows (location : Location.global_location) : ((Automaton.clock_index * NumConst.t) list) =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
-	(* Hashtbl clock_id --> flow *)
-	let flows_hashtable = Hashtbl.create (List.length model.clocks) in
-	
-	(* Maintain a Boolean to see if any clock has a rate different from 1 *)
-	let flow_mode = ref false in
-	
-	(* Update hash table *)
-	List.iter (fun automaton_index ->
-		(* Get the current location *)
-		let location_index = Location.get_location location automaton_index in
-		
-		(* 1. Manage the list of stopped clocks *)
-		let stopped = model.stopwatches automaton_index location_index in
-		(* If list non null: we have flows <> 1 *)
-		if stopped <> [] then flow_mode := true;
-		(* Add each clock *)
-		List.iter (fun stopwatch_id ->
-			Hashtbl.replace flows_hashtable stopwatch_id NumConst.zero
-		) stopped;
-		
-		(* 2. Manage the explicit flows *)
-		let flows = model.flow automaton_index location_index in
-		(* Add each clock *)
-		List.iter (fun (clock_id, flow_value) ->
-			(* If flow <> 1, update Boolean *)
-			if NumConst.neq flow_value NumConst.one then flow_mode := true;
-
-			(* Compare with previous value *)
-			try(
-				(* Get former value *)
-				let former_flow_value = Hashtbl.find flows_hashtable clock_id in
-				(* Compare *)
-				if NumConst.neq former_flow_value flow_value then(
-					
-					(*** TODO: a flag should be raised somewhere so that the result is said to be perhaps wrong! (or unspecified) ***)
-					
-					print_warning ("Clock `" ^ (model.variable_names clock_id) ^ "` is assigned to two different flow values at the same time (`" ^ (NumConst.string_of_numconst flow_value) ^ "` in location `" ^ (model.location_names automaton_index location_index) ^ "`, as well as `" ^ (NumConst.string_of_numconst former_flow_value) ^ "`). The behavior becomes unspecified!");
-				);
-				(* Do not add *)
-				()
-			) with Not_found ->(
-			(* Not found: not yet defined => add *)
-				Hashtbl.add flows_hashtable clock_id flow_value
-			);
-			
-		) flows;
-		
-	) model.automata;
-	
-	(* If there are no explicit flows then just return the set of clocks with flow 1 *)
-	if (not !flow_mode) then (List.map (fun clock_id -> clock_id, NumConst.one) model.clocks) else (
-		(* Computing the list of clocks with their flow *)
-		List.map (fun clock_id ->
-			(* Try to get the clock explicit flow *)
-			try(
-				(* Get value *)
-				let flow_value = Hashtbl.find flows_hashtable clock_id in
-				(* Return *)
-				clock_id, flow_value
-			) with Not_found ->
-				(* Absent: flow is 1 *)
-				clock_id, NumConst.one
-		) model.clocks
-	) (* if no explicit flow for this location *)
 
 
 
@@ -991,7 +918,7 @@ let pxd_compute_time_polyhedron (direction : time_direction) (location : Locatio
 	(* Print some information *)
 	print_message Verbose_high ("Computing list of explicit flows…");
 	
-	let flows = compute_flows location in
+	let flows = ModelPrinter.compute_flows location in
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
@@ -1035,7 +962,7 @@ let px_compute_time_polyhedron (direction : time_direction) (location : Location
 	(* Print some information *)
 	print_message Verbose_high ("Computing list of explicit flows…");
 	
-	let flows = compute_flows location in
+	let flows = ModelPrinter.compute_flows location in
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
