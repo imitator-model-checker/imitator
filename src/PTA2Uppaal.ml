@@ -356,6 +356,10 @@ let string_of_declarations model actions_and_nb_automata =
 	^ "\n" ^ " * Generated: " ^ (now()) ^ ""
 	^ "\n" ^ " ************************************************************/"
 
+    (* Declare built-in functions *)
+
+    ^ string_of_builtin_functions model
+
 	(* Declare clocks *)
 	^ (string_of_clocks model)
 
@@ -370,10 +374,6 @@ let string_of_declarations model actions_and_nb_automata =
 
 	(* Declare actions *)
 	^ (string_of_declared_actions model)
-
-    (* Declare built-in functions *)
-
-    ^ string_of_builtin_functions model
 
 	(*** TODO: get the initial value of clocks from the initial constraint and, if not 0, then issue a warning ***)
 

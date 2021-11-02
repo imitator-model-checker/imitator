@@ -2787,31 +2787,10 @@ END CONSTRAINT
 		'options'    : '-imi2Uppaal',
 		'expectations' : [
 			{'file': 'bool-discrete-var-update-uppaal.xml' , 'content' : """
+/* Discrete variables declarations (WARNING: these variables can be rational-valued in IMITATOR, but they become integer-valued in Uppaal) */
 bool b = true;
 
 /* Action declarations */
-
-/* Functions declarations */
-
-int shift_left(int b, int k, int l)
-{
-    return (b &lt;&lt; k) - ((b &gt;&gt; l - k) &lt;&lt; l);
-}
-
-int shift_right(int b, int k, int l)
-{
-    return b &gt;&gt; k;
-}
-
-int fill_left(int b, int k)
-{
-    return b &lt;&lt; k;
-}
-
-int fill_right(int b, int k)
-{
-    return b &gt;&gt; k;
-}
 
 
 
@@ -16520,29 +16499,7 @@ int nb__a = 3;
 /* Action declarations */
 broadcast chan a; /* This action is used in 3 automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the correctness is ensured thanks to variable 'nb__a' */
 chan b;
-broadcast chan c;/* Functions declarations */
-
-int shift_left(int b, int k, int l)
-{
-    return (b &lt;&lt; k) - ((b &gt;&gt; l - k) &lt;&lt; l);
-}
-
-int shift_right(int b, int k, int l)
-{
-    return b &gt;&gt; k;
-}
-
-int fill_left(int b, int k)
-{
-    return b &lt;&lt; k;
-}
-
-int fill_right(int b, int k)
-{
-    return b &gt;&gt; k;
-}
-
-
+broadcast chan c;
 
 	/*------------------------------------------------------------*/
 	/* Initial constraint (not interpreted by Uppaal)             */
