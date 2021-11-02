@@ -6239,8 +6239,8 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/04/01
-		# Test for IMITATOR version: 3
+		# Last modified            : 2021/11/02
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only discrete',
 		'input_files': ['testEFexemplify-discrete.imi', 'testEFexemplify-discrete.imiprop'],
 		'options'    : '-no-merge -comparison none',
@@ -6296,8 +6296,8 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/04/01
-		# Test for IMITATOR version: 3
+		# Last modified            : 2021/11/02
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock',
 		'input_files': ['testEFexemplify-1clock.imi', 'testEFexemplify-1clock.imiprop'],
 		'options'    : '-no-merge -comparison none',
@@ -6353,8 +6353,8 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/04/01
-		# Test for IMITATOR version: 3
+		# Last modified            : 2021/11/02
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock (+ non-1 flows, non-0 resets)',
 		'input_files': ['testEFexemplify-1complexclock.imi', 'testEFexemplify-1complexclock.imiprop'],
 		'options'    : '-no-merge -comparison none',
@@ -6378,27 +6378,27 @@ Concrete run for parameter valuation:
   
 
 pta: l1 ==> 
-x = 0 & global_time = 0
+x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 2
  | followed by combined transition [PTA pta: guard{ x = 2} updates{x := 5}  (* sync nosync_1*)  Target l2] 
  | 
  v  pta: l2 ==> 
-x = 5 & global_time = 2
+x = 5 & global_time = 2 flows[x' = 3, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 8} updates{x := 2*x}  (* sync nosync_2*)  Target l3] 
  | 
  v  pta: l3 ==> 
-x = 16 & global_time = 3
+x = 16 & global_time = 3 flows[x' = -1, global_time' = 1]
 
  | 
  | via d = 10
  | followed by combined transition [PTA pta: guard{ x = 6} updates{x := x + -3}  (* sync nosync_3*)  Target lTarget] 
  | 
  v  pta: lTarget ==> 
-x = 3 & global_time = 13
+x = 3 & global_time = 13 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 END RESULT
@@ -6417,8 +6417,8 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/04/01
-		# Test for IMITATOR version: 3
+		# Last modified            : 2021/11/02
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with 2 clocks (+ non-1 flows, non-0 resets)',
 		'input_files': ['testEFexemplify-2complexclocks.imi', 'testEFexemplify-2complexclocks.imiprop'],
 		'options'    : '-no-merge -comparison none',
@@ -6442,27 +6442,27 @@ Concrete run for parameter valuation:
   
 
 pta: l1 ==> 
-x = 0 & y = 0 & global_time = 0
+x = 0 & y = 0 & global_time = 0 flows[x' = 1, y' = 0, global_time' = 1]
  | 
  | via d = 2
  | followed by combined transition [PTA pta: guard{ x = 2} updates{y := 5}  (* sync nosync_1*)  Target l2] 
  | 
  v  pta: l2 ==> 
-x = 2 & y = 5 & global_time = 2
+x = 2 & y = 5 & global_time = 2 flows[x' = 3, y' = 2, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 5} updates{x := y, y := x}  (* sync nosync_2*)  Target l3] 
  | 
  v  pta: l3 ==> 
-x = 7 & y = 5 & global_time = 3
+x = 7 & y = 5 & global_time = 3 flows[x' = -12, y' = 1, global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{ x = 1} updates{y := -1*x + y}  (* sync nosync_3*)  Target lTarget] 
  | 
  v  pta: lTarget ==> 
-x = 1 & y = 9/2 & global_time = 7/2
+x = 1 & y = 9/2 & global_time = 7/2 flows[x' = 1, y' = 1, global_time' = 1]
 (************************************************************)
 
 END RESULT
@@ -6481,8 +6481,8 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/04/01
-		# Test for IMITATOR version: 3
+		# Last modified            : 2021/11/02
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with 1 clock and 2 bounded signals',
 		'input_files': ['testEFexemplify-2signals.imi', 'testEFexemplify-2signals.imiprop'],
 		'options'    : '-no-merge -comparison none',
@@ -6505,13 +6505,13 @@ Concrete run for parameter valuation:
   
 
 pta: l1, signal_1: increasing_slow, signal_2: increasing_slow ==> 
-x = 0 & s_1 = 37/4 & s_2 = 29/8 & global_time = 0
+x = 0 & s_1 = 37/4 & s_2 = 29/8 & global_time = 0 flows[x' = 1, s_1' = 1, s_2' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by combined transition [PTA signal_1: guard{True} updates{}  sync stabilize_1 Target stabilized] 
  | 
  v  pta: l1, signal_1: stabilized, signal_2: increasing_slow ==> 
-x = 1 & s_1 = 41/4 & s_2 = 37/8 & global_time = 1
+x = 1 & s_1 = 41/4 & s_2 = 37/8 & global_time = 1 flows[x' = 1, s_1' = 0, s_2' = 1, global_time' = 1]
 
  | 
  | via d = 1
@@ -6519,7 +6519,7 @@ x = 1 & s_1 = 41/4 & s_2 = 37/8 & global_time = 1
 & x = 2} updates{x := 0}  (* sync nosync_1*)  Target l2] 
  | 
  v  pta: l2, signal_1: stabilized, signal_2: increasing_slow ==> 
-x = 0 & s_1 = 41/4 & s_2 = 45/8 & global_time = 2
+x = 0 & s_1 = 41/4 & s_2 = 45/8 & global_time = 2 flows[x' = 1, s_1' = 0, s_2' = 1, global_time' = 1]
 
  | 
  | via d = 17/4
@@ -6527,7 +6527,7 @@ x = 0 & s_1 = 41/4 & s_2 = 45/8 & global_time = 2
 & 10 > s_2} updates{}  (* sync nosync_2*)  Target l3] 
  | 
  v  pta: l3, signal_1: stabilized, signal_2: increasing_slow ==> 
-x = 17/4 & s_1 = 41/4 & s_2 = 79/8 & global_time = 25/4
+x = 17/4 & s_1 = 41/4 & s_2 = 79/8 & global_time = 25/4 flows[x' = 2, s_1' = 0, s_2' = 1, global_time' = 1]
 
  | 
  | via d = 83/8
@@ -6536,7 +6536,7 @@ x = 17/4 & s_1 = 41/4 & s_2 = 79/8 & global_time = 25/4
 & s_1 + 10 = s_2} updates{}  (* sync nosync_3*)  Target lTarget] 
  | 
  v  pta: lTarget, signal_1: stabilized, signal_2: increasing_slow ==> 
-x = 25 & s_1 = 41/4 & s_2 = 81/4 & global_time = 133/8
+x = 25 & s_1 = 41/4 & s_2 = 81/4 & global_time = 133/8 flows[x' = 1, s_1' = 0, s_2' = 1, global_time' = 1]
 (************************************************************)
 
 """
@@ -6574,14 +6574,14 @@ Concrete run for parameter valuation:
   p = 1/2
 
 pta: l1 ==> 
-p = 1/2 & x = 0 & global_time = 0
+p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ 2*p = 1
 & x = 3} updates{x := 0}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 1/2 & x = 0 & global_time = 3
+p = 1/2 & x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6604,13 +6604,13 @@ Impossible concrete run for parameter valuation:
   p = 0
 
 pta: l1 ==> 
-p = 0 & x = 0 & global_time = 0
+p = 0 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l1 ==> 
-p = 0 & x = 1 & global_time = 1
+p = 0 & x = 1 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6630,13 +6630,13 @@ Impossible concrete run for parameter valuation:
   p = 1/2
 
 pta: l1 ==> 
-p = 1/2 & x = 0 & global_time = 0
+p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: ltarget ==> 
-p = 1/2 & x = 0 & global_time = 0
+p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 """
@@ -6675,14 +6675,14 @@ Concrete run for parameter valuation:
   p = 4095/2
 
 pta: l1 ==> 
-p = 4095/2 & x = 1 & global_time = 0
+p = 4095/2 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True
 &  p = 2046 + x} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 4095/2 & x = 3/2 & global_time = 1/2
+p = 4095/2 & x = 3/2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6705,13 +6705,13 @@ Impossible concrete run for parameter valuation:
   p = 0
 
 pta: l1 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l1 ==> 
-p = 0 & x = 2 & global_time = 1
+p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6732,13 +6732,13 @@ Impossible concrete run for parameter valuation:
   p = 4095/2
 
 pta: l1 ==> 
-p = 4095/2 & x = 1 & global_time = 0
+p = 4095/2 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: ltarget ==> 
-p = 4095/2 & x = 1 & global_time = 0
+p = 4095/2 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 
@@ -6775,27 +6775,27 @@ Concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1/4
  | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 5/4 & global_time = 1/4
+p = 1 & x = 5/4 & global_time = 1/4 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1/4
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 1 & x = 3/2 & global_time = 1/2
+p = 1 & x = 3/2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 1 & x = 2 & global_time = 1
+p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6815,27 +6815,27 @@ Impossible concrete run for parameter valuation:
   p = 0
 
 pta: l1 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l1 ==> 
-p = 0 & x = 2 & global_time = 1
+p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l2 ==> 
-p = 0 & x = 3 & global_time = 2
+p = 0 & x = 3 & global_time = 2 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p = 0 & x = 4 & global_time = 3
+p = 0 & x = 4 & global_time = 3 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6855,27 +6855,27 @@ Impossible concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l2 ==> 
-p = 1 & x = 2 & global_time = 1
+p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p = 1 & x = 3 & global_time = 2
+p = 1 & x = 3 & global_time = 2 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 
@@ -6912,27 +6912,27 @@ Concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 1 & x = 3/2 & global_time = 1/2
+p = 1 & x = 3/2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 1 & x = 2 & global_time = 1
+p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6952,26 +6952,26 @@ Impossible concrete run for parameter valuation:
   p = 0
 
 pta: l1 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l2 ==> 
-p = 0 & x = 2 & global_time = 1
+p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p = 0 & x = 3 & global_time = 2
+p = 0 & x = 3 & global_time = 2 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6991,26 +6991,26 @@ Impossible concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p = 1 & x = 2 & global_time = 1
+p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 
@@ -7047,27 +7047,27 @@ Concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 1 & x = 2 & global_time = 1
+p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7087,26 +7087,26 @@ Impossible concrete run for parameter valuation:
   p = 0
 
 pta: l1 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p = 0 & x = 2 & global_time = 1
+p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7126,26 +7126,26 @@ Impossible concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: ltarget ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 """
@@ -7183,27 +7183,27 @@ Concrete run for parameter valuation:
   p = 2
 
 pta: l1 ==> 
-p = 2 & x = 2 & global_time = 0
+p = 2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 2 & x = 2 & global_time = 0
+p = 2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 2 & x = 2 & global_time = 0
+p = 2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 2 & x = 0 & global_time = 0
+p = 2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
 (************************************************************)
 """
 			} # end result file
@@ -7240,27 +7240,27 @@ Concrete run for parameter valuation:
   p = 2
 
 pta: l1 ==> 
-p = 2 & x = 3/2 & global_time = 0
+p = 2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 2 & x = 3/2 & global_time = 0
+p = 2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 2 & x = 3/2 & global_time = 0
+p = 2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 2 & x = 2 & global_time = 1/2
+p = 2 & x = 2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 END RESULT
@@ -7304,20 +7304,20 @@ Concrete run for parameter valuation:
 & p2 = 1/2
 
 pta: l1 ==> 
-p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
@@ -7325,7 +7325,7 @@ p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0
 & p2 + x > p1} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p1 = 1 & p2 = 1/2 & x = 3 & global_time = 1
+p1 = 1 & p2 = 1/2 & x = 3 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7349,26 +7349,26 @@ Impossible concrete run for parameter valuation:
 & p2 = 3
 
 pta: l1 ==> 
-p1 = 3 & p2 = 3 & x = 3/2 & global_time = 0
+p1 = 3 & p2 = 3 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p1 = 3 & p2 = 3 & x = 3/2 & global_time = 0
+p1 = 3 & p2 = 3 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p1 = 3 & p2 = 3 & x = 2 & global_time = 1/2
+p1 = 3 & p2 = 3 & x = 2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p1 = 3 & p2 = 3 & x = 3 & global_time = 3/2
+p1 = 3 & p2 = 3 & x = 3 & global_time = 3/2 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7392,26 +7392,26 @@ Impossible concrete run for parameter valuation:
 & p2 = 1/2
 
 pta: l1 ==> 
-p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: ltarget ==> 
-p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 
@@ -7454,27 +7454,27 @@ Concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 0 & global_time = 0
+p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 0 & global_time = 0
+p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ p = x} updates{x := 0}  sync b Target l3] 
  | 
  v  pta: l3 ==> 
-p = 1 & x = 0 & global_time = 1
+p = 1 & x = 0 & global_time = 1 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ p = x} updates{}  sync b Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 1 & x = 1 & global_time = 2
+p = 1 & x = 1 & global_time = 2 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7494,26 +7494,26 @@ Impossible concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 0 & global_time = 0
+p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 0 & global_time = 0
+p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ p = x} updates{x := 0}  sync b Target l3] 
  | 
  v  pta: l3 ==> 
-p = 1 & x = 0 & global_time = 1
+p = 1 & x = 0 & global_time = 1 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with b
  | 
  v  pta: ltarget ==> 
-p = 1 & x = 0 & global_time = 1
+p = 1 & x = 0 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 
@@ -7551,34 +7551,34 @@ Concrete run for parameter valuation:
   
 
 pta: l1, d1 = 1/2, d2 = 50 ==> 
-x = 0 & global_time = 0
+x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2, d1 = 1/2, d2 = 50 ==> 
-x = 0 & global_time = 3
+x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
  | 
  v  pta: l3, d1 = 5/2, d2 = 50 ==> 
-x = 0 & global_time = 4
+x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := d2 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/2, d2 = 25 ==> 
-x = 1 & global_time = 5
+x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 7
  | followed by combined transition [PTA pta: guard{ x = 8} updates{}  sync a Target lbad] 
  | 
  v  pta: lbad, d1 = 5/2, d2 = 25 ==> 
-x = 8 & global_time = 12
+x = 8 & global_time = 12 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7598,33 +7598,33 @@ Impossible concrete run for parameter valuation:
   
 
 pta: l1, d1 = 1/2, d2 = 50 ==> 
-x = 0 & global_time = 0
+x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2, d1 = 1/2, d2 = 50 ==> 
-x = 0 & global_time = 3
+x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
  | 
  v  pta: l3, d1 = 5/2, d2 = 50 ==> 
-x = 0 & global_time = 4
+x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := d2 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/2, d2 = 25 ==> 
-x = 1 & global_time = 5
+x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: lbad, d1 = 5/2, d2 = 25 ==> 
-x = 1 & global_time = 5
+x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 END RESULT
@@ -7665,20 +7665,20 @@ Concrete run for parameter valuation:
   p = 1/2
 
 pta: l1, d1 = 1/2 ==> 
-p = 1/2 & x = 0 & global_time = 0
+p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2, d1 = 1/2 ==> 
-p = 1/2 & x = 0 & global_time = 3
+p = 1/2 & x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
  | 
  v  pta: l3, d1 = 5/2 ==> 
-p = 1/2 & x = 0 & global_time = 4
+p = 1/2 & x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
@@ -7686,14 +7686,14 @@ p = 1/2 & x = 0 & global_time = 4
 & x = 1} updates{d1 := d1 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/4 ==> 
-p = 1/2 & x = 1 & global_time = 5
+p = 1/2 & x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 7
  | followed by combined transition [PTA pta: guard{ x = 8} updates{}  sync a Target lbad] 
  | 
  v  pta: lbad, d1 = 5/4 ==> 
-p = 1/2 & x = 8 & global_time = 12
+p = 1/2 & x = 8 & global_time = 12 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7713,33 +7713,33 @@ Impossible concrete run for parameter valuation:
   p = 1
 
 pta: l1, d1 = 1/2 ==> 
-p = 1 & x = 0 & global_time = 0
+p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2, d1 = 1/2 ==> 
-p = 1 & x = 0 & global_time = 3
+p = 1 & x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
  | 
  v  pta: l3, d1 = 5/2 ==> 
-p = 1 & x = 0 & global_time = 4
+p = 1 & x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3, d1 = 5/2 ==> 
-p = 1 & x = 1 & global_time = 5
+p = 1 & x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l4, d1 = 5/4 ==> 
-p = 1 & x = 2 & global_time = 6
+p = 1 & x = 2 & global_time = 6 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7760,20 +7760,20 @@ Impossible concrete run for parameter valuation:
   p = 1/2
 
 pta: l1, d1 = 1/2 ==> 
-p = 1/2 & x = 0 & global_time = 0
+p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2, d1 = 1/2 ==> 
-p = 1/2 & x = 0 & global_time = 3
+p = 1/2 & x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
  | 
  v  pta: l3, d1 = 5/2 ==> 
-p = 1/2 & x = 0 & global_time = 4
+p = 1/2 & x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
@@ -7781,13 +7781,13 @@ p = 1/2 & x = 0 & global_time = 4
 & x = 1} updates{d1 := d1 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/4 ==> 
-p = 1/2 & x = 1 & global_time = 5
+p = 1/2 & x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: lbad, d1 = 5/4 ==> 
-p = 1/2 & x = 1 & global_time = 5
+p = 1/2 & x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 """
