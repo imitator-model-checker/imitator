@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/10/19
+# Last modified     : 2021/11/02
 #************************************************************
 
 
@@ -6264,20 +6264,20 @@ Concrete run for parameter valuation:
   
 
 pta: l1, i = 0 ==> 
-global_time = 0
+global_time = 0 flows[global_time' = 1]
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{i := 3}  (* sync nosync_1*)  Target l2] 
  | 
  v  pta: l2, i = 3 ==> 
-global_time = 1/2
+global_time = 1/2 flows[global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{i := i + 1}  (* sync nosync_2*)  Target lTarget] 
  | 
  v  pta: lTarget, i = 4 ==> 
-global_time = 1
+global_time = 1 flows[global_time' = 1]
 (************************************************************)
 
 END RESULT
@@ -6321,20 +6321,20 @@ Concrete run for parameter valuation:
   
 
 pta: l1 ==> 
-x = 0 & global_time = 0
+x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 2
  | followed by combined transition [PTA pta: guard{ x = 2} updates{x := 0}  (* sync nosync_1*)  Target l2] 
  | 
  v  pta: l2 ==> 
-x = 0 & global_time = 2
+x = 0 & global_time = 2 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := x}  (* sync nosync_2*)  Target lTarget] 
  | 
  v  pta: lTarget ==> 
-x = 3 & global_time = 5
+x = 3 & global_time = 5 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 END RESULT
