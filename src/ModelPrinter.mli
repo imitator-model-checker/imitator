@@ -54,12 +54,6 @@ val string_of_concrete_state : AbstractModel.abstract_model -> State.concrete_st
 val string_of_guard : (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
 val customized_string_of_guard : Constants.customized_string -> (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
 
-(************************************************************)
-(** Transitions *)
-(************************************************************)
-(* Convert a transition into a string: compact version for debugging/pretty-printing *)
-val string_of_transition : AbstractModel.abstract_model -> Automaton.automaton_index -> AbstractModel.transition -> string
-
 
 (************************************************************)
 (** Debug-print for symbolic run *)
