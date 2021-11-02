@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2021/02/05
+ * Last modified     : 2021/11/03
  *
  ************************************************************)
 
@@ -167,28 +167,6 @@ type state_space_computation_result = {
 	termination			: bfs_algorithm_termination;
 }
 
-
-
-(*** NOTE: former version of EFsynth, that works as a list of constraints (and kept for now, at least) ***)
-type deprecated_efsynth_result = {
-	(* List of convex constraints ensuring reachability of EF location *)
-	constraints			: LinearConstraint.p_linear_constraint list;
-	
-	(* Explored state space *)
-	state_space			: StateSpace.state_space;
-	
-	(* Nature of the state space *)
-	statespace_nature	: StateSpace.statespace_nature;
-	
-	(* Total computation time of the algorithm *)
-	computation_time	: float;
-	
-	(* Soundness of the result *)
-	soundness			: constraint_soundness;
-	
-	(* Termination *)
-	termination			: bfs_algorithm_termination;
-}
 
 
 (** Result for single synthesis: EF, PDFC *)
@@ -383,9 +361,6 @@ type imitator_result =
 	(* Result for Post* *)
 	| State_space_computation_result of state_space_computation_result
 
-	(* Result for old version of EFsynth *)
-	| Deprecated_efsynth_result of deprecated_efsynth_result
-	
 	(* Result for EFsynth, PDFC PRP *)
 	| Single_synthesis_result of single_synthesis_result
 	
