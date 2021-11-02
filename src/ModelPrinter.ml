@@ -474,8 +474,8 @@ let string_of_transition model automaton_index (transition : transition) =
 	^ ";"
 
 
-(* Convert a transition into a string: compact version for debugging/pretty-printing *)
-let string_of_transition model automaton_index (transition : transition) =
+(* Convert a transition into a string: version for runs *)
+let string_of_transition_for_runs model automaton_index (transition : transition) =
 	(* Print some information *)
 (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
 
@@ -1011,12 +1011,27 @@ let string_of_state model (state : state) =
 
 	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then Location.Float_display else Location.Exact_display) state.global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names state.px_constraint) ^ ""
 
-(* Convert a concrete state (locations, discrete variables valuations, rates for continuous variables) *)
+
+(* Convert a concrete state (locations, discrete variables valuations, continuous variables valuations, current flows for continuous variables) *)
 let string_of_concrete_state model (state : State.concrete_state) =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then Location.Float_display else Location.Exact_display) state.global_location) ^ " ==> \n" ^ (string_of_px_valuation model state.px_valuation) ^ ""
+	(* Convert location *)
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then Location.Float_display else Location.Exact_display) state.global_location)
+	(* Convert variables valuations *)
+	^ " ==> \n" ^ (string_of_px_valuation model state.px_valuation)
+	(* Convert rates *)
+	^ " flows["
+	^ (
+		let global_location : Location.global_location = state.global_location in
+		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows global_location in
+		(* Iterate *)
+		string_of_list_of_string_with_sep ", " (
+			List.map (fun (variable_index, flow) -> (model.variable_names variable_index ) ^ "' = "  ^ (NumConst.string_of_numconst flow) ) flows
+		)
+	)
+	^ "]"
 
 
 (************************************************************)
@@ -1031,7 +1046,7 @@ let string_of_combined_transition model combined_transition = string_of_list_of_
 		(* Get actual transition *)
 		let transition = model.transitions_description transition_index in
 		(* Print *)
-		string_of_transition model automaton_index transition
+		string_of_transition_for_runs model automaton_index transition
 	) combined_transition
 )
 
