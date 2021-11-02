@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2021/09/16
+ * Last modified     : 2021/11/02
  *
  ************************************************************)
 
@@ -394,9 +394,9 @@ let string_of_transition model automaton_index (transition : transition) =
 
 
 (* Convert a transition into a string: compact version for debugging/pretty-printing *)
-let debug_string_of_transition model automaton_index (transition : transition) =
+let string_of_transition model automaton_index (transition : transition) =
 	(* Print some information *)
-(* 	print_message Verbose_total ("Entering `ModelPrinter.debug_string_of_transition(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
 
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
@@ -943,14 +943,14 @@ let string_of_concrete_state model (state : State.concrete_state) =
 (************************************************************)
 
 (* Function to pretty-print combined transitions *)
-let debug_string_of_combined_transition model combined_transition = string_of_list_of_string_with_sep ", " (
+let string_of_combined_transition model combined_transition = string_of_list_of_string_with_sep ", " (
 	List.map (fun transition_index ->
 		(* Get automaton index *)
 		let automaton_index = model.automaton_of_transition transition_index in
 		(* Get actual transition *)
 		let transition = model.transitions_description transition_index in
 		(* Print *)
-		debug_string_of_transition model automaton_index transition
+		string_of_transition model automaton_index transition
 	) combined_transition
 )
 
@@ -963,7 +963,7 @@ let debug_string_of_symbolic_run model state_space (symbolic_run : StateSpace.sy
 	
 		  (" " ^ (string_of_state model state))
 		^ ("\n | ")
-		^ ("\n | via combined transition " ^ (debug_string_of_combined_transition model symbolic_step.transition))
+		^ ("\n | via combined transition " ^ (string_of_combined_transition model symbolic_step.transition))
 		^ ("\n | ")
 		^ ("\n v ")
 	) symbolic_run.symbolic_steps) in
@@ -981,7 +981,7 @@ let string_of_concrete_steps model concrete_steps =
 	(string_of_list_of_string_with_sep "\n" (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
 		  ("\n | ")
 		^ ("\n | via d = " ^ (NumConst.string_of_numconst concrete_step.time))
-		^ ("\n | followed by combined transition " ^ (debug_string_of_combined_transition model concrete_step.transition))
+		^ ("\n | followed by combined transition " ^ (string_of_combined_transition model concrete_step.transition))
 		^ ("\n | ")
 		^ ("\n v ")
 		^ (" " ^ (string_of_concrete_state model concrete_step.target))
@@ -1002,7 +1002,7 @@ let string_of_impossible_concrete_steps model impossible_concrete_steps =
 
 
 (** Convert a concrete run to a string (for debug-purpose) *)
-let debug_string_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
+let string_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
 	(* First recall the parameter valuation *)
 	"Concrete run for parameter valuation:"
 	^ "\n" ^ (string_of_pval model concrete_run.p_valuation)
@@ -1018,7 +1018,7 @@ let debug_string_of_concrete_run model (concrete_run : StateSpace.concrete_run) 
 
 	
 (** Convert an impossible_concrete_run to a string (for debug-purpose) *)
-let debug_string_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) =
+let string_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) =
 	(* First recall the parameter valuation *)
 	"Impossible concrete run for parameter valuation:"
 	^ "\n" ^ (string_of_pval model impossible_concrete_run.p_valuation)
