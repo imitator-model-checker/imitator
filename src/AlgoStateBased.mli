@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: main virtual class to explore the state space: only defines post-related function, i.e., to compute the successor states of ONE state
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2020/09/28
+ * Last modified     : 2021/09/23
  *
  ************************************************************)
 
@@ -240,7 +241,18 @@ class virtual algoStateBased :
 		(* Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
 		val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint
 
+		(*** NOTE: only used for exemplification purpose ***)
+		(* Positive examples spotted (positive examples: concrete runs to the target state) *)
+		val mutable positive_examples : Result.valuation_and_concrete_run list
 		
+		(*** NOTE: only used for exemplification purpose ***)
+		(* Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
+		val mutable negative_examples : Result.valuation_and_concrete_run list
+		
+		(*** NOTE: only used for exemplification purpose ***)
+		val nb_POSITIVE_EXAMPLES_MAX : int
+		val nb_NEGATIVE_EXAMPLES_MAX : int
+
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
@@ -316,6 +328,18 @@ class virtual algoStateBased :
 		method virtual process_initial_state : State.state -> bool
 		
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Generate counter-example(s) if required by the algorithm *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method construct_counterexamples : state_index -> unit
+		
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Create 1 positive and (up to) 2 negative examples (of type `option` in case could not be exhibited) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method exhibit_3_counterexamples : State.state_index-> (Result.valuation_and_concrete_run * Result.valuation_and_concrete_run option * Result.valuation_and_concrete_run option)
+
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

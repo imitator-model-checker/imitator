@@ -1,0 +1,52 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that accessing an out of bound index raise a controlled error
+ * Description      : Test that accessing an out of bound index raise a controlled error
+ * Correctness      : Error
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/10/05
+ * Last modified    : 2021/10/05
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.2
+ ************************************************************)
+
+var
+
+  my_int_array : int array(4);
+
+automaton P
+
+  loc s0: invariant True
+  when
+    (* Out of bound error *)
+    & my_int_array[3 + 1] = 0
+  (*
+  do {
+    my_int_array[1][3+1] := 1
+  }
+  *)
+  goto lend;
+
+  accepting loc lend : invariant my_int_array[0] = 1
+
+end
+
+
+init := {
+  discrete =
+    loc[P]:=s0,
+    my_int_array := [1,2,3,4]
+  ;
+
+}

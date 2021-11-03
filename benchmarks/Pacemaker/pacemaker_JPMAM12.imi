@@ -9,11 +9,11 @@
  *
  * Author          : Étienne André
  * Created         : 2015/02/11
- * Last modified   : 2020/08/18
- * IMITATOR version: 3
+ * Last modified   : 2021/10/07
+ * IMITATOR version: 3.1
  ************************************************************)
 
-var 
+var
 	(* local clocks *)
 	t_AVI, t_LRI, t_PVARP, t_VRP, t_5a,
 	(* global clocks *)
@@ -28,16 +28,12 @@ var
 	TPVAB		= 50,
 	Aminwait	= 0,(* (random value)*)
 	Amaxwait	= 1000,(* (random value)*)
-	
-	(* Constants for readability *)
-	TRUE = 1,
-	FALSE = 0
-	
+
 		: parameter;
-	
+
 	(* Hack to test another PTA's location *)
 	AVIisIdle, PVARPisIdle
-		: discrete;
+		: bool;
 
 
 
@@ -66,17 +62,17 @@ end (*LRI*)
 synclabs: AP, AS, VP, VS;
 
 loc Idle: invariant True
-	when True sync AP do {t_AVI := 0, AVIisIdle := FALSE} goto AVI;
-	when True sync AS do {t_AVI := 0, AVIisIdle := FALSE} goto AVI;
+	when True sync AP do {t_AVI := 0, AVIisIdle := False} goto AVI;
+	when True sync AS do {t_AVI := 0, AVIisIdle := False} goto AVI;
 
 loc AVI: invariant t_AVI <= TAVI
 	when True sync VS goto Idle;
-	when t_AVI >= TAVI & clk >= TURI sync VP do {AVIisIdle := TRUE} goto Idle;
+	when t_AVI >= TAVI & clk >= TURI sync VP do {AVIisIdle := True} goto Idle;
 	when t_AVI >= TAVI & clk < TURI goto WaitURI;
 
 loc WaitURI: invariant clk <= TURI
-	when True sync VS do {AVIisIdle := TRUE} goto Idle;
-	when clk >= TURI sync VP do {AVIisIdle := TRUE} goto Idle;
+	when True sync VS do {AVIisIdle := True} goto Idle;
+	when clk >= TURI sync VP do {AVIisIdle := True} goto Idle;
 
 
 end (*AVI*)
@@ -102,9 +98,9 @@ end (*URI*)
 synclabs: AR, AS, Aget, VP, VS, PVARPbacktoIdle;
 
 loc Idle: invariant True
-	when True sync VP do {t_PVARP := 0, PVARPisIdle := FALSE} goto PVAB;
-	when True sync VS do {t_PVARP := 0, PVARPisIdle := FALSE} goto PVAB;
-	when True sync Aget do {t_PVARP := 0, PVARPisIdle := FALSE} goto inter;
+	when True sync VP do {t_PVARP := 0, PVARPisIdle := False} goto PVAB;
+	when True sync VS do {t_PVARP := 0, PVARPisIdle := False} goto PVAB;
+	when True sync Aget do {t_PVARP := 0, PVARPisIdle := False} goto inter;
 
 (* ------------------------------------------------------------ *)
 (** COMMITTED **)
@@ -115,16 +111,16 @@ loc Idle: invariant True
 
 loc inter: invariant t_PVARP = 0
 	(* Easy case: loc[AVI] = idle: committed is urgent *)
-	when AVIisIdle = TRUE sync AS do {PVARPisIdle := TRUE} goto Idle;
+	when AVIisIdle sync AS do {PVARPisIdle := True} goto Idle;
 	(* Less easy case: loc[AVI] =!= idle: wait! *)
-	when AVIisIdle = FALSE goto Wait;
+	when not(AVIisIdle) goto Wait;
 
 loc Wait: invariant True
 	when True sync VP do {t_PVARP := 0} goto Urgent;
 	when True sync VS do {t_PVARP := 0} goto Urgent;
 
 loc Urgent: invariant t_PVARP = 0
-	when t_PVARP = 0 sync AS do {PVARPisIdle := TRUE} goto Idle;
+	when t_PVARP = 0 sync AS do {PVARPisIdle := True} goto Idle;
 
 (* END gadget for committed *)
 (* ------------------------------------------------------------ *)
@@ -134,7 +130,7 @@ loc PVAB: invariant t_PVARP <= TPVAB
 
 loc PVARP: invariant t_PVARP <= TPVARP
 	when True sync Aget do {x_urgent := 0} goto inter1;
-	when t_PVARP >= TPVARP do {PVARPisIdle := TRUE} sync PVARPbacktoIdle goto Idle;
+	when t_PVARP >= TPVARP do {PVARPisIdle := True} sync PVARPbacktoIdle goto Idle;
 
 (** COMMITTED **)
 (* In fact, urgent is OK because AR is not synchronized with anyone else *)
@@ -166,11 +162,11 @@ loc Idle: invariant True
 
 loc inter: invariant t_VRP = 0
 	(* Ready *)
-	when AVIisIdle = FALSE & PVARPisIdle = TRUE sync VS goto VRP;
+	when not(AVIisIdle) & PVARPisIdle sync VS goto VRP;
 	(* Not ready...*)
-	when AVIisIdle = TRUE & PVARPisIdle = TRUE goto bNOKdOK;
-	when AVIisIdle = FALSE & PVARPisIdle = FALSE goto bOKdNOK;
-	when AVIisIdle = TRUE & PVARPisIdle = FALSE goto bNOKdNOK;
+	when AVIisIdle & PVARPisIdle goto bNOKdOK;
+	when not(AVIisIdle) & not(PVARPisIdle) goto bOKdNOK;
+	when AVIisIdle & not(PVARPisIdle) goto bNOKdNOK;
 
 (* AVI(b) not ready; PVARP(d) not ready *)
 loc bNOKdNOK: invariant True
@@ -256,63 +252,67 @@ end (* monitor5a *)
 (* Initial state *)
 (************************************************************)
 
-init := True
-	(*------------------------------------------------------------
-	   INITIAL LOCATION
-	  ------------------------------------------------------------*)
-	& loc[LRI]			= LRI
-	& loc[AVI]			= Idle
-	& loc[URI]			= URI
-	& loc[PVARP]		= Idle
-	& loc[VRP]			= Idle
-	& loc[RHM]			= AReady
-	& loc[monitor5a]	= wait_1st
+init := {
+	discrete =
+		(*------------------------------------------------------------
+		   INITIAL LOCATION
+		  ------------------------------------------------------------*)
+		loc[LRI]			:= LRI,
+		loc[AVI]			:= Idle,
+		loc[URI]			:= URI,
+		loc[PVARP]		:= Idle,
+		loc[VRP]			:= Idle,
+		loc[RHM]			:= AReady,
+		loc[monitor5a]	:= wait_1st,
 
 
-	(*------------------------------------------------------------
-	   INITIAL DISCRETE
-	  ------------------------------------------------------------*)
-	& AVIisIdle			= TRUE
-	& PVARPisIdle		= TRUE
-	
-	(*------------------------------------------------------------
-	   INITIAL CLOCKS
-	  ------------------------------------------------------------*)
-	& clk		= 0
-	& x			= 0
-	& x_urgent	= 0
-	
-	& t_AVI		= 0
-	& t_LRI		= 0
-	& t_PVARP	= 0
-	& t_VRP		= 0
-	& t_5a		= 0
+		(*------------------------------------------------------------
+		   INITIAL DISCRETE
+		  ------------------------------------------------------------*)
+		AVIisIdle			:= True,
+		PVARPisIdle		:= True,
+	;
 
-	
-	(*------------------------------------------------------------
-	   PARAMETER CONSTRAINTS
-	  ------------------------------------------------------------*)
-	& TAVI		>= 0
-	& TLRI		>= 0
-	& TPVARP	>= 0
-	& TVRP		>= 0
-	& TURI		>= 0
-	& TPVAB		>= 0
-	& Aminwait	>= 0
-	& Amaxwait	>= 0
-	
-	& Aminwait <= Amaxwait
+	continuous =
+		(*------------------------------------------------------------
+		   INITIAL CLOCKS
+		  ------------------------------------------------------------*)
+		& clk		= 0
+		& x			= 0
+		& x_urgent	= 0
 
-	
-	(*------------------------------------------------------------
-	   PARAMETER VALUATION
-	  ------------------------------------------------------------*)
-(*	& TAVI		= 150
-	& TLRI		= 1000
-	& TPVARP	= 100
-	& TVRP		= 150
-	& TURI		= 400
-	& TPVAB		= 50*)
-;
+		& t_AVI		= 0
+		& t_LRI		= 0
+		& t_PVARP	= 0
+		& t_VRP		= 0
+		& t_5a		= 0
+
+
+		(*------------------------------------------------------------
+		   PARAMETER CONSTRAINTS
+		  ------------------------------------------------------------*)
+		& TAVI		>= 0
+		& TLRI		>= 0
+		& TPVARP	>= 0
+		& TVRP		>= 0
+		& TURI		>= 0
+		& TPVAB		>= 0
+		& Aminwait	>= 0
+		& Amaxwait	>= 0
+
+		& Aminwait <= Amaxwait
+
+
+		(*------------------------------------------------------------
+		   PARAMETER VALUATION
+		  ------------------------------------------------------------*)
+		(*	& TAVI		= 150
+		& TLRI		= 1000
+		& TPVARP	= 100
+		& TVRP		= 150
+		& TURI		= 400
+		& TPVAB		= 50*)
+	;
+}
 
 end

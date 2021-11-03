@@ -5,11 +5,11 @@
  * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
- * Module description: EFsynth algorithm [JLR15]
+ * Module description: generic EFsynth algorithm [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2020/09/21
+ * Last modified     : 2021/09/23
  *
  ************************************************************)
 
@@ -24,7 +24,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoEFsynth : AbstractProperty.state_predicate ->
+class virtual algoEFgen : AbstractProperty.state_predicate ->
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)
@@ -65,11 +65,6 @@ class virtual algoEFsynth : AbstractProperty.state_predicate ->
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method process_deadlock_state : state_index -> unit
 		
-		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Generate counter-example(s) if required by the algorithm *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_counterexample : state_index -> unit
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)

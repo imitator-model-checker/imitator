@@ -15,10 +15,10 @@
  * License          : 
  * 
  * Created          : 
- * Last modified    : 
+ * Last modified    : 2021/08/30
  * Model version    : 
  * 
- * IMITATOR version : 3
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
@@ -101,15 +101,22 @@ automaton observer
 end (* observer *)
 
 
-	init := True
-	& loc[process1] = idle1
-	& loc[process2] = idle2
-	& loc[variable] = Val0
-	& loc[observer] = obs_OK
-	& x1 = 0
-	& x2 = 0
-	& nb = 0
-	& Delta >= 0
-	& delta >= 0;
+init := {
+	discrete =
+		loc[process1] := idle1,
+		loc[process2] := idle2,
+		loc[variable] := Val0,
+		loc[observer] := obs_OK,
+
+		nb := 0,
+	;
+
+	continuous =
+		& x1 = 0
+		& x2 = 0
+		& Delta >= 0
+		& delta >= 0
+	;
+}
 
 end

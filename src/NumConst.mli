@@ -104,6 +104,7 @@ val is_int : t -> bool
 (**************************************************)
 (* Converts to int; raise Failure in case of impossible cast *)
 val to_int : t -> int
+val to_bounded_int : t -> int
 
 (** Convert a NumConst to a float thanks to the GMP.Q conversion *)
 val to_float : t -> float

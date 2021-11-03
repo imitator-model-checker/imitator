@@ -52,9 +52,10 @@
 \imitator{} addresses several variants of the following problem:
 ``given a concurrent timed system, what are the values of the timing constants that guarantee that the model of the system satisfies some property?''
 Among other algorithms, \imitator{} implements
-parametric safety analysis~\cite{AHV93,JLR15},
-the inverse method \cite{ACEF09,AM15},
+parametric safety and reachability analysis~\cite{AHV93,JLR15},
+parametric liveness synthesis (with Büchi conditions)~\cite{NPP18,AAPP21},
 parametric deadlock-freeness synthesis~\cite{Andre16},
+robustness analysis (also known as the inverse method) \cite{ACEF09,ALM20},
 the behavioral cartography~\cite{AF10},
 and
 parametric reachability preservation~\cite{ALNS15}.
@@ -146,7 +147,7 @@ This model contains two clocks: \styleIMI{x1} is process~1's clock, and \styleIM
 
 This model contains two parameters: \styleIMI{delta} is the parametric duration specifying how long a process is idle at most, whereas \styleIMI{gamma} is the parametric duration specifying the minimum duration between the time a process checks for the availability of the critical section and the time the same process indeed enters the critical section (if it is still available).
 
-Two rational-valued variables (\ie{} global, discrete variables, see \cref{section:discrete}) are used:
+Two integer-valued variables (\ie{} global, discrete variables, see \cref{section:discrete}) are used:
 \styleIMI{turn} checks which process is attempting to enter the critical section;
 \styleIMI{counter} records how many processes are in the critical section (this variable will not be used for the verification, but was used in the original \pat{} model, and we choose to keep it).
 % TODO: use it for verification since IMITATOR supports global variables in properties
@@ -206,7 +207,7 @@ Since \imitator{} 3.1, the initial definition section is split between the \emph
 % This new section introduce a more powerful initialization system allowing initialization of discrete variables by constant expressions. It mean that it's possible to initialize any discrete variables of any type (proposed by \imitator{}) with an expression that can be resolved at compile time (use of variables is forbbiden). It's also the only way to initialize discrete integer and discrete boolean variables.
 
 % Note the difference between constraints initializations and discrete variables initializations.
-% Disrete are initialized in the \styleIMI{continuous} part while other are initialized in the \styleIMI{discrete} part. 
+% Disrete are initialized in the \styleIMI{continuous} part while other are initialized in the \styleIMI{discrete} part.
 The discrete initialization (introduced by the \styleIMI{discrete} keyword) assigns an initial value to each discrete (global) variable, and sets the initial location for each automaton.
 Note that the assignment operator \styleIMI{:=} is used (in contrast with unification operator \styleIMI{=} used for constraints).
 % As all discrete variables are independent, the initializations are separated with a comma.
@@ -238,16 +239,19 @@ Note that the initial definition can introduce more complex constraints over clo
 \paragraph{Property specification}
 For this model, the correctness property is that two processes cannot be in the critical section at the same time; as explained above, this is equivalent to the fact that the \styleIMI{obs\_violation} location of the \styleIMI{observer} \IPTA{} is unreachable.
 This is input in the property as follows:
-\begin{center}
-	\styleIMI{property := \#synth AGnot(loc[observer] = obs\_violation);}
-\end{center}
+
+\begin{IMITATORproperty}
+	property := #synth AGnot(loc[observer] = obs_violation);
+\end{IMITATORproperty}
+
 Here, \styleIMI{AGnot} stands for safety.
-More elaborate properties are detailed in \cref{ss:mode:prop} (however, most properties in \imitator{} \emph{reduce} to safety or reachability, and more complex properties such as Büchi-like properties or fairness are not yet supported by \imitator{}).
+More elaborate properties are detailed in \cref{ss:mode:prop}.
+% (however, most properties in \imitator{} \emph{reduce} to safety or reachability, and more complex properties such as Büchi-like properties or fairness are not yet supported by \imitator{}).
 
 We give below the whole property file:
 
 %------------------------------------------------------------
-\IncludeIMIfile{include/fischerPAT_obs.imiprop}
+\IncludeIMIproperty{include/fischerPAT_obs.imiprop}
 %------------------------------------------------------------
 
 
@@ -257,18 +261,26 @@ Finally, let us run \imitator{} on this case study.
 Quite naturally, what we would be interested in is knowing for which parameter valuations this protocol is correct, \ie{} no more than one process can be present in the critical section at one time.
 Assuming this model is input in file \stylePath{fischer.imi} and the property is in file \stylePath{fischer.imiprop}, the command calling \imitator{} is as follows:
 
-\styleCommand{\binimitator{} fischer.imi fischer.imiprop}
+
+
+%------------------------------------------------------------
+\begin{terminal}
+imitator fischer.imi fischer.imiprop
+\end{terminal}
+%------------------------------------------------------------
 
 % In this command, \styleOption{-mode EF} calls the algorithm \EFsynth{} that synthesizes valuations reaching a given location (see \cref{ss:mode:EFsynth}); and \styleOption{-merge} is a merging technique reducing the state space that, for this model, ensures termination (see \cite{AFS13atva} for more details on merging).
 
 The result of the call to \imitator{} is
 
-\styleTerminalOutput{
-	Final positive constraint guaranteeing safety:\\
-	delta >= 0\\
-	\& gamma > delta\\
-	This positive constraint is exact (sound and complete)
-}
+%------------------------------------------------------------
+\begin{terminaloutput}
+Final positive constraint guaranteeing safety:
+delta >= 0
+& gamma > delta
+This positive constraint is exact (sound and complete)
+\end{terminaloutput}
+%------------------------------------------------------------
 
 That is, the system is safe if \styleIMI{O <= delta < gamma}, which is the well-known constraint ensuring mutual exclusion for this protocol.
 % TODO: ref
@@ -328,15 +340,16 @@ They can be seen as syntactic sugar to represent a possibly unbounded number of 
 
 
 Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
-if they are not, a warning is issued, and they are arbitrarily set to a standard value (\eg{}~0 for numerical variables, and to \BFalse{} for Boolean variables).
+if they are not, a warning is issued, and they are arbitrarily set to a standard value (\eg{} \styleIMI{0} for numerical variables, or \BFalse{} for Boolean variables; see \cref{section:init} for the actual value).
 
 Discrete variables can be tested in guards, and updated along transitions.
 
-\imitator{} currently supports three types of discrete variables:
+\imitator{} currently supports four types of discrete variables:
 \begin{enumerate}
 	\item rational-valued variables
 	\item ``int''-valued variables (over 32~bits)
 	\item Boolean variables
+	\item binary word variables, allowing to use bitwise binary operations.
 \end{enumerate}
 
 %------------------------------------------------------------
@@ -365,12 +378,12 @@ a rational variable valuation is a function $\rval : \RVar \rightarrow \setQ$.
 
 \emph{Int variables} are bounded signed integer-valued variables encoded on 32 bits (which is architecture independent).
 
-Int variables are encoded in \imitator{} using the \styleFileContent{int} type of OCaml.
+Int variables are encoded in \imitator{} using the \texttt{int} type of OCaml.
 
 \begin{becareful}[int encoding]
 	All arithmetic operations over the ``int'' variables are taken modulo $2^{32}$.
 	Overflow can therefore occur.
-	
+
 	For critical models, it is highly advised to use \emph{rational} variables instead (the computation using rational variables may be significantly slower but always exact).
 \end{becareful}
 
@@ -387,12 +400,90 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 The set of Boolean variables is $\BVar = \{ \bvar_1, \dots, \bvar_\BVarCard \} $;
 a Boolean variable valuation is a function $\bval : \BVar \rightarrow \setB$, where $\setB = \{\BTrue, \BFalse \}$.
 
+%------------------------------------------------------------
+\subsubsection{Binary word variables}
+%------------------------------------------------------------
+
+% \emph{Binary word variables}
+Binary word variables are sequences of bits of fixed length---the maximum size of a binary word is $2^{16}$.
+Bitwise operations can be defined on these variables (on same length).
+
+For example, defining two binary words \styleIMI{bw1} and \styleIMI{bw2} both of size~4 (type : \styleIMI{binary(4)}), such that initially \styleIMI{bw1 := 0b1010} and \styleIMI{bw2 := 0b1011}, we can use a guard \styleIMI{logor(bw1, bw2) <> bw1} that checks whether the result of the bitwise (logical) ``or'' operation on both variables differs from \styleIMI{bw1}.
+Then, if this check is true, one may want to shift the bits of \styleIMI{b1} by 2~positions, and set \styleIMI{bw2} to the result of the bitwise ``and'' operation on~\styleIMI{bw1} and~\styleIMI{bw2}.
+%
+A transition featuring such a guard and such updates would be written as follows in \imitator{} syntax:
 
 %------------------------------------------------------------
-\subsubsection{Discrete variables}
+\begin{IMITATORmodel}
+when logor(bw1, bw2) <> bw1 sync a do {bw1 := shift_left(bw1, 2), bw2 := logand(bw1, bw2)} goto l1;
+\end{IMITATORmodel}
 %------------------------------------------------------------
 
-The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar $.
+Note that binary words are of fixed length, and operations can only be applied to words of the \emph{same} length.
+
+% The set of Binary word variables is $\WVar = \{ \wvar_1, \dots, \wvar_\WVarCard \} $;
+% a Binary word variable valuation is a function $\wval : \WVar \rightarrow \setW(l)$, where $\setW(l)$ is an ordered set of length $l$ and $\setW(l) = \{b_1, ..., b_l \}$ with $b_l = \{0, 1\}$.
+We denote by~$\WVar$ the set of binary word variables.
+
+
+%------------------------------------------------------------
+\subsubsection{Built-in functions over discrete variables}\label{section:builtin-functions}
+%------------------------------------------------------------
+
+\imitator{} 3.1 and higher comes with some built-in functions over discrete variables:
+
+\paragraph{Arithmetic functions}
+
+\begin{itemize}
+    \item \styleIMI{pow(x : 'a, e : int) : 'a} with \styleIMI{'a : [rational | int]}: compute the power of a number
+\end{itemize}
+
+\paragraph{Conversion functions}
+
+\begin{itemize}
+    \item \styleIMI{rational\_of\_int(x : int) : rational}: convert an int number to a rational one
+\end{itemize}
+
+\paragraph{Binary word functions}
+
+\begin{itemize}
+    \item \styleIMI{shift\_left(b : binary\_word(l), i : int) : binary\_word(l)}: shift a binary word of length \styleIMI{l} to left
+		\item \styleIMI{shift\_right(b : binary\_word(l), i : int) : binary\_word(l)}: shift a binary word of length \styleIMI{l} to right
+		\item \styleIMI{fill\_left(b : binary\_word(l), i : const int) : binary\_word(l + i)}: shift a binary word of length \styleIMI{l} to left (non destructive)
+		\item \styleIMI{fill\_right(b : binary\_word(l), i : const int) : binary\_word(l + i)}: shift a binary word of length \styleIMI{l} to right (non destructive)
+		\item \styleIMI{logand(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: apply AND bitwise operation to two binary words of length \styleIMI{l}
+		\item \styleIMI{logor(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: apply OR bitwise operation to two binary words of length \styleIMI{l}
+		\item \styleIMI{logxor(b1 : binary\_word(l), b2 : binary\_word(l)) : binary\_word(l)}: apply XOR bitwise operation to two binary words of length \styleIMI{l}
+		\item \styleIMI{lognot(b : binary\_word(l)) : binary\_word(l)}: apply NOT bitwise operation to a binary word of length \styleIMI{l}
+\end{itemize}
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate the binary words operations, note that all the following guards in the model fragment below will evaluate to true:
+
+% HACK: always keep one blank space after a binary value (0b…) to have higlighting using moredelim
+%------------------------------------------------------------
+\begin{IMITATORmodel}
+when shift_left(0b010110 , 3)     = 0b110000    goto l1;
+when shift_right(0b010110 , 3)    = 0b000010    goto l1;
+when fill_left(0b010110 , 3)      = 0b010110000 goto l1;
+when fill_right(0b010110 , 3)     = 0b000010110 goto l1;
+when logand(0b010110 , 0b101010 ) = 0b000010    goto l1;
+when logor(0b010110 , 0b101010 )  = 0b111110    goto l1;
+when logxor(0b010110 , 0b101010 ) = 0b111100    goto l1;
+when lognot(0b010110 )            = 0b101001    goto l1;
+\end{IMITATORmodel}
+%------------------------------------------------------------
+
+\end{example}
+%------------------------------------------------------------
+
+
+%------------------------------------------------------------
+\subsubsection{Discrete variables definition}
+%------------------------------------------------------------
+
+The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar \cup \WVar $.
 
 %a discrete variable valuation is a function $\dval : \DVar \rightarrow \setN$.
 
@@ -447,8 +538,10 @@ We can now give a formal definition of \IPTA{}.
 
 %------------------------------------------------------------
 \begin{remark}
-	In the subsequent formal definition, we rule out int-valued variables and Boolean variables, for sake of simplicity.
+	In the subsequent formal definition, we rule out int-valued variables, Boolean variables and binary words, for sake of simplicity.
 	They can be used in a straightforward manner.
+	That is, guards (and invariants) can also include operations on such variables.
+	See the grammar in \cref{chapter:grammar} for the exact behavior allowed by \imitator{}.
 \end{remark}
 %------------------------------------------------------------
 
@@ -482,8 +575,12 @@ In the following, we explain this definition.
 \paragraph{Guards and invariants}
 Guards and invariants in \imitator{} are linear constraints over all variables.
 For example, the following expression can be used in a guard or an invariant:
-$$ \styleIMI{r1 + .5 x1 + 3 x2 >= 2 p1 - r2 \& p2 < 1/3} $$
-where \styleIMI{r1}, \styleIMI{r2} are discrete rational variables, \styleIMI{x1}, \styleIMI{x2} are clocks and \styleIMI{p1}, \styleIMI{p2} are parameters.
+
+\begin{IMITATORmodel}
+r1 + .5 x1 + 3 x2 >= 2 p1 - r2 & p2 < 1/3
+\end{IMITATORmodel}
+
+\noindent{}where \styleIMI{r1}, \styleIMI{r2} are discrete rational variables, \styleIMI{x1}, \styleIMI{x2} are clocks and \styleIMI{p1}, \styleIMI{p2} are parameters.
 This syntax includes in particular diagonal constraints (\eg{} \styleIMI{x1 - x2 <= 2}), not always supported in other model-checking tools.
 
 \paragraph{Actions}
@@ -639,13 +736,23 @@ Clocks are not necessarily equal to~0, and parameters are not even necessarily p
 
 Parameters and clocks can be initially bound by any linear constraint over parameters, clocks, and discrete variables.
 That is, we can define initial constraints such as:
-\begin{center}
-	\styleIMI{x1 + x2 <= 2 p1 + 0.5 p2 - i}.
-\end{center}
-% TODO: style for sample piece of file
+
+\begin{IMITATORmodel}
+x1 + x2 <= 2 p1 + 0.5 p2 - i
+\end{IMITATORmodel}
 
 However, discrete variables must be initialized to a \emph{constant} compatible with their type.
-Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i := ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to~0 (or to $\BFalse$ for Boolean variables), and will issue a warning.
+Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i := ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to a default value, and will issue a warning.
+
+This initial default value is as follows, depending on the variable type:
+
+\begin{tabular}{l l}
+	Rational & 0\\
+	Integer & 0\\
+	Boolean & \BFalse{}\\
+	Binary words & \styleIMI{0b0}\\
+\end{tabular}
+
 
 
 
@@ -672,17 +779,19 @@ If an \IPTA{} declares an action \styleIMI{a} that is never used in this \IPTA{}
 
 \imitator{} supports global constants, \ie{} a variable the value of which is known once for all.
 The syntax is the following one:
-\begin{center}
-	\styleIMI{c = 1: constant;}
-\end{center}
+
+\begin{IMITATORmodel}
+c = 1: constant;
+\end{IMITATORmodel}
+
 Then, any occurrence of \styleIMI{c} in the model is replaced with \styleIMI{1}.
 
 By default, constants are (unbounded, exact) rationals.
 It is possible to define constants of another type by making their type explicit:
 
-\begin{center}
-	\styleIMI{c = 1: int;}
-\end{center}
+\begin{IMITATORmodel}
+c = 1: int;
+\end{IMITATORmodel}
 
 In this case, \styleIMI{c} is a constant of type \styleIMI{int}.
 
@@ -692,9 +801,11 @@ Limited linear expressions over rationals can be used in the definition of a (ra
 %------------------------------------------------------------
 \begin{hint}
 	In fact, a variable (\eg{} a parameter) can be turned to a constant as follows in the definition of the parameters:
-	\begin{center}
-		\styleIMI{p = 2: parameter;}
-	\end{center}
+
+\begin{IMITATORmodel}
+p = 2: parameter;
+\end{IMITATORmodel}
+
 	This is equivalent to replacing \styleIMI{p} with \styleIMI{2} everywhere in the model; this is particularly useful when some parameters should be instantiated.
 	In contrast, if the parameter is instantiated in the initial definition, \imitator{} still counts it as a parameter, which makes all constraints suffer from an additional dimension.
 \end{hint}
@@ -722,7 +833,11 @@ For more detailed commands, and a complete list of options, see \cref{chapter:op
 \paragraph{Main command}
 The standard \imitator{} command for all algorithms is:
 
-\styleCommand{\binimitator{} model.imi property.imiprop}
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi property.imiprop
+\end{terminal}
+%------------------------------------------------------------
 
 \paragraph{Synthesis and emptiness}
 \imitator{} features two modes for properties:
@@ -750,8 +865,12 @@ The property syntax is as follows:\footnote{%
 	\imitator{} uses the TCTL syntax, where EF notably denotes reachability.
 }
 
-\styleIMI{property := \#synth EF(state\_predicate);}\\
-where \styleIMI{state\_predicate} is a state predicate, for example of the form \styleIMI{loc[AUTOMATON] = LOCATION}, where \styleIMI{AUTOMATON} is an automaton name, and \styleIMI{LOCATION} is a location name.
+\begin{IMITATORproperty}
+property := #synth EF(state_predicate);
+\end{IMITATORproperty}
+
+
+\noindent{}where \styleIMI{state\_predicate} is a state predicate, for example of the form \styleIMI{loc[AUTOMATON] = LOCATION}, where \styleIMI{AUTOMATON} is an automaton name, and \styleIMI{LOCATION} is a location name.
 State predicates allow conjunction, disjunction and the use of global discrete variables (see \cref{section:grammar-property} for details).
 
 
@@ -761,7 +880,11 @@ Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis
 
 % The standard command is:
 %
-% \styleCommand{\binimitator{} model.imi -mode EFunsafe -merge -incl -output-result}
+% %------------------------------------------------------------
+% \begin{terminal}
+% imitator model.imi -mode EFunsafe -merge -incl -output-result
+% \end{terminal}
+%------------------------------------------------------------
 
 % The option \styleOption{-output-result} is not compulsory, but allows one to
 One obtains a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
@@ -783,11 +906,15 @@ output the text description of all states (option \styleOption{-states-descripti
 	In that case, one can use the \styleIMI{accepting} predicate inside the property state predicate.
 	That is, one can define properties of the form:
 
-	\styleIMI{property := \#witness EF(accepting);}
+\begin{IMITATORproperty}
+property := #witness EF(accepting);
+\end{IMITATORproperty}
 
 	or even:
 
-	\styleIMI{property := \#synth EF(loc[pta] = l1 | (accepting \& loc[pta] <> l2));}
+\begin{IMITATORproperty}
+property := #synth EF(loc[pta] = l1 | (accepting & loc[pta] <> l2));
+\end{IMITATORproperty}
 
 	The semantics of the acceptance of a state is as follows: ``at least one of the locations is accepting (as specified by the \styleIMI{accepting} keyword in the model).''
 
@@ -803,11 +930,15 @@ output the text description of all states (option \styleOption{-states-descripti
 % \begin{becareful}
 % 	From \cref{remark:accepting}, one can see that
 %
-% 	\styleIMI{property := \#synth EF(False);}
+% 	\begin{IMITATORproperty}
+% property := #synth EF(False);
+% \end{IMITATORproperty}
 %
 % 	is absolutely equivalent to
 %
-% 	\styleIMI{property := \#synth EF(accepting);}.
+% 	\begin{IMITATORproperty}
+% property := #synth EF(accepting);
+% \end{IMITATORproperty}
 %
 % 	This might be seem counterintuitive; but remember that the \styleIMI{accepting} keyword can be seen as a ``hack'', and the acceptance condition should normally be defined in \emph{properties} only.
 % \end{becareful}
@@ -823,11 +954,17 @@ Often, we are rather interested in \emph{safety} synthesis, \ie{} the set of val
 
 % The standard command is:
 %
-% \styleCommand{\binimitator{} model.imi -mode EF -merge -incl -output-result}
+% %------------------------------------------------------------
+% \begin{terminal}
+%imitator model.imi -mode EF -merge -incl -output-result
+% \end{terminal}
+%------------------------------------------------------------
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth AGnot(state\_predicate);}
+\begin{IMITATORproperty}
+property := #synth AGnot(state_predicate);
+\end{IMITATORproperty}
 
 Internally, this algorithm works exactly the same as the reachability-synthesis, and at the end the obtained constraint is \emph{negated} (with parameters being constrained to be included in the initial state valuations).
 
@@ -842,7 +979,10 @@ This algorithm is briefly mentioned in~\cite{ABPV19}.
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth EFpmin(state\_predicate, p);}\\
+\begin{IMITATORproperty}
+property := #synth EFpmin(state_predicate, p);
+\end{IMITATORproperty}
+
 where \styleIMI{p} is the parameter the value of which must be minimized.
 
 
@@ -855,7 +995,9 @@ This algorithm is the dual of EF-minimization (see \cref{ss:mode:EFmin}).
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth EFpmax(state\_predicate, p);}
+\begin{IMITATORproperty}
+property := #synth EFpmax(state_predicate, p);
+\end{IMITATORproperty}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -867,13 +1009,12 @@ This algorithm synthesizes the parameter valuations for which a given location i
 
 Our algorithm uses a priority queue, with priority to the earliest successor for the selection of the next state.
 
-% The standard command is:
-%
-% \styleCommand{\binimitator{} model.imi -mode EFsynthminpq -merge -incl -output-result}
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth EFtmin(state\_predicate);}
+\begin{IMITATORproperty}
+property := #synth EFtmin(state_predicate);
+\end{IMITATORproperty}
 
 \emph{The maximum time reachability is currently not implemented.}
 
@@ -894,36 +1035,90 @@ Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using prede
 
 If using a predefined property pattern, the property pattern must be specified as follows:
 
-\styleIMI{property := \#synth pattern(<PROP>)}
-\\
-where \styleIMI{<PROP>} must follow the syntax of the following patterns, where \styleIMI{a}, \styleIMI{a1}, \styleIMI{a2} are actions, and the deadline \styleIMI{d} is a (possibly parametric) linear expression:
+\begin{IMITATORproperty}
+property := #synth pattern(<PROP>);
+\end{IMITATORproperty}
+
+\noindent{}where \styleIMI{<PROP>} must follow the syntax of the following patterns, where \styleIMI{a}, \styleIMI{a1}, \styleIMI{a2} are actions, and the deadline \styleIMI{d} is a (possibly parametric) linear expression:
 
 \begin{itemize}
-	\item \styleIMI{if a2 then a1 has happened before}
-	\item \styleIMI{everytime a2 then a1 has happened before}
-	\item \styleIMI{everytime a2 then a1 has happened once before}
-	      % 	\item \styleIMI{if a1 then eventually a2}
+	\item
+\begin{IMITATORproperty}
+if a2 then a1 has happened before
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+everytime a2 then a1 has happened before
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+everytime a2 then a1 has happened once before
+\end{IMITATORproperty}
+
+	% 	\item \styleIMI{if a1 then eventually a2}
 	      % TODO
 	      % 	\item \styleIMI{everytime a1 then eventually a2}
 	      % TODO
 	      % 	\item \styleIMI{everytime a1 then eventually a2 once before next}
 	      % TODO
-	\item \styleIMI{a within d}
-	\item \styleIMI{if a2 then a1 has happened within d before}
-	\item \styleIMI{everytime a2 then a1 has happened within d before}
-	\item \styleIMI{everytime a2 then a1 has happened once within d before}
-	\item \styleIMI{if a1 then eventually a2 within d}
-	\item \styleIMI{everytime a1 then eventually a2 within~d}
-	\item \styleIMI{if a1 then eventually a2 within d once before next}
-	\item \styleIMI{sequence a1, \dots, an}
-	\item \styleIMI{always sequence a1, \dots, an}
+	\item
+\begin{IMITATORproperty}
+a within d
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+if a2 then a1 has happened within d before
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+everytime a2 then a1 has happened within d before
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+everytime a2 then a1 has happened once within d before
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+if a1 then eventually a2 within d
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+everytime a1 then eventually a2 within~d
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+if a1 then eventually a2 within d once before next
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+sequence a1, ..., an
+\end{IMITATORproperty}
+
+	\item
+\begin{IMITATORproperty}
+always sequence a1, ..., an
+\end{IMITATORproperty}
+
 \end{itemize}
 
 The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
 
 % Then, the command to synthesize parameters is the same as for the EF-synthesis:
 %
-% \styleCommand{\binimitator{} model.imi -mode EF -merge -incl -output-result}
+% %------------------------------------------------------------
+% \begin{terminal}
+% imitator model.imi -mode EF -merge -incl -output-result}
+% \end{terminal}
+%------------------------------------------------------------
 %
 % Once more, options \styleOption{-merge} and \styleOption{-incl} are optional, but often improve efficiency and termination.
 
@@ -938,7 +1133,9 @@ Given an \NIPTA{}, \PDFC{} synthesizes a parameter constraint such that, for any
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth DeadlockFree;}
+\begin{IMITATORproperty}
+property := #synth DeadlockFree;
+\end{IMITATORproperty}
 
 As usual, \imitator{} can also
 output the state space in a graphical form (option \styleOption{-draw-statespace})
@@ -958,6 +1155,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by location matching an accepting condition.
 Such accepting conditions are given in the form of a state predicate, \ie{} a conjunction or disjunction of locations and values for discrete variables.
+This can be seen as a liveness property, or more precisely Büchi acceptance condition.
 
 \imitator{} implements two algorithms to this goal:
 \begin{enumerate}
@@ -967,7 +1165,9 @@ Such accepting conditions are given in the form of a state predicate, \ie{} a co
 
 In both cases, the property syntax is as follows:
 
-\styleIMI{property := \#synth CycleThrough(state\_predicate);}
+\begin{IMITATORproperty}
+property := #synth CycleThrough(state_predicate);
+\end{IMITATORproperty}
 
 %------------------------------------------------------------
 \begin{syntaxalias}
@@ -1007,7 +1207,9 @@ This (non-default) algorithm can be called using the following option syntax:
 %
 % The property syntax is as follows:
 %
-% \styleIMI{property := \#synth inf\_acc\_cycle;}
+% \begin{IMITATORproperty}
+% property := #synth inf_acc_cycle;
+% \end{IMITATORproperty}
 %
 % However, there are two main differences with \cref{ss:loop,sss:accepting-loop-BFS}:
 % \begin{enumerate}
@@ -1017,7 +1219,11 @@ This (non-default) algorithm can be called using the following option syntax:
 %
 % The command is therefore:
 %
-% \styleCommand{\binimitator{} model.imi property.imiprop -expl-order NDFS}
+% %------------------------------------------------------------
+% \begin{terminal}
+% imitator model.imi property.imiprop -expl-order NDFS
+% \end{terminal}
+%------------------------------------------------------------
 %
 % Several heuristics can be used, some of them synthesizing all parameter values for which a cycle can be found.
 % These are accessible via the \styleOption{-expl-order} option:
@@ -1110,6 +1316,48 @@ or
 output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
 
 
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Accepting cycle with generalized acceptance condition (BFS)}\label{sss:generalized-accepting-loop-BFS}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+Generalized Büchi conditions are supported by \imitator{}.
+The property syntax is as follows:
+
+\begin{IMITATORproperty}
+property := #synth CycleThrough(state_predicate_1, ..., state_predicate_n);
+\end{IMITATORproperty}
+
+The semantics is that each of the $n$ conditions must hold on at least one state of the same cycle, in order for this cycle to be accepting.
+
+%------------------------------------------------------------
+\begin{remark}
+	Only BFS (see \cref{sss:accepting-loop-BFS}) is available for these generalized conditions.
+\end{remark}
+%------------------------------------------------------------
+
+
+%------------------------------------------------------------
+\begin{example}
+	Assume the following condition:
+
+\begin{IMITATORproperty}
+property := #synth CycleThrough(loc[pta1] = l1, loc[pta1] = l2 and loc[pta2] = l2, accepting, i = 2 or i = 3);
+\end{IMITATORproperty}
+
+A cycle is accepting if it contains:
+\begin{itemize}
+	\item a state in which \styleIMI{pta1} is in location \styleIMI{l1}; and
+	\item another state in which \styleIMI{pta1} is in location \styleIMI{l2} and at the same time \styleIMI{pta2} is in location \styleIMI{l2}; and
+	\item another state syntactically labeled as \styleIMI{accepting} in the model; and
+	\item another state in which either \styleIMI{i} is equal to~2, \emph{or} \styleIMI{i} is equal to~3.
+\end{itemize}
+
+
+\end{example}
+
+%------------------------------------------------------------
+
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Any cycle synthesis}\label{ss:loop}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1119,12 +1367,16 @@ Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth Cycle;}
-
+\begin{IMITATORproperty}
+property := #synth Cycle;
+\end{IMITATORproperty}
 
 This is syntactic sugar for the following property:
 
-\styleIMI{property := \#synth CycleThrough(True);}
+\begin{IMITATORproperty}
+property := #synth CycleThrough(True);
+\end{IMITATORproperty}
+
 %------------------------------------------------------------
 \begin{syntaxalias}
 	\imitator{} accepts the \styleIMI{Loop} keyword as an equivalent for \styleIMI{Cycle}.
@@ -1146,8 +1398,9 @@ The precise algorithm we use, including the transformation of an arbitrary PTA i
 
 The property syntax is:
 
-\styleIMI{property := \#synth NZCycle;}
-
+\begin{IMITATORproperty}
+property := #synth NZCycle;
+\end{IMITATORproperty}
 
 Two options are possible in \imitator{}:
 \begin{enumerate}
@@ -1193,12 +1446,14 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given an \NIPTA{} and a reference parameter valuation, the inverse method~\IM{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
-This problem is known as the trace-preservation synthesis, and formalized in~\cite{AM15}.
-The trace-preservation emptiness problem being undecidable~\cite{AM15}, the analysis is not guaranteed to terminate (although it often does in practice).
+This problem is known as the trace-preservation synthesis, and formalized in~\cite{ALM20}.
+The trace-preservation emptiness problem being undecidable~\cite{ALM20}, the analysis is not guaranteed to terminate (although it often does in practice).
 
 The property syntax is of the following form:
 
-\styleIMI{property := \#synth IM(parameter\_valuation);}
+\begin{IMITATORproperty}
+property := #synth IM(parameter_valuation);
+\end{IMITATORproperty}
 
 \noindent{}
 where \styleIMI{parameter\_valuation} is a reference valuation of the form \styleIMI{p1 = 1 \& p2 = 2 \&…} (see \cref{section:grammar-property} for details).
@@ -1238,7 +1493,9 @@ The corresponding problem being undecidable, the analysis is not guaranteed to t
 The property syntax is of the following form:
 
 
-\styleIMI{property := \#synth BCcover(hyper\_rectangle);}
+\begin{IMITATORproperty}
+property := #synth BCcover(hyper_rectangle);
+\end{IMITATORproperty}
 
 \noindent{}
 where \styleIMI{hyper\_rectangle} is a reference hyper-rectangle of the form \styleIMI{p1 = 1..5 \& p2 = 2..4 \&…} (see \cref{section:grammar-property} for details).
@@ -1253,7 +1510,9 @@ output the constraints synthesized in a graphical form in two dimensions (option
 
 When using the following syntax with an optional second argument:
 
-\styleIMI{property := \#synth BCcover(hyper\_rectangle, step=2/3);}
+\begin{IMITATORproperty}
+property := #synth BCcover(hyper_rectangle, step=2/3);
+\end{IMITATORproperty}
 
 \noindent one can specify the interval between any two points of which the coverage is checked (see \cite{AF10}), here \styleIMI{2/3}.
 By default, it is 1; setting $\frac{1}{3}$ often leads to full coverage when 1 was not enough.
@@ -1277,7 +1536,9 @@ An alternative to the behavioral cartography is a random coverage~\cite{AF10}; i
 
 The property syntax is of the following form:
 
-\styleIMI{property := \#synth BCrandom(hyper\_rectangle , nb);}
+\begin{IMITATORproperty}
+property := #synth BCrandom(hyper_rectangle , nb);
+\end{IMITATORproperty}
 
 
 \noindent{}where \styleOption{nb} is the number of times an integer point is randomly selected within the domain defined.
@@ -1299,7 +1560,9 @@ It differs from the random cartography in the sense that the random cartography 
 
 The property syntax is:
 
-\styleIMI{property := \#synth BCshuffle(hyper\_rectangle);}
+\begin{IMITATORproperty}
+property := #synth BCshuffle(hyper_rectangle);
+\end{IMITATORproperty}
 
 
 
@@ -1313,7 +1576,9 @@ By preserving the reachability, we mean that $\loc$ is reachable for the other v
 
 This algorithm~$\PRP$, that somehow combines \EFsynth{} and \IM{} (see~\cite{ALNS15} for details), is called using the following property syntax:
 
-\styleIMI{property := \#synth PRP(state\_predicate , parameter\_valuation);}
+\begin{IMITATORproperty}
+property := #synth PRP(state_predicate , parameter_valuation);
+\end{IMITATORproperty}
 
 
 
@@ -1326,7 +1591,9 @@ An extension of $\PRP$ to the cartography (named \PRPC{}) is also available: \PR
 
 The property syntax for this algorithm $\PRPC$ is as follows:
 
-\styleIMI{property := \#synth PRPC(state\_predicate , hyper\_rectangle);}
+\begin{IMITATORproperty}
+property := #synth PRPC(state_predicate , hyper_rectangle);
+\end{IMITATORproperty}
 
 
 
@@ -1364,6 +1631,8 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			Cycle                  & \styleIMI{Cycle}                            & \cellYes{} & \cellYes{}  \\
 			\hline
 			Accepting cycle        & \styleIMI{CycleThrough(state\_predicate)} & \cellYes{} & \cellYes{}  \\
+			\hline
+			Accepting cycle        & \styleIMI{CycleThrough(state\_predicates)} & \cellYes{} & \cellYes{}  \\
 			\hline
 			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellYes{} & \cellNo{}  \\
 
@@ -1444,6 +1713,8 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			\hline
 			Accepting cycle        & \styleIMI{CycleThrough(state\_predicate)} & \cellNo{} & \styleOption{equality}  \\
 			\hline
+			Accepting cycle        & \styleIMI{CycleThrough(state\_predicates)} & \cellNo{} & \styleOption{equality}  \\
+			\hline
 			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellNo{} & \styleOption{equality}  \\
 
 			% Deadlock-freeness
@@ -1499,7 +1770,11 @@ Of course, the state space may be infinite, and this analysis is not guaranteed 
 
 The standard command is:
 
-\styleCommand{\binimitator{} model.imi -mode statespace -states-description}
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi -mode statespace -states-description
+\end{terminal}
+%------------------------------------------------------------
 
 The option \styleOption{-states-description} generates a file with a textual description of all states (without this option, \imitator{} will not output anything).
 Each state is represented with its discrete part (location and values of the discrete variables), the clock and parameter constraints, and below their projection onto the parameters.
@@ -1591,7 +1866,10 @@ More statistics are obtained with higher levels of verbosity, or with the \style
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The result can be projected onto selected parameters, by using the following syntax at the end of the property file:
 
-\styleIMI{projectresult(param1, \dots, paramn);}
+\begin{IMITATORmodel}
+projectresult(param1, ..., paramn);
+\end{IMITATORmodel}
+
 
 In that case, all parameters not in that set are eliminated using variable elimination, and the result in the result file only contains the selected parameters.
 
@@ -1618,7 +1896,11 @@ For more detailed commands, and a complete list of options, see \cref{chapter:op
 
 To generate the (discretized) state space of a given computation in a graphical form, use:
 
-\styleCommand{\binimitator{} model.imi [property.imiprop] [options] -draw-statespace normal}
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi [property.imiprop] [options] -draw-statespace normal
+\end{terminal}
+%------------------------------------------------------------
 
 \imitator{} will generate a file \stylePath{model-statespace.pdf}.
 States are made of two part: the left-hand number (\eg{} \styleFileContent{s\_0}) is the number of the symbolic state, which comes from \imitator{} internal representation (\styleFileContent{s\_0} is the first one to be generated, and so on); the right-hand part displays all the discrete part of the symbolic state vertically, that is the current location in each of the NIPTA in parallel, and the value of possible discrete variables (if any).
@@ -1645,7 +1927,11 @@ This option is mostly suitable for small state spaces.
 
 	These graphics were generated using the example in \cref{chapter:syntax-introduction} with the following command:
 
-	\styleCommand{\binimitator{} fischer.imi fischer.imiprop -depth-limit 4 -draw-statespace normal}
+%------------------------------------------------------------
+\begin{terminal}
+imitator fischer.imi fischer.imiprop -depth-limit 4 -draw-statespace normal
+\end{terminal}
+%------------------------------------------------------------
 
 	(where \styleOption{normal} should be replaced with \styleOption{undetailed} or \styleOption{full}, respectively)
 \end{example}
@@ -1683,7 +1969,11 @@ This option is mostly suitable for small state spaces.
 
 To visualize the constraint generated by \imitator{} using a 2-dimensional plot (thanks to the external \stylePath{plot} utility), use:
 
-\styleCommand{\binimitator{} model.imi property.imiprop [options] -draw-cart}
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi property.imiprop [options] -draw-cart
+\end{terminal}
+%------------------------------------------------------------
 
 This will generate file \stylePath{model\_cart.png}.
 % \stylePath{model\_cart\_ef.png} if the algorithm is \EFsynth{},
@@ -1710,7 +2000,11 @@ and \styleOption{-graphics-source} to keep the plot source.
 Since version 2.11, \imitator{} supports a translation of the model to the \uppaal{} syntax~\cite{LPY97}.
 To generate an equivalent \uppaal{} model without performing any analysis, use:
 
-\styleCommand{\binimitator{} model.imi -imi2Uppaal}
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi -imi2Uppaal
+\end{terminal}
+%------------------------------------------------------------
 
 \imitator{} will generate a file \stylePath{model-uppaal.xml}.
 Note that the translation of properties is not supported.
@@ -1731,6 +2025,15 @@ No checks are made when translating, and therefore \uppaal{} may not accept mode
 \paragraph{Rational variables}
 Rational variables in \imitator{} are rational-valued with an exact value.
 In \uppaal{}, they are interpreted as (bounded) integers: overflows may occur and, if their value becomes non-integer, it seems \uppaal{} will just round them to the nearest integer, thus creating a difference in semantics.
+
+\paragraph{Binary variables}
+
+\begin{becareful}
+Binary words translation into \uppaal{} formalism is experimental. Binary words are translated and encoded into 32-bit integer variables in \uppaal{} (with dedicated functions).
+For this reason, translating binary words of length greater than 31~bits or shifting a binary word of an arbitrary length can lead to unexpected behaviors and results.
+\end{becareful}
+
+
 
 \paragraph{Strong broadcast synchronization}
 \imitator{} uses a single communication model: strong broadcast (see \cref{sect:synchronization}), while \uppaal{} uses both channel binary synchronization, and broadcast synchronization.
@@ -1770,20 +2073,32 @@ Properties are so far not translated to \uppaal{}.
 Since version 2.8, \imitator{} supports a translation of the model to the \hytech{} syntax~\cite{HHW95} (that is quite close to that of \imitator{} anyway).
 To generate an equivalent \hytech{} model without performing any analysis, use:
 
-\styleCommand{\binimitator{} model.imi -imi2HyTech}
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi -imi2HyTech
+\end{terminal}
+%------------------------------------------------------------
 
 \imitator{} will generate a file \stylePath{model.hy}.
-Note that the translation of properties is not supported.
+
+The syntax going beyond that of \hytech{} (typically, Booleans, binary words…)\ is obviously not translated.
+
+In addition, the translation of properties is not supported.
 % TODO
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Translation to \jani{}}\label{section:jani}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Since version 3.1, \imitator{} supports a translation of the model to the \href{https://jani-spec.org/}{\jani{} specification}~\cite{BDHHJT17}.
+Since version~3.1, \imitator{} supports a translation of the model to the \href{https://jani-spec.org/}{\jani{} specification}~\cite{BDHHJT17}.
 To generate an equivalent \jani{} model without performing any analysis, use:
 
-\styleCommand{\binimitator{} model.imi -imi2Jani}
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi -imi2Jani
+\end{terminal}
+%------------------------------------------------------------
 
 \imitator{} will generate a file \stylePath{model.jani}.
 Note that the translation of properties is not supported.
@@ -1795,15 +2110,18 @@ We review some points in the following.
 \imitator{} and \jani{} do not have exactly the same semantics in the case of \styleIMI{if}-\styleIMI{then}-\styleIMI{else} updates.
 In order to provide a similar behavior, the translation is performed as follow.
 
-\styleIMI{if (x=1) then (x:=2, y:=3) else (x:=4)}\\ is transformed (and, after, written in \jani{} format) into
+\begin{IMITATORmodel}
+if (x=1) then (x:=2, y:=3) else (x:=4)
+\end{IMITATORmodel}
 
-\styleIMI{
-\begin{tabular}{l l}
-	x := & (if (x=1) then 2 else x)\\
-	y := & (if (x=1) then 3 else y)\\
-	x := & (if (x=1) then x else 4)
-\end{tabular}
-}
+\noindent{}is transformed (and, subsequently, written in \jani{} format) into
+
+\begin{IMITATORmodel}
+x := (if (x=1) then 2 else x);
+y := (if (x=1) then 3 else y);
+x := (if (x=1) then x else 4);
+\end{IMITATORmodel}
+
 
 \paragraph{Stopwatches and multi-rate clocks}
 If no clock of the input model has a rate different from~1, then all of them are declared in the output \jani{} model with the \styleIMI{clock} type.
@@ -1814,10 +2132,12 @@ Otherwise, if at least one rate uses a non-1 rate in the \imitator{} model, then
 \jani{} synchronization semantics is more permissive than the \imitator{} one, therefore the exact meaning can be kept.
 It is done by listing synchronization vectors in the \styleIMI{syncs} entry.
 
+\paragraph{Binary words}
+Binary words are somehow supported by our translation to \jani{}, but not the built-in functions.
+
 \paragraph{Properties}
 Properties are so far not translated to \jani{}.
 The corresponding input in the \jani{} file exists but remains empty.
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1826,11 +2146,23 @@ The corresponding input in the \jani{} file exists but remains empty.
 
 To generate a graphic representation of the \NIPTA{} model without performing any analysis, use:
 
-\styleCommand{\binimitator{} model.imi -imi2JPG}
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi -imi2JPG
+\end{terminal}
+%------------------------------------------------------------
 
-\styleCommand{\binimitator{} model.imi -imi2PDF}
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi -imi2PDF
+\end{terminal}
+%------------------------------------------------------------
 
-\styleCommand{\binimitator{} model.imi -imi2PNG}
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi -imi2PNG
+\end{terminal}
+%------------------------------------------------------------
 
 \imitator{} will generate a file \stylePath{model-pta.jpg}, \stylePath{model-pta.pdf} and \stylePath{model-pta.png} respectively (using the \gdot{} utility).
 
@@ -1857,7 +2189,11 @@ Colored transitions are synchronized transitions (\ie{} shared by at least two \
 
 To generate a \LaTeX{} representation of the \NIPTA{} model (using the \texttt{tikz} package) without performing any analysis, use:
 
-\styleCommand{\binimitator{} model.imi -imi2TikZ}
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi -imi2TikZ
+\end{terminal}
+%------------------------------------------------------------
 
 \imitator{} will generate a file \stylePath{model.tex}.
 This file is a standalone \LaTeX{} file containing a single figure, which contains the different \IPTA{} in ``\texttt{subfigure}'' environments.
@@ -1916,25 +2252,6 @@ No floating-point approximations (\styleIMI{float}) are used, except for the gen
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Built-in functions}\label{section:builtin-functions}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\imitator{} 3.1 and higher comes with some built-in functions:
-
-\subsection{Arithmetic functions}
-
-\begin{itemize}
-    \item \styleIMI{pow(x : 'a, e : int) : 'a} with \styleIMI{'a : [rational | int]}
-\end{itemize}
-
-\subsection{Conversion functions}
-
-\begin{itemize}
-    \item \styleIMI{rational\_of\_int(x : int) : rational}
-\end{itemize}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Type system}\label{section:type_system}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1946,9 +2263,10 @@ They can be declared with the following keywords:
 	\item Rational: \styleIMI{rational} (or \styleIMI{discrete} for backward-compatibility)
 	\item Integer (32 bits): \styleIMI{int}
 	\item Boolean: \styleIMI{bool}
+	\item Binary word: \styleIMI{binary(l)} with \styleIMI{l} the length of the word
 \end{itemize}
 
-Theses types are divided into two categories: numerical (for \styleIMI{rational} and \styleIMI{int}) and Booleans (for \styleIMI{bool}).
+These types are divided into three categories: numerical (for \styleIMI{rational} and \styleIMI{int}), Booleans (for \styleIMI{bool}) and Binary (for \styleIMI{binary(l)}).
 
 \imitator{} models are statically typed, in the sense of their variables and expressions types are resolved prior to the algorithms execution.
 
@@ -1985,7 +2303,7 @@ If an expression mixes different types, a type error is risen before the start o
 \subsection{Literal number type inference}
 
 The types of literal numbers are automatically resolved during the semantic analysis and more precisely during the type checking step.
-Once an expression type is resolved, all literal numbers within are automatically typed as the numerical type holding by the expression. 
+Once an expression type is resolved, all literal numbers within are automatically typed as the numerical type holding by the expression.
 
 For example, in the following update expression \styleIMI{b := True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1} will be automatically typed as a \styleIMI{int}.
 
@@ -2206,7 +2524,7 @@ This will generate file \stylePath{model\_cart.png}.
 % or \stylePath{model\_cart\_patator.png} if the algorithm is the distributed \BC{} and its variants.
 % This option takes an integer which limits the number of generated plots, where each plot represents the projection of the parametric zones on two parameters.
 % TODO: check
-If the model contains more than two parameters, then \code{-draw-cart} will plot the projection of the generated zones on the first two parameters of the model (or on the two \emph{varying} parameters in the case of \BC{}).
+If the model contains more than two parameters, then \styleOption{-draw-cart} will plot the projection of the generated zones on the first two parameters of the model (or on the two \emph{varying} parameters in the case of \BC{}).
 
 This option makes use of the external utility \texttt{graph}, which is
 part of the \emph{GNU plotting utils}, available on most Linux
@@ -2712,7 +3030,7 @@ We define each of those two components below.
 \regleGrammaire{declarations}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \code{var} \nt{var\_lists} \\
+	\   & \styleIMI{var} \nt{var\_lists} \\
 	$|$ & \emptystring
 \end{tabular}
 
@@ -2720,7 +3038,7 @@ We define each of those two components below.
 \regleGrammaire{var\_lists}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \nt{var\_list} \code{:} \nt{var\_type} \code{;} \nt{var\_lists} \\
+	\   & \nt{var\_list} \styleIMI{:} \nt{var\_type} \styleIMI{;} \nt{var\_lists} \\
 	$|$ & \emptystring
 \end{tabular}
 
@@ -2738,6 +3056,7 @@ We define each of those two components below.
 \regleGrammaire{var\_type}
 %------------------------------------------------------------
 \begin{tabular}{l l}
+  $|$ & \styleIMI{binary (} \nt{pos\_integer}  \styleIMI{)} \\
 	$|$ & \styleIMI{bool}  \\
 	$|$ & \styleIMI{clock}     \\
 	$|$ & \styleIMI{constant}  \\
@@ -2804,15 +3123,22 @@ We define each of those two components below.
 \end{tabular}
 
 %------------------------------------------------------------
+\regleGrammaire{location\_attribute}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$ & \emptystring{} \\
+	$|$ & \styleIMI{urgent} \\
+	$|$ & \styleIMI{accepting}        \\
+	$|$ & \styleIMI{accepting urgent} \\
+	$|$ & \styleIMI{urgent accepting} \\
+\end{tabular}
+
+%------------------------------------------------------------
 \regleGrammaire{location}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}                  \\
-	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}           \\
-	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}        \\
-	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
-	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
-	% 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{nonlinear\_convex\_predicate} \nt{transitions} \\
+	\   & \nt{location\_attribute} \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate}  \\
+	& \quad{} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
 \end{tabular}
 
 % \smallskip
@@ -2967,11 +3293,34 @@ We define each of those two components below.
 \end{tabular}
 
 %------------------------------------------------------------
+\regleGrammaire{syn\_label}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{sync} \styleIMI{<name>} \\
+\end{tabular}
+
+%------------------------------------------------------------
 \regleGrammaire{global\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \nt{boolean\_expression} \\
-	$|$ & \nt{arithmetic\_expression} \\
+	\   & \nt{arithmetic\_expression} \\
+  $|$ & \nt{binary\_word\_expression} \\
+	$|$ & \nt{boolean\_expression} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{binary\_word\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{shift\_left (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	\   & \styleIMI{shift\_right (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	\   & \styleIMI{fill\_left (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	\   & \styleIMI{fill\_right (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	\   & \styleIMI{log\_and (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
+	\   & \styleIMI{log\_or (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
+	\   & \styleIMI{log\_xor (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
+	\   & \styleIMI{log\_not (} \nt{binary\_word\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{<binary\_word>} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2993,14 +3342,7 @@ We define each of those two components below.
 	\   & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
 	$|$ & \nt{arithmetic\_expression} \styleIMI{in} $[$ \nt{arithmetic\_expression} \styleIMI{,} \nt{arithmetic\_expression} $]$ \\
 	$|$ & \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \\
-    $|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{syn\_label}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{sync} \styleIMI{<name>} \\
+  $|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
 \end{tabular}
 
 
@@ -3178,7 +3520,7 @@ We define each of those two components below.
 % 	 & \nt{init\_definition} \styleIMI{end} \\
 % 	 $|$ & \nt{old\_init\_definition} \styleIMI{end} \\
 % \end{tabular}
-% 
+%
 % %------------------------------------------------------------
 % \regleGrammaire{init\_definition}
 % %------------------------------------------------------------
@@ -3280,7 +3622,7 @@ We define each of those two components below.
 % 	\   & \nt{init\_loc\_predicate} \\
 % 	$|$ & \nt{linear\_constraint}   \\
 % \end{tabular}
-% 
+%
 % %------------------------------------------------------------
 % \regleGrammaire{init\_loc\_predicate}
 % %------------------------------------------------------------
@@ -3288,8 +3630,8 @@ We define each of those two components below.
 % 	\   & \styleIMI{loc[ <name> ] = <name>} \\
 % 	$|$ & \styleIMI{<name> is in <name>}    \\
 % \end{tabular}
-% 
-% 
+%
+%
 % %------------------------------------------------------------
 % \regleGrammaire{discrete\_predicate}
 % %------------------------------------------------------------
@@ -3359,10 +3701,10 @@ We define each of those two components below.
 	$|$ & \styleIMI{Loop}
 		\commentgrammar{alias for \styleIMI{Cycle}}
 	\\
-	$|$ & \styleIMI{CycleThrough} \nt{state\_predicate}
+	$|$ & \styleIMI{CycleThrough} \nt{state\_predicate\_list}
 	\\
 	% NOTE: alias
-	$|$ & \styleIMI{LoopThrough} \nt{state\_predicate}
+	$|$ & \styleIMI{LoopThrough} \nt{state\_predicate\_list}
 		\commentgrammar{alias for \styleIMI{CycleThrough}}
 	\\
 	$|$ & \styleIMI{NZCycle}                                                                                     \\
@@ -3432,6 +3774,26 @@ We define each of those two components below.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+%------------------------------------------------------------
+\regleGrammaire{state\_predicate\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$ & \nt{non\_empty\_state\_predicate\_list} \\
+	$|$ & \emptystring{}
+	\\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{non\_empty\_state\_predicate\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$ & \nt{state\_predicate} \styleIMI{,} \nt{non\_empty\_state\_predicate\_list} \\ % NOTE: actually non\_empty\_state\_predicate (absent from this document)
+	$|$ & \nt{state\_predicate} \nt{comma\_opt} \\
+\end{tabular}
+
+%% NOTE: the definition seems quite different from the actual grammar
 
 %------------------------------------------------------------
 \regleGrammaire{state\_predicate}
@@ -3725,11 +4087,11 @@ We define each of those two components below.
 
 
 \begin{remark}
-	In the parameter valuation definition (\nt{parameter\_valuation}), all parameters of the model must be given a valuation in this file; but the file may also use names that do not appear in the model (a warning will just be issued).
+	In the parameter valuation definition (\nt{parameter\_valuation}), all parameters of the model must be given a valuation; but the definition of the parameter valuation may also use names that do not appear in the model (a warning will just be issued).
 \end{remark}
 
 \begin{remark}
-	In the hyper-rectangle definition (\nt{hyper\_rectangle}), all parameters of the model must be given an interval (possibly punctual) in this file; again, the file may also use names that do not appear in the model (a warning will just be issued).
+	In the hyper-rectangle definition (\nt{hyper\_rectangle}), all parameters of the model must be given an interval (possibly punctual); again, the definition of the hyper-rectangle may also use names that do not appear in the model (a warning will just be issued).
 \end{remark}
 
 
@@ -3753,6 +4115,7 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{automatically\_generated\_x\_obs},
 \styleIMI{automaton},
 \styleIMI{before},
+\styleIMI{binary},
 \styleIMI{clock},
 \styleIMI{constant},
 \styleIMI{discrete},
@@ -3762,6 +4125,8 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{eventually},
 \styleIMI{everytime},
 \styleIMI{False},
+\styleIMI{fill\_left},
+\styleIMI{fill\_right},
 \styleIMI{flow},
 \styleIMI{goto},
 \styleIMI{happened},
@@ -3773,15 +4138,23 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{invariant},
 \styleIMI{is},
 \styleIMI{loc},
+\styleIMI{logand},
+\styleIMI{lognot},
+\styleIMI{logor},
+\styleIMI{logxor},
 \styleIMI{next},
 \styleIMI{nosync\_obs},
 \styleIMI{not},
 \styleIMI{once},
 \styleIMI{or},
 \styleIMI{parameter},
+\styleIMI{pow},
 \styleIMI{projectresult},
 \styleIMI{property},
+\styleIMI{rational\_of\_int},
 \styleIMI{sequence},
+\styleIMI{shift\_left},
+\styleIMI{shift\_right},
 \styleIMI{special\_0\_clock},
 \styleIMI{step},
 \styleIMI{stop},
@@ -3809,18 +4182,6 @@ The following words are reserved keywords and cannot be used as names for automa
 
 Although we try to make \imitator{} as complete as possible, it misses some features, not implemented due to lack of time (contributors are welcome!) or due to complexity, or to keep the tool consistent.
 We enumerate in the following what seems to us to be the ``most missing'' features and, when applicable, we give hints to overcome these limitations.
-
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \section{Urgent Locations}
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% Urgent transitions are locations in which time cannot elapse, \ie{} there must be left immediately after being entered.
-% Whereas this feature is not natively implemented in \imitator{}, it can easily be simulated as follows:
-% to simulate an urgent location \styleIMI{l}, one can add an extra clock (say \styleIMI{x\_urgent}) initialized to 0 on any transition leading \styleIMI{l}; then, the invariant of \styleIMI{l} is \styleIMI{x\_urgent = 0}.
-% Note that a single clock \styleIMI{x\_urgent} is enough to simulate any number of urgent locations.
-
-% TODO: example
 
 
 
@@ -3898,7 +4259,7 @@ However, in this latter case, the non-linear power of arithmetic expressions (mu
 
 \imitator{} does not implement specific algorithms for lower-bound / upper-bound PTA (L/U-PTA).
 This subclass of PTA, introduced in~\cite{HRSV02}, constrains parameters to appear either always as upper-bounds in inequalities comparing them with clocks, or always as lower-bounds.
-L/U-PTA benefit from some decidability results (see \eg{} \cite{HRSV02,BlT09,JLR15,AM15,ALime17}); however, exact synthesis seems to be intractable in practice~\cite{JLR15,ALR16ICFEM}.
+L/U-PTA benefit from some decidability results (see \eg{} \cite{HRSV02,BlT09,JLR15,ALime17,ALM20}); however, exact synthesis seems to be intractable in practice~\cite{JLR15,ALR16ICFEM}.
 Still, some subclasses for which exact synthesis can be performed were proposed~\cite{BlT09,ALR18FORMATS}.
 
 However, \imitator{} does detect whether an input model is an L/U-PTA, in which case a message is printed with the list of lower-bounds parameters and upper-bounds parameters.

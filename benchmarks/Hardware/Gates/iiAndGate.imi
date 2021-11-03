@@ -6,9 +6,9 @@
  *
  * Author          : Christopher Makanga
  * Created         : 2014/08/28
- * Last modified   : 2020/08/14
+ * Last modified   : 2021/08/30
  *
- * IMITATOR version: 3
+ * IMITATOR version: 3.1
  ************************************************************)
 
 var 	ckiiAnd
@@ -63,7 +63,7 @@ loc iiAnd110: invariant True
 	when True sync i2Down do {ckiiAnd := 0} goto iiAnd100;
 
 (* Unstable *)
-loc iiAnd111: invariant ckiiAnd <= diiAnd_u 
+loc iiAnd111: invariant ckiiAnd <= diiAnd_u
 	when True sync i1Down do {ckiiAnd := 0} goto iiAnd011;
 	when True sync i2Down do {} goto iiAnd101;
 	when ckiiAnd >= diiAnd_l sync sDown do {} goto iiAnd110;
@@ -74,22 +74,26 @@ end (*iiAndGate*)
 (* Analysis *)
 (************************************************************)
 
-init := True
-	(*------------------------------------------------------------
-	   INITIAL LOCATION
-	  ------------------------------------------------------------*)
-	& loc[iiAndGate] = iiAnd000
+init := {
+	discrete =
+		(*------------------------------------------------------------
+	   	INITIAL LOCATION
+	  	------------------------------------------------------------*)
+		loc[iiAndGate] := iiAnd000,
+	;
 
-	(*------------------------------------------------------------
-	   INITIAL CLOCKS
-	  ------------------------------------------------------------*)
-	& ckiiAnd = 0
+	continuous =
+		(*------------------------------------------------------------
+		   INITIAL CLOCKS
+		  ------------------------------------------------------------*)
+		& ckiiAnd = 0
 
-	(*------------------------------------------------------------
-	   PARAMETER CONSTRAINTS
-	  ------------------------------------------------------------*)
-	& diiAnd_l >= 0
-	& diiAnd_l <= diiAnd_u
-;
+		(*------------------------------------------------------------
+		   PARAMETER CONSTRAINTS
+		  ------------------------------------------------------------*)
+		& diiAnd_l >= 0
+		& diiAnd_l <= diiAnd_u
+	;
+}
 
 end

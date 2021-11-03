@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2020/09/21
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -26,7 +26,7 @@ open AbstractAlgorithm
 open AbstractModel
 open AbstractProperty
 open Result
-open AlgoEFsynth
+open AlgoEFgen
 
 
 
@@ -35,8 +35,8 @@ open AlgoEFsynth
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFunsafeSynth (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoEFsynth state_predicate as super
+class algoEF (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoEFgen state_predicate as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -67,11 +67,13 @@ class algoEFunsafeSynth (state_predicate : AbstractProperty.state_predicate) =
 		
 		
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
-				
+		
+		(* Retrieve the property *)
+		let abstract_property = Input.get_property() in
+		
 		(* Projecting onto SOME parameters if required *)
 		(*** NOTE: Useless test as we are in EF, so there is a property ***)
-		let result = if Input.has_property() then(
-			let abstract_property = Input.get_property() in
+		let result =
 			match abstract_property.projection with
 				(* No projection: copy the initial p constraint *)
 				| None -> synthesized_constraint
@@ -98,11 +100,6 @@ class algoEFunsafeSynth (state_predicate : AbstractProperty.state_predicate) =
 					
 					(* Return *)
 					projected_init_p_nnconvex_constraint
-				
-		)else(
-			(* No projection: copy the initial p constraint *)
-			synthesized_constraint
-		) (* end if has property *)
 		in
 		
 		(* Get the termination status *)
@@ -118,28 +115,51 @@ class algoEFunsafeSynth (state_predicate : AbstractProperty.state_predicate) =
 			else statespace_nature
 		in*)
 		
-		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
-		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+		(* Branching between Witness/Synthesis and Exemplification *)
+		if abstract_property.synthesis_type = Exemplification then(
+			(* Return the result *)
+			Runs_exhibition_result
+			{
+				(* Non-necessarily convex constraint guaranteeing the reachability of the bad location *)
+				(*** NOTE: use rev since we added the runs by reversed order ***)
+				runs				= List.rev_append positive_examples (List.rev negative_examples);
+				
+				(* Explored state space *)
+				state_space			= state_space;
+				
+				(* Total computation time of the algorithm *)
+				computation_time	= time_from start_time;
+				
+				(* Termination *)
+				termination			= termination_status;
+			}
+		
+		(* Normal mode: Witness/Synthesis *)
+		)else(
+		
+			(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
+			(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
+			let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
 
-		(* Return the result *)
-		Single_synthesis_result
-		{
-			(* Non-necessarily convex constraint guaranteeing the reachability of the desired states *)
-			result				= Good_constraint (result, soundness);
-			
-			(* English description of the constraint *)
-			constraint_description = "constraint guaranteeing reachability";
-	
-			(* Explored state space *)
-			state_space			= state_space;
-			
-			(* Total computation time of the algorithm *)
-			computation_time	= time_from start_time;
-			
-			(* Termination *)
-			termination			= termination_status;
-		}
+			(* Return the result *)
+			Single_synthesis_result
+			{
+				(* Non-necessarily convex constraint guaranteeing the reachability of the desired states *)
+				result				= Good_constraint (result, soundness);
+				
+				(* English description of the constraint *)
+				constraint_description = "constraint guaranteeing reachability";
+		
+				(* Explored state space *)
+				state_space			= state_space;
+				
+				(* Total computation time of the algorithm *)
+				computation_time	= time_from start_time;
+				
+				(* Termination *)
+				termination			= termination_status;
+			}
+		)
 
 
 	

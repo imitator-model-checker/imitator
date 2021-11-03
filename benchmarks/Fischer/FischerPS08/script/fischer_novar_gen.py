@@ -13,9 +13,9 @@
  # Script authors  : Michal Knapick, Étienne André
  #
  # Created         : 2015/05/15
- # Last modified   : 2020/08/14
+ # Last modified   : 2021/09/01
  #
- # IMITATOR version: 3
+ # IMITATOR version: 3.1
  ############################################################
 
 import sys
@@ -25,7 +25,7 @@ def getVars(n):
     print("var")
     print("\t"+", ".join(["x"+str(i) for i in range(1,n+1)]))
     print("\t: clock;\n")
-    print("\tnb\n\t: discrete;\n")
+    print("\tnb\n\t: int;\n")
     print("\tdelta, Delta\n\t: parameter;\n")
 
 
@@ -46,7 +46,7 @@ def getProcess(i):
 \tloc critical{0}: invariant True
 	\twhen True sync SetX0{0} do {{nb := nb - 1}} goto idle{0};
 
-end\n"""
+end (* automaton process{0} *)\n"""
 
     print(autStr.format(i))
 
@@ -90,21 +90,29 @@ def getInit(n):
     print("\n\tloc obs_BAD: invariant True")
     print("end (* observer *)")
 
-    print("\n\n\tinit := True")
-    for lp in ["\t& loc[process{0}] = idle{0}".format(i) for i in range(1, n+1)]:
+    print("\n\ninit := {")
+    print("\tdiscrete =")
+    for lp in ["\t\tloc[process{0}] := idle{0},".format(i) for i in range(1, n+1)]:
         print(lp)
-    print("\t& loc[variable] = Val0")
-    print("\t& loc[observer] = obs_OK")
+    print("\t\tloc[variable] := Val0,")
+    print("\t\tloc[observer] := obs_OK,")
+    print("\t\tnb := 0,")
 
+    print("\t;")
+    print("\n\tcontinuous =")
+    print("\t\t(* Clocks initially 0 *)")
     for i in range(1, n+1):
-        print("\t& x{} = 0".format(i))
+        print("\t\t& x{} = 0".format(i))
 
-    print("\t& nb = 0")
-    print("\t& Delta >= 0\n\t& delta >= 0;")
+    print("\t\t(* Non-negative parameters *)")
+    print("\t\t& Delta >= 0\n\t\t& delta >= 0")
+    print("\t;")
+    print("}")
 
 #    print("\nproperty := unreachable loc[observer] = obs_BAD;")
 
-    print ("\nend")
+    print("\n(* End of automatically generated model *)")
+    print ("end")
 
 
 if __name__ == "__main__":

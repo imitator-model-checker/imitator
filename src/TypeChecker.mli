@@ -15,7 +15,7 @@
  ************************************************************)
 
 open ParsingStructure
-
+open AbstractProperty
 
 type variable_name = string
 type variable_index = int
@@ -56,7 +56,7 @@ val check_guard : variable_infos -> ParsingStructure.convex_predicate -> Parsing
 
 (* Type check an update *)
 (* return a tuple containing the update uniformly typed and the resolved type of the expression *)
-val check_update : variable_infos -> string -> ParsingStructure.global_expression -> string * ParsingStructure.global_expression
+val check_update : variable_infos -> variable_access -> ParsingStructure.global_expression -> variable_access * ParsingStructure.global_expression
 
 (* Type check a conditional expression *)
 (* return a tuple containing the conditional expression uniformly typed and the resolved type of the expression *)
@@ -67,12 +67,14 @@ val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expres
 val check_type_assignment : variable_infos -> variable_name -> ParsingStructure.global_expression -> ParsingStructure.global_expression * DiscreteValue.var_type_discrete
 
 (* Check that constant declarations are well typed *)
-val check_constant_declarations : (variable_name * ParsingStructure.global_expression * DiscreteValue.discrete_value * DiscreteValue.var_type) list -> (variable_name * DiscreteValue.discrete_value) list
-val check_constant_declaration : (variable_name * ParsingStructure.global_expression * DiscreteValue.discrete_value * DiscreteValue.var_type) -> (variable_name * DiscreteValue.discrete_value)
 val check_constant_expression : (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t -> string * global_expression * DiscreteValue.var_type -> global_expression * DiscreteValue.var_type_discrete
 
 (* Check that a discrete variable initialization is well typed *)
 val check_discrete_init : variable_infos -> variable_name -> ParsingStructure.global_expression -> ParsingStructure.global_expression
+
+(* Type check a state predicate *)
+(* return a tuple containing the state predicate uniformly typed and the resolved type of the expression *)
+val check_parsed_state_predicate : variable_infos -> parsed_state_predicate -> parsed_state_predicate * DiscreteValue.var_type_discrete
 
 val discrete_type_of_expression : variable_infos -> ParsingStructure.global_expression -> DiscreteValue.var_type_discrete
 val discrete_type_of_parsed_boolean_expression : variable_infos -> ParsingStructure.parsed_boolean_expression -> DiscreteValue.var_type_discrete

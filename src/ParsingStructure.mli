@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/09/14
+ * Last modified     : 2021/09/16
  *
  ****************************************************************)
 
@@ -45,6 +45,7 @@ type var_type_discrete =
     | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_bool
     | Var_type_discrete_binary_word of int
+    | Var_type_discrete_array of var_type_discrete * int
 
 (* Type of variable in declarations *)
 type var_type =
@@ -54,40 +55,16 @@ type var_type =
 	| Var_type_parameter
 
 (****************************************************************)
-(** Arithmetic expressions for discrete variables *)
+(** Global expression *)
 (****************************************************************)
-type parsed_discrete_arithmetic_expression =
-	| Parsed_DAE_plus of parsed_discrete_arithmetic_expression * parsed_discrete_term
-	| Parsed_DAE_minus of parsed_discrete_arithmetic_expression * parsed_discrete_term
-	| Parsed_DAE_term of parsed_discrete_term
-
-and parsed_discrete_term =
-	| Parsed_DT_mul of parsed_discrete_term * parsed_discrete_factor
-	| Parsed_DT_div of parsed_discrete_term * parsed_discrete_factor
-	| Parsed_DT_factor of parsed_discrete_factor
-
-and parsed_discrete_factor =
-	| Parsed_DF_variable of variable_name
-	| Parsed_DF_constant of DiscreteValue.discrete_value
-	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
-	| Parsed_DF_unary_min of parsed_discrete_factor
-	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
-	| Parsed_pow_function of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
-	| Parsed_shift_left of parsed_discrete_factor * parsed_discrete_arithmetic_expression
-	| Parsed_shift_right of parsed_discrete_factor * parsed_discrete_arithmetic_expression
-	| Parsed_fill_left of parsed_discrete_factor * parsed_discrete_arithmetic_expression
-	| Parsed_fill_right of parsed_discrete_factor * parsed_discrete_arithmetic_expression
-	| Parsed_log_and of parsed_discrete_factor * parsed_discrete_factor
-	| Parsed_log_or of parsed_discrete_factor * parsed_discrete_factor
-	| Parsed_log_xor of parsed_discrete_factor * parsed_discrete_factor
-	| Parsed_log_not of parsed_discrete_factor
-(*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
+type global_expression =
+    | Parsed_global_expression of parsed_boolean_expression
 
 (****************************************************************)
 (** Boolean expressions *)
 (****************************************************************)
 
-type parsed_discrete_boolean_expression =
+and parsed_discrete_boolean_expression =
     | Parsed_arithmetic_expression of parsed_discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression of parsed_discrete_boolean_expression * parsed_relop * parsed_discrete_boolean_expression
@@ -100,17 +77,53 @@ type parsed_discrete_boolean_expression =
 
 
 and parsed_boolean_expression =
-	| Parsed_True (** True *)
-	| Parsed_False (** False *)
 	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
 	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
 	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
 
 (****************************************************************)
-(** Global expression *)
+(** Arithmetic expressions for discrete variables *)
 (****************************************************************)
-type global_expression =
-    | Parsed_global_expression of parsed_boolean_expression
+and parsed_discrete_arithmetic_expression =
+	| Parsed_DAE_plus of parsed_discrete_arithmetic_expression * parsed_discrete_term
+	| Parsed_DAE_minus of parsed_discrete_arithmetic_expression * parsed_discrete_term
+	| Parsed_DAE_term of parsed_discrete_term
+
+and parsed_discrete_term =
+	| Parsed_DT_mul of parsed_discrete_term * parsed_discrete_factor
+	| Parsed_DT_div of parsed_discrete_term * parsed_discrete_factor
+	| Parsed_DT_factor of parsed_discrete_factor
+
+and parsed_discrete_factor =
+	| Parsed_DF_variable of variable_name
+	| Parsed_DF_constant of DiscreteValue.discrete_value
+	| Parsed_DF_array of parsed_boolean_expression array
+    | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
+	| Parsed_DF_unary_min of parsed_discrete_factor
+	(* Functions *)
+	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
+	| Parsed_pow_function of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
+
+    (* All shift functions of the form : factor * arithmetic_expression *)
+	| Parsed_shift_function of parsed_shift_function_type * parsed_discrete_factor * parsed_discrete_arithmetic_expression
+    (* All binary log functions of the form : factor * factor *)
+    | Parsed_bin_log_function of parsed_bin_log_function_type * parsed_discrete_factor * parsed_discrete_factor
+	| Parsed_log_not of parsed_discrete_factor
+
+	| Parsed_array_concat of parsed_discrete_factor * parsed_discrete_factor
+(*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
+
+and parsed_shift_function_type =
+    | Parsed_shift_left
+    | Parsed_shift_right
+    | Parsed_fill_left
+    | Parsed_fill_right
+
+and parsed_bin_log_function_type =
+    | Parsed_log_and
+    | Parsed_log_or
+    | Parsed_log_xor
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
 type variable_declaration = var_type * (variable_name * global_expression option) list
@@ -139,10 +152,8 @@ type linear_constraint =
 	| Parsed_linear_constraint of linear_expression * parsed_relop * linear_expression
 
 (** Non-linear expressions *)
-
+(* TODO benjamin CLEAN remove Variant type : nonlinear_constraint = parsed_discrete_boolean_expression *)
 type nonlinear_constraint =
-    | Parsed_true_nonlinear_constraint (* True *)
-    | Parsed_false_nonlinear_constraint (* False *)
     | Parsed_nonlinear_constraint of parsed_discrete_boolean_expression
 
 type convex_predicate = nonlinear_constraint list
@@ -173,8 +184,11 @@ type invariant = convex_predicate
 type update =
 	| Normal of normal_update (** Updates withput conditions *)
 	| Condition of condition_update (** Updates with conditions *)
+and variable_access =
+    | Variable_name of variable_name
+    | Variable_access of variable_access * parsed_discrete_arithmetic_expression
 (** basic updating *)
-and normal_update = variable_name * global_expression
+and normal_update = variable_access * global_expression
 (** conditional updating *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 
@@ -295,6 +309,39 @@ and parsed_state_predicate =
 type parsed_synthesis_type =
 	| Parsed_witness
 	| Parsed_synthesis
+	| Parsed_exemplify
+
+
+(* Observer patterns [Andre13] *)
+type parsed_pattern =
+	(* if a2 then a1 has happened before *)
+	| Parsed_action_precedence_acyclic of sync_name * sync_name
+	(* everytime a2 then a1 has happened before *)
+	| Parsed_action_precedence_cyclic of sync_name * sync_name
+	(* everytime a2 then a1 has happened once before *)
+	| Parsed_action_precedence_cyclicstrict of sync_name * sync_name
+
+	(* a within d *)
+	| Parsed_action_deadline of sync_name * parsed_duration
+	
+	(* if a2 then a1 happened within d before *)
+	| Parsed_TB_Action_precedence_acyclic of sync_name * sync_name * parsed_duration
+	(* everytime a2 then a1 happened within d before *)
+	| Parsed_TB_Action_precedence_cyclic of sync_name * sync_name * parsed_duration
+	(* everytime a2 then a1 happened once within d before *)
+	| Parsed_TB_Action_precedence_cyclicstrict of sync_name * sync_name * parsed_duration
+
+	(* if a1 then eventually a2 within d *)
+	| Parsed_TB_response_acyclic of sync_name * sync_name * parsed_duration
+	(* everytime a1 then eventually a2 within d *)
+	| Parsed_TB_response_cyclic of sync_name * sync_name * parsed_duration
+	(* everytime a1 then eventually a2 within d once before next *)
+	| Parsed_TB_response_cyclicstrict of sync_name * sync_name * parsed_duration
+
+	(* sequence a1, …, an *)
+	| Parsed_Sequence_acyclic of sync_name list
+	(* always sequence a1, …, an *)
+	| Parsed_Sequence_cyclic of sync_name list
 
 
 
@@ -320,14 +367,6 @@ type parsed_property_type =
 	
 	
 	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
- 	| Parsed_EFexemplify of parsed_state_predicate
-	
-
-	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
@@ -347,6 +386,9 @@ type parsed_property_type =
 	
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Parsed_Cycle_Through of parsed_state_predicate
+
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Parsed_Cycle_Through_generalized of parsed_state_predicate list
 
 	(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
 	| Parsed_NZ_Cycle
@@ -408,35 +450,8 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 	(* Observer patterns *)
 	(*------------------------------------------------------------*)
-
-	(* if a2 then a1 has happened before *)
-	| Parsed_action_precedence_acyclic of sync_name * sync_name
-	(* everytime a2 then a1 has happened before *)
-	| Parsed_action_precedence_cyclic of sync_name * sync_name
-	(* everytime a2 then a1 has happened once before *)
-	| Parsed_action_precedence_cyclicstrict of sync_name * sync_name
-
-	(* a within d *)
-	| Parsed_action_deadline of sync_name * parsed_duration
 	
-	(* if a2 then a1 happened within d before *)
-	| Parsed_TB_Action_precedence_acyclic of sync_name * sync_name * parsed_duration
-	(* everytime a2 then a1 happened within d before *)
-	| Parsed_TB_Action_precedence_cyclic of sync_name * sync_name * parsed_duration
-	(* everytime a2 then a1 happened once within d before *)
-	| Parsed_TB_Action_precedence_cyclicstrict of sync_name * sync_name * parsed_duration
-
-	(* if a1 then eventually a2 within d *)
-	| Parsed_TB_response_acyclic of sync_name * sync_name * parsed_duration
-	(* everytime a1 then eventually a2 within d *)
-	| Parsed_TB_response_cyclic of sync_name * sync_name * parsed_duration
-	(* everytime a1 then eventually a2 within d once before next *)
-	| Parsed_TB_response_cyclicstrict of sync_name * sync_name * parsed_duration
-
-	(* sequence a1, …, an *)
-	| Parsed_Sequence_acyclic of sync_name list
-	(* always sequence a1, …, an *)
-	| Parsed_Sequence_cyclic of sync_name list
+	| Parsed_pattern of parsed_pattern
 
 
 

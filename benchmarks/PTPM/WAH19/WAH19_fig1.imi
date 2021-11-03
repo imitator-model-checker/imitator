@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
  * Fig.1 from [WAH19]
  *
@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2019/09/30
- * Last modified   : 2020/08/18
+ * Last modified   : 2021/08/30
  *
- * IMITATOR version: 3
+ * IMITATOR version: 3.1
  ************************************************************)
 
 var
@@ -82,7 +82,7 @@ loc lneq: invariant True
 	(*** HACK: still no "<>", so we use 2 transitions instead ***)
 	when c < tp && current_x = SIGNAL_b && current_v < valx sync update goto lneq;
 	when c < tp && current_x = SIGNAL_b && current_v > valx sync update goto lneq;
-	
+
 	when c < tp && current_x = SIGNAL_b & current_v = valx goto leq;
 
 	when c >= tp && tabs = tend sync epsilon goto lfrownie;
@@ -173,35 +173,39 @@ end (* word *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[monitor] = l0
-	& loc[word] = word_0
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[monitor] := l0,
+  	loc[word]    := word_0,
 
-	(*------------------------------------------------------------*)
-	(* Initial discrete assignments *)
-	(*------------------------------------------------------------*)
-	& current_v	= -1
-	& current_x	= -1
-	& valx		= -1
-	& valb		= -1
+  	(*------------------------------------------------------------*)
+  	(* Initial discrete assignments *)
+  	(*------------------------------------------------------------*)
+  	current_v	:= -1,
+  	current_x	:= -1,
+  	valx		  := -1,
+  	valb		  := -1,
+  ;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& c			= 0
-	& tabs		= 0
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& c			= 0
+  	& tabs		= 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& tp		>= 0
-	& px		>= 0
-	& tstart	>= 0
-	& tend		>= 0
-;
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& tp		>= 0
+  	& px		>= 0
+  	& tstart	>= 0
+  	& tend		>= 0
+  ;
+}
 
 (************************************************************)
 (* The end *)

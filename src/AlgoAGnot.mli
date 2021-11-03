@@ -5,11 +5,11 @@
  * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
- * Module description: EFexemplify algorithm [work in progress]
+ * Module description: "AG not" algorithm (safety from a set of bad states) [JLR15]
  * 
  * File contributors : Étienne André
- * Created           : 2019/07/08
- * Last modified     : 2020/04/16
+ * Created           : 2017/02/03
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -17,31 +17,24 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
-open AlgoEFsynth
-open State
+open AlgoEFgen
 
 
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoEFexemplify : AbstractProperty.state_predicate ->
-	object inherit algoEFsynth
+class algoAGnot : AbstractProperty.state_predicate ->
+	object inherit algoEFgen
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
 
 		method algorithm_name : string
-		
+
 
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Generate counter-example(s) if required by the algorithm *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_counterexample : state_index -> unit
-
 		
 		method compute_result : Result.imitator_result
 end

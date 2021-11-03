@@ -102,7 +102,12 @@ In \imitator{}, the variables are numbered as follows in the constraint, startin
 Since version 3.1 and the addition of \styleIMI{int} and \styleIMI{bool} types, a type inference system is added to \imitator{}.
 Details can be obtained on how the types are inferred using the following command:
 
-\styleCommand{\binimitator{} model.imi -verbose high | grep "Infer"}
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi -verbose high | grep "Infer"
+\end{terminal}
+%------------------------------------------------------------
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

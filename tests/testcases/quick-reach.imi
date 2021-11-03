@@ -1,0 +1,90 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Toy model to check whether merging does not slow down the analysis
+ * Description      : Toy model to check whether merging does not slow down the analysis by deleting branches that would leading quickly to a target. Here, l3 can be reached in 2 steps (l1, l2, l3). But (a bad implementation of) merging might delete the first transition l1 -> l2, thus requiring l1 -> l1 -> l2 -> l3.
+ * Correctness      : EF accepting
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Johan Arcile, Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/08/31
+ * Last modified    : 2021/09/01
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.1
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant True
+	when True do {x := 0} goto l1;
+	(* p should be smaller than 0.5 *)
+	when x = 2 & x > 4 p do {x := 0} goto l2;
+
+loc l2: invariant True
+	when True goto l3;
+
+accepting loc l3: invariant True
+	when True do {x := 0} goto l3;
+
+end (* pta *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 1
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& 0 <= p & p <= 1
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

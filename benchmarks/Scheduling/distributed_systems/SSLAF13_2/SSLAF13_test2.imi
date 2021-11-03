@@ -15,39 +15,39 @@
  * License          : 
  * 
  * Created          : < 2015/10/30
- * Last modified    : 2018/08/20
+ * Last modified    : 2021/10/07
  * Model version    : 
  * 
- * IMITATOR version : 3
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
 
-var 
+var
 	t_asap_1:clock;
 	t_pipeline_1:clock;
 	t_task_11:clock;
-	Token_11:discrete;
+(* 	Token_11:discrete; *)
 	t_task_12:clock;
-	Token_12:discrete;
+	Token_12:bool;
 	t_task_13:clock;
-	Token_13:discrete;
+(* 	Token_13:discrete; *)
 	t_task_14:clock;
-	Token_14:discrete;
+	Token_14:bool;
 	t_task_15:clock;
-	Token_15:discrete;
+(* 	Token_15:discrete; *)
 	t_asap_2:clock;
 	t_pipeline_2:clock;
 	t_task_21:clock;
-	Token_21:discrete;
+(* 	Token_21:discrete; *)
 	t_task_22:clock;
-	Token_22:discrete;
+	Token_22:bool;
 	t_task_23:clock;
-	Token_23:discrete;
+(* 	Token_23:discrete; *)
 	t_task_24:clock;
-	Token_24:discrete;
+	Token_24:bool;
 	t_task_25:clock;
-	Token_25:discrete;
+(* 	Token_25:discrete; *)
 
 	T_pipeline_1=31250,
 	D_pipeline_1=200000,
@@ -175,88 +175,88 @@ automaton proc_2
 	 synclabs: DEADLINE_MISSED_2,task_12_act,task_12_done,task_14_act,task_14_done,task_22_act,task_22_done,task_24_act,task_24_done;
 
 	 loc idle: invariant True stop{t_task_12,t_task_14,t_task_22,t_task_24}
-		when True sync task_12_act do{Token_12 := 1}goto t_12_running;
-		when True sync task_14_act do{Token_14 := 1}goto t_14_running;
-		when True sync task_22_act do{Token_22 := 1}goto t_22_running;
-		when True sync task_24_act do{Token_24 := 1}goto t_24_running;
+		when True sync task_12_act do{Token_12 := True}goto t_12_running;
+		when True sync task_14_act do{Token_14 := True}goto t_14_running;
+		when True sync task_22_act do{Token_22 := True}goto t_22_running;
+		when True sync task_24_act do{Token_24 := True}goto t_24_running;
 
 	loc DEADLINE_MISS: invariant True
 	loc t_12_running: invariant t_task_12 <= C_task_12 stop {t_task_14,t_task_22,t_task_24}
 		when t_task_12 < C_task_12 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_12 < C_task_12 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
-		 when t_task_12 <= 0 sync task_12_act do{Token_12 := 1}goto t_12_running;
-		 when t_task_12 > 0 sync task_12_act do{Token_12 := 1}goto t_12_running;
-		 when t_task_12 <= 0 sync task_14_act do{Token_14 := 1}goto t_12_running;
-		 when t_task_12 > 0 sync task_14_act do{Token_14 := 1}goto t_12_running;
-		 when t_task_12 <= 0 sync task_22_act do{Token_22 := 1}goto t_12_running;
-		 when t_task_12 > 0 sync task_22_act do{Token_22 := 1}goto t_12_running;
-		 when t_task_12 <= 0 sync task_24_act do{Token_24 := 1}goto t_12_running;
-		 when t_task_12 > 0 sync task_24_act do{Token_24 := 1}goto t_12_running;
-		when t_task_12 = C_task_12 & Token_14=0  & Token_22=0  & Token_24=0 sync task_12_done do{Token_12 := 0} goto idle;
-		when t_task_12 = C_task_12 & Token_14=1  & Token_22=0  & Token_24=0 sync task_12_done do{t_task_14 := 0,Token_12 := 0} goto t_14_running;
-		when t_task_12 = C_task_12 & Token_14=0  & Token_22=1  & Token_24=0 sync task_12_done do{t_task_22 := 0,Token_12 := 0} goto t_22_running;
-		when t_task_12 = C_task_12 & Token_14=0  & Token_22=0  & Token_24=1 sync task_12_done do{t_task_24 := 0,Token_12 := 0} goto t_24_running;
-		when t_task_12 = C_task_12 & Token_14=1  & Token_22=1  & Token_24=0 sync task_12_done do{t_task_14 := 0,Token_12 := 0} goto t_14_running;
-		when t_task_12 = C_task_12 & Token_14=1  & Token_22=0  & Token_24=1 sync task_12_done do{t_task_14 := 0,Token_12 := 0} goto t_14_running;
-		when t_task_12 = C_task_12 & Token_14=0  & Token_22=1  & Token_24=1 sync task_12_done do{t_task_22 := 0,Token_12 := 0} goto t_22_running;
-		when t_task_12 = C_task_12 & Token_14=1  & Token_22=1  & Token_24=1 sync task_12_done do{t_task_14 := 0,Token_12 := 0} goto t_14_running;
+		 when t_task_12 <= 0 sync task_12_act do{Token_12 := True}goto t_12_running;
+		 when t_task_12 > 0 sync task_12_act do{Token_12 := True}goto t_12_running;
+		 when t_task_12 <= 0 sync task_14_act do{Token_14 := True}goto t_12_running;
+		 when t_task_12 > 0 sync task_14_act do{Token_14 := True}goto t_12_running;
+		 when t_task_12 <= 0 sync task_22_act do{Token_22 := True}goto t_12_running;
+		 when t_task_12 > 0 sync task_22_act do{Token_22 := True}goto t_12_running;
+		 when t_task_12 <= 0 sync task_24_act do{Token_24 := True}goto t_12_running;
+		 when t_task_12 > 0 sync task_24_act do{Token_24 := True}goto t_12_running;
+		when t_task_12 = C_task_12 & not(Token_14)  & not(Token_22)  & not(Token_24) sync task_12_done do{Token_12 := False} goto idle;
+		when t_task_12 = C_task_12 & Token_14  & not(Token_22)  & not(Token_24) sync task_12_done do{t_task_14 := 0,Token_12 := False} goto t_14_running;
+		when t_task_12 = C_task_12 & not(Token_14)  & Token_22  & not(Token_24) sync task_12_done do{t_task_22 := 0,Token_12 := False} goto t_22_running;
+		when t_task_12 = C_task_12 & not(Token_14)  & not(Token_22)  & Token_24 sync task_12_done do{t_task_24 := 0,Token_12 := False} goto t_24_running;
+		when t_task_12 = C_task_12 & Token_14  & Token_22  & not(Token_24) sync task_12_done do{t_task_14 := 0,Token_12 := False} goto t_14_running;
+		when t_task_12 = C_task_12 & Token_14  & not(Token_22)  & Token_24 sync task_12_done do{t_task_14 := 0,Token_12 := False} goto t_14_running;
+		when t_task_12 = C_task_12 & not(Token_14)  & Token_22  & Token_24 sync task_12_done do{t_task_22 := 0,Token_12 := False} goto t_22_running;
+		when t_task_12 = C_task_12 & Token_14  & Token_22  & Token_24 sync task_12_done do{t_task_14 := 0,Token_12 := False} goto t_14_running;
 	loc t_14_running: invariant t_task_14 <= C_task_14 stop {t_task_12,t_task_22,t_task_24}
 		when t_task_14 < C_task_14 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_14 < C_task_14 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
-		 when t_task_14 <= 0 sync task_12_act do{Token_12 := 1}goto t_12_running;
-		 when t_task_14 > 0 sync task_12_act do{Token_12 := 1}goto t_14_running;
-		 when t_task_14 <= 0 sync task_14_act do{Token_14 := 1}goto t_14_running;
-		 when t_task_14 > 0 sync task_14_act do{Token_14 := 1}goto t_14_running;
-		 when t_task_14 <= 0 sync task_22_act do{Token_22 := 1}goto t_14_running;
-		 when t_task_14 > 0 sync task_22_act do{Token_22 := 1}goto t_14_running;
-		 when t_task_14 <= 0 sync task_24_act do{Token_24 := 1}goto t_14_running;
-		 when t_task_14 > 0 sync task_24_act do{Token_24 := 1}goto t_14_running;
-		when t_task_14 = C_task_14 & Token_12=0  & Token_22=0  & Token_24=0 sync task_14_done do{Token_14 := 0} goto idle;
-		when t_task_14 = C_task_14 & Token_12=1  & Token_22=0  & Token_24=0 sync task_14_done do{t_task_12 := 0,Token_14 := 0} goto t_12_running;
-		when t_task_14 = C_task_14 & Token_12=0  & Token_22=1  & Token_24=0 sync task_14_done do{t_task_22 := 0,Token_14 := 0} goto t_22_running;
-		when t_task_14 = C_task_14 & Token_12=0  & Token_22=0  & Token_24=1 sync task_14_done do{t_task_24 := 0,Token_14 := 0} goto t_24_running;
-		when t_task_14 = C_task_14 & Token_12=1  & Token_22=1  & Token_24=0 sync task_14_done do{t_task_12 := 0,Token_14 := 0} goto t_12_running;
-		when t_task_14 = C_task_14 & Token_12=1  & Token_22=0  & Token_24=1 sync task_14_done do{t_task_12 := 0,Token_14 := 0} goto t_12_running;
-		when t_task_14 = C_task_14 & Token_12=0  & Token_22=1  & Token_24=1 sync task_14_done do{t_task_22 := 0,Token_14 := 0} goto t_22_running;
-		when t_task_14 = C_task_14 & Token_12=1  & Token_22=1  & Token_24=1 sync task_14_done do{t_task_12 := 0,Token_14 := 0} goto t_12_running;
+		 when t_task_14 <= 0 sync task_12_act do{Token_12 := True}goto t_12_running;
+		 when t_task_14 > 0 sync task_12_act do{Token_12 := True}goto t_14_running;
+		 when t_task_14 <= 0 sync task_14_act do{Token_14 := True}goto t_14_running;
+		 when t_task_14 > 0 sync task_14_act do{Token_14 := True}goto t_14_running;
+		 when t_task_14 <= 0 sync task_22_act do{Token_22 := True}goto t_14_running;
+		 when t_task_14 > 0 sync task_22_act do{Token_22 := True}goto t_14_running;
+		 when t_task_14 <= 0 sync task_24_act do{Token_24 := True}goto t_14_running;
+		 when t_task_14 > 0 sync task_24_act do{Token_24 := True}goto t_14_running;
+		when t_task_14 = C_task_14 & not(Token_12)  & not(Token_22)  & not(Token_24) sync task_14_done do{Token_14 := False} goto idle;
+		when t_task_14 = C_task_14 & Token_12  & not(Token_22)  & not(Token_24) sync task_14_done do{t_task_12 := 0,Token_14 := False} goto t_12_running;
+		when t_task_14 = C_task_14 & not(Token_12)  & Token_22  & not(Token_24) sync task_14_done do{t_task_22 := 0,Token_14 := False} goto t_22_running;
+		when t_task_14 = C_task_14 & not(Token_12)  & not(Token_22)  & Token_24 sync task_14_done do{t_task_24 := 0,Token_14 := False} goto t_24_running;
+		when t_task_14 = C_task_14 & Token_12  & Token_22  & not(Token_24) sync task_14_done do{t_task_12 := 0,Token_14 := False} goto t_12_running;
+		when t_task_14 = C_task_14 & Token_12  & not(Token_22)  & Token_24 sync task_14_done do{t_task_12 := 0,Token_14 := False} goto t_12_running;
+		when t_task_14 = C_task_14 & not(Token_12)  & Token_22  & Token_24 sync task_14_done do{t_task_22 := 0,Token_14 := False} goto t_22_running;
+		when t_task_14 = C_task_14 & Token_12  & Token_22  & Token_24 sync task_14_done do{t_task_12 := 0,Token_14 := False} goto t_12_running;
 	loc t_22_running: invariant t_task_22 <= C_task_22 stop {t_task_12,t_task_14,t_task_24}
 		when t_task_22 < C_task_22 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_22 < C_task_22 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
-		 when t_task_22 <= 0 sync task_12_act do{Token_12 := 1}goto t_12_running;
-		 when t_task_22 > 0 sync task_12_act do{Token_12 := 1}goto t_22_running;
-		 when t_task_22 <= 0 sync task_14_act do{Token_14 := 1}goto t_14_running;
-		 when t_task_22 > 0 sync task_14_act do{Token_14 := 1}goto t_22_running;
-		 when t_task_22 <= 0 sync task_22_act do{Token_22 := 1}goto t_22_running;
-		 when t_task_22 > 0 sync task_22_act do{Token_22 := 1}goto t_22_running;
-		 when t_task_22 <= 0 sync task_24_act do{Token_24 := 1}goto t_22_running;
-		 when t_task_22 > 0 sync task_24_act do{Token_24 := 1}goto t_22_running;
-		when t_task_22 = C_task_22 & Token_12=0  & Token_14=0  & Token_24=0 sync task_22_done do{Token_22 := 0} goto idle;
-		when t_task_22 = C_task_22 & Token_12=1  & Token_14=0  & Token_24=0 sync task_22_done do{t_task_12 := 0,Token_22 := 0} goto t_12_running;
-		when t_task_22 = C_task_22 & Token_12=0  & Token_14=1  & Token_24=0 sync task_22_done do{t_task_14 := 0,Token_22 := 0} goto t_14_running;
-		when t_task_22 = C_task_22 & Token_12=0  & Token_14=0  & Token_24=1 sync task_22_done do{t_task_24 := 0,Token_22 := 0} goto t_24_running;
-		when t_task_22 = C_task_22 & Token_12=1  & Token_14=1  & Token_24=0 sync task_22_done do{t_task_12 := 0,Token_22 := 0} goto t_12_running;
-		when t_task_22 = C_task_22 & Token_12=1  & Token_14=0  & Token_24=1 sync task_22_done do{t_task_12 := 0,Token_22 := 0} goto t_12_running;
-		when t_task_22 = C_task_22 & Token_12=0  & Token_14=1  & Token_24=1 sync task_22_done do{t_task_14 := 0,Token_22 := 0} goto t_14_running;
-		when t_task_22 = C_task_22 & Token_12=1  & Token_14=1  & Token_24=1 sync task_22_done do{t_task_12 := 0,Token_22 := 0} goto t_12_running;
+		 when t_task_22 <= 0 sync task_12_act do{Token_12 := True}goto t_12_running;
+		 when t_task_22 > 0 sync task_12_act do{Token_12 := True}goto t_22_running;
+		 when t_task_22 <= 0 sync task_14_act do{Token_14 := True}goto t_14_running;
+		 when t_task_22 > 0 sync task_14_act do{Token_14 := True}goto t_22_running;
+		 when t_task_22 <= 0 sync task_22_act do{Token_22 := True}goto t_22_running;
+		 when t_task_22 > 0 sync task_22_act do{Token_22 := True}goto t_22_running;
+		 when t_task_22 <= 0 sync task_24_act do{Token_24 := True}goto t_22_running;
+		 when t_task_22 > 0 sync task_24_act do{Token_24 := True}goto t_22_running;
+		when t_task_22 = C_task_22 & not(Token_12)  & not(Token_14)  & not(Token_24) sync task_22_done do{Token_22 := False} goto idle;
+		when t_task_22 = C_task_22 & Token_12  & not(Token_14)  & not(Token_24) sync task_22_done do{t_task_12 := 0,Token_22 := False} goto t_12_running;
+		when t_task_22 = C_task_22 & not(Token_12)  & Token_14  & not(Token_24) sync task_22_done do{t_task_14 := 0,Token_22 := False} goto t_14_running;
+		when t_task_22 = C_task_22 & not(Token_12)  & not(Token_14)  & Token_24 sync task_22_done do{t_task_24 := 0,Token_22 := False} goto t_24_running;
+		when t_task_22 = C_task_22 & Token_12  & Token_14  & not(Token_24) sync task_22_done do{t_task_12 := 0,Token_22 := False} goto t_12_running;
+		when t_task_22 = C_task_22 & Token_12  & not(Token_14)  & Token_24 sync task_22_done do{t_task_12 := 0,Token_22 := False} goto t_12_running;
+		when t_task_22 = C_task_22 & not(Token_12)  & Token_14  & Token_24 sync task_22_done do{t_task_14 := 0,Token_22 := False} goto t_14_running;
+		when t_task_22 = C_task_22 & Token_12  & Token_14  & Token_24 sync task_22_done do{t_task_12 := 0,Token_22 := False} goto t_12_running;
 	loc t_24_running: invariant t_task_24 <= C_task_24 stop {t_task_12,t_task_14,t_task_22}
 		when t_task_24 < C_task_24 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_24 < C_task_24 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
-		 when t_task_24 <= 0 sync task_12_act do{Token_12 := 1}goto t_12_running;
-		 when t_task_24 > 0 sync task_12_act do{Token_12 := 1}goto t_24_running;
-		 when t_task_24 <= 0 sync task_14_act do{Token_14 := 1}goto t_14_running;
-		 when t_task_24 > 0 sync task_14_act do{Token_14 := 1}goto t_24_running;
-		 when t_task_24 <= 0 sync task_22_act do{Token_22 := 1}goto t_22_running;
-		 when t_task_24 > 0 sync task_22_act do{Token_22 := 1}goto t_24_running;
-		 when t_task_24 <= 0 sync task_24_act do{Token_24 := 1}goto t_24_running;
-		 when t_task_24 > 0 sync task_24_act do{Token_24 := 1}goto t_24_running;
-		when t_task_24 = C_task_24 & Token_12=0  & Token_14=0  & Token_22=0 sync task_24_done do{Token_24 := 0} goto idle;
-		when t_task_24 = C_task_24 & Token_12=1  & Token_14=0  & Token_22=0 sync task_24_done do{t_task_12 := 0,Token_24 := 0} goto t_12_running;
-		when t_task_24 = C_task_24 & Token_12=0  & Token_14=1  & Token_22=0 sync task_24_done do{t_task_14 := 0,Token_24 := 0} goto t_14_running;
-		when t_task_24 = C_task_24 & Token_12=0  & Token_14=0  & Token_22=1 sync task_24_done do{t_task_22 := 0,Token_24 := 0} goto t_22_running;
-		when t_task_24 = C_task_24 & Token_12=1  & Token_14=1  & Token_22=0 sync task_24_done do{t_task_12 := 0,Token_24 := 0} goto t_12_running;
-		when t_task_24 = C_task_24 & Token_12=1  & Token_14=0  & Token_22=1 sync task_24_done do{t_task_12 := 0,Token_24 := 0} goto t_12_running;
-		when t_task_24 = C_task_24 & Token_12=0  & Token_14=1  & Token_22=1 sync task_24_done do{t_task_14 := 0,Token_24 := 0} goto t_14_running;
-		when t_task_24 = C_task_24 & Token_12=1  & Token_14=1  & Token_22=1 sync task_24_done do{t_task_12 := 0,Token_24 := 0} goto t_12_running;
+		 when t_task_24 <= 0 sync task_12_act do{Token_12 := True}goto t_12_running;
+		 when t_task_24 > 0 sync task_12_act do{Token_12 := True}goto t_24_running;
+		 when t_task_24 <= 0 sync task_14_act do{Token_14 := True}goto t_14_running;
+		 when t_task_24 > 0 sync task_14_act do{Token_14 := True}goto t_24_running;
+		 when t_task_24 <= 0 sync task_22_act do{Token_22 := True}goto t_22_running;
+		 when t_task_24 > 0 sync task_22_act do{Token_22 := True}goto t_24_running;
+		 when t_task_24 <= 0 sync task_24_act do{Token_24 := True}goto t_24_running;
+		 when t_task_24 > 0 sync task_24_act do{Token_24 := True}goto t_24_running;
+		when t_task_24 = C_task_24 & not(Token_12)  & not(Token_14)  & not(Token_22) sync task_24_done do{Token_24 := False} goto idle;
+		when t_task_24 = C_task_24 & Token_12  & not(Token_14)  & not(Token_22) sync task_24_done do{t_task_12 := 0,Token_24 := False} goto t_12_running;
+		when t_task_24 = C_task_24 & not(Token_12)  & Token_14  & not(Token_22) sync task_24_done do{t_task_14 := 0,Token_24 := False} goto t_14_running;
+		when t_task_24 = C_task_24 & not(Token_12)  & not(Token_14)  & Token_22 sync task_24_done do{t_task_22 := 0,Token_24 := False} goto t_22_running;
+		when t_task_24 = C_task_24 & Token_12  & Token_14  & not(Token_22) sync task_24_done do{t_task_12 := 0,Token_24 := False} goto t_12_running;
+		when t_task_24 = C_task_24 & Token_12  & not(Token_14)  & Token_22 sync task_24_done do{t_task_12 := 0,Token_24 := False} goto t_12_running;
+		when t_task_24 = C_task_24 & not(Token_12)  & Token_14  & Token_22 sync task_24_done do{t_task_14 := 0,Token_24 := False} goto t_14_running;
+		when t_task_24 = C_task_24 & Token_12  & Token_14  & Token_22 sync task_24_done do{t_task_12 := 0,Token_24 := False} goto t_12_running;
 end
 
 automaton proc_3
@@ -297,54 +297,59 @@ end
 
 
 
-init:= True &
-	loc[proc_1]= proc_1_000 &
-	loc[proc_2]= idle &
-	loc[proc_3]= proc_3_0 &
-	loc[proc_4]= proc_4_00 &
-	loc[pipeline_1]=P1_1 &
-	loc[pipeline_2]=P2_1 &
-	t_asap_1 = 0 &
-	t_pipeline_1 = 0 &
-	t_task_11 = 0 & 
-	t_task_12 = 0 & 
-	t_task_13 = 0 & 
-	t_task_14 = 0 & 
-	t_task_15 = 0 & 
-	t_asap_2 = 0 &
-	t_pipeline_2 = 0 &
-	t_task_21 = 0 & 
-	t_task_22 = 0 & 
-	t_task_23 = 0 & 
-	t_task_24 = 0 & 
-	t_task_25 = 0 & 
-	Token_11 = 0 & 
-	Token_12 = 0 & 
-	Token_13 = 0 & 
-	Token_14 = 0 & 
-	Token_15 = 0 & 
-	Token_21 = 0 & 
-	Token_22 = 0 & 
-	Token_23 = 0 & 
-	Token_24 = 0 & 
-	Token_25 = 0 & 
-	True
-	
-	& T_pipeline_1 >= 0
-	& D_pipeline_1 >= 0
-	& C_task_11 >= 0
-	& C_task_12>= 0
-	& C_task_13 >= 0
-	& C_task_14 >= 0
-	& C_task_15 >= 0
-	& T_pipeline_2 >= 0
-	& D_pipeline_2 >= 0
-	& C_task_21 >= 0
-	& C_task_22 >= 0
-	& C_task_23 >= 0
-	& C_task_24 >= 0
-	& C_task_25 >= 0
-;
+init:= {
+	discrete =
+		loc[proc_1]			:= proc_1_000,
+		loc[proc_2]			:= idle,
+		loc[proc_3]			:= proc_3_0,
+		loc[proc_4]			:= proc_4_00,
+		loc[pipeline_1]	:= P1_1,
+		loc[pipeline_2]	:= P2_1,
+
+(* 		Token_11 := 0, *)
+		Token_12 := False,
+(* 		Token_13 := 0, *)
+		Token_14 := False,
+(* 		Token_15 := 0, *)
+(* 		Token_21 := 0, *)
+		Token_22 := False,
+(* 		Token_23 := 0, *)
+		Token_24 := False,
+(* 		Token_25 := 0, *)
+	;
+
+	continuous =
+		t_asap_1 = 0 &
+		t_pipeline_1 = 0 &
+		t_task_11 = 0 &
+		t_task_12 = 0 &
+		t_task_13 = 0 &
+		t_task_14 = 0 &
+		t_task_15 = 0 &
+		t_asap_2 = 0 &
+		t_pipeline_2 = 0 &
+		t_task_21 = 0 &
+		t_task_22 = 0 &
+		t_task_23 = 0 &
+		t_task_24 = 0 &
+		t_task_25 = 0
+
+		& T_pipeline_1 >= 0
+		& D_pipeline_1 >= 0
+		& C_task_11 >= 0
+		& C_task_12>= 0
+		& C_task_13 >= 0
+		& C_task_14 >= 0
+		& C_task_15 >= 0
+		& T_pipeline_2 >= 0
+		& D_pipeline_2 >= 0
+		& C_task_21 >= 0
+		& C_task_22 >= 0
+		& C_task_23 >= 0
+		& C_task_24 >= 0
+		& C_task_25 >= 0
+	;
+}
 
 (************************************************************)
 (* The end *)

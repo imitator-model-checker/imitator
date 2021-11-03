@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2021/07/09
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
  
@@ -151,11 +151,11 @@ let get_v0_option () =
 		match (Input.get_property()).property with
 			| EF _
 			| AGnot _
-			| EFexemplify _
 			| EFpmin _
 			| EFpmax _
 			| EFtmin _
 			| Cycle_through _
+			| Cycle_through_generalized _
 			| PRP _
 				
 			| NZ_Cycle
@@ -1339,19 +1339,21 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 		if Input.has_property() then(
 			
 			(* Try to get the state predicate*)
-			let state_predicate_option : state_predicate option =
+			let state_predicate_list : state_predicate list =
 			
 			match (Input.get_property()).property with
 				| EF state_predicate
 				| AGnot state_predicate
-				| EFexemplify state_predicate
 				| EFpmin (state_predicate , _)
 				| EFpmax (state_predicate , _)
 				| EFtmin state_predicate
 				| Cycle_through state_predicate
 				| PRP (state_predicate, _)
-					-> Some state_predicate
+					-> [state_predicate]
 					
+				| Cycle_through_generalized state_predicate_list
+					-> state_predicate_list
+
 				| NZ_Cycle
 				| Deadlock_Freeness
 				| IM _
@@ -1367,17 +1369,14 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				| RandomSeq_cartography _
 				| PRPC _
 				
-					-> None
+					-> []
 			in
-			
-			begin
-			match state_predicate_option with
-			| Some state_predicate ->
+
+			(* Check if at least one state_predicate in hte list satisfies the current state (*** NOTE: not exactly the semantics of generalized conditions! but still visually interesting ***) *)
+			List.exists (fun state_predicate ->
 				(* Check whether the current state matches ths state predicate *)
 				State.match_state_predicate model.is_accepting state_predicate state
-			| None -> false
-
-			end
+			) state_predicate_list
 		)else(
 			(* No property: no target state *)
 			false

@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
  * IEEE 1394 Root Contention Protocol
  *
@@ -11,9 +11,9 @@
  * Input by        : ?? (< 2007) and Étienne André
  *
  * Created         : 2008/01/10
- * Last modified   : 2020/08/18
+ * Last modified   : 2021/08/30
  *
- * IMITATOR version: 3
+ * IMITATOR version: 3.1
  ************************************************************)
 
 
@@ -35,7 +35,7 @@ var 	ckN1, ckN2, ckW12x, ckW12y, ckW21x, ckW21y
   automaton node1
 (************************************************************)
 synclabs: snd_ack12, rec_ack21,
-	snd_idle12, rec_idle21,	
+	snd_idle12, rec_idle21,
 	snd_req12, rec_req21,
 	root1, child1;
 
@@ -47,7 +47,7 @@ loc N1root_contention: invariant ckN1 <= 0
 loc N1rec_req_fast: invariant ckN1 <= rc_fast_max
 	when ckN1 >= rc_fast_min sync snd_ack12 do {ckN1 := 0} goto N1almost_root;
 	when True sync rec_idle21 do {} goto N1rec_idle_fast;
-	
+
 loc N1rec_req_slow: invariant ckN1 <= rc_slow_max
 	when ckN1 >= rc_slow_min sync snd_ack12 do {ckN1 := 0} goto N1almost_root;
 	when True sync rec_idle21 do {} goto N1rec_idle_slow;
@@ -100,7 +100,7 @@ loc N2root_contention: invariant ckN2 <= 0
 loc N2rec_req_fast: invariant ckN2 <= rc_fast_max
 	when ckN2 >= rc_fast_min sync snd_ack21 do {ckN2 := 0} goto N2almost_root;
 	when True sync rec_idle12 do {} goto N2rec_idle_fast;
-	
+
 loc N2rec_req_slow: invariant ckN2 <= rc_slow_max
 	when ckN2 >= rc_slow_min sync snd_ack21 do {ckN2 := 0} goto N2almost_root;
 	when True sync rec_idle12 do {} goto N2rec_idle_slow;
@@ -283,60 +283,63 @@ end (*s1o*)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[node1]  = N1root_contention
-	& loc[node2]  = N2root_contention
-	& loc[wire12] = W12empty
-	& loc[wire21] = W21empty
-	& loc[s1o]    = S1oStart
+init := {
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[node1]  := N1root_contention,
+		loc[node2]  := N2root_contention,
+		loc[wire12] := W12empty,
+		loc[wire21] := W21empty,
+		loc[s1o]    := S1oStart,
+	;
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& ckN1 = 0
-	& ckN2 = 0
-	& ckW12x = 0
-	& ckW12y = 0
-	& ckW21x = 0
-	& ckW21y = 0
+	continuous =
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& ckN1 = 0
+		& ckN2 = 0
+		& ckW12x = 0
+		& ckW12y = 0
+		& ckW21x = 0
+		& ckW21y = 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& delay >= 0 
-	& rc_fast_min >= 0
-	& rc_fast_max >= 0
-	& rc_slow_max >= 0
-	& rc_slow_min >= 0
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& delay >= 0
+		& rc_fast_min >= 0
+		& rc_fast_max >= 0
+		& rc_slow_max >= 0
+		& rc_slow_min >= 0
 
-	& rc_fast_min <= rc_fast_max
-	& rc_slow_min <= rc_slow_max
+		& rc_fast_min <= rc_fast_max
+		& rc_slow_min <= rc_slow_max
 
-	(*------------------------------------------------------------*)
-	(* Old parameter constraints *)
-	(*------------------------------------------------------------*)
-(*-- 	& rc_fast_max	= 85 -- 76 .. 100 (* 85 *)
--- 	& rc_fast_min	= 76
--- 	& rc_slow_max	= 159 .. 200 (* 167 *)
--- 	& rc_slow_min	= 159
--- 	& delay		= 30
-	
--- 	& rc_fast_max <= 100
--- 	& rc_slow_max <= 200*)
+		(*------------------------------------------------------------*)
+		(* Old parameter constraints *)
+		(*------------------------------------------------------------*)
+		(*-- 	& rc_fast_max	= 85 -- 76 .. 100 (* 85 *)
+		-- 	& rc_fast_min	= 76
+		-- 	& rc_slow_max	= 159 .. 200 (* 167 *)
+		-- 	& rc_slow_min	= 159
+		-- 	& delay		= 30
 
-	(*------------------------------------------------------------*)
-	(* Constraint output by IMITATOR 1 *)
-	(*------------------------------------------------------------*)
-(*--       & 2delay + rc_fast_max < rc_slow_min
---       & rc_slow_min <= rc_slow_max
---       & 2delay < rc_fast_min
---       & 0 <= delay
---       & rc_fast_min <= rc_fast_max*)
-;
+		-- 	& rc_fast_max <= 100
+		-- 	& rc_slow_max <= 200*)
 
+		(*------------------------------------------------------------*)
+		(* Constraint output by IMITATOR 1 *)
+		(*------------------------------------------------------------*)
+		(*--       & 2delay + rc_fast_max < rc_slow_min
+		--       & rc_slow_min <= rc_slow_max
+		--       & 2delay < rc_fast_min
+		--       & 0 <= delay
+		--       & rc_fast_min <= rc_fast_max*)
+	;
+}
 
 
 (************************************************************)

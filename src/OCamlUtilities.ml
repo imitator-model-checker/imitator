@@ -574,6 +574,70 @@ let write_to_file file_name file_content =
 (* pow of x by e *)
 let pow x e =
     let rec pow_rec r = function
+        | e when Int32.equal e Int32.zero -> Int32.one
         | e when Int32.equal e Int32.one -> r
         | e -> pow_rec (Int32.mul x r) (Int32.sub e Int32.one)
     in pow_rec x e
+
+let pow_int x e =
+    let rec pow_rec r = function
+        | e when e = 0 -> 1
+        | e when e = 1 -> r
+        | e -> pow_rec (x * r) (e - 1)
+    in pow_rec x e
+
+let modulo x y = Int32.sub x (Int32.mul (Int32.div x y) y)
+
+(* Render a beautiful and cute json from an ugly horrible json *)
+let prettify_json json =
+
+    (* Set start indent level *)
+    let indent_level_ref = ref 0 in
+
+    let prettify_json_char c (* char *) pc (* previous char *) =
+
+        let indent_level = !indent_level_ref in
+
+        (* Generate tabulations at different levels *)
+        let tabs = string_n_times indent_level "\t" in
+        let tabs_0 = if indent_level >= 1 then string_n_times (indent_level - 1) "\t" else "" in
+        let tabs_1 = string_n_times (indent_level + 1) "\t" in
+
+        (* Check current char *)
+        match c with
+        | '{'
+        | '[' as c ->
+            indent_level_ref := indent_level + 1;
+            "\n" ^ tabs ^ String.make 1 c ^ "\n" ^ tabs_1
+        | '}'
+        | ']' as c ->
+            indent_level_ref := indent_level - 1;
+            "\n" ^ tabs_0 ^ String.make 1 c ^ "\n"
+        | ',' ->
+            begin
+            match pc with
+            | '}'
+            | ']' ->
+                tabs ^ ",\n" ^ tabs
+            | _ ->
+                ",\n" ^ tabs
+            end
+        | c ->
+            String.make 1 c
+    in
+
+    (* *)
+    let pretty_json = ref (prettify_json_char (String.get json 0) ' ') in
+
+    (* Generate pretty json iterating through ugly json *)
+    for i = 1 to (String.length json) - 1 do
+        pretty_json := !pretty_json ^ prettify_json_char (String.get json i) (String.get json (i - 1))
+    done;
+
+    (* Return pretty json *)
+    !pretty_json
+
+let rev_filter_map f l =
+    List.map f l |>
+    List.filter (fun x -> match x with | None -> false | Some _ -> true) |>
+    List.fold_left (fun acc x -> match x with | None -> acc | Some x -> x :: acc) []

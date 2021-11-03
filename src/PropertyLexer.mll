@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2021/03/12
+ * Last modified     : 2021/09/16
 *****************************************************************)
 
 {
@@ -39,10 +39,12 @@ rule token = parse
  	| "special_0_clock"                     { CT_SPECIAL_RESET_CLOCK_NAME} (* to forbid this keyword, used when a special reset clock is defined *)
 
 	(* Synthesis type *)
+ 	| "#exemplification"{ CT_EXEMPLIFY }
+ 	| "#exemplify"     { CT_EXEMPLIFY }
  	| "#exhibit"       { CT_EXHIBIT }
  	| "#witness"       { CT_EXHIBIT }
  	| "#synth"         { CT_SYNTH }
- 	
+
  	(* Keywords for properties *)
 	| "AccCycle"       { CT_ACCEPTINGCYCLE }
 	| "AcceptingCycle" { CT_ACCEPTINGCYCLE }
@@ -60,7 +62,6 @@ rule token = parse
 	| "Cycle"          { CT_INFCYCLE }
 	| "CycleThrough"   { CT_INFCYCLETHROUGH }
 	| "EF"             { CT_EF }
-	| "EFexemplify"    { CT_EFEXEMPLIFY }
 	| "EFpmax"         { CT_EFpmax }
 	| "EFpmin"         { CT_EFpmin }
 	| "EFtmin"         { CT_EFtmin }
@@ -107,6 +108,7 @@ rule token = parse
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
 	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm }
 	| ['0'-'9']+ as lxm { INT(int_of_string lxm) }
+  | "0b"['0'-'9']+ as lxm { BINARYWORD lxm }
 	| '"' [^'"']* '"' as lxm { STRING lxm } (* a string between double quotes *)
 
 	| "<="             { OP_LEQ }

@@ -7,8 +7,8 @@
  * Scalable         : No
  * Generated        : No
  * Categories       : Boolean, Semantic, Computing
- * Source           : 
- * bibkey           : 
+ * Source           :
+ * bibkey           :
  * Author           : Benjamin L.
  * Modeling         : Benjamin L.
  * Input by         : Benjamin L.
@@ -25,14 +25,14 @@ var
         : int;
     j = 3 / 4
         : rational;
-    b1, b2 
+    b1, b2
         : bool;
 
 
 (************************************************************)
  automaton pta
 (************************************************************)
- 
+
 loc l1: invariant (b1 | not(b1))
     when
         not(b1) & b2 do { b1 := not(b1), b2 := not(b2) }
@@ -41,9 +41,9 @@ loc l1: invariant (b1 | not(b1))
 	    b1 = (1 < 2 * (2 + 1) & 3 > 2)
 	    & (b2 | rational_of_int(i * 3) / 4 = j)
 	    & not(rational_of_int(i * 2) <= 1 + j)
-	    & (True) = not(False)
+	    & True = not(False)
      goto lend;
- 
+
 accepting loc lend: invariant True
  end (* pta *)
 (************************************************************)
@@ -55,15 +55,15 @@ accepting loc lend: invariant True
 
 init := {
 
-    discrete = 
+    discrete =
         loc[pta] := l1,
         b1 := False,
         b2 := True
     ;
-    continuous = 
+    continuous =
         & True
     ;
-    
+
 }
 
 

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/09/14
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -18,7 +18,6 @@
 (* Modules *)
 (************************************************************)
 open Automaton
-(* open AbstractModel *)
 
 
 (****************************************************************)
@@ -77,13 +76,6 @@ type property =
 *)
 	
 	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify of state_predicate
-	
-	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
@@ -103,6 +95,9 @@ type property =
 	
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through of state_predicate
+
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized of state_predicate list
 
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
@@ -167,10 +162,12 @@ type property =
 
 
 type synthesis_type =
-	(* (tentative) exhibition of at least one valuation for which a property holds *)
-	| Witness
+	(* (tentative) exemplification of concrete runs *)
+	| Exemplification
 	(* (tentative) synthesis of all valuations for which a property holds *)
 	| Synthesis
+	(* (tentative) exhibition of at least one valuation for which a property holds *)
+	| Witness
 
 
 type projection = (parameter_index list) option

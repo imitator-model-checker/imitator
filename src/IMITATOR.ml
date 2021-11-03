@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2009/09/07
- * Last modified     : 2021/02/24
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -276,6 +276,7 @@ begin match property_option, options#imitator_mode with
 			(*** HACK: hard-coded directly ***)
 			let default_cycle_algorithm_option = match property.property with
 				| Cycle_through _ -> Some NDFS
+				| Cycle_through_generalized _ -> Some BFS
 				| _ -> None
 			in
 
@@ -626,8 +627,10 @@ match options#imitator_mode with
 
 		let emptiness_only =
 			match abstract_property.synthesis_type with
-			| Witness   -> true
-			| Synthesis -> false
+			(*** NOTE: not sure what exemplification would result in, in this case? (ÉA, 2021/09) ***)
+			| Exemplification	-> false
+			| Synthesis			-> false
+			| Witness			-> true
 		in
 
 
@@ -636,17 +639,19 @@ match options#imitator_mode with
 		(************************************************************)
 
 		begin
-		match abstract_property.property with
-		| EFexemplify _ | EFtmin _ ->
-			begin
+		let algorithm_requires_abstract_clock =
+			match abstract_property.property with
+			| EFtmin _ -> true
+			| _ -> false
+		in
+		(* Abstract clock required for selected algorithms OR for exemplification *)
+		if algorithm_requires_abstract_clock || abstract_property.synthesis_type = Exemplification then(
 			match model.global_time_clock with
 				| Some _ -> ()
 				| _ ->
 					print_error ("An absolute time clock `" ^ Constants.global_time_clock_name ^ "` must be defined in the model to run this algorithm.");
 					abort_program();
-			end;
-
-		| _ -> ()
+		);
 
 		end;
 
@@ -671,7 +676,7 @@ match options#imitator_mode with
 			(************************************************************)
 			| EF state_predicate ->
 
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth state_predicate in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEF state_predicate in myalgo
 
 
 			(************************************************************)
@@ -684,14 +689,7 @@ match options#imitator_mode with
 					print_warning "Exhibition of a subset of parameter valuations is not yet supported by this algorithm; either the whole set of valuations will be computed, or an over-approximation of this set.";
 				);
 
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth state_predicate in myalgo
-
-
-		(*------------------------------------------------------------*)
-		(* Reachability and specification illustration *)
-		(*------------------------------------------------------------*)
-			| EFexemplify state_predicate ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFexemplify.algoEFexemplify state_predicate in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGnot.algoAGnot state_predicate in myalgo
 
 
 		(*------------------------------------------------------------*)
@@ -740,8 +738,18 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric =
 				(* Branching depending on the requested algorithm *)
 				match options#cycle_algorithm with
-					| AbstractAlgorithm.BFS -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
+					| AbstractAlgorithm.BFS  -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
 					| AbstractAlgorithm.NDFS -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS state_predicate in myalgo
+				in myalgo
+
+
+			(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+			| Cycle_through_generalized state_predicate_list ->
+				let myalgo :> AlgoGeneric.algoGeneric =
+				(* Branching depending on the requested algorithm *)
+				match options#cycle_algorithm with
+					| AbstractAlgorithm.BFS  -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoGeneralizedAccLoopSynth.algoGeneralizedAccLoopSynth state_predicate_list in myalgo
+					| AbstractAlgorithm.NDFS -> raise (NotImplemented "Cycle_through_generalized + NDFS is not implemented")
 				in myalgo
 
 
@@ -1155,7 +1163,7 @@ end;
 		(* "Good" (at least not bad) exceptions *)
 
 		| Division_by_0 msg -> abort_with_good_exception (Result.Division_by_zero msg) msg
-
+        | Out_of_bound msg -> abort_with_good_exception (Result.Out_of_bound) msg
 		| UnsatisfiableInitialState -> abort_with_good_exception (Result.Unsatisfiable_initial_state) "Unsatisfiable initial state"
 
 

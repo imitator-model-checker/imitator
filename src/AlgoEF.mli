@@ -5,11 +5,11 @@
  * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
- * Module description: "AG not" algorithm (safety from a set of bad states) [JLR15]
+ * Module description: "EF" algorithm (unsafe w.r.t. a set of bad states) [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2020/04/16
+ * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -17,14 +17,14 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
-open AlgoEFsynth
+open AlgoEFgen
 
 
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoAGsafeSynth : AbstractProperty.state_predicate ->
-	object inherit algoEFsynth
+class algoEF : AbstractProperty.state_predicate ->
+	object inherit algoEFgen
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)

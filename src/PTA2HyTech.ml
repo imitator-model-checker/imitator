@@ -98,11 +98,27 @@ let find_stopwatches () =
 	(* Return only one each variable *)
 	list_only_once !list_of_stopwatches
 
+(* Check IMITATOR / HyTech compatibility on declaration types *)
+(* If compatibility fail, print a warning *)
+let check_declaration_compatibility model =
+	List.iter (fun i ->
+	    let variable_name = model.variable_names i in
+	    match model.type_of_variables i with
+	    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
+	    | DiscreteValue.Var_type_clock
+	    | DiscreteValue.Var_type_parameter -> ()
+	    | var_type -> print_warning ("Variable `" ^ variable_name ^ " : " ^ DiscreteValue.string_of_var_type var_type ^ "` is not a rational, HyTech only support rational-valued variable.")
+	) model.discrete
 
 (* Convert the initial variable declarations into a string *)
 let string_of_declarations model stopwatches clocks =
+
+    (* Check IMITATOR / HyTech compatibility on types *)
+    check_declaration_compatibility model;
+
 	let string_of_variables list_of_variables =
-		string_of_list_of_string_with_sep ", " (List.map model.variable_names list_of_variables) in
+		string_of_list_of_string_with_sep ", " (List.map model.variable_names list_of_variables)
+    in
 
 		"var "
 	^
@@ -149,14 +165,25 @@ let string_of_initially model automaton_index =
 	^ (model.location_names automaton_index initial_location)
 	^ ";"
 
+let is_linear_guard = function
+	| True_guard
+	| False_guard
+	| Continuous_guard _ -> true
+	| Discrete_guard guard -> NonlinearConstraint.is_linear_nonlinear_constraint guard
+	| Discrete_continuous_guard guard -> NonlinearConstraint.is_linear_nonlinear_constraint guard.discrete_guard
 
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model automaton_index location_index stopwatches clocks =
+
+    let invariant = model.invariants automaton_index location_index in
+    let str_invariant = ModelPrinter.string_of_guard model.variable_names invariant in
+
+    if not (is_linear_guard invariant) then
+        print_warning ("Invariant `" ^ str_invariant ^ "` contains non-linear expression(s) or are not rational-valued, HyTech doesn't support such expressions.");
+
 	(* Invariant *)
 	"while "
-	(* TODO benjamin HyTech doesn't support arithmetic expression in invariant, we should print a warning *)
-	(* or should we use only the continuous part ? *)
-	^ (ModelPrinter.string_of_guard model.variable_names (model.invariants automaton_index location_index))
+	^ str_invariant
 
 	(* Handle stopwatches *)
 	^
@@ -211,12 +238,14 @@ let string_of_clock_updates model = function
 (*** WARNING: calling string_of_arithmetic_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
 (*** TODO: fix or print warning ***)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, global_expression) ->
-		(* Convert the variable name *)
-		(model.variable_names variable_index)
+
+	string_of_list_of_string_with_sep ", " (List.map (fun (variable_access, global_expression) ->
+	    (* Convert the variable access to string *)
+	    let variable_name = ModelPrinter.string_of_variable_access model variable_access in
+		variable_name
 		^ "' = "
 		(* Convert the global_expression *)
-		^ (ModelPrinter.string_of_global_expression model.variable_names global_expression)
+		^ ModelPrinter.string_of_global_expression model.variable_names global_expression
 	) updates)
 
 
@@ -226,11 +255,16 @@ let string_of_transition model automaton_index transition =
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
 	let conditional_updates = transition.updates.conditional in
+
+    let str_guard = ModelPrinter.string_of_guard model.variable_names transition.guard in
+
+    if not (is_linear_guard transition.guard) then
+        print_warning ("Guard `" ^ str_guard ^ "` contains non-linear expression(s) or are not rational-valued, HyTech doesn't such expressions.");
+
 	(if conditional_updates <> [] then print_warning "Conditional updates are not supported by HyTech. Ignoring…" );
 	"\n\t" ^ "when "
 	(* Convert the guard *)
-	^ (ModelPrinter.string_of_guard model.variable_names transition.guard)
-
+	^ str_guard
 	(* Convert the updates *)
 	^ " do {"
 	(* Clock updates *)

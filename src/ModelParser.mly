@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Benjamin Loillier, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2021/06/01
+ * Last modified     : 2021/10/26
  *
  ************************************************************/
 
@@ -69,7 +69,7 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_DO
+	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY CT_DO
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -87,7 +87,7 @@ let unzip l = List.fold_left
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
-    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT    
+    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT
 
 
 %token EOF
@@ -116,7 +116,7 @@ main:
 		let declarations	= $1 in
 		let automata		= $2 in
 		let init_definition	= $3 in
-		
+
 		let main_model =
 		{
 			variable_declarations	= declarations;
@@ -124,7 +124,7 @@ main:
 			init_definition			= init_definition;
 		}
 		in
-		
+
 		let included_model = unzip !include_list in
 
 		(* Return the parsed model *)
@@ -191,10 +191,16 @@ var_type:
 ;
 
 var_type_discrete:
+    | var_type_discrete_array { $1 }
     | var_type_discrete_number { Var_type_discrete_number $1 }
     | CT_BOOL { Var_type_discrete_bool }
     /* TODO benjamin try to use directly int instead of numconst */
-    | CT_BINARY_WORD LPAREN pos_integer RPAREN { Var_type_discrete_binary_word (NumConst.to_int $3) }
+    | CT_BINARY_WORD LPAREN pos_integer RPAREN { Var_type_discrete_binary_word (NumConst.to_bounded_int $3) }
+;
+
+var_type_discrete_array:
+  | var_type_discrete CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_bounded_int $4) }
+  | var_type_discrete_array CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_bounded_int $4) }
 ;
 
 var_type_discrete_number:
@@ -441,26 +447,32 @@ update_nonempty_list:
 
 /************************************************************/
 
+/* Variable or variable access */
+variable_access:
+  | NAME { Variable_name $1 }
+  | variable_access LSQBRA arithmetic_expression RSQBRA { Variable_access ($1, $3) }
+;
+
 /** Normal updates */
 update:
 	/*** NOTE: deprecated syntax ***/
 	| NAME APOSTROPHE OP_EQ expression {
 		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
-		($1, $4)
+		(Variable_name $1, $4)
 		}
 
-	/*** NOTE: deprecated syntax ***/
-	| NAME APOSTROPHE OP_ASSIGN expression {
+		/** NOT ALLOWED FROM 3.2 (2021/10) */
+/*	| NAME APOSTROPHE OP_ASSIGN expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
-		($1, $4)
-	}
+		(Variable_name $1, $4)
+	}*/
 	/*** NOTE: deprecated syntax ***/
 	| NAME OP_EQ expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
-		($1, $3)
+		(Variable_name $1, $3)
 	}
 
-	| NAME OP_ASSIGN expression { ($1, $3) }
+	| variable_access OP_ASSIGN expression { ($1, $3) }
 ;
 
 /** List containing only normal updates.
@@ -513,30 +525,54 @@ arithmetic_term:
 	| OP_MINUS arithmetic_factor { Parsed_DT_factor(Parsed_DF_unary_min $2) }
 ;
 
+/*
+postfix_arithmetic_factor:
+  | arithmetic_factor { Parsed_DT_factor $1 }
+  | postfix_arithmetic_factor LSQBRA pos_integer RSQBRA { Parsed_DF_access ($1, NumConst.to_int $3) }
+;
+*/
+
 arithmetic_factor:
-	| number { Parsed_DF_constant ($1) }
-    | binary_word { Parsed_DF_constant $1 }
-	| NAME { Parsed_DF_variable $1 }
-	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
-	| function_call { $1 }
+  | arithmetic_factor LSQBRA arithmetic_expression RSQBRA { Parsed_DF_access ($1, $3) }
+  | number { Parsed_DF_constant ($1) }
+  | CT_TRUE { Parsed_DF_constant (DiscreteValue.Bool_value true) }
+  | CT_FALSE { Parsed_DF_constant (DiscreteValue.Bool_value false) }
+  | binary_word { Parsed_DF_constant $1 }
+  | literal_array { Parsed_DF_array (Array.of_list $1) }
+  | NAME { Parsed_DF_variable $1 }
+  | LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+  | function_call { $1 }
+;
+
+literal_array:
+  /* Empty array */
+  | LSQBRA RSQBRA { [] }
+  /* Non-empty array */
+  | LSQBRA literal_array_fol RSQBRA { $2 }
+;
+
+literal_array_fol:
+	| boolean_expression COMMA literal_array_fol { $1 :: $3 }
+	| boolean_expression { [$1] }
 ;
 
 function_call:
 	| CT_BUILTIN_FUNC_RATIONAL_OF_INT LPAREN arithmetic_expression RPAREN { Parsed_rational_of_int_function $3 }
 	| CT_POW LPAREN arithmetic_expression COMMA arithmetic_expression RPAREN { Parsed_pow_function ($3, $5) }
-	| CT_SHIFT_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_left ($3, $5) }
-	| CT_SHIFT_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_right ($3, $5) }
-	| CT_FILL_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_fill_left ($3, $5) }
-	| CT_FILL_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_fill_right ($3, $5) }
-	| CT_LOG_AND LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_and ($3, $5) }
-	| CT_LOG_OR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_or ($3, $5) }
-	| CT_LOG_XOR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_log_xor ($3, $5) }
+	| CT_SHIFT_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_function (Parsed_shift_left, $3, $5) }
+	| CT_SHIFT_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_function (Parsed_shift_right, $3, $5) }
+	| CT_FILL_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_function (Parsed_fill_left, $3, $5) }
+	| CT_FILL_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_function (Parsed_fill_right, $3, $5) }
+	| CT_LOG_AND LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_bin_log_function (Parsed_log_and, $3, $5) }
+	| CT_LOG_OR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_bin_log_function (Parsed_log_or, $3, $5) }
+	| CT_LOG_XOR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_bin_log_function (Parsed_log_xor, $3, $5) }
 	| CT_LOG_NOT LPAREN arithmetic_factor RPAREN { Parsed_log_not $3 }
+  | CT_ARRAY_CONCAT LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_array_concat ($3, $5) }
 ;
 
 number:
 	| integer { DiscreteValue.Number_value $1 }
-	| float { DiscreteValue.Number_value $1 }
+	| float { DiscreteValue.Rational_value $1 }
 	/*| integer OP_DIV pos_integer { ( DiscreteValue.Rational_value (NumConst.div $1 $3)) }*/
 ;
 
@@ -576,8 +612,6 @@ linear_constraint:
 
 nonlinear_constraint:
 	| discrete_boolean_expression { Parsed_nonlinear_constraint $1 }
-    | CT_TRUE { Parsed_true_nonlinear_constraint }
-    | CT_FALSE { Parsed_false_nonlinear_constraint }
 ;
 
 relop:
@@ -661,8 +695,6 @@ boolean_expression:
 	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
-	| CT_TRUE { Parsed_True }
-	| CT_FALSE { Parsed_False }
 ;
 
 discrete_boolean_expression:

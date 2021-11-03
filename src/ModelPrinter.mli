@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2020/01/08
+ * Last modified     : 2021/11/02
  *
  ************************************************************)
 
@@ -52,13 +52,7 @@ val string_of_concrete_state : AbstractModel.abstract_model -> State.concrete_st
 (************************************************************)
 (** Convert a guard into a string *)
 val string_of_guard : (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
-val customized_string_of_guard : Constants.customized_boolean_string -> (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
-
-(************************************************************)
-(** Transitions *)
-(************************************************************)
-(* Convert a transition into a string: compact version for debugging/pretty-printing *)
-val debug_string_of_transition : AbstractModel.abstract_model -> Automaton.automaton_index -> AbstractModel.transition -> string
+val customized_string_of_guard : Constants.customized_string -> (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
 
 
 (************************************************************)
@@ -66,8 +60,8 @@ val debug_string_of_transition : AbstractModel.abstract_model -> Automaton.autom
 (************************************************************)
 
 val debug_string_of_symbolic_run : AbstractModel.abstract_model -> StateSpace.state_space -> StateSpace.symbolic_run -> string
-val debug_string_of_concrete_run : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
-val debug_string_of_impossible_concrete_run : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
+val string_of_concrete_run : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
+val string_of_impossible_concrete_run : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
 
 
 (************************************************************)
@@ -100,6 +94,8 @@ val string_of_conditional_updates_template : AbstractModel.abstract_model -> con
 (** Convert conditional updates into a string *)
 val string_of_conditional_updates : AbstractModel.abstract_model -> conditional_update list -> string
 
+val customized_string_of_variable_access : Constants.customized_string -> AbstractModel.abstract_model -> discrete_variable_access -> string
+val string_of_variable_access : AbstractModel.abstract_model -> discrete_variable_access -> string
 
 (************************************************************)
 (** Points and hyperrectangles *)
@@ -128,3 +124,11 @@ val string_of_model : AbstractModel.abstract_model -> string
 (** Convert an string_of_abstract_property to a string, using the naming functions of an AbstractModel.abstract_model *)
 val string_of_abstract_property : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> string
 
+
+(************************************************************)
+(** Getting the flows of a location *)
+(************************************************************)
+
+(*** BADPROG: very, very bad programming: this function should be in AlgoStateBased BUT ModelPrinter doesn't have access to AlgoStateBased (but the other way is possible); and it is called from both modules, so defined here (ÉA, 2021/11/02) ***)
+
+val compute_flows : Location.global_location -> (Automaton.clock_index * NumConst.t) list

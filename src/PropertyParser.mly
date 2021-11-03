@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2021/03/12
+ * Last modified     : 2021/09/16
  *
  ************************************************************/
 
@@ -47,6 +47,7 @@ let resolve_property l =
 %token <int> INT
 %token <string> FLOAT
 %token <string> NAME
+%token <string> BINARYWORD
 %token <string> STRING
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
@@ -60,7 +61,7 @@ let resolve_property l =
 	CT_BCBORDER CT_BCLEARN CT_BCRANDOM CT_BCRANDOMSEQ CT_BCSHUFFLE CT_BEFORE
 	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
-	CT_EF CT_EFEXEMPLIFY CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
+	CT_EF CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXEMPLIFY CT_EXHIBIT
 	CT_FALSE
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN /* CT_INFACCCYCLE */ CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
@@ -75,7 +76,7 @@ let resolve_property l =
 
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
- 	
+
 %token EOF
 
 %left SYMBOL_OR              /* lowest precedence */
@@ -114,13 +115,14 @@ quantified_property:
 			(* Projection *)
 			projection		= $4;
 		}
-		
+
 	}
 ;
 
 synth_or_exhibit:
-	| CT_EXHIBIT { Parsed_witness }
-	| CT_SYNTH   { Parsed_synthesis }
+	| CT_EXEMPLIFY	{ Parsed_exemplify }
+	| CT_EXHIBIT	{ Parsed_witness }
+	| CT_SYNTH		{ Parsed_synthesis }
 ;
 
 /************************************************************/
@@ -138,25 +140,17 @@ property:
 
 
 	/*------------------------------------------------------------*/
-	/* Reachability and specification illustration */
-	/*------------------------------------------------------------*/
-	
-	/* EF-synthesis with examples of (un)safe words */
-	| CT_EFEXEMPLIFY state_predicate { Parsed_EFexemplify $2 }
-
-
-	/*------------------------------------------------------------*/
 	/* Optimized reachability */
 	/*------------------------------------------------------------*/
-	
+
 	/* Reachability with minimization of a parameter valuation */
 	| CT_EFpmin state_predicate COMMA NAME { Parsed_EFpmin ($2, $4) }
 	| CT_EFpmin LPAREN state_predicate COMMA NAME RPAREN { Parsed_EFpmin ($3, $5) }
-	
+
 	/* Reachability with maximization of a parameter valuation */
 	| CT_EFpmax state_predicate COMMA NAME { Parsed_EFpmax ($2, $4) }
 	| CT_EFpmax LPAREN state_predicate COMMA NAME RPAREN { Parsed_EFpmax ($3, $5) }
-	
+
 	/* Reachability with minimal-time */
 	| CT_EFtmin state_predicate { Parsed_EFtmin ($2) }
 
@@ -164,12 +158,18 @@ property:
 	/*------------------------------------------------------------*/
 	/* Cycles */
 	/*------------------------------------------------------------*/
-	
+
 	/* Infinite-run (cycle) */
 	| CT_INFCYCLE { Parsed_Cycle_Through (Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_true))) }
 
 	/* Accepting infinite-run (cycle) through a state predicate */
-	| CT_INFCYCLETHROUGH state_predicate { Parsed_Cycle_Through $2 }
+	| CT_INFCYCLETHROUGH LPAREN state_predicate_list RPAREN {
+		(* Check whether the list is of size <= 1 *)
+		match $3 with
+		| []				-> Parsed_Cycle_Through (Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_false))) (* NOTE: equivalent to False; this case probably cannot happen anyway *)
+		| [state_predicate]	-> Parsed_Cycle_Through state_predicate
+		| _					-> Parsed_Cycle_Through_generalized $3
+		}
 
 	/* Accepting infinite-run (cycle) through accepting locations */
 	| CT_ACCEPTINGCYCLE { Parsed_Cycle_Through (Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_accepting))) }
@@ -181,7 +181,7 @@ property:
 	/*------------------------------------------------------------*/
 	/* Deadlock-freeness */
 	/*------------------------------------------------------------*/
-	
+
 	/* Deadlock-free synthesis */
 	| CT_DEADLOCKFREE { Parsed_Deadlock_Freeness }
 
@@ -189,7 +189,7 @@ property:
 	/*------------------------------------------------------------*/
 	/* Inverse method, trace preservation, robustness */
 	/*------------------------------------------------------------*/
-	
+
 	| CT_TRACEPRESERVATION LPAREN reference_valuation RPAREN { Parsed_IM $3 }
 
 	| CT_IMCONVEX LPAREN reference_valuation RPAREN { Parsed_ConvexIM $3 }
@@ -199,39 +199,39 @@ property:
 	| CT_IMK LPAREN reference_valuation RPAREN { Parsed_IMK $3 }
 
 	| CT_IMUNION LPAREN reference_valuation RPAREN { Parsed_IMunion $3 }
-	
-	
+
+
 	/*------------------------------------------------------------*/
 	/* Cartography algorithms */
 	/*------------------------------------------------------------*/
-	
+
 	/* Cartography */
 	| CT_COVERCARTOGRAPHY LPAREN reference_rectangle RPAREN { Parsed_Cover_cartography ($3 , Constants.default_cartography_step) }
 	| CT_COVERCARTOGRAPHY LPAREN reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Cover_cartography ($3 , $7) }
-	
+
 	| CT_BCLEARN LPAREN state_predicate COMMA reference_rectangle RPAREN { Parsed_Learning_cartography ($3, $5, Constants.default_cartography_step) }
 	| CT_BCLEARN LPAREN state_predicate COMMA reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Learning_cartography ($3, $5, $9) }
-	
+
 	| CT_BCSHUFFLE LPAREN reference_rectangle RPAREN { Parsed_Shuffle_cartography ($3, Constants.default_cartography_step) }
 	| CT_BCSHUFFLE LPAREN reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Shuffle_cartography ($3, $7) }
-	
+
 	| CT_BCBORDER LPAREN reference_rectangle RPAREN { Parsed_Border_cartography ($3, Constants.default_cartography_step) }
 	| CT_BCBORDER LPAREN reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Border_cartography ($3, $7) }
-	
+
 	| CT_BCRANDOM LPAREN reference_rectangle COMMA pos_integer RPAREN { Parsed_Random_cartography ($3, $5, Constants.default_cartography_step) }
 	| CT_BCRANDOM LPAREN reference_rectangle COMMA pos_integer COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Random_cartography ($3, $5, $9) }
-	
+
 	| CT_BCRANDOMSEQ LPAREN reference_rectangle COMMA pos_integer RPAREN { Parsed_RandomSeq_cartography ($3, $5, Constants.default_cartography_step) }
 	| CT_BCRANDOMSEQ LPAREN reference_rectangle COMMA pos_integer COMMA CT_STEP OP_EQ rational RPAREN { Parsed_RandomSeq_cartography ($3, $5, $9) }
-	
+
 	| CT_PRPC LPAREN state_predicate COMMA reference_rectangle RPAREN { Parsed_PRPC ($3,$5, Constants.default_cartography_step) }
 	| CT_PRPC LPAREN state_predicate COMMA reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_PRPC ($3,$5, $9) }
 
-	
+
 	/*------------------------------------------------------------*/
 	/* Observer patterns */
 	/*------------------------------------------------------------*/
-	| CT_PATTERN LPAREN pattern RPAREN { $3 }
+	| CT_PATTERN LPAREN pattern RPAREN { Parsed_pattern ($3) }
 
 ;
 
@@ -245,7 +245,7 @@ pattern:
 	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Parsed_action_precedence_cyclic ($4, $2) }
 	/* everytime a2 then a1 has happened once before */
 	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_BEFORE { Parsed_action_precedence_cyclicstrict ($4, $2) }
-	
+
 	/* a within d */
 	| NAME CT_WITHIN linear_expression { Parsed_action_deadline ($1, $3) }
 
@@ -270,6 +270,21 @@ pattern:
 	| CT_ALWAYS CT_SEQUENCE name_nonempty_list { Parsed_Sequence_cyclic ($3) }
 	| CT_ALWAYS CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Parsed_Sequence_cyclic ($4) } /* with parentheses */
 
+;
+
+/************************************************************/
+state_predicate_list:
+/************************************************************/
+	| non_empty_state_predicate_list { $1 }
+	/* Also allow empty state predicate, equivalent to False */
+	| { [Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_false))] }
+;
+
+/************************************************************/
+non_empty_state_predicate_list:
+/************************************************************/
+	| non_empty_state_predicate COMMA non_empty_state_predicate_list { $1 :: $3 }
+	| non_empty_state_predicate comma_opt { [$1] }
 ;
 
 /************************************************************/
@@ -302,6 +317,9 @@ state_predicate_factor:
 simple_predicate:
 	| discrete_boolean_predicate { Parsed_discrete_boolean_expression($1) }
 	| loc_predicate { Parsed_loc_predicate ($1) }
+  /* TODO benjamin remove for avoid conflict with CT_TRUE and CT_FALSE in discrete_factor rule */
+  /* We pass from 20 reduce conflicts to 34 reduce conflicts by adding CT_TRUE and CT_FALSE in factor, but we have to do that in order to managing booleans */
+  /* So the best solution is to remove theses literal representations from grammar here */
 	| CT_TRUE { Parsed_state_predicate_true }
 	| CT_FALSE { Parsed_state_predicate_false }
 	| CT_ACCEPTING { Parsed_state_predicate_accepting }
@@ -315,7 +333,7 @@ loc_predicate:
 	| CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { Parsed_loc_predicate_EQ ($3, $6) }
 	/* my_pta IS IN my_loc */
 	| NAME CT_IS CT_IN NAME { Parsed_loc_predicate_EQ ($1, $4) }
-	
+
 	/* loc[my_pta] <> my_loc */
 	| CT_LOC LSQBRA NAME RSQBRA OP_NEQ NAME { Parsed_loc_predicate_NEQ ($3, $6) }
 	/* my_pta IS NOT IN my_loc */
@@ -327,6 +345,7 @@ loc_predicate:
 discrete_boolean_predicate:
 /************************************************************/
 	/* expr ~ expr */
+  | discrete_expression { Parsed_arithmetic_expression $1 }
 	| discrete_expression op_bool discrete_expression { Parsed_expression (Parsed_arithmetic_expression $1, $2, Parsed_arithmetic_expression $3) }
 	/* expr in [expr .. expr] */
 	| discrete_expression CT_IN LSQBRA discrete_expression COMMA discrete_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
@@ -347,9 +366,26 @@ discrete_term:
 
 discrete_factor:
 	| NAME { Parsed_DF_variable $1 }
-	| positive_rational { Parsed_DF_constant (DiscreteValue.Rational_value $1) }
+	| positive_rational { Parsed_DF_constant (DiscreteValue.Number_value $1) }
+  | CT_TRUE { Parsed_DF_constant (DiscreteValue.Bool_value true) }
+  | CT_FALSE { Parsed_DF_constant (DiscreteValue.Bool_value false) }
+  | binary_word { Parsed_DF_constant $1 }
+  | literal_array { Parsed_DF_array (Array.of_list $1) }
+  | discrete_factor LSQBRA discrete_expression RSQBRA { Parsed_DF_access ($1, $3) }
 	| RPAREN discrete_expression LPAREN { Parsed_DF_expression $2 }
 	| OP_MINUS discrete_factor { Parsed_DF_unary_min $2 }
+;
+
+literal_array:
+  /* Empty array */
+  | LSQBRA RSQBRA { [] }
+  /* Non-empty array */
+  | LSQBRA literal_array_fol RSQBRA { $2 }
+;
+
+literal_array_fol:
+	| discrete_boolean_predicate COMMA literal_array_fol { Parsed_Discrete_boolean_expression $1 :: $3 }
+	| discrete_boolean_predicate { [Parsed_Discrete_boolean_expression $1] }
 ;
 
 
@@ -400,6 +436,9 @@ pos_float:
 	}
 ;
 
+binary_word:
+        BINARYWORD { DiscreteValue.Binary_word_value (BinaryWord.binaryword_of_string $1) }
+;
 
 /************************************************************/
 projection_definition:

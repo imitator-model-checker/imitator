@@ -227,3 +227,14 @@ val write_to_file : string -> string -> unit
 
 (* pow of x by e *)
 val pow : Int32.t -> Int32.t -> Int32.t
+
+(* pow of int of x by e *)
+val pow_int : int -> int -> int
+
+val modulo : Int32.t -> Int32.t -> Int32.t
+
+(* Render a beautiful and cute json from an ugly horrible json *)
+val prettify_json : string -> string
+
+(* equivalent to List.filter_map of OCaml 4.08, but reverse the list *)
+val rev_filter_map : ('a -> 'b option) -> 'a list -> 'b list

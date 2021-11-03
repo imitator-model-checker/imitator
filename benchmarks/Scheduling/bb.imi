@@ -7,7 +7,7 @@ var time,x_1, x_2, x_3,t_1,t_2 :clock;
 -- STOPPER Used for Analysis Only	--
 -----------------------------------------*)
 automaton stopper
-synclabs: done1, require1, done2, require2,deadline; 
+synclabs: done1, require1, done2, require2,deadline;
 
 loc f_1_r: invariant time <= deadlineBasic
 	when True sync done1 goto f_1_r;
@@ -31,7 +31,7 @@ synclabs: require1, done1, require2, done2;
 
 loc active_non_1_non_2_non_3: invariant True stop{x_1,x_2,x_3}
 	when True sync require1  do {} goto active_1_non_2_non_3;
-	when True sync require2 do {} goto active_non_1_2_non_3;	
+	when True sync require2 do {} goto active_non_1_2_non_3;
 (* 	when True sync require3 do {} goto active_non_1_non_2_3; *)
 
 (*--loc active_non_1_non_2_3: invariant True stop{x_1,x_2}
@@ -49,12 +49,12 @@ loc active_non_1_2_non_3: invariant True stop{x_1,x_3}
 --	when x_2 = WCET_2 sync done2 do {x_2 := 0} goto active_non_1_non_2_3;*)
 
 loc active_1_non_2_non_3: invariant True stop{x_2,x_3}
-	when x_1 < WCET_1 sync require2 do {} goto active_1_2_non_3;	
+	when x_1 < WCET_1 sync require2 do {} goto active_1_2_non_3;
 (* 	when x_1 < WCET_1 sync require3 do {} goto active_1_non_2_3; *)
 	when x_1 = WCET_1 sync done1 do {x_1 := 0} goto active_non_1_non_2_non_3;
 
 (*--loc active_1_non_2_3: invariant True stop{x_2,x_3}
---	when x_1 < WCET_1 sync require2 do {} goto active_1_2_3;	
+--	when x_1 < WCET_1 sync require2 do {} goto active_1_2_3;
 --	when x_1 = WCET_1 sync done1  do {x_1' = 0} goto active_non_1_non_2_3;*)
 
 loc active_1_2_non_3: invariant True stop{x_2,x_3}
@@ -119,51 +119,53 @@ end
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	loc[stopper] = f_1_r &
+init := {
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[stopper] := f_1_r,
 
-	loc[scheduler_P_Application] = active_non_1_non_2_non_3 &
-	loc[T_1] = init_s &
-	loc[T_2] = init_s &
-(*--	loc[T_3]= init_s &*)
+		loc[scheduler_P_Application] := active_non_1_non_2_non_3,
+		loc[T_1] := init_s,
+		loc[T_2] := init_s,
+		(*--	loc[T_3] := init_s,*)
+	;
 
-x_1 = 0 &
-x_2 = 0 &
-x_3 = 0 &
-t_1 = 0 &
-t_2 = 0 &
-(* t_3 = 0 & *)
-time = 0 
-(*-- & deadlineBasic = 24
--- &
----------
---Etude 1--
---WCET_1 = 1 &
---WCET_2 = 2 &
---WCET_3 = 6 &
---per1 = 3 &
---per2 = 8 &
---per3 = 20 &
---Off1 = 0 &
---Off2 = 0 
---& Off3 = 0*)
+	continuous =
+		x_1 = 0 &
+		x_2 = 0 &
+		x_3 = 0 &
+		t_1 = 0 &
+		t_2 = 0 &
+		(* t_3 = 0 & *)
+		time = 0
+		(*-- & deadlineBasic = 24
+		-- &
+		---------
+		--Etude 1--
+		--WCET_1 = 1 &
+		--WCET_2 = 2 &
+		--WCET_3 = 6 &
+		--per1 = 3 &
+		--per2 = 8 &
+		--per3 = 20 &
+		--Off1 = 0 &
+		--Off2 = 0
+		--& Off3 = 0*)
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& deadlineBasic >= 0
-	& WCET_2 >= 0
-	& WCET_1 >= 0
-	& per1 >= 0
-	& Off1 >= 0
-	& per2 >= 0
-	& Off2 >= 0
-
-
-;
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& deadlineBasic >= 0
+		& WCET_2 >= 0
+		& WCET_1 >= 0
+		& per1 >= 0
+		& Off1 >= 0
+		& per2 >= 0
+		& Off2 >= 0
+	;
+}
 
 (************************************************************)
 (* The end *)

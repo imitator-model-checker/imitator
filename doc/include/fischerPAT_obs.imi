@@ -7,12 +7,12 @@
  * Correctness     : Not 2 processes together in the critical section (location obs_violation unreachable)
  * Source          : PAT library of benchmarks
  * Author          : ?
- * Input by        : Etienne Andre
+ * Input by        : Étienne André
  *
  * Created         : 2012/10/08
- * Last modified   : 2021/04/27
+ * Last modified   : 2021/10/14
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.2
  ************************************************************)
 
 var 
@@ -22,14 +22,14 @@ var
 
 	turn,
 	counter
-		: rational;
+		: int;
 
 	delta,
 	gamma
 		: parameter;
 		
 	IDLE = -1
-		: constant; 
+		: int; 
 
 (************************************************************)
 automaton proc1

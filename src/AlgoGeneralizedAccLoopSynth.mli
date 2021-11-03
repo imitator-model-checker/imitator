@@ -2,14 +2,13 @@
  *
  *                       IMITATOR
  * 
- * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
- * Module description: "EF" algorithm (unsafe w.r.t. a set of bad states) [JLR15]
+ * Module description: GeneralizedAccLoopSynth algorithm (synthesizes valuations for which there exists an accepting cycle in the PTA verifying a generalized condition given in the form of a *set* of state predicates)
  * 
  * File contributors : Étienne André
- * Created           : 2017/02/03
- * Last modified     : 2020/04/16
+ * Created           : 2021/09/01
+ * Last modified     : 2021/09/01
  *
  ************************************************************)
 
@@ -17,24 +16,26 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
-open AlgoEFsynth
+open AlgoLoopSynth
+open State
 
 
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoEFunsafeSynth : AbstractProperty.state_predicate ->
-	object inherit algoEFsynth
+class algoGeneralizedAccLoopSynth : AbstractProperty.state_predicate list ->
+	object inherit algoLoopSynth
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
 
 		method algorithm_name : string
-
-
-		(************************************************************)
-		(* Class methods *)
-		(************************************************************)
 		
-		method compute_result : Result.imitator_result
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Detect whether a cycle is accepting *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method is_accepting : StateSpace.scc ->  bool
+
+
 end

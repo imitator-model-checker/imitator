@@ -9,7 +9,7 @@
  *
  * File contributors : Laure Petrucci, Jaco van de Pol, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2021/03/19
+ * Last modified     : 2021/10/21
  *
  ************************************************************)
 
@@ -29,16 +29,86 @@ open Result
 open AlgoStateBased
 open State
 open Statistics
+
+(************************************************************)
+(************************************************************)
+(* Object-independent functions *)
+(************************************************************)
+(************************************************************)
+
+(************************************************************)
+(* Exception for NDFS *)
+(************************************************************)
+
+exception DFS_Limit_detected of bfs_limit_reached
+
+
+
+(************************************************************)
+(* Type *)
+(************************************************************)
+
 module IntMap = Map.Make(struct type t = int let compare = compare end)
 
 (************************************************************)
-(************************************************************)
-(* Types and exceptions for NDFS *)
-(************************************************************)
+(* Functions *)
 (************************************************************)
 
+(*------------------------------------------------------------*)
+(* add x before the first y in q such that (before x y) holds *)
+(*------------------------------------------------------------*)
+let rec add_ordered x q before =
+	match q with
+	| [] -> [x]
+	| y::q' -> if before x y then x::q else y::(add_ordered x q' before)
 
-exception DFS_Limit_detected of bfs_limit_reached
+let rec in_queue astate thequeue =
+	match thequeue with
+	| [] -> false
+	| (thestate,_)::body ->
+		if (astate = thestate) then true
+		else in_queue astate body
+
+
+(***********************)
+(* printing the queues *)
+(***********************)
+let printtable (colour : string) thetable : unit =
+	if verbose_mode_greater Verbose_medium then(
+			let printrecord state_index u rest =
+					(string_of_int state_index) ^ " " ^ rest;
+			in print_message Verbose_medium("Table " ^ colour ^ " : [ "
+					^ Hashtbl.fold printrecord thetable "" ^ "]")
+	);
+	()
+
+(***********************)
+(* Edit tables *)
+(***********************)
+(* Table add, test and remove; a state is present as it maps to ():unit *)
+let table_add (table : (State.state_index, unit) Hashtbl.t) (state_index : State.state_index) : unit =
+		Hashtbl.replace table state_index ()
+
+let table_rem (table : (State.state_index, unit) Hashtbl.t) (state_index : State.state_index) : unit =
+		Hashtbl.remove table state_index
+
+let table_test (table : (State.state_index, unit) Hashtbl.t) (state_index : State.state_index) : bool =
+		List.length (Hashtbl.find_all table state_index) > 0
+
+
+let printpendingqueue (colour : string) (thequeue : (State.state_index * int) list) : unit =
+	if verbose_mode_greater Verbose_medium then(
+		let rec r_printqueue thequeue = match thequeue with
+			| [] -> "";
+			| (state_index,state_depth)::body  ->
+				"(" ^ (string_of_int state_index)
+					^ ", " ^ (string_of_int state_depth) ^ ") "
+					^ (r_printqueue body);
+		in print_message Verbose_medium("Queue " ^ colour ^ " : [ "
+				^ r_printqueue thequeue ^ "]")
+	);
+	()
+
 
 (************************************************************)
 (************************************************************)
@@ -51,20 +121,33 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	val mutable constraint_valuations : LinearConstraint.p_nnconvex_constraint option = None
-		(* for the evaluation of the synthesis result *)
-	val mutable cyclecount = 0 (* counter for the cycles found *)
-	val mutable processed_blue = 0 (* number of states processed by a blue dfs *)
+
+	(* for the evaluation of the synthesis result *)
+	val mutable cyclecount				= 0 (* counter for the cycles found *)
+	val mutable processed_blue			= 0 (* number of states processed by a blue dfs *)
 		(* total count for iterative version *)
-	val mutable total_cyclecount = 0
-	val mutable total_processed_blue = 0
-	val mutable depth_reached = false (* used when a max depth has been reached *)
-	val mutable execute_again = true (* used when not doing iterative deepening for 1 execution only *)
-	val mutable current_depth = -1 (* used for iterative deepening *)
-	val mutable the_depth_step = -1 (* used for iterative deepening *)
-	val mutable max_depth = -1 (* used for iterative deepening *)
-	val mutable min_depth_found = -1 (* minimal depth at which a cycle is found *)
-	val mutable max_depth_reached = 0 (* maximum depth actually reached *)
+	val mutable total_cyclecount		= 0
+	val mutable total_processed_blue	= 0
+	val mutable depth_reached			= false (* used when a max depth has been reached *)
+	val mutable execute_again			= true (* used when not doing iterative deepening for 1 execution only *)
+	val mutable current_depth			= -1 (* used for iterative deepening *)
+	val mutable the_depth_step			= -1 (* used for iterative deepening *)
+	val mutable max_depth				= -1 (* used for iterative deepening *)
+	val mutable min_depth_found			= -1 (* minimal depth at which a cycle is found *)
+	val mutable max_depth_reached		= 0 (* maximum depth actually reached *)
+	
+	(************************************)
+	(* basic queues for NDFS algorithms *)
+	(************************************)
+	val mutable cyan			: (State.state_index, unit) Hashtbl.t = Hashtbl.create 100
+	val mutable blue			: (State.state_index, unit) Hashtbl.t = Hashtbl.create 100
+	val mutable green			: (State.state_index, unit) Hashtbl.t = Hashtbl.create 100
+	val mutable greendepth		: int IntMap.t = IntMap.empty
+	val mutable red				: (State.state_index, unit) Hashtbl.t = Hashtbl.create 100
+	val mutable pending			: (State.state_index * int) list = []; (* used in the layered algorithms *)
+
+	val mutable pzone_table		: (State.state_index, LinearConstraint.p_linear_constraint) Hashtbl.t = Hashtbl.create 100
+	val mutable pzone_nc_table	: (State.state_index, LinearConstraint.p_nnconvex_constraint) Hashtbl.t = Hashtbl.create 100
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -113,6 +196,156 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+	(***************************************************************************************)
+	(* Compute only once the convex parameter projection of the state, and put it in a hashtable *)
+	(***************************************************************************************)
+	method private find_or_compute_pzone (thestate : State.state_index) : LinearConstraint.p_linear_constraint =
+		try Hashtbl.find pzone_table thestate
+		with Not_found -> (
+			let astate : State.state = StateSpace.get_state state_space thestate in
+			let linear_aconstr : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse astate.px_constraint in
+			Hashtbl.add pzone_table thestate linear_aconstr;
+			linear_aconstr
+		)
+
+	(***************************************************************************************)
+	(* Compute only once the non-convex parameter projecvtion of the state, and put it in a hashtable *)
+	(***************************************************************************************)
+	method private find_or_compute_pzone_nc (thestate : State.state_index) = 
+		try Hashtbl.find pzone_nc_table thestate
+		with Not_found -> (
+			let linear_aconstr : LinearConstraint.p_linear_constraint = self#find_or_compute_pzone thestate in
+			let astate_constr : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint linear_aconstr in
+			Hashtbl.add pzone_nc_table thestate astate_constr;
+			astate_constr
+		)
+
+	(***************************************************)
+	(* Generic check of zone projection on parameters *)
+	(***************************************************)
+	method private parameter_projection_gen (operator : LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint -> bool) (state_index1 : State.state_index) (state_index2 : State.state_index) : bool =
+		let constr1 : LinearConstraint.p_linear_constraint = self#find_or_compute_pzone state_index1 in
+		let constr2 : LinearConstraint.p_linear_constraint = self#find_or_compute_pzone state_index2 in
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("Projected constraint 1: \n"
+				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
+				^ " state: "
+				^ (StateSpace.string_of_state_index state_index1));
+			print_message Verbose_high ("Projected constraint 2: \n"
+				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
+				^ " state: "
+				^ (StateSpace.string_of_state_index state_index2)));
+		operator constr1 constr2
+
+
+	(***************************************************)
+	(* Check equality of zone projection on parameters *)
+	(***************************************************)
+	method private same_parameter_projection (state_index1 : State.state_index) (state_index2 : State.state_index) : bool =
+		self#parameter_projection_gen LinearConstraint.p_is_equal state_index1 state_index2
+
+
+	(****************************************************)
+	(* Check inclusion of zone projection on parameters *)
+	(****************************************************)
+	method private smaller_parameter_projection (state_index1 : State.state_index) (state_index2 : State.state_index) : bool =
+		self#parameter_projection_gen LinearConstraint.p_is_leq state_index1 state_index2
+
+	(***************************)
+	(* Check inclusion of zone *)
+	(***************************)
+	method private smaller_zone (state_index1 : State.state_index) (state_index2 : State.state_index) : bool =
+		let state1	: State.state = StateSpace.get_state state_space state_index1 in
+		let constr1	: LinearConstraint.px_linear_constraint = state1.px_constraint in
+		let state2	: State.state = StateSpace.get_state state_space state_index2 in
+		let constr2	: LinearConstraint.px_linear_constraint = state2.px_constraint in
+		LinearConstraint.px_is_leq constr1 constr2
+
+
+	(******************************************)
+	(* printing zone projection on parameters *)
+	(******************************************)
+	method private print_projection verbose_level (thestate : State.state_index) : unit =
+		if verbose_mode_greater verbose_level then (
+			let constr = self#find_or_compute_pzone thestate in
+			print_message verbose_level ("Projected constraint : \n"
+				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr))
+
+
+	(***************************)
+	(* cyclefound *)
+	(***************************)
+	
+	(*** NOTE: functions written by Laure Petrucci and Jaco van de Pol using a lot of copy paste; then Étienne André tried to (re)factor (2021/09) ***)
+	
+	method private set_termination () : unit =
+		(* For synthesis: we do not stop immediately *)
+		termination_status <- Some Target_found;
+		()
+	
+	method private set_termination_if_synthesis () : unit =
+		(* Get the property to check whether we are in synthesis or witness mode *)
+		let property = Input.get_property() in
+	(* For synthesis: we do not stop immediately *)
+		if (property.synthesis_type = Synthesis) then
+			termination_status <- Some Regular_termination
+		else termination_status <- Some Target_found;
+		()
+
+
+	(*** NOTE: this function was used in the inner part of some loops; also, it is identical to "cyclefound", and therefore used there for factoring purpose (ÉA, 2021/08) ***)
+	method private cyclefound_inner (termination_function : unit -> unit) (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+		(* Get the property to check whether we are in synthesis or witness mode *)
+		let property = Input.get_property() in
+
+		cyclecount <- cyclecount + 1;
+		total_cyclecount <- total_cyclecount + 1;
+		if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
+		if (property.synthesis_type = Witness) then
+			print_highlighted_message Shell_bold Verbose_standard
+				("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
+		else print_highlighted_message Shell_bold Verbose_standard
+			("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
+		if verbose_mode_greater Verbose_low then (
+			print_message Verbose_medium
+				(ModelPrinter.string_of_state model
+					(StateSpace.get_state state_space astate));
+			self#print_projection Verbose_low astate);
+		
+		(*** NOTE: here some factoring (ÉA) using the `termination_function` ***)
+		termination_function ();
+		
+		let pzone = self#find_or_compute_pzone astate in
+		LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
+		if (property.synthesis_type = Witness) then raise TerminateAnalysis;
+		()
+
+
+	(*** NOTE: this function was copy/paste almost identically 4 times, and I factored it (ÉA, 2021/08) ***)
+	method private cyclefound_gen (termination_function : unit -> unit) (custom_string : string) (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+		
+		(* Call first part of the function *)
+		self#cyclefound_inner termination_function thestate astate astate_depth;
+		
+		(* table_add blue astate; *)
+		table_add blue thestate;
+		(*** NOTE: here some factoring using the `custom_string` ***)
+		printtable custom_string blue;
+		(* and the current state is popped from the cyan list *)
+		table_rem cyan thestate;
+		()
+		
+
+	method private cyclefound_cyclefound (termination_function : unit -> unit) (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+		self#cyclefound_gen termination_function "Blue (cyclefound)" thestate astate astate_depth
+
+
+	method private cyclefound_cyclecount (termination_function : unit -> unit) (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+		self#cyclefound_gen termination_function "Blue (cyclecount)" thestate astate astate_depth
+
+
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run NDFS exploration [WORK IN PROGRESS] *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -124,81 +357,25 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 
 		let options = Input.get_options() in
 		limit_reached <- Keep_going;
+		
 		(************************************)
-		(* basic queues for NDFS algorithms *)
+		(* Initialize basic queues for NDFS algorithms *)
 		(************************************)
-		let cyan = Hashtbl.create 100 in
-		let blue = Hashtbl.create 100 in
-		let green = Hashtbl.create 100 in
-		let greendepth = ref IntMap.empty in
-		let red = Hashtbl.create 100 in
-		let pending = ref [] in (* used in the layered algorithms *)
-		let pzone_table = Hashtbl.create 100 in (* Used as a cache of projected convex parameter zones *)
-		let pzone_nc_table = Hashtbl.create 100 in (* Used as a cache of projected non-convex parameter zones *)
+		cyan			<- Hashtbl.create 100;
+		blue			<- Hashtbl.create 100;
+		green			<- Hashtbl.create 100;
+		greendepth		<- IntMap.empty;
+		red				<- Hashtbl.create 100;
+		pending			<- []; (* used in the layered algorithms *)
+		
+		pzone_table		<- Hashtbl.create 100; (* Used as a cache of projected convex parameter zones *)
+		pzone_nc_table	<- Hashtbl.create 100; (* Used as a cache of projected non-convex parameter zones *)
+		
 		(**************************************)
 		(* variable for the synthesis results *)
 		(**************************************)
-		let collected_constr = ref (LinearConstraint.false_p_nnconvex_constraint()) in
+		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint();
 
-
-        (* Table add, test and remove; a state is present as it maps to ():unit *)
-        let table_add table state_index =
-                Hashtbl.replace table state_index ()
-        in
-        let table_rem table state_index =
-                Hashtbl.remove table state_index
-        in
-        let table_test table state_index =
-                List.length (Hashtbl.find_all table state_index) > 0
-        in
-		(***************************************************************************************)
-		(* Compute only once the convex parameter projecvtion of the state, and put it in a hashtable *)
-		(***************************************************************************************)
-		let find_or_compute_pzone thestate = 
-			try Hashtbl.find pzone_table thestate
-			with Not_found -> (
-				let astate = StateSpace.get_state state_space thestate in
-				let linear_aconstr = LinearConstraint.px_hide_nonparameters_and_collapse astate.px_constraint in
-				Hashtbl.add pzone_table thestate linear_aconstr;
-				linear_aconstr
-			) in
-
-		(***************************************************************************************)
-		(* Compute only once the non-convex parameter projecvtion of the state, and put it in a hashtable *)
-		(***************************************************************************************)
-		let find_or_compute_pzone_nc thestate = 
-			try Hashtbl.find pzone_nc_table thestate
-			with Not_found -> (
-				let linear_aconstr = find_or_compute_pzone thestate in
-				let astate_constr = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint linear_aconstr in
-				Hashtbl.add pzone_nc_table thestate astate_constr;
-				astate_constr
-			) in
-
-		(***********************)
-		(* printing the queues *)
-		(***********************)
-        let printtable colour thetable =
-            if verbose_mode_greater Verbose_medium then(
-                    let printrecord state_index u rest =
-                            (string_of_int state_index) ^ " " ^ rest;
-                    in print_message Verbose_medium("Table " ^ colour ^ " : [ "
-                            ^ Hashtbl.fold printrecord thetable "" ^ "]")
-            );
-        in
-
-		let printpendingqueue colour thequeue =
-			if verbose_mode_greater Verbose_medium then(
-				let rec r_printqueue thequeue = match thequeue with
-					| [] -> "";
-					| (state_index,state_depth)::body  ->
-						"(" ^ (string_of_int state_index)
-							^ ", " ^ (string_of_int state_depth) ^ ") "
-							^ (r_printqueue body);
-				in print_message Verbose_medium("Queue " ^ colour ^ " : [ "
-						^ r_printqueue thequeue ^ "]")
-			);
-		in
 
 		(***************************************)
 		(* put accepting states first in queue *)
@@ -221,54 +398,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		in
 
 
-		(***************************)
-		(* Check inclusion of zone *)
-		(***************************)
-        let smaller_zone state_index1 state_index2 =
-			let state1 = StateSpace.get_state state_space state_index1 in
-			let constr1 = state1.px_constraint in
-                        let state2 = StateSpace.get_state state_space state_index2 in
-                        let constr2 = state2.px_constraint in
-			LinearConstraint.px_is_leq constr1 constr2
-		in
 
-		(*** TODO: factor the following 2 functions!!! ***)
-
-		(***************************************************)
-		(* Check equality of zone projection on parameters *)
-		(***************************************************)
-		let same_parameter_projection state_index1 state_index2 =
-			let constr1 = find_or_compute_pzone state_index1 in
-			let constr2 = find_or_compute_pzone state_index2 in
-			if verbose_mode_greater Verbose_high then(
-				print_message Verbose_high ("Projected constraint 1: \n"
-					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
-					^ " state: "
-					^ (StateSpace.string_of_state_index state_index1));
-				print_message Verbose_high ("Projected constraint 2: \n"
-					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
-					^ " state: "
-					^ (StateSpace.string_of_state_index state_index2)));
-			LinearConstraint.p_is_equal constr1 constr2
-		in
-
-		(****************************************************)
-		(* Check inclusion of zone projection on parameters *)
-		(****************************************************)
-		let smaller_parameter_projection state_index1 state_index2 =
-			let constr1 = find_or_compute_pzone state_index1 in
-			let constr2 = find_or_compute_pzone state_index2 in
-			if verbose_mode_greater Verbose_high then(
-				print_message Verbose_high ("Projected constraint 1: \n"
-					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
-					^ " state: "
-					^ (StateSpace.string_of_state_index state_index1));
-				print_message Verbose_high ("Projected constraint 2: \n"
-					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
-					^ " state: "
-					^ (StateSpace.string_of_state_index state_index2)));
-			LinearConstraint.p_is_leq constr1 constr2
-		in
 
 		(****************************************************************************************)
 		(* Check if parameter constraint is included in a non-convex list of convex constraints *)
@@ -276,8 +406,8 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		let check_parameter_leq_list astate_index =
 			print_highlighted_message Shell_bold Verbose_high
 				("Testing inclusion of parameter zone in list of collected constraints");
-			let astate_constr = find_or_compute_pzone_nc astate_index in
-			if (LinearConstraint.p_nnconvex_constraint_is_leq astate_constr !collected_constr) then (
+			let astate_constr = self#find_or_compute_pzone_nc astate_index in
+			if (LinearConstraint.p_nnconvex_constraint_is_leq astate_constr synthesized_constraint) then (
 				print_highlighted_message Shell_bold Verbose_medium("Pruning with inclusion in collected constraints");
 				true
 			) else false
@@ -295,31 +425,18 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(* add a state and its depth to the pending queue *)
 		(**************************************************)
 
-        (* add x before the first y in q such that (before x y) holds *)
-        let rec add_ordered x q before =
-            match q with
-            | [] -> [x]
-            | y::q' -> if before x y then x::q else y::(add_ordered x q' before)
-        in
         let before s t = (* TODO: avoid hash-table lookups for every comparison *)
             match options#pending_order with
             | Pending_none -> true
             | Pending_accept -> State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space s)
-            | Pending_param -> (smaller_parameter_projection t s)
-            | Pending_zone -> (smaller_zone t s)
+            | Pending_param -> (self#smaller_parameter_projection t s)
+            | Pending_zone -> (self#smaller_zone t s)
         in
 		let add_pending astate_index astate_depth =
 			let before_pair (astate_index,_) (bstate_index,_) = before astate_index bstate_index in
-			pending := add_ordered (astate_index,astate_depth) !pending before_pair;
-			printpendingqueue "Pending (state added)" !pending
+			pending <- add_ordered (astate_index,astate_depth) pending before_pair;
+			printpendingqueue "Pending (state added)" pending
         in
-        let rec in_queue astate thequeue =
-			match thequeue with
-			| [] -> false
-			| (thestate,_)::body ->
-				if (astate = thestate) then true
-				else in_queue astate body
-		in
 
 		(**********************************)
 		(* Check the subsumption relation *)
@@ -371,22 +488,12 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				(* we traverse all states with the same location modulo hash collision *)
 				else let similar_states = StateSpace.get_comparable_states state_space smallstate
 						and check_sub bigstate = (table_test setbig bigstate) && (subsumes bigstate smallstate)
-							&& (same_parameter_projection bigstate smallstate)
+							&& (self#same_parameter_projection bigstate smallstate)
 					in begin
 						if verbose_mode_greater Verbose_high then(
 							print_message Verbose_high ("layersetsubsumes with " ^ string_of_int (List.length similar_states) ^ " states"));
 						List.exists check_sub similar_states
 					end
-		in
-
-		(******************************************)
-		(* printing zone projection on parameters *)
-		(******************************************)
-		let print_projection verbose_level thestate =
-			if verbose_mode_greater verbose_level then (
-				let constr = find_or_compute_pzone thestate in
-				print_message verbose_level ("Projected constraint : \n"
-					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr))
 		in
 
 		(***********************************)
@@ -431,7 +538,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(* Mark a state blue if deadlock or no successor is green, *)
 		(* Otherwise mark green and associate the depth in the map *)
 		(***********************************************************)
-		let mark_blue_or_green thestate thedepth =
+		let mark_blue_or_green thestate (thedepth : int) =
 			(* mark only if not blue due to lookahead *)
 			(* if the green colour is not used (option no_green),
 				then the state is necessarily marked blue *)
@@ -439,16 +546,16 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				let successors = StateSpace.get_successors state_space thestate
 					and is_green astate = table_test green astate
 					and is_pending_not_blue astate =
-						(in_queue astate !pending) &&
+						(in_queue astate pending) &&
 							not (table_test blue astate)
 				in
 				if ( options#no_green || List.exists is_green successors ||
-					(!pending <> [] &&
+					(pending <> [] &&
 						List.exists is_pending_not_blue successors))
 				then ( if options#recompute_green &&
 						(not (is_green thestate) ||
-							(IntMap.find thestate !greendepth) > thedepth)
-					then (greendepth := IntMap.add thestate thedepth !greendepth);
+							(IntMap.find thestate greendepth) > thedepth)
+					then (greendepth <- IntMap.add thestate thedepth greendepth);
 					table_add green thestate;
 					printtable "Green (mark_blue_or_green)" green)
 				else (  table_add blue thestate;
@@ -459,14 +566,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(***********************************************)
 		(* Test if a green state should be re-explored *)
 		(***********************************************)
-		let test_reexplore_green thestate thedepth =
+		let test_reexplore_green thestate (thedepth : int) =
 			print_message Verbose_high ("?? re-explore state " ^ (string_of_int thestate));
 			printtable "Green (test_reexplore_green)" green;
 			if not (table_test green thestate)
 			then true
 			else( (* it is green => check the depth if recomputation is required *)
  				if options#recompute_green &&
-					(IntMap.find thestate !greendepth) > thedepth
+					(IntMap.find thestate greendepth) > thedepth
 				then( (* the reexplored state must also be removed from previous red exploration *)
 					table_rem green thestate;
 					table_rem red thestate;
@@ -563,7 +670,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				if not depth_ok && not (table_test blue thestate) then (
 					table_add green thestate;
 					if options#recompute_green
-					then greendepth := IntMap.add thestate thestate_depth !greendepth;
+					then greendepth <- IntMap.add thestate thestate_depth greendepth;
 					()
 				)
 		)
@@ -612,7 +719,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				Hashtbl.clear green;
 				(* We keep the blue states from the previous run unless we do not use the green colour *)
 				if options#no_green then Hashtbl.clear blue;
-				greendepth := IntMap.empty;
+				greendepth <- IntMap.empty;
 				processed_blue <- 0;
 				cyclecount <-0;
 				Hashtbl.clear red;
@@ -638,7 +745,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						printtable "Cyan (predfs)" cyan;
 						find_or_compute_successors astate
 					in
-					let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+(*					let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 						cyclecount <- cyclecount + 1;
 						total_cyclecount <- total_cyclecount + 1;
 						if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
@@ -651,20 +758,20 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 							print_message Verbose_medium
 								(ModelPrinter.string_of_state model
 									(StateSpace.get_state state_space astate));
-							print_projection Verbose_low astate);
+							self#print_projection Verbose_low astate);
 						(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
 						else termination_status <- Some Target_found;
-						let pzone = find_or_compute_pzone astate in
-						LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
+						let pzone = self#find_or_compute_pzone astate in
+						LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 						if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 						(* table_add blue astate; *)
 						table_add blue thestate;
 						printtable "Blue (cyclefound)" blue;
 						(* and the current state is popped from the cyan list *)
 						table_rem cyan thestate;
-					in
+					in*)
 					let filterdfs (thestate : State.state_index) (astate : State.state_index)
 						(astate_depth : int) : bool =
 						not (table_test blue astate) &&
@@ -687,7 +794,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 							let predfs (astate : State.state_index) : unit =
 								table_add red astate;
 								printtable "Red (predfs)" red in
-							let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+							(*let cyclefound2 (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 								cyclecount <- cyclecount + 1;
 								total_cyclecount <- total_cyclecount + 1;
 								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
@@ -700,33 +807,33 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									print_message Verbose_medium
 										(ModelPrinter.string_of_state model
 											(StateSpace.get_state state_space astate));
-									print_projection Verbose_low astate);
+									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								termination_status <- Some Target_found;
-								let pzone = find_or_compute_pzone astate in
-								LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
+								let pzone = self#find_or_compute_pzone astate in
+								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
-							in
+							in*)
 							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
-								(same_parameter_projection thestate astate)
+								(self#same_parameter_projection thestate astate)
 							in
 							let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 								(table_test cyan astate)
 							in
 							let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
-								cyclefound astate astate astate_depth
+								(self#cyclefound_inner self#set_termination) astate astate astate_depth
 							in
 							let testrecursivedfs (astate : State.state_index) : bool =
 								not (table_test red astate)
 							in
 							let postdfs (astate : State.state_index) (astate_depth : int) : unit =
 								() in
-							rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
+							rundfs enterdfs predfs noLookahead (self#cyclefound_inner self#set_termination) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
 						);
 						mark_blue_or_green astate astate_depth;
 						table_rem cyan astate;
-						in
-					(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
+					in
+					(try (rundfs enterdfs predfs withLookahead (self#cyclefound_cyclefound self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
 						with TerminateAnalysis -> ());
 					print_message Verbose_medium("Finished the calls")
 
@@ -747,7 +854,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						printtable "Cyan (predfs)" cyan;
 						find_or_compute_successors astate
 					in
-					let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+					(*let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 						cyclecount <- cyclecount + 1;
 						total_cyclecount <- total_cyclecount + 1;
 						if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
@@ -760,13 +867,13 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 							print_message Verbose_medium
 								(ModelPrinter.string_of_state model
 									(StateSpace.get_state state_space astate));
-							print_projection Verbose_low astate);
+							self#print_projection Verbose_low astate);
 						(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
 						else termination_status <- Some Target_found;
-						let pzone = find_or_compute_pzone astate in
-						LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
+						let pzone = self#find_or_compute_pzone astate in
+						LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 						if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 						(* the state where the lookahead has found a cycle is now set blue *)
 						(* table_add blue astate; *)
@@ -774,7 +881,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						printtable "Blue (cyclefound)" blue;
 						(* and the current state is popped from the cyan list *)
 						table_rem cyan thestate;
-					in
+					in*)
 					let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
 						not (table_test blue astate) &&
 						test_reexplore_green astate astate_depth &&
@@ -797,7 +904,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 							let predfs (astate: State.state_index) : unit =
 								table_add red astate;
 								printtable "Red (predfs)" red in
-							let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+							(*let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 								cyclecount <- cyclecount + 1;
 								total_cyclecount <- total_cyclecount + 1;
 								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
@@ -810,35 +917,35 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									print_message Verbose_medium
 										(ModelPrinter.string_of_state model
 											(StateSpace.get_state state_space astate));
-									print_projection Verbose_low astate);
+									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
-								let pzone = find_or_compute_pzone astate in
-								LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
+								let pzone = self#find_or_compute_pzone astate in
+								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
-							in
+							in*)
 							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
-								(same_parameter_projection thestate astate)
+								(self#same_parameter_projection thestate astate)
 							in
 							let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 								(subsumesset astate cyan)
 							in
 							let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
-								cyclefound astate astate astate_depth
+								(self#cyclefound_inner self#set_termination_if_synthesis) astate astate astate_depth
 							in
 							let testrecursivedfs (astate : State.state_index) : bool =
 								not (setsubsumes red astate)
 							in
 							let postdfs (astate : State.state_index) (astate_depth : int) : unit =
 								() in
-							rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
+							rundfs enterdfs predfs noLookahead (self#cyclefound_inner self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
 						);
 						mark_blue_or_green astate astate_depth;
 						table_rem cyan astate;
-						in
-					(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
+					in
+					(try (rundfs enterdfs predfs withLookahead (self#cyclefound_cyclefound self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
 						with TerminateAnalysis -> ());
 					print_message Verbose_medium("Finished the calls")
 
@@ -846,14 +953,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				| true, false ->
 					(* set up the dfs blue calls *)
 					add_pending init_state_index 0;
-					(try (while !pending <> [] do
-						match !pending with
-						| [] -> print_message Verbose_standard ("Impossible case");
+					(try (while pending <> [] do
+						match pending with
+						| [] -> raise (InternalError "Impossible case in NDFS (Layers, no subsumption)")
 						| (thestate,thestate_depth)::body ->
-							pending := body;
+							pending <- body;
 							print_message Verbose_medium ("Popped state "
 								^ (string_of_int thestate));
-							printpendingqueue "Pending" !pending;
+							printpendingqueue "Pending" pending;
 							if (not (table_test blue thestate) &&
 								test_reexplore_green thestate thestate_depth) then
 							begin
@@ -871,7 +978,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								printtable "Cyan (preds)" cyan;
 								find_or_compute_successors astate
 							in
-							let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+							(*let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 								cyclecount <- cyclecount + 1;
 								total_cyclecount <- total_cyclecount + 1;
 								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
@@ -884,13 +991,13 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									print_message Verbose_medium
 										(ModelPrinter.string_of_state model
 											(StateSpace.get_state state_space astate));
-									print_projection Verbose_low astate);
+									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
-								let pzone = find_or_compute_pzone astate in
-								LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
+								let pzone = self#find_or_compute_pzone astate in
+								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 								(* the state where the lookahead has found a cycle is now set blue *)
 								(* table_add blue astate; *)
@@ -898,14 +1005,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								printtable "Blue (cyclecount)" blue;
 								(* and the current state is popped from the cyan list *)
 								table_rem cyan thestate;
-							in
+							in*)
 							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
 								not (table_test blue astate) &&
 								test_reexplore_green astate astate_depth &&
 								not (table_test cyan astate)
 							in
 							let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-								not (same_parameter_projection thestate astate)
+								not (self#same_parameter_projection thestate astate)
 							in
 							let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
 								add_pending astate (astate_depth + 1) in
@@ -921,7 +1028,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									let predfs (astate: State.state_index) : unit =
 										table_add red astate;
 										printtable "Red (predfs)" red in
-									let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+(*									let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 										cyclecount <- cyclecount + 1;
 										total_cyclecount <- total_cyclecount + 1;
 										if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
@@ -934,35 +1041,35 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 											print_message Verbose_medium
 												(ModelPrinter.string_of_state model
 													(StateSpace.get_state state_space astate));
-											print_projection Verbose_low astate);
+											self#print_projection Verbose_low astate);
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
 										else termination_status <- Some Target_found;
-										let pzone = find_or_compute_pzone astate in
-										LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
+										let pzone = self#find_or_compute_pzone astate in
+										LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
-									in
+									in*)
 									let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
-										(same_parameter_projection thestate astate)
+										(self#same_parameter_projection thestate astate)
 									in
 									let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 										(table_test cyan astate)
 									in
 									let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
-										cyclefound astate astate astate_depth
+										(self#cyclefound_inner self#set_termination_if_synthesis) astate astate astate_depth
 									in
 									let testrecursivedfs (astate : State.state_index) : bool =
 										not (table_test red astate)
 									in
 									let postdfs (astate : State.state_index) (astate_depth : int) : unit =
 										() in
-									rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
+									rundfs enterdfs predfs noLookahead (self#cyclefound_inner self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
 								);
 								mark_blue_or_green astate astate_depth;
 								table_rem cyan astate;
 								in
-							rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate thestate_depth;
+							rundfs enterdfs predfs withLookahead (self#cyclefound_cyclecount self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate thestate_depth;
 							end;
 					done;)
 
@@ -973,14 +1080,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				| true, true ->
 					(* set up the dfs blue calls *)
 					add_pending init_state_index 0;
-					(try (while !pending <> [] do
-						match !pending with
-						| [] -> print_message Verbose_standard ("Impossible case");
+					(try (while pending <> [] do
+						match pending with
+						| [] -> raise (InternalError "Impossible case in NDFS (Layers, subsumption)")
 						| (thestate,thestate_depth)::body ->
-							pending := body;
+							pending <- body;
 							print_message Verbose_medium ("Popped state "
 								^ (string_of_int thestate));
-							printpendingqueue "Pending" !pending;
+							printpendingqueue "Pending" pending;
 							if (not (table_test blue thestate) &&
 								test_reexplore_green thestate thestate_depth) then
 							begin
@@ -998,7 +1105,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								printtable "Cyan (predfs)" cyan;
 								find_or_compute_successors astate
 							in
-							let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+							(*let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 								cyclecount <- cyclecount + 1;
 								total_cyclecount <- total_cyclecount + 1;
 								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
@@ -1011,13 +1118,13 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									print_message Verbose_medium
 										(ModelPrinter.string_of_state model
 											(StateSpace.get_state state_space astate));
-									print_projection Verbose_low astate);
+									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
-								let pzone = find_or_compute_pzone astate in
-								LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
+								let pzone = self#find_or_compute_pzone astate in
+								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 								(* the state where the lookahead has found a cycle is now set blue *)
 								(* table_add blue astate; *)
@@ -1025,7 +1132,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								printtable "Blue (cyclecount)" blue;
 								(* and the current state is popped from the cyan list *)
 								table_rem cyan thestate;
-							in
+							in*)
 							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
 								not (table_test blue astate) &&
 								test_reexplore_green astate astate_depth &&
@@ -1033,23 +1140,23 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								not (layersetsubsumes red astate)
 							in
 							let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-								not (same_parameter_projection thestate astate)
+								not (self#same_parameter_projection thestate astate)
 							in
 							let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
 								add_pending astate (astate_depth + 1) in
 							let testrecursivedfs (astate: State.state_index) : bool =
 								true in
 							let postdfs (astate: State.state_index) (astate_depth : int) : unit =
-								(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
+								(* launch red DFS only if not with a smaller constraint than a state marked by a lookahead *)
 								if ((* (not (check_parameter_leq_list astate)) && *)
 										(State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space astate))) then (
-									(* set up the dfs red calls *)
+									(* set up the DFS red calls *)
 									let enterdfs (astate: State.state_index) : bool =
 										not (check_parameter_leq_list astate) in
 									let predfs (astate: State.state_index) : unit =
 										table_add red astate;
 										printtable "Red (predfs)" red in
-									let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+									(*let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 										cyclecount <- cyclecount + 1;
 										total_cyclecount <- total_cyclecount + 1;
 										if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
@@ -1062,35 +1169,35 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 											print_message Verbose_medium
 												(ModelPrinter.string_of_state model
 													(StateSpace.get_state state_space astate));
-											print_projection Verbose_low astate);
+											self#print_projection Verbose_low astate);
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
 										else termination_status <- Some Target_found;
-										let pzone = find_or_compute_pzone astate in
-										LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
+										let pzone = self#find_or_compute_pzone astate in
+										LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
-									in
+									in*)
 									let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
-										(same_parameter_projection thestate astate)
+										(self#same_parameter_projection thestate astate)
 									in
 									let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 										(subsumesset astate cyan)
 									in
 									let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
-										cyclefound astate astate astate_depth
+										(self#cyclefound_inner self#set_termination_if_synthesis) astate astate astate_depth
 									in
 									let testrecursivedfs (astate : State.state_index) : bool =
 										not (layersetsubsumes red astate)
 									in
 									let postdfs (astate : State.state_index) (astate_depth : int) : unit =
 										() in
-									rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
+									rundfs enterdfs predfs noLookahead (self#cyclefound_inner self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
 								);
 								mark_blue_or_green astate astate_depth;
 								table_rem cyan astate;
 								in
-							rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate thestate_depth;
+							rundfs enterdfs predfs withLookahead (self#cyclefound_cyclecount self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate thestate_depth;
 							end;
 					done;)
 
@@ -1099,9 +1206,6 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 
 (* 	                       | _ -> raise (InternalError ("Unknown exploration order in NDFS")) *)
 			end;
-
-			(* combine the linear constraints *)
-			constraint_valuations <- Some !collected_constr;
 
 			print_message Verbose_standard("---------------- Ending exploration ------------------");
 
@@ -1115,7 +1219,16 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 			total_processed_blue <- total_processed_blue + processed_blue;
 
 			if execute_again then(
-				ResultProcessor.process_result self#compute_result "Iterative deepening" None;
+(* 				ResultProcessor.process_result self#compute_result "Iterative deepening" None; *)
+				(* Print some information *)
+				if verbose_mode_greater Verbose_low then(
+					self#print_algo_message Verbose_low ("Current constraint: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint));
+				);
+
+				(* Display stats *)
+				self#print_stats;
+				
+				
 				current_depth <- current_depth + the_depth_step;
 				()
 			);
@@ -1201,15 +1314,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method check_termination_at_post_n = false
 
-
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
+	(** Print stats *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
-		self#print_algo_message_newline Verbose_standard (
-			"State space exploration completed " ^ (after_seconds ()) ^ "."
-		);
-
+	method private print_stats : unit =
 		let nb_states = StateSpace.nb_states state_space in
 		print_message Verbose_standard ("Number of computed states: " ^ (string_of_int nb_states));
 		print_message Verbose_standard ("Number of processed states: " ^ (string_of_int processed_blue));
@@ -1221,6 +1330,19 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		if (min_depth_found <> -1) then
 			print_message Verbose_standard ("Minimum depth at which a cycle was found: " ^ (string_of_int min_depth_found));
 		print_message Verbose_standard ("Maximal depth actually reached: " ^ (string_of_int max_depth_reached));
+		()
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Method packaging the result output by the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method compute_result =
+		self#print_algo_message_newline Verbose_standard (
+			"State space exploration completed " ^ (after_seconds ()) ^ "."
+		);
+		
+		(* Print stats *)
+		self#print_stats;
 
 		(* Get the termination status *)
 		let termination_status = match termination_status with
@@ -1237,7 +1359,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(*** TODO (ÉA): is Including_check dangerous? ***)
 		let dangerous_inclusion = options#comparison_operator = Inclusion_check || options#comparison_operator = Including_check || options#comparison_operator = Double_inclusion_check in
 		
- 		let abstracted = (dangerous_inclusion || options#merge) in
+		if dangerous_inclusion then(
+			self#print_algo_message Verbose_high "A dangerous inclusion was used: result will be at least an overapproximation (or invalid)";
+		);
+		if options#merge then(
+			self#print_algo_message Verbose_high "Merging was used: result will be at least an overapproximation (or invalid)";
+		);
+
+		let abstracted = (dangerous_inclusion || options#merge) in
 
  		let soundness =
 			(* EXACT if termination is normal and no inclusion nor merge *)
@@ -1250,16 +1379,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 			else Constraint_maybe_invalid
 		in
 
-		let constr_result = match constraint_valuations with
-				| None -> LinearConstraint.false_p_nnconvex_constraint()
-				| Some constr -> constr
-		in
-
 		(* Return result *)
 		Single_synthesis_result
 		{
 			(* Accepting_cycle_constraint *)
-			result = Good_constraint (constr_result, soundness);
+			result = Good_constraint (synthesized_constraint, soundness);
 
 			(* English description of the constraint *)
 			constraint_description = "constraint for detecting accepting cycles via NDFS exploration";

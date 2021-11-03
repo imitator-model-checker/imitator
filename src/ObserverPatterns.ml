@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/09/14
+ * Last modified: 2021/09/16
  *
  ************************************************************)
  
@@ -89,62 +89,42 @@ let lc_x_eq_0 (x : clock_index) =
 let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	match parsed_property.property with
 	
+	(* Pattern-based property *)
+	| Parsed_pattern pattern ->
+		(
+		match pattern with
+		(* Untimed observers *)
+		
+		| Parsed_action_precedence_acyclic _
+		| Parsed_action_precedence_cyclic _
+		| Parsed_action_precedence_cyclicstrict _
+		
+		| ParsingStructure.Parsed_Sequence_acyclic _
+		| ParsingStructure.Parsed_Sequence_cyclic _
+
+			-> false
+		
+		
+		(* Timed observers *)
+		
+		| Parsed_action_deadline _
+		
+		| Parsed_TB_Action_precedence_acyclic _
+		| Parsed_TB_Action_precedence_cyclic _
+		| Parsed_TB_Action_precedence_cyclicstrict _
+
+		| ParsingStructure.Parsed_TB_response_acyclic _
+		| ParsingStructure.Parsed_TB_response_cyclic _
+		| ParsingStructure.Parsed_TB_response_cyclicstrict _
+
+			-> true
+				
+		)
+	
 	(* Non-observer properties *)
-	
-	| Parsed_EF _
-	| Parsed_AGnot _
+	| _ -> false
 
-	| Parsed_EFexemplify _
 
-	| Parsed_EFpmax _
-	| Parsed_EFpmin _
-	| Parsed_EFtmin _
-
-	| Parsed_Cycle_Through _
-	| Parsed_NZ_Cycle
-
-	| Parsed_Deadlock_Freeness
-
-	| Parsed_IM _
-	| Parsed_ConvexIM _
-	| Parsed_PRP _
-	| Parsed_IMK _
-	| Parsed_IMunion _
-
-	| Parsed_Cover_cartography _
-	| Parsed_Learning_cartography _
-	| Parsed_Shuffle_cartography _
-	| Parsed_Border_cartography _
-	| Parsed_Random_cartography _
-	| Parsed_RandomSeq_cartography _
-	| Parsed_PRPC _
-
-	(* Untimed observers *)
-	
-	| Parsed_action_precedence_acyclic _
-	| Parsed_action_precedence_cyclic _
-	| Parsed_action_precedence_cyclicstrict _
-	
-	| ParsingStructure.Parsed_Sequence_acyclic _
-	| ParsingStructure.Parsed_Sequence_cyclic _
-
-		-> false
-	
-	
-	(* Timed observers *)
-	
-	| Parsed_action_deadline _
-	
-	| Parsed_TB_Action_precedence_acyclic _
-	| Parsed_TB_Action_precedence_cyclic _
-	| Parsed_TB_Action_precedence_cyclicstrict _
-
-	| ParsingStructure.Parsed_TB_response_acyclic _
-	| ParsingStructure.Parsed_TB_response_cyclic _
-	| ParsingStructure.Parsed_TB_response_cyclicstrict _
-
-		-> true
-	
 
 
 (* Create a property of the form AGnot from a single bad location *)
@@ -160,116 +140,73 @@ let make_AGnot_single_location automaton_index location_index =
 let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	match parsed_property.property with
 	
+	(* Pattern-based property *)
+	| Parsed_pattern pattern ->
+		(
+		match pattern with
+		(* Untimed observers: add automaton, do not add clock *)
+		
+		| ParsingStructure.Parsed_action_precedence_acyclic _
+		| ParsingStructure.Parsed_action_precedence_cyclic _
+		| ParsingStructure.Parsed_action_precedence_cyclicstrict _
+
+		| ParsingStructure.Parsed_Sequence_acyclic _
+		| ParsingStructure.Parsed_Sequence_cyclic _
+		
+			-> (Some observer_automaton_name, None)
+		
+		(* Timed observers: add automaton, add clock *)
+		
+		| Parsed_action_deadline _
+		| Parsed_TB_Action_precedence_acyclic _
+		| Parsed_TB_Action_precedence_cyclic _
+		| Parsed_TB_Action_precedence_cyclicstrict _
+
+		| ParsingStructure.Parsed_TB_response_acyclic _
+		| ParsingStructure.Parsed_TB_response_cyclic _
+		| ParsingStructure.Parsed_TB_response_cyclicstrict _
+		
+			-> (Some observer_automaton_name, Some observer_clock_name)
+		)
+
 	(* No observer required: does not build anything *)
+	| _ -> (None , None)
 	
-	| Parsed_EF _
-	| Parsed_AGnot _
 	
-	| Parsed_EFexemplify _
-
-	| Parsed_EFpmin _
-	| Parsed_EFpmax _
-	| Parsed_EFtmin _
-
-	| Parsed_Cycle_Through _
-	| Parsed_NZ_Cycle
-
-	| Parsed_Deadlock_Freeness
-
-	| Parsed_IM _
-	| Parsed_ConvexIM _
-	| Parsed_PRP _
-	| Parsed_IMK _
-	| Parsed_IMunion _
-
-	| Parsed_Cover_cartography _
-	| Parsed_Learning_cartography _
-	| Parsed_Shuffle_cartography _
-	| Parsed_Border_cartography _
-	| Parsed_Random_cartography _
-	| Parsed_RandomSeq_cartography _
-	| Parsed_PRPC _
-	
-		-> (None , None)
-	
-	(* Untimed observers: add automaton, do not add clock *)
-	
-	| ParsingStructure.Parsed_action_precedence_acyclic _
-	| ParsingStructure.Parsed_action_precedence_cyclic _
-	| ParsingStructure.Parsed_action_precedence_cyclicstrict _
-
-	| ParsingStructure.Parsed_Sequence_acyclic _
-	| ParsingStructure.Parsed_Sequence_cyclic _
-	
-		-> (Some observer_automaton_name, None)
-	
-	(* Timed observers: add automaton, add clock *)
-	
-	| Parsed_action_deadline _
-	| Parsed_TB_Action_precedence_acyclic _
-	| Parsed_TB_Action_precedence_cyclic _
-	| Parsed_TB_Action_precedence_cyclicstrict _
-
-	| ParsingStructure.Parsed_TB_response_acyclic _
-	| ParsingStructure.Parsed_TB_response_cyclic _
-	| ParsingStructure.Parsed_TB_response_cyclicstrict _
-	
-		-> (Some observer_automaton_name, Some observer_clock_name)
-
 
 (* Get the number of locations for this observer *)
 let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	match parsed_property.property with
-	(* Not a real observer: does not build anything *)
-	| Parsed_EF _
-	| Parsed_AGnot _
 	
-	| Parsed_EFexemplify _
-
-	| Parsed_EFpmin _
-	| Parsed_EFpmax _
-	| Parsed_EFtmin _
-	
-	| Parsed_Cycle_Through _
-	| Parsed_NZ_Cycle
-
-	| Parsed_Deadlock_Freeness
-
-	| Parsed_IM _
-	| Parsed_ConvexIM _
-	| Parsed_PRP _
-	| Parsed_IMK _
-	| Parsed_IMunion _
-	
-	| Parsed_Cover_cartography _
-	| Parsed_Learning_cartography _
-	| Parsed_Shuffle_cartography _
-	| Parsed_Border_cartography _
-	| Parsed_Random_cartography _
-	| Parsed_RandomSeq_cartography _
-	| Parsed_PRPC _
-		-> 0
-	
-	(* Observers *)
-
-	| ParsingStructure.Parsed_action_precedence_acyclic _
-	| ParsingStructure.Parsed_action_precedence_cyclic _
-	| ParsingStructure.Parsed_action_precedence_cyclicstrict _
-		-> 3
-	
-	| ParsingStructure.Parsed_action_deadline _
-		-> 3
+	(* Pattern-based property *)
+	| Parsed_pattern pattern ->
+		(
+		match pattern with
 		
-	| ParsingStructure.Parsed_TB_Action_precedence_acyclic _ -> 4
-	| ParsingStructure.Parsed_TB_Action_precedence_cyclic _ -> 3
-	| ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict _ -> 3
-	
-	| ParsingStructure.Parsed_TB_response_acyclic _ -> 4
-	| ParsingStructure.Parsed_TB_response_cyclic _ -> 3
-	| ParsingStructure.Parsed_TB_response_cyclicstrict _ -> 3
-	
-	| ParsingStructure.Parsed_Sequence_acyclic list_of_actions -> (List.length list_of_actions) + 2
-	| ParsingStructure.Parsed_Sequence_cyclic list_of_actions -> (List.length list_of_actions) + 1
+		(* Observers *)
+		| ParsingStructure.Parsed_action_precedence_acyclic _
+		| ParsingStructure.Parsed_action_precedence_cyclic _
+		| ParsingStructure.Parsed_action_precedence_cyclicstrict _
+			-> 3
+		
+		| ParsingStructure.Parsed_action_deadline _
+			-> 3
+			
+		| ParsingStructure.Parsed_TB_Action_precedence_acyclic _ -> 4
+		| ParsingStructure.Parsed_TB_Action_precedence_cyclic _ -> 3
+		| ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict _ -> 3
+		
+		| ParsingStructure.Parsed_TB_response_acyclic _ -> 4
+		| ParsingStructure.Parsed_TB_response_cyclic _ -> 3
+		| ParsingStructure.Parsed_TB_response_cyclicstrict _ -> 3
+		
+		| ParsingStructure.Parsed_Sequence_acyclic list_of_actions -> (List.length list_of_actions) + 2
+		| ParsingStructure.Parsed_Sequence_cyclic list_of_actions -> (List.length list_of_actions) + 1
+	)
+
+	(* Not a real observer: does not build anything *)
+	| _ -> 0
+
 
 
 (* Create the list of location indexes for this observer *)
@@ -339,6 +276,11 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 
 	
 	match parsed_property.property with
+	
+	(* Pattern-based property *)
+	| Parsed_pattern pattern ->
+	(
+	match pattern with
 	
 	(*------------------------------------------------------------*)
 	(* if a2 then a1 has happened before *)
@@ -881,6 +823,8 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* Reduce to safety property *)
 		make_AGnot_single_location automaton_index lbad
 
+	
+	)
 	(*------------------------------------------------------------*)
 	(* Others: should not happen! *)
 	(*------------------------------------------------------------*)

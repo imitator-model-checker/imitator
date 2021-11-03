@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/07/19
+# Last modified     : 2021/11/02
 #************************************************************
 
 
@@ -33,7 +33,7 @@ tests = [
 		## Test version             : 1
 		## Test since               : 2021/03/33
 		## Last modified            : 2021/03/33
-		## Test for IMITATOR version: 3.1
+		## Test for IMITATOR version: 3.2
 		#'purpose'    : 'Test something',
 		#'input_files': ['somemodel.imi'],
 		#'options'    : '-mode checksyntax',
@@ -90,7 +90,7 @@ Error                                   : property file not found
 			} # end result file
 			,
 		] # end expectations
-	} # end test casearithmetic_expressions
+	} # end test case
 	#------------------------------------------------------------
 
 	,
@@ -337,6 +337,59 @@ L/U subclass                            : L-PTA
 
 	#,
 
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/10/19
+		# Last modified            : 2021/10/19
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Test discrete swap',
+		'input_files': ['test-swap-discrete.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'test-swap-discrete-statespace.states' , 'content' : """
+  pta: l1, i = 1, j = 2 ==> 
+		"""
+			} # end result file
+			,
+			{'file': 'test-swap-discrete-statespace.states' , 'content' : """
+  pta: l2, i = 2, j = 1 ==> 
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/10/19
+		# Last modified            : 2021/10/19
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Test discrete dependent updates',
+		'input_files': ['test-discrete-dependent-updates.imi'],
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'test-discrete-dependent-updates-statespace.states' , 'content' : """
+  pta: l1, i = 1, j = 10 ==> 
+		"""
+			} # end result file
+			,
+			{'file': 'test-discrete-dependent-updates-statespace.states' , 'content' : """
+  pta: l2, i = 0, j = 2 ==> 
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -2474,6 +2527,32 @@ when  y + 7 > 2*x
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
+		## Test since               : 2021/10/20
+		## Last modified            : 2021/10/20
+		## Test for IMITATOR version: 3.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'tags': 'parsing, arithmetic, float',
+		'purpose'    : 'Test that literal floats are parsed as literal rationals',
+		'input_files': ['arithmetic_expressions/literal_float.imi'],
+		'options'    : '-no-var-autoremove -mode checksyntax',
+		'expectations' : [
+			{'file': 'literal_float.res' , 'content' : """
+ ************************************************************)
+------------------------------------------------------------
+Number of IPTAs                         : 1
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
 		## Test since               : 2021/02/10
 		## Last modified            : 2021/02/10
 		## Test for IMITATOR version: > 3.0
@@ -2615,12 +2694,12 @@ when  z * x / y > x do {}  sync a1 goto lend;
 	,
 
 	#------------------------------------------------------------
-	# BEGIN : Test boolean expressions
+	# BEGIN : Test Boolean expressions
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test boolean True constant (computing)',
+		'purpose'    : 'Test Boolean True constant (computing)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2640,7 +2719,7 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test boolean False constant (computing)',
+		'purpose'    : 'Test Boolean False constant (computing)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2660,7 +2739,7 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test boolean negation (computing)',
+		'purpose'    : 'Test Boolean negation (computing)',
 		'tags':'boolean, computing, semantic',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-negation.imi', 'acceptingReachable.imiprop'],
@@ -2682,7 +2761,7 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean variable is correctly updated (computing)',
+		'purpose'    : 'Test that a Boolean variable is correctly updated (computing)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-discrete-var-update.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2702,7 +2781,7 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test boolean variable update conversion to Uppaal (printing)',
+		'purpose'    : 'Test Boolean variable update conversion to Uppaal (printing)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-discrete-var-update.imi'],
 		'options'    : '-imi2Uppaal',
@@ -2734,19 +2813,19 @@ bool b = true;
  
 <location id="id_pta0_loc2" x="400" y="0">
 	<name x="400" y="-40">lend</name>
-	<label kind="invariant" x="400" y="40"> b</label></location>
+	<label kind="invariant" x="400" y="40">b</label></location>
  <init ref="id_pta0_loc0"/>
  
 	<transition>
 		<source ref="id_pta0_loc0"/>
 		<target ref="id_pta0_loc1"/>
-		<label kind="guard" x="100" y="40"> b</label>
+		<label kind="guard" x="100" y="40">b</label>
 		<label kind="assignment" x="100" y="-40">b = false</label>
 	</transition>
 	<transition>
 		<source ref="id_pta0_loc1"/>
 		<target ref="id_pta0_loc2"/>
-		<label kind="guard" x="300" y="40"> (! (b))</label>
+		<label kind="guard" x="300" y="40">(! (b))</label>
 		<label kind="assignment" x="300" y="-40">b = 1 &lt; 2</label>
 	</transition>
  </template>
@@ -2766,7 +2845,7 @@ system pta;
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean constant is initialized with consistant type',
+		'purpose'    : 'Test that a Boolean constant is initialized with consistant type',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-constant-init-type-error.imi'],
 		'options'    : '',
@@ -2784,7 +2863,7 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a boolean variable is initialized with consistant type',
+		'purpose'    : 'Test that a Boolean variable is initialized with consistant type',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2808,7 +2887,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a boolean variable is updated with a consistent typed expression',
+		'purpose'    : 'Test that a Boolean variable is updated with a consistent typed expression',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2831,7 +2910,7 @@ Error                                   : invalid model
         ## Last modified            : 2021/05/31
         ## Test for IMITATOR version: 3.1.0
         ## Author 					: lbinria
-        'purpose'    : 'Test that "not" boolean operator is effective and correct (computing)',
+        'purpose'    : 'Test that "not" Boolean operator is effective and correct (computing)',
 		'tags':'boolean, computing, semantic',
         'input_files': ['boolean_expressions/not-operator.imi'],
         'options'    : '-mode statespace -states-description',
@@ -2863,7 +2942,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test a complex boolean comparison (computing)',
+		'purpose'    : 'Test a complex Boolean comparison (computing)',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/complex-bool-comparison.imi'],
 		'options'    : '-mode statespace -states-description',
@@ -2931,7 +3010,72 @@ Error                                   : invalid model
 	,
 
 	#------------------------------------------------------------
-	# END : Test boolean expressions
+	# END : Test Boolean expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test array expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		'author': 'lbinria',
+		'purpose'    : 'Test general behavior of array expressions (computing)',
+		'tags':'array, computing, semantic',
+		'input_files': ['array_expressions/array.imi', 'acceptingReachable.imiprop'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'array-statespace.states' , 'content' : """
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  P: s0, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [0, 0, 0], my_bool_array = [False, False] ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  P: lend, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 0]], [[5, 6], [0, 0]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [1, 0, 0], my_bool_array = [False, True] ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+    #------------------------------------------------------------
+    {
+        'author': 'lbinria',
+        'purpose'    : 'Test that accessing an out of bound index raise a controlled error',
+        'tags':'array, semantic, error',
+        'input_files': ['array_expressions/array_out_of_bound_error.imi'],
+        'options'    : '-mode statespace -states-description',
+        'expectations' : [
+            {'file': 'array_out_of_bound_error.res' , 'content' : """
+Error                                   : index out of range
+		"""
+             } # end result file
+            ,
+        ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+	#------------------------------------------------------------
+	# END : Test array expressions
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
@@ -3725,6 +3869,32 @@ Error                                   : invalid model
 
 	,
 
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/08/25
+		## Last modified            : 2021/08/25
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that properties support type checking',
+		'input_files': ['type_checking/typed-property.imi', 'type_checking/typed-property.imiprop'],
+		'tags':'type checking, property',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'typed-property.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	# END : Type checking on guards tests
 
 	#------------------------------------------------------------
@@ -3792,6 +3962,60 @@ Error                                   : invalid model
 
 	,
 
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/08/17
+		# Last modified            : 2021/08/17
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test simple operations on binary words',
+		'input_files': ['binary/testbinary.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'testbinary-statespace.states' , 'content' : """
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1, bw1 = 0b1010, bw2 = 0b1011 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  pta: l1, bw1 = 0b1000, bw2 = 0b1010 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 2:
+  pta: l1, bw1 = 0b0000, bw2 = 0b1000 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 3:
+  pta: l1, bw1 = 0b0000, bw2 = 0b0000 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
@@ -4925,6 +5149,59 @@ Number of computed states               : 14
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test EF with depth-limit to check the quick reachability (-no-merge)',
+		'input_files': ['quick-reach.imi', 'EFaccepting.imiprop'],
+		'options'    : '-no-merge -depth-limit 3',
+		'expectations' : [
+			{'file': 'quick-reach.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 > 4*p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	# NOTE: disabled because the FINAL state space is still correct (and the result as well); what is "incorrect" (??) is the "quick reachability" for a given depth…
+	#{
+		## Test version             : 1
+		## Test since               : 2021/09/01
+		## Last modified            : 2021/09/01
+		## Test for IMITATOR version: 3.1
+		#'purpose'    : 'Test EF with depth-limit to check the quick reachability (-merge)',
+		#'input_files': ['quick-reach.imi', 'EFaccepting.imiprop'],
+		#'options'    : '-merge -depth-limit 3',
+		#'expectations' : [
+			#{'file': 'quick-reach.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #2 > 4*p
+#& p >= 0
+#END CONSTRAINT
+
+#------------------------------------------------------------
+#Constraint soundness                    : possible under-approximation
+#"""
+			#} #end result file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+
+	#,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2019/05/30
 		# Test for IMITATOR version: 2.11
 		'purpose'    : 'Test EFunsafe',
@@ -5962,8 +6239,8 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/04/01
-		# Test for IMITATOR version: 3
+		# Last modified            : 2021/11/02
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only discrete',
 		'input_files': ['testEFexemplify-discrete.imi', 'testEFexemplify-discrete.imiprop'],
 		'options'    : '-no-merge -comparison none',
@@ -5987,20 +6264,20 @@ Concrete run for parameter valuation:
   
 
 pta: l1, i = 0 ==> 
-global_time = 0
+global_time = 0 flows[global_time' = 1]
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{i := 3}  (* sync nosync_1*)  Target l2] 
  | 
  v  pta: l2, i = 3 ==> 
-global_time = 1/2
+global_time = 1/2 flows[global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{i := i + 1}  (* sync nosync_2*)  Target lTarget] 
  | 
  v  pta: lTarget, i = 4 ==> 
-global_time = 1
+global_time = 1 flows[global_time' = 1]
 (************************************************************)
 
 END RESULT
@@ -6019,8 +6296,8 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/04/01
-		# Test for IMITATOR version: 3
+		# Last modified            : 2021/11/02
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock',
 		'input_files': ['testEFexemplify-1clock.imi', 'testEFexemplify-1clock.imiprop'],
 		'options'    : '-no-merge -comparison none',
@@ -6044,20 +6321,20 @@ Concrete run for parameter valuation:
   
 
 pta: l1 ==> 
-x = 0 & global_time = 0
+x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 2
  | followed by combined transition [PTA pta: guard{ x = 2} updates{x := 0}  (* sync nosync_1*)  Target l2] 
  | 
  v  pta: l2 ==> 
-x = 0 & global_time = 2
+x = 0 & global_time = 2 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := x}  (* sync nosync_2*)  Target lTarget] 
  | 
  v  pta: lTarget ==> 
-x = 3 & global_time = 5
+x = 3 & global_time = 5 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 END RESULT
@@ -6076,8 +6353,8 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/04/01
-		# Test for IMITATOR version: 3
+		# Last modified            : 2021/11/02
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock (+ non-1 flows, non-0 resets)',
 		'input_files': ['testEFexemplify-1complexclock.imi', 'testEFexemplify-1complexclock.imiprop'],
 		'options'    : '-no-merge -comparison none',
@@ -6101,27 +6378,27 @@ Concrete run for parameter valuation:
   
 
 pta: l1 ==> 
-x = 0 & global_time = 0
+x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 2
  | followed by combined transition [PTA pta: guard{ x = 2} updates{x := 5}  (* sync nosync_1*)  Target l2] 
  | 
  v  pta: l2 ==> 
-x = 5 & global_time = 2
+x = 5 & global_time = 2 flows[x' = 3, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 8} updates{x := 2*x}  (* sync nosync_2*)  Target l3] 
  | 
  v  pta: l3 ==> 
-x = 16 & global_time = 3
+x = 16 & global_time = 3 flows[x' = -1, global_time' = 1]
 
  | 
  | via d = 10
  | followed by combined transition [PTA pta: guard{ x = 6} updates{x := x + -3}  (* sync nosync_3*)  Target lTarget] 
  | 
  v  pta: lTarget ==> 
-x = 3 & global_time = 13
+x = 3 & global_time = 13 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 END RESULT
@@ -6140,8 +6417,8 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/04/01
-		# Test for IMITATOR version: 3
+		# Last modified            : 2021/11/02
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with 2 clocks (+ non-1 flows, non-0 resets)',
 		'input_files': ['testEFexemplify-2complexclocks.imi', 'testEFexemplify-2complexclocks.imiprop'],
 		'options'    : '-no-merge -comparison none',
@@ -6165,27 +6442,27 @@ Concrete run for parameter valuation:
   
 
 pta: l1 ==> 
-x = 0 & y = 0 & global_time = 0
+x = 0 & y = 0 & global_time = 0 flows[x' = 1, y' = 0, global_time' = 1]
  | 
  | via d = 2
  | followed by combined transition [PTA pta: guard{ x = 2} updates{y := 5}  (* sync nosync_1*)  Target l2] 
  | 
  v  pta: l2 ==> 
-x = 2 & y = 5 & global_time = 2
+x = 2 & y = 5 & global_time = 2 flows[x' = 3, y' = 2, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 5} updates{x := y, y := x}  (* sync nosync_2*)  Target l3] 
  | 
  v  pta: l3 ==> 
-x = 7 & y = 5 & global_time = 3
+x = 7 & y = 5 & global_time = 3 flows[x' = -12, y' = 1, global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{ x = 1} updates{y := -1*x + y}  (* sync nosync_3*)  Target lTarget] 
  | 
  v  pta: lTarget ==> 
-x = 1 & y = 9/2 & global_time = 7/2
+x = 1 & y = 9/2 & global_time = 7/2 flows[x' = 1, y' = 1, global_time' = 1]
 (************************************************************)
 
 END RESULT
@@ -6204,8 +6481,8 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/04/01
-		# Test for IMITATOR version: 3
+		# Last modified            : 2021/11/02
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with 1 clock and 2 bounded signals',
 		'input_files': ['testEFexemplify-2signals.imi', 'testEFexemplify-2signals.imiprop'],
 		'options'    : '-no-merge -comparison none',
@@ -6228,13 +6505,13 @@ Concrete run for parameter valuation:
   
 
 pta: l1, signal_1: increasing_slow, signal_2: increasing_slow ==> 
-x = 0 & s_1 = 37/4 & s_2 = 29/8 & global_time = 0
+x = 0 & s_1 = 37/4 & s_2 = 29/8 & global_time = 0 flows[x' = 1, s_1' = 1, s_2' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by combined transition [PTA signal_1: guard{True} updates{}  sync stabilize_1 Target stabilized] 
  | 
  v  pta: l1, signal_1: stabilized, signal_2: increasing_slow ==> 
-x = 1 & s_1 = 41/4 & s_2 = 37/8 & global_time = 1
+x = 1 & s_1 = 41/4 & s_2 = 37/8 & global_time = 1 flows[x' = 1, s_1' = 0, s_2' = 1, global_time' = 1]
 
  | 
  | via d = 1
@@ -6242,7 +6519,7 @@ x = 1 & s_1 = 41/4 & s_2 = 37/8 & global_time = 1
 & x = 2} updates{x := 0}  (* sync nosync_1*)  Target l2] 
  | 
  v  pta: l2, signal_1: stabilized, signal_2: increasing_slow ==> 
-x = 0 & s_1 = 41/4 & s_2 = 45/8 & global_time = 2
+x = 0 & s_1 = 41/4 & s_2 = 45/8 & global_time = 2 flows[x' = 1, s_1' = 0, s_2' = 1, global_time' = 1]
 
  | 
  | via d = 17/4
@@ -6250,7 +6527,7 @@ x = 0 & s_1 = 41/4 & s_2 = 45/8 & global_time = 2
 & 10 > s_2} updates{}  (* sync nosync_2*)  Target l3] 
  | 
  v  pta: l3, signal_1: stabilized, signal_2: increasing_slow ==> 
-x = 17/4 & s_1 = 41/4 & s_2 = 79/8 & global_time = 25/4
+x = 17/4 & s_1 = 41/4 & s_2 = 79/8 & global_time = 25/4 flows[x' = 2, s_1' = 0, s_2' = 1, global_time' = 1]
 
  | 
  | via d = 83/8
@@ -6259,7 +6536,7 @@ x = 17/4 & s_1 = 41/4 & s_2 = 79/8 & global_time = 25/4
 & s_1 + 10 = s_2} updates{}  (* sync nosync_3*)  Target lTarget] 
  | 
  v  pta: lTarget, signal_1: stabilized, signal_2: increasing_slow ==> 
-x = 25 & s_1 = 41/4 & s_2 = 81/4 & global_time = 133/8
+x = 25 & s_1 = 41/4 & s_2 = 81/4 & global_time = 133/8 flows[x' = 1, s_1' = 0, s_2' = 1, global_time' = 1]
 (************************************************************)
 
 """
@@ -6297,14 +6574,14 @@ Concrete run for parameter valuation:
   p = 1/2
 
 pta: l1 ==> 
-p = 1/2 & x = 0 & global_time = 0
+p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ 2*p = 1
 & x = 3} updates{x := 0}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 1/2 & x = 0 & global_time = 3
+p = 1/2 & x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6327,13 +6604,13 @@ Impossible concrete run for parameter valuation:
   p = 0
 
 pta: l1 ==> 
-p = 0 & x = 0 & global_time = 0
+p = 0 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l1 ==> 
-p = 0 & x = 1 & global_time = 1
+p = 0 & x = 1 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6353,13 +6630,13 @@ Impossible concrete run for parameter valuation:
   p = 1/2
 
 pta: l1 ==> 
-p = 1/2 & x = 0 & global_time = 0
+p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: ltarget ==> 
-p = 1/2 & x = 0 & global_time = 0
+p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 """
@@ -6398,14 +6675,14 @@ Concrete run for parameter valuation:
   p = 4095/2
 
 pta: l1 ==> 
-p = 4095/2 & x = 1 & global_time = 0
+p = 4095/2 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True
 &  p = 2046 + x} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 4095/2 & x = 3/2 & global_time = 1/2
+p = 4095/2 & x = 3/2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6428,13 +6705,13 @@ Impossible concrete run for parameter valuation:
   p = 0
 
 pta: l1 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l1 ==> 
-p = 0 & x = 2 & global_time = 1
+p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6455,13 +6732,13 @@ Impossible concrete run for parameter valuation:
   p = 4095/2
 
 pta: l1 ==> 
-p = 4095/2 & x = 1 & global_time = 0
+p = 4095/2 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: ltarget ==> 
-p = 4095/2 & x = 1 & global_time = 0
+p = 4095/2 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 
@@ -6498,27 +6775,27 @@ Concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1/4
  | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 5/4 & global_time = 1/4
+p = 1 & x = 5/4 & global_time = 1/4 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1/4
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 1 & x = 3/2 & global_time = 1/2
+p = 1 & x = 3/2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 1 & x = 2 & global_time = 1
+p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6538,27 +6815,27 @@ Impossible concrete run for parameter valuation:
   p = 0
 
 pta: l1 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l1 ==> 
-p = 0 & x = 2 & global_time = 1
+p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l2 ==> 
-p = 0 & x = 3 & global_time = 2
+p = 0 & x = 3 & global_time = 2 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p = 0 & x = 4 & global_time = 3
+p = 0 & x = 4 & global_time = 3 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6578,27 +6855,27 @@ Impossible concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l2 ==> 
-p = 1 & x = 2 & global_time = 1
+p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p = 1 & x = 3 & global_time = 2
+p = 1 & x = 3 & global_time = 2 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 
@@ -6635,27 +6912,27 @@ Concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 1 & x = 3/2 & global_time = 1/2
+p = 1 & x = 3/2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 1 & x = 2 & global_time = 1
+p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6675,26 +6952,26 @@ Impossible concrete run for parameter valuation:
   p = 0
 
 pta: l1 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l2 ==> 
-p = 0 & x = 2 & global_time = 1
+p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p = 0 & x = 3 & global_time = 2
+p = 0 & x = 3 & global_time = 2 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6714,26 +6991,26 @@ Impossible concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p = 1 & x = 2 & global_time = 1
+p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 
@@ -6770,27 +7047,27 @@ Concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 1 & x = 2 & global_time = 1
+p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6810,26 +7087,26 @@ Impossible concrete run for parameter valuation:
   p = 0
 
 pta: l1 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 0 & x = 1 & global_time = 0
+p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p = 0 & x = 2 & global_time = 1
+p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -6849,26 +7126,26 @@ Impossible concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: ltarget ==> 
-p = 1 & x = 1 & global_time = 0
+p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 """
@@ -6906,27 +7183,27 @@ Concrete run for parameter valuation:
   p = 2
 
 pta: l1 ==> 
-p = 2 & x = 2 & global_time = 0
+p = 2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 2 & x = 2 & global_time = 0
+p = 2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 2 & x = 2 & global_time = 0
+p = 2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 2 & x = 0 & global_time = 0
+p = 2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
 (************************************************************)
 """
 			} # end result file
@@ -6963,27 +7240,27 @@ Concrete run for parameter valuation:
   p = 2
 
 pta: l1 ==> 
-p = 2 & x = 3/2 & global_time = 0
+p = 2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 2 & x = 3/2 & global_time = 0
+p = 2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 2 & x = 3/2 & global_time = 0
+p = 2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 2 & x = 2 & global_time = 1/2
+p = 2 & x = 2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 END RESULT
@@ -7027,20 +7304,20 @@ Concrete run for parameter valuation:
 & p2 = 1/2
 
 pta: l1 ==> 
-p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
@@ -7048,7 +7325,7 @@ p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0
 & p2 + x > p1} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p1 = 1 & p2 = 1/2 & x = 3 & global_time = 1
+p1 = 1 & p2 = 1/2 & x = 3 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7072,26 +7349,26 @@ Impossible concrete run for parameter valuation:
 & p2 = 3
 
 pta: l1 ==> 
-p1 = 3 & p2 = 3 & x = 3/2 & global_time = 0
+p1 = 3 & p2 = 3 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p1 = 3 & p2 = 3 & x = 3/2 & global_time = 0
+p1 = 3 & p2 = 3 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p1 = 3 & p2 = 3 & x = 2 & global_time = 1/2
+p1 = 3 & p2 = 3 & x = 2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p1 = 3 & p2 = 3 & x = 3 & global_time = 3/2
+p1 = 3 & p2 = 3 & x = 3 & global_time = 3/2 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7115,26 +7392,26 @@ Impossible concrete run for parameter valuation:
 & p2 = 1/2
 
 pta: l1 ==> 
-p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: ltarget ==> 
-p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0
+p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 
@@ -7177,27 +7454,27 @@ Concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 0 & global_time = 0
+p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 0 & global_time = 0
+p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ p = x} updates{x := 0}  sync b Target l3] 
  | 
  v  pta: l3 ==> 
-p = 1 & x = 0 & global_time = 1
+p = 1 & x = 0 & global_time = 1 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ p = x} updates{}  sync b Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 1 & x = 1 & global_time = 2
+p = 1 & x = 1 & global_time = 2 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7217,26 +7494,26 @@ Impossible concrete run for parameter valuation:
   p = 1
 
 pta: l1 ==> 
-p = 1 & x = 0 & global_time = 0
+p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 0 & global_time = 0
+p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ p = x} updates{x := 0}  sync b Target l3] 
  | 
  v  pta: l3 ==> 
-p = 1 & x = 0 & global_time = 1
+p = 1 & x = 0 & global_time = 1 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with b
  | 
  v  pta: ltarget ==> 
-p = 1 & x = 0 & global_time = 1
+p = 1 & x = 0 & global_time = 1 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 
@@ -7274,34 +7551,34 @@ Concrete run for parameter valuation:
   
 
 pta: l1, d1 = 1/2, d2 = 50 ==> 
-x = 0 & global_time = 0
+x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2, d1 = 1/2, d2 = 50 ==> 
-x = 0 & global_time = 3
+x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
  | 
  v  pta: l3, d1 = 5/2, d2 = 50 ==> 
-x = 0 & global_time = 4
+x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := d2 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/2, d2 = 25 ==> 
-x = 1 & global_time = 5
+x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 7
  | followed by combined transition [PTA pta: guard{ x = 8} updates{}  sync a Target lbad] 
  | 
  v  pta: lbad, d1 = 5/2, d2 = 25 ==> 
-x = 8 & global_time = 12
+x = 8 & global_time = 12 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7321,33 +7598,33 @@ Impossible concrete run for parameter valuation:
   
 
 pta: l1, d1 = 1/2, d2 = 50 ==> 
-x = 0 & global_time = 0
+x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2, d1 = 1/2, d2 = 50 ==> 
-x = 0 & global_time = 3
+x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
  | 
  v  pta: l3, d1 = 5/2, d2 = 50 ==> 
-x = 0 & global_time = 4
+x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := d2 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/2, d2 = 25 ==> 
-x = 1 & global_time = 5
+x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: lbad, d1 = 5/2, d2 = 25 ==> 
-x = 1 & global_time = 5
+x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 END RESULT
@@ -7388,20 +7665,20 @@ Concrete run for parameter valuation:
   p = 1/2
 
 pta: l1, d1 = 1/2 ==> 
-p = 1/2 & x = 0 & global_time = 0
+p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2, d1 = 1/2 ==> 
-p = 1/2 & x = 0 & global_time = 3
+p = 1/2 & x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
  | 
  v  pta: l3, d1 = 5/2 ==> 
-p = 1/2 & x = 0 & global_time = 4
+p = 1/2 & x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
@@ -7409,14 +7686,14 @@ p = 1/2 & x = 0 & global_time = 4
 & x = 1} updates{d1 := d1 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/4 ==> 
-p = 1/2 & x = 1 & global_time = 5
+p = 1/2 & x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 7
  | followed by combined transition [PTA pta: guard{ x = 8} updates{}  sync a Target lbad] 
  | 
  v  pta: lbad, d1 = 5/4 ==> 
-p = 1/2 & x = 8 & global_time = 12
+p = 1/2 & x = 8 & global_time = 12 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7436,33 +7713,33 @@ Impossible concrete run for parameter valuation:
   p = 1
 
 pta: l1, d1 = 1/2 ==> 
-p = 1 & x = 0 & global_time = 0
+p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2, d1 = 1/2 ==> 
-p = 1 & x = 0 & global_time = 3
+p = 1 & x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
  | 
  v  pta: l3, d1 = 5/2 ==> 
-p = 1 & x = 0 & global_time = 4
+p = 1 & x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3, d1 = 5/2 ==> 
-p = 1 & x = 1 & global_time = 5
+p = 1 & x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l4, d1 = 5/4 ==> 
-p = 1 & x = 2 & global_time = 6
+p = 1 & x = 2 & global_time = 6 flows[x' = 1, global_time' = 1]
 (************************************************************)
 
 
@@ -7483,20 +7760,20 @@ Impossible concrete run for parameter valuation:
   p = 1/2
 
 pta: l1, d1 = 1/2 ==> 
-p = 1/2 & x = 0 & global_time = 0
+p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2, d1 = 1/2 ==> 
-p = 1/2 & x = 0 & global_time = 3
+p = 1/2 & x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
  | 
  v  pta: l3, d1 = 5/2 ==> 
-p = 1/2 & x = 0 & global_time = 4
+p = 1/2 & x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
 
  | 
  | via d = 1
@@ -7504,13 +7781,13 @@ p = 1/2 & x = 0 & global_time = 4
 & x = 1} updates{d1 := d1 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/4 ==> 
-p = 1/2 & x = 1 & global_time = 5
+p = 1/2 & x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: lbad, d1 = 5/4 ==> 
-p = 1/2 & x = 1 & global_time = 5
+p = 1/2 & x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
 (************************************************************)
 END RESULT
 """
@@ -7573,9 +7850,36 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test LoopSynth: simple example with loop',
+		'purpose'    : 'Test LoopSynth: simple example with loop (BFS)',
 		'input_files': ['PDFC4.imi', 'PDFC-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'PDFC4.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 >= p2
+& p2 >= 0
+& p1 >= 0
+& p1 + 5 >= p2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: simple example with loop (NDFS)',
+		'input_files': ['PDFC4.imi', 'PDFC-loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -7604,9 +7908,37 @@ Constraint nature                       : good
 		# Test since               : 2020/09/24
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: simple example with no real loop (1a)',
+		'purpose'    : 'Test LoopSynth: simple example with no real loop (1a) (BFS)',
 		'input_files': ['testNoCycle-1a.imi', 'loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testNoCycle-1a.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with no real loop (1a) (NDFS)',
+		'input_files': ['testNoCycle-1a.imi', 'loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1a.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -7632,7 +7964,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/24
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: simple example with no real loop (1b)',
+		'purpose'    : 'Test LoopSynth: simple example with no real loop (1b) (BFS)',
 		'input_files': ['testNoCycle-1b.imi', 'loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
@@ -7656,9 +7988,63 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation',
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with no real loop (1b) (NDFS)',
+		'input_files': ['testNoCycle-1b.imi', 'loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'testNoCycle-1b.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation (BFS)',
 		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p3 >= 0
+& p2 >= 0
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation (NDFS)',
+		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -7686,7 +8072,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: witness vs. synthesis (witness)',
+		'purpose'    : 'Test LoopSynth: witness vs. synthesis (witness) (BFS)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop-witness.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
@@ -7714,7 +8100,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis)',
+		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis) (BFS)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
@@ -7742,12 +8128,71 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis) (NDFS)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 > p
+& p >= 0
+OR
+  p = 2046
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: simple example with 1 real loop',
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (BFS)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (NDFS)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -7919,9 +8364,40 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (synthesis)',
+		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (synthesis) (BFS)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-accloop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (synthesis) (NDFS)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-accloop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8006,7 +8482,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop',
+		'purpose'    : 'Test AccLoopSynth (BFS): simple example with 1 real loop',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
@@ -8031,12 +8507,12 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
-		# Test since               : 2020/09/09
-		# Last modified            : 2020/09/10
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (syntax variant without parentheses)',
-		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop-noparen.imiprop'],
-		'options'    : '-cycle-algo BFS',
+		'purpose'    : 'Test AccLoopSynth (NDFS): simple example with 1 real loop',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8055,6 +8531,35 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 
 	,
+
+	##------------------------------------------------------------
+	#{
+		## Test version             : 1
+		## Test since               : 2020/09/09
+		## Last modified            : 2020/09/10
+		## Test deleted             : 2021/09/01
+		## Test for IMITATOR version: 3
+		#'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (syntax variant without parentheses)',
+		#'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop-noparen.imiprop'],
+		#'options'    : '-cycle-algo BFS',
+		#'expectations' : [
+			#{'file': 'exLoopIncl.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #p = 2
+#END CONSTRAINT
+
+#------------------------------------------------------------
+#Constraint soundness                    : exact
+#Termination                             : regular termination
+#Constraint nature                       : good
+#------------------------------------------------------------
+#"""
+			#} #end result file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+
+	#,
 
 	#------------------------------------------------------------
 	{
@@ -8268,9 +8773,39 @@ Constraint nature                       : good
 		# Test since               : 2019/07/22
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test AccLoopSynth: simple example 3 (accepting for all valuations)',
+		'purpose'    : 'Test AccLoopSynth (BFS): simple example 3 (accepting for all valuations)',
 		'input_files': ['PDFC5.imi', 'PDFC5-accloop.imiprop'],
 		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p3 >= 0
+& p2 >= 0
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth (NDFS): simple example 3 (accepting for all valuations)',
+		'input_files': ['PDFC5.imi', 'PDFC5-accloop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8298,7 +8833,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/22
 		# Last modified            : 2020/09/22
 		# Test for IMITATOR version: 3.0
-		'purpose'    : 'Test AccLoopSynth (without option -no-cumulative-pruning)',
+		'purpose'    : 'Test AccLoopSynth (BFS) (without option -no-cumulative-pruning)',
 		'input_files': ['testInclusionEF.imi', 'testInclusionEF-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
@@ -8316,6 +8851,35 @@ Constraint nature                       : good
 Number of states                        : 4
 Number of transitions                   : 4
 Number of computed states               : 5
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/22
+		# Last modified            : 2020/09/22
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test AccLoopSynth (NDFS)',
+		'input_files': ['testInclusionEF.imi', 'testInclusionEF-loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'testInclusionEF.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p
+& p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
@@ -8605,6 +9169,262 @@ Termination                             : regular termination
 	#------------------------------------------------------------
 
 	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test AccLoopSynth with depth-limit to check the quick reachability (NDFS)',
+		'input_files': ['quick-reach.imi', 'acceptingLoop.imiprop'],
+		'options'    : '-depth-limit 3 -cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'quick-reach.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 > 4*p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test AccLoopSynth with depth-limit to check the quick reachability (BFS)',
+		'input_files': ['quick-reach.imi', 'acceptingLoop.imiprop'],
+		'options'    : '-depth-limit 4 -cycle-algo BFS',
+		'expectations' : [
+			{'file': 'quick-reach.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 > 4*p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test AccLoopSynth (BFS) on a simple example',
+		'input_files': ['test-generalized-buchi.imi', 'test-generalized-buchi-cycle.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'test-generalized-buchi.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 >= p_1
+& p_1 >= 0
+& p_2 >= 0
+OR
+  p_1 >= 0
+& p_2 = 2000
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test AccLoopSynth (NDFS) on a simple example',
+		'input_files': ['test-generalized-buchi.imi', 'test-generalized-buchi-cycle.imiprop'],
+		'options'    : '-cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'test-generalized-buchi.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 >= p_1
+& p_1 >= 0
+& p_2 >= 0
+OR
+  p_1 >= 0
+& p_2 = 2000
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/09/01
+		# Last modified            : 2021/09/01
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test generalized acceptance condition (BFS)',
+		'input_files': ['test-generalized-buchi.imi', 'test-generalized-buchi.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'test-generalized-buchi.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 >= p_1
+& p_1 >= 2
+& p_2 = 2000
+OR
+  p_2 >= 2021
+& p_1 >= 2
+& 10 >= p_1
+& 2046 >= p_2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/10/07
+		# Last modified            : 2021/10/07
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Test option: -no-global-time-clock-in-comparison (without)',
+		'input_files': ['testExemplify-loop-single.imi', 'loop.imiprop'],
+		'options'    : '-cycle-algo BFS -depth-limit 10',
+		'expectations' : [
+			{'file': 'testExemplify-loop-single.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/10/07
+		# Last modified            : 2021/10/07
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Test option: -no-global-time-clock-in-comparison (with)',
+		'input_files': ['testExemplify-loop-single.imi', 'loop.imiprop'],
+		'options'    : '-cycle-algo BFS -no-global-time-clock-in-comparison -depth-limit 10',
+		'expectations' : [
+			{'file': 'testExemplify-loop-single.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 2
+Number of transitions                   : 2
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	##------------------------------------------------------------
+	#{
+		## Test version             : 1
+		## Test since               : 2021/09/23
+		## Last modified            : 2021/09/23
+		## Test for IMITATOR version: 3.2
+		#'purpose'    : 'Test cycle exemplification [temporarily disabled]',
+		#'input_files': ['testExemplify-loop-single.imi', 'exemplify-loop.imiprop'],
+		#'options'    : '-cycle-algo BFS',
+		#'expectations' : [
+			#{'file': 'testExemplify-loop-single.res' , 'content' : """
+#TODO
+		#""" # TODO
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+
+	#,
+
+	##------------------------------------------------------------
+	#{
+		## Test version             : 1
+		## Test since               : 2021/10/07
+		## Last modified            : 2021/10/07
+		## Test for IMITATOR version: 3.2
+		#'purpose'    : 'Test cycle exemplification [temporarily disabled]',
+		#'input_files': ['testExemplify-loop-single2.imi', 'exemplify-loop.imiprop'],
+		#'options'    : '-cycle-algo BFS',
+		#'expectations' : [
+			#{'file': 'testExemplify-loop-single2.res' , 'content' : """
+#TODO
+		#""" # TODO
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+
+	#,
+
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -15689,16 +16509,16 @@ broadcast chan c;
 
 <template><name x="0" y="0">pta1</name><declaration>// No local declaration for automaton 'pta1'
 </declaration>
-
+ 
 <location id="id_pta0_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
-
+ 
 <location id="id_pta0_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
  <init ref="id_pta0_loc0"/>
-
+ 
 	<transition>
 		<source ref="id_pta0_loc0"/>
 		<target ref="id_pta0_loc0"/>
@@ -15711,23 +16531,23 @@ broadcast chan c;
 		<target ref="id_pta0_loc1"/>
 		<label kind="synchronisation" x="100" y="80">b!</label>
 		<label kind="guard" x="100" y="40"> x == 4</label>
-
+		
 	</transition>
  </template>
 
 
 <template><name x="1" y="1">pta2</name><declaration>// No local declaration for automaton 'pta2'
 </declaration>
-
+ 
 <location id="id_pta1_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
-
+ 
 <location id="id_pta1_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
  <init ref="id_pta1_loc0"/>
-
+ 
 	<transition>
 		<source ref="id_pta1_loc0"/>
 		<target ref="id_pta1_loc0"/>
@@ -15740,27 +16560,27 @@ broadcast chan c;
 		<target ref="id_pta1_loc1"/>
 		<label kind="synchronisation" x="100" y="80">b?</label>
 		<label kind="guard" x="100" y="40">true</label>
-
+		
 	</transition>
  </template>
 
 
 <template><name x="2" y="2">pta3</name><declaration>// No local declaration for automaton 'pta3'
 </declaration>
-
+ 
 <location id="id_pta2_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
-
+ 
 <location id="id_pta2_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
-
+ 
 <location id="id_pta2_loc2" x="400" y="0">
 	<name x="400" y="-40">l3</name>
 	<label kind="invariant" x="400" y="40">nb__a == 3</label></location>
  <init ref="id_pta2_loc0"/>
-
+ 
 	<transition>
 		<source ref="id_pta2_loc0"/>
 		<target ref="id_pta2_loc1"/>

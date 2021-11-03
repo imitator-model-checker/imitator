@@ -1,4 +1,17 @@
 *******************************************************
+# release 3.2 (2021-11-03) Cheese Blueberries
+
+### Syntax improvement
+* New type: "binary words", of the form `0b00111`, for bitwise binary operations. Can be used in guards, invariants, updates. Example: `when logor(bw1, 0b1011) <> bw1 do {shift_left(bw1, 2)}`
+* The syntax `var' := expr` in updates is discontinued. Official syntax remains `var := expr` (backward-compatibility for `var' = expr` remains ensured until further notice)
+
+### Major features
+* New accepting cycle synthesis with generalized condition. Syntax `property := #synth CycleThrough(condition_1, …, condition_n)` Each of the conditions must hold on at least one state of the same cycle, in order for this cycle to be accepting.
+
+
+
+
+*******************************************************
 # release 3.1 (2021-07-20) Cheese Artichoke
 
 ### Syntax improvement
@@ -13,7 +26,7 @@
 * New syntax for the initial state definition, with a separation between the discrete and the continuous parts (the former syntax remains accepted for backward-compatibility, but a warning is triggered).
 
 ### Syntax changes in the property
-* `property := AcceptingCycle` now allowed as a shortcut for `property := CycleThrough(accepting)`
+* `property := #synth AcceptingCycle` now allowed as a shortcut for `property := #synth CycleThrough(accepting)`
 
 ### Export
 * New translation to the [JANI](https://jani-spec.org/) interchange format

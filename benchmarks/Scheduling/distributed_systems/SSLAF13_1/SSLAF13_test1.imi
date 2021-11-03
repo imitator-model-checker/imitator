@@ -15,40 +15,40 @@
  * License          : 
  * 
  * Created          : < 2013/10
- * Last modified    : 2018/08/20
+ * Last modified    : 2021/10/07
  * Model version    : 
  * 
- * IMITATOR version : 3
+ * IMITATOR version : 3.1
  ******************************************************************************)
 
 
 
 
-var 
+var
 	t_asap_1:clock;
 	t_pipeline_1:clock;
 	t_task_11:clock;
-	Token_11:discrete;
+(* 	Token_11:discrete; *)
 	t_asap_2:clock;
 	t_pipeline_2:clock;
 	t_task_21:clock;
-	Token_21:discrete;
+(* 	Token_21:discrete; *)
 	t_task_22:clock;
-	Token_22:discrete;
+	Token_22:bool;
 	t_task_23:clock;
-	Token_23:discrete;
+(* 	Token_23:discrete; *)
 	t_task_24:clock;
-	Token_24:discrete;
+	Token_24:bool;
 	t_task_25:clock;
-	Token_25:discrete;
+(* 	Token_25:discrete; *)
 	t_asap_3:clock;
 	t_pipeline_3:clock;
 	t_task_31:clock;
-	Token_31:discrete;
+(* 	Token_31:discrete; *)
 	t_asap_4:clock;
 	t_pipeline_4:clock;
 	t_task_41:clock;
-	Token_41:discrete;
+(* 	Token_41:discrete; *)
 
 	T_pipeline_1=20,
 	D_pipeline_1=20,
@@ -198,8 +198,8 @@ automaton proc_2
 	 synclabs: DEADLINE_MISSED_2,task_22_act,task_22_done,task_24_act,task_24_done;
 
 	 loc idle: invariant True stop{t_task_22,t_task_24}
-		when True sync task_22_act do{Token_22 := 1}goto t_22_running;
-		when True sync task_24_act do{Token_24 := 1}goto t_24_running;
+		when True sync task_22_act do{Token_22 := True}goto t_22_running;
+		when True sync task_24_act do{Token_24 := True}goto t_24_running;
 
 	loc DEADLINE_MISS: invariant True
 	loc t_22_running: invariant t_task_22 <= C_task_22 stop {t_task_24}
@@ -207,23 +207,23 @@ automaton proc_2
 		when t_task_22 < C_task_22 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_22 < C_task_22 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_22 < C_task_22 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
-		 when t_task_22 <= 0 sync task_22_act do{Token_22 := 1}goto t_22_running;
-		 when t_task_22 > 0 sync task_22_act do{Token_22 := 1}goto t_22_running;
-		 when t_task_22 <= 0 sync task_24_act do{Token_24 := 1}goto t_22_running;
-		 when t_task_22 > 0 sync task_24_act do{Token_24 := 1}goto t_22_running;
-		when t_task_22 = C_task_22 & Token_24=0 sync task_22_done do{Token_22 := 0} goto idle;
-		when t_task_22 = C_task_22 & Token_24=1 sync task_22_done do{t_task_24 := 0,Token_22 := 0} goto t_24_running;
+		 when t_task_22 <= 0 sync task_22_act do{Token_22 := True}goto t_22_running;
+		 when t_task_22 > 0 sync task_22_act do{Token_22 := True}goto t_22_running;
+		 when t_task_22 <= 0 sync task_24_act do{Token_24 := True}goto t_22_running;
+		 when t_task_22 > 0 sync task_24_act do{Token_24 := True}goto t_22_running;
+		when t_task_22 = C_task_22 & not(Token_24) sync task_22_done do{Token_22 := False} goto idle;
+		when t_task_22 = C_task_22 & Token_24 sync task_22_done do{t_task_24 := 0,Token_22 := False} goto t_24_running;
 	loc t_24_running: invariant t_task_24 <= C_task_24 stop {t_task_22}
 		when t_task_24 < C_task_24 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_24 < C_task_24 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_24 < C_task_24 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_24 < C_task_24 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
-		 when t_task_24 <= 0 sync task_22_act do{Token_22 := 1}goto t_22_running;
-		 when t_task_24 > 0 sync task_22_act do{Token_22 := 1}goto t_24_running;
-		 when t_task_24 <= 0 sync task_24_act do{Token_24 := 1}goto t_24_running;
-		 when t_task_24 > 0 sync task_24_act do{Token_24 := 1}goto t_24_running;
-		when t_task_24 = C_task_24 & Token_22=0 sync task_24_done do{Token_24 := 0} goto idle;
-		when t_task_24 = C_task_24 & Token_22=1 sync task_24_done do{t_task_22 := 0,Token_24 := 0} goto t_22_running;
+		 when t_task_24 <= 0 sync task_22_act do{Token_22 := True}goto t_22_running;
+		 when t_task_24 > 0 sync task_22_act do{Token_22 := True}goto t_24_running;
+		 when t_task_24 <= 0 sync task_24_act do{Token_24 := True}goto t_24_running;
+		 when t_task_24 > 0 sync task_24_act do{Token_24 := True}goto t_24_running;
+		when t_task_24 = C_task_24 & not(Token_22) sync task_24_done do{Token_24 := False} goto idle;
+		when t_task_24 = C_task_24 & Token_22 sync task_24_done do{t_task_22 := 0,Token_24 := False} goto t_22_running;
 end
 
 automaton proc_3
@@ -295,56 +295,60 @@ end
 
 
 
-init:= True &
-	loc[proc_1]= proc_1_000 &
-	loc[proc_2]= idle &
-	loc[proc_3]= proc_3_000 &
-	loc[pipeline_1]=P1_1 &
-	loc[pipeline_2]=P2_1 &
-	loc[pipeline_3]=P3_1 &
-	loc[pipeline_4]=P4_1 &
-	t_asap_1 = 0 &
-	t_pipeline_1 = 0 &
-	t_task_11 = 0 & 
-	t_asap_2 = 0 &
-	t_pipeline_2 = 0 &
-	t_task_21 = 0 & 
-	t_task_22 = 0 & 
-	t_task_23 = 0 & 
-	t_task_24 = 0 & 
-	t_task_25 = 0 & 
-	t_asap_3 = 0 &
-	t_pipeline_3 = 0 &
-	t_task_31 = 0 & 
-	t_asap_4 = 0 &
-	t_pipeline_4 = 0 &
-	t_task_41 = 0 & 
-	Token_11 = 0 & 
-	Token_21 = 0 & 
-	Token_22 = 0 & 
-	Token_23 = 0 & 
-	Token_24 = 0 & 
-	Token_25 = 0 & 
-	Token_31 = 0 & 
-	Token_41 = 0 & 
-	True
-	
-	& T_pipeline_1 >= 0
-	& D_pipeline_1 >= 0
-	& T_pipeline_2 >= 0
-	& D_pipeline_2 >= 0
-	& C_task_11 >= 0
-	& C_task_21 >= 0
-	& C_task_22 >= 0
-	& C_task_23 >= 0
-	& C_task_24 >= 0
-	& C_task_25 >= 0
-	& T_pipeline_3 >= 0
-	& D_pipeline_3 >= 0
-	& T_pipeline_4 >= 0
-	& D_pipeline_4 >= 0
-	& C_task_41 >= 0
-;
+init:= {
+	discrete =
+		loc[proc_1] := proc_1_000,
+		loc[proc_2] := idle,
+		loc[proc_3] := proc_3_000,
+		loc[pipeline_1]:= P1_1,
+		loc[pipeline_2] := P2_1,
+		loc[pipeline_3] := P3_1,
+		loc[pipeline_4] := P4_1,
+
+(*		Token_11 := 0,
+		Token_21 := 0,*)
+		Token_22 := False,
+(* 		Token_23 := 0, *)
+		Token_24 := False,
+(* 		Token_25 := 0, 
+		Token_31 := 0,
+		Token_41 := 0,*)
+	;
+	continuous =
+		t_asap_1 = 0 &
+		t_pipeline_1 = 0 &
+		t_task_11 = 0 &
+		t_asap_2 = 0 &
+		t_pipeline_2 = 0 &
+		t_task_21 = 0 &
+		t_task_22 = 0 &
+		t_task_23 = 0 &
+		t_task_24 = 0 &
+		t_task_25 = 0 &
+		t_asap_3 = 0 &
+		t_pipeline_3 = 0 &
+		t_task_31 = 0 &
+		t_asap_4 = 0 &
+		t_pipeline_4 = 0 &
+		t_task_41 = 0
+
+		& T_pipeline_1 >= 0
+		& D_pipeline_1 >= 0
+		& T_pipeline_2 >= 0
+		& D_pipeline_2 >= 0
+		& C_task_11 >= 0
+		& C_task_21 >= 0
+		& C_task_22 >= 0
+		& C_task_23 >= 0
+		& C_task_24 >= 0
+		& C_task_25 >= 0
+		& T_pipeline_3 >= 0
+		& D_pipeline_3 >= 0
+		& T_pipeline_4 >= 0
+		& D_pipeline_4 >= 0
+		& C_task_41 >= 0
+	;
+}
 
 (************************************************************)
 (* The end *)

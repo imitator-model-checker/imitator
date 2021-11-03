@@ -5,11 +5,11 @@
  * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
- * Module description: EFsynth algorithm [JLR15]
+ * Module description: generic EFsynth algorithm [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2021/07/05
+ * Last modified     : 2021/09/23
  *
  ************************************************************)
 
@@ -37,7 +37,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
+class virtual algoEFgen (state_predicate : AbstractProperty.state_predicate) =
 	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
@@ -60,15 +60,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	val counter_process_state = create_hybrid_counter_and_register "EFsynth.process_state" States_counter Verbose_experiments
 	val counter_add_a_new_state = create_hybrid_counter_and_register "EFsynth.add_a_new_state" States_counter Verbose_experiments
 
-	
-	
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 	method algorithm_name = "EF virtual" *)
-	
-	
+
 	
 	(************************************************************)
 	(* Class methods *)
@@ -197,11 +189,13 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	method process_initial_state initial_state = self#process_state initial_state
 
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Generate counter-example(s) if required by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	(*** NOTE: old version from EFSynth ***)
 
-	method process_counterexample target_state_index =
+	method construct_counterexamples target_state_index =
 		()
 		
 		(*** NOTE: temporarily (?) disabled 2021/07 by ÉA, because merging is used by default, but not sound for counterexample reconstruction ***)
@@ -224,8 +218,8 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		
 		(* The end *)
 		()
-		*)
-	
+		*)*)
+
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -310,7 +304,10 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		(* Case accepting state *)
 		if !is_target then(
 			(* 1. Construct counterexample if requested by the algorithm (and stop termination by raising a TerminateAnalysis exception, if needed) *)
-			self#process_counterexample new_state_index;
+			let property = Input.get_property() in
+			if property.synthesis_type = Exemplification then(
+				self#construct_counterexamples new_state_index;
+			);
 			
 			(* 2. If #witness mode, then we will throw an exception *)
 			self#terminate_if_witness;

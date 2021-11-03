@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/07/17
+ * Last modified     : 2021/10/01
  *
  ************************************************************)
 
@@ -190,6 +190,9 @@ class imitator_options =
 
 		(* Remove useless clocks (slightly experimental) *)
 		val mutable dynamic_clock_elimination		= false
+		
+		(* Remove global time clock when comparing states (expensive!) *)
+		val mutable no_global_time_in_comparison	= false
 
 		(* Layered NDFS *)
 		val mutable layer : bool option				= None
@@ -293,6 +296,7 @@ class imitator_options =
 		method draw_cart							= draw_cart
 		(* method dynamic = dynamic *)
 		method dynamic_clock_elimination			= dynamic_clock_elimination
+		method no_global_time_in_comparison			= no_global_time_in_comparison
 
 		method exploration_order					= value_of_option "exploration_order" exploration_order
 		method is_set_exploration_order				= exploration_order <> None
@@ -726,6 +730,9 @@ class imitator_options =
 				("-dynamic-elimination", Unit (fun () -> dynamic_clock_elimination <- true), " Dynamic clock elimination [FSFMA13]. Default: disabled.
 				");
 
+				("-no-global-time-clock-in-comparison", Unit (fun () -> no_global_time_in_comparison <- true), " Eliminate the global time clock (if any) when performing a state comparison; expensive due to variable elimination. Default: disabled, i.e., does not eliminate the global time clock.
+				");
+
 				("-expl-order", String set_exploration_order, " Exploration order [EXPERIMENTAL].
         Use `layerBFS`      for a layer-based breadth-first search (default for most algorithms).
         Use `queueBFS`      for a queue-based breadth-first search. [ANP17]
@@ -1090,6 +1097,19 @@ class imitator_options =
 
 
 			(*------------------------------------------------------------*)
+			(* Check if #exemplification is supported for this algorithm *)
+			(*------------------------------------------------------------*)
+			begin
+			match property_option with
+				| None -> ()
+				| Some property ->
+					if property.synthesis_type = Exemplification && not (AlgorithmOptions.supports_exemplification property) then(
+						print_warning ("The mode #exemplification is not supported by this property. Normal synthesis will be run.");
+					);
+			end;
+
+
+			(*------------------------------------------------------------*)
 			(* No cart options if not in cartography *)
 			(*------------------------------------------------------------*)
 			if not is_cartography then(
@@ -1117,8 +1137,6 @@ class imitator_options =
 					| EF _
 					(* Safety *)
 					| AGnot _
-					(** EF-synthesis with examples of (un)safe words *)
-					| EFexemplify _
 					(* Reachability with minimization of a parameter valuation *)
 					| EFpmin _
 					(* Reachability with maximization of a parameter valuation *)
@@ -1127,6 +1145,8 @@ class imitator_options =
 					| EFtmin _
 					(** Accepting infinite-run (cycle) through a state predicate *)
 					| Cycle_through _
+					(** Accepting infinite-run (cycle) through a state predicate *)
+					| Cycle_through_generalized _
 					(* Parametric reachability preservation *)
 (* 					| PRP _ *)
 					(* Parametric reachability preservation *)
@@ -1140,6 +1160,17 @@ class imitator_options =
 			);
 
 
+			(*------------------------------------------------------------*)
+			(* Option no_global_time_in_comparison is useless if no global time clock *)
+			(*------------------------------------------------------------*)
+			if no_global_time_in_comparison then(
+				match model.global_time_clock with
+				| Some _ -> ()
+				| None -> (
+					no_global_time_in_comparison <- false;
+					print_warning ("Option `-no-global-time-clock-in-comparison` is only appropriate when a global time clock `" ^ Constants.global_time_clock_name ^ "` is defined in the model.");
+				)
+			);
 
 			(*------------------------------------------------------------*)
 			(*------------------------------------------------------------*)
@@ -1160,6 +1191,26 @@ class imitator_options =
 
 			(*** TODO: check NDFS options only for NDFS; and NDFS only for Cycle_through ***)
 
+
+			(*------------------------------------------------------------*)
+			(* Only BFS (no NDFS) for generalized acceptance conditions, so far *)
+			(*------------------------------------------------------------*)
+			if imitator_mode = Algorithm then(
+				match (get_property()).property with
+					(** Accepting infinite-run (cycle) through a state predicate *)
+					| Cycle_through_generalized _ ->
+						begin
+						match cycle_algorithm with
+						| Some BFS -> () (* fine *)
+						| Some NDFS -> 
+							print_error ("The only implemented algorithm for generalized acceptance conditions in cycle synthesis is BFS. NDFS is ignored.");
+							cycle_algorithm <- Some BFS
+						| None -> 
+							print_warning ("No algorithm specified for generalized acceptance conditions in cycle synthesis. Default chosen (BFS).");
+							cycle_algorithm <- Some BFS;
+						end;
+					| _ -> ()
+			);
 
 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1394,6 +1445,11 @@ class imitator_options =
 				print_message Verbose_standard ("Dynamic clock elimination activated.")
 			else
 				print_message Verbose_medium ("No dynamic clock elimination (default).");
+
+			if no_global_time_in_comparison then
+				print_message Verbose_standard ("Elimination of the global time clock when performing state comparisons.")
+			else
+				print_message Verbose_medium ("No elimination of the global time clock when performing state comparisons (default).");
 
 			if check_ippta then
 				print_message Verbose_standard ("Check that each generated state contains an integer point. Raises an exception otherwise.")

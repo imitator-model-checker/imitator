@@ -4,12 +4,13 @@
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Description of the symbolic states and of the state space
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2021/03/19
+ * Last modified     : 2021/10/14
  *
  ************************************************************)
 
@@ -415,7 +416,7 @@ let get_transitions_table state_space =
 
 
 (** Compte and return the list of pairs (combined transition, index successor of a state) (if entry undefined in the hashtable, then []) *)
-let get_successors_with_combined_transitions state_space state_index =
+let get_successors_with_combined_transitions (state_space : state_space) (state_index : state_index) : (combined_transition * state_index) list =
 	(* Get all successors with their combined transition *)
 	hashtbl_get_or_default state_space.transitions_table state_index []
 
@@ -452,7 +453,7 @@ let get_transitions_of_state state_space state_index =
 
 
 (** Get the (unique) action associated with a combined_transition (if entry undefined in the hashtable, then []) *)
-let get_action_from_combined_transition combined_transition =
+let get_action_from_combined_transition (combined_transition : combined_transition) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* The action is the same for any transition of a combined_transition, therefore pick up the first one *)
@@ -467,6 +468,24 @@ let get_action_from_combined_transition combined_transition =
 	) with Failure msg -> raise (InternalError ("Empty list of transitions in a combined_transition found in get_action_from_combined_transition, although this should not have been the case: `" ^ msg ^ "`."))
 	in
 	action_index
+
+(** Get the combined_transition between a state_index and its successor. Raise Not_found if no such transition exists. If several combined transitions exist, only the first one is retrieved. *)
+(* local exception *)
+exception Found_transition of combined_transition
+
+let get_combined_transition_between_states (state_space : state_space) (source_state_index : state_index) (target_state_index : state_index) : combined_transition =
+	(* Get all successors of source_state_index *)
+	let successors = get_successors_with_combined_transitions state_space source_state_index in
+
+	try(
+		(* Iterate *)
+
+		List.iter (fun (combined_transition, state_index) -> if state_index = target_state_index then raise (Found_transition combined_transition)) successors;
+		
+		(* If not found *)
+		raise Not_found
+	) with Found_transition combined_transition -> combined_transition
+
 
 
 (*(** Compte and return the list of pairs (index successor of a state, corresponding action) (if entry undefined in the hashtable, then []) *)
@@ -1040,10 +1059,10 @@ let is_marked colortable element : bool =
 
 
 (*------------------------------------------------------------*)
-(** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; the target state is not included. Raise Not_found if run not found. *)
+(** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; optionally one can pass a list of states (a "lasso") for which we already know the succession of state indices. the final (target) state is not included. Raise Not_found if run not found. *)
 (*------------------------------------------------------------*)
 
-let backward_symbolic_run state_space (target_state_index : state_index) (source_state_index : state_index) (predecessors_table_option : predecessors_table option) : symbolic_run =
+let backward_symbolic_run state_space (target_state_index : state_index) (lasso : state_index list) (source_state_index : state_index) (predecessors_table_option : predecessors_table option) : symbolic_run =
 	(* First manage the predecessors_table *)
 	let predecessors_table = match predecessors_table_option with
 		(* If given: keep it *)
@@ -1061,7 +1080,7 @@ let backward_symbolic_run state_space (target_state_index : state_index) (source
 
 	(*------------------------------------------------------------*)
 	(* Use a recursive procedure returning a (list of (state, combined transition))'option ; None denotes the current run is useless. The states are returned in reversed order. *)
-	let rec backward_symbolic_run_rec current_state_index =
+	let rec backward_symbolic_run_rec (current_state_index : state_index) : (symbolic_step list) option =
 		(* If target is reached: return *)
 		if current_state_index = source_state_index then Some [] (*** NOTE: do not add index, it will be added during the recursion together with the transition ***)
 
@@ -1080,7 +1099,7 @@ let backward_symbolic_run state_space (target_state_index : state_index) (source
 			let sorted_predecessors = sort_predecessors predecessors in
 
 			(* Iterate on the predecessors *)
-			let symbolic_steps = List.fold_left (fun current_steps (combined_transition, predecessor_index) ->
+			let symbolic_steps : (symbolic_step list) option = List.fold_left (fun current_steps (combined_transition, predecessor_index) ->
 				(* If predecessor is marked: skip and go to next predecessor *)
 				if is_marked colortable predecessor_index then current_steps
 
@@ -1104,16 +1123,55 @@ let backward_symbolic_run state_space (target_state_index : state_index) (source
 
 	in
 	(*------------------------------------------------------------*)
+	
+	(* If a lasso is provided, first reconstruct the final symbolic steps for the lasso *)
+	let (final_symbolic_steps , target_state_index_for_backward_reconstruction) = match lasso with
+		(* No lasso *)
+		| [] ->
+			[] , target_state_index
 
+		(* A non-empty lasso *)
+		| first_state_of_the_lasso :: rest_of_the_lasso -> 
+			
+			(*** BADPROG: mix imperative and functional programming… ***)
+			let current_state_index : state_index ref = ref first_state_of_the_lasso in
+			
+			(* Convert each state of the lasso (except the last one) into a pair (state, combined_transition) *)
+			let final_symbolic_steps : symbolic_step list =
+			(* Iterate on the successor of each state of the lasso except the first one *)
+			List.map (fun (current_successor : state_index) : symbolic_step ->
+				(* Retrieve the transition (state, successor) *)
+				let combined_transition : combined_transition = get_combined_transition_between_states state_space !current_state_index current_successor in
+				
+				(* Compute *)
+				let symbolic_step : symbolic_step=
+					{source = !current_state_index ; transition = combined_transition }
+				in
+				
+				(* Update current index for next step *)
+				current_state_index := current_successor;
+				
+				(* Replace with the previously computed symbolic_step *)
+				symbolic_step
+			) rest_of_the_lasso
+			in
+			
+			(*** NOTE: the last state of the lasso is actually the current value of !current_state_index ***)
+			final_symbolic_steps, !current_state_index
+	in
+	
 	(* Call the recursive procedure and reverse the result *)
-	match backward_symbolic_run_rec target_state_index with
+	match backward_symbolic_run_rec target_state_index_for_backward_reconstruction with
+	
 	(* Oops! *)
+	(*** NOTE: what if the lasso is non-empty in this situation?! ***)
 	| None -> raise Not_found
+	
 	| Some symbolic_steps ->
 		(* Construct the structure symbolic_run *)
 		{
 			(* Reverse because states were added in reversed order *)
-			symbolic_steps = List.rev symbolic_steps;
+			symbolic_steps = OCamlUtilities.list_append ( List.rev symbolic_steps) final_symbolic_steps;
 			(* Add final state *)
 			final_state = target_state_index;
 		}
@@ -1134,13 +1192,13 @@ let increment_nb_gen_states state_space =
 	state_space.nb_generated_states := !(state_space.nb_generated_states) + 1
 
 
-(** Check if two states are equal *)
-let states_equal (state1 : state) (state2 : state) : bool =
+(** Compare two states (generic version) *)
+let states_compare (constraint_comparison_function : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint -> bool) (comparison_name : string) (state1 : state) (state2 : state) : bool =
 	let (loc1, constr1) = state1.global_location, state1.px_constraint in
 	let (loc2, constr2) = state2.global_location, state2.px_constraint in
 	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
-		print_message Verbose_high ("About to compare equality between two constraints.");
+		print_message Verbose_high ("About to compare " ^ comparison_name ^ " between two constraints.");
 
 		(* Statistics *)
 		statespace_dcounter_nb_constraint_comparisons#increment;
@@ -1150,49 +1208,38 @@ let states_equal (state1 : state) (state2 : state) : bool =
 			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
 		);
 
-		LinearConstraint.px_is_equal constr1 constr2
+		(* Retrieve the model *)
+		let model = Input.get_model() in
+		
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+		
+		let constr1, constr2 =
+		(* Specific option to remove the global time clock *)
+		if options#no_global_time_in_comparison then(
+			match model.global_time_clock with
+			(* Nothing to do *)
+			| None -> constr1, constr2
+			(* Nothing to do *)
+			| Some global_time_clock ->
+				(* Remove the global time clock in both constraints *)
+				(*** NOTE: expensive! ***)
+				LinearConstraint.px_hide [global_time_clock] constr1
+				,
+				LinearConstraint.px_hide [global_time_clock] constr2
+		)else(
+			(* Check with standard constraints *)
+			constr1, constr2
+		) in
+		
+		(* Perform the actual comparison *)
+		constraint_comparison_function constr1 constr2
 	)
 
-(* Check dynamically if two states are equal*)
-let states_equal_dyn (state1 : state) (state2 : state) constr : bool =
-	let (loc1, constr1) = state1.global_location, state1.px_constraint in
-	let (loc2, constr2) = state2.global_location, state2.px_constraint in
-	if not (Location.location_equal loc1 loc2) then false else (
-		(* Statistics *)
-		print_message Verbose_high ("About to compare (dynamic) equality between two constraints.");
+(** Concrete implementations *)
+let states_equal   = states_compare LinearConstraint.px_is_equal "equality"
+let state_included = states_compare LinearConstraint.px_is_leq   "inclusion"
 
-		(* Statistics *)
-		statespace_dcounter_nb_constraint_comparisons#increment;
-
-		if verbose_mode_greater Verbose_high then(
-			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
-			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
-		);
-
-		(*** WARNING!!! Really sure that one wants do MODIFY the constraints here?!!! ***)
-		LinearConstraint.px_intersection_assign constr1  [constr];
-		LinearConstraint.px_intersection_assign constr2 [constr];
-		LinearConstraint.px_is_equal constr1 constr2
-	)
-
-
-(** Check if a state is included in another one *)
-(* (Despite the test based on the hash table, this is still necessary in case of hash collisions) *)
-let state_included (state1 : state) (state2 : state) : bool =
-	let (loc1, constr1) = state1.global_location, state1.px_constraint in
-	let (loc2, constr2) = state2.global_location, state2.px_constraint in
-	if not (Location.location_equal loc1 loc2) then false else (
-
-		(* Statistics *)
-		statespace_dcounter_nb_constraint_comparisons#increment;
-
-		if verbose_mode_greater Verbose_high then(
-			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
-			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
-		);
-
-		LinearConstraint.px_is_leq constr1 constr2
-	)
 
 let new_location_index state_space location =
         let new_index = try (

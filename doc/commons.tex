@@ -72,7 +72,7 @@
 \fancyhead[r]{%
 	\includegraphics[height=1em]{../logos/imitator-500.png}
 	\includegraphics[height=1em]{../logos/logo-3-300.png}
-	\includegraphics[height=1em]{../logos/logo-3-1-300.png}
+	\includegraphics[height=1em]{../logos/logo-3-2-300.png}
 }
 
 \renewcommand{\headrulewidth}{.1pt}
@@ -149,6 +149,7 @@
 \newcommand{\ArithExprR}{\ArithExpr(\RVar)}
 \newcommand{\ArithExprI}{\ArithExpr(\IVar)}
 \newcommand{\ArithExprB}{\ArithExpr(\BVar)}
+\newcommand{\ArithExprW}{\ArithExpr(\WVar)}
 \newcommand{\C}{C}
 \newcommand{\Cinit}{\C_\init} % initial constraint
 \newcommand{\Clock}{X} % set of clocks
@@ -173,6 +174,10 @@
 \newcommand{\BVar}{B} % set of boolean variables
 \newcommand{\bvar}{b} % boolean variable
 \newcommand{\BVarCard}{L} % cardinality of boolean variables
+% \newcommand{\wval}{\ensuremath{\omega}} % binary variable
+\newcommand{\WVar}{W} % set of binary word variables
+\newcommand{\wvar}{w} % binary word variable % TODO: conflict
+% \newcommand{\WVarCard}{M} % cardinality of binary word variables  % TODO: conflict
 % \newcommand{\DVarinit}{\DVar_\init} % discrete variable
 \newcommand{\edge}{e}
 \newcommand{\flow}{\ensuremath{\mathit{flow}}}
@@ -204,6 +209,7 @@
 
 % Sets
 \newcommand{\setB}{\ensuremath{\mathbb B}}
+% \newcommand{\setW}{\ensuremath{\mathbb W}}
 \newcommand{\setN}{\ensuremath{\mathbb N}}
 \newcommand{\setQ}{\ensuremath{\mathbb Q}}
 \newcommand{\setQplus}{\ensuremath{\mathbb Q}_{\geq 0}}
@@ -269,8 +275,8 @@
 
 
 % Current version
-\newcommand{\imitatorversion}{3.1}
-\newcommand{\imitatorversionname}{Cheese Artichoke}
+\newcommand{\imitatorversion}{3.2}
+\newcommand{\imitatorversionname}{Cheese Blueberries}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -371,7 +377,7 @@
 
 
 % Code integre au texte
-\newcommand{\code}[1]{\textbf{\texttt{#1}}}
+% \newcommand{\code}[1]{\textbf{\texttt{#1}}}
 
 
 \definecolor{imicolor}{rgb}{0, .4, .4}
@@ -389,31 +395,31 @@
 
 \newcommand{\GitHubIMI}{\href{https://github.com/imitator-model-checker/imitator}{GitHub}}
 
-\newcommand{\styleCommand}[1]{
-	\medskip
+% \newcommand{\styleCommand}[1]{
+% 	\medskip
+% 
+% 	% \mbox{}\hspace{.5cm}
+% 	\noindent\fcolorbox{white}{black!90}{
+% 		\textcolor{yellow!30}{\$\ \ \texttt{#1}}
+% 	}
+% 
+% 	\medskip
+% 
+% }
 
-	% \mbox{}\hspace{.5cm}
-	\noindent\fcolorbox{white}{black!90}{
-		\textcolor{yellow!30}{\$\ \ \texttt{#1}}
-	}
-
-	\medskip
-
-}
-
-\newcommand{\styleTerminalOutput}[1]{
-	\medskip
-
-	% \mbox{}\hspace{.5cm}
-	\noindent\fcolorbox{white}{black!90}{
-	\begin{minipage}{.97\textwidth}
-		\textcolor{yellow!30}{\texttt{#1}}
-	\end{minipage}
-	}
-
-	\medskip
-
-}
+% \newcommand{\styleTerminalOutput}[1]{
+% 	\medskip
+% 
+% 	% \mbox{}\hspace{.5cm}
+% 	\noindent\fcolorbox{white}{black!90}{
+% 	\begin{minipage}{.97\textwidth}
+% 		\textcolor{yellow!30}{\texttt{#1}}
+% 	\end{minipage}
+% 	}
+% 
+% 	\medskip
+% 
+% }
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -459,33 +465,273 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % IMITATOR FILES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{bggcolor}{rgb}{0.95,0.95,0.95}
+\definecolor{commentscolor}{rgb}{0.5,0.5,0.6}
+% \definecolor{numberscolor}{rgb}{0.1,.5,0.1}
+\definecolor{keywordscolor}{rgb}{0.0, 0.0, 1.0}
+\definecolor{numberscolor}{rgb}{0.6, 0.6, 0.6}
+% \definecolor{stringscolor}{rgb}{1,0.6,0.6}
+\definecolor{binarycolor}{rgb}{1, 0.0, 0.0}
+
+
 \usepackage{listings}
 \newcommand{\IncludeIMIfile}[1]{
-	\lstset{language=Imitator}
+	\lstset{style=IMITATORmodel}
 	\lstinputlisting[
 		basicstyle=\footnotesize,
-		breaklines=true,
-		breakatwhitespace=true,
+% 		breaklines=true,
+% 		breakatwhitespace=true,
 		columns=fixed,
-		numbers=left,
-		frame=single,
-		numberstyle=\tiny,
-		tabsize=4,
+% 		numbers=left,
+% 		frame=single,
+% 		numberstyle=\tiny,
+% 		tabsize=4,
 % 		title=\lstname
 	]{#1}
 }
 
-\lstdefinelanguage{Imitator}{
-	morekeywords={
-		and, automaton, clock, constant, continuous, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, invariant, loc, locations, not, or, parameter, print, property, rational, reach, region, unreachable, urgent, sync, synclabs, True, var, wait, when, while
-	},
-	sensitive=false,
-% 	morecomment=[l][\color{gray}]{--},
-	morecomment=[s][keywordstyle]{"}{"},
-% 	morecomment=[s]{/*}{*/},
-	morecomment=[s][\color{gray!50!blue}]{(*}{*)},
+\newcommand{\IncludeIMIproperty}[1]{
+	\lstset{style=IMITATORproperty}
+	\lstinputlisting[]{#1}
 }
 
+\lstdefinestyle{IMITATORmodel}{
+	backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+	basicstyle=\tt\footnotesize,        % the size of the fonts that are used for the code
+	breakatwhitespace=true,         % sets if automatic breaks should only happen at whitespace
+	breaklines=true,                 % sets automatic line breaking
+	%   captionpos=b,                    % sets the caption-position to bottom
+	commentstyle=\color{commentscolor},    % comment style
+	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+	extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+	%   firstnumber=1,                % start line enumeration with line 1000
+	frame=single,	                   % adds a frame around the code
+	keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+	keywordstyle=\bfseries\color{keywordscolor},       % keyword style
+	language=caml,                 % the language of the code
+	deletekeywords={done},            % if you want to delete keywords from the given language; WARNING! must be set AFTER the `language=…`
+	morekeywords={
+		accepting, and, automaton, binary, clock, constant, continuous, discrete, do, end, False, fill_left, fill_right, flow, forward, from, goto, if, in, init, int, initially, invariant, loc, logand, lognot, logor, logxor, not, or, parameter, projectresult, rational, shift_left, shift_right, stop, sync, sync, synclabs, True, urgent, var, when, while
+	},
+	numbers=right,                    % where to put the line-numbers; possible values are (none, left, right)
+	numbersep=5pt,                   % how far the line-numbers are from the code
+	numberstyle=\tiny\color{numberscolor}, % the style that is used for the line-numbers
+	rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+	showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+	showstringspaces=false,          % underline spaces within strings only
+	showtabs=false,                  % show tabs within strings adding particular underscores
+	stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+% 	stringstyle=\color{stringscolor},     % string literal style
+	tabsize=2,	                   % sets default tabsize to 2 spaces
+	sensitive=false,
+% 	morecomment=[l][\color{gray}]{--},
+% 	morecomment=[s][keywordstyle]{"}{"},
+% 	morecomment=[s]{/*}{*/},
+% 	morestring=[s][\color{red}]{0b}, % values: b,d,m,s(*2?)
+	moredelim=[s][\color{binarycolor}]{0b}{\ },
+	moredelim=[s][\color{red}]{\#}{\ },
+	morecomment=[s][\color{commentscolor}]{(*}{*)},
+		% values: lfdnms
+	% For UTF-8
+	inputencoding=utf8,
+    extendedchars=true,
+    literate=
+        {á}{{\'a}}1  {é}{{\'e}}1  {í}{{\'i}}1 {ó}{{\'o}}1  {ú}{{\'u}}1
+      {Á}{{\'A}}1  {É}{{\'E}}1  {Í}{{\'I}}1 {Ó}{{\'O}}1  {Ú}{{\'U}}1
+      {à}{{\`a}}1  {è}{{\`e}}1  {ì}{{\`i}}1 {ò}{{\`o}}1  {ù}{{\`u}}1
+      {À}{{\`A}}1  {È}{{\'E}}1  {Ì}{{\`I}}1 {Ò}{{\`O}}1  {Ù}{{\`U}}1
+      {ä}{{\"a}}1  {ë}{{\"e}}1  {ï}{{\"i}}1 {ö}{{\"o}}1  {ü}{{\"u}}1
+      {Ä}{{\"A}}1  {Ë}{{\"E}}1  {Ï}{{\"I}}1 {Ö}{{\"O}}1  {Ü}{{\"U}}1
+      {â}{{\^a}}1  {ê}{{\^e}}1  {î}{{\^i}}1 {ô}{{\^o}}1  {û}{{\^u}}1
+      {Â}{{\^A}}1  {Ê}{{\^E}}1  {Î}{{\^I}}1 {Ô}{{\^O}}1  {Û}{{\^U}}1
+      {œ}{{\oe}}1  {Œ}{{\OE}}1  {æ}{{\ae}}1 {Æ}{{\AE}}1  {ß}{{\ss}}1
+      {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1  {Ø}{{\O}}1   {å}{{\r a}}1
+      {Å}{{\r A}}1 {ã}{{\~a}}1  {õ}{{\~o}}1 {Ã}{{\~A}}1  {Õ}{{\~O}}1
+      {ñ}{{\~n}}1  {Ñ}{{\~N}}1  {¿}{{?`}}1  {¡}{{!`}}1
+      {ā}{{\=a}}1  {Ā}{{\=A}}1 {ē}{{\=e}}1  {Ē}{{\=E}}1 {ī}{{\=i}}1 {Ī}{{\=I}}1 {ō}{{\=o}}1 {Ō}{{\=O}}1 {ū}{{\=u}}1 {Ū}{{\=U}}1 
+      ,
+}
+
+
+
+\lstdefinestyle{IMITATORproperty}{
+  backgroundcolor=\color{bggcolor},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+  basicstyle=\tt\scriptsize,        % the size of the fonts that are used for the code
+%   breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+%   captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{commentscolor},    % comment style
+%   deletekeywords={},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+%   firstnumber=1000,                % start line enumeration with line 1000
+  frame=single,	                   % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\bfseries\color{keywordscolor},       % keyword style
+%   language=caml,                 % the language of the code
+  morekeywords={accepting, AGnot, always, BCcover, BCrandom, BCshuffle, before, Cycle, CycleThrough, DeadlockFree, EF, EFpmin, EFpmax, EFtmin, everytime, eventually, happened, has, IM, loc, next, once, pattern, PRP, PRPC, property,sequence,synth,within,witness},            % if you want to add more keywords to the set
+  numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
+%   numbersep=5pt,                   % how far the line-numbers are from the code
+%   numberstyle=\tiny\color{bggcolor}, % the style that is used for the line-numbers
+%   rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+%   showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+%   showstringspaces=false,          % underline spaces within strings only
+%   showtabs=false,                  % show tabs within strings adding particular underscores
+%   stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
+%   stringstyle=\color{stringscolor},     % string literal style
+%   tabsize=2,	                   % sets default tabsize to 2 spaces
+%   title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+	morecomment=[s][\color{commentscolor}]{(*}{*)},
+	% For UTF-8
+	inputencoding=utf8,
+    extendedchars=true,
+    literate=
+        {á}{{\'a}}1  {é}{{\'e}}1  {í}{{\'i}}1 {ó}{{\'o}}1  {ú}{{\'u}}1
+      {Á}{{\'A}}1  {É}{{\'E}}1  {Í}{{\'I}}1 {Ó}{{\'O}}1  {Ú}{{\'U}}1
+      {à}{{\`a}}1  {è}{{\`e}}1  {ì}{{\`i}}1 {ò}{{\`o}}1  {ù}{{\`u}}1
+      {À}{{\`A}}1  {È}{{\'E}}1  {Ì}{{\`I}}1 {Ò}{{\`O}}1  {Ù}{{\`U}}1
+      {ä}{{\"a}}1  {ë}{{\"e}}1  {ï}{{\"i}}1 {ö}{{\"o}}1  {ü}{{\"u}}1
+      {Ä}{{\"A}}1  {Ë}{{\"E}}1  {Ï}{{\"I}}1 {Ö}{{\"O}}1  {Ü}{{\"U}}1
+      {â}{{\^a}}1  {ê}{{\^e}}1  {î}{{\^i}}1 {ô}{{\^o}}1  {û}{{\^u}}1
+      {Â}{{\^A}}1  {Ê}{{\^E}}1  {Î}{{\^I}}1 {Ô}{{\^O}}1  {Û}{{\^U}}1
+      {œ}{{\oe}}1  {Œ}{{\OE}}1  {æ}{{\ae}}1 {Æ}{{\AE}}1  {ß}{{\ss}}1
+      {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1  {Ø}{{\O}}1   {å}{{\r a}}1
+      {Å}{{\r A}}1 {ã}{{\~a}}1  {õ}{{\~o}}1 {Ã}{{\~A}}1  {Õ}{{\~O}}1
+      {ñ}{{\~n}}1  {Ñ}{{\~N}}1  {¿}{{?`}}1  {¡}{{!`}}1
+      {ā}{{\=a}}1  {Ā}{{\=A}}1 {ē}{{\=e}}1  {Ē}{{\=E}}1 {ī}{{\=i}}1 {Ī}{{\=I}}1 {ō}{{\=o}}1 {Ō}{{\=O}}1 {ū}{{\=u}}1 {Ū}{{\=U}}1 
+      ,
+}
+
+
+\definecolor{commentscolorterminal}{rgb}{0.6,0.6,0.6}
+% \definecolor{numberscolorterminal}{rgb}{0.3,.3,0.3}
+\definecolor{stringscolorterminal}{rgb}{.6,1,0.6}
+
+\lstdefinestyle{terminal}{
+	backgroundcolor=\color{black},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+	basicstyle=\ttfamily\small\color{yellow},        % the size of the fonts that are used for the code
+	breakatwhitespace=true,         % sets if automatic breaks should only happen at whitespace
+	breaklines=true,                 % sets automatic line breaking
+	%   captionpos=b,                    % sets the caption-position to bottom
+	commentstyle=\color{commentscolorterminal},    % comment style
+	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+	%   firstnumber=1,                % start line enumeration with line 1000
+	frame=single,	                   % adds a frame around the code
+	keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+	keywordstyle=\bfseries\color{orange},       % keyword style
+	language=bash,                 % the language of the code
+% 	deletekeywords={done},            % if you want to delete keywords from the given language; WARNING! must be set AFTER the `language=…`
+	morekeywords={
+		grep, imitator
+	},
+	numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
+% 	numbersep=5pt,                   % how far the line-numbers are from the code
+% 	numberstyle=\tiny\color{numberscolorterminal}, % the style that is used for the line-numbers
+	rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+	showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+	showstringspaces=false,          % underline spaces within strings only
+	showtabs=false,                  % show tabs within strings adding particular underscores
+	stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+	stringstyle=\color{stringscolorterminal},     % string literal style
+	tabsize=2,	                   % sets default tabsize to 2 spaces
+	sensitive=false,
+	% For UTF-8
+	inputencoding=utf8,
+    extendedchars=true,
+    literate=
+        {á}{{\'a}}1  {é}{{\'e}}1  {í}{{\'i}}1 {ó}{{\'o}}1  {ú}{{\'u}}1
+      {Á}{{\'A}}1  {É}{{\'E}}1  {Í}{{\'I}}1 {Ó}{{\'O}}1  {Ú}{{\'U}}1
+      {à}{{\`a}}1  {è}{{\`e}}1  {ì}{{\`i}}1 {ò}{{\`o}}1  {ù}{{\`u}}1
+      {À}{{\`A}}1  {È}{{\'E}}1  {Ì}{{\`I}}1 {Ò}{{\`O}}1  {Ù}{{\`U}}1
+      {ä}{{\"a}}1  {ë}{{\"e}}1  {ï}{{\"i}}1 {ö}{{\"o}}1  {ü}{{\"u}}1
+      {Ä}{{\"A}}1  {Ë}{{\"E}}1  {Ï}{{\"I}}1 {Ö}{{\"O}}1  {Ü}{{\"U}}1
+      {â}{{\^a}}1  {ê}{{\^e}}1  {î}{{\^i}}1 {ô}{{\^o}}1  {û}{{\^u}}1
+      {Â}{{\^A}}1  {Ê}{{\^E}}1  {Î}{{\^I}}1 {Ô}{{\^O}}1  {Û}{{\^U}}1
+      {œ}{{\oe}}1  {Œ}{{\OE}}1  {æ}{{\ae}}1 {Æ}{{\AE}}1  {ß}{{\ss}}1
+      {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1  {Ø}{{\O}}1   {å}{{\r a}}1
+      {Å}{{\r A}}1 {ã}{{\~a}}1  {õ}{{\~o}}1 {Ã}{{\~A}}1  {Õ}{{\~O}}1
+      {ñ}{{\~n}}1  {Ñ}{{\~N}}1  {¿}{{?`}}1  {¡}{{!`}}1
+      {ā}{{\=a}}1  {Ā}{{\=A}}1 {ē}{{\=e}}1  {Ē}{{\=E}}1 {ī}{{\=i}}1 {Ī}{{\=I}}1 {ō}{{\=o}}1 {Ō}{{\=O}}1 {ū}{{\=u}}1 {Ū}{{\=U}}1 
+    ,
+}
+
+% Define empty language
+\lstdefinelanguage{none}{
+  identifierstyle=
+}
+
+\lstdefinestyle{terminaloutput}{
+	backgroundcolor=\color{black},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+	basicstyle=\ttfamily\small\color{yellow},        % the size of the fonts that are used for the code
+	breakatwhitespace=true,         % sets if automatic breaks should only happen at whitespace
+	breaklines=true,                 % sets automatic line breaking
+	%   captionpos=b,                    % sets the caption-position to bottom
+	commentstyle=\color{commentscolorterminal},    % comment style
+	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+	extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+	%   firstnumber=1,                % start line enumeration with line 1000
+	frame=single,	                   % adds a frame around the code
+	keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+% 	keywordstyle=\bfseries\color{orange},       % keyword style
+	language=none,                 % the language of the code
+% 	deletekeywords={done},            % if you want to delete keywords from the given language; WARNING! must be set AFTER the `language=…`
+% 	morekeywords={
+% 		imitator
+% 	},
+	numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
+% 	numbersep=5pt,                   % how far the line-numbers are from the code
+% 	numberstyle=\tiny\color{numberscolorterminal}, % the style that is used for the line-numbers
+	rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+	showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+	showstringspaces=false,          % underline spaces within strings only
+	showtabs=false,                  % show tabs within strings adding particular underscores
+	stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+	stringstyle=\color{stringscolorterminal},     % string literal style
+	tabsize=2,	                   % sets default tabsize to 2 spaces
+	sensitive=false,
+	% For UTF-8
+	inputencoding=utf8,
+    extendedchars=true,
+    literate=
+        {á}{{\'a}}1  {é}{{\'e}}1  {í}{{\'i}}1 {ó}{{\'o}}1  {ú}{{\'u}}1
+      {Á}{{\'A}}1  {É}{{\'E}}1  {Í}{{\'I}}1 {Ó}{{\'O}}1  {Ú}{{\'U}}1
+      {à}{{\`a}}1  {è}{{\`e}}1  {ì}{{\`i}}1 {ò}{{\`o}}1  {ù}{{\`u}}1
+      {À}{{\`A}}1  {È}{{\'E}}1  {Ì}{{\`I}}1 {Ò}{{\`O}}1  {Ù}{{\`U}}1
+      {ä}{{\"a}}1  {ë}{{\"e}}1  {ï}{{\"i}}1 {ö}{{\"o}}1  {ü}{{\"u}}1
+      {Ä}{{\"A}}1  {Ë}{{\"E}}1  {Ï}{{\"I}}1 {Ö}{{\"O}}1  {Ü}{{\"U}}1
+      {â}{{\^a}}1  {ê}{{\^e}}1  {î}{{\^i}}1 {ô}{{\^o}}1  {û}{{\^u}}1
+      {Â}{{\^A}}1  {Ê}{{\^E}}1  {Î}{{\^I}}1 {Ô}{{\^O}}1  {Û}{{\^U}}1
+      {œ}{{\oe}}1  {Œ}{{\OE}}1  {æ}{{\ae}}1 {Æ}{{\AE}}1  {ß}{{\ss}}1
+      {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1  {Ø}{{\O}}1   {å}{{\r a}}1
+      {Å}{{\r A}}1 {ã}{{\~a}}1  {õ}{{\~o}}1 {Ã}{{\~A}}1  {Õ}{{\~O}}1
+      {ñ}{{\~n}}1  {Ñ}{{\~N}}1  {¿}{{?`}}1  {¡}{{!`}}1
+      {ā}{{\=a}}1  {Ā}{{\=A}}1 {ē}{{\=e}}1  {Ē}{{\=E}}1 {ī}{{\=i}}1 {Ī}{{\=I}}1 {ō}{{\=o}}1 {Ō}{{\=O}}1 {ū}{{\=u}}1 {Ū}{{\=U}}1 
+      ,
+}
+
+\lstnewenvironment{terminal}[0]
+	{%
+		\lstset{style=terminal}
+	}%
+	{}
+
+\lstnewenvironment{terminaloutput}[0]
+	{%
+		\lstset{style=terminaloutput}
+	}%
+	{}
+
+\lstnewenvironment{IMITATORmodel}[0]
+	{%
+		\lstset{style=IMITATORmodel}
+	}%
+	{}
+
+\lstnewenvironment{IMITATORproperty}[0]
+	{%
+		\lstset{style=IMITATORproperty}
+	}%
+	{}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2020/08/25
- * Last modified     : 2020/09/24
+ * Last modified     : 2021/10/07
  *
  ************************************************************)
 
@@ -42,13 +42,6 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	
 	
 	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify _
-	
-	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
@@ -71,6 +64,9 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 	
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized _
+
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 	
@@ -155,13 +151,6 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	
 	
 	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify _
-	
-	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
@@ -184,9 +173,8 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
-		(* No inclusion allowed except old <= new *)
-		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
-	
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized _
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 		(* No inclusion allowed *)
@@ -280,13 +268,6 @@ let merge_needed property =
 	
 	
 	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify _
-	
-	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
@@ -309,6 +290,9 @@ let merge_needed property =
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 	
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized _
+
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 	
@@ -394,13 +378,6 @@ let merge_needed property =
 	(* Safety *)
 	| AGnot _
 	
-	
-	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify _
 	
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -516,15 +493,6 @@ let supports_witness property =
 	
 	
 	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify _
-		(*** TODO ***)
-		-> false
-	
-	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
@@ -547,6 +515,9 @@ let supports_witness property =
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 	
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized _
+
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 	
@@ -610,6 +581,39 @@ let supports_witness property =
 		-> false
 
 
+(*------------------------------------------------------------*)
+(* Does the property support the #exemplification mode? *)
+(*------------------------------------------------------------*)
+
+let supports_exemplification property =
+	match property.property with
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL *)
+	(*------------------------------------------------------------*)
+
+	(* Reachability *)
+	| EF _
+	
+(*	(* Safety *)
+	| AGnot _*)
+		-> true
+	(*------------------------------------------------------------*)
+	(* Cycles *)
+	(*------------------------------------------------------------*)
+	
+	(** Accepting infinite-run (cycle) through a state predicate *)
+	| Cycle_through _
+	
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized _
+
+		-> true
+
+	(*------------------------------------------------------------*)
+	(* Any other *)
+	(*------------------------------------------------------------*)
+	| _ -> false
+
 
 (*------------------------------------------------------------*)
 let is_cartography property =
@@ -634,8 +638,9 @@ let is_cartography property =
 (* Gives a textual description of a property *)
 let text_of_property property =
 	let synthesis_or_witness = match property.synthesis_type with
-		| Synthesis -> "synthesis"
-		| Witness -> "witness"
+		| Exemplification	-> "exemplification"
+		| Synthesis			-> "synthesis"
+		| Witness			-> "witness"
 	in
 	
 	match property.property with
@@ -649,13 +654,6 @@ let text_of_property property =
 	(* Safety *)
 	| AGnot _ -> "safety " ^ synthesis_or_witness
 	
-	
-	(*------------------------------------------------------------*)
-	(* Reachability and specification illustration *)
-	(*------------------------------------------------------------*)
-	
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify _ -> "reachability counterexample exemplification"
 	
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -677,6 +675,9 @@ let text_of_property property =
 	
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _ -> "infinite accepting run " ^ synthesis_or_witness
+
+	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	| Cycle_through_generalized _ -> "infinite generalized accepting run " ^ synthesis_or_witness
 
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle -> "non-Zeno infinite accepting run " ^ synthesis_or_witness ^ ""
@@ -744,7 +745,6 @@ let text_of_property property =
 				| EF_synth_min -> "EF-synth with minimization"
 				| EF_synth_max -> "EF-synth with maximization"
 				| EF_synth_min_priority_queue -> "EF-synth with minimal reachability"
-				| EFexemplify -> "EF-exemplify"
 				| AF_synthesis -> "AF-synthesis"
 				| Loop_synthesis -> "infinite run synthesis"
 				| Acc_loop_synthesis -> "accepting infinite run synthesis"

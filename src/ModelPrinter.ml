@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2021/06/01
+ * Last modified     : 2021/11/02
  *
  ************************************************************)
 
@@ -23,6 +23,87 @@ open AbstractProperty
 open ImitatorUtilities
 open State
 open StateSpace
+
+
+(************************************************************)
+(** Getting the flows of a location *)
+(************************************************************)
+
+(*** BADPROG: very, very bad programming: this function should be in AlgoStateBased BUT ModelPrinter doesn't have access to AlgoStateBased (but the other way is possible); and it is called from both modules, so defined here (ÉA, 2021/11/02) ***)
+
+(*------------------------------------------------------------*)
+(* Compute the list of clocks with their flow in a location   *)
+(* Returns a list of pairs (clock_index, flow)                *)
+(* Raises a warning whenever a clock is assigned to TWO different flows *)
+(*------------------------------------------------------------*)
+let compute_flows (location : Location.global_location) : ((Automaton.clock_index * NumConst.t) list) =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
+	(* Hashtbl clock_id --> flow *)
+	let flows_hashtable = Hashtbl.create (List.length model.clocks) in
+	
+	(* Maintain a Boolean to see if any clock has a rate different from 1 *)
+	let flow_mode = ref false in
+	
+	(* Update hash table *)
+	List.iter (fun automaton_index ->
+		(* Get the current location *)
+		let location_index = Location.get_location location automaton_index in
+		
+		(* 1. Manage the list of stopped clocks *)
+		let stopped = model.stopwatches automaton_index location_index in
+		(* If list non null: we have flows <> 1 *)
+		if stopped <> [] then flow_mode := true;
+		(* Add each clock *)
+		List.iter (fun stopwatch_id ->
+			Hashtbl.replace flows_hashtable stopwatch_id NumConst.zero
+		) stopped;
+		
+		(* 2. Manage the explicit flows *)
+		let flows = model.flow automaton_index location_index in
+		(* Add each clock *)
+		List.iter (fun (clock_id, flow_value) ->
+			(* If flow <> 1, update Boolean *)
+			if NumConst.neq flow_value NumConst.one then flow_mode := true;
+
+			(* Compare with previous value *)
+			try(
+				(* Get former value *)
+				let former_flow_value = Hashtbl.find flows_hashtable clock_id in
+				(* Compare *)
+				if NumConst.neq former_flow_value flow_value then(
+					
+					(*** TODO: a flag should be raised somewhere so that the result is said to be perhaps wrong! (or unspecified) ***)
+					
+					print_warning ("Clock `" ^ (model.variable_names clock_id) ^ "` is assigned to two different flow values at the same time (`" ^ (NumConst.string_of_numconst flow_value) ^ "` in location `" ^ (model.location_names automaton_index location_index) ^ "`, as well as `" ^ (NumConst.string_of_numconst former_flow_value) ^ "`). The behavior becomes unspecified!");
+				);
+				(* Do not add *)
+				()
+			) with Not_found ->(
+			(* Not found: not yet defined => add *)
+				Hashtbl.add flows_hashtable clock_id flow_value
+			);
+			
+		) flows;
+		
+	) model.automata;
+	
+	(* If there are no explicit flows then just return the set of clocks with flow 1 *)
+	if (not !flow_mode) then (List.map (fun clock_id -> clock_id, NumConst.one) model.clocks) else (
+		(* Computing the list of clocks with their flow *)
+		List.map (fun clock_id ->
+			(* Try to get the clock explicit flow *)
+			try(
+				(* Get value *)
+				let flow_value = Hashtbl.find flows_hashtable clock_id in
+				(* Return *)
+				clock_id, flow_value
+			) with Not_found ->
+				(* Absent: flow is 1 *)
+				clock_id, NumConst.one
+		) model.clocks
+	) (* if no explicit flow for this location *)
 
 
 
@@ -191,7 +272,7 @@ let customized_string_of_guard customized_boolean_string variable_names = functi
 		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
 
 (** Convert a guard into a string *)
-let string_of_guard = customized_string_of_guard Constants.default_string
+let string_of_guard = customized_string_of_guard Constants.global_default_string
 (*
 let string_of_guard variable_names = function
 	| True_guard -> LinearConstraint.string_of_true
@@ -294,9 +375,18 @@ let string_of_clock_updates model clock_updates =
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_index, arithmetic_expression) ->
+
+    let rec string_of_discrete_variable_access = function
+        | Discrete_variable_index (variable_index) ->
+            model.variable_names variable_index
+        | Discrete_variable_access (variable_access, index_expr) ->
+            string_of_discrete_variable_access variable_access
+            ^ "[" ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names index_expr  ^ "]"
+    in
+
+	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_access, arithmetic_expression) ->
 		(* Convert the variable name *)
-		(model.variable_names variable_index)
+		string_of_discrete_variable_access variable_access
 		^ " := "
 		(* Convert the arithmetic_expression *)
 		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
@@ -384,10 +474,10 @@ let string_of_transition model automaton_index (transition : transition) =
 	^ ";"
 
 
-(* Convert a transition into a string: compact version for debugging/pretty-printing *)
-let debug_string_of_transition model automaton_index (transition : transition) =
+(* Convert a transition into a string: version for runs *)
+let string_of_transition_for_runs model automaton_index (transition : transition) =
 	(* Print some information *)
-(* 	print_message Verbose_total ("Entering `ModelPrinter.debug_string_of_transition(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
 
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
@@ -506,6 +596,14 @@ let string_of_automata model =
 	string_of_list_of_string_with_sep "\n\n" (
 		List.map (fun automaton_index -> string_of_automaton model automaton_index
 	) model.automata)
+
+
+let rec customized_string_of_variable_access customized_string model = function
+    | Discrete_variable_index variable_index -> model.variable_names variable_index
+    | Discrete_variable_access (variable_access, index_expr) ->
+        customized_string_of_variable_access customized_string model variable_access ^ "[" ^ DiscreteExpressions.customized_string_of_int_arithmetic_expression customized_string model.variable_names index_expr ^ "]"
+
+let string_of_variable_access = customized_string_of_variable_access Constants.global_default_string
 
 (* Convert initial state of locations to string *)
 let string_of_new_initial_locations ?indent_level:(i=1) model =
@@ -635,16 +733,6 @@ let string_of_initial_state model =
     ^ "\n"
 	^ "\n" ^ "}"
 
-(*(* Convert initial state to string *)
-(* Keep backward-compatibility between old init zone and new init zone *)
-let string_of_initial_state model =
-    (* If all variable are rational, we can print initial state as old model *)
-    if List.for_all (fun (var_type, _) -> DiscreteValue.is_rational_type var_type) model.discrete_names_by_type_group then
-        string_of_old_initial_state model
-    (* Else, we use the new init zone *)
-    else
-        string_of_initial_state model*)
-
 (************************************************************)
 (** Property *)
 (************************************************************)
@@ -729,8 +817,9 @@ let string_of_abstract_property model property =
 	(* Handle synthesis_type *)
 	(
 	match property.synthesis_type with
-	| Witness -> "#exhibit"
-	| Synthesis -> "#synth"
+	| Exemplification	-> "#exemplify"
+	| Synthesis			-> "#synth"
+	| Witness			-> "#exhibit"
 	)
 	
 	^
@@ -758,14 +847,6 @@ let string_of_abstract_property model property =
 
 		
 		(*------------------------------------------------------------*)
-		(* Reachability and specification illustration *)
-		(*------------------------------------------------------------*)
-		
-		(** EF-synthesis with examples of (un)safe words *)
-		| EFexemplify state_predicate -> "EFexemplify(" ^ (string_of_state_predicate model state_predicate) ^ ")"
-
-
-		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)
 		
@@ -790,6 +871,10 @@ let string_of_abstract_property model property =
 		| Cycle_through state_predicate ->
 			if state_predicate = (State_predicate_term (State_predicate_factor (Simple_predicate State_predicate_true))) then "Cycle"
 			else "CycleThrough(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+		
+		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+		| Cycle_through_generalized state_predicate_list ->
+			"CycleThrough(" ^ (string_of_list_of_string_with_sep " , " (List.map (string_of_state_predicate model) state_predicate_list)) ^ ")"
 		
 		(** Infinite-run (cycle) with non-Zeno assumption *)
 		| NZ_Cycle -> "NZCycle"
@@ -926,12 +1011,27 @@ let string_of_state model (state : state) =
 
 	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then Location.Float_display else Location.Exact_display) state.global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names state.px_constraint) ^ ""
 
+
+(* Convert a concrete state (locations, discrete variables valuations, continuous variables valuations, current flows for continuous variables) *)
 let string_of_concrete_state model (state : State.concrete_state) =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then Location.Float_display else Location.Exact_display) state.global_location) ^ " ==> \n" ^ (string_of_px_valuation model state.px_valuation) ^ ""
-	
+	(* Convert location *)
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then Location.Float_display else Location.Exact_display) state.global_location)
+	(* Convert variables valuations *)
+	^ " ==> \n" ^ (string_of_px_valuation model state.px_valuation)
+	(* Convert rates *)
+	^ " flows["
+	^ (
+		let global_location : Location.global_location = state.global_location in
+		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows global_location in
+		(* Iterate *)
+		string_of_list_of_string_with_sep ", " (
+			List.map (fun (variable_index, flow) -> (model.variable_names variable_index ) ^ "' = "  ^ (NumConst.string_of_numconst flow) ) flows
+		)
+	)
+	^ "]"
 
 
 (************************************************************)
@@ -939,14 +1039,14 @@ let string_of_concrete_state model (state : State.concrete_state) =
 (************************************************************)
 
 (* Function to pretty-print combined transitions *)
-let debug_string_of_combined_transition model combined_transition = string_of_list_of_string_with_sep ", " (
+let string_of_combined_transition model combined_transition = string_of_list_of_string_with_sep ", " (
 	List.map (fun transition_index ->
 		(* Get automaton index *)
 		let automaton_index = model.automaton_of_transition transition_index in
 		(* Get actual transition *)
 		let transition = model.transitions_description transition_index in
 		(* Print *)
-		debug_string_of_transition model automaton_index transition
+		string_of_transition_for_runs model automaton_index transition
 	) combined_transition
 )
 
@@ -959,7 +1059,7 @@ let debug_string_of_symbolic_run model state_space (symbolic_run : StateSpace.sy
 	
 		  (" " ^ (string_of_state model state))
 		^ ("\n | ")
-		^ ("\n | via combined transition " ^ (debug_string_of_combined_transition model symbolic_step.transition))
+		^ ("\n | via combined transition " ^ (string_of_combined_transition model symbolic_step.transition))
 		^ ("\n | ")
 		^ ("\n v ")
 	) symbolic_run.symbolic_steps) in
@@ -977,7 +1077,7 @@ let string_of_concrete_steps model concrete_steps =
 	(string_of_list_of_string_with_sep "\n" (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
 		  ("\n | ")
 		^ ("\n | via d = " ^ (NumConst.string_of_numconst concrete_step.time))
-		^ ("\n | followed by combined transition " ^ (debug_string_of_combined_transition model concrete_step.transition))
+		^ ("\n | followed by combined transition " ^ (string_of_combined_transition model concrete_step.transition))
 		^ ("\n | ")
 		^ ("\n v ")
 		^ (" " ^ (string_of_concrete_state model concrete_step.target))
@@ -998,7 +1098,7 @@ let string_of_impossible_concrete_steps model impossible_concrete_steps =
 
 
 (** Convert a concrete run to a string (for debug-purpose) *)
-let debug_string_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
+let string_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
 	(* First recall the parameter valuation *)
 	"Concrete run for parameter valuation:"
 	^ "\n" ^ (string_of_pval model concrete_run.p_valuation)
@@ -1014,7 +1114,7 @@ let debug_string_of_concrete_run model (concrete_run : StateSpace.concrete_run) 
 
 	
 (** Convert an impossible_concrete_run to a string (for debug-purpose) *)
-let debug_string_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) =
+let string_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) =
 	(* First recall the parameter valuation *)
 	"Impossible concrete run for parameter valuation:"
 	^ "\n" ^ (string_of_pval model impossible_concrete_run.p_valuation)

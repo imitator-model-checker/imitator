@@ -22,6 +22,9 @@
 (** Exception raised when a division by 0 is found *)
 exception Division_by_0 of string
 
+(** Exception raised when trying an out of bound access to an array *)
+exception Out_of_bound of string
+
 exception Found
 
 (** Exception when an #include fails in a model *)

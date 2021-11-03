@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2021/07/15
+ * Last modified     : 2021/11/02
  *
  ************************************************************)
 
@@ -23,9 +23,9 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "3.1"
+let version_string = "3.2"
 
-let version_name = "Cheese Artichoke"
+let version_name = "Cheese Blueberries"
 
 (* Path ending with "/" *)
 let path_to_program =
@@ -163,10 +163,22 @@ type customized_arithmetic_string = {
     unary_min_string : string;
 }
 
+(** Data structure allowing for customizing string conversions of array delimiters symbols *)
+type customized_array_string = {
+    array_literal_delimiter : string * string;
+    array_access_delimiter : string * string;
+}
+
+type customized_binary_word_representation =
+    | Binary_word_representation_standard
+    | Binary_word_representation_int
+
 (** Data structure allowing for customizing string conversions of symbols *)
 type customized_string = {
     arithmetic_string : customized_arithmetic_string;
     boolean_string : customized_boolean_string;
+    array_string : customized_array_string;
+    binary_word_representation : customized_binary_word_representation;
 }
 
 (** Default string values of bool symbols *)
@@ -219,8 +231,16 @@ let default_arithmetic_string_without_whitespace = {
     unary_min_string = "-";
 }
 
+(** Default string values of array delimiters symbols without white spaces around operators *)
+let default_array_string = {
+    array_literal_delimiter = "[", "]";
+    array_access_delimiter = "[", "]";
+}
+
 (** Default string values of symbols *)
 let global_default_string = {
     arithmetic_string = default_arithmetic_string;
     boolean_string = default_string;
+    array_string = default_array_string;
+    binary_word_representation = Binary_word_representation_standard;
 }

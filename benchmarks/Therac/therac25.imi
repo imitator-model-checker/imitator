@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
  * Simplified model of the Therac 25 bug
  *
@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2017/03/10
- * Last modified   : 2020/08/13
+ * Last modified   : 2021/10/12
  *
- * IMITATOR version: 3
+ * IMITATOR version: 3.2
  ************************************************************)
 
 var
@@ -24,7 +24,7 @@ var
 (* Modes for the machine *)
 MODE25MV = 1,
 MODE25MeV = 2,
-	: constant;
+	: int;
 
 (* Clocks *)
  	x_engineer,
@@ -36,7 +36,7 @@ MODE25MeV = 2,
 	buffer_VT100,
 (* The buffer for the PDP-11 *)
 	buffer_PDP11
-		: discrete;
+		: int;
 
 (* Parameters *)
 (* Time between 2 consecutive key strokes *)
@@ -132,33 +132,37 @@ end (* observer *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------*)
-	(* Initial location *)
-	(*------------------------------------------------------------*)
-	& loc[engineer] = engineer_idle
-	& loc[buffer_copier] = loc_buffer_copier
-	& loc[PDP11] = loc_PDP11
-	& loc[observer] = obs_ok
+init := {
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[engineer] := engineer_idle,
+		loc[buffer_copier] := loc_buffer_copier,
+		loc[PDP11] := loc_PDP11,
+		loc[observer] := obs_ok,
+	;
 
-	(*------------------------------------------------------------*)
-	(* Initial discrete assignments *)
-	(*------------------------------------------------------------*)
-	& buffer_VT100 = MODE25MeV
-	& buffer_PDP11 = MODE25MeV
+	continuous =
+		(*------------------------------------------------------------*)
+		(* Initial discrete assignments *)
+		(*------------------------------------------------------------*)
+		& buffer_VT100 = MODE25MeV
+		& buffer_PDP11 = MODE25MeV
 
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
-	(*------------------------------------------------------------*)
-	& x_engineer = 0
-	& x_buffer = 0
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x_engineer = 0
+		& x_buffer = 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& p_key >= 1
-	& p_period >= 1
-;
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p_key >= 1
+		& p_period >= 1
+	;
+}
 
 
 (************************************************************)

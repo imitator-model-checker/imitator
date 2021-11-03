@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2021/06/08
+ * Last modified     : 2021/11/02
  *
  ************************************************************)
 
@@ -345,6 +345,7 @@ let export_to_file_errorresult error_type file_name =
 	(* Error message *)
 	let error_message = match error_type with
 		| Division_by_zero msg			-> "division by 0 (" ^ msg ^ ")"
+		| Out_of_bound                  -> "index out of range"
 		| ModelFileNotFound_error		-> "model file not found"
 		| PropertyFileNotFound_error	-> "property file not found"
 		| InvalidModel_error			-> "invalid model"
@@ -415,57 +416,6 @@ let export_to_file_noresult file_name =
 	(* The end *)
 	()
 
-
-
-(* Write an ef_synth result to the result file *)
-let export_to_file_deprecated_efsynth_result file_name (deprecated_efsynth_result : Result.deprecated_efsynth_result) =
-	(* Start counter *)
-	counter#start;
-	
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	(* Retrieve the input options *)
-(* 	let options = Input.get_options () in *)
-
-	(* Convert the constraint to a string *)
-	let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) deprecated_efsynth_result.constraints) in
-
-	(* Prepare the string to write *)
-	let file_content =
-		(* 1) Header *)
-		file_header ()
-		
-		(* 2) Statistics about model *)
-		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (model_statistics ())
-		^ "\n------------------------------------------------------------"
-
-		(* 3) The actual result *)
-		^ (add_constraints_delimiters result_str)
-		
-		(* 4) Statistics about result *)
-		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (result_nature_statistics (string_of_soundness deprecated_efsynth_result.soundness) deprecated_efsynth_result.termination (StateSpace.string_of_statespace_nature deprecated_efsynth_result.statespace_nature))
-		
-		(* 5) Statistics about state space *)
-		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (statespace_statistics deprecated_efsynth_result.state_space deprecated_efsynth_result.computation_time)
-		^ "\n------------------------------------------------------------"
-		
-		(* 6) General statistics *)
-		^ "\n" ^ (Statistics.string_of_all_counters())
-		^ "\n------------------------------------------------------------"
-	in
-	
-	(* Write to file *)
-	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
-	
-	(* Stop counter *)
-	counter#stop;
-	
-	(* The end *)
-	()
 
 
 (* Write a single_synthesis_result to the result file *)
@@ -805,8 +755,8 @@ let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibi
 			^ "\n\n Run nature: " ^ (match run with Impossible_concrete_run _ -> "impossible run" | Concrete_run _ -> "valid run")
 			^ "\n\n Run:"
 			^ "\n" ^ (let str = match run with
-				| Concrete_run concrete_run -> ModelPrinter.debug_string_of_concrete_run model concrete_run
-				| Impossible_concrete_run impossible_concrete_run -> ModelPrinter.debug_string_of_impossible_concrete_run model impossible_concrete_run
+				| Concrete_run concrete_run -> ModelPrinter.string_of_concrete_run model concrete_run
+				| Impossible_concrete_run impossible_concrete_run -> ModelPrinter.string_of_impossible_concrete_run model impossible_concrete_run
 				in str
 			)
 			^ "\n(************************************************************)\n"
@@ -1073,67 +1023,6 @@ let process_result result algorithm_name prefix_option =
 		
 		(* Draw state space *)
 		draw_statespace_if_requested state_space_computation.state_space;
-		
-		(* The end *)
-		()
-
-
-	| Deprecated_efsynth_result efsynth_result ->
-		
-		(* Print the result *)
-		if verbose_mode_greater Verbose_standard then(
-			(* Retrieve the model *)
-			let model = Input.get_model() in
-			
-			(* Convert result to string *)
-			(*** NOTE: this conversion to string is duplicate, since it will again be converted in export_to_file_efsynth_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
-			let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) efsynth_result.constraints) in
-			
-			print_message Verbose_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length efsynth_result.constraints)) ^ " constraint" ^ (s_of_int (List.length efsynth_result.constraints)) ^ "): ");
-			print_highlighted_message Shell_result Verbose_standard (result_str);
-
-			(* Give a comment on the validity of the result *)
-			print_highlighted_message Shell_soundness Verbose_standard (verbose_string_of_soundness efsynth_result.soundness);
-		);
-		
-		print_message Verbose_low (
-			"Computation time: "
-			^ (string_of_seconds efsynth_result.computation_time) ^ "."
-		);
-
-		(* Print memory information *)
-		if options#statistics || verbose_mode_greater Verbose_experiments then(
-			print_newline();
-			print_message Verbose_standard (memory_used ());
-		);
-		
-(*		(* Print on terminal *)
-		print_message Verbose_standard (
-			"\nEF-synthesis successfully finished " ^ (after_seconds ()) ^ "."
-		);*)
-
-		(* Write to file if requested *)
-		if options#output_result then(
-			let file_name = file_prefix ^ Constants.result_file_extension in
-			export_to_file_deprecated_efsynth_result file_name efsynth_result;
-		)else(
-			print_message Verbose_high "No result export to file requested.";
-		);
-		
-		(* Print statistics *)
-		print_state_space_statistics efsynth_result.computation_time efsynth_result.state_space;
-		print_memory_statistics ();
-		
-		(* Draw state space *)
-		draw_statespace_if_requested efsynth_result.state_space;
-		
-		(* Render zones in a graphical form *)
-		if options#draw_cart then (
-			let zones = List.map (fun p_linear_constraint -> (LinearConstraint.Convex_p_constraint p_linear_constraint, StateSpace.Bad)) efsynth_result.constraints in
-			Graphics.draw_cartography zones (file_prefix ^ Constants.cart_file_suffix)
-		) else (
-			print_message Verbose_high "Graphical cartography not asked: not drawn.";
-		);
 		
 		(* The end *)
 		()
