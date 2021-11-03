@@ -19,12 +19,12 @@ jobs:
 
       # install dependencies
       - name: Run build
-        run: .travis/build.sh
+        run: .github/scripts/build.sh
         shell: bash
 
       # build documentation
       - name: Documentation
-        run: .travis/documentation.sh
+        run: .github/scripts/documentation.sh
         shell: bash
 
       # upload artifacts
@@ -57,7 +57,7 @@ jobs:
 
       # prepare deploy
       - name: Prepare deploy
-        run: .travis/deploy.sh
+        run: .github/scripts/deploy.sh
         shell: bash
 
       # deploy
