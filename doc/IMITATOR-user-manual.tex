@@ -348,8 +348,9 @@ Discrete variables can be tested in guards, and updated along transitions.
 \begin{enumerate}
 	\item rational-valued variables
 	\item ``int''-valued variables (over 32~bits)
-	\item Boolean variables
+	\item boolean-valued variables
 	\item binary word variables, allowing to use bitwise binary operations.
+	\item array variables
 \end{enumerate}
 
 %------------------------------------------------------------
@@ -425,6 +426,27 @@ Note that binary words are of fixed length, and operations can only be applied t
 % a Binary word variable valuation is a function $\wval : \WVar \rightarrow \setW(l)$, where $\setW(l)$ is an ordered set of length $l$ and $\setW(l) = \{b_1, ..., b_l \}$ with $b_l = \{0, 1\}$.
 We denote by~$\WVar$ the set of binary word variables.
 
+%------------------------------------------------------------
+\subsubsection{Array variables}
+%------------------------------------------------------------
+
+Array variables are fixed length collections of indexed elements.
+Array elements can be accessed or updated using an integer-valued arithmetic expression as index.
+An array variable always has an underlying type, which can be any of available types of \imitator{}.
+For example, it's possible to declare an array of int, an array of bool, an array of array of bool - an array can be multi-dimensional - etc. following the syntax below:
+
+%------------------------------------------------------------
+\begin{IMITATORmodel}
+	my_rational_array : rational array(5);
+	my_int_array : int array(2);
+	my_bool_array : bool array(3);
+	my_binary_word_array : binary(4) array(2);
+	my_2d_int_array : int array(2) array(2);
+\end{IMITATORmodel}
+%------------------------------------------------------------
+
+The set of Array variables is $\AVar = \{ \avar_1, \dots, \avar_\AVarCard \} $;
+an Array variable valuation is a function $\aval : \AVar \rightarrow \setA$, where $\setA$ is the set of the elements of the array.
 
 %------------------------------------------------------------
 \subsubsection{Built-in functions over discrete variables}\label{section:builtin-functions}
@@ -438,11 +460,37 @@ We denote by~$\WVar$ the set of binary word variables.
     \item \styleIMI{pow(x : 'a, e : int) : 'a} with \styleIMI{'a : [rational | int]}: compute the power of a number
 \end{itemize}
 
+%------------------------------------------------------------
+\begin{example}
+	To illustrate above operation, note that all the following guards in the model fragment below will evaluate to true:
+
+%------------------------------------------------------------
+	\begin{IMITATORmodel}
+		when pow(2, 3)     = 8    goto l1;
+	\end{IMITATORmodel}
+%------------------------------------------------------------
+\end{example}
+%------------------------------------------------------------
+
 \paragraph{Conversion functions}
 
 \begin{itemize}
     \item \styleIMI{rational\_of\_int(x : int) : rational}: convert an int number to a rational one
 \end{itemize}
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate above operation, note that all the following guards in the model fragment below will evaluate to true:
+
+%------------------------------------------------------------
+	\begin{IMITATORmodel}
+		(* i : int *)
+		(* r : rational *)
+		when rational_of_int(i)     = r    goto l1;
+	\end{IMITATORmodel}
+%------------------------------------------------------------
+\end{example}
+%------------------------------------------------------------
 
 \paragraph{Binary word functions}
 
@@ -478,12 +526,31 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 \end{example}
 %------------------------------------------------------------
 
+\paragraph{Array functions}
+
+\begin{itemize}
+	\item \styleIMI{array\_concat(a1 : 'a array(l1), a2 : 'a array(l2)) : 'a array(l1 + l2)} with \styleIMI{'a : any}: concat an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting to an array of length \styleIMI{l1 + l2}
+\end{itemize}
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate the arrays operations, note that all the following guards in the model fragment below will evaluate to true:
+
+%------------------------------------------------------------
+	\begin{IMITATORmodel}
+		when array_concat([1, 2, 3] , [4, 5, 6])     = [1, 2, 3, 4, 5, 6]    goto l1;
+		when array_concat([[1, 2]] , [[3, 4]])     = [[1, 2], [3, 4]]    goto l2;
+	\end{IMITATORmodel}
+%------------------------------------------------------------
+
+\end{example}
+%------------------------------------------------------------
 
 %------------------------------------------------------------
 \subsubsection{Discrete variables definition}
 %------------------------------------------------------------
 
-The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar \cup \WVar $.
+The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar \cup \WVar \cup \AVar $.
 
 %a discrete variable valuation is a function $\dval : \DVar \rightarrow \setN$.
 
@@ -2033,7 +2100,29 @@ Binary words translation into \uppaal{} formalism is experimental. Binary words 
 For this reason, translating binary words of length greater than 31~bits or shifting a binary word of an arbitrary length can lead to unexpected behaviors and results.
 \end{becareful}
 
+\paragraph{Array variables}
 
+Array variables, array literals, arrays element access (read / write) and arrays comparisons are supported by our translation into \uppaal{}.
+
+\begin{becareful}
+	Although it's possible in \imitator{} to comparing an array variable to a literal array or literal array to another one, this type of comparison isn't supported by \uppaal{}.
+
+\end{becareful}
+
+\begin{becareful}
+	Built-in functions operating on array are not supported by our translation.
+\end{becareful}
+
+\paragraph{Built-in functions}
+
+The only \imitator{} built-in function fully supported by our translation is the \styleIMI{pow} function.
+
+Partially supported \imitator{} built-in functions are the following: \styleIMI{shift\_left}, \styleIMI{shift\_right}, \styleIMI{fill\_left}, \styleIMI{fill\_right}.
+Because of binary words are encoded into integer variables, these functions could have a unspecified behaviors.
+
+\begin{becareful}
+	Unsupported \imitator{} built-in functions will not be declared (and implemented) in \uppaal{} translation, resulting to a bad program when trying to call one. The declaration and implementation of these functions in \uppaal{}, if the \uppaal{} formalism allow it, is the responsability of the user.
+\end{becareful}
 
 \paragraph{Strong broadcast synchronization}
 \imitator{} uses a single communication model: strong broadcast (see \cref{sect:synchronization}), while \uppaal{} uses both channel binary synchronization, and broadcast synchronization.
@@ -2079,10 +2168,10 @@ imitator model.imi -imi2HyTech
 \end{terminal}
 %------------------------------------------------------------
 
-\imitator{} will generate a file \stylePath{model.hy}.
+\imitator{} will generate a file \stylePath{model.hy}. \\
 
-The syntax going beyond that of \hytech{} (typically, Booleans, binary words…)\ is obviously not translated.
-
+The syntax going beyond that of \hytech{} (typically, booleans, binary words, array…) and \imitator{} built-in functions
+is obviously not translated correctly.
 In addition, the translation of properties is not supported.
 % TODO
 
@@ -2134,6 +2223,22 @@ It is done by listing synchronization vectors in the \styleIMI{syncs} entry.
 
 \paragraph{Binary words}
 Binary words are somehow supported by our translation to \jani{}, but not the built-in functions.
+
+\begin{becareful}
+	Built-in functions operating on binary words are not supported by our translation.
+\end{becareful}
+
+\paragraph{Array variables}
+
+Array variables, array literals, arrays element access (read / write) and arrays comparisons are supported by our translation into \jani{}. But not the built-in functions.
+
+\paragraph{Built-in functions}
+
+The only \imitator{} built-in function fully supported by our translation is the \styleIMI{pow} function.
+
+\begin{becareful}
+	Unsupported \imitator{} built-in functions will not be declared in \jani{} translation, resulting to a bad program when trying to call one of them. The declaration and implementation of these functions in \jani{}, if the \jani{} formalism allow it, is the responsability of the user.
+\end{becareful}
 
 \paragraph{Properties}
 Properties are so far not translated to \jani{}.
@@ -3304,32 +3409,70 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\   & \nt{arithmetic\_expression} \\
-  $|$ & \nt{binary\_word\_expression} \\
+  	$|$ & \nt{binary\_word\_expression} \\
 	$|$ & \nt{boolean\_expression} \\
+	$|$ & \nt{array\_expression} \\
 \end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{array\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\ & \styleIMI{(} \nt{array\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{array\_concat (} \nt{array\_expression} \styleIMI{, } \nt{array\_expression} \styleIMI{)} \\
+	$|$ \ & \styleIMI{<name>} \\
+	$|$ & \nt{literal\_array} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{literal\_array}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{[} \styleIMI{]} \\
+	$|$ & \styleIMI{[} \nt{literal\_array\_fol} \styleIMI{]} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{literal\_array\_fol}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{global\_expression} \styleIMI{,} \nt{literal\_array\_fol} \\
+	$|$ & \nt{global\_expression} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{array\_access}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\ 	& \nt{array\_expression} \styleIMI{[} \nt{arithmetic\_expression} \styleIMI{]} \\
+	$|$ \ 	& \styleIMI{<name>} \styleIMI{[} \nt{arithmetic\_expression} \styleIMI{]} \\
+\end{tabular}
+
+
 
 %------------------------------------------------------------
 \regleGrammaire{binary\_word\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \styleIMI{shift\_left (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
-	\   & \styleIMI{shift\_right (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
-	\   & \styleIMI{fill\_left (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
-	\   & \styleIMI{fill\_right (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
-	\   & \styleIMI{log\_and (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
-	\   & \styleIMI{log\_or (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
-	\   & \styleIMI{log\_xor (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
-	\   & \styleIMI{log\_not (} \nt{binary\_word\_expression} \styleIMI{)} \\
-	$|$ & \styleIMI{<binary\_word>} \\
+	\ 	& \styleIMI{(} \nt{binary\_word\_expression} \styleIMI{)} \\
+	$|$ \	& \styleIMI{shift\_left (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ \   & \styleIMI{shift\_right (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ \   & \styleIMI{fill\_left (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ \   & \styleIMI{fill\_right (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ \   & \styleIMI{log\_and (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
+	$|$ \   & \styleIMI{log\_or (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
+	$|$ \   & \styleIMI{log\_xor (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
+	$|$ \   & \styleIMI{log\_not (} \nt{binary\_word\_expression} \styleIMI{)} \\
+	$|$ \	& \nt{array\_access} \\
+	$|$ \ 	& \styleIMI{<name>} \\
+	$|$ \ 	& \styleIMI{<binary\_word>} \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{boolean\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \styleIMI{True}                                                    \\
-	$|$ & \styleIMI{False}                                                   \\
-	$|$ & \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression}    \\
+	& \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression}    \\
 	$|$ & \nt{boolean\_expression} \styleIMI{|} \nt{boolean\_expression}     \\
 	$|$ & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
 	$|$ & \nt{discrete\_boolean\_expression}                                 \\
@@ -3342,7 +3485,11 @@ We define each of those two components below.
 	\   & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
 	$|$ & \nt{arithmetic\_expression} \styleIMI{in} $[$ \nt{arithmetic\_expression} \styleIMI{,} \nt{arithmetic\_expression} $]$ \\
 	$|$ & \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \\
-  $|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
+  	$|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
+	$|$ & \nt{array\_access} \\
+	$|$ & \styleIMI{<name>}                                     \\
+	$|$	& \styleIMI{True}                                                    \\
+	$|$ & \styleIMI{False}                                                   \\
 \end{tabular}
 
 
@@ -3372,11 +3519,12 @@ We define each of those two components below.
 \regleGrammaire{arithmetic\_factor}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \nt{rational}                                         \\
-	$|$ & \styleIMI{<name>}                                     \\
-	$|$ & \styleIMI{(} \nt{arithmetic\_expression} \styleIMI{)} \\
+	& \styleIMI{(} \nt{arithmetic\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{pow(} \nt{arithmetic\_expression}, \nt{arithmetic\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{rational\_of\_int(} \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ & \nt{array\_access}									\\
+	$|$ & \styleIMI{<name>}                                     \\
+	$|$   & \nt{rational}
 \end{tabular}
 
 
@@ -4104,74 +4252,73 @@ We define each of those two components below.
 
 The following words are reserved keywords and cannot be used as names for automata, variables, actions or locations.
 
-\styleIMI{\#exhibit},
-\styleIMI{\#include},
-\styleIMI{\#synth},
-\styleIMI{\#witness},
-\styleIMI{accepting},
-\styleIMI{always},
-\styleIMI{and},
-\styleIMI{automatically\_generated\_observer},
-\styleIMI{automatically\_generated\_x\_obs},
-\styleIMI{automaton},
-\styleIMI{before},
-\styleIMI{binary},
-\styleIMI{clock},
-\styleIMI{constant},
-\styleIMI{discrete},
-\styleIMI{do},
-\styleIMI{else},
-\styleIMI{end},
-\styleIMI{eventually},
-\styleIMI{everytime},
-\styleIMI{False},
-\styleIMI{fill\_left},
-\styleIMI{fill\_right},
-\styleIMI{flow},
-\styleIMI{goto},
-\styleIMI{happened},
-\styleIMI{has},
-\styleIMI{if},
-\styleIMI{in},
-\styleIMI{init},
-\styleIMI{initially},
-\styleIMI{invariant},
-\styleIMI{is},
-\styleIMI{loc},
-\styleIMI{logand},
-\styleIMI{lognot},
-\styleIMI{logor},
-\styleIMI{logxor},
-\styleIMI{next},
-\styleIMI{nosync\_obs},
-\styleIMI{not},
-\styleIMI{once},
-\styleIMI{or},
-\styleIMI{parameter},
-\styleIMI{pow},
-\styleIMI{projectresult},
-\styleIMI{property},
-\styleIMI{rational\_of\_int},
-\styleIMI{sequence},
-\styleIMI{shift\_left},
-\styleIMI{shift\_right},
-\styleIMI{special\_0\_clock},
-\styleIMI{step},
-\styleIMI{stop},
-\styleIMI{sync},
-\styleIMI{synclabs},
-\styleIMI{then},
-\styleIMI{True},
-\styleIMI{urgent},
-\styleIMI{var},
-\styleIMI{wait},
-\styleIMI{when},
-\styleIMI{while},
-\styleIMI{within}
-
-
-
-
+\begin{multicols}{2}
+	\styleIMI{\#exhibit} \\
+	\styleIMI{\#include} \\
+	\styleIMI{\#synth} \\
+	\styleIMI{\#witness}\\
+	\styleIMI{accepting} \\
+	\styleIMI{always} \\
+	\styleIMI{and} \\
+	\styleIMI{array\_concat} \\
+	\styleIMI{automatically\_generated\_observer} \\
+	\styleIMI{automatically\_generated\_x\_obs} \\
+	\styleIMI{automaton} \\
+	\styleIMI{before} \\
+	\styleIMI{binary} \\
+	\styleIMI{clock} \\
+	\styleIMI{constant} \\
+	\styleIMI{discrete} \\
+	\styleIMI{do} \\
+	\styleIMI{else} \\
+	\styleIMI{end} \\
+	\styleIMI{eventually} \\
+	\styleIMI{everytime} \\
+	\styleIMI{False} \\
+	\styleIMI{fill\_left} \\
+	\styleIMI{fill\_right} \\
+	\styleIMI{flow} \\
+	\styleIMI{goto} \\
+	\styleIMI{happened} \\
+	\styleIMI{has} \\
+	\styleIMI{if} \\
+	\styleIMI{in} \\
+	\styleIMI{init} \\
+	\styleIMI{initially} \\
+	\styleIMI{invariant} \\
+	\styleIMI{is} \\
+	\styleIMI{loc} \\
+	\styleIMI{logand} \\
+	\styleIMI{lognot} \\
+	\styleIMI{logor} \\
+	\styleIMI{logxor} \\
+	\styleIMI{next} \\
+	\styleIMI{nosync\_obs} \\
+	\styleIMI{not} \\
+	\styleIMI{once} \\
+	\styleIMI{or} \\
+	\styleIMI{parameter} \\
+	\styleIMI{pow} \\
+	\styleIMI{projectresult} \\
+	\styleIMI{property} \\
+	\styleIMI{rational\_of\_int} \\
+	\styleIMI{sequence} \\
+	\styleIMI{shift\_left} \\
+	\styleIMI{shift\_right} \\
+	\styleIMI{special\_0\_clock} \\
+	\styleIMI{step} \\
+	\styleIMI{stop} \\
+	\styleIMI{sync} \\
+	\styleIMI{synclabs} \\
+	\styleIMI{then} \\
+	\styleIMI{True} \\
+	\styleIMI{urgent} \\
+	\styleIMI{var} \\
+	\styleIMI{wait} \\
+	\styleIMI{when} \\
+	\styleIMI{while} \\
+	\styleIMI{within}
+\end{multicols}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
