@@ -9,6 +9,8 @@
 
 \usepackage[english]{babel} % francais,
 
+\usepackage{multicol}
+
 \usepackage{fourier}
 % \usepackage{eulervm}
 % NOTE: both fourier + eulervm make '<' and '>' not displaid!
@@ -150,6 +152,7 @@
 \newcommand{\ArithExprI}{\ArithExpr(\IVar)}
 \newcommand{\ArithExprB}{\ArithExpr(\BVar)}
 \newcommand{\ArithExprW}{\ArithExpr(\WVar)}
+\newcommand{\ArithExprA}{\ArithExpr(\AVar)}
 \newcommand{\C}{C}
 \newcommand{\Cinit}{\C_\init} % initial constraint
 \newcommand{\Clock}{X} % set of clocks
@@ -178,6 +181,13 @@
 \newcommand{\WVar}{W} % set of binary word variables
 \newcommand{\wvar}{w} % binary word variable % TODO: conflict
 % \newcommand{\WVarCard}{M} % cardinality of binary word variables  % TODO: conflict
+
+\newcommand{\aval}{\ensuremath{\alpha}} % array variable
+\newcommand{\AVar}{A} % set of array variables
+\newcommand{\ElVar}{El} % set of element of array variables
+\newcommand{\avar}{t} % array variable
+\newcommand{\AVarCard}{N} % cardinality of array variables
+
 % \newcommand{\DVarinit}{\DVar_\init} % discrete variable
 \newcommand{\edge}{e}
 \newcommand{\flow}{\ensuremath{\mathit{flow}}}
@@ -208,6 +218,7 @@
 \newcommand{\VarCard}{N} % cardinality of variables % TODO: conflict
 
 % Sets
+\newcommand{\setA}{\ensuremath{\mathbb A}}
 \newcommand{\setB}{\ensuremath{\mathbb B}}
 % \newcommand{\setW}{\ensuremath{\mathbb W}}
 \newcommand{\setN}{\ensuremath{\mathbb N}}
