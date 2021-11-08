@@ -123,6 +123,7 @@ rule token = parse
   | "logxor"         { CT_LOG_XOR }
   | "lognot"         { CT_LOG_NOT }
   | "array_concat"   { CT_ARRAY_CONCAT }
+  | "list"           { CT_LIST }
 
 
 

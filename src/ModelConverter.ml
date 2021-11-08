@@ -74,8 +74,9 @@ let convert_var_type_discrete_number = function
 let rec convert_var_type_discrete = function
     | ParsingStructure.Var_type_discrete_number x -> DiscreteValue.Var_type_discrete_number (convert_var_type_discrete_number x)
     | ParsingStructure.Var_type_discrete_bool -> DiscreteValue.Var_type_discrete_bool
-    | ParsingStructure.Var_type_discrete_binary_word l -> DiscreteValue.Var_type_discrete_binary_word l
-    | ParsingStructure.Var_type_discrete_array (t, l) -> DiscreteValue.Var_type_discrete_array (convert_var_type_discrete t, l)
+    | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteValue.Var_type_discrete_binary_word length
+    | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteValue.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
+    | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteValue.Var_type_discrete_list (convert_var_type_discrete inner_type)
 
 (* Convert var type from parsing structure to abstract model *)
 let convert_var_type = function
@@ -152,8 +153,10 @@ and convert_parsed_global_expression variable_infos = function
             int_expression_of_parsed_expression variable_infos expr
         | DiscreteValue.Var_type_discrete_binary_word _ ->
             Binary_word_expression (binary_word_expression_of_parsed_boolean_expression variable_infos expr)
-        | DiscreteValue.Var_type_discrete_array (discrete_type, length) ->
+        | DiscreteValue.Var_type_discrete_array _ ->
             Array_expression (array_expression_of_parsed_boolean_expression variable_infos expr)
+        | DiscreteValue.Var_type_discrete_list _ ->
+            List_expression (list_expression_of_parsed_boolean_expression variable_infos expr)
         (* Should never happen *)
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
             raise (InternalError "An expression still contains unknown literal number after type checking")
@@ -235,6 +238,12 @@ and convert_discrete_bool_expr variable_infos = function
                 convert_parsed_relop relop,
                 array_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
             )
+        | DiscreteValue.Var_type_discrete_list _ ->
+            List_comparison (
+                list_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
+                convert_parsed_relop relop,
+                list_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
+            )
         | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
             raise (InvalidModel) (* should never happen, if type checking failed before *)
         )
@@ -286,14 +295,32 @@ and search_variable_of_discrete_arithmetic_expression variable_infos expr =
             let bool_value = DiscreteValue.bool_value var_value in
             DB_constant bool_value
         | Parsed_DF_access (factor, index_expr) ->
-            Bool_array_access (
-                array_expression_of_parsed_factor variable_infos factor,
-                convert_parsed_int_arithmetic_expression variable_infos index_expr
+            (* Check discrete type for differentiate arrays and lists *)
+            let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
+
+            (match discrete_type with
+            | Var_type_discrete_array _ ->
+                Bool_array_access (
+                    array_expression_of_parsed_factor variable_infos factor,
+                    convert_parsed_int_arithmetic_expression variable_infos index_expr
+                )
+            | Var_type_discrete_list _ ->
+                Bool_list_access (
+                    list_expression_of_parsed_factor variable_infos factor,
+                    convert_parsed_int_arithmetic_expression variable_infos index_expr
+                )
+            | _ ->
+                raise (InternalError
+                    "An access on other element than an array or a list was found, although it was been type checked before."
+                )
             )
-        | Parsed_DF_array expr_array ->
+
+        | Parsed_DF_array _
+        | Parsed_DF_list _ as factor ->
             raise (InternalError (
-                "Search of boolean variable in an array expression, something failed.
-                Maybe an arithmetic expression was resolved as an array expression before"
+                "Search of boolean variable in an "
+                ^ label_of_parsed_factor_constructor factor
+                ^ " expression, something failed. Maybe an arithmetic expression was resolved as an array expression before"
             ))
         | Parsed_rational_of_int_function _
         | Parsed_pow_function _
@@ -331,7 +358,8 @@ and convert_parsed_discrete_arithmetic_expression variable_infos expr =
     (* Other cases mean that type checking has failed *)
     | DiscreteValue.Var_type_discrete_bool
     | DiscreteValue.Var_type_discrete_binary_word _
-    | DiscreteValue.Var_type_discrete_array _ as t ->
+    | DiscreteValue.Var_type_discrete_array _
+    | DiscreteValue.Var_type_discrete_list _ as t ->
         raise (InternalError ("An arithmetic expression was deduced as " ^ DiscreteValue.string_of_var_type_discrete t ^ " expression, maybe type checking has failed before"))
     | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
         raise (InternalError "An arithmetic expression still contains unknown literal numbers after type checking, maybe type checking has failed before")
@@ -375,10 +403,28 @@ and convert_parsed_rational_arithmetic_expression variable_infos (* expr *) =
             )
 
         | Parsed_DF_access (factor, index_expr) ->
-            Rational_array_access (
-                array_expression_of_parsed_factor variable_infos factor,
-                convert_parsed_int_arithmetic_expression variable_infos index_expr
+
+           (* Check discrete type for differentiate arrays and lists *)
+            let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
+
+            (match discrete_type with
+            | Var_type_discrete_array _ ->
+                Rational_array_access (
+                    array_expression_of_parsed_factor variable_infos factor,
+                    convert_parsed_int_arithmetic_expression variable_infos index_expr
+                )
+            | Var_type_discrete_list _ ->
+                Rational_list_access (
+                    list_expression_of_parsed_factor variable_infos factor,
+                    convert_parsed_int_arithmetic_expression variable_infos index_expr
+                )
+            | _ ->
+                raise (InternalError
+                    "An access on other element than an array or a list was found, although it was been type checked before."
+                )
             )
+
+
 
         | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.to_numconst_value var_value)
         | Parsed_DF_expression expr -> DF_expression (convert_parsed_rational_arithmetic_expression_rec expr)
@@ -387,6 +433,7 @@ and convert_parsed_rational_arithmetic_expression variable_infos (* expr *) =
         | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_rational_factor factor)
         (* Should never happen, because it was checked by type checker before *)
         | Parsed_DF_array _
+        | Parsed_DF_list _
         | Parsed_shift_function _
         | Parsed_bin_log_function _
         | Parsed_log_not _
@@ -452,13 +499,30 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
         | Parsed_DF_unary_min factor -> Int_unary_min (convert_parsed_int_factor factor)
 
         | Parsed_DF_access (factor, index_expr) ->
-            Int_array_access (
-                array_expression_of_parsed_factor variable_infos factor,
-                convert_parsed_int_arithmetic_expression_rec index_expr
+
+           (* Check discrete type for differentiate arrays and lists *)
+            let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
+
+            (match discrete_type with
+            | Var_type_discrete_array _ ->
+                Int_array_access (
+                    array_expression_of_parsed_factor variable_infos factor,
+                    convert_parsed_int_arithmetic_expression variable_infos index_expr
+                )
+            | Var_type_discrete_list _ ->
+                Int_list_access (
+                    list_expression_of_parsed_factor variable_infos factor,
+                    convert_parsed_int_arithmetic_expression variable_infos index_expr
+                )
+            | _ ->
+                raise (InternalError
+                    "An access on other element than an array or a list was found, although it was been type checked before."
+                )
             )
 
         (* Should never happen, because it was checked by type checker before *)
         | Parsed_DF_array _
+        | Parsed_DF_list _
         | Parsed_rational_of_int_function _
         | Parsed_shift_function _
         | Parsed_bin_log_function _
@@ -529,11 +593,28 @@ and binary_word_expression_of_parsed_factor variable_infos factor =
         Binary_word_constant binary_word_value
 
     | Parsed_DF_access (factor, index_expr) ->
-        Binary_word_array_access (
-            array_expression_of_parsed_factor variable_infos factor,
-            convert_parsed_int_arithmetic_expression variable_infos index_expr,
-            binary_word_length
-        )
+
+           (* Check discrete type for differentiate arrays and lists *)
+            let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
+
+            (match discrete_type with
+            | Var_type_discrete_array _ ->
+                Binary_word_array_access (
+                    array_expression_of_parsed_factor variable_infos factor,
+                    convert_parsed_int_arithmetic_expression variable_infos index_expr,
+                    binary_word_length
+                )
+            | Var_type_discrete_list _ ->
+                Binary_word_list_access (
+                    list_expression_of_parsed_factor variable_infos factor,
+                    convert_parsed_int_arithmetic_expression variable_infos index_expr,
+                    binary_word_length
+                )
+            | _ ->
+                raise (InternalError
+                    "An access on other element than an array or a list was found, although it was been type checked before."
+                )
+            )
 
     | Parsed_shift_function (fun_type, factor, expr) ->
         let binary_word_expr = binary_word_expression_of_parsed_factor variable_infos factor in
@@ -562,6 +643,7 @@ and binary_word_expression_of_parsed_factor variable_infos factor =
     | Parsed_DF_expression expression ->
         binary_word_expression_of_parsed_discrete_arithmetic_expression variable_infos expression
     | Parsed_DF_array _
+    | Parsed_DF_list _
     | Parsed_DF_unary_min _
     | Parsed_rational_of_int_function _
     | Parsed_pow_function _
@@ -575,39 +657,39 @@ and binary_word_expression_of_parsed_factor variable_infos factor =
     binary_word_expression_of_parsed_factor_inner factor
 
 
-(* Try to convert a parsed boolean expression to abstract binary word expression *)
+(* Try to convert a parsed boolean expression to abstract array expression *)
 and array_expression_of_parsed_boolean_expression variable_infos = function
-    (* A binary word can only be found in parsed factor *)
+    (* A array can only be found in parsed factor *)
     | Parsed_Discrete_boolean_expression expr ->
         array_expression_of_parsed_discrete_boolean_expression variable_infos expr
     (* Other cases mean that type checking has failed before *)
     | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
 
-(* Try to convert a parsed discrete boolean expression to abstract binary word expression *)
+(* Try to convert a parsed discrete boolean expression to abstract array expression *)
 and array_expression_of_parsed_discrete_boolean_expression variable_infos = function
-    (* A binary word can only be found in parsed factor *)
+    (* A array can only be found in parsed factor *)
     | Parsed_arithmetic_expression expr ->
         array_expression_of_parsed_discrete_arithmetic_expression variable_infos expr
     (* Other cases mean that type checking has failed before *)
     | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
 
-(* Try to convert a parsed arithmetic expression to abstract binary word expression *)
+(* Try to convert a parsed arithmetic expression to abstract array expression *)
 and array_expression_of_parsed_discrete_arithmetic_expression variable_infos = function
-    (* A binary word can only be found in parsed factor *)
+    (* A array can only be found in parsed factor *)
     | Parsed_DAE_term term ->
         array_expression_of_parsed_term variable_infos term
     (* Other cases mean that type checking has failed before *)
     | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
 
-(* Try to convert a parsed term to abstract binary word expression *)
+(* Try to convert a parsed term to abstract array expression *)
 and array_expression_of_parsed_term variable_infos = function
-    (* A binary word can only be found in parsed factor *)
+    (* A array can only be found in parsed factor *)
     | Parsed_DT_factor factor ->
         array_expression_of_parsed_factor variable_infos factor
     (* Other cases mean that type checking has failed before *)
     | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
 
-(* Try to convert a parsed factor to abstract binary word expression *)
+(* Try to convert a parsed factor to abstract array expression *)
 and array_expression_of_parsed_factor variable_infos = function
     | Parsed_DF_variable variable_name ->
 
@@ -621,10 +703,27 @@ and array_expression_of_parsed_factor variable_infos = function
         Literal_array (Array.map (fun expr -> convert_parsed_global_expression variable_infos (Parsed_global_expression expr)) expr_array)
 
     | Parsed_DF_access (factor, index_expr) ->
-        Array_array_access (
-            array_expression_of_parsed_factor variable_infos factor,
-            convert_parsed_int_arithmetic_expression variable_infos index_expr
-        )
+
+           (* Check discrete type for differentiate arrays and lists *)
+            let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
+
+            (match discrete_type with
+            | Var_type_discrete_array _ ->
+                Array_array_access (
+                    array_expression_of_parsed_factor variable_infos factor,
+                    convert_parsed_int_arithmetic_expression variable_infos index_expr
+                )
+            | Var_type_discrete_list _ ->
+                Array_list_access (
+                    list_expression_of_parsed_factor variable_infos factor,
+                    convert_parsed_int_arithmetic_expression variable_infos index_expr
+                )
+            | _ ->
+                raise (InternalError
+                    "An access on other element than an array or a list was found, although it was been type checked before."
+                )
+            )
+
     | Parsed_array_concat (factor_0, factor_1) ->
         Array_concat (
             array_expression_of_parsed_factor variable_infos factor_0,
@@ -635,6 +734,80 @@ and array_expression_of_parsed_factor variable_infos = function
             "Use of \""
             ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
             ^ "\" in an array expression, although it was checked before by type checking. Maybe something fail in type checking"
+        ))
+
+(* Try to convert a parsed discrete boolean expression to abstract list expression *)
+and list_expression_of_parsed_boolean_expression variable_infos = function
+    (* A list can only be found in parsed factor *)
+    | Parsed_Discrete_boolean_expression expr ->
+        list_expression_of_parsed_discrete_boolean_expression variable_infos expr
+    (* Other cases mean that type checking has failed before *)
+    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+
+(* Try to convert a parsed discrete boolean expression to abstract list expression *)
+and list_expression_of_parsed_discrete_boolean_expression variable_infos = function
+    (* A list can only be found in parsed factor *)
+    | Parsed_arithmetic_expression expr ->
+        list_expression_of_parsed_discrete_arithmetic_expression variable_infos expr
+    (* Other cases mean that type checking has failed before *)
+    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+
+(* Try to convert a parsed arithmetic expression to abstract list expression *)
+and list_expression_of_parsed_discrete_arithmetic_expression variable_infos = function
+    (* A list can only be found in parsed factor *)
+    | Parsed_DAE_term term ->
+        list_expression_of_parsed_term variable_infos term
+    (* Other cases mean that type checking has failed before *)
+    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+
+(* Try to convert a parsed term to abstract list expression *)
+and list_expression_of_parsed_term variable_infos = function
+    (* A list can only be found in parsed factor *)
+    | Parsed_DT_factor factor ->
+        list_expression_of_parsed_factor variable_infos factor
+    (* Other cases mean that type checking has failed before *)
+    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+
+(* Try to convert a parsed factor to abstract list expression *)
+and list_expression_of_parsed_factor variable_infos = function
+    | Parsed_DF_variable variable_name ->
+
+        let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+        (match variable_kind with
+        | Constant_kind value -> List_constant (DiscreteValue.list_value value)
+        | Variable_kind discrete_index -> List_variable discrete_index
+        )
+
+    | Parsed_DF_list expr_list ->
+        Literal_list (List.map (fun expr -> convert_parsed_global_expression variable_infos (Parsed_global_expression expr)) expr_list)
+
+    | Parsed_DF_access (factor, index_expr) ->
+
+           (* Check discrete type for differentiate arrays and lists *)
+            let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
+
+            (match discrete_type with
+            | Var_type_discrete_array _ ->
+                List_array_access (
+                    array_expression_of_parsed_factor variable_infos factor,
+                    convert_parsed_int_arithmetic_expression variable_infos index_expr
+                )
+            | Var_type_discrete_list _ ->
+                List_list_access (
+                    list_expression_of_parsed_factor variable_infos factor,
+                    convert_parsed_int_arithmetic_expression variable_infos index_expr
+                )
+            | _ ->
+                raise (InternalError
+                    "An access on other element than an array or a list was found, although it was been type checked before."
+                )
+            )
+
+    | _ as factor ->
+        raise (InternalError (
+            "Use of \""
+            ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
+            ^ "\" in a list expression, although it was checked before by type checking. Maybe something fail in type checking"
         ))
 
 
@@ -2108,6 +2281,7 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
             raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
 
         | Parsed_DF_array _
+        | Parsed_DF_list _
         | Parsed_DF_access _
         | Parsed_rational_of_int_function _
         | Parsed_pow_function _
@@ -2615,6 +2789,7 @@ let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_info
             update_coef_array_in_parsed_update_factor mult_factor factor
         | Parsed_bin_log_function _
         | Parsed_DF_array _
+        | Parsed_DF_list _
         | Parsed_DF_access _
         | Parsed_array_concat _ as factor ->
             raise (InternalError ("Use of " ^ ParsingStructureUtilities.label_of_parsed_factor_constructor factor ^ " is forbidden in linear term, something failed before."))

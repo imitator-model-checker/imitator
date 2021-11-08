@@ -87,7 +87,7 @@ let unzip l = List.fold_left
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
-    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT
+    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST
 
 
 %token EOF
@@ -191,16 +191,22 @@ var_type:
 ;
 
 var_type_discrete:
-    | var_type_discrete_array { $1 }
     | var_type_discrete_number { Var_type_discrete_number $1 }
     | CT_BOOL { Var_type_discrete_bool }
     /* TODO benjamin try to use directly int instead of numconst */
     | CT_BINARY_WORD LPAREN pos_integer RPAREN { Var_type_discrete_binary_word (NumConst.to_bounded_int $3) }
+    | var_type_discrete_array { $1 }
+    | var_type_discrete_list { $1 }
 ;
 
 var_type_discrete_array:
   | var_type_discrete CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_bounded_int $4) }
   | var_type_discrete_array CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_bounded_int $4) }
+;
+
+var_type_discrete_list:
+  | var_type_discrete CT_LIST { Var_type_discrete_list $1 }
+  | var_type_discrete_list CT_LIST { Var_type_discrete_list $1 }
 ;
 
 var_type_discrete_number:
@@ -539,6 +545,7 @@ arithmetic_factor:
   | CT_FALSE { Parsed_DF_constant (DiscreteValue.Bool_value false) }
   | binary_word { Parsed_DF_constant $1 }
   | literal_array { Parsed_DF_array (Array.of_list $1) }
+  | CT_LIST LPAREN literal_array RPAREN { Parsed_DF_list $3 }
   | NAME { Parsed_DF_variable $1 }
   | LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
   | function_call { $1 }

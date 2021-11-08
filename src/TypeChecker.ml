@@ -195,6 +195,10 @@ and convert_literals_of_parsed_discrete_factor variable_infos target_type = func
             (* Convert array elements to the inner type of the array target type *)
             let converted_array = Array.map (convert_literals_of_parsed_boolean_expression variable_infos target_type) expr_array in
             Parsed_DF_array converted_array
+    | Parsed_DF_list expr_list ->
+            (* Convert array elements to the inner type of the array target type *)
+            let converted_list = List.map (convert_literals_of_parsed_boolean_expression variable_infos target_type) expr_list in
+            Parsed_DF_list converted_list
     | Parsed_DF_access (factor, index_expr) ->
         Parsed_DF_access (
             convert_literals_of_parsed_discrete_factor variable_infos target_type factor,
@@ -582,7 +586,7 @@ and infer_parsed_discrete_factor variable_infos = function
         if not all_same then (
             raise (TypeError (type_mixin_error_message (string_of_parsed_factor variable_infos df_array) discrete_types))
 
-        (* If all the same type, just convert each elements to the same type of first type *)
+        (* If all the same type, just set infer type to array of 'a *)
         ) else (
             let infer_type = DiscreteValue.Var_type_discrete_array (first_type, Array.length expr_array) in
 
@@ -591,17 +595,66 @@ and infer_parsed_discrete_factor variable_infos = function
             Parsed_DF_array converted_expr_array, infer_type
         )
 
+    | Parsed_DF_list expr_list as df_list ->
+
+        (* Infer type of each elements of list and convert to a list *)
+        let infer_expr_list = List.map (infer_parsed_boolean_expression variable_infos) expr_list in
+
+        (* Check if there is any number in list that is known type (or type that holding known type) *)
+        let known_number = List.filter (fun (_, discrete_type) -> DiscreteValue.is_discrete_type_holding_known_number_type discrete_type) infer_expr_list in
+
+        (* Infer type of list *)
+        let infer_expr_list =
+            if List.length known_number > 0 then (
+                let first_known_number_expr, target_type = List.nth known_number 0 in
+                List.map (fun (expr, discrete_type) ->
+                    if DiscreteValue.is_discrete_type_holding_unknown_number_type discrete_type then (
+                        let inner_target_type = DiscreteValue.extract_inner_type target_type in
+                        convert_literals_of_parsed_boolean_expression variable_infos inner_target_type expr, target_type
+                    )
+                    else
+                        expr, discrete_type
+                ) infer_expr_list
+            )
+            else
+                infer_expr_list
+        in
+
+        (*  *)
+        let discrete_types = List.map (fun (_, discrete_type) -> discrete_type) infer_expr_list in
+        let discrete_types_array = Array.of_list discrete_types in
+        let converted_expr_list = List.map (fun (converted_expr, _) -> converted_expr) infer_expr_list in
+
+        (* Check if all elements in array had the same types *)
+        (* TODO benjamin REFACTOR use DiscreteValue.default_type *)
+        let first_type = if List.length discrete_types > 0 then List.nth discrete_types 0 else (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational) in
+        let all_same = List.for_all (fun discrete_type -> discrete_type = first_type) discrete_types in
+
+        (* If not all the same, type error ! *)
+        if not all_same then (
+            raise (TypeError (type_mixin_error_message (string_of_parsed_factor variable_infos df_list) discrete_types_array))
+
+        (* If all the same type, just set infer type to array of 'a *)
+        ) else (
+            let infer_type = DiscreteValue.Var_type_discrete_list first_type in
+
+            print_infer_expr_message (string_of_parsed_factor variable_infos df_list) infer_type;
+
+            Parsed_DF_list converted_expr_list, infer_type
+        )
+
     | Parsed_DF_access (factor, index_expr) as access ->
 
         let infer_factor, discrete_type = infer_parsed_discrete_factor variable_infos factor in
         let infer_index_expr, index_type = infer_parsed_discrete_arithmetic_expression variable_infos index_expr in
 
-        (* If type is not an array, access is used in wrong context ! *)
+        (* If type is not an array or a list, access is used in wrong context ! *)
         let infer_type = (
             match discrete_type with
-            | DiscreteValue.Var_type_discrete_array (inner_type, _) -> inner_type
+            | DiscreteValue.Var_type_discrete_array (inner_type, _)
+            | DiscreteValue.Var_type_discrete_list inner_type -> inner_type
             | _ -> raise (TypeError (
-                "Trying to make an access to a non array variable at `"
+                "Trying to make an access to a non array or non list variable at `"
                 ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos access
                 ^ "`"
             ))
@@ -963,18 +1016,26 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
 
     | Parsed_DF_array expr_array ->
         (* Arbitrary take the first item of array *)
+        (* TODO benjamin REFACTOR use default_type from DiscreteValue here below *)
         let inner_type = if Array.length expr_array > 0 then discrete_type_of_parsed_boolean_expression variable_infos (Array.get expr_array 0) else (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational) in
         let length = Array.length expr_array in
         DiscreteValue.Var_type_discrete_array (inner_type, length)
 
+    | Parsed_DF_list expr_list ->
+        (* Arbitrary take the first item of list *)
+        (* TODO benjamin REFACTOR use default_type from DiscreteValue here below *)
+        let inner_type = if List.length expr_list > 0 then discrete_type_of_parsed_boolean_expression variable_infos (List.nth expr_list 0) else (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational) in
+        DiscreteValue.Var_type_discrete_list inner_type
+
 	| Parsed_DF_unary_min factor ->
 	    discrete_type_of_parsed_discrete_factor variable_infos factor
-    | Parsed_DF_access (factor, _) ->
+    | Parsed_DF_access (factor, _) as access ->
         let discrete_type = discrete_type_of_parsed_discrete_factor variable_infos factor in
         (* Unwrap type from array, because of access *)
         (match discrete_type with
-        | DiscreteValue.Var_type_discrete_array (inner_type, _) -> inner_type
-        | _ -> raise (TypeError ("")) (* TODO benjamin CLEAN set message *)
+        | DiscreteValue.Var_type_discrete_array (inner_type, _)
+        | DiscreteValue.Var_type_discrete_list inner_type -> inner_type
+        | _ -> raise (TypeError ("Unable to access an index of a non-array / non-list: " ^ string_of_parsed_factor variable_infos access))
         )
 	| Parsed_DF_expression expr ->
 	    discrete_type_of_parsed_discrete_arithmetic_expression variable_infos expr
@@ -998,7 +1059,7 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
             (* Arbitrary use inner_type of parameter 0, because already type checked!) *)
             (* But array length of array concatenation is equal to length of first array plus length of second array *)
             DiscreteValue.Var_type_discrete_array (inner_type_0, length_0 + length_1)
-        | _ -> raise (TypeError "") (* TODO benjamin CLEAN set message *)
+        | _ -> raise (TypeError "fill this message") (* TODO benjamin CLEAN set message *)
         end
 
 

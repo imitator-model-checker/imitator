@@ -46,6 +46,7 @@ type var_type_discrete =
     | Var_type_discrete_bool
     | Var_type_discrete_binary_word of int
     | Var_type_discrete_array of var_type_discrete * int
+    | Var_type_discrete_list of var_type_discrete
 
 (* Type of variable in declarations *)
 type var_type =
@@ -98,6 +99,7 @@ and parsed_discrete_factor =
 	| Parsed_DF_variable of variable_name
 	| Parsed_DF_constant of DiscreteValue.discrete_value
 	| Parsed_DF_array of parsed_boolean_expression array
+	| Parsed_DF_list of parsed_boolean_expression list
     | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min of parsed_discrete_factor

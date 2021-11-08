@@ -32,6 +32,7 @@ type var_type_discrete =
     | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_binary_word of int
     | Var_type_discrete_array of var_type_discrete * int
+    | Var_type_discrete_list of var_type_discrete
 
 (* Type of variable in declarations *)
 type var_type =
@@ -53,6 +54,7 @@ type discrete_value =
     | Bool_value of bool
     | Binary_word_value of BinaryWord.t
     | Array_value of discrete_value array
+    | List_value of discrete_value list
 
 (************************************************************)
 (** Type functions  *)
@@ -140,14 +142,6 @@ val is_binary_word_value : discrete_value -> bool
 
 (** Default values  **)
 
-(* Get default NumConst.t value *)
-val numconst_default_value : NumConst.t
-(* Get default Int32.t value *)
-val int_default_value : Int32.t
-(* Get default bool value *)
-val bool_default_value : bool
-(* Get default binary word value *)
-val binary_word_default_value : int -> BinaryWord.t
 (* Get default discrete value *)
 val default_value : var_type -> discrete_value
 
@@ -157,11 +151,6 @@ val rational_zero : discrete_value
 val bool_value_false : discrete_value
 (* Get true value of Bool_value *)
 val bool_value_true : discrete_value
-
-(* Get a zero discrete value according to given discrete value type *)
-val zero_of : discrete_value -> discrete_value
-(* Get a one discrete value according to given discrete value type *)
-val one_of : discrete_value -> discrete_value
 
 (** Get / Convert values  **)
 
@@ -175,6 +164,8 @@ val bool_value : discrete_value -> bool
 val binary_word_value : discrete_value -> BinaryWord.t
 (* Get array value of discrete value *)
 val array_value : discrete_value -> discrete_value array
+(* Get list value of discrete value *)
+val list_value : discrete_value -> discrete_value list
 
 (* Convert any discrete value to NumConst.t value, if possible *)
 val to_numconst_value : discrete_value -> NumConst.t

@@ -94,6 +94,7 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
 	| Parsed_DF_variable variable_name -> leaf_fun (Leaf_variable variable_name)
 	| Parsed_DF_constant value -> leaf_fun (Leaf_constant value)
 	| Parsed_DF_array expr_array -> Array.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_array
+	| Parsed_DF_list expr_list -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_list
 	| Parsed_DF_expression expr
 	| Parsed_rational_of_int_function expr ->
         fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
@@ -242,7 +243,8 @@ let label_of_parsed_factor_constructor = function
 	| Parsed_DF_variable _ -> "variable"
 	| Parsed_DF_constant _ -> "constant"
 	| Parsed_DF_array _ -> "array"
-	| Parsed_DF_access _ -> "array access"
+	| Parsed_DF_list _ -> "list"
+	| Parsed_DF_access _ -> "access"
 	| Parsed_DF_expression _ -> "expression"
 	| Parsed_DF_unary_min _ -> "minus"
 	| Parsed_rational_of_int_function _ -> "rational_of_int"
@@ -297,6 +299,8 @@ and string_of_parsed_factor variable_infos = function
     | Parsed_DF_constant value -> DiscreteValue.string_of_value value
     | Parsed_DF_array expr_array ->
         "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (string_of_parsed_boolean_expression variable_infos) expr_array) ^ "]"
+    | Parsed_DF_list expr_list ->
+        "list([" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (string_of_parsed_boolean_expression variable_infos) expr_list) ^ "])"
     | Parsed_DF_access (factor, expr) ->
         string_of_parsed_factor variable_infos factor ^ "[" ^ string_of_parsed_arithmetic_expression variable_infos expr ^ "]"
     | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
@@ -499,14 +503,27 @@ and try_reduce_parsed_arithmetic_expression constants expr =
         | Parsed_DF_array expr_array ->
             let values = Array.map (try_reduce_parsed_boolean_expression constants) expr_array in
             DiscreteValue.Array_value values
+        | Parsed_DF_list expr_list ->
+            let values = List.map (try_reduce_parsed_boolean_expression constants) expr_list in
+            DiscreteValue.List_value values
         | Parsed_DF_access (factor, index_expr) ->
-            (* factor should be an array (checked by type checker) *)
+
             let values = try_reduce_parsed_factor factor in
             let index = try_reduce_parsed_arithmetic_expression_rec index_expr in
             (* Get value at index *)
-            let array_values = DiscreteValue.array_value values in
-            let int_index = DiscreteValue.int_value index in
-            Array.get array_values (Int32.to_int int_index)
+            (* Factor should be an array or list (checked before by type checker) *)
+            (match values with
+            | DiscreteValue.Array_value array_values ->
+                let int_index = DiscreteValue.int_value index in
+                Array.get array_values (Int32.to_int int_index)
+            | DiscreteValue.List_value list_values ->
+                let int_index = DiscreteValue.int_value index in
+                List.nth list_values (Int32.to_int int_index)
+            | _ ->
+                raise (InternalError
+                    "An access on other element than an array or a list was found, although it was been type checked before."
+                )
+            )
 
         | Parsed_DF_expression arithmetic_expr -> try_reduce_parsed_arithmetic_expression_rec arithmetic_expr
         | Parsed_DF_unary_min factor ->
@@ -535,6 +552,7 @@ and try_reduce_parsed_arithmetic_expression constants expr =
             | DiscreteValue.Var_type_discrete_bool
             | DiscreteValue.Var_type_discrete_binary_word _
             | DiscreteValue.Var_type_discrete_array _
+            | DiscreteValue.Var_type_discrete_list _
             | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number as t ->
                 raise (InternalError (
                     "Try to reduce a pow function on a "

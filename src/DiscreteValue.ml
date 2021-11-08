@@ -33,6 +33,7 @@ type var_type_discrete =
     | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_binary_word of int
     | Var_type_discrete_array of var_type_discrete * int
+    | Var_type_discrete_list of var_type_discrete
 
 (** Type of variable in declarations *)
 type var_type =
@@ -55,6 +56,7 @@ type discrete_value =
     | Bool_value of bool
     | Binary_word_value of BinaryWord.t
     | Array_value of discrete_value array
+    | List_value of discrete_value list
 
 (************************************************************)
 (** Type functions  *)
@@ -73,7 +75,8 @@ let rec string_of_var_type_discrete = function
     | Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | Var_type_discrete_bool -> "bool"
     | Var_type_discrete_binary_word l -> "binary(" ^ string_of_int l ^ ")"
-    | Var_type_discrete_array (discrete_type, length) -> string_of_var_type_discrete discrete_type ^ " array(" ^ string_of_int length ^ ")"
+    | Var_type_discrete_array (inner_type, length) -> string_of_var_type_discrete inner_type ^ " array(" ^ string_of_int length ^ ")"
+    | Var_type_discrete_list inner_type -> string_of_var_type_discrete inner_type ^ " list"
 
 (* String of var type *)
 let string_of_var_type = function
@@ -111,22 +114,26 @@ let is_discrete_type_known_number_type = function
 (* Check if discrete type is, or holding a inner type that is unknown number type *)
 let rec is_discrete_type_holding_unknown_number_type = function
     | Var_type_discrete_number Var_type_discrete_unknown_number -> true
-    | Var_type_discrete_array (inner_type, _) -> is_discrete_type_holding_unknown_number_type inner_type
+    | Var_type_discrete_array (inner_type, _)
+    | Var_type_discrete_list inner_type -> is_discrete_type_holding_unknown_number_type inner_type
     | _ -> false
 
 let rec is_discrete_type_holding_known_number_type = function
     | Var_type_discrete_number Var_type_discrete_unknown_number -> false
     | Var_type_discrete_number _ -> true
-    | Var_type_discrete_array (inner_type, _) -> is_discrete_type_holding_known_number_type inner_type
+    | Var_type_discrete_array (inner_type, _)
+    | Var_type_discrete_list inner_type -> is_discrete_type_holding_known_number_type inner_type
     | _ -> false
 
 let rec is_discrete_type_holding_number_type = function
     | Var_type_discrete_number _ -> true
-    | Var_type_discrete_array (inner_type, _) -> is_discrete_type_holding_number_type inner_type
+    | Var_type_discrete_array (inner_type, _)
+    | Var_type_discrete_list inner_type -> is_discrete_type_holding_number_type inner_type
     | _ -> false
 
 let rec extract_inner_type = function
-    | Var_type_discrete_array (inner_type, _) -> extract_inner_type inner_type
+    | Var_type_discrete_array (inner_type, _)
+    | Var_type_discrete_list inner_type -> extract_inner_type inner_type
     | _ as discrete_type -> discrete_type
 
 (* Get default discrete type of any type that is, or holding a inner type that is unknown number type *)
@@ -135,6 +142,7 @@ let rec extract_inner_type = function
 let rec default_type_of_type_holding_unknown_number_type = function
     | Var_type_discrete_number Var_type_discrete_unknown_number -> Var_type_discrete_number Var_type_discrete_rational
     | Var_type_discrete_array (inner_type, length) -> Var_type_discrete_array (default_type_of_type_holding_unknown_number_type inner_type, length)
+    | Var_type_discrete_list inner_type -> Var_type_discrete_list (default_type_of_type_holding_unknown_number_type inner_type)
     | _ as discrete_type -> discrete_type
 
 (* Check if discrete type is a Var_type_discrete_rational *)
@@ -164,12 +172,17 @@ let rec discrete_type_of_value = function
     | Rational_value _ -> Var_type_discrete_number Var_type_discrete_rational
     | Int_value _ -> Var_type_discrete_number Var_type_discrete_int
     | Bool_value _ -> Var_type_discrete_bool
-    | Binary_word_value b -> Var_type_discrete_binary_word (BinaryWord.length b)
+    | Binary_word_value value -> Var_type_discrete_binary_word (BinaryWord.length value)
     | Array_value a ->
         if Array.length a = 0 then
             Var_type_discrete_array (Var_type_discrete_number Var_type_discrete_rational, 0)
         else
             Var_type_discrete_array (discrete_type_of_value (Array.get a 0), Array.length a)
+    | List_value l ->
+        if List.length l = 0 then
+            Var_type_discrete_list (Var_type_discrete_number Var_type_discrete_rational)
+        else
+            Var_type_discrete_list (discrete_type_of_value (List.nth l 0))
 
 (* Get var type of a discrete value *)
 let rec var_type_of_value = function
@@ -179,6 +192,7 @@ let rec var_type_of_value = function
     | Bool_value _ -> var_type_bool
     | Binary_word_value b -> var_type_binary_word (BinaryWord.length b)
     | Array_value a -> Var_type_discrete (Var_type_discrete_array (discrete_type_of_value (Array.get a 0), Array.length a))
+    | List_value l -> Var_type_discrete (Var_type_discrete_list (discrete_type_of_value (List.nth l 0)))
 
 
 let discrete_type_of_var_type = function
@@ -193,8 +207,10 @@ let rec is_discrete_type_compatibles var_type expr_type =
     | Var_type_discrete_number _, Var_type_discrete_number Var_type_discrete_unknown_number
     | Var_type_discrete_number Var_type_discrete_unknown_number, Var_type_discrete_number _ -> true
     (* Two array of same type are compatibles *)
-    | Var_type_discrete_array (l_discrete_type, l_length), Var_type_discrete_array (r_discrete_type, r_length) when l_length = r_length ->
-        is_discrete_type_compatibles l_discrete_type r_discrete_type
+    | Var_type_discrete_array (l_inner_type, l_length), Var_type_discrete_array (r_inner_type, r_length) when l_length = r_length ->
+        is_discrete_type_compatibles l_inner_type r_inner_type
+    | Var_type_discrete_list l_inner_type, Var_type_discrete_list r_inner_type ->
+        is_discrete_type_compatibles l_inner_type r_inner_type
     (* any equals types *)
     | ta, tb when ta = tb -> true
     (* other are not compatibles *)
@@ -221,9 +237,14 @@ let rec customized_string_of_value customized_string = function
     | Int_value x -> Int32.to_string x
     | Binary_word_value b -> BinaryWord.string_of_binaryword b
     | Array_value a ->
-        let string_array = Array.map (fun x -> customized_string_of_value customized_string x) a in
+        let str_values = Array.map (fun x -> customized_string_of_value customized_string x) a in
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        l_delimiter ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ r_delimiter
+        l_delimiter ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ r_delimiter
+    | List_value l ->
+        let str_values = List.map (fun x -> customized_string_of_value customized_string x) l in
+        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
+        (* TODO benjamin IMPROVE "list([a,b,c])" *)
+        l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_delimiter
 
 let string_of_value = customized_string_of_value global_default_string
 
@@ -249,77 +270,81 @@ let is_binary_word_value = function
     | Binary_word_value _ -> true
     | _ -> false
 
+(* Constructor functions *)
+
+(* Get discrete value from NumConst.t *)
+let of_numconst x = Rational_value x
+(* Get discrete value from Int32.t *)
+let of_int x = Int_value x
+(* Get discrete value from bool *)
+let of_bool x = Bool_value x
+
 (** Default values  **)
 
-(* Get default NumConst.t value *)
-let numconst_default_value = NumConst.zero
-(* Get default Int32.t value *)
-let int_default_value = Int32.zero
-(* Get default bool value *)
-let bool_default_value = false
-(* Get default binary word value *)
-let binary_word_default_value l = BinaryWord.zero l
+(* Default discrete rational value *)
+let default_rational = Rational_value NumConst.zero
+(* Default discrete int value *)
+let default_int = Int_value Int32.zero
+(* Default discrete bool value *)
+let default_bool = Bool_value false
+(* Default discrete binary word value *)
+let default_binary_word_value l = Binary_word_value (BinaryWord.zero l)
+(* Default discrete list value *)
+let default_list_value = List_value []
 
 (* Get default discrete number value *)
 let default_discrete_number_value = function
     | Var_type_discrete_unknown_number
-    | Var_type_discrete_rational -> Rational_value numconst_default_value
-    | Var_type_discrete_int -> Int_value int_default_value
+    | Var_type_discrete_rational -> default_rational
+    | Var_type_discrete_int -> default_int
 
 (* Get default discrete value *)
 let rec default_discrete_value = function
     | Var_type_discrete_number x -> default_discrete_number_value x
-    | Var_type_discrete_bool -> Bool_value bool_default_value
-    | Var_type_discrete_binary_word l -> Binary_word_value (BinaryWord.zero l)
-    | Var_type_discrete_array (discrete_type, length) -> Array_value (Array.make length (default_discrete_value discrete_type))
+    | Var_type_discrete_bool -> default_bool
+    | Var_type_discrete_binary_word l -> default_binary_word_value l
+    | Var_type_discrete_array (inner_type, length) -> Array_value (Array.make length (default_discrete_value inner_type))
+    | Var_type_discrete_list inner_type -> default_list_value
 
 (* Get default discrete value *)
 let default_value = function
-    | Var_type_clock -> Rational_value numconst_default_value
-    | Var_type_parameter -> Rational_value numconst_default_value
+    | Var_type_clock -> default_rational
+    | Var_type_parameter -> default_rational
     | Var_type_discrete var_type_discrete -> default_discrete_value var_type_discrete
 
 (* Get zero value of Rational_value *)
-let rational_zero = Rational_value NumConst.zero
+let rational_zero = default_rational
 (* Get false value of Bool_value *)
-let bool_value_false = Bool_value false
+let bool_value_false = default_bool
 (* Get true value of Bool_value *)
 let bool_value_true = Bool_value true
-
-(* Get a zero discrete value according to given discrete value type *)
-let zero_of = function
-    | Rational_value _ -> Rational_value NumConst.zero
-    | Int_value _ -> Int_value Int32.zero
-    | _ as value -> raise (InternalError ("Computing exception at `zero_of " ^ string_of_value value ^ "`"))
-
-(* Get a one discrete value according to given discrete value type *)
-let one_of = function
-    | Rational_value _ -> Rational_value NumConst.one
-    | Int_value _ -> Int_value Int32.one
-    | _ as value -> raise (InternalError ("Computing exception at `one_of " ^ string_of_value value ^ "`"))
 
 (** Convert values  **)
 
 (* Get NumConst.t value of rational discrete value *)
 let numconst_value = function
     | Rational_value x -> x
-    | value -> raise (InternalError ("Unable to get rational value of non-rational discrete value: " ^ string_of_value value))
-
+    | v -> raise (InternalError ("Unable to get rational value of non-rational discrete value: " ^ string_of_value v))
 
 (* Get Int32.t value of int32 discrete value *)
 let int_value = function
     | Int_value x -> x
-    | _ as value -> raise (InternalError ("Unable to get int value of non-int discrete value: " ^ string_of_value value ^ ":" ^ string_of_var_type (var_type_of_value value)))
+    | v -> raise (InternalError ("Unable to get int value of non-int discrete value: " ^ string_of_value v ^ ":" ^ string_of_var_type (var_type_of_value v)))
 
 (* Get bool value of bool discrete value *)
 let bool_value = function
     | Bool_value x -> x
-    | _ as t -> raise (InternalError ("Unable to get bool value of non-bool discrete value" ^ string_of_value t))
+    | v -> raise (InternalError ("Unable to get bool value of non-bool discrete value" ^ string_of_value v))
 
 (* Get array value of discrete value *)
 let array_value = function
     | Array_value x -> x
-    | _ -> raise (InternalError "Unable to get array value of non-array discrete value")
+    | v -> raise (InternalError ("Unable to get array value of non-array discrete value: " ^ string_of_value v))
+
+(* Get list value of discrete value *)
+let list_value = function
+    | List_value x -> x
+    | v -> raise (InternalError ("Unable to get list value of non-list discrete value: " ^ string_of_value v))
 
 (* Convert any discrete value to NumConst.t value, if possible *)
 let to_numconst_value = function
@@ -330,6 +355,7 @@ let to_numconst_value = function
     | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
     | Binary_word_value x -> NumConst.numconst_of_int (BinaryWord.hash x)
     | Array_value _ -> raise (InternalError "Unable to convert array to NumConst.t value")
+    | List_value _ -> raise (InternalError "Unable to convert list to NumConst.t value")
 
 (* Convert any discrete value to Int32 value, if possible *)
 let to_int_value = function
@@ -341,6 +367,7 @@ let to_int_value = function
     | Int_value x -> x
     | Binary_word_value x -> Int32.of_int (BinaryWord.hash x)
     | Array_value _ -> raise (InternalError "Unable to convert array to Int32.t value")
+    | List_value _ -> raise (InternalError "Unable to convert list to Int32.t value")
 
 (* Convert any discrete value to float value, if possible *)
 let to_float_value = function
@@ -350,6 +377,7 @@ let to_float_value = function
     | Int_value x -> Int32.to_float x
     | Binary_word_value x -> float_of_int (BinaryWord.hash x)
     | Array_value _ -> raise (InternalError "Unable to convert array to float value")
+    | List_value _ -> raise (InternalError "Unable to convert list to float value")
 
 (* Get binary word value of discrete value *)
 let binary_word_value = function
@@ -357,12 +385,7 @@ let binary_word_value = function
     | _ as value -> raise (InternalError ("Unable to get binary word value of non binary word `" ^ string_of_value value ^ "`"))
 
 
-(* Get discrete value from NumConst.t *)
-let of_numconst x = Rational_value x
-(* Get discrete value from Int32.t *)
-let of_int x = Int_value x
-(* Get discrete value from bool *)
-let of_bool x = Bool_value x
+
 
 (* Convert any discrete value to a Rational_value *)
 let convert_to_rational_value value =
@@ -404,6 +427,7 @@ let rec hash = function
     | Binary_word_value b -> BinaryWord.hash b
     (* Arbitrary *)
     | Array_value a -> Array.fold_left (fun acc x -> acc + (hash x)) 0 a
+    | List_value l -> List.fold_left (fun acc x -> acc + (hash x)) 0 l
 
 (** Dynamic computing operations on values  **)
 
@@ -416,6 +440,7 @@ let equal a b =
     | Int_value a, Int_value b -> Int32.equal a b
     | Binary_word_value a, Binary_word_value b -> BinaryWord.equal a b
     | Array_value a, Array_value b -> a = b
+    | List_value a, List_value b -> a = b
     | lt, rt -> raise (
         InternalError ("Computing exception on `"
             ^ string_of_var_type_discrete (discrete_type_of_value lt)
@@ -498,6 +523,7 @@ let l a b =
         | Rational_value a, Rational_value b -> Bool_value (NumConst.l a b)
         | Int_value a, Int_value b -> Bool_value (a < b)
         | Array_value a, Array_value b -> Bool_value (a < b)
+        | List_value a, List_value b -> Bool_value (a < b)
         | _ -> raise (InternalError ("Computing exception at `l " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Comparison, less or equal between two discrete value *)
@@ -507,6 +533,7 @@ let leq a b =
         | Rational_value a, Rational_value b -> Bool_value (NumConst.le a b)
         | Int_value a, Int_value  b -> Bool_value (a < b)
         | Array_value a, Array_value b -> Bool_value  (a <= b)
+        | List_value a, List_value b -> Bool_value  (a <= b)
         | _ -> raise (InternalError ("Computing exception at `leq " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Comparison, greater between two discrete value *)
@@ -516,6 +543,7 @@ let g a b =
         | Rational_value a, Rational_value b -> Bool_value (NumConst.g a b)
         | Int_value a, Int_value  b -> Bool_value (a < b)
         | Array_value a, Array_value b -> Bool_value  (a > b)
+        | List_value a, List_value b -> Bool_value  (a > b)
         | _ -> raise (InternalError ("Computing exception at `g " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Comparison, greater or equal between two discrete value *)
@@ -525,10 +553,12 @@ let geq a b =
         | Rational_value a, Rational_value b -> Bool_value (NumConst.ge a b)
         | Int_value a, Int_value  b -> Bool_value (a < b)
         | Array_value a, Array_value b -> Bool_value  (a >= b)
+        | List_value a, List_value b -> Bool_value  (a >= b)
         | _ -> raise (InternalError ("Computing exception at `geq " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 let access i = function
     | Array_value a -> a.(i)
+    | List_value l -> List.nth l i
     | _ as value -> raise (InternalError ("Computing exception at `access " ^ string_of_value value ^ "`"))
 
 let shift_left i = function

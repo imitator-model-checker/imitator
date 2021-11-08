@@ -15,6 +15,7 @@ let rec eval_global_expression discrete_valuation = function
     | Bool_expression expr -> DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
     | Binary_word_expression expr -> DiscreteValue.Binary_word_value (eval_discrete_binary_word_expression discrete_valuation expr)
     | Array_expression expr -> DiscreteValue.Array_value (eval_array_expression discrete_valuation expr)
+    | List_expression expr -> DiscreteValue.List_value (eval_list_expression discrete_valuation expr)
 
 and eval_discrete_arithmetic_expression discrete_valuation = function
     | Rational_arithmetic_expression expr ->
@@ -64,6 +65,9 @@ and eval_rational_expression discrete_valuation expr =
             variable_value;
         | Rational_array_access (array_expr, index_expr) ->
             let value = get_array_value_at discrete_valuation array_expr index_expr in
+            DiscreteValue.numconst_value value
+        | Rational_list_access (list_expr, index_expr) ->
+            let value = get_list_value_at discrete_valuation list_expr index_expr in
             DiscreteValue.numconst_value value
         | DF_expression expr ->
             eval_rational_expression_rec expr
@@ -137,6 +141,9 @@ and eval_int_expression discrete_valuation (* expr *) =
         | Int_array_access (array_expr, index_expr) ->
             let value = get_array_value_at discrete_valuation array_expr index_expr in
             DiscreteValue.int_value value
+        | Int_list_access (list_expr, index_expr) ->
+            let value = get_list_value_at discrete_valuation list_expr index_expr in
+            DiscreteValue.int_value value
     in
     eval_int_expression_rec
 
@@ -157,6 +164,9 @@ and check_discrete_boolean_expression discrete_valuation = function
     | Bool_array_access (array_expr, index_expr) ->
         let value = get_array_value_at discrete_valuation array_expr index_expr in
         DiscreteValue.bool_value value
+    | Bool_list_access (list_expr, index_expr) ->
+        let value = get_list_value_at discrete_valuation list_expr index_expr in
+        DiscreteValue.bool_value value
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
     (* TODO benjamin WARNING here we compare a DiscreteValue.discrete_value type with operator it's bad *)
     (* We just have to create a Rational_comparison and a Int_comparison to solve this *)
@@ -176,6 +186,10 @@ and check_discrete_boolean_expression discrete_valuation = function
         (operator_of_relop relop)
             (eval_array_expression discrete_valuation l_expr)
             (eval_array_expression discrete_valuation r_expr)
+    | List_comparison (l_expr, relop, r_expr) ->
+        (operator_of_relop relop)
+            (eval_list_expression discrete_valuation l_expr)
+            (eval_list_expression discrete_valuation r_expr)
 
     (** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
     | Expression_in (discrete_arithmetic_expression_1, discrete_arithmetic_expression_2, discrete_arithmetic_expression_3) ->
@@ -233,6 +247,9 @@ and eval_discrete_binary_word_expression discrete_valuation = function
     | Binary_word_array_access (array_expr, index_expr, _) ->
         let value = get_array_value_at discrete_valuation array_expr index_expr in
         DiscreteValue.binary_word_value value
+    | Binary_word_list_access (list_expr, index_expr, _) ->
+        let value = get_list_value_at discrete_valuation list_expr index_expr in
+        DiscreteValue.binary_word_value value
 
 and eval_array_expression discrete_valuation = function
     | Literal_array array ->
@@ -244,10 +261,27 @@ and eval_array_expression discrete_valuation = function
     | Array_array_access (array_expr, index_expr) ->
         let value = get_array_value_at discrete_valuation array_expr index_expr in
         DiscreteValue.array_value value
+    | Array_list_access (list_expr, index_expr) ->
+        let value = get_list_value_at discrete_valuation list_expr index_expr in
+        DiscreteValue.array_value value
     | Array_concat (array_expr_0, array_expr_1) ->
         let array_0 = eval_array_expression discrete_valuation array_expr_0 in
         let array_1 = eval_array_expression discrete_valuation array_expr_1 in
         Array.append array_0 array_1
+
+and eval_list_expression discrete_valuation = function
+    | Literal_list list ->
+        List.map (fun expr -> eval_global_expression discrete_valuation expr) list
+    | List_variable variable_index ->
+        DiscreteValue.list_value (discrete_valuation variable_index)
+    | List_constant values ->
+        values
+    | List_array_access (array_expr, index_expr) ->
+        let value = get_array_value_at discrete_valuation array_expr index_expr in
+        DiscreteValue.list_value value
+    | List_list_access (list_expr, index_expr) ->
+        let value = get_list_value_at discrete_valuation list_expr index_expr in
+        DiscreteValue.list_value value
 
 and get_array_value_at discrete_valuation array_expr index_expr =
 
@@ -262,6 +296,20 @@ and get_array_value_at discrete_valuation array_expr index_expr =
     );
 
     Array.get values int_index
+
+and get_list_value_at discrete_valuation array_expr index_expr =
+
+    let values = eval_list_expression discrete_valuation array_expr in
+    let index = eval_int_expression discrete_valuation index_expr in
+    let int_index = Int32.to_int index in
+
+    if int_index >= List.length values || int_index < 0 then (
+        let str_index = string_of_int int_index in
+        let str_values = OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (fun value -> DiscreteValue.string_of_value value) values) in
+        raise (Out_of_bound ("List index out of range: `" ^ str_index ^ "` for list " ^ str_values))
+    );
+
+    List.nth values int_index
 
 (*
 (* Wrap a scalar value to an array value in function of the modified index of an old value *)
