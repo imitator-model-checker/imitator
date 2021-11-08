@@ -538,25 +538,25 @@ and try_reduce_parsed_arithmetic_expression constants expr =
             (* we have to know type of expr *)
             let value_type = DiscreteValue.discrete_type_of_value reduced_expr in
             (match value_type with
-            | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
+            | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational ->
                 let numconst_expr = DiscreteValue.numconst_value reduced_expr in
                 let int_exp = DiscreteValue.int_value reduced_exp in
                 let numconst_result = NumConst.pow numconst_expr int_exp in
                 DiscreteValue.of_numconst numconst_result
-            | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
+            | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_int ->
                 let int_expr = DiscreteValue.int_value reduced_expr in
                 let int_exp = DiscreteValue.int_value reduced_exp in
                 let int_result = OCamlUtilities.pow int_expr int_exp in
                 DiscreteValue.of_int int_result
             (* Should never happen *)
-            | DiscreteValue.Var_type_discrete_bool
-            | DiscreteValue.Var_type_discrete_binary_word _
-            | DiscreteValue.Var_type_discrete_array _
-            | DiscreteValue.Var_type_discrete_list _
-            | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number as t ->
+            | DiscreteType.Var_type_discrete_bool
+            | DiscreteType.Var_type_discrete_binary_word _
+            | DiscreteType.Var_type_discrete_array _
+            | DiscreteType.Var_type_discrete_list _
+            | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_unknown_number as t ->
                 raise (InternalError (
                     "Try to reduce a pow function on a "
-                    ^ DiscreteValue.string_of_var_type_discrete t
+                    ^ DiscreteType.string_of_var_type_discrete t
                     ^ " expression, altough it was checked before by the type checker. Maybe type checking has failed before"
                 ))
             )
@@ -652,7 +652,7 @@ let is_only_discrete variable_infos = function
         ||
         try(
             let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-            DiscreteValue.is_discrete_type (variable_infos.type_of_variables variable_index)
+            DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
         ) with Not_found -> (
             (* Variable not found! *)
             (*** TODO: why is this checked here…? It should have been checked before ***)
@@ -669,7 +669,7 @@ let no_variables variable_infos = function
         (* Or parameter *)
         ||
         let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-        variable_infos.type_of_variables variable_index = DiscreteValue.Var_type_parameter
+        variable_infos.type_of_variables variable_index = DiscreteType.Var_type_parameter
 
 (* Check if a global expression is constant *)
 let is_parsed_global_expression_constant variable_infos =

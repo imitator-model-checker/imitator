@@ -22,7 +22,7 @@ open DiscreteExpressions
 (** Local printings *)
 (****************************************************************)
 (* Convert a var_type into a string *)
-val string_of_var_type : DiscreteValue.var_type -> string
+val string_of_var_type : DiscreteType.var_type -> string
 
 (************************************************************)
 (** Arithmetic expression *)

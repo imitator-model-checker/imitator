@@ -218,9 +218,9 @@ type abstract_model = {
 	(* The function : variable_index -> variable name *)
 	variable_names : variable_index -> variable_name;
 	(* All discrete variable names group by types *)
-    discrete_names_by_type_group : (DiscreteValue.var_type * (variable_name list)) list;
+    discrete_names_by_type_group : (DiscreteType.var_type * (variable_name list)) list;
 	(* The type of variables *)
-	type_of_variables : variable_index -> DiscreteValue.var_type;
+	type_of_variables : variable_index -> DiscreteType.var_type;
 
 	(* The automata *)
 	automata : automaton_index list;

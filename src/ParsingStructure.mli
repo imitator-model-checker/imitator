@@ -488,7 +488,7 @@ type useful_parsing_model_information = {
 	nb_parameters						: int;
 	parameter_names						: variable_name list;
 	removed_action_names				: Automaton.action_name list;
-	type_of_variables					: Automaton.variable_index -> DiscreteValue.var_type;
+	type_of_variables					: Automaton.variable_index -> DiscreteType.var_type;
 	variable_names						: variable_name list;
 	variables							: variable_name array;
 	removed_variable_names				: variable_name list;
@@ -498,6 +498,6 @@ type variable_infos = {
 	constants							: (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t;
     variable_names						: variable_name list;
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
-	type_of_variables					: Automaton.variable_index -> DiscreteValue.var_type;
+	type_of_variables					: Automaton.variable_index -> DiscreteType.var_type;
 	removed_variable_names				: variable_name list;
 }

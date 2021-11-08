@@ -67,23 +67,23 @@ exception InvalidProperty
 (************************************************************)
 
 let convert_var_type_discrete_number = function
-    | ParsingStructure.Var_type_discrete_rational -> DiscreteValue.Var_type_discrete_rational
-    | ParsingStructure.Var_type_discrete_int -> DiscreteValue.Var_type_discrete_int
+    | ParsingStructure.Var_type_discrete_rational -> DiscreteType.Var_type_discrete_rational
+    | ParsingStructure.Var_type_discrete_int -> DiscreteType.Var_type_discrete_int
 
 (* Convert discrete var type from parsing structure to abstract model *)
 let rec convert_var_type_discrete = function
-    | ParsingStructure.Var_type_discrete_number x -> DiscreteValue.Var_type_discrete_number (convert_var_type_discrete_number x)
-    | ParsingStructure.Var_type_discrete_bool -> DiscreteValue.Var_type_discrete_bool
-    | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteValue.Var_type_discrete_binary_word length
-    | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteValue.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
-    | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteValue.Var_type_discrete_list (convert_var_type_discrete inner_type)
+    | ParsingStructure.Var_type_discrete_number x -> DiscreteType.Var_type_discrete_number (convert_var_type_discrete_number x)
+    | ParsingStructure.Var_type_discrete_bool -> DiscreteType.Var_type_discrete_bool
+    | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteType.Var_type_discrete_binary_word length
+    | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteType.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
+    | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteType.Var_type_discrete_list (convert_var_type_discrete inner_type)
 
 (* Convert var type from parsing structure to abstract model *)
 let convert_var_type = function
-    | ParsingStructure.Var_type_clock -> DiscreteValue.Var_type_clock
-    | ParsingStructure.Var_type_constant -> DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
-    | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteValue.Var_type_discrete (convert_var_type_discrete var_type_discrete)
-    | ParsingStructure.Var_type_parameter -> DiscreteValue.Var_type_parameter
+    | ParsingStructure.Var_type_clock -> DiscreteType.Var_type_clock
+    | ParsingStructure.Var_type_constant -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational)
+    | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteType.Var_type_discrete (convert_var_type_discrete var_type_discrete)
+    | ParsingStructure.Var_type_parameter -> DiscreteType.Var_type_parameter
 
 
 let numconst_value_or_fail = function
@@ -91,7 +91,7 @@ let numconst_value_or_fail = function
     | DiscreteValue.Rational_value x -> x
     | x ->
         let str_value = DiscreteValue.string_of_value x in
-        let str_type = DiscreteValue.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value x) in
+        let str_type = DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value x) in
         let error_msg =
             "Linear expressions only support rational literals and constants, value "
             ^ str_value
@@ -145,20 +145,20 @@ and convert_parsed_global_expression variable_infos = function
         let discrete_type = TypeChecker.discrete_type_of_expression variable_infos global_expr in
 
         match discrete_type with
-        | DiscreteValue.Var_type_discrete_bool ->
+        | DiscreteType.Var_type_discrete_bool ->
             bool_expression_of_parsed_expression variable_infos expr
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
+        | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational ->
             rational_expression_of_parsed_expression variable_infos expr
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
+        | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_int ->
             int_expression_of_parsed_expression variable_infos expr
-        | DiscreteValue.Var_type_discrete_binary_word _ ->
+        | DiscreteType.Var_type_discrete_binary_word _ ->
             Binary_word_expression (binary_word_expression_of_parsed_boolean_expression variable_infos expr)
-        | DiscreteValue.Var_type_discrete_array _ ->
+        | DiscreteType.Var_type_discrete_array _ ->
             Array_expression (array_expression_of_parsed_boolean_expression variable_infos expr)
-        | DiscreteValue.Var_type_discrete_list _ ->
+        | DiscreteType.Var_type_discrete_list _ ->
             List_expression (list_expression_of_parsed_boolean_expression variable_infos expr)
         (* Should never happen *)
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
+        | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_unknown_number ->
             raise (InternalError "An expression still contains unknown literal number after type checking")
 
 (* Get typed rational expression of global parsed expression *)
@@ -213,38 +213,38 @@ and convert_discrete_bool_expr variable_infos = function
         let t = TypeChecker.discrete_type_of_parsed_discrete_boolean_expression variable_infos l_expr in
 
         (match t with
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
+        | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational
+        | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_int ->
             Expression (
                 (arithmetic_expression_of_parsed_discrete_boolean_expression variable_infos l_expr),
                 (convert_parsed_relop relop),
                 (arithmetic_expression_of_parsed_discrete_boolean_expression variable_infos r_expr)
             )
-        | DiscreteValue.Var_type_discrete_bool ->
+        | DiscreteType.Var_type_discrete_bool ->
             Boolean_comparison (
                 convert_discrete_bool_expr variable_infos l_expr,
                 convert_parsed_relop relop,
                 convert_discrete_bool_expr variable_infos r_expr
             )
-        | DiscreteValue.Var_type_discrete_binary_word l ->
+        | DiscreteType.Var_type_discrete_binary_word l ->
             Binary_comparison (
                 binary_word_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
                 convert_parsed_relop relop,
                 binary_word_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
             )
-        | DiscreteValue.Var_type_discrete_array _ ->
+        | DiscreteType.Var_type_discrete_array _ ->
             Array_comparison (
                 array_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
                 convert_parsed_relop relop,
                 array_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
             )
-        | DiscreteValue.Var_type_discrete_list _ ->
+        | DiscreteType.Var_type_discrete_list _ ->
             List_comparison (
                 list_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
                 convert_parsed_relop relop,
                 list_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
             )
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
+        | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_unknown_number ->
             raise (InvalidModel) (* should never happen, if type checking failed before *)
         )
 	| Parsed_expression_in (expr1, expr2, expr3) -> Expression_in (
@@ -350,18 +350,18 @@ and convert_parsed_discrete_arithmetic_expression variable_infos expr =
     let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_arithmetic_expression variable_infos expr in
 
     match discrete_type with
-    | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
+    | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational ->
         Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression variable_infos expr)
-    | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
+    | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_int ->
         Int_arithmetic_expression (convert_parsed_int_arithmetic_expression variable_infos expr)
 
     (* Other cases mean that type checking has failed *)
-    | DiscreteValue.Var_type_discrete_bool
-    | DiscreteValue.Var_type_discrete_binary_word _
-    | DiscreteValue.Var_type_discrete_array _
-    | DiscreteValue.Var_type_discrete_list _ as t ->
-        raise (InternalError ("An arithmetic expression was deduced as " ^ DiscreteValue.string_of_var_type_discrete t ^ " expression, maybe type checking has failed before"))
-    | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
+    | DiscreteType.Var_type_discrete_bool
+    | DiscreteType.Var_type_discrete_binary_word _
+    | DiscreteType.Var_type_discrete_array _
+    | DiscreteType.Var_type_discrete_list _ as t ->
+        raise (InternalError ("An arithmetic expression was deduced as " ^ DiscreteType.string_of_var_type_discrete t ^ " expression, maybe type checking has failed before"))
+    | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_unknown_number ->
         raise (InternalError "An arithmetic expression still contains unknown literal numbers after type checking, maybe type checking has failed before")
 
 (* Convert a parsed discrete arithmetic expression to a rational arithmetic expression *)
@@ -575,7 +575,7 @@ and binary_word_expression_of_parsed_factor variable_infos factor =
     let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
     let binary_word_length =
         match discrete_type with
-        | DiscreteValue.Var_type_discrete_binary_word length -> length
+        | DiscreteType.Var_type_discrete_binary_word length -> length
         | _ -> raise (InternalError "Binary word expression hold another type than binary word, although it was type checked before.")
     in
 
@@ -1535,14 +1535,14 @@ let check_update variable_infos automaton_name update =
 
                         match variable_type with
                         (* Type clock: allow any linear term in updates: so just check that variables have been declared *)
-                        | Some DiscreteValue.Var_type_clock ->
+                        | Some DiscreteType.Var_type_clock ->
                             print_message Verbose_total ("                A clock!");
                             (* TODO benjamin REFACTOR change to true, because it was checked before *)
                             ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression
 
                         (* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
-                        | Some DiscreteValue.Var_type_discrete var_type_discrete ->
-                            let string_of_var_type = DiscreteValue.string_of_var_type_discrete var_type_discrete in
+                        | Some DiscreteType.Var_type_discrete var_type_discrete ->
+                            let string_of_var_type = DiscreteType.string_of_var_type_discrete var_type_discrete in
                             print_message Verbose_total ("                A " ^ string_of_var_type ^ "!");
 
                             (* TODO benjamin REFACTOR change to true, because it was checked before *)
@@ -1561,7 +1561,7 @@ let check_update variable_infos automaton_name update =
                                 )
                             )
                         (* Case of a parameter: forbidden! *)
-                        | Some DiscreteValue.Var_type_parameter ->
+                        | Some DiscreteType.Var_type_parameter ->
                             print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
                         | None ->
                             print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); false
@@ -1591,8 +1591,8 @@ let check_update variable_infos automaton_name update =
             in
             match variable_type with
             | None -> print_error ("Variable or constant \"" ^ variable_name ^ "\" in the condition of a conditional update is not declared."); false
-            | Some DiscreteValue.Var_type_clock -> print_error ("The variable " ^ variable_name ^ " is a clock and cannot be used in the condition of a conditional update."); false
-            | Some DiscreteValue.Var_type_parameter -> print_error ("The variable " ^ variable_name ^ " is a parameter and cannot be used in the condition of a conditional update."); false
+            | Some DiscreteType.Var_type_clock -> print_error ("The variable " ^ variable_name ^ " is a clock and cannot be used in the condition of a conditional update."); false
+            | Some DiscreteType.Var_type_parameter -> print_error ("The variable " ^ variable_name ^ " is a parameter and cannot be used in the condition of a conditional update."); false
             | _ -> print_message Verbose_total ("                Check passed."); true
 
     in
@@ -1668,7 +1668,7 @@ let check_stopwatches index_of_variables type_of_variables location_name stopwat
 		(* Get variable name *)
 		try (
 			let variable_index = Hashtbl.find index_of_variables stopwatch in
-			if type_of_variables variable_index <> DiscreteValue.Var_type_clock then (
+			if type_of_variables variable_index <> DiscreteType.Var_type_clock then (
 			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined as a clock.");
 			ok := false;
 			);
@@ -1698,7 +1698,7 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 			let variable_index = Hashtbl.find index_of_variables clock_name in
 
 			(* Check variable type *)
-			if type_of_variables variable_index <> DiscreteValue.Var_type_clock then (
+			if type_of_variables variable_index <> DiscreteType.Var_type_clock then (
 				print_error ("The variable `" ^ clock_name ^ "` used in a flow in location `" ^ location_name ^ "` is not defined as a clock.");
 				ok := false;
 			);
@@ -1973,7 +1973,7 @@ let partition_discrete_continuous variable_infos filtered_init_inequalities =
 			if (Hashtbl.mem variable_infos.index_of_variables variable_name) then (
 				let variable_index =  Hashtbl.find variable_infos.index_of_variables variable_name in
 				(* Keep if this is a discrete *)
-				DiscreteValue.is_discrete_type (variable_infos.type_of_variables variable_index)
+				DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
 			) else if (Hashtbl.mem variable_infos.constants variable_name) then
 			    false
             else (
@@ -2175,13 +2175,13 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
         let non_rational_variable_names = StringSet.filter (fun variable_name ->
             if Hashtbl.mem index_of_variables variable_name then (
                 let variable_index = Hashtbl.find index_of_variables variable_name in
-                let variable_type = DiscreteValue.discrete_type_of_var_type (type_of_variables variable_index) in
-                not (DiscreteValue.is_discrete_type_rational_type variable_type)
+                let variable_type = DiscreteType.discrete_type_of_var_type (type_of_variables variable_index) in
+                not (DiscreteType.is_discrete_type_rational_type variable_type)
             )
             else if Hashtbl.mem constants variable_name then (
                 let value =  Hashtbl.find constants variable_name in
                 let variable_type = DiscreteValue.discrete_type_of_value value in
-                not (DiscreteValue.is_discrete_type_rational_type variable_type)
+                not (DiscreteType.is_discrete_type_rational_type variable_type)
             )
             else (
                 (* Otherwise problem ! *)
@@ -2198,7 +2198,7 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
                 ^ "` used in init constraint \""
                 ^ ParsingStructureUtilities.string_of_parsed_init_state_predicate variable_infos lp
                 ^ "\" should be "
-                ^ DiscreteValue.string_of_var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
+                ^ DiscreteType.string_of_var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational)
             );
             continuous_init_error := true;
         ) non_rational_variable_names
@@ -2906,7 +2906,7 @@ let split_to_clock_discrete_updates index_of_variables only_resets type_of_varia
 
     let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     (* Retrieve variable type *)
-    if type_of_variables (Hashtbl.find index_of_variables variable_name) = DiscreteValue.Var_type_clock then (
+    if type_of_variables (Hashtbl.find index_of_variables variable_name) = DiscreteType.Var_type_clock then (
       (* Update flag *)
       if parsed_update_expression <> Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant DiscreteValue.rational_zero))))) then (
         only_resets := false;
@@ -3153,7 +3153,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 				if (Hashtbl.mem index_of_variables variable_name) then (
 				let variable_index =  Hashtbl.find index_of_variables variable_name in
 				(* Keep if this is a discrete *)
-				DiscreteValue.is_discrete_type (type_of_variables variable_index)
+				DiscreteType.is_discrete_type (type_of_variables variable_index)
 				) else (
 				(* Case constant *)
 				if (Hashtbl.mem constants variable_name) then false
@@ -3812,7 +3812,7 @@ let check_parameter_name suffix_explanation_string variable_infos parameter_name
 		false
 	) else(
 		let parameter_index = Hashtbl.find variable_infos.index_of_variables parameter_name in
-		if not(variable_infos.type_of_variables parameter_index = DiscreteValue.Var_type_parameter) then(
+		if not(variable_infos.type_of_variables parameter_index = DiscreteType.Var_type_parameter) then(
 			print_error ("Variable " ^ parameter_name ^ " is not a parameter" ^ suffix_explanation_string);
 			false
 		)else true
@@ -4606,7 +4606,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         variable_names = [];
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];
-        type_of_variables = fun i -> DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational);
+        type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational);
     }
     in
 
@@ -4931,9 +4931,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let first_discrete_index  = first_clock_index + nb_clocks in
 
 	(* An array `variable index -> AbstractModel.var_type` *)
-	let type_of_variables = Array.make nb_variables DiscreteValue.Var_type_parameter in
+	let type_of_variables = Array.make nb_variables DiscreteType.Var_type_parameter in
 	for i = first_clock_index to first_discrete_index - 1 do
-		type_of_variables.(i) <- DiscreteValue.Var_type_clock;
+		type_of_variables.(i) <- DiscreteType.Var_type_clock;
 	done;
 
     (* Print some information *)
@@ -4946,7 +4946,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* Convert var_type from ParsingStructure to AbstractModel *)
 		type_of_variables.(i) <- var_type;
         (* Print type infos *)
-		print_message Verbose_high ("variable " ^ v ^ " : " ^ (DiscreteValue.string_of_var_type type_of_variables.(i)))
+		print_message Verbose_high ("variable " ^ v ^ " : " ^ (DiscreteType.string_of_var_type type_of_variables.(i)))
 	done;
 
 	(* Functional representation *)
@@ -4959,8 +4959,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 	(* Create the type check functions *)
-	let is_clock = (fun variable_index -> try (type_of_variables variable_index = DiscreteValue.Var_type_clock) with Invalid_argument _ ->  false) in
-	let is_discrete = (fun variable_index -> try (DiscreteValue.is_discrete_type (type_of_variables variable_index)) with Invalid_argument _ ->  false) in
+	let is_clock = (fun variable_index -> try (type_of_variables variable_index = DiscreteType.Var_type_clock) with Invalid_argument _ ->  false) in
+	let is_discrete = (fun variable_index -> try (DiscreteType.is_discrete_type (type_of_variables variable_index)) with Invalid_argument _ ->  false) in
 
 
 	(* Detect the clock with a special global time name, if any *)

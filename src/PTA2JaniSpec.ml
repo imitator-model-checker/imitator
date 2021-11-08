@@ -660,21 +660,21 @@ let string_of_clocks model =
 
 (* String of number var type *)
 let string_of_var_type_discrete_number_for_jani = function
-    | DiscreteValue.Var_type_discrete_rational -> json_quoted "real"
-    | DiscreteValue.Var_type_discrete_int -> json_quoted "int"
-    | DiscreteValue.Var_type_discrete_unknown_number -> json_quoted "number"
+    | DiscreteType.Var_type_discrete_rational -> json_quoted "real"
+    | DiscreteType.Var_type_discrete_int -> json_quoted "int"
+    | DiscreteType.Var_type_discrete_unknown_number -> json_quoted "number"
 
 (* String of discrete var type *)
 let rec string_of_var_type_discrete_for_jani = function
-    | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
-    | DiscreteValue.Var_type_discrete_bool -> json_quoted "bool"
-    | DiscreteValue.Var_type_discrete_binary_word _ ->
+    | DiscreteType.Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
+    | DiscreteType.Var_type_discrete_bool -> json_quoted "bool"
+    | DiscreteType.Var_type_discrete_binary_word _ ->
         json_struct [|
             json_property "kind" (json_quoted "array");
             json_property "base" (json_quoted "bool");
         |]
 
-    | DiscreteValue.Var_type_discrete_array (discrete_type, _) ->
+    | DiscreteType.Var_type_discrete_array (discrete_type, _) ->
         json_struct [|
             json_property "kind" (json_quoted "array");
             json_property "base" (string_of_var_type_discrete_for_jani discrete_type)
@@ -689,7 +689,7 @@ let string_of_discrete model =
 				(* Get the name *)
 				let discrete_name = model.variable_names discrete_index in
                 (* Get the type *)
-                let discrete_type = DiscreteValue.discrete_type_of_var_type (model.type_of_variables discrete_index) in
+                let discrete_type = DiscreteType.discrete_type_of_var_type (model.type_of_variables discrete_index) in
                 (* Get str for the type*)
                 let str_discrete_type = string_of_var_type_discrete_for_jani discrete_type in
 				(* Get the initial value *)

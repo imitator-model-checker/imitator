@@ -596,7 +596,7 @@ let apply_updates_assign_gen (time_direction: time_direction) (linear_constraint
 						(* Consider cases for clocks *)
 						match model.type_of_variables variable_index with
 						(* Clocks: X = 0 *)
-						| DiscreteValue.Var_type_clock ->
+						| DiscreteType.Var_type_clock ->
 							let x_lt = LinearConstraint.make_pxd_linear_term [
 								NumConst.one, variable_index;
 							] NumConst.zero in
@@ -2483,9 +2483,9 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(*** NOTE: we need a px AND d valuation, therefore a bit a hack here ***)
 		let pxd_valuation = fun variable_index ->
 			match model.type_of_variables variable_index with
-			| DiscreteValue.Var_type_clock
-			| DiscreteValue.Var_type_parameter -> valuation_n variable_index
-			| DiscreteValue.Var_type_discrete _ -> Location.get_discrete_rational_value location_n variable_index (* TODO benjamin : check with étienne, what is it ? is it computing of linear part ? *)
+			| DiscreteType.Var_type_clock
+			| DiscreteType.Var_type_parameter -> valuation_n variable_index
+			| DiscreteType.Var_type_discrete _ -> Location.get_discrete_rational_value location_n variable_index (* TODO benjamin : check with étienne, what is it ? is it computing of linear part ? *)
 		in
 		
 		(* Add the valuation to the list, and replace n+1 with n *)
@@ -3774,8 +3774,8 @@ class virtual algoStateBased =
 				(* Construct the px-valuation *)
 				(*** NOTE: technically (internally), the concrete_x_valuation already contains the parameter valuations! but for type soundness, we pretend to take parameters from pval ***)
 				let concrete_px_valuation_i variable_index = match model.type_of_variables variable_index with
-					| DiscreteValue.Var_type_clock -> concrete_x_valuation variable_index
-					| DiscreteValue.Var_type_parameter -> functional_pval_positive variable_index
+					| DiscreteType.Var_type_clock -> concrete_x_valuation variable_index
+					| DiscreteType.Var_type_parameter -> functional_pval_positive variable_index
 					| _ -> raise (InternalError ("Only clocks or parameters are expected at this point (in AlgoStateBased.exhibit_negative_counterexamples)"))
 				in
 (*							(*** NOTE: technically (internally), the concrete_x_valuation already contains the parameter valuations! but for type soundness, we pretend to re-intersect with the pval ***)

@@ -104,10 +104,10 @@ let check_declaration_compatibility model =
 	List.iter (fun i ->
 	    let variable_name = model.variable_names i in
 	    match model.type_of_variables i with
-	    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
-	    | DiscreteValue.Var_type_clock
-	    | DiscreteValue.Var_type_parameter -> ()
-	    | var_type -> print_warning ("Variable `" ^ variable_name ^ " : " ^ DiscreteValue.string_of_var_type var_type ^ "` is not a rational, HyTech only support rational-valued variable.")
+	    | DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational)
+	    | DiscreteType.Var_type_clock
+	    | DiscreteType.Var_type_parameter -> ()
+	    | var_type -> print_warning ("Variable `" ^ variable_name ^ " : " ^ DiscreteType.string_of_var_type var_type ^ "` is not a rational, HyTech only support rational-valued variable.")
 	) model.discrete
 
 (* Convert the initial variable declarations into a string *)

@@ -236,10 +236,10 @@ let footer = "\n"
 (************************************************************)
 
 (* Convert a var_type_discrete into a string *)
-let string_of_var_type_discrete = DiscreteValue.string_of_var_type_discrete
+let string_of_var_type_discrete = DiscreteType.string_of_var_type_discrete
 
 (* Convert a var_type into a string *)
-let string_of_var_type = DiscreteValue.string_of_var_type
+let string_of_var_type = DiscreteType.string_of_var_type
 
 (* Convert discrete variable declarations group (by type) into a string *)
 let string_of_discrete_variables_by_type var_type variable_names =
