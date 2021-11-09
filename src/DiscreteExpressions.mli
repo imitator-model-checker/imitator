@@ -61,8 +61,7 @@ and rational_term =
 and rational_factor =
 	| DF_variable of Automaton.variable_index
 	| DF_constant of NumConst.t
-    | Rational_array_access of array_expression * int_arithmetic_expression
-    | Rational_list_access of list_expression * int_arithmetic_expression
+    | Rational_access of expression_access_type * int_arithmetic_expression
 	| DF_expression of rational_arithmetic_expression
 	| DF_rational_of_int of int_arithmetic_expression
 	| DF_unary_min of rational_factor
@@ -89,8 +88,7 @@ and int_factor =
 	| Int_unary_min of int_factor
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     (* TODO benjamin IMPORTANT here decline array_expression to int_array_expression *)
-    | Int_array_access of array_expression * int_arithmetic_expression
-    | Int_list_access of list_expression * int_arithmetic_expression
+    | Int_access of expression_access_type * int_arithmetic_expression
 
 (************************************************************)
 (************************************************************)
@@ -126,8 +124,7 @@ and discrete_boolean_expression =
 	| DB_constant of bool
 	(** access to a boolean array **)
 	(* TODO benjamin IMPORTANT here decline array_expression to bool_array_expression *)
-    | Bool_array_access of array_expression * int_arithmetic_expression
-    | Bool_list_access of list_expression * int_arithmetic_expression
+    | Bool_access of expression_access_type * int_arithmetic_expression
 
 (************************************************************)
 (************************************************************)
@@ -148,16 +145,14 @@ and binary_word_expression =
     | Logical_not of binary_word_expression * int
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
-    | Binary_word_array_access of array_expression * int_arithmetic_expression * int
-    | Binary_word_list_access of list_expression * int_arithmetic_expression * int
+    | Binary_word_access of expression_access_type * int_arithmetic_expression * int
 
 (** Array expression **)
 and array_expression =
     | Literal_array of global_expression array
     | Array_constant of DiscreteValue.discrete_value array
     | Array_variable of Automaton.variable_index
-    | Array_array_access of array_expression * int_arithmetic_expression
-    | Array_list_access of list_expression * int_arithmetic_expression
+    | Array_access of expression_access_type * int_arithmetic_expression
     (* Add here some function on array *)
     | Array_concat of array_expression * array_expression
 
@@ -166,13 +161,12 @@ and list_expression =
     | Literal_list of global_expression list
     | List_constant of DiscreteValue.discrete_value list
     | List_variable of Automaton.variable_index
-    | List_array_access of array_expression * int_arithmetic_expression
-    | List_list_access of list_expression * int_arithmetic_expression
-(*
-and expression_access =
-    | Array_access of array_expression
-    | List_access of list_expression
-*)
+    | List_access of expression_access_type * int_arithmetic_expression
+
+and expression_access_type =
+    | Expression_array_access of array_expression
+    | Expression_list_access of list_expression
+
 type discrete_variable_access =
     | Discrete_variable_index of Automaton.discrete_index
     | Discrete_variable_access of discrete_variable_access * int_arithmetic_expression

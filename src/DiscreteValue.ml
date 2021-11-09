@@ -83,8 +83,8 @@ let rec customized_string_of_value customized_string = function
     | List_value l ->
         let str_values = List.map (fun x -> customized_string_of_value customized_string x) l in
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        (* TODO benjamin IMPROVE "list([a,b,c])" *)
-        l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_delimiter
+        (* TODO benjamin remove hardcoded "list([a,b,c])" *)
+        "list(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_delimiter ^ ")"
 
 let string_of_value = customized_string_of_value global_default_string
 

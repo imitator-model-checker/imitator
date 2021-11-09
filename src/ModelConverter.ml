@@ -134,6 +134,7 @@ let convert_parsed_relop = function
 	| PARSED_OP_GEQ	-> OP_GEQ
 	| PARSED_OP_G 	-> OP_G
 
+
 (* Convert parsed_discrete_arithmetic_expression *)
 let rec convert_parsed_discrete_arithmetic_expression_with_model variable_infos =
     convert_parsed_discrete_arithmetic_expression variable_infos
@@ -295,24 +296,9 @@ and search_variable_of_discrete_arithmetic_expression variable_infos expr =
             let bool_value = DiscreteValue.bool_value var_value in
             DB_constant bool_value
         | Parsed_DF_access (factor, index_expr) ->
-            (* Check discrete type for differentiate arrays and lists *)
-            let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
-
-            (match discrete_type with
-            | Var_type_discrete_array _ ->
-                Bool_array_access (
-                    array_expression_of_parsed_factor variable_infos factor,
-                    convert_parsed_int_arithmetic_expression variable_infos index_expr
-                )
-            | Var_type_discrete_list _ ->
-                Bool_list_access (
-                    list_expression_of_parsed_factor variable_infos factor,
-                    convert_parsed_int_arithmetic_expression variable_infos index_expr
-                )
-            | _ ->
-                raise (InternalError
-                    "An access on other element than an array or a list was found, although it was been type checked before."
-                )
+            Bool_access (
+                expression_access_type_of_parsed_df_access variable_infos factor,
+                convert_parsed_int_arithmetic_expression variable_infos index_expr
             )
 
         | Parsed_DF_array _
@@ -404,27 +390,10 @@ and convert_parsed_rational_arithmetic_expression variable_infos (* expr *) =
 
         | Parsed_DF_access (factor, index_expr) ->
 
-           (* Check discrete type for differentiate arrays and lists *)
-            let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
-
-            (match discrete_type with
-            | Var_type_discrete_array _ ->
-                Rational_array_access (
-                    array_expression_of_parsed_factor variable_infos factor,
-                    convert_parsed_int_arithmetic_expression variable_infos index_expr
-                )
-            | Var_type_discrete_list _ ->
-                Rational_list_access (
-                    list_expression_of_parsed_factor variable_infos factor,
-                    convert_parsed_int_arithmetic_expression variable_infos index_expr
-                )
-            | _ ->
-                raise (InternalError
-                    "An access on other element than an array or a list was found, although it was been type checked before."
-                )
+            Rational_access (
+                expression_access_type_of_parsed_df_access variable_infos factor,
+                convert_parsed_int_arithmetic_expression variable_infos index_expr
             )
-
-
 
         | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.to_numconst_value var_value)
         | Parsed_DF_expression expr -> DF_expression (convert_parsed_rational_arithmetic_expression_rec expr)
@@ -500,24 +469,9 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
 
         | Parsed_DF_access (factor, index_expr) ->
 
-           (* Check discrete type for differentiate arrays and lists *)
-            let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
-
-            (match discrete_type with
-            | Var_type_discrete_array _ ->
-                Int_array_access (
-                    array_expression_of_parsed_factor variable_infos factor,
-                    convert_parsed_int_arithmetic_expression variable_infos index_expr
-                )
-            | Var_type_discrete_list _ ->
-                Int_list_access (
-                    list_expression_of_parsed_factor variable_infos factor,
-                    convert_parsed_int_arithmetic_expression variable_infos index_expr
-                )
-            | _ ->
-                raise (InternalError
-                    "An access on other element than an array or a list was found, although it was been type checked before."
-                )
+            Int_access (
+                expression_access_type_of_parsed_df_access variable_infos factor,
+                convert_parsed_int_arithmetic_expression variable_infos index_expr
             )
 
         (* Should never happen, because it was checked by type checker before *)
@@ -593,28 +547,11 @@ and binary_word_expression_of_parsed_factor variable_infos factor =
         Binary_word_constant binary_word_value
 
     | Parsed_DF_access (factor, index_expr) ->
-
-           (* Check discrete type for differentiate arrays and lists *)
-            let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
-
-            (match discrete_type with
-            | Var_type_discrete_array _ ->
-                Binary_word_array_access (
-                    array_expression_of_parsed_factor variable_infos factor,
-                    convert_parsed_int_arithmetic_expression variable_infos index_expr,
-                    binary_word_length
-                )
-            | Var_type_discrete_list _ ->
-                Binary_word_list_access (
-                    list_expression_of_parsed_factor variable_infos factor,
-                    convert_parsed_int_arithmetic_expression variable_infos index_expr,
-                    binary_word_length
-                )
-            | _ ->
-                raise (InternalError
-                    "An access on other element than an array or a list was found, although it was been type checked before."
-                )
-            )
+        Binary_word_access (
+            expression_access_type_of_parsed_df_access variable_infos factor,
+            convert_parsed_int_arithmetic_expression variable_infos index_expr,
+            binary_word_length
+        )
 
     | Parsed_shift_function (fun_type, factor, expr) ->
         let binary_word_expr = binary_word_expression_of_parsed_factor variable_infos factor in
@@ -703,26 +640,10 @@ and array_expression_of_parsed_factor variable_infos = function
         Literal_array (Array.map (fun expr -> convert_parsed_global_expression variable_infos (Parsed_global_expression expr)) expr_array)
 
     | Parsed_DF_access (factor, index_expr) ->
-
-           (* Check discrete type for differentiate arrays and lists *)
-            let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
-
-            (match discrete_type with
-            | Var_type_discrete_array _ ->
-                Array_array_access (
-                    array_expression_of_parsed_factor variable_infos factor,
-                    convert_parsed_int_arithmetic_expression variable_infos index_expr
-                )
-            | Var_type_discrete_list _ ->
-                Array_list_access (
-                    list_expression_of_parsed_factor variable_infos factor,
-                    convert_parsed_int_arithmetic_expression variable_infos index_expr
-                )
-            | _ ->
-                raise (InternalError
-                    "An access on other element than an array or a list was found, although it was been type checked before."
-                )
-            )
+        Array_access (
+            expression_access_type_of_parsed_df_access variable_infos factor,
+            convert_parsed_int_arithmetic_expression variable_infos index_expr
+        )
 
     | Parsed_array_concat (factor_0, factor_1) ->
         Array_concat (
@@ -782,26 +703,10 @@ and list_expression_of_parsed_factor variable_infos = function
         Literal_list (List.map (fun expr -> convert_parsed_global_expression variable_infos (Parsed_global_expression expr)) expr_list)
 
     | Parsed_DF_access (factor, index_expr) ->
-
-           (* Check discrete type for differentiate arrays and lists *)
-            let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
-
-            (match discrete_type with
-            | Var_type_discrete_array _ ->
-                List_array_access (
-                    array_expression_of_parsed_factor variable_infos factor,
-                    convert_parsed_int_arithmetic_expression variable_infos index_expr
-                )
-            | Var_type_discrete_list _ ->
-                List_list_access (
-                    list_expression_of_parsed_factor variable_infos factor,
-                    convert_parsed_int_arithmetic_expression variable_infos index_expr
-                )
-            | _ ->
-                raise (InternalError
-                    "An access on other element than an array or a list was found, although it was been type checked before."
-                )
-            )
+        List_access (
+            expression_access_type_of_parsed_df_access variable_infos factor,
+            convert_parsed_int_arithmetic_expression variable_infos index_expr
+        )
 
     | _ as factor ->
         raise (InternalError (
@@ -810,6 +715,19 @@ and list_expression_of_parsed_factor variable_infos = function
             ^ "\" in a list expression, although it was checked before by type checking. Maybe something fail in type checking"
         ))
 
+and expression_access_type_of_parsed_df_access variable_infos factor =
+    (* Check discrete type for differentiate arrays and lists *)
+    let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
+
+    match discrete_type with
+    | Var_type_discrete_array _ ->
+        Expression_array_access (array_expression_of_parsed_factor variable_infos factor)
+    | Var_type_discrete_list _ ->
+        Expression_list_access (list_expression_of_parsed_factor variable_infos factor)
+    | _ ->
+        raise (InternalError
+            "An access on other element than an array or a list was found, although it was been type checked before."
+        )
 
 (*------------------------------------------------------------*)
 (* Functions for property conversion *)

@@ -25,6 +25,7 @@ type discrete_value =
     | Int_value of Int32.t
     | Bool_value of bool
     | Binary_word_value of BinaryWord.t
+    (* TODO benjamin REFACTOR maybe Collection_value *)
     | Array_value of discrete_value array
     | List_value of discrete_value list
 

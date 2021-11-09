@@ -73,7 +73,9 @@ let rec string_of_var_type_discrete = function
         let warning_in_comment = if length > 31 then ", WARNING: length > 31 can lead to overflow !" else "" in
         let comment = "/* binary(" ^ string_of_int length ^ ")" ^ warning_in_comment ^ " */" in
         "int " ^ comment
-    | DiscreteType.Var_type_discrete_array (discrete_type, length) -> string_of_var_type_discrete discrete_type
+    | DiscreteType.Var_type_discrete_array (inner_type, _)
+    | DiscreteType.Var_type_discrete_list inner_type ->
+        string_of_var_type_discrete inner_type
 
 (* Customized string of var_type *)
 let string_of_var_type = function
@@ -99,6 +101,10 @@ let rec string_of_value = function
     | DiscreteValue.Array_value a ->
         let string_array = Array.map (fun x -> string_of_value x) a in
         "{" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "}"
+    | DiscreteValue.List_value l ->
+        let string_list = List.map (fun x -> string_of_value x) l in
+        "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
+
 
 (* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
 (* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
