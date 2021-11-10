@@ -344,14 +344,14 @@ if they are not, a warning is issued, and they are arbitrarily set to a standard
 
 Discrete variables can be tested in guards, and updated along transitions.
 
-\imitator{} currently supports four types of discrete variables:
+\imitator{} currently supports four elementary types of discrete variables:
 \begin{enumerate}
 	\item rational-valued variables
 	\item ``int''-valued variables (over 32~bits)
-	\item boolean-valued variables
+	\item Boolean-valued variables
 	\item binary word variables, allowing to use bitwise binary operations.
-	\item array variables
 \end{enumerate}
+In addition, \emph{arrays} (of elementary types, or of arrays) can be used.
 
 %------------------------------------------------------------
 \subsubsection{Rational-valued variables}
@@ -427,26 +427,28 @@ Note that binary words are of fixed length, and operations can only be applied t
 We denote by~$\WVar$ the set of binary word variables.
 
 %------------------------------------------------------------
-\subsubsection{Array variables}
+\subsubsection{Arrays}
 %------------------------------------------------------------
 
 Array variables are fixed length collections of indexed elements.
 Array elements can be accessed or updated using an integer-valued arithmetic expression as index.
-An array variable always has an underlying type, which can be any of available types of \imitator{}.
-For example, it's possible to declare an array of int, an array of bool, an array of array of bool - an array can be multi-dimensional - etc. following the syntax below:
+An array variable always has a fixed length and an underlying type, which can be any of the available types of \imitator{} (including arrays).
+For example, it is possible to declare an array of integers, of Booleans, of arrays of arrays of Booleans---which can be seen as a multidimensional array.
+
+Examples of array definitions are given below:
 
 %------------------------------------------------------------
 \begin{IMITATORmodel}
-	my_rational_array : rational array(5);
-	my_int_array : int array(2);
-	my_bool_array : bool array(3);
+	my_rational_array    : rational array(5);
+	my_int_array         : int array(2);
+	my_bool_array        : bool array(3);
 	my_binary_word_array : binary(4) array(2);
-	my_2d_int_array : int array(2) array(2);
+	my_2d_int_array      : int array(2) array(2);
 \end{IMITATORmodel}
 %------------------------------------------------------------
 
-The set of Array variables is $\AVar = \{ \avar_1, \dots, \avar_\AVarCard \} $;
-an Array variable valuation is a function $\aval : \AVar \rightarrow \setA$, where $\setA$ is the set of the elements of the array.
+% The set of array variables is $\AVar = \{ \avar_1, \dots, \avar_\AVarCard \} $;
+% an Array variable valuation is a function $\aval : \AVar \rightarrow \setA$, where $\setA$ is the set of the elements of the array.
 
 %------------------------------------------------------------
 \subsubsection{Built-in functions over discrete variables}\label{section:builtin-functions}
@@ -529,7 +531,7 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 \paragraph{Array functions}
 
 \begin{itemize}
-	\item \styleIMI{array\_concat(a1 : 'a array(l1), a2 : 'a array(l2)) : 'a array(l1 + l2)} with \styleIMI{'a : any}: concat an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting to an array of length \styleIMI{l1 + l2}
+	\item \styleIMI{array\_concat(a1 : 'a array(l1), a2 : 'a array(l2)) : 'a array(l1 + l2)} with \styleIMI{'a : any}: concatenates an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting in an array of length \styleIMI{l1 + l2}
 \end{itemize}
 
 %------------------------------------------------------------
@@ -550,7 +552,8 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 \subsubsection{Discrete variables definition}
 %------------------------------------------------------------
 
-The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar \cup \WVar \cup \AVar $.
+The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar \cup \WVar$.
+(We do not formalize the arrays in the following, as we believe their usage is straightforward.)
 
 %a discrete variable valuation is a function $\dval : \DVar \rightarrow \setN$.
 
@@ -677,7 +680,7 @@ That is, by default, $\forall \loc \in \Loc, \forall \clock \in \Clock : \flow(\
 However, one can explicitly define an alternative (constant, rational-valued) flow using two methods:
 \begin{description}
 	\item [Using stopwatches]
-A stopwatch is a clock whose elapsing is stopped in some locations, \ie{} $\flow(\loc, \clock) = 0$.
+A stopwatch~\cite{CL00} is a clock whose elapsing is stopped in some locations, \ie{} $\flow(\loc, \clock) = 0$.
 There is no distinction between clocks and stopwatches.
 That is, any clock can potentially be stopped in some location.
 \imitator{} will detect whether a model has or not stopwatches; if there is no stopwatch in the model, \imitator{} will apply some optimizations that (may) increase the analysis speed.
@@ -690,7 +693,7 @@ It is resumed when leaving the location---unless the target location again stops
 \item [Using explicit flows]
 \imitator{} also support constant flows, \ie{} multi-rate (parametric) timed automata~\cite{ACHHHNOSY95}.
 That is, it is possible to specify the \emph{speed} of a clock in a location.
-This value is an arbitrary rational number, including 0 (in which case it is equivalent to a stopwatch) or a negative number.
+This value is an arbitrary rational number, including 0 (in which case it is equivalent to a stopwatch~\cite{CL00}) or a negative number.
 This can be specified using a syntax of the following form: \styleIMI{flow \{x' = 2\}}.
 A clock for which no flow is explicitly defined has of course flow~1.
 A stopwatch has flow~0.
@@ -820,6 +823,7 @@ This initial default value is as follows, depending on the variable type:
 	Binary words & \styleIMI{0b0}\\
 \end{tabular}
 
+The initial default value of arrays is that of their type.
 
 
 
@@ -2100,17 +2104,18 @@ Binary words translation into \uppaal{} formalism is experimental. Binary words 
 For this reason, translating binary words of length greater than 31~bits or shifting a binary word of an arbitrary length can lead to unexpected behaviors and results.
 \end{becareful}
 
-\paragraph{Array variables}
+\paragraph{Arrays}
 
+Arrays are only partially supported by our translation to \uppaal{}.
+%
 Array variables, array literals, arrays element access (read / write) and arrays comparisons are supported by our translation into \uppaal{}.
 
 \begin{becareful}
-	Although it's possible in \imitator{} to comparing an array variable to a literal array or literal array to another one, this type of comparison isn't supported by \uppaal{}.
-
+	Although it is possible in \imitator{} to compare an array variable to a literal array or literal array to another one, this type of comparison is not supported by \uppaal{}.
 \end{becareful}
 
 \begin{becareful}
-	Built-in functions operating on array are not supported by our translation.
+	Built-in functions operating on arrays (such as \styleIMI{array\_concat}) are not supported by our translation.
 \end{becareful}
 
 \paragraph{Built-in functions}
@@ -2121,7 +2126,7 @@ Partially supported \imitator{} built-in functions are the following: \styleIMI{
 Because of binary words are encoded into integer variables, these functions could have a unspecified behaviors.
 
 \begin{becareful}
-	Unsupported \imitator{} built-in functions will not be declared (and implemented) in \uppaal{} translation, resulting to a bad program when trying to call one. The declaration and implementation of these functions in \uppaal{}, if the \uppaal{} formalism allow it, is the responsability of the user.
+	Unsupported \imitator{} built-in functions will not be declared (and implemented) in \uppaal{} translation, resulting to a bad program when trying to call one. The declaration and implementation of these functions in \uppaal{}, if the \uppaal{} input syntax allows it, is the responsibility of the user.
 \end{becareful}
 
 \paragraph{Strong broadcast synchronization}
@@ -2170,7 +2175,7 @@ imitator model.imi -imi2HyTech
 
 \imitator{} will generate a file \stylePath{model.hy}. \\
 
-The syntax going beyond that of \hytech{} (typically, booleans, binary words, array…) and \imitator{} built-in functions
+The syntax going beyond that of \hytech{} (typically, Booleans, binary words, arrays…)\ and \imitator{} built-in functions
 is obviously not translated correctly.
 In addition, the translation of properties is not supported.
 % TODO
@@ -2228,9 +2233,12 @@ Binary words are somehow supported by our translation to \jani{}, but not the bu
 	Built-in functions operating on binary words are not supported by our translation.
 \end{becareful}
 
-\paragraph{Array variables}
+\paragraph{Arrays}
 
-Array variables, array literals, arrays element access (read / write) and arrays comparisons are supported by our translation into \jani{}. But not the built-in functions.
+Arrays are only partially supported by our translation to \jani{}.
+%
+Array variables, array literals, arrays element access (read / write) and arrays comparisons are supported by our translation into \jani{}.
+But not the built-in functions.
 
 \paragraph{Built-in functions}
 

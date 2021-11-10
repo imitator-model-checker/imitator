@@ -152,7 +152,7 @@
 \newcommand{\ArithExprI}{\ArithExpr(\IVar)}
 \newcommand{\ArithExprB}{\ArithExpr(\BVar)}
 \newcommand{\ArithExprW}{\ArithExpr(\WVar)}
-\newcommand{\ArithExprA}{\ArithExpr(\AVar)}
+% \newcommand{\ArithExprA}{\ArithExpr(\AVar)}
 \newcommand{\C}{C}
 \newcommand{\Cinit}{\C_\init} % initial constraint
 \newcommand{\Clock}{X} % set of clocks
@@ -182,11 +182,11 @@
 \newcommand{\wvar}{w} % binary word variable % TODO: conflict
 % \newcommand{\WVarCard}{M} % cardinality of binary word variables  % TODO: conflict
 
-\newcommand{\aval}{\ensuremath{\alpha}} % array variable
-\newcommand{\AVar}{A} % set of array variables
-\newcommand{\ElVar}{El} % set of element of array variables
-\newcommand{\avar}{t} % array variable
-\newcommand{\AVarCard}{N} % cardinality of array variables
+% \newcommand{\aval}{\ensuremath{\alpha}} % array variable
+% \newcommand{\AVar}{A} % set of array variables
+% \newcommand{\ElVar}{El} % set of element of array variables
+% \newcommand{\avar}{t} % array variable
+% \newcommand{\AVarCard}{N} % cardinality of array variables
 
 % \newcommand{\DVarinit}{\DVar_\init} % discrete variable
 \newcommand{\edge}{e}
@@ -522,7 +522,7 @@
 	language=caml,                 % the language of the code
 	deletekeywords={done},            % if you want to delete keywords from the given language; WARNING! must be set AFTER the `language=…`
 	morekeywords={
-		accepting, and, automaton, binary, clock, constant, continuous, discrete, do, end, False, fill_left, fill_right, flow, forward, from, goto, if, in, init, int, initially, invariant, loc, logand, lognot, logor, logxor, not, or, parameter, projectresult, rational, shift_left, shift_right, stop, sync, sync, synclabs, True, urgent, var, when, while
+		accepting, and, array, automaton, binary, bool, clock, constant, continuous, discrete, do, end, False, fill_left, fill_right, flow, forward, from, goto, if, in, init, int, initially, invariant, loc, logand, lognot, logor, logxor, not, or, parameter, projectresult, rational, shift_left, shift_right, stop, sync, sync, synclabs, True, urgent, var, when, while
 	},
 	numbers=right,                    % where to put the line-numbers; possible values are (none, left, right)
 	numbersep=5pt,                   % how far the line-numbers are from the code
