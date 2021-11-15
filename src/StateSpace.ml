@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne, Dylan Marinho
  * Created           : 2009/12/08
- * Last modified     : 2021/10/21
+ * Last modified     : 2021/11/15
  *
  ************************************************************)
 
@@ -2264,7 +2264,9 @@ let merge2021 state_space queue =
         (* Merge si and sj. Note that C(si) = siUsj from the test *)
 
             (* Transitions: Replace  s-->s_merged with s-->s_merger and s_merged-->s with s_merger-->s  *)
-            merge_transitions state_space s_merger s_merged
+            tcounter_merge_statespace#start;
+            merge_transitions state_space s_merger s_merged;
+            tcounter_merge_statespace#stop;
         in
 
         let state = get_state state_space si in
