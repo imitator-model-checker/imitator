@@ -54,58 +54,10 @@ exception InvalidProperty
 (************************************************************)
 (************************************************************)
 
-
-
 (************************************************************)
 (************************************************************)
-(** Checking and converting discrete arithmetic expressions *)
+(** Type conversions *)
 (************************************************************)
-(************************************************************)
-
-(************************************************************)
-(** Getting variables *)
-(************************************************************)
-
-let convert_var_type_discrete_number = function
-    | ParsingStructure.Var_type_discrete_rational -> DiscreteType.Var_type_discrete_rational
-    | ParsingStructure.Var_type_discrete_int -> DiscreteType.Var_type_discrete_int
-
-(* Convert discrete var type from parsing structure to abstract model *)
-let rec convert_var_type_discrete = function
-    | ParsingStructure.Var_type_discrete_number x -> DiscreteType.Var_type_discrete_number (convert_var_type_discrete_number x)
-    | ParsingStructure.Var_type_discrete_bool -> DiscreteType.Var_type_discrete_bool
-    | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteType.Var_type_discrete_binary_word length
-    | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteType.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
-    | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteType.Var_type_discrete_list (convert_var_type_discrete inner_type)
-
-(* Convert var type from parsing structure to abstract model *)
-let convert_var_type = function
-    | ParsingStructure.Var_type_clock -> DiscreteType.Var_type_clock
-    | ParsingStructure.Var_type_constant -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational)
-    | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteType.Var_type_discrete (convert_var_type_discrete var_type_discrete)
-    | ParsingStructure.Var_type_parameter -> DiscreteType.Var_type_parameter
-
-
-let numconst_value_or_fail = function
-    | DiscreteValue.Number_value x
-    | DiscreteValue.Rational_value x -> x
-    | x ->
-        let str_value = DiscreteValue.string_of_value x in
-        let str_type = DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value x) in
-        let error_msg =
-            "Linear expressions only support rational literals and constants, value "
-            ^ str_value
-            ^ " of type "
-            ^ str_type
-            ^ " is not rational"
-        in
-        raise (InvalidExpression  error_msg)
-
-let is_variable_or_constant_declared index_of_variables constants variable_name =
-    Hashtbl.mem index_of_variables variable_name || Hashtbl.mem constants variable_name
-
-(************************************************************)
-(** Converting discrete arithmetic expressions *)
 (************************************************************)
 
 (* Variable kind type represent a variable or a constant kind *)
@@ -125,33 +77,75 @@ let variable_kind_of_variable_name variable_infos variable_name =
     else
         Variable_kind (Hashtbl.find variable_infos.index_of_variables variable_name)
 
+(* Convert var type number from parsing structure to abstract model *)
+let convert_var_type_discrete_number = function
+    | ParsingStructure.Var_type_discrete_rational -> DiscreteType.Var_type_discrete_rational
+    | ParsingStructure.Var_type_discrete_int -> DiscreteType.Var_type_discrete_int
+
+(* Convert discrete var type from parsing structure to abstract model *)
+let rec convert_var_type_discrete = function
+    | ParsingStructure.Var_type_discrete_number x -> DiscreteType.Var_type_discrete_number (convert_var_type_discrete_number x)
+    | ParsingStructure.Var_type_discrete_bool -> DiscreteType.Var_type_discrete_bool
+    | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteType.Var_type_discrete_binary_word length
+    | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteType.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
+    | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteType.Var_type_discrete_list (convert_var_type_discrete inner_type)
+
+(* Convert var type from parsing structure to abstract model *)
+let convert_var_type = function
+    | ParsingStructure.Var_type_clock -> DiscreteType.Var_type_clock
+    | ParsingStructure.Var_type_constant -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational)
+    | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteType.Var_type_discrete (convert_var_type_discrete var_type_discrete)
+    | ParsingStructure.Var_type_parameter -> DiscreteType.Var_type_parameter
+
+(* Get rational value or print error message (for linear expression that doesn't support other type than rational) *)
+let numconst_value_or_fail = function
+    | DiscreteValue.Number_value x
+    | DiscreteValue.Rational_value x -> x
+    | x ->
+        let str_value = DiscreteValue.string_of_value x in
+        let str_type = DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value x) in
+        let error_msg =
+            "Linear expressions only support rational literals and constants, value "
+            ^ str_value
+            ^ " of type "
+            ^ str_type
+            ^ " is not rational"
+        in
+        raise (InvalidExpression  error_msg)
+
+(************************************************************)
+(** Getting variables *)
+(************************************************************)
+
+let is_variable_or_constant_declared index_of_variables constants variable_name =
+    Hashtbl.mem index_of_variables variable_name || Hashtbl.mem constants variable_name
+
+(************************************************************)
+(** Converting discrete arithmetic expressions *)
+(************************************************************)
+
 (** Convert a Boolean operator to its abstract model *)
 let convert_parsed_relop = function
-	| PARSED_OP_L	-> OP_L
+	| PARSED_OP_L -> OP_L
 	| PARSED_OP_LEQ	-> OP_LEQ
 	| PARSED_OP_EQ	-> OP_EQ
 	| PARSED_OP_NEQ	-> OP_NEQ
 	| PARSED_OP_GEQ	-> OP_GEQ
-	| PARSED_OP_G 	-> OP_G
-
-
-(* Convert parsed_discrete_arithmetic_expression *)
-let rec convert_parsed_discrete_arithmetic_expression_with_model variable_infos =
-    convert_parsed_discrete_arithmetic_expression variable_infos
+	| PARSED_OP_G -> OP_G
 
 (* Convert a parsed global expression to an abstract model expression *)
-and convert_parsed_global_expression variable_infos = function
+let rec convert_parsed_global_expression variable_infos = function
     | Parsed_global_expression expr as global_expr ->
         (* TYPE CHECK *)
         let discrete_type = TypeChecker.discrete_type_of_expression variable_infos global_expr in
 
         match discrete_type with
         | DiscreteType.Var_type_discrete_bool ->
-            bool_expression_of_parsed_expression variable_infos expr
+            Bool_expression (bool_expression_of_parsed_boolean_expression variable_infos expr)
         | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational ->
-            rational_expression_of_parsed_expression variable_infos expr
+            rational_expression_of_parsed_boolean_expression variable_infos expr
         | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_int ->
-            int_expression_of_parsed_expression variable_infos expr
+            int_expression_of_parsed_boolean_expression variable_infos expr
         | DiscreteType.Var_type_discrete_binary_word _ ->
             Binary_word_expression (binary_word_expression_of_parsed_boolean_expression variable_infos expr)
         | DiscreteType.Var_type_discrete_array _ ->
@@ -162,130 +156,86 @@ and convert_parsed_global_expression variable_infos = function
         | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_unknown_number ->
             raise (InternalError "An expression still contains unknown literal number after type checking")
 
-(* Get typed rational expression of global parsed expression *)
-(* Extract arithmetic expression from parsed_discrete_boolean_expression *)
-and rational_expression_of_parsed_expression variable_infos (* expr *) =
-
-    let rec rational_expression_of_parsed_expression = function
-        | Parsed_Discrete_boolean_expression expr -> rational_expression_of_parsed_discrete_boolean_expression expr
-        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-    and rational_expression_of_parsed_discrete_boolean_expression = function
-        | Parsed_arithmetic_expression expr ->
-            Arithmetic_expression (Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression variable_infos expr))
-        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-    in
-    rational_expression_of_parsed_expression (* expr *)
-
-(* Get typed int expression of global parsed expression *)
-(* Extract arithmetic expression from parsed_discrete_boolean_expression *)
-and int_expression_of_parsed_expression variable_infos (* expr *) =
-
-    let rec int_expression_of_parsed_expression = function
-        | Parsed_Discrete_boolean_expression expr -> int_expression_of_parsed_discrete_boolean_expression expr
-        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-    and int_expression_of_parsed_discrete_boolean_expression = function
-        | Parsed_arithmetic_expression expr ->
-            Arithmetic_expression (Int_arithmetic_expression (convert_parsed_int_arithmetic_expression variable_infos expr))
-        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-    in
-    int_expression_of_parsed_expression
+(** Convert a boolean expression in its abstract model *)
 (* Get typed bool expression of global parsed expression *)
 (* discrete type is the inner type of the boolean expression, for example : *)
 (* if x + 1 > 0 then x else y with x : int, give a Bool_expression (expr, Var_type_discrete_int) *)
-and bool_expression_of_parsed_expression variable_infos expr =
-     Bool_expression (convert_bool_expr variable_infos expr)
-
-(** Convert a boolean expression in its abstract model *)
-and convert_bool_expr variable_infos = function
-	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr variable_infos e1), (convert_bool_expr variable_infos e2))
-	| Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr variable_infos e1), (convert_bool_expr variable_infos e2))
+and bool_expression_of_parsed_boolean_expression variable_infos = function
+	| Parsed_And (e1,e2) -> And_bool ((bool_expression_of_parsed_boolean_expression variable_infos e1), (bool_expression_of_parsed_boolean_expression variable_infos e2))
+	| Parsed_Or (e1, e2) -> Or_bool ((bool_expression_of_parsed_boolean_expression variable_infos e1), (bool_expression_of_parsed_boolean_expression variable_infos e2))
 	| Parsed_Discrete_boolean_expression parsed_discrete_boolean_expression ->
 	    (* TODO benjamin IMPORTANT check for true or false in order to return True_bool / False_bool *)
-		Discrete_boolean_expression (convert_discrete_bool_expr variable_infos parsed_discrete_boolean_expression)
+		Discrete_boolean_expression (bool_expression_of_parsed_discrete_boolean_expression variable_infos parsed_discrete_boolean_expression)
 
-and convert_discrete_bool_expr variable_infos = function
+and bool_expression_of_parsed_discrete_boolean_expression variable_infos = function
     | Parsed_arithmetic_expression expr ->
         (* Search boolean variables, constants in DF_variable, DF_constant *)
-        search_variable_of_discrete_arithmetic_expression variable_infos expr
+        bool_expression_of_parsed_discrete_arithmetic_expression variable_infos expr
 
     | Parsed_expression (l_expr, relop, r_expr) ->
         let t = TypeChecker.discrete_type_of_parsed_discrete_boolean_expression variable_infos l_expr in
+        bool_expression_of_parsed_comparison variable_infos l_expr relop r_expr t
 
-        (match t with
-        | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational
-        | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_int ->
-            Expression (
-                (arithmetic_expression_of_parsed_discrete_boolean_expression variable_infos l_expr),
-                (convert_parsed_relop relop),
-                (arithmetic_expression_of_parsed_discrete_boolean_expression variable_infos r_expr)
-            )
-        | DiscreteType.Var_type_discrete_bool ->
-            Boolean_comparison (
-                convert_discrete_bool_expr variable_infos l_expr,
-                convert_parsed_relop relop,
-                convert_discrete_bool_expr variable_infos r_expr
-            )
-        | DiscreteType.Var_type_discrete_binary_word l ->
-            Binary_comparison (
-                binary_word_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
-                convert_parsed_relop relop,
-                binary_word_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
-            )
-        | DiscreteType.Var_type_discrete_array _ ->
-            Array_comparison (
-                array_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
-                convert_parsed_relop relop,
-                array_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
-            )
-        | DiscreteType.Var_type_discrete_list _ ->
-            List_comparison (
-                list_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
-                convert_parsed_relop relop,
-                list_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
-            )
-        | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_unknown_number ->
-            raise (InvalidModel) (* should never happen, if type checking failed before *)
-        )
 	| Parsed_expression_in (expr1, expr2, expr3) -> Expression_in (
-		(convert_parsed_discrete_arithmetic_expression variable_infos expr1),
-		(convert_parsed_discrete_arithmetic_expression variable_infos expr2),
-		(convert_parsed_discrete_arithmetic_expression variable_infos expr3)
+		(arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr1),
+		(arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr2),
+		(arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr3)
 		)
     | Parsed_boolean_expression parsed_boolean_expression ->
-        Boolean_expression (convert_bool_expr variable_infos parsed_boolean_expression)
+        Boolean_expression (bool_expression_of_parsed_boolean_expression variable_infos parsed_boolean_expression)
 	| Parsed_Not e ->
-	    Not_bool (convert_bool_expr variable_infos e)
+	    Not_bool (bool_expression_of_parsed_boolean_expression variable_infos e)
+
+and bool_expression_of_parsed_comparison variable_infos l_expr relop r_expr = function
+    | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational
+    | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_int ->
+        Expression (
+            (arithmetic_expression_of_parsed_discrete_boolean_expression variable_infos l_expr),
+            (convert_parsed_relop relop),
+            (arithmetic_expression_of_parsed_discrete_boolean_expression variable_infos r_expr)
+        )
+    | DiscreteType.Var_type_discrete_bool ->
+        Boolean_comparison (
+            bool_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
+            convert_parsed_relop relop,
+            bool_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
+        )
+    | DiscreteType.Var_type_discrete_binary_word l ->
+        Binary_comparison (
+            binary_word_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
+            convert_parsed_relop relop,
+            binary_word_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
+        )
+    | DiscreteType.Var_type_discrete_array _ ->
+        Array_comparison (
+            array_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
+            convert_parsed_relop relop,
+            array_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
+        )
+    | DiscreteType.Var_type_discrete_list _ ->
+        List_comparison (
+            list_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
+            convert_parsed_relop relop,
+            list_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
+        )
+    | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_unknown_number ->
+        raise (InvalidModel) (* should never happen, if type checking failed before *)
+
 
 (* Search of boolean variables / constants in parsed discrete arithmetic expression *)
-and search_variable_of_discrete_arithmetic_expression variable_infos expr =
+and bool_expression_of_parsed_discrete_arithmetic_expression variable_infos expr =
 
-    let rec search_variable_of_discrete_arithmetic_expression_rec = function
-        | Parsed_DAE_plus _
-        | Parsed_DAE_minus _ ->
-            raise (InternalError (
-                "Search of boolean variable in arithmetic expression, something failed.
-                Maybe an arithmetic expression was resolved as boolean expression before"
-            ))
-        | Parsed_DAE_term term -> search_variable_of_discrete_term term
+    let rec bool_expression_of_parsed_discrete_arithmetic_expression_rec = function
+        | Parsed_DAE_term term -> bool_expression_of_parsed_term term
+        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
 
-    and search_variable_of_discrete_term = function
-        | Parsed_DT_mul _
-        | Parsed_DT_div _ ->
-            raise (InternalError (
-                "Search of boolean variable in arithmetic expression, something failed.
-                Maybe an arithmetic expression was resolved as boolean expression before"
-            ))
-        | Parsed_DT_factor factor -> search_variable_of_discrete_factor factor
+    and bool_expression_of_parsed_term = function
+        | Parsed_DT_factor factor -> bool_expression_of_parsed_factor factor
+        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
 
-    and search_variable_of_discrete_factor = function
-        | Parsed_DF_expression expr -> search_variable_of_discrete_arithmetic_expression_rec expr
-        | Parsed_DF_unary_min _ ->
-            raise (InternalError (
-                "Search of boolean variable in arithmetic expression, something failed.
-                Maybe an arithmetic expression was resolved as boolean expression before"
-            ))
+    and bool_expression_of_parsed_factor = function
+        | Parsed_DF_expression expr -> bool_expression_of_parsed_discrete_arithmetic_expression_rec expr
+
         | Parsed_DF_variable variable_name ->
             let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
             (match variable_kind with
@@ -298,48 +248,35 @@ and search_variable_of_discrete_arithmetic_expression variable_infos expr =
         | Parsed_DF_access (factor, index_expr) ->
             Bool_access (
                 expression_access_type_of_parsed_df_access variable_infos factor,
-                convert_parsed_int_arithmetic_expression variable_infos index_expr
+                int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr
             )
-
-        | Parsed_DF_array _
-        | Parsed_DF_list _ as factor ->
+        (* Should never happen, because it was checked by type checker before *)
+        | _ as factor ->
             raise (InternalError (
-                "Search of boolean variable in an "
-                ^ label_of_parsed_factor_constructor factor
-                ^ " expression, something failed. Maybe an arithmetic expression was resolved as an array expression before"
-            ))
-        | Parsed_rational_of_int_function _
-        | Parsed_pow_function _
-        | Parsed_shift_function _
-        | Parsed_bin_log_function _
-        | Parsed_log_not _
-        | Parsed_array_concat _ ->
-            raise (InternalError (
-                "Search of boolean variable in binary word expression, something failed.
-                Maybe an arithmetic expression was resolved as binary expression before"
+                "There is a call to \""
+                ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
+                ^ "\" in an boolean expression, although it was checked before by type checking. Maybe something fail in type checking"
             ))
     in
-    search_variable_of_discrete_arithmetic_expression_rec expr
-
-
+    bool_expression_of_parsed_discrete_arithmetic_expression_rec expr
 
 and arithmetic_expression_of_parsed_discrete_boolean_expression variable_infos = function
-    | Parsed_arithmetic_expression expr -> convert_parsed_discrete_arithmetic_expression variable_infos expr
+    | Parsed_arithmetic_expression expr -> arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr
     | _ -> raise (InternalError "Unable to create an arithmetic expression from another constructor of `discrete_boolean_expression` than `Parsed_arithmetic_expression`")
 
 (* Convert a parsed discrete arithmetic expression *)
 (* to a rational arithmetic expression or an int arithmetic expression *)
 (* according to the type of the parsed discrete arithmetic expression *)
-and convert_parsed_discrete_arithmetic_expression variable_infos expr =
+and arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr =
 
     (* Get the deduced type of the parsed arithmetic expression *)
     let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_arithmetic_expression variable_infos expr in
 
     match discrete_type with
     | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational ->
-        Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression variable_infos expr)
+        Rational_arithmetic_expression (rational_expression_of_parsed_discrete_arithmetic_expression variable_infos expr)
     | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_int ->
-        Int_arithmetic_expression (convert_parsed_int_arithmetic_expression variable_infos expr)
+        Int_arithmetic_expression (int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr)
 
     (* Other cases mean that type checking has failed *)
     | DiscreteType.Var_type_discrete_bool
@@ -350,37 +287,52 @@ and convert_parsed_discrete_arithmetic_expression variable_infos expr =
     | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_unknown_number ->
         raise (InternalError "An arithmetic expression still contains unknown literal numbers after type checking, maybe type checking has failed before")
 
+(* Get typed rational expression of global parsed expression *)
+(* Extract arithmetic expression from parsed_discrete_boolean_expression *)
+and rational_expression_of_parsed_boolean_expression variable_infos (* expr *) =
+
+    let rec rational_expression_of_parsed_boolean_expression = function
+        | Parsed_Discrete_boolean_expression expr -> Arithmetic_expression (rational_expression_of_parsed_discrete_boolean_expression expr)
+        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+
+    and rational_expression_of_parsed_discrete_boolean_expression = function
+        | Parsed_arithmetic_expression expr ->
+             Rational_arithmetic_expression (rational_expression_of_parsed_discrete_arithmetic_expression variable_infos expr)
+        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+    in
+    rational_expression_of_parsed_boolean_expression (* expr *)
+
 (* Convert a parsed discrete arithmetic expression to a rational arithmetic expression *)
-and convert_parsed_rational_arithmetic_expression variable_infos (* expr *) =
-    let rec convert_parsed_rational_arithmetic_expression_rec = function
+and rational_expression_of_parsed_discrete_arithmetic_expression variable_infos (* expr *) =
+    let rec rational_expression_of_parsed_discrete_arithmetic_expression_rec = function
         | Parsed_DAE_plus (expr , term) ->
             DAE_plus (
-                (convert_parsed_rational_arithmetic_expression_rec expr),
-                (convert_parsed_rational_term term)
+                (rational_expression_of_parsed_discrete_arithmetic_expression_rec expr),
+                (rational_expression_of_parsed_term term)
             )
         | Parsed_DAE_minus (expr , term) ->
             DAE_minus (
-                (convert_parsed_rational_arithmetic_expression_rec expr),
-                (convert_parsed_rational_term term)
+                (rational_expression_of_parsed_discrete_arithmetic_expression_rec expr),
+                (rational_expression_of_parsed_term term)
             )
         | Parsed_DAE_term term ->
-            DAE_term (convert_parsed_rational_term term)
+            DAE_term (rational_expression_of_parsed_term term)
 
-    and convert_parsed_rational_term = function
+    and rational_expression_of_parsed_term = function
         | Parsed_DT_mul (term , factor) ->
             DT_mul (
-                (convert_parsed_rational_term term),
-                (convert_parsed_rational_factor factor)
+                (rational_expression_of_parsed_term term),
+                (rational_expression_of_parsed_factor factor)
             )
         | Parsed_DT_div (term, factor) ->
             DT_div (
-                (convert_parsed_rational_term term) ,
-                (convert_parsed_rational_factor factor)
+                (rational_expression_of_parsed_term term) ,
+                (rational_expression_of_parsed_factor factor)
             )
         | Parsed_DT_factor factor ->
-            DT_factor (convert_parsed_rational_factor factor)
+            DT_factor (rational_expression_of_parsed_factor factor)
 
-    and convert_parsed_rational_factor = function
+    and rational_expression_of_parsed_factor = function
         | Parsed_DF_variable variable_name ->
             let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
             (match variable_kind with
@@ -392,50 +344,60 @@ and convert_parsed_rational_arithmetic_expression variable_infos (* expr *) =
 
             Rational_access (
                 expression_access_type_of_parsed_df_access variable_infos factor,
-                convert_parsed_int_arithmetic_expression variable_infos index_expr
+                int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr
             )
 
         | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.to_numconst_value var_value)
-        | Parsed_DF_expression expr -> DF_expression (convert_parsed_rational_arithmetic_expression_rec expr)
-        | Parsed_rational_of_int_function expr -> DF_rational_of_int (convert_parsed_int_arithmetic_expression variable_infos expr)
-        | Parsed_pow_function (expr, exp) -> DF_pow (convert_parsed_rational_arithmetic_expression_rec expr, convert_parsed_int_arithmetic_expression variable_infos exp)
-        | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_rational_factor factor)
+        | Parsed_DF_expression expr -> DF_expression (rational_expression_of_parsed_discrete_arithmetic_expression_rec expr)
+        | Parsed_rational_of_int_function expr -> DF_rational_of_int (int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr)
+        | Parsed_pow_function (expr, exp) -> DF_pow (rational_expression_of_parsed_discrete_arithmetic_expression_rec expr, int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos exp)
+        | Parsed_DF_unary_min factor -> DF_unary_min (rational_expression_of_parsed_factor factor)
         (* Should never happen, because it was checked by type checker before *)
-        | Parsed_DF_array _
-        | Parsed_DF_list _
-        | Parsed_shift_function _
-        | Parsed_bin_log_function _
-        | Parsed_log_not _
-        | Parsed_array_concat _ as factor ->
+        | _ as factor ->
             raise (InternalError (
                 "There is a call to \""
                 ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
-                ^ "\" in an rational expression, although it was checked before by type checking. Maybe something fail in type checking"
+                ^ "\" in an boolean expression, although it was checked before by type checking. Maybe something fail in type checking"
             ))
     in
-    convert_parsed_rational_arithmetic_expression_rec
+    rational_expression_of_parsed_discrete_arithmetic_expression_rec
+
+(* Get typed int expression of global parsed expression *)
+(* Extract arithmetic expression from parsed_discrete_boolean_expression *)
+and int_expression_of_parsed_boolean_expression variable_infos (* expr *) =
+
+    let rec int_expression_of_parsed_boolean_expression = function
+        | Parsed_Discrete_boolean_expression expr -> Arithmetic_expression (int_expression_of_parsed_discrete_boolean_expression expr)
+        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+
+    and int_expression_of_parsed_discrete_boolean_expression = function
+        | Parsed_arithmetic_expression expr ->
+            Int_arithmetic_expression (int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr)
+        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
+    in
+    int_expression_of_parsed_boolean_expression
 
 (* Convert a parsed discrete arithmetic expression to an int arithmetic expression *)
-and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
-    let rec convert_parsed_int_arithmetic_expression_rec = function
+and int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos (* expr *) =
+    let rec int_arithmetic_expression_of_parsed_arithmetic_expression_rec = function
         | Parsed_DAE_plus (expr , term) ->
             Int_plus (
-                (convert_parsed_int_arithmetic_expression_rec expr),
-                (convert_parsed_int_term term)
+                (int_arithmetic_expression_of_parsed_arithmetic_expression_rec expr),
+                (int_arithmetic_expression_of_parsed_term term)
             )
         | Parsed_DAE_minus (expr , term) ->
             Int_minus (
-                (convert_parsed_int_arithmetic_expression_rec expr),
-                (convert_parsed_int_term term)
+                (int_arithmetic_expression_of_parsed_arithmetic_expression_rec expr),
+                (int_arithmetic_expression_of_parsed_term term)
             )
         | Parsed_DAE_term term ->
-            Int_term (convert_parsed_int_term term)
+            Int_term (int_arithmetic_expression_of_parsed_term term)
 
-    and convert_parsed_int_term = function
+    and int_arithmetic_expression_of_parsed_term = function
         | Parsed_DT_mul (term , factor) ->
             Int_mul (
-                (convert_parsed_int_term term),
-                (convert_parsed_int_factor factor)
+                (int_arithmetic_expression_of_parsed_term term),
+                (int_arithmetic_expression_of_parsed_factor factor)
             )
         | Parsed_DT_div (term, factor) as div ->
 
@@ -446,13 +408,13 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
             );
 
             Int_div (
-                (convert_parsed_int_term term) ,
-                (convert_parsed_int_factor factor)
+                (int_arithmetic_expression_of_parsed_term term) ,
+                (int_arithmetic_expression_of_parsed_factor factor)
             )
         | Parsed_DT_factor factor ->
-            Int_factor (convert_parsed_int_factor factor)
+            Int_factor (int_arithmetic_expression_of_parsed_factor factor)
 
-    and convert_parsed_int_factor = function
+    and int_arithmetic_expression_of_parsed_factor = function
         | Parsed_DF_variable variable_name ->
 
             let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
@@ -462,34 +424,27 @@ and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
             )
 
         | Parsed_DF_constant var_value -> Int_constant (DiscreteValue.int_value var_value)
-        | Parsed_DF_expression expr -> Int_expression (convert_parsed_int_arithmetic_expression_rec expr)
-        | Parsed_pow_function (expr, exp) -> Int_pow (convert_parsed_int_arithmetic_expression_rec expr, convert_parsed_int_arithmetic_expression_rec exp)
+        | Parsed_DF_expression expr -> Int_expression (int_arithmetic_expression_of_parsed_arithmetic_expression_rec expr)
+        | Parsed_pow_function (expr, exp) -> Int_pow (int_arithmetic_expression_of_parsed_arithmetic_expression_rec expr, int_arithmetic_expression_of_parsed_arithmetic_expression_rec exp)
 
-        | Parsed_DF_unary_min factor -> Int_unary_min (convert_parsed_int_factor factor)
+        | Parsed_DF_unary_min factor -> Int_unary_min (int_arithmetic_expression_of_parsed_factor factor)
 
         | Parsed_DF_access (factor, index_expr) ->
 
             Int_access (
                 expression_access_type_of_parsed_df_access variable_infos factor,
-                convert_parsed_int_arithmetic_expression variable_infos index_expr
+                int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr
             )
 
         (* Should never happen, because it was checked by type checker before *)
-        | Parsed_DF_array _
-        | Parsed_DF_list _
-        | Parsed_rational_of_int_function _
-        | Parsed_shift_function _
-        | Parsed_bin_log_function _
-        | Parsed_log_not _
-        | Parsed_array_concat _ as factor ->
+        | _ as factor ->
             raise (InternalError (
                 "There is a call to \""
                 ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
-                ^ "\" in an int expression, although it was checked before by type checking. Maybe something fail in type checking"
+                ^ "\" in an boolean expression, although it was checked before by type checking. Maybe something fail in type checking"
             ))
     in
-    convert_parsed_int_arithmetic_expression_rec
-
+    int_arithmetic_expression_of_parsed_arithmetic_expression_rec
 
 (* Try to convert a parsed boolean expression to abstract binary word expression *)
 and binary_word_expression_of_parsed_boolean_expression variable_infos = function
@@ -549,13 +504,13 @@ and binary_word_expression_of_parsed_factor variable_infos factor =
     | Parsed_DF_access (factor, index_expr) ->
         Binary_word_access (
             expression_access_type_of_parsed_df_access variable_infos factor,
-            convert_parsed_int_arithmetic_expression variable_infos index_expr,
+            int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr,
             binary_word_length
         )
 
     | Parsed_shift_function (fun_type, factor, expr) ->
         let binary_word_expr = binary_word_expression_of_parsed_factor variable_infos factor in
-        let int_expr = convert_parsed_int_arithmetic_expression variable_infos expr in
+        let int_expr = int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr in
 
         (match fun_type with
         | Parsed_shift_left -> Logical_shift_left (binary_word_expr, int_expr, binary_word_length)
@@ -642,7 +597,7 @@ and array_expression_of_parsed_factor variable_infos = function
     | Parsed_DF_access (factor, index_expr) ->
         Array_access (
             expression_access_type_of_parsed_df_access variable_infos factor,
-            convert_parsed_int_arithmetic_expression variable_infos index_expr
+            int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr
         )
 
     | Parsed_array_concat (factor_0, factor_1) ->
@@ -705,7 +660,7 @@ and list_expression_of_parsed_factor variable_infos = function
     | Parsed_DF_access (factor, index_expr) ->
         List_access (
             expression_access_type_of_parsed_df_access variable_infos factor,
-            convert_parsed_int_arithmetic_expression variable_infos index_expr
+            int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr
         )
 
     | _ as factor ->
@@ -745,7 +700,7 @@ let convert_parsed_loc_predicate useful_parsing_model_information = function
 
 (* Convert parsed_simple_predicate *)
 let convert_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_discrete_bool_expr (ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information) parsed_discrete_boolean_expression)
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (bool_expression_of_parsed_discrete_boolean_expression (ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information) parsed_discrete_boolean_expression)
 	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
 	| Parsed_state_predicate_true -> State_predicate_true
 	| Parsed_state_predicate_false -> State_predicate_false
@@ -1093,7 +1048,7 @@ let nonlinear_constraint_of_nonlinear_convex_predicate variable_infos convex_pre
             | Parsed_nonlinear_constraint (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v)))) when DiscreteValue.bool_value v = false -> raise False_exception
             | Parsed_nonlinear_constraint nonlinear_constraint  ->
                 (* Convert non-linear constraint to abstract model *)
-                let convert_nonlinear_constraint = convert_discrete_bool_expr variable_infos nonlinear_constraint in
+                let convert_nonlinear_constraint = bool_expression_of_parsed_discrete_boolean_expression variable_infos nonlinear_constraint in
                 (* Add typed discrete boolean expression to inequality list *)
                 convert_nonlinear_constraint :: nonlinear_inequalities
 
@@ -2776,7 +2731,7 @@ let to_abstract_discrete_update variable_infos (variable_access, parsed_update_e
         | Variable_access (variable_access, index_expr) ->
             Discrete_variable_access (
                 to_abstract_variable_access variable_access,
-                convert_parsed_int_arithmetic_expression variable_infos index_expr
+                int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr
             )
     in
 
@@ -2884,7 +2839,7 @@ let convert_updates variable_infos updates : updates =
         (* TYPE CHECK *)
         let uniformly_typed_bool_expr, _ = TypeChecker.check_conditional variable_infos boolean_value in
 
-        let convert_boolean_expr = convert_bool_expr variable_infos uniformly_typed_bool_expr in
+        let convert_boolean_expr = bool_expression_of_parsed_boolean_expression variable_infos uniformly_typed_bool_expr in
         let convert_if_updates = convert_normal_updates variable_infos if_updates in
         let convert_else_updates = convert_normal_updates variable_infos else_updates in
         (convert_boolean_expr, convert_if_updates, convert_else_updates)
