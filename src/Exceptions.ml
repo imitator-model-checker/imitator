@@ -33,6 +33,8 @@ exception IncludeFileNotFound of string
 (** Exception when interfacing with another program *)
 exception InterfacingError of string
 
+exception InvalidModel
+
 exception InternalError of string
 
 (** When a constraint contains no integer point *)

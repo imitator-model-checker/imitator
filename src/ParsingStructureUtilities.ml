@@ -111,6 +111,10 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
         operator
             (fold_parsed_discrete_factor operator base leaf_fun factor_0)
             (fold_parsed_discrete_factor operator base leaf_fun factor_1)
+    | Parsed_list_cons (expr, factor) ->
+        operator
+            (fold_parsed_boolean_expression operator base leaf_fun expr)
+            (fold_parsed_discrete_factor operator base leaf_fun factor)
     | Parsed_DF_access (factor, _)
 	| Parsed_log_not factor
 	| Parsed_DF_unary_min factor ->
@@ -254,6 +258,7 @@ let label_of_parsed_factor_constructor = function
 
     | Parsed_log_not _ -> "lognot"
     | Parsed_array_concat _ -> "array_concat"
+    | Parsed_list_cons _ -> "list_cons"
 
 
 
@@ -330,6 +335,13 @@ and string_of_parsed_factor variable_infos = function
         ^ string_of_parsed_factor variable_infos l_factor
         ^ ", "
         ^ string_of_parsed_factor variable_infos r_factor
+        ^ ")"
+    | Parsed_list_cons (expr, factor) as func ->
+        label_of_parsed_factor_constructor func
+        ^ "("
+        ^ string_of_parsed_boolean_expression variable_infos expr
+        ^ ", "
+        ^ string_of_parsed_factor variable_infos factor
         ^ ")"
     | Parsed_log_not factor as func ->
         label_of_parsed_factor_constructor func
@@ -586,6 +598,12 @@ and try_reduce_parsed_arithmetic_expression constants expr =
             let reduced_l_factor = try_reduce_parsed_factor l_factor in
             let reduced_r_factor = try_reduce_parsed_factor r_factor in
             DiscreteValue.array_concat reduced_l_factor reduced_r_factor
+
+        | Parsed_list_cons (expr, factor) ->
+
+            let reduced_expr = try_reduce_parsed_boolean_expression constants expr in
+            let reduced_factor = try_reduce_parsed_factor factor in
+            DiscreteValue.list_cons reduced_expr reduced_factor
 
         | Parsed_log_not factor ->
 

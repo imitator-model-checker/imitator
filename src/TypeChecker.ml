@@ -113,6 +113,7 @@ let get_discrete_type_of_variable_by_name variable_infos variable_name =
     let var_type = get_type_of_variable_by_name variable_infos variable_name in
     DiscreteType.discrete_type_of_var_type var_type
 
+
 (** Conversions of expressions **)
 
 
@@ -234,6 +235,11 @@ and convert_literals_of_parsed_discrete_factor variable_infos target_type = func
         Parsed_array_concat (
             convert_literals_of_parsed_discrete_factor variable_infos target_type l_factor,
             convert_literals_of_parsed_discrete_factor variable_infos target_type r_factor
+        )
+    | Parsed_list_cons (expr, factor) ->
+        Parsed_list_cons (
+            convert_literals_of_parsed_boolean_expression variable_infos target_type expr,
+            convert_literals_of_parsed_discrete_factor variable_infos target_type factor
         )
     | Parsed_DF_unary_min factor ->
         Parsed_DF_unary_min (convert_literals_of_parsed_discrete_factor variable_infos target_type factor)
@@ -909,6 +915,45 @@ and infer_parsed_discrete_factor variable_infos = function
             ))
         )
 
+    | Parsed_list_cons (expr, factor) as func ->
+
+        let infer_expr, expr_type = infer_parsed_boolean_expression variable_infos expr in
+        let infer_factor, factor_type = infer_parsed_discrete_factor variable_infos factor in
+
+        (* Factor must be a list *)
+        (match factor_type with
+        | DiscreteType.Var_type_discrete_list inner_type ->
+            (* Check that list elements are the same type of expr *)
+            let convert_expr, convert_factor, convert_type =
+                match check_number_type_compatibility inner_type expr_type with
+                | No_number_error
+                | Both_unknown_number_error ->
+                    infer_expr, infer_factor, expr_type
+                | Left_unknown_number_error ->
+                    convert_literals_of_parsed_boolean_expression variable_infos inner_type infer_expr,
+                    infer_factor,
+                    inner_type
+                | Right_unknown_number_error ->
+                    infer_expr,
+                    convert_literals_of_parsed_discrete_factor variable_infos expr_type infer_factor,
+                    expr_type
+                | Number_type_mixin_error ->
+                    raise (InternalError "Compatibility type should be checked previously")
+            in
+            print_infer_expr_message (string_of_parsed_factor variable_infos func) convert_type;
+            Parsed_list_cons (convert_expr, convert_factor), DiscreteType.Var_type_discrete_list convert_type
+
+        | _ ->
+            raise (TypeError (
+                "Left or right member of expression `"
+                ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos func
+                ^ "` is not a list: "
+                ^ DiscreteType.string_of_var_type_discrete expr_type
+                ^ ", "
+                ^ DiscreteType.string_of_var_type_discrete factor_type
+            ))
+        )
+
     | Parsed_DF_unary_min factor ->
         let infer_factor, factor_type = infer_parsed_discrete_factor variable_infos factor in
         Parsed_DF_unary_min infer_factor, factor_type
@@ -1050,17 +1095,22 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
         (* Shift result type is a binary word of length depending on the left member length *)
         (* Logical and, or, xor, not depend on one member length (arbitrary, because already type checked!) *)
         discrete_type_of_parsed_discrete_factor variable_infos factor
+
     | Parsed_array_concat (factor_0, factor_1) ->
         let parameter_type_0 = discrete_type_of_parsed_discrete_factor variable_infos factor_0 in
         let parameter_type_1 = discrete_type_of_parsed_discrete_factor variable_infos factor_1 in
-        begin
-        match parameter_type_0, parameter_type_1 with
+
+        (match parameter_type_0, parameter_type_1 with
         | DiscreteType.Var_type_discrete_array (inner_type_0, length_0), DiscreteType.Var_type_discrete_array (inner_type_1, length_1) ->
             (* Arbitrary use inner_type of parameter 0, because already type checked!) *)
             (* But array length of array concatenation is equal to length of first array plus length of second array *)
             DiscreteType.Var_type_discrete_array (inner_type_0, length_0 + length_1)
         | _ -> raise (TypeError "fill this message") (* TODO benjamin CLEAN set message *)
-        end
+        )
+
+    | Parsed_list_cons (_, factor) ->
+        (* Already type checked, the type is of the type of list (in factor) Var_type_discrete_list x *)
+        discrete_type_of_parsed_discrete_factor variable_infos factor
 
 
 (** Checking functions **)

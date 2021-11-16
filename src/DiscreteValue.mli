@@ -19,6 +19,7 @@ open DiscreteType
 
 
 (* Discrete value of different specific types *)
+
 type discrete_value =
     | Number_value of NumConst.t
     | Rational_value of NumConst.t
@@ -28,6 +29,17 @@ type discrete_value =
     (* TODO benjamin REFACTOR maybe Collection_value *)
     | Array_value of discrete_value array
     | List_value of discrete_value list
+
+(*
+type (_, _) discrete_value =
+    | Number_value : NumConst.t -> ('e, NumConst.t) discrete_value
+    | Rational_value : NumConst.t -> ('e, NumConst.t) discrete_value
+    | Int_value : Int32.t -> ('e, Int32.t) discrete_value
+    | Bool_value : bool -> ('e, bool) discrete_value
+    | Binary_word_value : BinaryWord.t -> ('e, BinaryWord.t) discrete_value
+    | Array_value : ('e, 'a) discrete_value array -> ('e, ('e, 'a) discrete_value array) discrete_value
+    | List_value : ('e, 'a) discrete_value list -> ('e, ('e, 'a) discrete_value list) discrete_value
+*)
 
 (** Values and types  **)
 
@@ -161,3 +173,4 @@ val log_or : discrete_value -> discrete_value -> discrete_value
 val log_xor : discrete_value -> discrete_value -> discrete_value
 val log_not : discrete_value -> discrete_value
 val array_concat : discrete_value -> discrete_value -> discrete_value
+val list_cons : discrete_value -> discrete_value -> discrete_value

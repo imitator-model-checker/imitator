@@ -264,6 +264,10 @@ and eval_list_expression discrete_valuation = function
     | List_access (access_type, index_expr) ->
         let value = get_expression_access_value discrete_valuation index_expr access_type in
         DiscreteValue.list_value value
+    | List_cons (expr, list_expr) ->
+        let list = eval_list_expression discrete_valuation list_expr in
+        let value = eval_global_expression discrete_valuation expr in
+        value :: list
 
 and get_array_value_at discrete_valuation array_expr index_expr =
 

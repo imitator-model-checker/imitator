@@ -153,7 +153,7 @@ and array_expression =
     | Array_constant of DiscreteValue.discrete_value array
     | Array_variable of Automaton.variable_index
     | Array_access of expression_access_type * int_arithmetic_expression
-    (* Add here some function on array *)
+    (* Add here some functions on array *)
     | Array_concat of array_expression * array_expression
 
 (** List expression **)
@@ -162,6 +162,8 @@ and list_expression =
     | List_constant of DiscreteValue.discrete_value list
     | List_variable of Automaton.variable_index
     | List_access of expression_access_type * int_arithmetic_expression
+    (* Add here some functions on list *)
+    | List_cons of global_expression * list_expression
 
 and expression_access_type =
     | Expression_array_access of array_expression

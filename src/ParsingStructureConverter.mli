@@ -1,0 +1,7 @@
+open ParsingStructure
+open DiscreteExpressions
+
+val convert_parsed_global_expression : variable_infos -> ParsingStructure.global_expression -> DiscreteExpressions.global_expression
+val bool_expression_of_parsed_boolean_expression : variable_infos -> ParsingStructure.parsed_boolean_expression -> DiscreteExpressions.boolean_expression
+val bool_expression_of_parsed_discrete_boolean_expression : variable_infos -> ParsingStructure.parsed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
+val int_arithmetic_expression_of_parsed_arithmetic_expression : variable_infos -> ParsingStructure.parsed_discrete_arithmetic_expression -> DiscreteExpressions.int_arithmetic_expression

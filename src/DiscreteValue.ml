@@ -19,6 +19,7 @@ open Exceptions
 open DiscreteType
 
 (* Discrete value of different specific types *)
+
 type discrete_value =
     | Number_value of NumConst.t
     | Rational_value of NumConst.t
@@ -27,6 +28,19 @@ type discrete_value =
     | Binary_word_value of BinaryWord.t
     | Array_value of discrete_value array
     | List_value of discrete_value list
+
+
+(*
+type (_, _) discrete_value =
+    | Number_value : NumConst.t -> ('e, NumConst.t) discrete_value
+    | Rational_value : NumConst.t -> ('e, NumConst.t) discrete_value
+    | Int_value : Int32.t -> ('e, Int32.t) discrete_value
+    | Bool_value : bool -> ('e, bool) discrete_value
+    | Binary_word_value : BinaryWord.t -> ('e, BinaryWord.t) discrete_value
+    | Array_value : ('e, 'a) discrete_value array -> ('e, ('e, 'a) discrete_value array) discrete_value
+    | List_value : ('e, 'a) discrete_value list -> ('e, ('e, 'a) discrete_value list) discrete_value
+*)
+
 
 (* Get discrete var type of a discrete value *)
 let rec discrete_type_of_value = function
@@ -440,3 +454,8 @@ let array_concat a b =
     match a, b with
     | Array_value a, Array_value b -> Array_value (Array.append a b)
     | _ -> raise (InternalError ("Computing exception at `array_concat " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
+
+let list_cons a b =
+    match b with
+    | List_value l -> List_value (a :: l)
+    | _ -> raise (InternalError ("Computing exception at `list_cons " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
