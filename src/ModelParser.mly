@@ -618,8 +618,9 @@ linear_constraint:
 	| CT_FALSE { Parsed_false_constraint }
 ;
 
+/* TODO benjamin CLEAN to delete */
 nonlinear_constraint:
-	| discrete_boolean_expression { Parsed_nonlinear_constraint $1 }
+	| discrete_boolean_expression { $1 }
 ;
 
 relop:

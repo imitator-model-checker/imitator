@@ -245,10 +245,8 @@ and convert_literals_of_parsed_discrete_factor variable_infos target_type = func
         Parsed_DF_unary_min (convert_literals_of_parsed_discrete_factor variable_infos target_type factor)
 
 (* Convert literals types of a non-linear constraint to a given target type *)
-let convert_literals_of_nonlinear_constraint variable_infos target_type = function
-    (* It's ok non-linear constraint is of Boolean type *)
-    | Parsed_nonlinear_constraint expr ->
-        Parsed_nonlinear_constraint (convert_literals_of_parsed_discrete_boolean_expression variable_infos target_type expr)
+(* TODO benjamin CLEAN to delete *)
+let convert_literals_of_nonlinear_constraint = convert_literals_of_parsed_discrete_boolean_expression
 
 (** Type checking and inference **)
 
@@ -979,11 +977,9 @@ and infer_parsed_discrete_factor variable_infos = function
         Parsed_DF_unary_min infer_factor, factor_type
 
 (* Type checking and infer literal numbers of non-linear constraint *)
-and infer_nonlinear_constraint variable_infos = function
-    (* It's ok non-linear constraint is of Boolean type *)
-    | Parsed_nonlinear_constraint expr ->
-        let convert_expr, discrete_type = infer_parsed_discrete_boolean_expression variable_infos expr in
-        Parsed_nonlinear_constraint convert_expr, discrete_type
+(* TODO benjamin CLEAN to delete *)
+let infer_nonlinear_constraint = infer_parsed_discrete_boolean_expression
+
 
 
 (* Type checking and infer literal numbers of simple predicate *)

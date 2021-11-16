@@ -471,9 +471,9 @@ let nonlinear_constraint_of_nonlinear_convex_predicate variable_infos convex_pre
 
             match nonlinear_inequality with
             (* TODO benjamin REFACTOR, in ParsingStructureUtilities create a function that check if a nonlinear constraint is true or false *)
-            | Parsed_nonlinear_constraint (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v)))) when DiscreteValue.bool_value v = true -> nonlinear_inequalities
-            | Parsed_nonlinear_constraint (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v)))) when DiscreteValue.bool_value v = false -> raise False_exception
-            | Parsed_nonlinear_constraint nonlinear_constraint  ->
+            | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = true -> nonlinear_inequalities
+            | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = false -> raise False_exception
+            | nonlinear_constraint  ->
                 (* Convert non-linear constraint to abstract model *)
                 let convert_nonlinear_constraint = ParsingStructureConverter.bool_expression_of_parsed_discrete_boolean_expression variable_infos nonlinear_constraint in
                 (* Add typed discrete boolean expression to inequality list *)
@@ -1601,9 +1601,8 @@ let try_convert_linear_expression_of_parsed_discrete_boolean_expression = functi
 
 (* Convert nonlinear_constraint to linear_constraint if possible
    and check bad use of non-linear expressions when converting *)
-let linear_constraint_of_nonlinear_constraint = function
-    | Parsed_nonlinear_constraint nonlinear_constraint ->
-        try_convert_linear_expression_of_parsed_discrete_boolean_expression nonlinear_constraint
+(* TODO benjamin CLEAN to delete *)
+let linear_constraint_of_nonlinear_constraint = try_convert_linear_expression_of_parsed_discrete_boolean_expression
 
 (* Split convex_predicate into two lists *)
 (* One only contain discrete expression to nonlinear_constraint *)
@@ -1614,9 +1613,9 @@ let split_convex_predicate_into_discrete_and_continuous variable_infos convex_pr
     (fun nonlinear_inequality ->
        match nonlinear_inequality with
        (* TODO benjamin REFACTOR, in ParsingStructureUtilities create a function that check if a nonlinear constraint is true or false *)
-       | Parsed_nonlinear_constraint (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v)))) when DiscreteValue.bool_value v = true -> true
-       | Parsed_nonlinear_constraint (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v)))) when DiscreteValue.bool_value v = true -> raise False_exception
-       | Parsed_nonlinear_constraint nonlinear_constraint -> ParsingStructureUtilities.only_discrete_in_nonlinear_expression variable_infos nonlinear_constraint
+       | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = true -> true
+       | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = true -> raise False_exception
+       | nonlinear_constraint -> ParsingStructureUtilities.only_discrete_in_nonlinear_expression variable_infos nonlinear_constraint
     ) convex_predicate
     in
     (* Get discrete part as a nonlinear constraint but convert back continuous part to a linear constraint *)

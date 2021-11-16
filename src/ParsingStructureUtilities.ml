@@ -145,9 +145,8 @@ and fold_parsed_linear_term operator leaf_fun = function
     | Variable (value, variable_name) -> leaf_fun (Leaf_linear_variable (value, variable_name))
 
 (** Fold a parsed linear constraint using operator applying custom function on leafs **)
-let fold_parsed_nonlinear_constraint operator base leaf_fun nonlinear_constraint_leaf_fun = function
-    | Parsed_nonlinear_constraint expr ->
-        fold_parsed_discrete_boolean_expression operator base leaf_fun expr
+(* TODO benjamin CLEAN to delete *)
+let fold_parsed_nonlinear_constraint = fold_parsed_discrete_boolean_expression
 
 (** Fold a parsed update expression using operator applying custom function on leafs **)
 (** As update expression contain list of leaf, it return list of result from function applications **)
@@ -422,8 +421,8 @@ let string_of_parsed_init_state_predicate variable_infos = function
 	    ^ " = "
 	    ^ string_of_parsed_global_expression variable_infos expr
 
-let string_of_parsed_nonlinear_constraint variable_infos = function
-    | Parsed_nonlinear_constraint expr -> string_of_parsed_discrete_boolean_expression variable_infos expr
+(* TODO benjamin CLEAN to delete *)
+let string_of_parsed_nonlinear_constraint = string_of_parsed_discrete_boolean_expression
 
 (* Try to reduce a parsed global expression, cannot take into account variables ! *)
 (* This function is used for computing constant values *)
@@ -715,11 +714,11 @@ let all_variables_defined_in_linear_constraint variable_infos callback_fail expr
         (is_variable_defined_in_linear_expression variable_infos callback_fail)
         (function | Leaf_false_linear_constraint | Leaf_true_linear_constraint -> true) expr
 
-(* Check that all variables in a non-linear constraint are effectivily be defined *)
+(* Check that all variables in a non-linear constraint are effectively be defined *)
 let all_variables_defined_in_nonlinear_constraint variable_infos callback expr =
     for_all_in_parsed_nonlinear_constraint
         (is_variable_defined_with_callback variable_infos callback)
-        (function | Leaf_false_nonlinear_constraint | Leaf_true_nonlinear_constraint -> true) expr
+        expr
 
 (* Check that all variables in a non-linear convex predicate (non-linear constraint list) are effectivily be defined *)
 let all_variables_defined_in_nonlinear_convex_predicate variable_infos callback non_linear_convex_predicate =
@@ -782,10 +781,8 @@ let get_variables_in_linear_constraint_with_accumulator variables_used_ref =
         (function | Leaf_true_linear_constraint | Leaf_false_linear_constraint -> ())
 
 (* Gather all variable names used in a non-linear constraint in a given accumulator *)
-let get_variables_in_nonlinear_constraint_with_accumulator variables_used_ref =
-    iterate_parsed_nonlinear_constraint
-        (add_variable_of_discrete_boolean_expression variables_used_ref)
-        (function | Leaf_true_nonlinear_constraint | Leaf_false_nonlinear_constraint -> ())
+(* TODO benjamin CLEAN delete *)
+let get_variables_in_nonlinear_constraint_with_accumulator = get_variables_in_parsed_discrete_boolean_expression_with_accumulator
 
 (* Gather all variable names used in an update in a given accumulator *)
 let get_variables_in_parsed_update_with_accumulator variables_used_ref =

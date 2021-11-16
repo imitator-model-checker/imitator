@@ -64,6 +64,10 @@ type global_expression =
 (****************************************************************)
 (** Boolean expressions *)
 (****************************************************************)
+and parsed_boolean_expression =
+	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
+	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
+	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
 
 and parsed_discrete_boolean_expression =
     | Parsed_arithmetic_expression of parsed_discrete_arithmetic_expression
@@ -75,12 +79,6 @@ and parsed_discrete_boolean_expression =
 	| Parsed_boolean_expression of parsed_boolean_expression
     (** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
 	| Parsed_Not of parsed_boolean_expression (** Negation *)
-
-
-and parsed_boolean_expression =
-	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
-	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
-	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
 
 (****************************************************************)
 (** Arithmetic expressions for discrete variables *)
@@ -156,8 +154,7 @@ type linear_constraint =
 
 (** Non-linear expressions *)
 (* TODO benjamin CLEAN remove Variant type : nonlinear_constraint = parsed_discrete_boolean_expression *)
-type nonlinear_constraint =
-    | Parsed_nonlinear_constraint of parsed_discrete_boolean_expression
+type nonlinear_constraint = parsed_discrete_boolean_expression
 
 type convex_predicate = nonlinear_constraint list
 

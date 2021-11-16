@@ -51,7 +51,7 @@ val for_all_in_parsed_linear_term : (linear_expression_leaf -> bool) -> linear_t
 (** Check if all leaf of a linear constraint satisfy the predicate **)
 val for_all_in_parsed_linear_constraint : (linear_expression_leaf -> bool) -> (linear_constraint_leaf -> bool) -> linear_constraint -> bool
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
-val for_all_in_parsed_nonlinear_constraint : (parsing_structure_leaf -> bool) -> (nonlinear_constraint_leaf -> bool) -> nonlinear_constraint -> bool
+val for_all_in_parsed_nonlinear_constraint : (parsing_structure_leaf -> bool) -> nonlinear_constraint -> bool
 (** Check if all leaf of a parsed update satisfy the predicate **)
 val for_all_in_parsed_update : (parsing_structure_leaf -> bool) -> update -> bool
 
@@ -71,7 +71,7 @@ val exists_in_parsed_linear_term : (linear_expression_leaf -> bool) -> linear_te
 (** Check if any leaf of a linear constraint satisfy the predicate **)
 val exists_in_parsed_linear_constraint : (linear_expression_leaf -> bool) -> (linear_constraint_leaf -> bool) -> linear_constraint -> bool
 (** Check if any leaf of a non-linear constraint satisfy the predicate **)
-val exists_in_parsed_nonlinear_constraint : (parsing_structure_leaf -> bool) -> (nonlinear_constraint_leaf -> bool) -> nonlinear_constraint -> bool
+val exists_in_parsed_nonlinear_constraint : (parsing_structure_leaf -> bool) -> nonlinear_constraint -> bool
 
 
 (** Apply units over leaf of a parsing structure **)
@@ -90,7 +90,7 @@ val iterate_parsed_linear_term : (linear_expression_leaf -> unit) -> linear_term
 (** Iterate over a linear constraint applying a unit function **)
 val iterate_parsed_linear_constraint : (linear_expression_leaf -> unit) -> (linear_constraint_leaf -> unit) -> linear_constraint -> unit
 (** Iterate over a non-linear constraint applying a unit function **)
-val iterate_parsed_nonlinear_constraint : (parsing_structure_leaf -> unit) -> (nonlinear_constraint_leaf -> unit) -> nonlinear_constraint -> unit
+val iterate_parsed_nonlinear_constraint : (parsing_structure_leaf -> unit) -> nonlinear_constraint -> unit
 
 val label_of_parsed_factor_constructor : parsed_discrete_factor -> string
 
