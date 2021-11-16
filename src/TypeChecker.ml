@@ -503,14 +503,27 @@ and infer_parsed_discrete_term variable_infos = function
         Parsed_DT_mul (convert_l_expr, convert_r_expr), discrete_type
 
     (* Specific case, literal rational => constant / constant *)
-    (* Should be reduced directly as a rational value *)
+    (* Should be reduced before... *)
     | Parsed_DT_div ((Parsed_DT_factor (Parsed_DF_constant lv)), Parsed_DF_constant rv) ->
-        let target_type = DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational in
+
+        (* Doing division *)
         let l_numconst = DiscreteValue.to_numconst_value lv in
         let r_numconst = DiscreteValue.to_numconst_value rv in
         let numconst_value = NumConst.div l_numconst r_numconst in
-        let discrete_value = DiscreteValue.Rational_value numconst_value in
-        Parsed_DT_factor (Parsed_DF_constant discrete_value), target_type
+
+        (* Check if result is representable by an int *)
+        let is_int = NumConst.is_int numconst_value in
+
+        (* If it's representable by an int, it can be a rational or an int *)
+        if is_int then (
+            let discrete_value = DiscreteValue.Number_value numconst_value in
+            Parsed_DT_factor (Parsed_DF_constant discrete_value), DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_unknown_number
+        )
+        (* If it's not representable by an int, it's a rational *)
+        else (
+            let discrete_value = DiscreteValue.Rational_value numconst_value in
+            Parsed_DT_factor (Parsed_DF_constant discrete_value), DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational
+        )
 
     | Parsed_DT_div (term, factor) as expr_term ->
         let (convert_l_expr, convert_r_expr), discrete_type = type_check_and_convert_term variable_infos term factor expr_term in
@@ -567,6 +580,7 @@ and infer_parsed_discrete_factor variable_infos = function
         let infer_expr_array =
             if List.length known_number > 0 then (
                 let first_known_number_expr, target_type = List.nth known_number 0 in
+
                 Array.map (fun (expr, discrete_type) ->
                     if DiscreteType.is_discrete_type_holding_unknown_number_type discrete_type then (
                         let inner_target_type = DiscreteType.extract_inner_type target_type in
@@ -585,7 +599,13 @@ and infer_parsed_discrete_factor variable_infos = function
         let converted_expr_array = Array.map (fun (converted_expr, _) -> converted_expr) infer_expr_array in
 
         (* Check if all elements in array had the same types *)
-        let first_type = if Array.length discrete_types > 0 then Array.get discrete_types 0 else (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational) in
+        let first_type =
+            if Array.length discrete_types > 0 then
+                Array.get discrete_types 0
+            else
+                DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_unknown_number
+        in
+
         let all_same = Array.for_all (fun discrete_type -> discrete_type = first_type) discrete_types in
 
         (* If not all the same, type error ! *)
