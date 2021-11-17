@@ -147,7 +147,7 @@ val _and : discrete_value -> discrete_value -> discrete_value
 (* Logical or on two discrete value *)
 val _or : discrete_value -> discrete_value -> discrete_value
 (* Logical not on a discrete value *)
-val not : discrete_value -> discrete_value
+val _not : discrete_value -> discrete_value
 (* Logical equality on two discrete value *)
 val bool_equal : discrete_value -> discrete_value -> discrete_value
 (* Logical equality inverse on two discrete value *)

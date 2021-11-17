@@ -360,7 +360,7 @@ let _or a b =
         | _ -> raise (InternalError ("Computing exception at `or " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 (* Logical not on a discrete value *)
-let not = function
+let _not = function
     | Bool_value a -> Bool_value (not (a))
     | _ as value -> raise (InternalError ("Computing exception at `not " ^ string_of_value value ^ "`"))
 

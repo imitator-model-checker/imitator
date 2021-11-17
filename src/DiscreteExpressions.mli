@@ -65,7 +65,9 @@ and rational_factor =
 	| DF_expression of rational_arithmetic_expression
 	| DF_rational_of_int of int_arithmetic_expression
 	| DF_unary_min of rational_factor
-	| DF_pow of rational_arithmetic_expression * int_arithmetic_expression
+	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
+	| Rational_list_hd of list_expression
+(*	| Rational_function_call of string * global_expression list*)
 
 (************************************************************)
 (** Int arithmetic expressions for discrete variables *)
@@ -86,9 +88,11 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
-    | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     (* TODO benjamin IMPORTANT here decline array_expression to int_array_expression *)
     | Int_access of expression_access_type * int_arithmetic_expression
+    | Int_pow of int_arithmetic_expression * int_arithmetic_expression
+    | Int_list_hd of list_expression
+(*    | Int_function_call of string * global_expression list*)
 
 (************************************************************)
 (************************************************************)
@@ -125,6 +129,9 @@ and discrete_boolean_expression =
 	(** access to a boolean array **)
 	(* TODO benjamin IMPORTANT here decline array_expression to bool_array_expression *)
     | Bool_access of expression_access_type * int_arithmetic_expression
+    (** functions **)
+    | Bool_list_hd of list_expression
+(*    | Bool_function_call of string * global_expression list*)
 
 (************************************************************)
 (************************************************************)
@@ -146,6 +153,8 @@ and binary_word_expression =
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
     | Binary_word_access of expression_access_type * int_arithmetic_expression * int
+    | Binary_word_list_hd of list_expression
+(*    | Binary_word_function_call of string * global_expression list*)
 
 (** Array expression **)
 and array_expression =
@@ -155,6 +164,8 @@ and array_expression =
     | Array_access of expression_access_type * int_arithmetic_expression
     (* Add here some functions on array *)
     | Array_concat of array_expression * array_expression
+    | Array_list_hd of list_expression
+(*    | Array_function_call of string * global_expression list*)
 
 (** List expression **)
 and list_expression =
@@ -164,6 +175,10 @@ and list_expression =
     | List_access of expression_access_type * int_arithmetic_expression
     (* Add here some functions on list *)
     | List_cons of global_expression * list_expression
+    | List_list_hd of list_expression
+    | List_tl of list_expression
+    | List_rev of list_expression
+(*    | List_function_call of string * global_expression list*)
 
 and expression_access_type =
     | Expression_array_access of array_expression
@@ -178,10 +193,12 @@ val is_linear_discrete_boolean_expression : discrete_boolean_expression -> bool
 (* String *)
 
 (* Constructors strings *)
+val label_of_bool_factor : discrete_boolean_expression -> string
 val label_of_rational_factor : rational_factor -> string
 val label_of_int_factor : int_factor -> string
 val label_of_binary_word_expression : binary_word_expression -> string
 val label_of_array_expression : array_expression -> string
+val label_of_list_expression : list_expression -> string
 
 (* String representation of boolean according to customized string *)
 val customized_string_of_bool_value : Constants.customized_boolean_string -> bool -> string

@@ -362,12 +362,17 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
 			string_of_arithmetic_expression customized_string expr
 		| DF_rational_of_int expr ->
 		    customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
-        | DF_pow (expr, exp) as factor ->
+        | Rational_pow (expr, exp) as factor ->
             jani_binary_operator
                 (label_of_rational_factor factor)
                 (string_of_arithmetic_expression customized_string expr)
                 (customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names exp)
-
+        | Rational_list_hd list_expr as func ->
+            let label = label_of_rational_factor func in
+            jani_function_call
+                label
+                [|customized_string_of_list_expression_for_jani customized_string variable_names list_expr|]
+                ~str_comment:(undeclared_function_warning label)
 
 	(* Call top-level *)
 	in string_of_arithmetic_expression customized_string
@@ -428,13 +433,19 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
 
 		| Int_expression discrete_arithmetic_expression ->
 			string_of_int_arithmetic_expression customized_string discrete_arithmetic_expression
-        | Int_pow (expr, exp) as factor ->
+        | Int_pow (expr, exp) as func ->
             jani_function_call
-                (label_of_int_factor factor)
+                (label_of_int_factor func)
                 [|
                     string_of_int_arithmetic_expression customized_string expr;
                     string_of_int_arithmetic_expression customized_string exp
                 |]
+        | Int_list_hd list_expr as func ->
+            let label = label_of_int_factor func in
+            jani_function_call
+                label
+                [|customized_string_of_list_expression_for_jani customized_string variable_names list_expr|]
+                ~str_comment:(undeclared_function_warning label)
 
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
@@ -522,6 +533,27 @@ and customized_string_of_list_expression_for_jani customized_string variable_nam
     | List_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
     | List_access (access_type, index_expr) ->
         string_of_expression_access_for_jani customized_string variable_names access_type index_expr
+    | List_cons (expr, list_expr) as func ->
+        (* Get label of expression *)
+        let label = label_of_list_expression func in
+
+        jani_function_call
+            label
+            [|
+                customized_string_of_global_expression_for_jani customized_string variable_names expr;
+                customized_string_of_list_expression_for_jani customized_string variable_names list_expr
+            |]
+            ~str_comment:(undeclared_function_warning label)
+    | List_list_hd list_expr
+    | List_tl list_expr
+    | List_rev list_expr as func ->
+        (* Get label of expression *)
+        let label = label_of_list_expression func in
+
+        jani_function_call
+            label
+            [| customized_string_of_list_expression_for_jani customized_string variable_names list_expr |]
+            ~str_comment:(undeclared_function_warning label)
 
 and string_of_expression_of_access_for_jani customized_string variable_names = function
     | Expression_array_access array_expr ->

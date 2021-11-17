@@ -68,3 +68,6 @@ exception InvalidExpression of string
 
 (* Used when an expression is ill-typed formed or when computing on not compatible types *)
 exception TypeError of string
+
+(* Used when a function isn't found *)
+exception UndefinedFunction of string

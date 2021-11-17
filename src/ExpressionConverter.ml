@@ -1,3 +1,19 @@
+(************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ *
+ * Module description: This module aims to convert a parsed expression to a abstract typed expression
+ *
+ * File contributors : Benjamin L.
+ * Created           : 2021/11/20
+ * Last modified     : 2021/11/20
+ *
+ ************************************************************)
+
 open Constants
 open Exceptions
 open ParsingStructure
@@ -42,9 +58,9 @@ let rec convert_parsed_global_expression variable_infos = function
         | DiscreteType.Var_type_discrete_bool ->
             Bool_expression (bool_expression_of_parsed_boolean_expression variable_infos expr)
         | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational ->
-            rational_expression_of_parsed_boolean_expression variable_infos expr
+            Arithmetic_expression (Rational_arithmetic_expression (rational_expression_of_parsed_boolean_expression variable_infos expr))
         | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_int ->
-            int_expression_of_parsed_boolean_expression variable_infos expr
+            Arithmetic_expression (Int_arithmetic_expression (int_expression_of_parsed_boolean_expression variable_infos expr))
         | DiscreteType.Var_type_discrete_binary_word _ ->
             Binary_word_expression (binary_word_expression_of_parsed_boolean_expression variable_infos expr)
         | DiscreteType.Var_type_discrete_array _ ->
@@ -55,6 +71,9 @@ let rec convert_parsed_global_expression variable_infos = function
         | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_unknown_number ->
             raise (InternalError "An expression still contains unknown literal number after type checking")
 
+and global_expression_of_parsed_boolean_expression variable_infos expr =
+    convert_parsed_global_expression variable_infos (Parsed_global_expression expr)
+
 and convert_parsed_boolean_expression variable_infos expr =
         (* TYPE CHECK *)
         let discrete_type = TypeChecker.discrete_type_of_parsed_boolean_expression variable_infos expr in
@@ -63,9 +82,9 @@ and convert_parsed_boolean_expression variable_infos expr =
         | DiscreteType.Var_type_discrete_bool ->
             Bool_expression (bool_expression_of_parsed_boolean_expression variable_infos expr)
         | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational ->
-            rational_expression_of_parsed_boolean_expression variable_infos expr
+            Arithmetic_expression (Rational_arithmetic_expression (rational_expression_of_parsed_boolean_expression variable_infos expr))
         | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_int ->
-            int_expression_of_parsed_boolean_expression variable_infos expr
+            Arithmetic_expression (Int_arithmetic_expression (int_expression_of_parsed_boolean_expression variable_infos expr))
         | DiscreteType.Var_type_discrete_binary_word _ ->
             Binary_word_expression (binary_word_expression_of_parsed_boolean_expression variable_infos expr)
         | DiscreteType.Var_type_discrete_array _ ->
@@ -170,6 +189,9 @@ and bool_expression_of_parsed_discrete_arithmetic_expression variable_infos expr
                 expression_access_type_of_parsed_df_access variable_infos factor,
                 int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr
             )
+        | Parsed_function_call (variable, argument_expressions) ->
+            let name = ParsingStructureUtilities.function_name_of_parsed_factor variable in
+            bool_expression_of_parsed_function_call variable_infos argument_expressions name
         (* Should never happen, because it was checked by type checker before *)
         | _ as factor ->
             raise (InternalError (
@@ -179,6 +201,21 @@ and bool_expression_of_parsed_discrete_arithmetic_expression variable_infos expr
             ))
     in
     bool_expression_of_parsed_discrete_arithmetic_expression_rec expr
+
+and bool_expression_of_parsed_function_call variable_infos argument_expressions = function
+    | "list_hd" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Bool_list_hd (
+            list_expression_of_parsed_boolean_expression variable_infos arg_0
+        )
+    (* TODO benjamin, in the future replace raise by custom function call as comment below *)
+    | function_name -> raise (UndefinedFunction function_name)
+    (*
+    Bool_function_call (
+        name,
+        List.map (global_expression_of_parsed_boolean_expression variable_infos) argument_expressions
+    )
+    *)
 
 and arithmetic_expression_of_parsed_discrete_boolean_expression variable_infos = function
     | Parsed_arithmetic_expression expr -> arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr
@@ -212,12 +249,12 @@ and arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr =
 and rational_expression_of_parsed_boolean_expression variable_infos (* expr *) =
 
     let rec rational_expression_of_parsed_boolean_expression = function
-        | Parsed_Discrete_boolean_expression expr -> Arithmetic_expression (rational_expression_of_parsed_discrete_boolean_expression expr)
+        | Parsed_Discrete_boolean_expression expr -> rational_expression_of_parsed_discrete_boolean_expression expr
         | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
 
     and rational_expression_of_parsed_discrete_boolean_expression = function
         | Parsed_arithmetic_expression expr ->
-             Rational_arithmetic_expression (rational_expression_of_parsed_discrete_arithmetic_expression variable_infos expr)
+            rational_expression_of_parsed_discrete_arithmetic_expression variable_infos expr
         | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
     in
     rational_expression_of_parsed_boolean_expression (* expr *)
@@ -270,8 +307,12 @@ and rational_expression_of_parsed_discrete_arithmetic_expression variable_infos 
         | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.to_numconst_value var_value)
         | Parsed_DF_expression expr -> DF_expression (rational_expression_of_parsed_discrete_arithmetic_expression_rec expr)
         | Parsed_rational_of_int_function expr -> DF_rational_of_int (int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr)
-        | Parsed_pow_function (expr, exp) -> DF_pow (rational_expression_of_parsed_discrete_arithmetic_expression_rec expr, int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos exp)
+        | Parsed_pow_function (expr, exp) -> Rational_pow (rational_expression_of_parsed_discrete_arithmetic_expression_rec expr, int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos exp)
         | Parsed_DF_unary_min factor -> DF_unary_min (rational_expression_of_parsed_factor factor)
+        | Parsed_function_call (variable, argument_expressions) ->
+            let name = ParsingStructureUtilities.function_name_of_parsed_factor variable in
+            rational_expression_of_parsed_function_call variable_infos argument_expressions name
+
         (* Should never happen, because it was checked by type checker before *)
         | _ as factor ->
             raise (InternalError (
@@ -282,20 +323,47 @@ and rational_expression_of_parsed_discrete_arithmetic_expression variable_infos 
     in
     rational_expression_of_parsed_discrete_arithmetic_expression_rec
 
+and rational_expression_of_parsed_function_call variable_infos argument_expressions = function
+    | "pow" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+        Rational_pow (
+            rational_expression_of_parsed_boolean_expression variable_infos arg_0,
+            int_expression_of_parsed_boolean_expression variable_infos arg_1
+        )
+    | "rational_of_int" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        DF_rational_of_int (
+            int_expression_of_parsed_boolean_expression variable_infos arg_0
+        )
+    | "list_hd" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Rational_list_hd (
+            list_expression_of_parsed_boolean_expression variable_infos arg_0
+        )
+    (* TODO benjamin, in the future replace raise by custom function call as comment below *)
+    | function_name -> raise (UndefinedFunction function_name)
+    (*
+    Rational_function_call (
+        name,
+        List.map (global_expression_of_parsed_boolean_expression variable_infos) argument_expressions
+    )
+    *)
+
 (* Get typed int expression of global parsed expression *)
 (* Extract arithmetic expression from parsed_discrete_boolean_expression *)
 and int_expression_of_parsed_boolean_expression variable_infos (* expr *) =
 
     let rec int_expression_of_parsed_boolean_expression = function
-        | Parsed_Discrete_boolean_expression expr -> Arithmetic_expression (int_expression_of_parsed_discrete_boolean_expression expr)
+        | Parsed_Discrete_boolean_expression expr -> int_expression_of_parsed_discrete_boolean_expression expr
         | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
 
     and int_expression_of_parsed_discrete_boolean_expression = function
         | Parsed_arithmetic_expression expr ->
-            Int_arithmetic_expression (int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr)
+            int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos expr
         | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
     in
-    int_expression_of_parsed_boolean_expression
+    int_expression_of_parsed_boolean_expression (* expr *)
 
 (* Convert a parsed discrete arithmetic expression to an int arithmetic expression *)
 and int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos (* expr *) =
@@ -346,15 +414,16 @@ and int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos (* 
         | Parsed_DF_constant var_value -> Int_constant (DiscreteValue.int_value var_value)
         | Parsed_DF_expression expr -> Int_expression (int_arithmetic_expression_of_parsed_arithmetic_expression_rec expr)
         | Parsed_pow_function (expr, exp) -> Int_pow (int_arithmetic_expression_of_parsed_arithmetic_expression_rec expr, int_arithmetic_expression_of_parsed_arithmetic_expression_rec exp)
-
         | Parsed_DF_unary_min factor -> Int_unary_min (int_arithmetic_expression_of_parsed_factor factor)
-
         | Parsed_DF_access (factor, index_expr) ->
 
             Int_access (
                 expression_access_type_of_parsed_df_access variable_infos factor,
                 int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr
             )
+        | Parsed_function_call (variable, argument_expressions) ->
+            let name = ParsingStructureUtilities.function_name_of_parsed_factor variable in
+            int_arithmetic_expression_of_parsed_function_call variable_infos argument_expressions name
 
         (* Should never happen, because it was checked by type checker before *)
         | _ as factor ->
@@ -365,6 +434,29 @@ and int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos (* 
             ))
     in
     int_arithmetic_expression_of_parsed_arithmetic_expression_rec
+
+and int_arithmetic_expression_of_parsed_function_call variable_infos argument_expressions = function
+    | "pow" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+        Int_pow (
+            int_expression_of_parsed_boolean_expression variable_infos arg_0,
+            int_expression_of_parsed_boolean_expression variable_infos arg_1
+        )
+    | "list_hd" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Int_list_hd (
+            list_expression_of_parsed_boolean_expression variable_infos arg_0
+        )
+    (* TODO benjamin, in the future replace raise by custom function call as comment below *)
+    | function_name -> raise (UndefinedFunction function_name)
+    (*
+    Int_function_call (
+        name,
+        List.map (global_expression_of_parsed_boolean_expression variable_infos) argument_expressions
+    )
+    *)
+
 
 (* Try to convert a parsed boolean expression to abstract binary word expression *)
 and binary_word_expression_of_parsed_boolean_expression variable_infos = function
@@ -452,6 +544,10 @@ and binary_word_expression_of_parsed_factor variable_infos factor =
             binary_word_expression_of_parsed_factor variable_infos factor,
             binary_word_length
         )
+    | Parsed_function_call (variable, argument_expressions) ->
+        let name = ParsingStructureUtilities.function_name_of_parsed_factor variable in
+        binary_word_expression_of_parsed_function_call variable_infos binary_word_length argument_expressions name
+
     | Parsed_DF_expression expression ->
         binary_word_expression_of_parsed_discrete_arithmetic_expression variable_infos expression
     | _ as factor ->
@@ -462,6 +558,92 @@ and binary_word_expression_of_parsed_factor variable_infos factor =
         ))
     in
     binary_word_expression_of_parsed_factor_inner factor
+
+and binary_word_expression_of_parsed_function_call variable_infos binary_word_length argument_expressions = function
+    | "shift_left" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+
+        Logical_shift_left (
+            binary_word_expression_of_parsed_boolean_expression variable_infos arg_0,
+            int_expression_of_parsed_boolean_expression variable_infos arg_1,
+            binary_word_length
+        )
+    | "shift_right" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+
+        Logical_shift_right (
+            binary_word_expression_of_parsed_boolean_expression variable_infos arg_0,
+            int_expression_of_parsed_boolean_expression variable_infos arg_1,
+            binary_word_length
+        )
+    | "fill_left" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+
+        Logical_fill_left (
+            binary_word_expression_of_parsed_boolean_expression variable_infos arg_0,
+            int_expression_of_parsed_boolean_expression variable_infos arg_1,
+            binary_word_length
+        )
+    | "fill_right" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+
+        Logical_fill_right (
+            binary_word_expression_of_parsed_boolean_expression variable_infos arg_0,
+            int_expression_of_parsed_boolean_expression variable_infos arg_1,
+            binary_word_length
+        )
+    | "logand" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+
+        Logical_and (
+            binary_word_expression_of_parsed_boolean_expression variable_infos arg_0,
+            binary_word_expression_of_parsed_boolean_expression variable_infos arg_1,
+            binary_word_length
+        )
+    | "logor" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+
+        Logical_or (
+            binary_word_expression_of_parsed_boolean_expression variable_infos arg_0,
+            binary_word_expression_of_parsed_boolean_expression variable_infos arg_1,
+            binary_word_length
+        )
+    | "logxor" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+
+        Logical_xor (
+            binary_word_expression_of_parsed_boolean_expression variable_infos arg_0,
+            binary_word_expression_of_parsed_boolean_expression variable_infos arg_1,
+            binary_word_length
+        )
+
+    | "lognot" ->
+        let arg_0 = List.nth argument_expressions 0 in
+
+        Logical_not (
+            binary_word_expression_of_parsed_boolean_expression variable_infos arg_0,
+            binary_word_length
+        )
+    | "list_hd" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Binary_word_list_hd (
+            list_expression_of_parsed_boolean_expression variable_infos arg_0
+        )
+    (* TODO benjamin, in the future replace raise by custom function call as comment below *)
+    | function_name -> raise (UndefinedFunction function_name)
+    (*
+    Binary_word_function_call (
+        name,
+        List.map (global_expression_of_parsed_boolean_expression variable_infos) argument_expressions
+    )
+    *)
 
 
 (* Try to convert a parsed boolean expression to abstract array expression *)
@@ -520,12 +702,38 @@ and array_expression_of_parsed_factor variable_infos = function
             array_expression_of_parsed_factor variable_infos factor_0,
             array_expression_of_parsed_factor variable_infos factor_1
         )
+    | Parsed_function_call (variable, argument_expressions) ->
+        let name = ParsingStructureUtilities.function_name_of_parsed_factor variable in
+        array_expression_of_parsed_function_call variable_infos argument_expressions name
+
     | _ as factor ->
         raise (InternalError (
             "Use of \""
             ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
             ^ "\" in an array expression, although it was checked before by type checking. Maybe something fail in type checking"
         ))
+
+and array_expression_of_parsed_function_call variable_infos argument_expressions = function
+    | "array_concat" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+        Array_concat (
+            array_expression_of_parsed_boolean_expression variable_infos arg_0,
+            array_expression_of_parsed_boolean_expression variable_infos arg_1
+        )
+    | "list_hd" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Array_list_hd (
+            list_expression_of_parsed_boolean_expression variable_infos arg_0
+        )
+    (* TODO benjamin, in the future replace raise by custom function call as comment below *)
+    | function_name -> raise (UndefinedFunction function_name)
+    (*
+    Array_function_call (
+        name,
+        List.map (global_expression_of_parsed_boolean_expression variable_infos) argument_expressions
+    )
+    *)
 
 (* Try to convert a parsed discrete boolean expression to abstract list expression *)
 and list_expression_of_parsed_boolean_expression variable_infos = function
@@ -582,6 +790,9 @@ and list_expression_of_parsed_factor variable_infos = function
             convert_parsed_boolean_expression variable_infos expr,
             list_expression_of_parsed_factor variable_infos factor
         )
+    | Parsed_function_call (variable, argument_expressions) ->
+        let name = ParsingStructureUtilities.function_name_of_parsed_factor variable in
+        list_expression_of_parsed_function_call variable_infos argument_expressions name
 
     | _ as factor ->
         raise (InternalError (
@@ -589,6 +800,38 @@ and list_expression_of_parsed_factor variable_infos = function
             ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
             ^ "\" in a list expression, although it was checked before by type checking. Maybe something fail in type checking"
         ))
+
+and list_expression_of_parsed_function_call variable_infos argument_expressions = function
+    | "list_cons" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+        List_cons (
+            convert_parsed_boolean_expression variable_infos arg_0,
+            list_expression_of_parsed_boolean_expression variable_infos arg_1
+        )
+    | "list_hd" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        List_list_hd (
+            list_expression_of_parsed_boolean_expression variable_infos arg_0
+        )
+    | "list_tl" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        List_tl (
+            list_expression_of_parsed_boolean_expression variable_infos arg_0
+        )
+    | "list_rev" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        List_rev (
+            list_expression_of_parsed_boolean_expression variable_infos arg_0
+        )
+    (* TODO benjamin, in the future replace raise by custom function call as comment below *)
+    | function_name -> raise (UndefinedFunction function_name)
+    (*
+    List_function_call (
+        name,
+        List.map (global_expression_of_parsed_boolean_expression variable_infos) argument_expressions
+    )
+    *)
 
 and expression_access_type_of_parsed_df_access variable_infos factor =
     (* Check discrete type for differentiate arrays and lists *)

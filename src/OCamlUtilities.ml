@@ -268,6 +268,16 @@ let hashtbl_group_by keySelector l =
     done;
     table
 
+(* Check if predicate is true for all arrangement of list *)
+let for_all_in_arrangement predicate l =
+    let result = ref true in
+    for i = 0 to (List.length l) - 1 do
+        for j = i to (List.length l) - 1 do
+            result := !result && predicate (List.nth l i) (List.nth l j)
+        done
+    done;
+    !result
+
 (************************************************************)
 (** Useful functions on arrays *)
 (************************************************************)
@@ -356,6 +366,13 @@ let hashtbl_get_or_default hashtbl key default_value =
 (** function to filter hash table with a predicate on keys *)
 let hashtbl_filter pred =
 	Hashtbl.filter_map_inplace (fun k v -> if pred k then Some v else None)
+
+let hashtbl_of_tuples tuples =
+    let table = Hashtbl.create (List.length tuples) in
+    List.iter (fun (a, b) ->
+        Hashtbl.add table a b
+    ) tuples;
+    table
 
 (************************************************************)
 (** Useful functions on string *)

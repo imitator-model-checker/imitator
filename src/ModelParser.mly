@@ -86,8 +86,8 @@ let unzip l = List.fold_left
 	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
-    CT_BUILTIN_FUNC_RATIONAL_OF_INT CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
-    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST CT_LIST_CONS
+    CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
+    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST
 
 
 %token EOF
@@ -540,15 +540,26 @@ postfix_arithmetic_factor:
 
 arithmetic_factor:
   | arithmetic_factor LSQBRA arithmetic_expression RSQBRA { Parsed_DF_access ($1, $3) }
-  | number { Parsed_DF_constant ($1) }
-  | CT_TRUE { Parsed_DF_constant (DiscreteValue.Bool_value true) }
-  | CT_FALSE { Parsed_DF_constant (DiscreteValue.Bool_value false) }
-  | binary_word { Parsed_DF_constant $1 }
-  | literal_array { Parsed_DF_array (Array.of_list $1) }
-  | CT_LIST LPAREN literal_array RPAREN { Parsed_DF_list $3 }
+  | arithmetic_factor LPAREN function_argument_fol RPAREN { Parsed_function_call ($1, $3) }
+  | arithmetic_factor LPAREN RPAREN { Parsed_function_call ($1, []) }
+  | literal_scalar_constant { Parsed_DF_constant $1 }
+  | literal_non_scalar_constant { $1 }
   | NAME { Parsed_DF_variable $1 }
   | LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
-  | function_call { $1 }
+;
+
+literal_scalar_constant:
+  | number { $1 }
+  | CT_TRUE { DiscreteValue.Bool_value true }
+  | CT_FALSE { DiscreteValue.Bool_value false }
+  | binary_word { $1 }
+;
+
+/* TODO benjamin see if possible to encapsulate array / list to Parsed_DF_constant */
+/* in this case, move these elements of that rule to `literal_scalar_constant` */
+literal_non_scalar_constant:
+  | literal_array { Parsed_DF_array (Array.of_list $1) }
+  | CT_LIST LPAREN literal_array RPAREN { Parsed_DF_list $3 }
 ;
 
 literal_array:
@@ -563,9 +574,11 @@ literal_array_fol:
 	| boolean_expression { [$1] }
 ;
 
+/*
 function_call:
 	| CT_BUILTIN_FUNC_RATIONAL_OF_INT LPAREN arithmetic_expression RPAREN { Parsed_rational_of_int_function $3 }
 	| CT_POW LPAREN arithmetic_expression COMMA arithmetic_expression RPAREN { Parsed_pow_function ($3, $5) }
+  | CT_POW LPAREN boolean_expression COMMA boolean_expression RPAREN { Parsed_function_call ("pow", [$3; $5]) }
 	| CT_SHIFT_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_function (Parsed_shift_left, $3, $5) }
 	| CT_SHIFT_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_function (Parsed_shift_right, $3, $5) }
 	| CT_FILL_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_function (Parsed_fill_left, $3, $5) }
@@ -577,6 +590,12 @@ function_call:
   | CT_ARRAY_CONCAT LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_array_concat ($3, $5) }
   | CT_LIST_CONS LPAREN boolean_expression COMMA arithmetic_factor RPAREN { Parsed_list_cons ($3, $5) }
 ;
+*/
+
+function_argument_fol:
+  | boolean_expression COMMA function_argument_fol { $1 :: $3 }
+  | boolean_expression { [$1] }
+
 
 number:
 	| integer { DiscreteValue.Number_value $1 }

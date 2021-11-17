@@ -291,6 +291,10 @@ let compile_model_and_property (options : Options.imitator_options) =
             (* Abort properly *)
             let failure_message =  "Type error: " ^ message in
             print_error_and_abort options failure_message (Result.InvalidModel_error)
+        | UndefinedFunction function_name ->
+            (* Abort properly *)
+            let failure_message =  "Function `" ^ function_name ^ "` is undefined." in
+            print_error_and_abort options failure_message (Result.InvalidModel_error)
 		| InternalError e ->
 			(print_error ("Internal error while parsing the input model and the property: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
 		in

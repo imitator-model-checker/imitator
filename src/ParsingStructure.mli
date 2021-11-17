@@ -113,6 +113,8 @@ and parsed_discrete_factor =
 
 	| Parsed_array_concat of parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_list_cons of parsed_boolean_expression * parsed_discrete_factor
+	| Parsed_function_call of parsed_discrete_factor (* name *) * parsed_boolean_expression list (* arguments *)
+
 (*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
 
 and parsed_shift_function_type =
@@ -469,6 +471,7 @@ type parsed_property = {
 (** Useful data structure to avoid multiple parameters in functions *)
 (************************************************************)
 (************************************************************)
+type constants_table = (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t
 
 type useful_parsing_model_information = {
 	(* The locations for each automaton: automaton_index -> location_index -> location_name *)
@@ -476,7 +479,7 @@ type useful_parsing_model_information = {
 	array_of_location_names				: location_name array array;
 	automata							: Automaton.automaton_index list;
 	automata_names						: (Automaton.automaton_index -> automaton_name);
-	constants							: (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t;
+	constants							: constants_table;
 	discrete							: Automaton.variable_index list;
 	index_of_actions					: (Automaton.action_name , Automaton.action_index) Hashtbl.t;
 	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
@@ -493,7 +496,7 @@ type useful_parsing_model_information = {
 }
 
 type variable_infos = {
-	constants							: (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t;
+	constants							: constants_table;
     variable_names						: variable_name list;
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
 	type_of_variables					: Automaton.variable_index -> DiscreteType.var_type;

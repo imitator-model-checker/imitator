@@ -19,6 +19,8 @@ open ParsingStructureUtilities
 open ImitatorUtilities
 open OCamlUtilities
 open Exceptions
+open FunctionSig
+open TypeConstraintResolver
 
 type variable_name = string
 type variable_index = int
@@ -240,6 +242,11 @@ and convert_literals_of_parsed_discrete_factor variable_infos target_type = func
         Parsed_list_cons (
             convert_literals_of_parsed_boolean_expression variable_infos target_type expr,
             convert_literals_of_parsed_discrete_factor variable_infos target_type factor
+        )
+    | Parsed_function_call (variable, argument_expressions) ->
+        Parsed_function_call (
+            variable,
+            List.map (convert_literals_of_parsed_boolean_expression variable_infos target_type) argument_expressions
         )
     | Parsed_DF_unary_min factor ->
         Parsed_DF_unary_min (convert_literals_of_parsed_discrete_factor variable_infos target_type factor)
@@ -972,12 +979,152 @@ and infer_parsed_discrete_factor variable_infos = function
             ))
         )
 
+    | Parsed_function_call (variable, argument_expressions) as func ->
+
+        (* Get function name *)
+        let function_name = ParsingStructureUtilities.function_name_of_parsed_factor variable in
+
+        (* Get arity of function *)
+        let arity = Functions.arity_of_function function_name in
+        let arguments_number = List.length argument_expressions in
+
+        (* Check call number of arguments is consistent with function arity *)
+        if arguments_number <> arity then
+            raise (TypeError (
+                "Arguments number of `"
+                ^ string_of_parsed_factor variable_infos func
+                ^ "`/"
+                ^ string_of_int (arguments_number)
+                ^ " call doesn't match with arity of the function : `"
+                ^ function_name
+                ^ "`/"
+                ^ string_of_int arity
+                ^ "."
+            ));
+
+        (* Infer function signature from signature template according to argument expressions types *)
+        let infer_expressions, function_signature_constraint, resolved_constraints, malformed_constraints, resolved_signature = infer_function_signature variable_infos func function_name argument_expressions in
+
+        (* Print messages *)
+        print_message Verbose_high ("\tInfer signature constraint of `" ^ function_name ^ "`: " ^ FunctionSig.string_of_signature_constraint function_signature_constraint);
+
+        (* Print resolved constraints *)
+        let str_resolved_constraints = TypeConstraintResolver.string_of_resolved_constraints resolved_constraints in
+        if str_resolved_constraints <> "" then print_message Verbose_high ("\tInfer resolved constraints: {" ^ str_resolved_constraints ^ "} for call `" ^ string_of_parsed_factor variable_infos func ^ "`.");
+
+        print_message Verbose_high ("\tInfer signature of `" ^ string_of_parsed_factor variable_infos func ^ "` resolved as: " ^ FunctionSig.string_of_signature resolved_signature);
+
+        let resolved_signature_without_return_type, return_type = FunctionSig.split_signature resolved_signature in
+
+        (* Make type conversions when needed *)
+        (* convert all unknown number to resolved type, if resolved type is number -> rational *)
+        (* *)
+        let infer_expressions_with_signature = List.combine infer_expressions resolved_signature_without_return_type in
+
+        let converted_expressions = List.map (fun ((expr, expr_type), defined_type_constraint) ->
+
+            (* Convert expr literals number to signature type if necessary *)
+            let converted_expr =
+                if DiscreteType.is_discrete_type_holding_unknown_number_type expr_type then (
+                    let target_type = if DiscreteType.is_discrete_type_known_number_type defined_type_constraint then defined_type_constraint else Var_type_discrete_number Var_type_discrete_rational in
+                    let target_type = DiscreteType.extract_inner_type target_type in
+                    convert_literals_of_parsed_boolean_expression variable_infos target_type expr
+                )
+                else
+                    expr
+            in
+            converted_expr
+
+        ) infer_expressions_with_signature
+        in
+
+        Parsed_function_call (variable, converted_expressions), return_type
+
     | Parsed_DF_unary_min factor ->
         let infer_factor, factor_type = infer_parsed_discrete_factor variable_infos factor in
         Parsed_DF_unary_min infer_factor, factor_type
 
+and infer_function_signature variable_infos func function_name argument_expressions =
+    (* Infer argument expressions *)
+    let infer_expressions = List.map (infer_parsed_boolean_expression variable_infos) argument_expressions in
+
+    (* Get inferred types of arguments as a signature *)
+    let call_signature = List.map (fun (_, expr_type) -> expr_type) infer_expressions in
+
+    (* Get function signature *)
+    let function_signature_constraint = Functions.signature_constraint_of_function function_name in
+    (* Get parameters signature *)
+    let function_parameter_signature_constraint, _ = FunctionSig.split_signature function_signature_constraint in
+
+    (* Check signature and signature constraint compatibility *)
+    let is_compatibles = FunctionSig.is_signature_compatible_with_signature_constraint call_signature function_parameter_signature_constraint in
+
+    (* If signature and signature constraint are not compatibles raise a type error *)
+    if not is_compatibles then
+        raise (TypeError (
+            "Call of `"
+            ^ string_of_parsed_factor variable_infos func
+            ^ "` with arguments signature "
+            ^ FunctionSig.string_of_signature call_signature
+            ^ " is not compatible with function parameters signature "
+            ^ FunctionSig.string_of_signature_constraint function_parameter_signature_constraint
+        ));
+
+    (* --- *)
+    let signature_constraint_with_expressions = List.combine function_parameter_signature_constraint argument_expressions in
+
+    let dependent_type_constraints = OCamlUtilities.rev_filter_map (fun (type_constraint, expr) ->
+        match type_constraint with
+        | Defined_type_constraint (Number_constraint (Defined_type_number_constraint Int_constraint (Int_name_constraint constraint_name))) ->
+            (* If expression is a type-dependent value, we must convert expression to an int expression *)
+            (* convert *)
+            let target_type = DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_int in
+            print_infer_expr_message (string_of_parsed_boolean_expression variable_infos expr) target_type;
+            let converted_expr = convert_literals_of_parsed_boolean_expression variable_infos target_type expr in
+
+
+            if not (ParsingStructureUtilities.is_parsed_boolean_expression_constant variable_infos converted_expr) then (
+                raise (TypeError (""));
+            )
+            else (
+                let value = ParsingStructureUtilities.try_reduce_parsed_boolean_expression variable_infos.constants converted_expr in
+                Some (constraint_name, Resolved_length_constraint (Int32.to_int (DiscreteValue.to_int_value value)))
+            )
+        | _ -> None
+
+    ) signature_constraint_with_expressions
+    in
+
+    (* ---- *)
+
+    (* Resolve constraint according to arguments types *)
+    let resolved_constraints, malformed_constraints = TypeConstraintResolver.resolve_constraints variable_infos function_parameter_signature_constraint call_signature argument_expressions in
+
+    let resolved_constraints = resolved_constraints @ dependent_type_constraints in
+
+    (* Eventually display the list of malformed constraints, if any, and raise an exception *)
+    if List.length malformed_constraints > 0 then (
+        raise (TypeError (
+            "Constraints consistency fail, "
+            ^ "call of `"
+            ^ string_of_parsed_factor variable_infos func
+            ^ "` resolve constraints as {"
+            ^ TypeConstraintResolver.string_of_resolved_constraints malformed_constraints
+            ^ "} which is not compatible with function parameters signature of `"
+            ^ function_name
+            ^ "` "
+            ^ FunctionSig.string_of_signature_constraint function_parameter_signature_constraint
+        ))
+    );
+
+    (* Resolve signature from resolved constraints *)
+    let resolved_constraints_table = OCamlUtilities.hashtbl_of_tuples resolved_constraints in
+
+    let resolved_signature = TypeConstraintResolver.signature_of_signature_constraint resolved_constraints_table function_signature_constraint in
+    infer_expressions, function_signature_constraint, resolved_constraints, malformed_constraints, resolved_signature
+
+
 (* Type checking and infer literal numbers of non-linear constraint *)
-(* TODO benjamin CLEAN to delete *)
 let infer_nonlinear_constraint = infer_parsed_discrete_boolean_expression
 
 
@@ -1127,7 +1274,14 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
     | Parsed_list_cons (_, factor) ->
         (* Already type checked, the type is of the type of list (in factor) Var_type_discrete_list x *)
         discrete_type_of_parsed_discrete_factor variable_infos factor
-
+    | Parsed_function_call (variable, argument_expressions) as func ->
+        (* Get function name *)
+        let function_name = function_name_of_parsed_factor variable in
+        (* Infer function signature *)
+        let _, _, _, _, resolved_signature = infer_function_signature variable_infos func function_name argument_expressions in
+        (* Get return type from signature *)
+        let _, return_type = FunctionSig.split_signature resolved_signature in
+        return_type
 
 (** Checking functions **)
 
@@ -1335,10 +1489,6 @@ let check_constant_expression initialized_constants (name, expr, var_type) =
     (* If no type was deduce from expression, so it's a rational *)
     let converted_expr, converted_type = convert_literals_of_expression variable_infos target_inner_type infer_expr, target_var_type in
     converted_expr, converted_type
-
-type yo =
-    | YO1 of int
-    | YO2 of int
 
 (* Check that a discrete variable initialization is well typed *)
 let check_discrete_init variable_infos variable_name expr =

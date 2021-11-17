@@ -1,3 +1,19 @@
+(************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ *
+ * Module description: This module aims to convert a parsed expression to a abstract typed expression
+ *
+ * File contributors : Benjamin L.
+ * Created           : 2021/11/20
+ * Last modified     : 2021/11/20
+ *
+ ************************************************************)
+
 open ParsingStructure
 open DiscreteExpressions
 

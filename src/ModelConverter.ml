@@ -127,7 +127,7 @@ let convert_parsed_loc_predicate useful_parsing_model_information = function
 
 (* Convert parsed_simple_predicate *)
 let convert_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (ParsingStructureConverter.bool_expression_of_parsed_discrete_boolean_expression (ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information) parsed_discrete_boolean_expression)
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (ExpressionConverter.bool_expression_of_parsed_discrete_boolean_expression (ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information) parsed_discrete_boolean_expression)
 	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
 	| Parsed_state_predicate_true -> State_predicate_true
 	| Parsed_state_predicate_false -> State_predicate_false
@@ -475,7 +475,7 @@ let nonlinear_constraint_of_nonlinear_convex_predicate variable_infos convex_pre
             | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = false -> raise False_exception
             | nonlinear_constraint  ->
                 (* Convert non-linear constraint to abstract model *)
-                let convert_nonlinear_constraint = ParsingStructureConverter.bool_expression_of_parsed_discrete_boolean_expression variable_infos nonlinear_constraint in
+                let convert_nonlinear_constraint = ExpressionConverter.bool_expression_of_parsed_discrete_boolean_expression variable_infos nonlinear_constraint in
                 (* Add typed discrete boolean expression to inequality list *)
                 convert_nonlinear_constraint :: nonlinear_inequalities
 
@@ -2128,13 +2128,13 @@ let to_abstract_discrete_update variable_infos (variable_access, parsed_update_e
         | Variable_access (variable_access, index_expr) ->
             Discrete_variable_access (
                 to_abstract_variable_access variable_access,
-                ParsingStructureConverter.int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr
+                ExpressionConverter.int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr
             )
     in
 
     (* Convert *)
     let abstract_variable_access = to_abstract_variable_access variable_access in
-    let global_expression = ParsingStructureConverter.convert_parsed_global_expression variable_infos parsed_update_expression in
+    let global_expression = ExpressionConverter.convert_parsed_global_expression variable_infos parsed_update_expression in
     (abstract_variable_access, global_expression)
 
 (** Translate a parsed clock update into its abstract model *)
@@ -2236,7 +2236,7 @@ let convert_updates variable_infos updates : updates =
         (* TYPE CHECK *)
         let uniformly_typed_bool_expr, _ = TypeChecker.check_conditional variable_infos boolean_value in
 
-        let convert_boolean_expr = ParsingStructureConverter.bool_expression_of_parsed_boolean_expression variable_infos uniformly_typed_bool_expr in
+        let convert_boolean_expr = ExpressionConverter.bool_expression_of_parsed_boolean_expression variable_infos uniformly_typed_bool_expr in
         let convert_if_updates = convert_normal_updates variable_infos if_updates in
         let convert_else_updates = convert_normal_updates variable_infos else_updates in
         (convert_boolean_expr, convert_if_updates, convert_else_updates)

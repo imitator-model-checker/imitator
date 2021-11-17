@@ -95,6 +95,8 @@ val iterate_parsed_nonlinear_constraint : (parsing_structure_leaf -> unit) -> no
 val label_of_parsed_factor_constructor : parsed_discrete_factor -> string
 
 (* Parsed expression to string *)
+val function_name_of_parsed_factor : parsed_discrete_factor -> string
+
 val string_of_parsed_global_expression : variable_infos -> global_expression -> string
 val string_of_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> string
 val string_of_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> string
@@ -111,14 +113,15 @@ val string_of_parsed_init_state_predicate : variable_infos -> parsed_init_state_
 
 val string_of_parsed_nonlinear_constraint : variable_infos -> nonlinear_constraint -> string
 
-val try_reduce_parsed_global_expression : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> global_expression -> DiscreteValue.discrete_value
-val try_reduce_parsed_arithmetic_expression : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> parsed_discrete_arithmetic_expression -> DiscreteValue.discrete_value
-
-val try_reduce_parsed_term : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> parsed_discrete_term -> DiscreteValue.discrete_value
-val try_reduce_parsed_factor : (variable_name, DiscreteValue.discrete_value) Hashtbl.t -> parsed_discrete_factor -> DiscreteValue.discrete_value
+val try_reduce_parsed_global_expression : constants_table -> global_expression -> DiscreteValue.discrete_value
+val try_reduce_parsed_boolean_expression : constants_table -> parsed_boolean_expression -> DiscreteValue.discrete_value
+val try_reduce_parsed_arithmetic_expression : constants_table -> parsed_discrete_arithmetic_expression -> DiscreteValue.discrete_value
+val try_reduce_parsed_term : constants_table -> parsed_discrete_term -> DiscreteValue.discrete_value
+val try_reduce_parsed_factor : constants_table -> parsed_discrete_factor -> DiscreteValue.discrete_value
 
 (** Utils **)
 val is_parsed_global_expression_constant : variable_infos -> global_expression -> bool
+val is_parsed_boolean_expression_constant : variable_infos -> parsed_boolean_expression -> bool
 val is_parsed_arithmetic_expression_constant : variable_infos -> parsed_discrete_arithmetic_expression -> bool
 
 (* --- *)

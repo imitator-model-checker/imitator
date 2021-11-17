@@ -122,6 +122,8 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
         operator
             (fold_parsed_boolean_expression operator base leaf_fun expr)
             (fold_parsed_discrete_factor operator base leaf_fun factor)
+    | Parsed_function_call (_, argument_expressions) ->
+        List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression operator base leaf_fun expr) acc) base argument_expressions
     | Parsed_DF_access (factor, _)
 	| Parsed_log_not factor
 	| Parsed_DF_unary_min factor ->
@@ -306,6 +308,11 @@ let iterate_in_parsed_state_predicate_factor = apply_evaluate_unit_with_base fol
 let iterate_in_parsed_state_predicate_term = apply_evaluate_unit_with_base fold_parsed_state_predicate_term
 let iterate_in_parsed_state_predicate = apply_evaluate_unit_with_base fold_parsed_state_predicate
 
+(* Extract function name from parsed factor *)
+let function_name_of_parsed_factor = function
+	| Parsed_DF_variable name -> name
+    | factor -> raise (TypeError "Trying to make a call on a non-function.")
+
 (* Labels of a parsed factors *)
 
 let label_of_parsed_shift_function_type = function
@@ -335,6 +342,7 @@ let label_of_parsed_factor_constructor = function
     | Parsed_log_not _ -> "lognot"
     | Parsed_array_concat _ -> "array_concat"
     | Parsed_list_cons _ -> "list_cons"
+    | Parsed_function_call (variable, _) -> function_name_of_parsed_factor variable
 
 
 
@@ -430,6 +438,11 @@ and string_of_parsed_factor variable_infos = function
         ^ ", "
         ^ string_of_parsed_factor variable_infos factor
         ^ ")"
+    | Parsed_function_call (_, argument_expressions) as func ->
+        let str_arguments_list = List.map (string_of_parsed_boolean_expression variable_infos) argument_expressions in
+        let str_arguments = OCamlUtilities.string_of_list_of_string_with_sep ", " str_arguments_list in
+        label_of_parsed_factor_constructor func ^ "(" ^ str_arguments ^ ")"
+
     | Parsed_log_not factor as func ->
         label_of_parsed_factor_constructor func
         ^ "("
@@ -541,7 +554,7 @@ and try_reduce_parsed_boolean_expression constants expr =
         | Parsed_boolean_expression expr ->
             try_reduce_parsed_boolean_expression_rec expr
 	    | Parsed_Not expr ->
-	        DiscreteValue.not
+	        DiscreteValue._not
 	            (try_reduce_parsed_boolean_expression_rec expr)
 
     and eval_parsed_relop relop value_1 value_2 =
@@ -625,31 +638,8 @@ and try_reduce_parsed_arithmetic_expression constants expr =
 
             let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
             let reduced_exp = try_reduce_parsed_arithmetic_expression_rec exp in
-            (* we have to know type of expr *)
-            let value_type = DiscreteValue.discrete_type_of_value reduced_expr in
-            (match value_type with
-            | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational ->
-                let numconst_expr = DiscreteValue.numconst_value reduced_expr in
-                let int_exp = DiscreteValue.int_value reduced_exp in
-                let numconst_result = NumConst.pow numconst_expr int_exp in
-                DiscreteValue.of_numconst numconst_result
-            | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_int ->
-                let int_expr = DiscreteValue.int_value reduced_expr in
-                let int_exp = DiscreteValue.int_value reduced_exp in
-                let int_result = OCamlUtilities.pow int_expr int_exp in
-                DiscreteValue.of_int int_result
-            (* Should never happen *)
-            | DiscreteType.Var_type_discrete_bool
-            | DiscreteType.Var_type_discrete_binary_word _
-            | DiscreteType.Var_type_discrete_array _
-            | DiscreteType.Var_type_discrete_list _
-            | DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_unknown_number as t ->
-                raise (InternalError (
-                    "Try to reduce a pow function on a "
-                    ^ DiscreteType.string_of_var_type_discrete t
-                    ^ " expression, altough it was checked before by the type checker. Maybe type checking has failed before"
-                ))
-            )
+            Functions.dynamic_function_call "pow" [reduced_expr; reduced_exp]
+
         | Parsed_shift_function (fun_type, factor, expr) ->
             let reduced_factor = try_reduce_parsed_factor factor in
             let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
@@ -672,16 +662,20 @@ and try_reduce_parsed_arithmetic_expression constants expr =
             end
 
         | Parsed_array_concat (l_factor, r_factor) ->
-
             let reduced_l_factor = try_reduce_parsed_factor l_factor in
             let reduced_r_factor = try_reduce_parsed_factor r_factor in
             DiscreteValue.array_concat reduced_l_factor reduced_r_factor
 
         | Parsed_list_cons (expr, factor) ->
-
             let reduced_expr = try_reduce_parsed_boolean_expression constants expr in
             let reduced_factor = try_reduce_parsed_factor factor in
             DiscreteValue.list_cons reduced_expr reduced_factor
+
+        | Parsed_function_call (variable, argument_expressions) ->
+            let function_name = function_name_of_parsed_factor variable in
+            let reduced_expressions = List.map (try_reduce_parsed_boolean_expression constants) argument_expressions in
+            Functions.dynamic_function_call function_name reduced_expressions
+
 
         | Parsed_log_not factor ->
 
@@ -796,11 +790,15 @@ let no_variables variable_infos = function
         let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
         variable_infos.type_of_variables variable_index = DiscreteType.Var_type_parameter
 
-(* Check if a global expression is constant *)
+(* Check if a parsed global expression is constant *)
 let is_parsed_global_expression_constant variable_infos =
     for_all_in_parsed_global_expression (is_constant variable_infos)
 
-(* Check if an arithmetic expression is constant *)
+(* Check if a parsed boolean expression is constant *)
+let is_parsed_boolean_expression_constant variable_infos =
+    for_all_in_parsed_boolean_expression (is_constant variable_infos)
+
+(* Check if a parsed arithmetic expression is constant *)
 let is_parsed_arithmetic_expression_constant variable_infos =
     for_all_in_parsed_discrete_arithmetic_expression (is_constant variable_infos)
 

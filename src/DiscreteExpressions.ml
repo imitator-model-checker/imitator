@@ -62,7 +62,9 @@ and rational_factor =
 	| DF_expression of rational_arithmetic_expression
 	| DF_rational_of_int of int_arithmetic_expression
 	| DF_unary_min of rational_factor
-    | DF_pow of rational_arithmetic_expression * int_arithmetic_expression
+    | Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
+    | Rational_list_hd of list_expression
+(*    | Rational_function_call of string * global_expression list*)
 
 
 (************************************************************)
@@ -84,8 +86,10 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
-    | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_access of expression_access_type * int_arithmetic_expression
+    | Int_pow of int_arithmetic_expression * int_arithmetic_expression
+    | Int_list_hd of list_expression
+(*    | Int_function_call of string * global_expression list*)
 
 (****************************************************************)
 (** Boolean expressions for discrete variables *)
@@ -118,6 +122,9 @@ and discrete_boolean_expression =
 	| DB_constant of bool
 	(** access to a boolean array **)
     | Bool_access of expression_access_type * int_arithmetic_expression
+    (** functions **)
+    | Bool_list_hd of list_expression
+(*    | Bool_function_call of string * global_expression list*)
 
 
 (************************************************************)
@@ -140,6 +147,8 @@ and binary_word_expression =
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
     | Binary_word_access of expression_access_type * int_arithmetic_expression * int
+    | Binary_word_list_hd of list_expression
+(*    | Binary_word_function_call of string * global_expression list*)
 
 (************************************************************)
 (************************************************************)
@@ -156,6 +165,8 @@ and array_expression =
     | Array_access of expression_access_type * int_arithmetic_expression
     (* Add here some function on array *)
     | Array_concat of array_expression * array_expression
+    | Array_list_hd of list_expression
+(*    | Array_function_call of string * global_expression list*)
 
 (** List expression **)
 and list_expression =
@@ -164,6 +175,10 @@ and list_expression =
     | List_variable of Automaton.variable_index
     | List_access of expression_access_type * int_arithmetic_expression
     | List_cons of global_expression * list_expression
+    | List_list_hd of list_expression
+	| List_tl of list_expression
+	| List_rev of list_expression
+(*    | List_function_call of string * global_expression list*)
 
 and expression_access_type =
     | Expression_array_access of array_expression
@@ -349,14 +364,29 @@ let add_parenthesis_to_unary_minus_int str = function
 
 (* Constructors strings *)
 
+let label_of_bool_factor = function
+	| Expression _
+    | Boolean_comparison _
+    | Binary_comparison _
+    | Array_comparison _
+    | List_comparison _ -> "bool comparison"
+	| Expression_in _ -> "in expression"
+	| Boolean_expression _ -> "bool expression"
+	| Not_bool _ -> "bool negation expression"
+	| DB_variable _ -> "bool variable"
+	| DB_constant _ -> "bool constant"
+    | Bool_access _ -> "bool access"
+    | Bool_list_hd _ -> "list_hd"
+
 let label_of_rational_factor = function
 	| DF_variable _ -> "rational variable"
 	| DF_constant _ -> "rational constant"
 	| DF_expression _ -> "rational expression"
 	| DF_unary_min _ -> "rational minus"
 	| DF_rational_of_int _ -> "rational_of_int"
-	| DF_pow _ -> "pow"
+	| Rational_pow _ -> "pow"
 	| Rational_access _ -> "rational access"
+	| Rational_list_hd _ -> "list_hd"
 
 let label_of_int_factor = function
 	| Int_variable _ -> "int variable"
@@ -365,6 +395,7 @@ let label_of_int_factor = function
 	| Int_unary_min _ -> "int minus"
 	| Int_pow _ -> "pow"
 	| Int_access _ -> "int access"
+	| Int_list_hd _ -> "list_hd"
 
 let label_of_binary_word_expression = function
     | Logical_shift_left _ -> "shift_left"
@@ -378,6 +409,7 @@ let label_of_binary_word_expression = function
     | Binary_word_constant _ -> "binary word constant"
     | Binary_word_variable _ -> "binary word variable"
     | Binary_word_access _ -> "binary word access"
+    | Binary_word_list_hd _ -> "list_hd"
 
 let label_of_array_expression = function
     | Literal_array _ -> "literal array"
@@ -385,6 +417,17 @@ let label_of_array_expression = function
     | Array_variable _ -> "array variable"
     | Array_access _ -> "array access"
     | Array_concat _ -> "array_concat"
+    | Array_list_hd _ -> "list_hd"
+
+let label_of_list_expression = function
+    | Literal_list _ -> "literal list"
+    | List_constant _ -> "list constant"
+    | List_variable _ -> "list variable"
+    | List_access _ -> "list access"
+    | List_cons _ -> "list_cons"
+    | List_list_hd _ -> "list_hd"
+    | List_tl _ -> "list_tl"
+    | List_rev _ -> "list_rev"
 
 (* Check if a binary word encoded on an integer have length greater than 31 bits *)
 (* If it's the case, print a warning *)
@@ -395,6 +438,8 @@ let print_binary_word_overflow_warning_if_needed expr length = function
             ImitatorUtilities.print_warning ("Encoding a `" ^ label_of_binary_word_expression expr ^ "` of length `" ^ string_of_int length ^ "` on an integer can leads to an overflow.")
 
 (* Expressions strings *)
+
+let print_function function_name str_arguments = function_name ^ "(" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_arguments ^ ")"
 
 let rec customized_string_of_global_expression customized_string variable_names = function
     | Arithmetic_expression expr -> customized_string_of_arithmetic_expression customized_string variable_names expr
@@ -464,17 +509,20 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 		         (string_of_factor customized_string discrete_factor)
 		    ) discrete_factor
 		| DF_rational_of_int discrete_arithmetic_expression as factor ->
-		    label_of_rational_factor factor
-		    ^ "("
-		    ^ customized_string_of_int_arithmetic_expression customized_string variable_names discrete_arithmetic_expression
-		    ^ ")"
-        | DF_pow (expr, exp) as factor ->
-            label_of_rational_factor factor
-            ^ "("
-            ^ string_of_arithmetic_expression customized_string expr
-            ^ ", "
-            ^ customized_string_of_int_arithmetic_expression customized_string variable_names exp
-            ^ ")"
+            print_function
+                (label_of_rational_factor factor)
+                [customized_string_of_int_arithmetic_expression customized_string variable_names discrete_arithmetic_expression]
+        | Rational_pow (expr, exp) as factor ->
+            print_function
+                (label_of_rational_factor factor)
+                [
+                    string_of_arithmetic_expression customized_string expr;
+                    customized_string_of_int_arithmetic_expression customized_string variable_names exp
+                ]
+        | Rational_list_hd list_expression as factor ->
+            print_function
+                (label_of_rational_factor factor)
+                [customized_string_of_list_expression customized_string variable_names list_expression]
 		| DF_expression discrete_arithmetic_expression ->
 			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 	(* Call top-level *)
@@ -540,15 +588,19 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 		    ) factor
 		| Int_expression expr ->
 			string_of_int_arithmetic_expression customized_string expr
-        | Int_pow (expr, exp) as factor ->
-            label_of_int_factor factor
-            ^ "("
-            ^ string_of_int_arithmetic_expression customized_string expr
-            ^ ", "
-            ^ string_of_int_arithmetic_expression customized_string exp
-            ^ ")"
         | Int_access (access_type, index_expr) ->
             string_of_expression_access customized_string variable_names access_type index_expr
+        | Int_pow (expr, exp) as func ->
+            print_function
+                (label_of_int_factor func)
+                [
+                    string_of_int_arithmetic_expression customized_string expr;
+                    string_of_int_arithmetic_expression customized_string exp
+                ]
+        | Int_list_hd list_expression as func ->
+            print_function
+                (label_of_int_factor func)
+                [customized_string_of_list_expression customized_string variable_names list_expression]
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 
@@ -600,13 +652,17 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression3)
 		^ "]"
     | Boolean_expression boolean_expression ->
-        "(" ^ (customized_string_of_boolean_expression customized_string variable_names boolean_expression) ^ ")"
+        "(" ^ customized_string_of_boolean_expression customized_string variable_names boolean_expression ^ ")"
 	| Not_bool b ->
 	    customized_string.boolean_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
     | DB_variable discrete_index -> variable_names discrete_index
     | DB_constant value -> customized_string_of_bool_value customized_string.boolean_string value
     | Bool_access (access_type, index_expr) ->
         string_of_expression_access customized_string variable_names access_type index_expr
+    | Bool_list_hd list_expression as func ->
+        print_function
+            (label_of_bool_factor func)
+            [customized_string_of_list_expression customized_string variable_names list_expression]
 
 and customized_string_of_boolean_operations customized_string = function
 	| OP_L		-> customized_string.l_operator
@@ -690,7 +746,10 @@ and customized_string_of_binary_word_expression customized_string variable_names
     | Binary_word_access (access_type, index_expr, length) as binary_word_expression ->
         print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
         string_of_expression_access customized_string variable_names access_type index_expr
-
+    | Binary_word_list_hd list_expr as func ->
+        print_function
+            (label_of_binary_word_expression func)
+            [customized_string_of_list_expression customized_string variable_names list_expr]
 
 and customized_string_of_array_expression customized_string variable_names = function
     | Literal_array expr_array ->
@@ -712,6 +771,10 @@ and customized_string_of_array_expression customized_string variable_names = fun
         ^ ", "
         ^ customized_string_of_array_expression customized_string variable_names array_expr_1
         ^ ")"
+    | Array_list_hd list_expr as func ->
+        print_function
+            (label_of_array_expression func)
+            [customized_string_of_list_expression customized_string variable_names list_expr]
 
 and customized_string_of_list_expression customized_string variable_names = function
     | Literal_list expr_list ->
@@ -727,6 +790,20 @@ and customized_string_of_list_expression customized_string variable_names = func
     | List_variable variable_index -> variable_names variable_index
     | List_access (access_type, index_expr) ->
         string_of_expression_access customized_string variable_names access_type index_expr
+    | List_cons (global_expression, list_expr) as func ->
+        label_of_list_expression func
+        ^ "("
+        ^ customized_string_of_global_expression customized_string variable_names global_expression
+        ^ ", "
+        ^ customized_string_of_list_expression customized_string variable_names list_expr
+        ^ ")"
+    | List_list_hd list_expr
+    | List_tl list_expr
+    | List_rev list_expr as func ->
+        label_of_list_expression func
+        ^ "("
+        ^ customized_string_of_list_expression customized_string variable_names list_expr
+        ^ ")"
 
 and string_of_expression_of_access customized_string variable_names = function
     | Expression_array_access array_expr ->

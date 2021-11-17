@@ -112,6 +112,7 @@ rule token = parse
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
 	| "within"         { CT_WITHIN }
+  (*
   | "rational_of_int"{ CT_BUILTIN_FUNC_RATIONAL_OF_INT }
   | "pow"            { CT_POW }
   | "shift_left"     { CT_SHIFT_LEFT }
@@ -123,8 +124,10 @@ rule token = parse
   | "logxor"         { CT_LOG_XOR }
   | "lognot"         { CT_LOG_NOT }
   | "array_concat"   { CT_ARRAY_CONCAT }
-  | "list"           { CT_LIST }
+
   | "list_cons"      { CT_LIST_CONS }
+  *)
+  | "list"           { CT_LIST }
 
 
 
