@@ -41,6 +41,13 @@ type nonlinear_constraint_leaf =
 type init_state_predicate_leaf =
     | Leaf_loc_assignment of automaton_name * location_name
 
+type state_predicate_leaf =
+    | Leaf_predicate_true
+    | Leaf_predicate_false
+    | Leaf_predicate_accepting
+    | Leaf_predicate_EQ of string (* automaton name *) * string (* location name *)
+    | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
+
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
 let rec fold_parsed_global_expression operator base leaf_fun = function
@@ -168,66 +175,136 @@ let fold_init_state_predicate operator base loc_assignment_leaf_fun linear_expre
 	| Parsed_linear_predicate linear_constraint -> fold_parsed_linear_constraint operator linear_expression_leaf_fun linear_constraint_leaf_fun linear_constraint
 	| Parsed_discrete_predicate (_, expr) -> fold_parsed_global_expression operator base leaf_fun expr
 
+let fold_parsed_loc_predicate operator base predicate_leaf_fun leaf_fun = function
+    | Parsed_loc_predicate_EQ (automaton_name, loc_name) ->
+        predicate_leaf_fun (Leaf_predicate_EQ (automaton_name, loc_name))
+    | Parsed_loc_predicate_NEQ (automaton_name, loc_name) ->
+        predicate_leaf_fun (Leaf_predicate_NEQ (automaton_name, loc_name))
+
+let fold_parsed_simple_predicate operator base predicate_leaf_fun leaf_fun = function
+	| Parsed_discrete_boolean_expression expr ->
+        fold_parsed_discrete_boolean_expression operator base leaf_fun expr
+	| Parsed_loc_predicate predicate ->
+		fold_parsed_loc_predicate operator base predicate_leaf_fun leaf_fun predicate
+	| Parsed_state_predicate_true -> predicate_leaf_fun Leaf_predicate_true
+	| Parsed_state_predicate_false -> predicate_leaf_fun Leaf_predicate_false
+	| Parsed_state_predicate_accepting -> predicate_leaf_fun Leaf_predicate_accepting
+
+let rec fold_parsed_state_predicate_factor operator base predicate_leaf_fun leaf_fun = function
+	| Parsed_state_predicate predicate ->
+	    fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun predicate
+	| Parsed_state_predicate_factor_NOT predicate ->
+	    fold_parsed_state_predicate_factor operator base predicate_leaf_fun leaf_fun predicate
+	| Parsed_simple_predicate predicate ->
+	    fold_parsed_simple_predicate operator base predicate_leaf_fun leaf_fun predicate
+
+and fold_parsed_state_predicate_term operator base predicate_leaf_fun leaf_fun = function
+	| Parsed_state_predicate_term_AND (l_predicate, r_predicate) ->
+	    operator
+	        (fold_parsed_state_predicate_term operator base predicate_leaf_fun leaf_fun l_predicate)
+	        (fold_parsed_state_predicate_term operator base predicate_leaf_fun leaf_fun r_predicate)
+	| Parsed_state_predicate_factor predicate ->
+	    fold_parsed_state_predicate_factor operator base predicate_leaf_fun leaf_fun predicate
+
+and fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun = function
+	| Parsed_state_predicate_OR (l_predicate, r_predicate) ->
+        operator
+            (fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun l_predicate)
+            (fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun r_predicate)
+	| Parsed_state_predicate_term predicate_term ->
+	    fold_parsed_state_predicate_term operator base predicate_leaf_fun leaf_fun predicate_term
+
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
-let for_all_in_parsed_global_expression = fold_parsed_global_expression (OCamlUtilities.evaluate_and) true
-let for_all_in_parsed_boolean_expression = fold_parsed_boolean_expression (OCamlUtilities.evaluate_and) true
-let for_all_in_parsed_discrete_boolean_expression = fold_parsed_discrete_boolean_expression (OCamlUtilities.evaluate_and) true
-let for_all_in_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithmetic_expression (OCamlUtilities.evaluate_and) true
-let for_all_in_parsed_discrete_term = fold_parsed_discrete_term (OCamlUtilities.evaluate_and) true
-let for_all_in_parsed_discrete_factor = fold_parsed_discrete_factor (OCamlUtilities.evaluate_and) true
+(* Apply to a fold function the standard parameters for evaluate AND *)
+let apply_evaluate_and fold_func = fold_func (OCamlUtilities.evaluate_and)
+let apply_evaluate_and_with_base fold_func = fold_func (OCamlUtilities.evaluate_and) true
+
+let for_all_in_parsed_global_expression = apply_evaluate_and_with_base fold_parsed_global_expression
+let for_all_in_parsed_boolean_expression = apply_evaluate_and_with_base fold_parsed_boolean_expression
+let for_all_in_parsed_discrete_boolean_expression = apply_evaluate_and_with_base fold_parsed_discrete_boolean_expression
+let for_all_in_parsed_discrete_arithmetic_expression = apply_evaluate_and_with_base fold_parsed_discrete_arithmetic_expression
+let for_all_in_parsed_discrete_term = apply_evaluate_and_with_base fold_parsed_discrete_term
+let for_all_in_parsed_discrete_factor = apply_evaluate_and_with_base fold_parsed_discrete_factor
 
 (** Check if all leaf of a linear expression satisfy the predicate **)
-let for_all_in_parsed_linear_expression = fold_parsed_linear_expression (OCamlUtilities.evaluate_and)
+let for_all_in_parsed_linear_expression = apply_evaluate_and fold_parsed_linear_expression
 (** Check if all leaf of a linear term satisfy the predicate **)
-let for_all_in_parsed_linear_term = fold_parsed_linear_term (OCamlUtilities.evaluate_and)
+let for_all_in_parsed_linear_term = apply_evaluate_and fold_parsed_linear_term
 (** Check if all leaf of a linear constraint satisfy the predicate **)
-let for_all_in_parsed_linear_constraint = fold_parsed_linear_constraint (OCamlUtilities.evaluate_and)
+let for_all_in_parsed_linear_constraint = apply_evaluate_and fold_parsed_linear_constraint
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
-let for_all_in_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint (OCamlUtilities.evaluate_and) true
+let for_all_in_parsed_nonlinear_constraint = apply_evaluate_and_with_base fold_parsed_nonlinear_constraint
 (** Check if all leaf of a parsed update satisfy the predicate **)
-let for_all_in_parsed_update = fold_parsed_update (OCamlUtilities.evaluate_and) true
+let for_all_in_parsed_update = apply_evaluate_and_with_base fold_parsed_update
+
+let for_all_in_parsed_loc_predicate = apply_evaluate_and_with_base fold_parsed_loc_predicate
+let for_all_in_parsed_simple_predicate = apply_evaluate_and_with_base fold_parsed_simple_predicate
+let for_all_in_parsed_state_predicate_factor = apply_evaluate_and_with_base fold_parsed_state_predicate_factor
+let for_all_in_parsed_state_predicate_term = apply_evaluate_and_with_base fold_parsed_state_predicate_term
+let for_all_in_parsed_state_predicate = apply_evaluate_and_with_base fold_parsed_state_predicate
 
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
-let exists_in_parsed_global_expression = fold_parsed_global_expression (||) false
-let exists_in_parsed_boolean_expression = fold_parsed_boolean_expression (||) false
-let exists_in_parsed_discrete_boolean_expression = fold_parsed_discrete_boolean_expression (||) false
-let exists_in_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithmetic_expression (||) false
-let exists_in_parsed_discrete_term = fold_parsed_discrete_term (||) false
-let exists_in_parsed_discrete_factor = fold_parsed_discrete_factor (||) false
+(* Apply to a fold function the standard parameters for evaluate OR *)
+let apply_evaluate_or fold_func = fold_func (||)
+let apply_evaluate_or_with_base fold_func = fold_func (||) false
+
+let exists_in_parsed_global_expression = apply_evaluate_or_with_base fold_parsed_global_expression
+let exists_in_parsed_boolean_expression = apply_evaluate_or_with_base fold_parsed_boolean_expression
+let exists_in_parsed_discrete_boolean_expression = apply_evaluate_or_with_base fold_parsed_discrete_boolean_expression
+let exists_in_parsed_discrete_arithmetic_expression = apply_evaluate_or_with_base fold_parsed_discrete_arithmetic_expression
+let exists_in_parsed_discrete_term = apply_evaluate_or_with_base fold_parsed_discrete_term
+let exists_in_parsed_discrete_factor = apply_evaluate_or_with_base fold_parsed_discrete_factor
 
 (** Check if any leaf of a linear expression satisfy the predicate **)
-let exists_in_parsed_linear_expression = fold_parsed_linear_expression (||)
+let exists_in_parsed_linear_expression = apply_evaluate_or fold_parsed_linear_expression
 (** Check if any leaf of a linear term satisfy the predicate **)
-let exists_in_parsed_linear_term = fold_parsed_linear_term (||)
+let exists_in_parsed_linear_term = apply_evaluate_or fold_parsed_linear_term
 (** Check if any leaf of a linear constraint satisfy the predicate **)
-let exists_in_parsed_linear_constraint = fold_parsed_linear_constraint (||)
+let exists_in_parsed_linear_constraint = apply_evaluate_or fold_parsed_linear_constraint
 (** Check if any leaf of a non-linear constraint satisfy the predicate **)
-let exists_in_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint (||) false
+let exists_in_parsed_nonlinear_constraint = apply_evaluate_or_with_base fold_parsed_nonlinear_constraint
 (** Check if any leaf of a parsed update satisfy the predicate **)
-let exists_in_parsed_update = fold_parsed_update (||) false
+let exists_in_parsed_update = apply_evaluate_or_with_base fold_parsed_update
+
+let exists_in_parsed_loc_predicate = apply_evaluate_or_with_base fold_parsed_loc_predicate
+let exists_in_parsed_simple_predicate = apply_evaluate_or_with_base fold_parsed_simple_predicate
+let exists_in_parsed_state_predicate_factor = apply_evaluate_or_with_base fold_parsed_state_predicate_factor
+let exists_in_parsed_state_predicate_term = apply_evaluate_or_with_base fold_parsed_state_predicate_term
+let exists_in_parsed_state_predicate = apply_evaluate_or_with_base fold_parsed_state_predicate
 
 (** Iterate over a parsing structure **)
 
 let binunit (a : unit) (b : unit) = a; b; ()
-let iterate_parsed_global_expression = fold_parsed_global_expression binunit ()
-let iterate_parsed_boolean_expression = fold_parsed_boolean_expression binunit ()
-let iterate_parsed_discrete_boolean_expression = fold_parsed_discrete_boolean_expression binunit ()
-let iterate_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithmetic_expression binunit ()
-let iterate_parsed_discrete_term  = fold_parsed_discrete_term binunit ()
-let iterate_parsed_discrete_factor = fold_parsed_discrete_factor binunit ()
+(* Apply to a fold function the standard parameters for evaluate unit *)
+let apply_evaluate_unit fold_func = fold_func binunit
+let apply_evaluate_unit_with_base fold_func = fold_func binunit ()
+
+
+let iterate_parsed_global_expression = apply_evaluate_unit_with_base fold_parsed_global_expression
+let iterate_parsed_boolean_expression = apply_evaluate_unit_with_base fold_parsed_boolean_expression
+let iterate_parsed_discrete_boolean_expression = apply_evaluate_unit_with_base fold_parsed_discrete_boolean_expression
+let iterate_parsed_discrete_arithmetic_expression = apply_evaluate_unit_with_base fold_parsed_discrete_arithmetic_expression
+let iterate_parsed_discrete_term  = apply_evaluate_unit_with_base fold_parsed_discrete_term
+let iterate_parsed_discrete_factor = apply_evaluate_unit_with_base fold_parsed_discrete_factor
 
 (** Iterate over a linear expression **)
-let iterate_parsed_linear_expression = fold_parsed_linear_expression binunit
+let iterate_parsed_linear_expression = apply_evaluate_unit fold_parsed_linear_expression
 (** Iterate over a linear term **)
-let iterate_parsed_linear_term = fold_parsed_linear_term binunit
+let iterate_parsed_linear_term = apply_evaluate_unit fold_parsed_linear_term
 (** Iterate over a linear constraint **)
-let iterate_parsed_linear_constraint = fold_parsed_linear_constraint binunit
+let iterate_parsed_linear_constraint = apply_evaluate_unit fold_parsed_linear_constraint
 (** Iterate over a non-linear constraint **)
-let iterate_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint binunit ()
+let iterate_parsed_nonlinear_constraint = apply_evaluate_unit_with_base fold_parsed_nonlinear_constraint
 
-let iterate_parsed_update = fold_parsed_update binunit ()
+let iterate_parsed_update = apply_evaluate_unit_with_base fold_parsed_update
+
+let iterate_in_parsed_loc_predicate = apply_evaluate_unit_with_base fold_parsed_loc_predicate
+let iterate_in_parsed_simple_predicate = apply_evaluate_unit_with_base fold_parsed_simple_predicate
+let iterate_in_parsed_state_predicate_factor = apply_evaluate_unit_with_base fold_parsed_state_predicate_factor
+let iterate_in_parsed_state_predicate_term = apply_evaluate_unit_with_base fold_parsed_state_predicate_term
+let iterate_in_parsed_state_predicate = apply_evaluate_unit_with_base fold_parsed_state_predicate
 
 (* Labels of a parsed factors *)
 
@@ -262,7 +339,18 @@ let label_of_parsed_factor_constructor = function
 
 
 (* String of a parsed expression *)
-(* Used for error message on type checking *)
+(* Used when needed to display an error message (ie : error on type checking) *)
+
+(* String of relational operator *)
+let string_of_parsed_relop relop value_1 value_2 =
+    match relop with
+    | PARSED_OP_L		-> value_1 ^ " < " ^ value_2
+    | PARSED_OP_LEQ	    -> value_1 ^ " <= " ^ value_2
+    | PARSED_OP_EQ		-> value_1 ^ " = " ^ value_2
+    | PARSED_OP_NEQ	    -> value_1 ^ " <> " ^ value_2
+    | PARSED_OP_GEQ	    -> value_1 ^ " >= " ^ value_2
+    | PARSED_OP_G		-> value_1 ^ " > " ^ value_2
+
 let rec string_of_parsed_global_expression variable_infos = function
     | Parsed_global_expression expr -> string_of_parsed_boolean_expression variable_infos expr
 
@@ -378,15 +466,6 @@ and string_of_parsed_discrete_boolean_expression variable_infos = function
         string_of_parsed_boolean_expression variable_infos expr
     | Parsed_Not expr ->
             "not (" ^ (string_of_parsed_boolean_expression variable_infos expr) ^ ")"
-
-and string_of_parsed_relop relop value_1 value_2 =
-        match relop with
-        | PARSED_OP_L		-> value_1 ^ " < " ^ value_2
-        | PARSED_OP_LEQ	    -> value_1 ^ " <= " ^ value_2
-        | PARSED_OP_EQ		-> value_1 ^ " = " ^ value_2
-        | PARSED_OP_NEQ	    -> value_1 ^ " <> " ^ value_2
-        | PARSED_OP_GEQ	    -> value_1 ^ " >= " ^ value_2
-        | PARSED_OP_G		-> value_1 ^ " > " ^ value_2
 
 let rec string_of_parsed_linear_constraint variable_infos = function
 	| Parsed_true_constraint -> "True"
@@ -649,7 +728,7 @@ let is_variable_defined_with_callback variable_infos callback = function
 
 let is_variable_defined variable_infos = is_variable_defined_with_callback variable_infos None
 
-(* Check if leaf is a variable that is defined *)
+(* Check if linear expression leaf is a variable that is defined *)
 let is_variable_defined_in_linear_expression variable_infos callback_fail = function
     | Leaf_linear_constant _ -> true
     | Leaf_linear_variable (_, variable_name) ->
@@ -658,6 +737,35 @@ let is_variable_defined_in_linear_expression variable_infos callback_fail = func
         )
         else
             true
+
+(* Check if a state predicate leaf has it's automaton / location defined *)
+let is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_info undefined_automaton_callback_opt undefined_loc_callback_opt = function
+    | Leaf_predicate_false
+    | Leaf_predicate_true
+    | Leaf_predicate_accepting -> true
+    | Leaf_predicate_EQ (automaton_name, location_name)
+    | Leaf_predicate_NEQ (automaton_name, location_name) ->
+        (* Find the automaton *)
+        if not (Hashtbl.mem parsing_info.index_of_automata automaton_name) then (
+            (match undefined_automaton_callback_opt with
+            | Some callback -> callback automaton_name
+            | None -> ()
+            );
+            false
+        ) else (
+            let automaton_index : Automaton.automaton_index = Hashtbl.find parsing_info.index_of_automata automaton_name in
+            (* Find the location *)
+            if not (Hashtbl.mem parsing_info.index_of_locations.(automaton_index) location_name) then (
+                (match undefined_loc_callback_opt with
+                | Some callback -> callback automaton_name location_name
+                | None -> ()
+                );
+                false
+            ) else (
+                (* Both checks passed *)
+                true
+            )
+        )
 
 (* Check if leaf is only a discrete variable *)
 let is_only_discrete variable_infos = function
@@ -696,19 +804,23 @@ let is_parsed_global_expression_constant variable_infos =
 let is_parsed_arithmetic_expression_constant variable_infos =
     for_all_in_parsed_discrete_arithmetic_expression (is_constant variable_infos)
 
-(* Check that all variables in a parsed global expression are effectivily be defined *)
+(* Check that all variables in a parsed global expression are effectively be defined *)
 let all_variables_defined_in_parsed_global_expression variable_infos expr =
     for_all_in_parsed_global_expression (is_variable_defined variable_infos) expr
 
-(* Check that all variables in a parsed parsed boolean expression are effectivily be defined *)
-let all_variables_defined_in_parsed_boolean_expression variable_infos expr =
-    for_all_in_parsed_boolean_expression (is_variable_defined variable_infos) expr
+(* Check that all variables in a parsed boolean expression are effectively be defined *)
+let all_variables_defined_in_parsed_boolean_expression variable_infos callback expr =
+    for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos callback) expr
 
-(* Check that all variables in a linear expression are effectivily be defined *)
+(* Check that all variables in a parsed discrete boolean expression are effectively be defined *)
+let all_variables_defined_in_parsed_discrete_boolean_expression variable_infos callback expr =
+    for_all_in_parsed_discrete_boolean_expression (is_variable_defined_with_callback variable_infos callback) expr
+
+(* Check that all variables in a linear expression are effectively be defined *)
 let all_variables_defined_in_linear_expression variable_infos callback_fail expr =
     for_all_in_parsed_linear_expression (is_variable_defined_in_linear_expression variable_infos callback_fail) expr
 
-(* Check that all variables in a linear constraint are effectivily be defined *)
+(* Check that all variables in a linear constraint are effectively be defined *)
 let all_variables_defined_in_linear_constraint variable_infos callback_fail expr =
     for_all_in_parsed_linear_constraint
         (is_variable_defined_in_linear_expression variable_infos callback_fail)
@@ -720,7 +832,7 @@ let all_variables_defined_in_nonlinear_constraint variable_infos callback expr =
         (is_variable_defined_with_callback variable_infos callback)
         expr
 
-(* Check that all variables in a non-linear convex predicate (non-linear constraint list) are effectivily be defined *)
+(* Check that all variables in a non-linear convex predicate (non-linear constraint list) are effectively be defined *)
 let all_variables_defined_in_nonlinear_convex_predicate variable_infos callback non_linear_convex_predicate =
   List.fold_left
     (fun all_defined nonlinear_constraint ->
@@ -728,6 +840,13 @@ let all_variables_defined_in_nonlinear_convex_predicate variable_infos callback 
     )
     true
     non_linear_convex_predicate
+
+(* Check that all variables in a state predicate are effectively be defined *)
+let all_variable_in_parsed_state_predicate parsing_infos variable_infos undefined_variable_callback_opt undefined_automaton_callback_opt undefined_loc_callback_opt expr =
+    for_all_in_parsed_state_predicate
+        (is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_infos undefined_automaton_callback_opt undefined_loc_callback_opt)
+        (is_variable_defined_with_callback variable_infos undefined_variable_callback_opt)
+        expr
 
 (* Check that there is only discrete variables in a parsed global expression *)
 let only_discrete_in_parsed_global_expression variable_infos expr =
@@ -752,6 +871,7 @@ let add_variable_of_linear_expression variables_used_ref = function
         (* Add the variable name to the set and update the reference *)
         variables_used_ref := StringSet.add variable_name !variables_used_ref
 
+(* Gather all variable names used in a discrete boolean expression *)
 let add_variable_of_discrete_boolean_expression variables_used_ref = function
     | Leaf_constant _ -> ()
     | Leaf_variable variable_name ->
@@ -781,7 +901,6 @@ let get_variables_in_linear_constraint_with_accumulator variables_used_ref =
         (function | Leaf_true_linear_constraint | Leaf_false_linear_constraint -> ())
 
 (* Gather all variable names used in a non-linear constraint in a given accumulator *)
-(* TODO benjamin CLEAN delete *)
 let get_variables_in_nonlinear_constraint_with_accumulator = get_variables_in_parsed_discrete_boolean_expression_with_accumulator
 
 (* Gather all variable names used in an update in a given accumulator *)

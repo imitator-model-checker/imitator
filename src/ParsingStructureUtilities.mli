@@ -124,11 +124,14 @@ val is_parsed_arithmetic_expression_constant : variable_infos -> parsed_discrete
 (* --- *)
 (* --- *)
 val all_variables_defined_in_parsed_global_expression : variable_infos -> global_expression -> bool
-val all_variables_defined_in_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
+val all_variables_defined_in_parsed_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_boolean_expression -> bool
+val all_variables_defined_in_parsed_discrete_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_discrete_boolean_expression -> bool
 val all_variables_defined_in_linear_expression : variable_infos -> (variable_name -> unit) -> linear_expression -> bool
 val all_variables_defined_in_linear_constraint : variable_infos -> (variable_name -> unit) -> linear_constraint -> bool
 val all_variables_defined_in_nonlinear_constraint : variable_infos -> (variable_name -> unit) option -> nonlinear_constraint -> bool
 val all_variables_defined_in_nonlinear_convex_predicate : variable_infos -> (variable_name -> unit) option -> nonlinear_constraint list -> bool
+
+val all_variable_in_parsed_state_predicate : useful_parsing_model_information -> variable_infos -> (variable_name -> unit) option -> (automaton_name -> unit) option -> (automaton_name -> location_name -> unit) option -> parsed_state_predicate -> bool
 
 val only_discrete_in_parsed_global_expression : variable_infos -> global_expression -> bool
 val only_discrete_in_nonlinear_expression : variable_infos -> parsed_discrete_boolean_expression -> bool

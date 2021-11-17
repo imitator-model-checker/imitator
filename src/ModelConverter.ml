@@ -1640,8 +1640,6 @@ let convert_guard variable_infos guard_convex_predicate =
 
 
     (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
-(*    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous variable_infos guard_convex_predicate in*)
-    (* TODO benjamin check here ? *)
     let uniform_type_guards, _ = TypeChecker.check_guard variable_infos guard_convex_predicate in
     let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous variable_infos uniform_type_guards in
 
@@ -2989,90 +2987,21 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 *)
 
 (*------------------------------------------------------------*)
-(** Check a discrete Boolean expression *)
-(*------------------------------------------------------------*)
-
-(* TODO benjamin REFACTOR into ParsingStructureUtilities *)
-let is_variable_defined_in_property variable_infos = function
-    | Leaf_constant _ -> true
-    | Leaf_variable variable_name ->
-        if not (Hashtbl.mem variable_infos.index_of_variables variable_name) && not (Hashtbl.mem variable_infos.constants variable_name) then (
-            print_error ("Undefined variable name `" ^ variable_name ^ "` in the property");
-            false
-        )
-        else
-            true
-
-(*------------------------------------------------------------*)
 (** Check a state predicate *)
 (*------------------------------------------------------------*)
 
-(* TODO benjamin REFACTOR with ParsingStructureUtilities *)
-let check_parsed_loc_predicate useful_parsing_model_information = function
-	| Parsed_loc_predicate_EQ (automaton_name , location_name)
-	| Parsed_loc_predicate_NEQ (automaton_name , location_name)
-		->
-		(* Useful variables *)
-		let index_of_automata  = useful_parsing_model_information.index_of_automata  in
-		let index_of_locations : ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array = useful_parsing_model_information.index_of_locations in
-		
-		(* Find the automaton *)
-		if not (Hashtbl.mem index_of_automata automaton_name) then(
-			print_error ("Unknown automaton name `" ^ automaton_name ^ "` in the property.");
-			false
-		)else(
-			let automaton_index : Automaton.automaton_index = Hashtbl.find index_of_automata automaton_name in
-			(* Find the location *)
-			if not (Hashtbl.mem index_of_locations.(automaton_index) location_name) then(
-				print_error ("Unknown location name `" ^ location_name ^ "` in automaton `" ^ automaton_name ^ "` in the property.");
-				false
-			)else(
-				(* Both checks passed *)
-				true
-			)
-		)
-
-
-(* TODO benjamin REFACTOR with ParsingStructureUtilities *)
-let check_parsed_simple_predicate (useful_parsing_model_information : useful_parsing_model_information) = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression ->
-		ParsingStructureUtilities.for_all_in_parsed_discrete_boolean_expression (is_variable_defined_in_property (ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information)) parsed_discrete_boolean_expression
-	| Parsed_loc_predicate parsed_loc_predicate ->
-		check_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate
-	| Parsed_state_predicate_true | Parsed_state_predicate_false | Parsed_state_predicate_accepting ->
-		true
-
-(* TODO benjamin REFACTOR with ParsingStructureUtilities *)
-let rec check_parsed_state_predicate useful_parsing_model_information = function
-	| Parsed_state_predicate_OR (parsed_state_predicate_1 , parsed_state_predicate_2) ->
-		(* Check both even if one fails, so as to provide users with more errors at once *)
-		evaluate_and
-			(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_1)
-			(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_2)
-		
-	| Parsed_state_predicate_term parsed_state_predicate_term ->
-		check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term
-
-(* TODO benjamin REFACTOR with ParsingStructureUtilities *)
-and check_parsed_state_predicate_term useful_parsing_model_information = function
-	| Parsed_state_predicate_term_AND (parsed_state_predicate_term_1 , parsed_state_predicate_term_2) ->
-		(* Check both even if one fails, so as to provide users with more errors at once *)
-		evaluate_and
-			(check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term_1)
-			(check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term_2)
-	| Parsed_state_predicate_factor parsed_state_predicate_factor ->
-		check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
-
-(* TODO benjamin REFACTOR with ParsingStructureUtilities *)
-and check_parsed_state_predicate_factor useful_parsing_model_information = function
-	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor ->
-		check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
-	| Parsed_simple_predicate parsed_simple_predicate ->
-		check_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate
-	| Parsed_state_predicate parsed_state_predicate ->
-		check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-
-
+let check_parsed_state_predicate parsing_infos expr =
+    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model parsing_infos in
+    ParsingStructureUtilities.all_variable_in_parsed_state_predicate
+        parsing_infos
+        variable_infos
+        (* Undefined variable name callback, triggered if an undefined variable is found *)
+        (Some (fun variable_name -> print_error ("Undefined variable name `" ^ variable_name ^ "` in the property")))
+        (* Undefined automaton name callback, triggered if an undefined automaton is found *)
+        (Some (fun automaton_name -> print_error ("Unknown automaton name `" ^ automaton_name ^ "` in the property.")))
+        (* Undefined location name callback, triggered if an undefined location is found *)
+        (Some (fun automaton_name loc_name -> print_error ("Unknown location name `" ^ loc_name ^ "` in automaton `" ^ automaton_name ^ "` in the property.")))
+        expr
 
 (*------------------------------------------------------------*)
 (** Generic function checking whether a name is a valid parameter name *)
