@@ -1293,6 +1293,9 @@ let check_parsed_state_predicate variable_infos predicate =
 (* return a tuple containing the non-linear constraint uniformly typed and the resolved type of the expression *)
 let check_nonlinear_constraint variable_infos nonlinear_constraint =
 
+    print_message Verbose_high "----------";
+    print_message Verbose_high ("Infer non-linear constraint expression: " ^ string_of_parsed_nonlinear_constraint variable_infos nonlinear_constraint);
+
     let uniformly_typed_nonlinear_constraint, discrete_type = infer_nonlinear_constraint variable_infos nonlinear_constraint in
     print_message Verbose_high ("nonlinear constraint " ^ (string_of_parsed_nonlinear_constraint variable_infos nonlinear_constraint) ^ " was checked ");
     (* Check that non-linear constraint is a Boolean expression *)
@@ -1355,6 +1358,9 @@ let rec infer_variable_access variable_infos = function
 (* return a tuple containing the update uniformly typed and the resolved type of the expression *)
 let check_update variable_infos variable_access expr =
 
+    print_message Verbose_high "----------";
+    print_message Verbose_high ("Infer update expression: " ^ string_of_parsed_global_expression variable_infos expr);
+
     (* Resolve expression type and get uniformly typed expression *)
     let uniformly_typed_expr, expr_type = infer_expression variable_infos expr in
     (* Get assigned variable type *)
@@ -1406,6 +1412,9 @@ let check_update variable_infos variable_access expr =
 (* return a tuple containing the conditional expression uniformly typed and the resolved type of the expression *)
 let check_conditional variable_infos expr =
 
+    print_message Verbose_high "----------";
+    print_message Verbose_high ("Infer conditional expression: " ^ string_of_parsed_boolean_expression variable_infos expr);
+
     let uniformly_typed_bool_expr, expr_type = infer_parsed_boolean_expression variable_infos expr in
 
     (* Check that non-linear constraint is a Boolean expression *)
@@ -1456,6 +1465,7 @@ let check_type_assignment variable_infos variable_name expr =
 
 
 let check_constant_expression initialized_constants (name, expr, var_type) =
+
     let variable_infos = {
         constants = initialized_constants;
         variable_names = [];
@@ -1464,6 +1474,9 @@ let check_constant_expression initialized_constants (name, expr, var_type) =
         type_of_variables = (fun _ -> raise (TypeError "oops!"));
     }
     in
+    print_message Verbose_high "----------";
+    print_message Verbose_high ("Infer constant expression: " ^ string_of_parsed_global_expression variable_infos expr);
+
     let target_var_type = DiscreteType.discrete_type_of_var_type var_type in
     (* Infer expression type *)
     let infer_expr, discrete_type = infer_expression variable_infos expr in
@@ -1492,6 +1505,9 @@ let check_constant_expression initialized_constants (name, expr, var_type) =
 
 (* Check that a discrete variable initialization is well typed *)
 let check_discrete_init variable_infos variable_name expr =
+
+    print_message Verbose_high "----------";
+    print_message Verbose_high ("Infer init expression: " ^ string_of_parsed_global_expression variable_infos expr);
 
     (* Get the variable index *)
     let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
