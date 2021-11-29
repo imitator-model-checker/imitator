@@ -416,7 +416,7 @@ let label_of_array_expression = function
     | Array_constant _ -> "array constant"
     | Array_variable _ -> "array variable"
     | Array_access _ -> "array access"
-    | Array_concat _ -> "array_concat"
+    | Array_concat _ -> "array_append"
     | Array_list_hd _ -> "list_hd"
 
 let label_of_list_expression = function

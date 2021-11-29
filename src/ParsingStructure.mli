@@ -111,7 +111,7 @@ and parsed_discrete_factor =
     | Parsed_bin_log_function of parsed_bin_log_function_type * parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_log_not of parsed_discrete_factor
 
-	| Parsed_array_concat of parsed_discrete_factor * parsed_discrete_factor
+	| Parsed_array_append of parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_list_cons of parsed_boolean_expression * parsed_discrete_factor
 	| Parsed_function_call of parsed_discrete_factor (* name *) * parsed_boolean_expression list (* arguments *)
 

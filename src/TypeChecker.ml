@@ -233,8 +233,8 @@ and convert_literals_of_parsed_discrete_factor variable_infos target_type = func
     | Parsed_log_not factor ->
         Parsed_log_not
             (convert_literals_of_parsed_discrete_factor variable_infos target_type factor)
-    | Parsed_array_concat (l_factor, r_factor) ->
-        Parsed_array_concat (
+    | Parsed_array_append (l_factor, r_factor) ->
+        Parsed_array_append (
             convert_literals_of_parsed_discrete_factor variable_infos target_type l_factor,
             convert_literals_of_parsed_discrete_factor variable_infos target_type r_factor
         )
@@ -715,7 +715,7 @@ and infer_parsed_discrete_factor variable_infos = function
     | Parsed_DF_expression expr ->
         let infer_expr, expr_type = infer_parsed_discrete_arithmetic_expression variable_infos expr in
         Parsed_DF_expression infer_expr, expr_type
-
+    (*
     | Parsed_rational_of_int_function expr as int_expr ->
         let infer_expr, expr_type = infer_parsed_discrete_arithmetic_expression variable_infos expr in
 
@@ -891,7 +891,7 @@ and infer_parsed_discrete_factor variable_infos = function
         ) else (
             Parsed_log_not infer_factor, discrete_type
         )
-    | Parsed_array_concat (factor_0, factor_1) as func ->
+    | Parsed_array_append (factor_0, factor_1) as func ->
 
         let infer_factor_0, discrete_type_0 = infer_parsed_discrete_factor variable_infos factor_0 in
         let infer_factor_1, discrete_type_1 = infer_parsed_discrete_factor variable_infos factor_1 in
@@ -925,7 +925,7 @@ and infer_parsed_discrete_factor variable_infos = function
 
                 let array_type = DiscreteType.Var_type_discrete_array (convert_type, length_0 + length_1) in
                 print_infer_expr_message (string_of_parsed_factor variable_infos func) array_type;
-                Parsed_array_concat (convert_factor_0, convert_factor_1), array_type
+                Parsed_array_append (convert_factor_0, convert_factor_1), array_type
 
             )
 
@@ -978,7 +978,7 @@ and infer_parsed_discrete_factor variable_infos = function
                 ^ DiscreteType.string_of_var_type_discrete factor_type
             ))
         )
-
+    *)
     | Parsed_function_call (variable, argument_expressions) as func ->
 
         (* Get function name *)
@@ -1264,7 +1264,7 @@ and discrete_type_of_parsed_discrete_factor variable_infos = function
         (* Logical and, or, xor, not depend on one member length (arbitrary, because already type checked!) *)
         discrete_type_of_parsed_discrete_factor variable_infos factor
 
-    | Parsed_array_concat (factor_0, factor_1) ->
+    | Parsed_array_append (factor_0, factor_1) ->
         let parameter_type_0 = discrete_type_of_parsed_discrete_factor variable_infos factor_0 in
         let parameter_type_1 = discrete_type_of_parsed_discrete_factor variable_infos factor_1 in
 

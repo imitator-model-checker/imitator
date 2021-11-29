@@ -172,5 +172,5 @@ val log_and : discrete_value -> discrete_value -> discrete_value
 val log_or : discrete_value -> discrete_value -> discrete_value
 val log_xor : discrete_value -> discrete_value -> discrete_value
 val log_not : discrete_value -> discrete_value
-val array_concat : discrete_value -> discrete_value -> discrete_value
+val array_append : discrete_value -> discrete_value -> discrete_value
 val list_cons : discrete_value -> discrete_value -> discrete_value

@@ -114,7 +114,7 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
             (fold_parsed_discrete_factor operator base leaf_fun factor)
             (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
 	| Parsed_bin_log_function (_, factor_0, factor_1)
-	| Parsed_array_concat (factor_0, factor_1) ->
+	| Parsed_array_append (factor_0, factor_1) ->
         operator
             (fold_parsed_discrete_factor operator base leaf_fun factor_0)
             (fold_parsed_discrete_factor operator base leaf_fun factor_1)
@@ -340,7 +340,7 @@ let label_of_parsed_factor_constructor = function
 	| Parsed_bin_log_function (fun_type, _, _) -> label_of_parsed_bin_log_function_type fun_type
 
     | Parsed_log_not _ -> "lognot"
-    | Parsed_array_concat _ -> "array_concat"
+    | Parsed_array_append _ -> "array_append"
     | Parsed_list_cons _ -> "list_cons"
     | Parsed_function_call (variable, _) -> function_name_of_parsed_factor variable
 
@@ -424,7 +424,7 @@ and string_of_parsed_factor variable_infos = function
         ^ string_of_parsed_arithmetic_expression variable_infos expr
         ^ ")"
     | Parsed_bin_log_function (_, l_factor, r_factor)
-    | Parsed_array_concat (l_factor, r_factor) as func ->
+    | Parsed_array_append (l_factor, r_factor) as func ->
         label_of_parsed_factor_constructor func
         ^ "("
         ^ string_of_parsed_factor variable_infos l_factor
@@ -661,10 +661,10 @@ and try_reduce_parsed_arithmetic_expression constants expr =
             | Parsed_log_xor -> DiscreteValue.log_xor reduced_l_factor reduced_r_factor
             end
 
-        | Parsed_array_concat (l_factor, r_factor) ->
+        | Parsed_array_append (l_factor, r_factor) ->
             let reduced_l_factor = try_reduce_parsed_factor l_factor in
             let reduced_r_factor = try_reduce_parsed_factor r_factor in
-            DiscreteValue.array_concat reduced_l_factor reduced_r_factor
+            DiscreteValue.array_append reduced_l_factor reduced_r_factor
 
         | Parsed_list_cons (expr, factor) ->
             let reduced_expr = try_reduce_parsed_boolean_expression constants expr in

@@ -450,10 +450,10 @@ let log_not = function
     | Binary_word_value b -> Binary_word_value (BinaryWord.log_not b)
     | _ as value -> raise (InternalError ("Computing exception at `log_not " ^ string_of_value value ^ "`"))
 
-let array_concat a b =
+let array_append a b =
     match a, b with
     | Array_value a, Array_value b -> Array_value (Array.append a b)
-    | _ -> raise (InternalError ("Computing exception at `array_concat " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
+    | _ -> raise (InternalError ("Computing exception at `array_append " ^ string_of_value a ^ " " ^ string_of_value b ^ "`"))
 
 let list_cons a b =
     match b with

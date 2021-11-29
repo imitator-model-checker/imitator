@@ -587,7 +587,7 @@ function_call:
 	| CT_LOG_OR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_bin_log_function (Parsed_log_or, $3, $5) }
 	| CT_LOG_XOR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_bin_log_function (Parsed_log_xor, $3, $5) }
 	| CT_LOG_NOT LPAREN arithmetic_factor RPAREN { Parsed_log_not $3 }
-  | CT_ARRAY_CONCAT LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_array_concat ($3, $5) }
+  | CT_ARRAY_CONCAT LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_array_append ($3, $5) }
   | CT_LIST_CONS LPAREN boolean_expression COMMA arithmetic_factor RPAREN { Parsed_list_cons ($3, $5) }
 ;
 */

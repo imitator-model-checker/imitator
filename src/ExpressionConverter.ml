@@ -697,7 +697,7 @@ and array_expression_of_parsed_factor variable_infos = function
             int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr
         )
 
-    | Parsed_array_concat (factor_0, factor_1) ->
+    | Parsed_array_append (factor_0, factor_1) ->
         Array_concat (
             array_expression_of_parsed_factor variable_infos factor_0,
             array_expression_of_parsed_factor variable_infos factor_1
@@ -714,7 +714,7 @@ and array_expression_of_parsed_factor variable_infos = function
         ))
 
 and array_expression_of_parsed_function_call variable_infos argument_expressions = function
-    | "array_concat" ->
+    | "array_append" ->
         let arg_0 = List.nth argument_expressions 0 in
         let arg_1 = List.nth argument_expressions 1 in
         Array_concat (

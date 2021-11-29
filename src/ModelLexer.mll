@@ -73,6 +73,7 @@ rule token = parse
 	| "constant"       { CT_CONSTANT }
 	| "discrete"       { CT_DISCRETE }
 	| "rational"       { CT_DISCRETE }
+  | "rat"            { CT_DISCRETE }
 	| "int"            { CT_INT }
 	| "bool"           { CT_BOOL }
 	| "binary"         { CT_BINARY_WORD }
@@ -123,7 +124,7 @@ rule token = parse
   | "logor"          { CT_LOG_OR }
   | "logxor"         { CT_LOG_XOR }
   | "lognot"         { CT_LOG_NOT }
-  | "array_concat"   { CT_ARRAY_CONCAT }
+  | "array_append"   { CT_ARRAY_CONCAT }
 
   | "list_cons"      { CT_LIST_CONS }
   *)

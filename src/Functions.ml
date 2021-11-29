@@ -253,7 +253,7 @@ end
 (* 'a array(l1) -> 'a array(l2) -> 'a array(l1+l2) *)
 module ArrayConcatFunction : FunctionImplementation = struct
 
-    let name = "array_concat"
+    let name = "array_append"
     let arity = 2
 
     let signature =
@@ -403,7 +403,7 @@ let function_module_by_name : string -> (module FunctionImplementation) = functi
     | "logor" -> (module LogOrFunction)
     | "logxor" -> (module LogXorFunction)
     | "lognot" -> (module LogNotFunction)
-    | "array_concat" -> (module ArrayConcatFunction)
+    | "array_append" -> (module ArrayConcatFunction)
     | "list_cons" -> (module ListConsFunction)
     | "list_hd" -> (module ListHdFunction)
     | "list_tl" -> (module ListTlFunction)
