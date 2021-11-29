@@ -148,7 +148,7 @@ let resolve_constraints variable_infos signature discrete_types expressions =
         in
         (* If all type constraint on particular constraint are unknown numbers, transform current constraint to rational *)
         match first_known_constraint_opt with
-        | None -> constraint_name, Resolved_type_constraint (Var_type_discrete_number Var_type_discrete_rational)
+        | None -> constraint_name, Resolved_type_constraint (Var_type_discrete_number Var_type_discrete_unknown_number)
         | Some first_known_constraint -> constraint_name, first_known_constraint
 
     ) well_formed_constraint_resolutions

@@ -1022,19 +1022,21 @@ and infer_parsed_discrete_factor variable_infos = function
         let infer_expressions_with_signature = List.combine infer_expressions resolved_signature_without_return_type in
 
         let converted_expressions = List.map (fun ((expr, expr_type), defined_type_constraint) ->
+                    let target_type = DiscreteType.extract_inner_type defined_type_constraint in
+                    convert_literals_of_parsed_boolean_expression variable_infos target_type expr
 
             (* Convert expr literals number to signature type if necessary *)
+            (*
             let converted_expr =
                 if DiscreteType.is_discrete_type_holding_unknown_number_type expr_type then (
-                    let target_type = if DiscreteType.is_discrete_type_known_number_type defined_type_constraint then defined_type_constraint else Var_type_discrete_number Var_type_discrete_rational in
-                    let target_type = DiscreteType.extract_inner_type target_type in
+                    let target_type = DiscreteType.extract_inner_type defined_type_constraint in
                     convert_literals_of_parsed_boolean_expression variable_infos target_type expr
                 )
                 else
                     expr
             in
             converted_expr
-
+            *)
         ) infer_expressions_with_signature
         in
 
@@ -1062,12 +1064,15 @@ and infer_function_signature variable_infos func function_name argument_expressi
     (* If signature and signature constraint are not compatibles raise a type error *)
     if not is_compatibles then
         raise (TypeError (
-            "Call of `"
+            "`"
             ^ string_of_parsed_factor variable_infos func
-            ^ "` with arguments signature "
+            ^ " : "
             ^ FunctionSig.string_of_signature call_signature
-            ^ " is not compatible with function parameters signature "
-            ^ FunctionSig.string_of_signature_constraint function_parameter_signature_constraint
+            ^ " -> _` is not compatible with `"
+            ^ label_of_parsed_factor_constructor func
+            ^ " : "
+            ^ FunctionSig.string_of_signature_constraint function_signature_constraint
+            ^ "`."
         ));
 
     (* --- *)
