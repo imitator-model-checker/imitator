@@ -205,10 +205,14 @@ and check_discrete_boolean_expression discrete_valuation = function
         is_boolean_expression_satisfied discrete_valuation boolean_expression
     | Not_bool b ->
         not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
-    | Bool_list_hd (list_expr) ->
+    | Bool_list_hd list_expr ->
         let list = eval_list_expression discrete_valuation list_expr in
         let value = List.hd list in
         DiscreteValue.bool_value value
+    | List_mem (expr, list_expr) ->
+        let value = eval_global_expression discrete_valuation expr in
+        let list = eval_list_expression discrete_valuation list_expr in
+        List.mem value list
 
 and eval_binary_word_expression discrete_valuation = function
     | Logical_shift_left (binary_word, expr, _) ->

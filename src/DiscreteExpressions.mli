@@ -129,8 +129,9 @@ and discrete_boolean_expression =
 	(** access to a boolean array **)
 	(* TODO benjamin IMPORTANT here decline array_expression to bool_array_expression *)
     | Bool_access of expression_access_type * int_arithmetic_expression
-    (** functions **)
+    (* Add here some function on array *)
     | Bool_list_hd of list_expression
+    | List_mem of global_expression * list_expression
 (*    | Bool_function_call of string * global_expression list*)
 
 (************************************************************)

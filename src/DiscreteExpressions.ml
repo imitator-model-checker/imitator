@@ -122,8 +122,9 @@ and discrete_boolean_expression =
 	| DB_constant of bool
 	(** access to a boolean array **)
     | Bool_access of expression_access_type * int_arithmetic_expression
-    (** functions **)
+    (* Add here some function on array *)
     | Bool_list_hd of list_expression
+    | List_mem of global_expression * list_expression
 (*    | Bool_function_call of string * global_expression list*)
 
 
@@ -147,6 +148,7 @@ and binary_word_expression =
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
     | Binary_word_access of expression_access_type * int_arithmetic_expression * int
+    (* Add here some functions *)
     | Binary_word_list_hd of list_expression
 (*    | Binary_word_function_call of string * global_expression list*)
 
@@ -377,6 +379,7 @@ let label_of_bool_factor = function
 	| DB_constant _ -> "bool constant"
     | Bool_access _ -> "bool access"
     | Bool_list_hd _ -> "list_hd"
+    | List_mem _ -> "list_mem"
 
 let label_of_rational_factor = function
 	| DF_variable _ -> "rational variable"
@@ -659,10 +662,17 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
     | DB_constant value -> customized_string_of_bool_value customized_string.boolean_string value
     | Bool_access (access_type, index_expr) ->
         string_of_expression_access customized_string variable_names access_type index_expr
-    | Bool_list_hd list_expression as func ->
+    | Bool_list_hd list_expr as func ->
         print_function
             (label_of_bool_factor func)
-            [customized_string_of_list_expression customized_string variable_names list_expression]
+            [customized_string_of_list_expression customized_string variable_names list_expr]
+    | List_mem (expr, list_expr) as func ->
+        print_function
+            (label_of_bool_factor func)
+            [
+                customized_string_of_global_expression customized_string variable_names expr;
+                customized_string_of_list_expression customized_string variable_names list_expr
+            ]
 
 and customized_string_of_boolean_operations customized_string = function
 	| OP_L		-> customized_string.l_operator

@@ -208,6 +208,13 @@ and bool_expression_of_parsed_function_call variable_infos argument_expressions 
         Bool_list_hd (
             list_expression_of_parsed_boolean_expression variable_infos arg_0
         )
+    | "list_mem" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+        List_mem (
+            global_expression_of_parsed_boolean_expression variable_infos arg_0,
+            list_expression_of_parsed_boolean_expression variable_infos arg_1
+        )
     (* TODO benjamin, in the future replace raise by custom function call as comment below *)
     | function_name -> raise (UndefinedFunction function_name)
     (*

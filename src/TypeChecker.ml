@@ -10,7 +10,7 @@
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/17
- * Last modified     : 2021/09/20
+ * Last modified     : 2021/11/29
  *
  ************************************************************)
 
@@ -251,9 +251,6 @@ and convert_literals_of_parsed_discrete_factor variable_infos target_type = func
     | Parsed_DF_unary_min factor ->
         Parsed_DF_unary_min (convert_literals_of_parsed_discrete_factor variable_infos target_type factor)
 
-(* Convert literals types of a non-linear constraint to a given target type *)
-(* TODO benjamin CLEAN to delete *)
-let convert_literals_of_nonlinear_constraint = convert_literals_of_parsed_discrete_boolean_expression
 
 (** Type checking and inference **)
 
@@ -383,6 +380,8 @@ and infer_parsed_discrete_boolean_expression variable_infos = function
 
                 | No_number_error
                 | Number_type_mixin_error ->
+                    (* conversion point *)
+
                     infer_l_expr, infer_r_expr
             )
             in
@@ -1302,7 +1301,7 @@ let check_nonlinear_constraint variable_infos nonlinear_constraint =
     print_message Verbose_high ("Infer non-linear constraint expression: " ^ string_of_parsed_nonlinear_constraint variable_infos nonlinear_constraint);
 
     let uniformly_typed_nonlinear_constraint, discrete_type = infer_nonlinear_constraint variable_infos nonlinear_constraint in
-    print_message Verbose_high ("nonlinear constraint " ^ (string_of_parsed_nonlinear_constraint variable_infos nonlinear_constraint) ^ " was checked ");
+
     (* Check that non-linear constraint is a Boolean expression *)
     match discrete_type with
     | DiscreteType.Var_type_discrete_bool -> uniformly_typed_nonlinear_constraint, discrete_type

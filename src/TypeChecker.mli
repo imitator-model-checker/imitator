@@ -10,7 +10,7 @@
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/17
- * Last modified     : 2021/03/17
+ * Last modified     : 2021/11/29
  *
  ************************************************************)
 
@@ -19,15 +19,6 @@ open AbstractProperty
 
 type variable_name = string
 type variable_index = int
-
-(*val checkus :*)
-(*    useful_parsing_model_information -> 'a -> 'b -> 'c*)
-(*    -> (useful_parsing_model_information -> 'a -> 'a * DiscreteType.var_type_discrete)*)
-(*    -> (useful_parsing_model_information -> 'b -> 'b * DiscreteType.var_type_discrete)*)
-(*    -> (useful_parsing_model_information -> DiscreteType.var_type_discrete -> 'a -> 'a)*)
-(*    -> (useful_parsing_model_information -> DiscreteType.var_type_discrete -> 'b -> 'b)*)
-(*    -> (useful_parsing_model_information -> 'c -> string)*)
-(*    -> ('a * 'b) * DiscreteType.var_type_discrete*)
 
 (** Get variables types **)
 

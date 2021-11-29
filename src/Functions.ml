@@ -251,7 +251,7 @@ module LogNotFunction : FunctionImplementation = struct
 end
 
 (* 'a array(l1) -> 'a array(l2) -> 'a array(l1+l2) *)
-module ArrayConcatFunction : FunctionImplementation = struct
+module ArrayAppendFunction : FunctionImplementation = struct
 
     let name = "array_append"
     let arity = 2
@@ -267,6 +267,26 @@ module ArrayConcatFunction : FunctionImplementation = struct
         let a = List.nth values 0 |> DiscreteValue.array_value in
         let b = List.nth values 1 |> DiscreteValue.array_value in
         Array_value (Array.append a b)
+
+    let def = dynamic_call, signature
+
+end
+
+(* 'a array(l) -> int *)
+module ArrayLengthFunction : FunctionImplementation = struct
+
+    let name = "array_length"
+    let arity = 1
+
+    let signature =
+    [
+        Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l")));
+        Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
+    ]
+
+    let dynamic_call values =
+        let a = List.nth values 0 |> DiscreteValue.array_value in
+        Int_value (Int32.of_int (Array.length a))
 
     let def = dynamic_call, signature
 
@@ -403,7 +423,8 @@ let function_module_by_name : string -> (module FunctionImplementation) = functi
     | "logor" -> (module LogOrFunction)
     | "logxor" -> (module LogXorFunction)
     | "lognot" -> (module LogNotFunction)
-    | "array_append" -> (module ArrayConcatFunction)
+    | "array_append" -> (module ArrayAppendFunction)
+    | "array_length" -> (module ArrayLengthFunction)
     | "list_cons" -> (module ListConsFunction)
     | "list_hd" -> (module ListHdFunction)
     | "list_tl" -> (module ListTlFunction)
