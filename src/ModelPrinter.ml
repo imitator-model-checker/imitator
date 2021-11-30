@@ -291,10 +291,10 @@ let string_of_guard variable_names = function
 (** Automata *)
 (************************************************************)
 
-(* Convert the synclabs of an automaton into a string *)
-let string_of_synclabs model automaton_index =
+(* Convert the actions declaration of an automaton into a string *)
+let string_of_actions_declaration model automaton_index =
 	(* Print some information *)
-(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_synclabs(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_actions_declaration(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
 
 	"synclabs: "
 	^ (let synclabs, _ = (List.fold_left (fun (synclabs, first) action_index ->
@@ -342,11 +342,18 @@ let string_of_invariant model automaton_index location_index =
 	" flow{" ^ flow_str ^ "}"
 
 
-(* Convert a sync into a string *)
-let string_of_sync model action_index =
+(* Convert an action into a string *)
+let string_of_action model (action_index : Automaton.action_index) =
 	match model.action_types action_index with
 	| Action_type_sync -> " sync " ^ (model.action_names action_index)
 	| Action_type_nosync -> " (* sync " ^ (model.action_names action_index) ^ "*) "
+
+(* Convert an action into a JSON-like string *)
+let json_of_action model (action_index : Automaton.action_index) =
+	match model.action_types action_index with
+	| Action_type_sync -> (model.action_names action_index)
+	| Action_type_nosync -> "(silent)"
+
 
 (** generic template for converting clock updates into string *)
 let string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep =
@@ -368,6 +375,13 @@ let string_of_clock_updates model clock_updates =
 	let wrap_expr variable_index linear_term = (model.variable_names variable_index)
 			^ " := "
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) in
+	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
+
+(** Convert a clock update into a JSON-like string *)
+let json_of_clock_updates model clock_updates =
+	let sep = ", " in
+	let wrap_reset variable_index = "\n\t\t\t\t\t\t\t'" ^ (model.variable_names variable_index) ^ "': 0," in
+	let wrap_expr variable_index linear_term = "\n\t\t\t\t\t\t\t'" ^ (model.variable_names variable_index) ^ "': '" ^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) ^ "'," in
 	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
 
 
@@ -436,10 +450,22 @@ let string_of_conditional_updates model conditional_updates =
 	let sep = ", " in
 	string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
 
+(** Convert a list of conditional updates into a JSON-like string *)
+(*** WARNING: not really supported ***)
+let json_of_conditional_updates model conditional_updates =
+	if conditional_updates <> [] then(
+		print_warning "Conditional updates not (really) supported in the JSON export!";
+		(* Do our best to still export something *)
+		""
+		^ "\n\t\t\t\t\t\t\t'conditional': {"
+		^ "\n\t\t\t\t\t\t\t\t'update': '" ^ (string_of_conditional_updates model conditional_updates) ^ "'"
+		^ "\n\t\t\t\t\t\t\t}"
+	)else ""
+
 (* Convert a transition into a string *)
 let string_of_transition model automaton_index (transition : transition) =
 	(* Print some information *)
-(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")` with target `" ^ (model.location_names automaton_index transition.target) ^ "` via action `" ^ (string_of_sync model transition.action) ^ "`…"); *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")` with target `" ^ (model.location_names automaton_index transition.target) ^ "` via action `" ^ (string_of_action model transition.action) ^ "`…"); *)
 
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
@@ -468,7 +494,7 @@ let string_of_transition model automaton_index (transition : transition) =
 	^ "} "
 	
 	(* Convert the sync *)
-	^ (string_of_sync model transition.action)
+	^ (string_of_action model transition.action)
 	(* Convert the destination location *)
 	^ " goto " ^ (model.location_names automaton_index transition.target)
 	^ ";"
@@ -503,11 +529,39 @@ let string_of_transition_for_runs model automaton_index (transition : transition
 	^ "} "
 
 	(* Convert the sync *)
-	^ (string_of_sync model transition.action)
+	^ (string_of_action model transition.action)
 	(* Convert the destination location *)
 	^ " Target " ^ (model.location_names automaton_index transition.target)
 	^ "] "
 
+(* Convert a transition into a JSON-like string *)
+let json_of_transition model automaton_index (transition : transition) =
+	let clock_updates = transition.updates.clock in
+	let discrete_updates = transition.updates.discrete in
+	let conditional_updates = transition.updates.conditional in
+
+	""
+	^ "\n\t\t\t\t\t'transition': {"
+	(* PTA name *)
+	^ "\n\t\t\t\t\t\t'PTA': '" ^ (model.automata_names automaton_index) ^ "',"
+	
+	(* Guard *)
+	^ "\n\t\t\t\t\t\t'guard': '" ^ (string_of_guard model.variable_names transition.guard) ^ "',"
+	
+	(* Updates *)
+	^ "\n\t\t\t\t\t\t'updates': ["
+	(* Clock updates *)
+	^ (json_of_clock_updates model clock_updates)
+	(* Discrete updates *)
+	^ (string_of_discrete_updates model discrete_updates)
+	(* Conditional updates *)
+	^ (json_of_conditional_updates model conditional_updates)
+	^ "\n\t\t\t\t\t\t]"
+	
+(* 	(* Convert the destination location *) *)
+(* 	^ " Target " ^ (model.location_names automaton_index transition.target) *)
+
+	^ "\n\t\t\t\t\t}"
 
 
 
@@ -520,7 +574,7 @@ let string_of_transitions model automaton_index location_index =
 	(* For each action *)
 	List.map (fun action_index ->
 		(* Print some information *)
-(* 		print_message Verbose_total ("Retrieving transitions via `" ^ (string_of_sync model action_index) ^ "`…"); *)
+(* 		print_message Verbose_total ("Retrieving transitions via `" ^ (string_of_action model action_index) ^ "`…"); *)
 
 		(* Get the list of transitions *)
 		let transitions = model.transitions automaton_index location_index action_index in
@@ -577,7 +631,7 @@ let string_of_automaton model automaton_index =
 	"\n(************************************************************)"
 	^ "\n automaton " ^ (model.automata_names automaton_index)
 	^ "\n(************************************************************)"
-	^ "\n " ^ (string_of_synclabs model automaton_index)
+	^ "\n " ^ (string_of_actions_declaration model automaton_index)
 	^ "\n " ^ (string_of_locations model automaton_index)
 	^ "\n end (* " ^ (model.automata_names automaton_index) ^ " *)"
 	^ "\n(************************************************************)"
@@ -1036,7 +1090,7 @@ let string_of_concrete_state model (state : State.concrete_state) =
 
 (* Convert a global location into JSON-style string (locations, NO discrete variables valuations) *)
 let json_of_global_location model (global_location : Location.global_location) =
-	string_of_list_of_string (
+	string_of_list_of_string_with_sep ", " (
 		List.map (fun automaton_index ->
 			(* Retrieve location for `automaton_index` *)
 			let location_index = Location.get_location global_location automaton_index in
@@ -1046,13 +1100,13 @@ let json_of_global_location model (global_location : Location.global_location) =
 			let location_name = model.location_names automaton_index location_index in
 			
 			(* Convert *)
-			"\n\t\t\t\t\t\t'" ^ automaton_name ^ "': '" ^ location_name ^ "',"
+			"\n\t\t\t\t\t\t'" ^ automaton_name ^ "': '" ^ location_name ^ "'"
 		) model.automata
 	)
 
 (* Convert the values of the discrete variables in a global location into JSON-style string *)
 let json_of_discrete_values model (global_location : Location.global_location) =
-	string_of_list_of_string (
+	string_of_list_of_string_with_sep ", " (
 		List.map (fun discrete_index ->
 			(* Retrieve valuation for `discrete_index` *)
 			let variable_value = Location.get_discrete_value global_location discrete_index in
@@ -1062,7 +1116,7 @@ let json_of_discrete_values model (global_location : Location.global_location) =
 			let variable_valuation = DiscreteValue.string_of_value variable_value in
 			
 			(* Convert *)
-			"\n\t\t\t\t\t\t'" ^ variable_name ^ "': '" ^ variable_valuation ^ "',"
+			"\n\t\t\t\t\t\t'" ^ variable_name ^ "': '" ^ variable_valuation ^ "'"
 		) model.discrete
 	)
 
@@ -1096,13 +1150,13 @@ let json_of_concrete_state model (state : State.concrete_state) =
 		let global_location : Location.global_location = state.global_location in
 		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows global_location in
 		(* Iterate *)
-		string_of_list_of_string (
+		string_of_list_of_string_with_sep ", " (
 			List.map (fun (variable_index, flow) ->
-				"\n\t\t\t\t\t'" ^ (model.variable_names variable_index ) ^ "': " ^ (NumConst.string_of_numconst flow) ^ ","
+				"\n\t\t\t\t\t'" ^ (model.variable_names variable_index ) ^ "': " ^ (NumConst.string_of_numconst flow)
 			) flows
 		)
 	)
-	^ "\n\t\t\t\t]," (* end flows *)
+	^ "\n\t\t\t\t]" (* end flows *)
 
 	(* End state *)
 	^ "\n\t\t\t}"
@@ -1119,10 +1173,32 @@ let string_of_combined_transition model combined_transition = string_of_list_of_
 		let automaton_index = model.automaton_of_transition transition_index in
 		(* Get actual transition *)
 		let transition = model.transitions_description transition_index in
-		(* Print *)
+		(* Convert *)
 		string_of_transition_for_runs model automaton_index transition
 	) combined_transition
 )
+
+(* Function to pretty-print combined transitions *)
+let json_of_combined_transition model combined_transition =
+	""
+	^ "\n\t\t\t\t'transitions': ["
+
+	^ (
+		string_of_list_of_string_with_sep ", " (
+			List.map (fun transition_index ->
+				(* Get automaton index *)
+				let automaton_index = model.automaton_of_transition transition_index in
+				
+				(* Get actual transition *)
+				let transition = model.transitions_description transition_index in
+				
+				(* Convert *)
+				json_of_transition model automaton_index transition
+			) combined_transition
+		)
+	)
+	^ "\n\t\t\t\t]"
+
 
 (** Convert a symbolic run to a string (for debug-purpose) *)
 let debug_string_of_symbolic_run model state_space (symbolic_run : StateSpace.symbolic_run) =
@@ -1148,14 +1224,29 @@ let debug_string_of_symbolic_run model state_space (symbolic_run : StateSpace.sy
 
 let json_of_concrete_steps model concrete_steps =
 	(* Iterate on following steps *)
-	(string_of_list_of_string_with_sep "\n" (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
-		  ("\n | ")
-		^ ("\n | via d = " ^ (NumConst.string_of_numconst concrete_step.time))
-		^ ("\n | followed by combined transition " ^ (string_of_combined_transition model concrete_step.transition))
-		^ ("\n | ")
-		^ ("\n v ")
-		^ (" " ^ (json_of_concrete_state model concrete_step.target))
+	(string_of_list_of_string_with_sep ", " (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
+		(* Get the action: a little tricky, as it is stored in *each* of transition of the combined transition *)
+		(*** NOTE: we get it arbitrarily from the first transition of the combined transition ***)
+		let first_transition_index : AbstractModel.transition_index = (List.hd (concrete_step.transition)) in
+		let first_transition : AbstractModel.transition = model.transitions_description first_transition_index in
+		let action_index : Automaton.action_index = first_transition.action in
+		(* Convert action to string *)
+		let action_name = json_of_action model action_index in
+		
+		""
+		
+		(* Begin transition *)
+		^ "\n\t\t\t'transition': {"
+		^ "\n\t\t\t\t'duration': " ^ (NumConst.string_of_numconst concrete_step.time) ^ ","
+		^ "\n\t\t\t\t'action': '" ^ action_name ^ "',"
+		^ (json_of_combined_transition model concrete_step.transition) ^ ","
+		(* End transition *)
+		^ "\n\t\t\t},"
+		
+		(* Target state *)
+		^ (json_of_concrete_state model concrete_step.target)
 	) concrete_steps))
+
 
 let string_of_concrete_steps model concrete_steps =
 	(* Iterate on following steps *)
@@ -1209,7 +1300,7 @@ let json_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
 	^ "\n\t\t'steps': ["
 	
 	(* Then convert the initial state *)
-	^ "\n" ^ (json_of_concrete_state model concrete_run.initial_state)
+	^ "\n" ^ (json_of_concrete_state model concrete_run.initial_state) ^ ","
 	
 	(* Iterate on following steps *)
 	^ (json_of_concrete_steps model concrete_run.steps)
