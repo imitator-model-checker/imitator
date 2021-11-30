@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2021/11/02
+ * Last modified     : 2021/11/30
  *
  ************************************************************)
 
@@ -60,7 +60,8 @@ val customized_string_of_guard : Constants.customized_string -> (Automaton.varia
 (************************************************************)
 
 val debug_string_of_symbolic_run : AbstractModel.abstract_model -> StateSpace.state_space -> StateSpace.symbolic_run -> string
-val string_of_concrete_run : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
+val debug_string_of_concrete_run : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
+val json_of_concrete_run : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
 val string_of_impossible_concrete_run : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
 
 

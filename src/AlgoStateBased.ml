@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2021/11/02
+ * Last modified     : 2021/11/30
  *
  ************************************************************)
 
@@ -3619,7 +3619,7 @@ class virtual algoStateBased =
 				(* Print it *)
 				if verbose_mode_greater Verbose_medium then(
 					print_message Verbose_medium "Concrete run prefix:";
-					print_message Verbose_medium (ModelPrinter.string_of_concrete_run model concrete_run_prefix);
+					print_message Verbose_medium (ModelPrinter.debug_string_of_concrete_run model concrete_run_prefix);
 				);
 				
 				(* Now create an impossible concrete run from this point to the accepting location *)
@@ -3810,7 +3810,7 @@ class virtual algoStateBased =
 				(* Print it *)
 				if verbose_mode_greater Verbose_medium then(
 					print_message Verbose_medium "Concrete run prefix:";
-					print_message Verbose_medium (ModelPrinter.string_of_concrete_run model concrete_run_prefix);
+					print_message Verbose_medium (ModelPrinter.debug_string_of_concrete_run model concrete_run_prefix);
 				);
 				
 				(* Now create an impossible concrete run from this point to the accepting location *)

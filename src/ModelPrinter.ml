@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2021/11/02
+ * Last modified     : 2021/11/30
  *
  ************************************************************)
 
@@ -1017,8 +1017,9 @@ let string_of_concrete_state model (state : State.concrete_state) =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
+	""
 	(* Convert location *)
-	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then Location.Float_display else Location.Exact_display) state.global_location)
+	^ (Location.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then Location.Float_display else Location.Exact_display) state.global_location)
 	(* Convert variables valuations *)
 	^ " ==> \n" ^ (string_of_px_valuation model state.px_valuation)
 	(* Convert rates *)
@@ -1032,6 +1033,79 @@ let string_of_concrete_state model (state : State.concrete_state) =
 		)
 	)
 	^ "]"
+
+(* Convert a global location into JSON-style string (locations, NO discrete variables valuations) *)
+let json_of_global_location model (global_location : Location.global_location) =
+	string_of_list_of_string (
+		List.map (fun automaton_index ->
+			(* Retrieve location for `automaton_index` *)
+			let location_index = Location.get_location global_location automaton_index in
+			
+			(* Get names *)
+			let automaton_name = model.automata_names automaton_index in
+			let location_name = model.location_names automaton_index location_index in
+			
+			(* Convert *)
+			"\n\t\t\t\t\t\t'" ^ automaton_name ^ "': '" ^ location_name ^ "',"
+		) model.automata
+	)
+
+(* Convert the values of the discrete variables in a global location into JSON-style string *)
+let json_of_discrete_values model (global_location : Location.global_location) =
+	string_of_list_of_string (
+		List.map (fun discrete_index ->
+			(* Retrieve valuation for `discrete_index` *)
+			let variable_value = Location.get_discrete_value global_location discrete_index in
+			
+			(* Convert to strings *)
+			let variable_name = model.variable_names discrete_index in
+			let variable_valuation = DiscreteValue.string_of_value variable_value in
+			
+			(* Convert *)
+			"\n\t\t\t\t\t\t'" ^ variable_name ^ "': '" ^ variable_valuation ^ "',"
+		) model.discrete
+	)
+
+
+
+(* Convert a concrete state into JSON-style string (locations, discrete variables valuations, continuous variables valuations, current flows for continuous variables) *)
+let json_of_concrete_state model (state : State.concrete_state) =
+	(* Retrieve the input options *)
+(* 	let options = Input.get_options () in *)
+	
+	""
+	
+	(* Begin state *)
+	^ "\n\t\t\t'state': {"
+
+	(* Convert location *)
+	^ "\n\t\t\t\t'location': [" ^ (json_of_global_location model state.global_location)
+	^ "\n\t\t\t\t]," (* end locations *)
+	
+	(* Convert discrete variables *)
+	^ "\n\t\t\t\t'discrete_variables': [" ^ (json_of_discrete_values model state.global_location) (*** TODO: float? ***)
+	^ "\n\t\t\t\t]," (* end discrete *)
+	
+	(* Convert continuous variables valuations *)
+	^ "\n\t\t\t\t'continuous_variables': [" ^ (string_of_px_valuation model state.px_valuation)
+	^ "\n\t\t\t\t]," (* end continuous variables *)
+
+	(* Convert rates *)
+	^ "\n\t\t\t\t'flows': ["
+	^ (
+		let global_location : Location.global_location = state.global_location in
+		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows global_location in
+		(* Iterate *)
+		string_of_list_of_string (
+			List.map (fun (variable_index, flow) ->
+				"\n\t\t\t\t\t'" ^ (model.variable_names variable_index ) ^ "': " ^ (NumConst.string_of_numconst flow) ^ ","
+			) flows
+		)
+	)
+	^ "\n\t\t\t\t]," (* end flows *)
+
+	(* End state *)
+	^ "\n\t\t\t}"
 
 
 (************************************************************)
@@ -1072,6 +1146,17 @@ let debug_string_of_symbolic_run model state_space (symbolic_run : StateSpace.sy
 
 
 
+let json_of_concrete_steps model concrete_steps =
+	(* Iterate on following steps *)
+	(string_of_list_of_string_with_sep "\n" (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
+		  ("\n | ")
+		^ ("\n | via d = " ^ (NumConst.string_of_numconst concrete_step.time))
+		^ ("\n | followed by combined transition " ^ (string_of_combined_transition model concrete_step.transition))
+		^ ("\n | ")
+		^ ("\n v ")
+		^ (" " ^ (json_of_concrete_state model concrete_step.target))
+	) concrete_steps))
+
 let string_of_concrete_steps model concrete_steps =
 	(* Iterate on following steps *)
 	(string_of_list_of_string_with_sep "\n" (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
@@ -1098,18 +1183,40 @@ let string_of_impossible_concrete_steps model impossible_concrete_steps =
 
 
 (** Convert a concrete run to a string (for debug-purpose) *)
-let string_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
+let debug_string_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
 	(* First recall the parameter valuation *)
 	"Concrete run for parameter valuation:"
 	^ "\n" ^ (string_of_pval model concrete_run.p_valuation)
 	
 	^ "\n"
 	
-	(* Then print the initial state *)
+	(* Then convert the initial state *)
 	^ "\n" ^ (string_of_concrete_state model concrete_run.initial_state)
 	
 	(* Iterate on following steps *)
 	^ (string_of_concrete_steps model concrete_run.steps)
+
+
+(** Convert a concrete run to a JSON-style string *)
+let json_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
+	(* First recall the parameter valuation *)
+	"{"
+	^ "\n\t'run': {"
+	^ "\n\t\t'nature': 'concrete',"
+	^ "\n\t\t'valuation': " ^ (string_of_pval model concrete_run.p_valuation) ^ ","
+	
+	^ "\n"
+	^ "\n\t\t'steps': ["
+	
+	(* Then convert the initial state *)
+	^ "\n" ^ (json_of_concrete_state model concrete_run.initial_state)
+	
+	(* Iterate on following steps *)
+	^ (json_of_concrete_steps model concrete_run.steps)
+	
+	^ "\n\t\t]" (* end steps *)
+	^ "\n\t}" (* end run *)
+	^ "\n}" (* end *)
 	
 
 	
