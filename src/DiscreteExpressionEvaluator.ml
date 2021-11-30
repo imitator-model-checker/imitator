@@ -376,3 +376,337 @@ let pack_value variable_names discrete_valuation old_value new_value variable_ac
 (*        ImitatorUtilities.print_message Verbose_standard ("packed new value is: " ^ DiscreteValue.string_of_value old_value);*)
         old_value
     | None -> new_value
+
+
+
+
+let rec try_reduce_global_expression = function
+    | Arithmetic_expression expr -> try_reduce_discrete_arithmetic_expression expr
+    | Bool_expression expr -> DiscreteValue.Bool_value (try_reduce_boolean_expression expr)
+    | Binary_word_expression expr -> DiscreteValue.Binary_word_value (try_reduce_binary_word_expression expr)
+    | Array_expression expr -> DiscreteValue.Array_value (try_reduce_array_expression expr)
+    | List_expression expr -> DiscreteValue.List_value (try_reduce_list_expression expr)
+
+and try_reduce_discrete_arithmetic_expression = function
+    | Rational_arithmetic_expression expr ->
+        DiscreteValue.Rational_value (try_reduce_rational_expression expr)
+    | Int_arithmetic_expression expr ->
+        DiscreteValue.Int_value (try_reduce_int_expression expr)
+
+and try_reduce_rational_expression expr =
+    let rec try_reduce_rational_expression_rec = function
+        | DAE_plus (expr, term) ->
+            NumConst.add
+                (try_reduce_rational_expression_rec expr)
+                (try_reduce_rational_term term)
+        | DAE_minus (expr, term) ->
+            NumConst.sub
+                (try_reduce_rational_expression_rec expr)
+                (try_reduce_rational_term term)
+        | DAE_term term ->
+            try_reduce_rational_term term
+
+    and try_reduce_rational_term = function
+        | DT_mul (term, factor) ->
+            NumConst.mul
+            (try_reduce_rational_term term)
+            (try_reduce_rational_factor factor)
+        | DT_div (term, factor) ->
+            let numerator	= (try_reduce_rational_term term) in
+            let denominator	= (try_reduce_rational_factor factor) in
+
+            (* Check for 0-denominator *)
+            if NumConst.equal denominator NumConst.zero then(
+                raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (NumConst.to_string numerator) ^ " / " ^ (NumConst.to_string denominator) ^ ""))
+            );
+
+            (* Divide *)
+            NumConst.div
+                numerator
+                denominator
+
+        | DT_factor factor ->
+            try_reduce_rational_factor factor
+
+    and try_reduce_rational_factor = function
+        | DF_variable variable_index ->
+            raise (InternalError ("Unable to reduce a non-constant expression."))
+        | DF_constant variable_value ->
+            variable_value
+        | Rational_access (access_type, index_expr) ->
+            let value = try_reduce_expression_access_value index_expr access_type in
+            DiscreteValue.numconst_value value
+        | DF_expression expr ->
+            try_reduce_rational_expression_rec expr
+        | DF_rational_of_int expr ->
+(*            ImitatorUtilities.print_message Verbose_standard "Evaluate a int expression";*)
+            ImitatorUtilities.print_warning
+                "Conversion of an int expression to a rational expression
+                may cause overflow if your platform doesn't manage `int` as an exact 32 bits integer.";
+            NumConst.numconst_of_int (Int32.to_int (try_reduce_int_expression expr))
+        | Rational_pow (expr, exp) ->
+            NumConst.pow (try_reduce_rational_expression_rec expr) (try_reduce_int_expression exp)
+        | Rational_list_hd (list_expr) ->
+            let list = try_reduce_list_expression list_expr in
+            let value = List.hd list in
+            DiscreteValue.numconst_value value
+        | DF_unary_min factor ->
+            NumConst.neg (try_reduce_rational_factor factor)
+    in
+    try_reduce_rational_expression_rec expr
+
+and try_reduce_int_expression expr =
+    let rec try_reduce_int_expression_rec = function
+        | Int_plus (expr, term) ->
+            Int32.add
+                (try_reduce_int_expression_rec expr)
+                (try_reduce_int_term term)
+        | Int_minus (expr, term) ->
+            Int32.sub
+                (try_reduce_int_expression_rec expr)
+                (try_reduce_int_term term)
+        | Int_term term ->
+            try_reduce_int_term term
+
+    and try_reduce_int_term = function
+        | Int_mul (term, factor) ->
+            Int32.mul
+                (try_reduce_int_term term)
+                (try_reduce_int_factor factor)
+        | Int_div (term, factor) ->
+            let numerator	= (try_reduce_int_term term) in
+            let denominator	= (try_reduce_int_factor factor) in
+
+            (* Check for 0-denominator *)
+            if Int32.equal denominator Int32.zero then (
+                raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (Int32.to_string numerator) ^ " / " ^ (Int32.to_string denominator) ^ ""))
+            );
+
+            (* Check for non-int division *)
+            if OCamlUtilities.modulo numerator denominator <> Int32.zero then
+                ImitatorUtilities.print_warning (
+                    "Non-integer division of type int was spotted! This means that an int variable was rounded down to the nearest integer instead of a rational result (`"
+                    ^ Int32.to_string numerator ^ " / " ^ Int32.to_string denominator
+                    ^ "`). The overall result may now be invalid."
+                );
+
+            (* Divide *)
+            Int32.div
+                numerator
+                denominator
+
+        | Int_factor factor ->
+            try_reduce_int_factor factor
+
+    and try_reduce_int_factor = function
+        | Int_variable variable_index ->
+            raise (InternalError ("Unable to reduce a non-constant expression."))
+        | Int_constant variable_value ->
+            variable_value;
+        | Int_expression expr ->
+            try_reduce_int_expression_rec expr
+        | Int_unary_min factor ->
+            Int32.neg (try_reduce_int_factor factor)
+        | Int_access (access_type, index_expr) ->
+            let value = try_reduce_expression_access_value index_expr access_type in
+            DiscreteValue.int_value value
+        | Int_pow (expr, exp) ->
+            OCamlUtilities.pow (try_reduce_int_expression_rec expr) (try_reduce_int_expression_rec exp)
+        | Int_list_hd (list_expr) ->
+            let list = try_reduce_list_expression list_expr in
+            let value = List.hd list in
+            DiscreteValue.int_value value
+    in
+    try_reduce_int_expression_rec expr
+
+(** Check if a boolean expression is satisfied *)
+and try_reduce_boolean_expression = function
+    | True_bool -> true
+    | False_bool -> false
+    | And_bool (b1, b2) -> (try_reduce_boolean_expression b1) && (try_reduce_boolean_expression b2) (* conjunction *)
+    | Or_bool (b1, b2) -> (try_reduce_boolean_expression b1) || (try_reduce_boolean_expression b2) (* disjunction *)
+    | Discrete_boolean_expression dbe -> try_reduce_discrete_boolean_expression dbe
+
+(** Check if a discrete boolean expression is satisfied *)
+and try_reduce_discrete_boolean_expression = function
+    | DB_variable variable_index ->
+        raise (InternalError ("Unable to reduce a non-constant expression."))
+    | DB_constant value ->
+        value
+    | Bool_access (access_type, index_expr) ->
+        let value = try_reduce_expression_access_value index_expr access_type in
+        DiscreteValue.bool_value value
+    (** Discrete arithmetic expression of the form Expr ~ Expr *)
+    (* TODO benjamin WARNING here we compare a DiscreteValue.discrete_value type with operator it's bad *)
+    (* We just have to create a Rational_comparison and a Int_comparison to solve this *)
+    | Expression (l_expr, relop, r_expr) ->
+        (operator_of_relop relop)
+            (try_reduce_discrete_arithmetic_expression l_expr)
+            (try_reduce_discrete_arithmetic_expression r_expr)
+    | Boolean_comparison (l_expr, relop, r_expr) ->
+         (operator_of_relop relop)
+             (try_reduce_discrete_boolean_expression l_expr)
+             (try_reduce_discrete_boolean_expression r_expr)
+    | Binary_comparison (l_expr, relop, r_expr) ->
+        (operator_of_relop relop)
+            (try_reduce_binary_word_expression l_expr)
+            (try_reduce_binary_word_expression r_expr)
+    | Array_comparison (l_expr, relop, r_expr) ->
+        (operator_of_relop relop)
+            (try_reduce_array_expression l_expr)
+            (try_reduce_array_expression r_expr)
+    | List_comparison (l_expr, relop, r_expr) ->
+        (operator_of_relop relop)
+            (try_reduce_list_expression l_expr)
+            (try_reduce_list_expression r_expr)
+
+    (** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+    | Expression_in (discrete_arithmetic_expression_1, discrete_arithmetic_expression_2, discrete_arithmetic_expression_3) ->
+        (* Compute the first one to avoid redundancy *)
+        let expr1_evaluated = try_reduce_discrete_arithmetic_expression discrete_arithmetic_expression_1 in
+            (try_reduce_discrete_arithmetic_expression discrete_arithmetic_expression_2)
+            <=
+            expr1_evaluated
+            &&
+            expr1_evaluated
+            <=
+            (try_reduce_discrete_arithmetic_expression discrete_arithmetic_expression_3)
+    | Boolean_expression boolean_expression ->
+        try_reduce_boolean_expression boolean_expression
+    | Not_bool b ->
+        not (try_reduce_boolean_expression b) (* negation *)
+    | Bool_list_hd list_expr ->
+        let list = try_reduce_list_expression list_expr in
+        let value = List.hd list in
+        DiscreteValue.bool_value value
+    | List_mem (expr, list_expr) ->
+        let value = try_reduce_global_expression expr in
+        let list = try_reduce_list_expression list_expr in
+        List.mem value list
+
+and try_reduce_binary_word_expression = function
+    | Logical_shift_left (binary_word, expr, _) ->
+        BinaryWord.shift_left
+            (try_reduce_binary_word_expression binary_word)
+            (Int32.to_int (try_reduce_int_expression expr))
+    | Logical_shift_right (binary_word, expr, _) ->
+        BinaryWord.shift_right
+            (try_reduce_binary_word_expression binary_word)
+            (Int32.to_int (try_reduce_int_expression expr))
+    | Logical_fill_left (binary_word, expr, _) ->
+        BinaryWord.fill_left
+            (try_reduce_binary_word_expression binary_word)
+            (Int32.to_int (try_reduce_int_expression expr))
+    | Logical_fill_right (binary_word, expr, _) ->
+        BinaryWord.fill_right
+            (try_reduce_binary_word_expression binary_word)
+            (Int32.to_int (try_reduce_int_expression expr))
+    | Logical_and (l_binary_word, r_binary_word, _) ->
+        BinaryWord.log_and
+            (try_reduce_binary_word_expression l_binary_word)
+            (try_reduce_binary_word_expression r_binary_word)
+    | Logical_or (l_binary_word, r_binary_word, _) ->
+        BinaryWord.log_or
+            (try_reduce_binary_word_expression l_binary_word)
+            (try_reduce_binary_word_expression r_binary_word)
+    | Logical_xor (l_binary_word, r_binary_word, _) ->
+        BinaryWord.log_xor
+            (try_reduce_binary_word_expression l_binary_word)
+            (try_reduce_binary_word_expression r_binary_word)
+    | Logical_not (binary_word, _) ->
+        BinaryWord.log_not
+            (try_reduce_binary_word_expression binary_word)
+
+    | Binary_word_constant value -> value
+    | Binary_word_variable (variable_index, _) ->
+        raise (InternalError ("Unable to reduce a non-constant expression."))
+    | Binary_word_access (access_type, index_expr, _) ->
+        let value = try_reduce_expression_access_value index_expr access_type in
+        DiscreteValue.binary_word_value value
+    | Binary_word_list_hd list_expr ->
+        let list = try_reduce_list_expression list_expr in
+        DiscreteValue.binary_word_value (List.hd list)
+
+and try_reduce_array_expression = function
+    | Literal_array array ->
+        Array.map (fun expr -> try_reduce_global_expression expr) array
+    | Array_variable variable_index ->
+        raise (InternalError ("Unable to reduce a non-constant expression."))
+    | Array_constant values ->
+        values
+    | Array_access (access_type, index_expr) ->
+        let value = try_reduce_expression_access_value index_expr access_type in
+        DiscreteValue.array_value value
+    | Array_concat (array_expr_0, array_expr_1) ->
+        let array_0 = try_reduce_array_expression array_expr_0 in
+        let array_1 = try_reduce_array_expression array_expr_1 in
+        Array.append array_0 array_1
+    | Array_list_hd list_expr ->
+        let list = try_reduce_list_expression list_expr in
+        DiscreteValue.array_value (List.hd list)
+
+and try_reduce_list_expression = function
+    | Literal_list list ->
+        List.map (fun expr -> try_reduce_global_expression expr) list
+    | List_variable variable_index ->
+        raise (InternalError ("Unable to reduce a non-constant expression."))
+    | List_constant values ->
+        values
+    | List_access (access_type, index_expr) ->
+        let value = try_reduce_expression_access_value index_expr access_type in
+        DiscreteValue.list_value value
+    | List_cons (expr, list_expr) ->
+        let list = try_reduce_list_expression list_expr in
+        let value = try_reduce_global_expression expr in
+        value :: list
+    | List_list_hd list_expr ->
+        let list = try_reduce_list_expression list_expr in
+        DiscreteValue.list_value (List.hd list)
+    | List_tl list_expr ->
+        let list = try_reduce_list_expression list_expr in
+        List.tl list
+    | List_rev list_expr ->
+        let list = try_reduce_list_expression list_expr in
+        List.rev list
+
+and try_reduce_array_value_at array_expr index_expr =
+
+    let values = try_reduce_array_expression array_expr in
+    let index = try_reduce_int_expression index_expr in
+    let int_index = Int32.to_int index in
+
+    if int_index >= Array.length values || int_index < 0 then (
+        let str_index = string_of_int int_index in
+        let str_values = OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (fun value -> DiscreteValue.string_of_value value) values) in
+        raise (Out_of_bound ("Array index out of range: `" ^ str_index ^ "` for array " ^ str_values))
+    );
+
+    Array.get values int_index
+
+and try_reduce_list_value_at array_expr index_expr =
+
+    let values = try_reduce_list_expression array_expr in
+    let index = try_reduce_int_expression index_expr in
+    let int_index = Int32.to_int index in
+
+    if int_index >= List.length values || int_index < 0 then (
+        let str_index = string_of_int int_index in
+        let str_values = OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (fun value -> DiscreteValue.string_of_value value) values) in
+        raise (Out_of_bound ("List index out of range: `" ^ str_index ^ "` for list " ^ str_values))
+    );
+
+    List.nth values int_index
+
+and try_reduce_expression_access_value index_expr = function
+    | Expression_array_access array_expr ->
+        try_reduce_array_value_at array_expr index_expr
+    | Expression_list_access list_expr ->
+        try_reduce_list_value_at list_expr index_expr
+
+(* TODO benjamin REPLACE BY A REAL EVALUATION OF CONSTANT and not this tricky function using try *)
+let is_global_expression_constant expr =
+    try (
+        let reduced = try_reduce_global_expression expr in
+        true
+    )
+    with _ -> false

@@ -89,5 +89,11 @@ val is_discrete_type_binary_word_type : var_type_discrete -> bool
 (* Note : clocks / parameter are of rational type *)
 val discrete_type_of_var_type : var_type -> var_type_discrete
 
+(* Check if two discrete number types are compatible *)
+val is_discrete_type_number_compatibles : var_type_discrete_number -> var_type_discrete_number -> bool
 (* Check if two discrete types are compatible *)
 val is_discrete_type_compatibles : var_type_discrete -> var_type_discrete -> bool
+
+val greater_defined : var_type_discrete -> var_type_discrete -> var_type_discrete
+val greater_number_defined : var_type_discrete_number -> var_type_discrete_number -> var_type_discrete_number
+val default_type_if_needed : var_type_discrete -> var_type_discrete

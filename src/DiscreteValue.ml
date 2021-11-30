@@ -227,11 +227,12 @@ let to_int_value = function
 let to_float_value = function
     | Number_value x
     | Rational_value x -> (NumConst.to_float x)
-    | Bool_value x -> if x then 0.0 else 0.0
+    | Bool_value x -> if x then 1.0 else 0.0
     | Int_value x -> Int32.to_float x
     | Binary_word_value x -> float_of_int (BinaryWord.hash x)
     | Array_value _ -> raise (InternalError "Unable to convert array to float value")
     | List_value _ -> raise (InternalError "Unable to convert list to float value")
+
 
 (* Get binary word value of discrete value *)
 let binary_word_value = function
@@ -247,7 +248,7 @@ let convert_to_rational_value value =
 
 (* Convert discrete value to another discrete type *)
 (* Use for implicit conversion *)
-let convert_value_to_discrete_type value target_type =
+let rec convert_value_to_discrete_type value target_type =
     match value, target_type with
     (* Source and target type are identical *)
     | Rational_value _, Var_type_discrete_number Var_type_discrete_rational
@@ -263,6 +264,15 @@ let convert_value_to_discrete_type value target_type =
     (* Rational_value to Int_value *)
     | Rational_value _, Var_type_discrete_number Var_type_discrete_int ->
         Int_value (to_int_value value)
+
+    (* TODO benjamin IMPORTANT CHECK HERE *)
+    (* No Conversion *)
+    | Bool_value _, Var_type_discrete_bool
+    | Binary_word_value _, Var_type_discrete_binary_word _ -> value
+    | Array_value inner_values, Var_type_discrete_array (inner_type, _) ->
+        Array_value (Array.map (fun value -> convert_value_to_discrete_type value inner_type) inner_values)
+    | List_value inner_values, Var_type_discrete_list inner_type ->
+        List_value (List.map (fun value -> convert_value_to_discrete_type value inner_type) inner_values)
     (* Other are not supported *)
     | x, t -> failwith (
         "Implicit conversion of value "

@@ -35,7 +35,7 @@ type global_location_index = int
 (* Array automaton_index -> location_index *)
 type locations = location_index array
 
-(* Array discrete_index -> NumConst.t *)
+(* Array discrete_index -> discrete_value *)
 type discrete = DiscreteValue.discrete_value array
 
 (* Global location: location for each automaton + value of the discrete *)

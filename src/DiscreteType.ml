@@ -158,6 +158,13 @@ let discrete_type_of_var_type = function
     | Var_type_parameter -> Var_type_discrete_number Var_type_discrete_rational
     | Var_type_discrete x -> x
 
+(* Check if two discrete number types are compatible *)
+let is_discrete_type_number_compatibles type_number_a type_number_b =
+    match type_number_a, type_number_b with
+    | Var_type_discrete_rational, Var_type_discrete_int
+    | Var_type_discrete_int, Var_type_discrete_rational -> false
+    | _ -> true
+
 (* Check if two discrete types are compatible *)
 let rec is_discrete_type_compatibles var_type expr_type =
     match var_type, expr_type with
@@ -173,3 +180,26 @@ let rec is_discrete_type_compatibles var_type expr_type =
     | ta, tb when ta = tb -> true
     (* other are not compatibles *)
     | _, _ -> false
+
+let greater_number_defined discrete_number_type_a discrete_number_type_b =
+    match discrete_number_type_a, discrete_number_type_b with
+    | Var_type_discrete_unknown_number, Var_type_discrete_int
+    | Var_type_discrete_unknown_number, Var_type_discrete_rational -> discrete_number_type_b
+    | _ -> discrete_number_type_a
+
+let rec greater_defined discrete_type_a discrete_type_b =
+    match discrete_type_a, discrete_type_b with
+    | Var_type_discrete_number discrete_number_type_a, Var_type_discrete_number discrete_number_type_b ->
+        Var_type_discrete_number (greater_number_defined discrete_number_type_a discrete_number_type_b)
+    | Var_type_discrete_array (inner_type_a, length), Var_type_discrete_array (inner_type_b, _) ->
+        Var_type_discrete_array ((greater_defined inner_type_a inner_type_b), length)
+    | Var_type_discrete_list inner_type_a, Var_type_discrete_list inner_type_b ->
+        Var_type_discrete_list (greater_defined inner_type_a inner_type_b)
+    | _ ->
+        discrete_type_a
+
+
+
+let default_type_if_needed = function
+    | Var_type_discrete_number Var_type_discrete_unknown_number -> Var_type_discrete_number Var_type_discrete_rational
+    | discrete_type -> discrete_type

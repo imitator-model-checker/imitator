@@ -27,6 +27,7 @@ open ImitatorUtilities
 open Options
 open Automaton
 open DiscreteExpressions
+open DiscreteExpressionEvaluator
 open AbstractModel
 open ParsingStructure
 open AbstractProperty
@@ -1345,6 +1346,41 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
             false
         )
         else (
+
+
+            (* Get the variable index *)
+            let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+            (* TYPE CHECKING *)
+            let converted_expr = ExpressionConverter2.convert_discrete_init3 variable_infos variable_name expr in
+
+            (* Check if it was already declared *)
+            if Hashtbl.mem init_values_for_discrete discrete_index then (
+                print_error (
+                    "The discrete variable `"
+                    ^ variable_name
+                    ^ "` is given an initial value several times in the init definition."
+                );
+                false
+            )
+            (* Try to reduce expression to a value *)
+            else if not (DiscreteExpressionEvaluator.is_global_expression_constant converted_expr) then (
+                (* TODO benjamin CLEAN REPLACE BY STRING OF DiscreteExpression *)
+                print_error (
+                    "Init variable \""
+                    ^ variable_name
+                    ^ "\" with a non constant expression \""
+                    ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
+                    ^ "\" is forbidden."
+                );
+                false
+            ) else (
+                let value = DiscreteExpressionEvaluator.try_reduce_global_expression converted_expr in
+                Hashtbl.add init_values_for_discrete discrete_index value;
+                true
+            )
+
+
+            (*
             (* Get the variable index *)
             let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
             (* TYPE CHECKING *)
@@ -1374,6 +1410,8 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
                 Hashtbl.add init_values_for_discrete discrete_index value;
                 true
             )
+            *)
+
         )
 
     | _ -> raise (InternalError ("Must have this form since it was checked before."))
@@ -1681,7 +1719,7 @@ let make_constants constants =
   let constants_hashtable : (string, DiscreteValue.discrete_value) Hashtbl.t = Hashtbl.create (List.length constants) in
   (* Manage Boolean for checking errors *)
   let correct = ref true in
-  List.iter (fun (name, value) ->
+  List.iter (fun (name, value, discrete_type) ->
       if (Hashtbl.mem constants_hashtable name) then (
         let old_value = Hashtbl.find constants_hashtable name in
         (* If same: warning *)
@@ -1694,7 +1732,18 @@ let make_constants constants =
         );
       )else(
         (* Otherwise: add it *)
-        Hashtbl.add constants_hashtable name value;
+        (* Make value of the same type as the type declaration of the constant *)
+        (* It was already type checked ! *)
+        let converted_value = DiscreteValue.convert_value_to_discrete_type value discrete_type in
+        ImitatorUtilities.print_message Verbose_standard (
+            "add constant "
+            ^ DiscreteType.string_of_var_type_discrete discrete_type
+            ^ " with value "
+            ^ DiscreteValue.string_of_value converted_value
+            ^ " of type "
+            ^ DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value converted_value)
+        );
+        Hashtbl.add constants_hashtable name converted_value;
       );
     ) constants;
   (* Return hash table *)
@@ -3830,7 +3879,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
         (* TYPE CHECKING *)
         let constant = name, expr, var_type in
-        let converted_expr, _ = TypeChecker.check_constant_expression initialized_constants constant in
+        let converted_expr, expr_type = TypeChecker.check_constant_expression initialized_constants constant in
         (* Try to get the value *)
         let value = ParsingStructureUtilities.try_reduce_parsed_global_expression initialized_constants converted_expr in
 (*         Create evaluated constant tuple *)
@@ -3840,7 +3889,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;
         (* Return *)
-        name, value
+        name, value, expr_type
     ) (List.rev constants) in
 
 

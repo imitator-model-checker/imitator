@@ -128,6 +128,14 @@ and parsed_bin_log_function_type =
     | Parsed_log_or
     | Parsed_log_xor
 
+
+
+
+
+
+
+
+
 (* We allow for some variables (i.e., parameters and constants) a value *)
 type variable_declaration = var_type * (variable_name * global_expression option) list
 type variable_declarations = variable_declaration list

@@ -7,8 +7,8 @@
  * Scalable         : No
  * Generated        : No
  * Categories       : Semantic, Type checking
- * Source           : 
- * bibkey           : 
+ * Source           :
+ * bibkey           :
  * Author           : Benjamin L.
  * Modeling         : Benjamin L.
  * Input by         : Benjamin L.
@@ -20,7 +20,7 @@
  *
  * IMITATOR version : 3.1.0
  ************************************************************)
-var 
+var
     x,
         : clock;
     p
@@ -37,10 +37,10 @@ var
 (************************************************************)
  automaton pta
 (************************************************************)
- 
-loc l1: invariant True 
+
+loc l1: invariant True
 	when b & r2 = 7 / 3 & p > r2 goto lend;
-	
+
 accepting loc lend: invariant True
  end (* pta *)
 (************************************************************)
@@ -53,16 +53,16 @@ accepting loc lend: invariant True
 
 init := {
 
-    discrete = 
+    discrete =
         loc[pta] := l1,
         b := True & not(False) & (2 < 1 | i = 1) & r1 = 2 / 3,
         r2 := rational_of_int(i) + r1 * 2
     ;
-    continuous = 
+    continuous =
         & x >= 0
         & p >= 0
     ;
-    
+
 }
 
 
