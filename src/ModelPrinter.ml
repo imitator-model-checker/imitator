@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2021/11/30
+ * Last modified     : 2021/12/01
  *
  ************************************************************)
 
@@ -380,30 +380,39 @@ let string_of_clock_updates model clock_updates =
 (** Convert a clock update into a JSON-like string *)
 let json_of_clock_updates model clock_updates =
 	let sep = ", " in
-	let wrap_reset variable_index = "\n\t\t\t\t\t\t\t'" ^ (model.variable_names variable_index) ^ "': 0," in
+	let wrap_reset variable_index = "\n\t\t\t\t\t\t\t'" ^ (model.variable_names variable_index) ^ "': '0'," in
 	let wrap_expr variable_index linear_term = "\n\t\t\t\t\t\t\t'" ^ (model.variable_names variable_index) ^ "': '" ^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) ^ "'," in
 	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
 
 
 
 
+(* Access to either variable or array *)
+let rec string_of_discrete_variable_access model = function
+	| Discrete_variable_index (variable_index) ->
+		model.variable_names variable_index
+	| Discrete_variable_access (variable_access, index_expr) ->
+		string_of_discrete_variable_access model variable_access
+		^ "[" ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names index_expr  ^ "]"
+
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
-
-    let rec string_of_discrete_variable_access = function
-        | Discrete_variable_index (variable_index) ->
-            model.variable_names variable_index
-        | Discrete_variable_access (variable_access, index_expr) ->
-            string_of_discrete_variable_access variable_access
-            ^ "[" ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names index_expr  ^ "]"
-    in
-
 	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_access, arithmetic_expression) ->
 		(* Convert the variable name *)
-		string_of_discrete_variable_access variable_access
+		string_of_discrete_variable_access model variable_access
 		^ " := "
 		(* Convert the arithmetic_expression *)
 		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
+	) updates)
+
+(* Convert a list of discrete updates into a JSON-like string *)
+let json_of_discrete_updates ?(sep=", ") model updates =
+	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_access, arithmetic_expression) ->
+		(* Convert the variable name *)
+		"'" ^ string_of_discrete_variable_access model variable_access ^ "'"
+		^ ": "
+		(* Convert the arithmetic_expression *)
+		^ "'" ^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression) ^ "'"
 	) updates)
 
 (** Return if there is no clock updates *)
@@ -495,7 +504,7 @@ let string_of_transition model automaton_index (transition : transition) =
 	
 	(* Convert the sync *)
 	^ (string_of_action model transition.action)
-	(* Convert the destination location *)
+	(* Convert the target location *)
 	^ " goto " ^ (model.location_names automaton_index transition.target)
 	^ ";"
 
@@ -530,7 +539,7 @@ let string_of_transition_for_runs model automaton_index (transition : transition
 
 	(* Convert the sync *)
 	^ (string_of_action model transition.action)
-	(* Convert the destination location *)
+	(* Convert the target location *)
 	^ " Target " ^ (model.location_names automaton_index transition.target)
 	^ "] "
 
@@ -553,12 +562,12 @@ let json_of_transition model automaton_index (transition : transition) =
 	(* Clock updates *)
 	^ (json_of_clock_updates model clock_updates)
 	(* Discrete updates *)
-	^ (string_of_discrete_updates model discrete_updates)
+	^ (json_of_discrete_updates model discrete_updates)
 	(* Conditional updates *)
 	^ (json_of_conditional_updates model conditional_updates)
 	^ "\n\t\t\t\t\t\t]"
 	
-(* 	(* Convert the destination location *) *)
+(* 	(* Convert the target location *) *)
 (* 	^ " Target " ^ (model.location_names automaton_index transition.target) *)
 
 	^ "\n\t\t\t\t\t}"
@@ -1043,11 +1052,25 @@ let string_of_valuation variables variable_names valuation =
 		) variables
 	)
 
+(* Convert a valuation into a JSON-like string *)
+let json_of_valuation variables variable_names valuation =
+	string_of_list_of_string_with_sep "," (
+		List.map (fun variable ->
+			"\n\t\t\t\t\t'"
+			^ (variable_names variable) ^ "'"
+			^ ": "
+			^ "'" ^ (NumConst.string_of_numconst (valuation variable)) ^ "'"
+		) variables
+	)
+
 (* Convert a px-valuation into a string *)
 let string_of_px_valuation model = string_of_valuation model.parameters_and_clocks model.variable_names
 
 (* Convert an x-valuation into a string *)
 let string_of_x_valuation model = string_of_valuation model.clocks model.variable_names
+
+(* Convert a px-valuation into a JSON-like string *)
+let json_of_px_valuation model = json_of_valuation model.parameters_and_clocks model.variable_names
 
 
 
@@ -1100,7 +1123,7 @@ let json_of_global_location model (global_location : Location.global_location) =
 			let location_name = model.location_names automaton_index location_index in
 			
 			(* Convert *)
-			"\n\t\t\t\t\t\t'" ^ automaton_name ^ "': '" ^ location_name ^ "'"
+			"\n\t\t\t\t\t'" ^ automaton_name ^ "': '" ^ location_name ^ "'"
 		) model.automata
 	)
 
@@ -1116,7 +1139,7 @@ let json_of_discrete_values model (global_location : Location.global_location) =
 			let variable_valuation = DiscreteValue.string_of_value variable_value in
 			
 			(* Convert *)
-			"\n\t\t\t\t\t\t'" ^ variable_name ^ "': '" ^ variable_valuation ^ "'"
+			"\n\t\t\t\t\t'" ^ variable_name ^ "': '" ^ variable_valuation ^ "'"
 		) model.discrete
 	)
 
@@ -1141,7 +1164,7 @@ let json_of_concrete_state model (state : State.concrete_state) =
 	^ "\n\t\t\t\t]," (* end discrete *)
 	
 	(* Convert continuous variables valuations *)
-	^ "\n\t\t\t\t'continuous_variables': [" ^ (string_of_px_valuation model state.px_valuation)
+	^ "\n\t\t\t\t'continuous_variables': [" ^ (json_of_px_valuation model state.px_valuation)
 	^ "\n\t\t\t\t]," (* end continuous variables *)
 
 	(* Convert rates *)
@@ -1152,7 +1175,7 @@ let json_of_concrete_state model (state : State.concrete_state) =
 		(* Iterate *)
 		string_of_list_of_string_with_sep ", " (
 			List.map (fun (variable_index, flow) ->
-				"\n\t\t\t\t\t'" ^ (model.variable_names variable_index ) ^ "': " ^ (NumConst.string_of_numconst flow)
+				"\n\t\t\t\t\t'" ^ (model.variable_names variable_index ) ^ "': '" ^ (NumConst.string_of_numconst flow) ^ "'"
 			) flows
 		)
 	)
