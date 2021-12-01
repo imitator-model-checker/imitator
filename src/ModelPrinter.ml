@@ -379,9 +379,9 @@ let string_of_clock_updates model clock_updates =
 
 (** Convert a clock update into a JSON-like string *)
 let json_of_clock_updates model clock_updates =
-	let sep = ", " in
-	let wrap_reset variable_index = "\n\t\t\t\t\t\t\t'" ^ (model.variable_names variable_index) ^ "': '0'," in
-	let wrap_expr variable_index linear_term = "\n\t\t\t\t\t\t\t'" ^ (model.variable_names variable_index) ^ "': '" ^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) ^ "'," in
+	let sep = "," in
+	let wrap_reset variable_index = "\n\t\t\t\t\t\t\t'" ^ (model.variable_names variable_index) ^ "': '0'" in
+	let wrap_expr variable_index linear_term = "\n\t\t\t\t\t\t\t'" ^ (model.variable_names variable_index) ^ "': '" ^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) ^ "'" in
 	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
 
 
