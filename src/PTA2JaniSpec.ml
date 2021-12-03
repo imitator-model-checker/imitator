@@ -10,7 +10,7 @@
  *
  * File contributors : Dylan Marinho
  * Created           : 2021/02/23
- * Last modified     : 2021/10/28
+ * Last modified     : 2021/12/03
  *
  ************************************************************)
 
@@ -1110,6 +1110,9 @@ let string_of_system model =
 
 (* Convert the model into a string *)
 let string_of_model model =
+	(* Add a warning due to semantic difference *)
+	print_warning "Translation to JANI is mostly correct, but may feature some subtle differences in semantics. Notably, JANI assumes that a guard x=1 followed by an invariant x>=2 *can* be fired, which is not the case in IMITATOR semantics.";
+	
     let actions_and_nb_automata = List.map (fun action_index ->
         (* Get number of automata *)
         let nb_automata = List.length (model.automata_per_action action_index) in
