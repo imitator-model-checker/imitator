@@ -11,7 +11,7 @@ and typed_boolean_expression =
 
 and typed_discrete_boolean_expression =
     | Typed_arithmetic_expr of typed_discrete_arithmetic_expression * var_type_discrete
-	| Typed_comparison of typed_discrete_boolean_expression * parsed_relop * typed_discrete_boolean_expression * var_type_discrete
+	| Typed_comparison of typed_discrete_boolean_expression * parsed_relop * typed_discrete_boolean_expression * var_type_discrete * var_type_discrete
 	| Typed_comparison_in of typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_bool_expr of typed_boolean_expression * var_type_discrete
 	| Typed_not_expr of typed_boolean_expression
@@ -59,3 +59,5 @@ val string_of_typed_global_expression : variable_infos -> typed_global_expressio
 (*val checkus_guard : variable_infos -> nonlinear_constraint list -> unit*)
 (*val check_discrete_init : variable_infos -> variable_name -> global_expression -> var_type_discrete*)
 val check_discrete_init3 : variable_infos -> variable_name -> global_expression -> typed_global_expression
+(* Check that constant declarations are well typed *)
+val check_constant_expression : variable_infos -> variable_name * global_expression * DiscreteType.var_type -> typed_global_expression

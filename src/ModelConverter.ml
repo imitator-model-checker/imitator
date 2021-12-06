@@ -1719,7 +1719,7 @@ let make_constants constants =
   let constants_hashtable : (string, DiscreteValue.discrete_value) Hashtbl.t = Hashtbl.create (List.length constants) in
   (* Manage Boolean for checking errors *)
   let correct = ref true in
-  List.iter (fun (name, value, discrete_type) ->
+  List.iter (fun (name, value(*, discrete_type *)) ->
       if (Hashtbl.mem constants_hashtable name) then (
         let old_value = Hashtbl.find constants_hashtable name in
         (* If same: warning *)
@@ -1731,6 +1731,7 @@ let make_constants constants =
           correct := false;
         );
       )else(
+        (*
         (* Otherwise: add it *)
         (* Make value of the same type as the type declaration of the constant *)
         (* It was already type checked ! *)
@@ -1743,7 +1744,8 @@ let make_constants constants =
             ^ " of type "
             ^ DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value converted_value)
         );
-        Hashtbl.add constants_hashtable name converted_value;
+        *)
+        Hashtbl.add constants_hashtable name value;
       );
     ) constants;
   (* Return hash table *)
@@ -3879,9 +3881,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
         (* TYPE CHECKING *)
         let constant = name, expr, var_type in
+
+        (*
         let converted_expr, expr_type = TypeChecker.check_constant_expression initialized_constants constant in
         (* Try to get the value *)
         let value = ParsingStructureUtilities.try_reduce_parsed_global_expression initialized_constants converted_expr in
+        *)
+        let typed_expr(*, expr_type *) = ExpressionConverter2.convert_discrete_constant initialized_constants constant in
+        let value = DiscreteExpressionEvaluator.try_reduce_global_expression typed_expr in
 (*         Create evaluated constant tuple *)
 (*        let evaluated_constant = name, expr, value, var_type in*)
 
@@ -3889,7 +3896,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;
         (* Return *)
-        name, value, expr_type
+        name, value(*, expr_type *)
     ) (List.rev constants) in
 
 

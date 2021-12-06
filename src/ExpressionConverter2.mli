@@ -24,3 +24,4 @@ val int_arithmetic_expression_of_parsed_arithmetic_expression : variable_infos -
 val convert_discrete_init : variable_infos -> variable_name -> ParsingStructure.global_expression -> DiscreteExpressions.global_expression
 *)
 val convert_discrete_init3 : variable_infos -> variable_name -> ParsingStructure.global_expression -> DiscreteExpressions.global_expression
+val convert_discrete_constant : constants_table -> variable_name * ParsingStructure.global_expression * DiscreteType.var_type -> DiscreteExpressions.global_expression
