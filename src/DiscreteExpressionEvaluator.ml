@@ -703,6 +703,8 @@ and try_reduce_expression_access_value index_expr = function
     | Expression_list_access list_expr ->
         try_reduce_list_value_at list_expr index_expr
 
+
+
 (* TODO benjamin REPLACE BY A REAL EVALUATION OF CONSTANT and not this tricky function using try *)
 let is_global_expression_constant expr =
     try (

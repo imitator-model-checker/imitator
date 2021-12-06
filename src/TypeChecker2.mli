@@ -32,32 +32,22 @@ and typed_discrete_factor =
 	| Typed_array of typed_boolean_expression array * var_type_discrete
 	| Typed_list of typed_boolean_expression list * var_type_discrete
 	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
-	| Typed_unary_min of typed_discrete_factor
-    | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete
+	| Typed_unary_min of typed_discrete_factor * var_type_discrete_number
+    | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * var_type_discrete
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
 
-val type_of_typed_discrete_boolean_expression : typed_discrete_boolean_expression -> var_type_discrete
-
-(*type type_tree = | Node_type of var_type_discrete * type_tree list*)
-(*val split_tree : type_tree -> var_type_discrete * type_tree list*)
-(*val inner_unary_node : type_tree -> type_tree*)
-(*val inner_bin_node : type_tree -> type_tree * type_tree*)
-
-
-(*
-val type_check_global_expression : variable_infos -> global_expression -> var_type_discrete
-val type_check_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> var_type_discrete
-val type_check_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> var_type_discrete
-val type_check_parsed_discrete_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> var_type_discrete
-val type_check_parsed_discrete_term : variable_infos -> parsed_discrete_term -> var_type_discrete
-val type_check_parsed_discrete_factor : variable_infos -> parsed_discrete_factor -> var_type_discrete
-val type_check_nonlinear_constraint : variable_infos -> nonlinear_constraint -> var_type_discrete
-*)
+type typed_guard = typed_discrete_boolean_expression list
 
 val string_of_typed_global_expression : variable_infos -> typed_global_expression -> string
+val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
+val string_of_typed_discrete_factor : variable_infos -> typed_discrete_factor -> string
 
-(*val checkus_guard : variable_infos -> nonlinear_constraint list -> unit*)
-(*val check_discrete_init : variable_infos -> variable_name -> global_expression -> var_type_discrete*)
+val type_of_typed_discrete_boolean_expression : typed_discrete_boolean_expression -> var_type_discrete
+val type_of_typed_discrete_factor : typed_discrete_factor -> var_type_discrete
+
+(* Check that a discrete init is well typed *)
 val check_discrete_init3 : variable_infos -> variable_name -> global_expression -> typed_global_expression
-(* Check that constant declarations are well typed *)
+(* Check that a constant declarations is well typed *)
 val check_constant_expression : variable_infos -> variable_name * global_expression * DiscreteType.var_type -> typed_global_expression
+(* Check that a guard is well typed *)
+val check_guard : variable_infos -> guard -> typed_guard

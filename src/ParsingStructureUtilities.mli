@@ -159,4 +159,6 @@ val get_variables_in_nonlinear_convex_predicate : nonlinear_constraint list -> S
 val variable_name_of_variable_access : variable_access -> variable_name
 val is_variable_access_is_a_variable_name : variable_access -> bool
 
+val linear_constraint_of_nonlinear_constraint : nonlinear_constraint -> linear_constraint
+
 val variable_infos_of_parsed_model : useful_parsing_model_information -> variable_infos

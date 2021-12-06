@@ -23,5 +23,8 @@ val bool_expression_of_parsed_discrete_boolean_expression : variable_infos -> Pa
 val int_arithmetic_expression_of_parsed_arithmetic_expression : variable_infos -> ParsingStructure.parsed_discrete_arithmetic_expression -> DiscreteExpressions.int_arithmetic_expression
 val convert_discrete_init : variable_infos -> variable_name -> ParsingStructure.global_expression -> DiscreteExpressions.global_expression
 *)
+val linear_constraint_of_convex_predicate : variable_infos -> ParsingStructure.linear_constraint list -> LinearConstraint.pxd_linear_constraint
+
 val convert_discrete_init3 : variable_infos -> variable_name -> ParsingStructure.global_expression -> DiscreteExpressions.global_expression
 val convert_discrete_constant : constants_table -> variable_name * ParsingStructure.global_expression * DiscreteType.var_type -> DiscreteExpressions.global_expression
+val convert_guard : variable_infos -> ParsingStructure.guard -> AbstractModel.guard

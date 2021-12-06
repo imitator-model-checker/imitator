@@ -39,8 +39,7 @@ open CustomModules
 (** Exceptions *)
 (************************************************************)
 (************************************************************)
-(* For constraint conversion *)
-exception False_exception
+
 
 (* For detecting strongly deterministic PTAs *)
 exception Not_strongly_deterministic
@@ -266,6 +265,7 @@ let undeclared_variable_in_linear_constraint_message variable_name =
 let undeclared_variable_in_boolean_expression_message variable_name =
     print_error ("The variable `" ^ variable_name ^ "` used in a boolean expression was not declared.")
 
+
 (************************************************************)
 (** Converting linear constraints *)
 (************************************************************)
@@ -348,7 +348,7 @@ let linear_term_of_linear_expression index_of_variables constants linear_express
   let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
   linear_term_of_array array_of_coef constant
 
-
+(*
 (*------------------------------------------------------------*)
 (* Perform the substraction of 2 NumConst array of same size *)
 (*------------------------------------------------------------*)
@@ -491,7 +491,7 @@ let nonlinear_constraint_of_nonlinear_convex_predicate variable_infos convex_pre
         (* Stop if any false constraint is found *)
     )
     with False_exception -> NonlinearConstraint.false_nonlinear_constraint
-
+*)
 
 (************************************************************)
 (************************************************************)
@@ -1555,7 +1555,7 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 (************************************************************)
 (** Converting the model *)
 (************************************************************)
-
+(*
 (*------------------------------------------------------------*)
 (* Try to convert a non-linear expression to a linear *)
 (* If it's not possible (due to non-linear expression involving clocks or parameters *)
@@ -1639,9 +1639,10 @@ let try_convert_linear_expression_of_parsed_discrete_boolean_expression = functi
 
 (* Convert nonlinear_constraint to linear_constraint if possible
    and check bad use of non-linear expressions when converting *)
-(* TODO benjamin CLEAN to delete *)
 let linear_constraint_of_nonlinear_constraint = try_convert_linear_expression_of_parsed_discrete_boolean_expression
+*)
 
+(*
 (* Split convex_predicate into two lists *)
 (* One only contain discrete expression to nonlinear_constraint *)
 (* One that doesn't only contain discrete expression to linear_constraint *)
@@ -1652,7 +1653,7 @@ let split_convex_predicate_into_discrete_and_continuous variable_infos convex_pr
        match nonlinear_inequality with
        (* TODO benjamin REFACTOR, in ParsingStructureUtilities create a function that check if a nonlinear constraint is true or false *)
        | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = true -> true
-       | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = true -> raise False_exception
+       | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = false -> raise False_exception
        | nonlinear_constraint -> ParsingStructureUtilities.only_discrete_in_nonlinear_expression variable_infos nonlinear_constraint
     ) convex_predicate
     in
@@ -1660,7 +1661,8 @@ let split_convex_predicate_into_discrete_and_continuous variable_infos convex_pr
     let discrete_part, continuous_part = partitions in
         discrete_part,
         List.map (fun nonlinear_constraint -> linear_constraint_of_nonlinear_constraint nonlinear_constraint) continuous_part
-
+*)
+(*
 (*------------------------------------------------------------*)
 (* Convert a guard *)
 (*------------------------------------------------------------*)
@@ -1676,6 +1678,9 @@ let convert_guard variable_infos guard_convex_predicate =
         variable_infos.constants in
 
 
+
+    (* TODO benjamin make split before type checking *)
+    (* Then convert each part with ExpressionConverter2 *)
 
     (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
     let uniform_type_guards, _ = TypeChecker.check_guard variable_infos guard_convex_predicate in
@@ -1709,6 +1714,7 @@ let convert_guard variable_infos guard_convex_predicate =
         }
     (* If some false construct found: false guard *)
   ) with False_exception -> False_guard
+*)
 
 
 (*------------------------------------------------------------*)
@@ -1938,7 +1944,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
 
 				(* Update the array of invariants *)
-				invariants.(automaton_index).(location_index) <- convert_guard variable_infos location.invariant;
+				invariants.(automaton_index).(location_index) <- ExpressionConverter2.convert_guard variable_infos location.invariant;
 
 				(* Does the model has stopwatches? *)
 				if location.stopped <> [] then has_non_1rate_clocks := true;
@@ -2354,7 +2360,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
           List.iter (fun (action_index, guard, updates, target_location_index) ->
 
               (* Convert the guard *)
-              let converted_guard = convert_guard variable_infos guard in
+              let converted_guard = ExpressionConverter2.convert_guard variable_infos guard in
 
               (* Filter the updates that should assign some variable name to be removed to any expression *)
               (* let filtered_updates = List.filter (fun (variable_name, (*linear_expression*)_) ->
@@ -2439,7 +2445,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 (*------------------------------------------------------------*)
 (* Create the initial state *)
 (*------------------------------------------------------------*)
-let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition =
+let make_initial_state variable_infos index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
 		| Parsed_loc_assignment _ -> true
@@ -2507,7 +2513,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_rational_numconst_pairs in
 
 		(* Create initial constraint (through parsing) *)
-		let initial_constraint = (linear_constraint_of_convex_predicate index_of_variables constants convex_predicate) in
+		let initial_constraint = (ExpressionConverter2.linear_constraint_of_convex_predicate variable_infos convex_predicate) in
 
 		(* Intersects initial constraint with discretes *)
 		LinearConstraint.pxd_intersection_assign initial_constraint [discretes];
@@ -3889,6 +3895,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         *)
         let typed_expr(*, expr_type *) = ExpressionConverter2.convert_discrete_constant initialized_constants constant in
         let value = DiscreteExpressionEvaluator.try_reduce_global_expression typed_expr in
+        (* TODO benjamin CLEAN comments *)
 (*         Create evaluated constant tuple *)
 (*        let evaluated_constant = name, expr, value, var_type in*)
 
@@ -4885,7 +4892,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Building initial state…");
 
 	let (initial_location, initial_constraint) =
-		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs parsed_model.init_definition in
+		make_initial_state variable_infos index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs parsed_model.init_definition in
 
 	(* Add the observer initial constraint *)
 	begin

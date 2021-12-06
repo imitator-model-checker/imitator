@@ -65,6 +65,7 @@ type global_expression =
 (** Boolean expressions *)
 (****************************************************************)
 and parsed_boolean_expression =
+    (* TODO benjamin Group And and Or in another type for don't repeat yourself in pattern matching *)
 	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
 	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
 	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
@@ -84,11 +85,13 @@ and parsed_discrete_boolean_expression =
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
 and parsed_discrete_arithmetic_expression =
+    (* TODO benjamin Group plus and minus in another type for don't repeat yourself in pattern matching *)
 	| Parsed_DAE_plus of parsed_discrete_arithmetic_expression * parsed_discrete_term
 	| Parsed_DAE_minus of parsed_discrete_arithmetic_expression * parsed_discrete_term
 	| Parsed_DAE_term of parsed_discrete_term
 
 and parsed_discrete_term =
+    (* TODO benjamin Group mul and div in another type for don't repeat yourself in pattern matching *)
 	| Parsed_DT_mul of parsed_discrete_term * parsed_discrete_factor
 	| Parsed_DT_div of parsed_discrete_term * parsed_discrete_factor
 	| Parsed_DT_factor of parsed_discrete_factor

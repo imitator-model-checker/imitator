@@ -134,6 +134,8 @@ val array_exists : ('a -> bool) -> 'a array -> bool
 (** Shuffles the values of an array *)
 val array_shuffle : 'a array -> unit
 
+(** Perform the substraction of 2 NumConst array of same size **)
+val sub_array : NumConst.t array -> NumConst.t array -> NumConst.t array
 
 (************************************************************)
 (** Useful functions on dynamic arrays *)

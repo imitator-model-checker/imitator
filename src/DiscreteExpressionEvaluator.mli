@@ -8,6 +8,7 @@ val eval_global_expression : discrete_valuation -> global_expression -> Discrete
 val eval_int_expression : discrete_valuation -> int_arithmetic_expression -> Int32.t
 
 val try_reduce_global_expression : global_expression -> DiscreteValue.discrete_value
+val try_reduce_discrete_boolean_expression : discrete_boolean_expression -> bool
 
 val is_global_expression_constant : global_expression -> bool
 

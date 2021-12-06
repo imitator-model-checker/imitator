@@ -7,6 +7,7 @@ type variable = int
 (* Non-linear custom expression without PPL *)
 type nonlinear_inequality = DiscreteExpressions.discrete_arithmetic_expression * DiscreteExpressions.relop * DiscreteExpressions.discrete_arithmetic_expression
 
+(* TODO benjamin change nonlinear_constraint to nonlinear_constraint = discrete_boolean_expression list *)
 type nonlinear_constraint =
   | Nonlinear_constraint of DiscreteExpressions.discrete_boolean_expression list
 
@@ -41,3 +42,6 @@ let customized_string_of_nonlinear_constraint customized_string variable_names =
 (* Get string of non-linear constraint inequalities with default strings *)
 let string_of_nonlinear_constraint = customized_string_of_nonlinear_constraint global_default_string
 
+let try_reduce_nonlinear_constraint = function
+    | Nonlinear_constraint nonlinear_constraint ->
+        List.map DiscreteExpressionEvaluator.try_reduce_discrete_boolean_expression nonlinear_constraint

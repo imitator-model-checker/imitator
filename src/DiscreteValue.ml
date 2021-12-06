@@ -204,12 +204,9 @@ let list_value = function
 let to_numconst_value = function
     | Number_value x
     | Rational_value x -> x
-    | Bool_value x -> if x then NumConst.one else NumConst.zero
     (* Warning, a bit is lost when converting on 32 bit platform !*)
     | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
-    | Binary_word_value x -> NumConst.numconst_of_int (BinaryWord.hash x)
-    | Array_value _ -> raise (InternalError "Unable to convert array to NumConst.t value")
-    | List_value _ -> raise (InternalError "Unable to convert list to NumConst.t value")
+    | value -> raise (InternalError ("Unable to convert " ^ string_of_value value ^ " to rational NumConst.t value"))
 
 (* Convert any discrete value to Int32 value, if possible *)
 let to_int_value = function
