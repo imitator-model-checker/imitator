@@ -1064,3 +1064,25 @@ let check_update variable_infos variable_access expr =
 
     typed_variable_access,
     convert_typed_global_expression l_value_type typed_expr
+
+(* Type check a conditional expression *)
+(* return a tuple containing the conditional expression uniformly typed and the resolved type of the expression *)
+let check_conditional variable_infos expr =
+
+    print_message Verbose_high "----------";
+    print_message Verbose_high ("Infer conditional expression: " ^ string_of_parsed_boolean_expression variable_infos expr);
+
+    let typed_expr = type_check_parsed_boolean_expression3 variable_infos expr in
+    let expr_type = type_of_typed_boolean_expression typed_expr in
+
+    (* Check that non-linear constraint is a Boolean expression *)
+    match expr_type with
+    | Var_type_discrete_bool ->
+        convert_typed_boolean_expression (Var_type_discrete_number Var_type_discrete_rational) typed_expr
+    | _ ->
+        raise (TypeError (
+            "Expression `"
+            ^ (string_of_parsed_boolean_expression variable_infos expr)
+            ^ "` in conditional statement, is not a Boolean expression"
+            )
+        )

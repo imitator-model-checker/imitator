@@ -37,6 +37,7 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 
 (* Specific type of number *)
 type var_type_discrete_number =
+    (* TODO benjamin CLEAN rename to Var_type_discrete_rat *)
     | Var_type_discrete_rational
     | Var_type_discrete_int
 
@@ -51,6 +52,7 @@ type var_type_discrete =
 (* Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
+	(* TODO benjamin remove Var_type_constant (useless) *)
 	| Var_type_constant
 	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
@@ -58,6 +60,7 @@ type var_type =
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
+(* TODO benjamin CLEAN rename to parsed_global_expression *)
 type global_expression =
     | Parsed_global_expression of parsed_boolean_expression
 

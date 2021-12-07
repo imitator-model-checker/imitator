@@ -55,5 +55,7 @@ val check_discrete_init3 : variable_infos -> variable_name -> global_expression 
 val check_constant_expression : variable_infos -> variable_name * global_expression * DiscreteType.var_type -> typed_global_expression
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
-
+(* Check that an update is well typed *)
 val check_update : variable_infos -> variable_access -> ParsingStructure.global_expression -> typed_variable_access * typed_global_expression
+(* Check that a condition is well typed *)
+val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression

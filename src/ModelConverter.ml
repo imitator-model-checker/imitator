@@ -324,156 +324,6 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
   array_of_coef, !constant
 
 
-
-
-
-
-
-(*
-(*------------------------------------------------------------*)
-(* Perform the substraction of 2 NumConst array of same size *)
-(*------------------------------------------------------------*)
-let sub_array array1 array2 =
-  (* Create the result *)
-  let result = Array.make (Array.length array1) NumConst.zero in
-  (* Iterate on both arrays *)
-  for i = 0 to (Array.length array1) - 1 do
-    (* Perform array1 - array2 *)
-    result.(i) <- NumConst.sub array1.(i) array2.(i);
-  done;
-  (* Return the result *)
-  result
-
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.linear_constraint into a Constraint.linear_inequality *)
-(*------------------------------------------------------------*)
-let linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2) =
-  (* Get the array of variables and constant associated to the linear terms *)
-  let array1, constant1 = array_of_coef_of_linear_expression index_of_variables constants linexpr1 in
-  let array2, constant2 = array_of_coef_of_linear_expression index_of_variables constants linexpr2 in
-  (* Consider the operator *)
-  match relop with
-  (* a < b <=> b - a > 0 *)
-  | PARSED_OP_L ->
-    (* Create the array *)
-    let array12 = sub_array array2 array1 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant2 constant1 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
-  (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_g *)
-
-  (* a <= b <=> b - a >= 0 *)
-  | PARSED_OP_LEQ ->
-    (* Create the array *)
-    let array12 = sub_array array2 array1 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant2 constant1 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
-  (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_ge *)
-
-  (* a = b <=> b - a = 0 *)
-  | PARSED_OP_EQ ->
-    (* Create the array *)
-    let array12 = sub_array array2 array1 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant2 constant1 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
-
-  (* 	(Constraint.substract_linear_terms lt1 lt2), Constraint.Op_eq *)
-
-  (* a >= b <=> a - b >= 0 *)
-  | PARSED_OP_GEQ ->
-    (* Create the array *)
-    let array12 = sub_array array1 array2 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant1 constant2 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
-  (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_ge *)
-
-  (* a > b <=> a - b > 0 *)
-  | PARSED_OP_G ->
-    (* Create the array *)
-    let array12 = sub_array array1 array2 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant1 constant2 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
-  (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_g *)
-
-  | PARSED_OP_NEQ ->
-    raise (InternalError("Inequality <> not yet supported"))
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.convex_predicate into a Constraint.linear_constraint *)
-(*------------------------------------------------------------*)
-let linear_constraint_of_convex_predicate index_of_variables constants convex_predicate : LinearConstraint.pxd_linear_constraint =
-  try(
-    (* Compute a list of inequalities *)
-    let linear_inequalities = List.fold_left
-        (fun linear_inequalities linear_inequality ->
-           match linear_inequality with
-           | Parsed_true_constraint -> linear_inequalities
-           | Parsed_false_constraint -> raise False_exception
-           | Parsed_linear_constraint (linexpr1, relop, linexpr2) -> (linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2)) :: linear_inequalities
-        ) [] convex_predicate
-    in LinearConstraint.make_pxd_constraint linear_inequalities
-    (* Stop if any false constraint is found *)
-  ) with False_exception -> LinearConstraint.pxd_false_constraint ()
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.convex_predicate into a nonlinear_constraint *)
-(*------------------------------------------------------------*)
-let nonlinear_constraint_of_nonlinear_convex_predicate variable_infos convex_predicate : NonlinearConstraint.nonlinear_constraint =
-    try (
-
-
-        (* Compute a list of inequalities from convex_predicate list *)
-        let nonlinear_inequalities = List.fold_left
-        (fun nonlinear_inequalities nonlinear_inequality ->
-
-            (* TODO benjamin CHECKING IS MADE ON GUARD LEVEL, IF THERE IS ANY TYPE CHECKING ISSUE, WE SHOULD MOVE TYPE CHECKING HERE AND ON LINEAR EXPRESSION *)
-            (* Get typed non-linear constraint inequality *)
-(*            let uniform_typed_nonlinear_inequality, _ = TypeChecker.check_nonlinear_constraint variable_infos nonlinear_inequality in*)
-(*            match uniform_typed_nonlinear_inequality with*)
-
-            match nonlinear_inequality with
-            (* TODO benjamin REFACTOR, in ParsingStructureUtilities create a function that check if a nonlinear constraint is true or false *)
-            | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = true -> nonlinear_inequalities
-            | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = false -> raise False_exception
-            | nonlinear_constraint  ->
-                (* Convert non-linear constraint to abstract model *)
-                let convert_nonlinear_constraint = ExpressionConverter.bool_expression_of_parsed_discrete_boolean_expression variable_infos nonlinear_constraint in
-                (* Add typed discrete boolean expression to inequality list *)
-                convert_nonlinear_constraint :: nonlinear_inequalities
-
-        ) [] convex_predicate
-        in
-
-
-
-        match nonlinear_inequalities with
-        | [] -> NonlinearConstraint.true_nonlinear_constraint
-        | _ -> NonlinearConstraint.Nonlinear_constraint nonlinear_inequalities
-        (* Stop if any false constraint is found *)
-    )
-    with False_exception -> NonlinearConstraint.false_nonlinear_constraint
-*)
-
 (************************************************************)
 (************************************************************)
 (** Checking and converting model *)
@@ -1360,39 +1210,6 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
                 true
             )
 
-
-            (*
-            (* Get the variable index *)
-            let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-            (* TYPE CHECKING *)
-            let converted_expr = TypeChecker.check_discrete_init variable_infos variable_name expr in
-
-            (* Check if it was already declared *)
-            if Hashtbl.mem init_values_for_discrete discrete_index then (
-                print_error (
-                    "The discrete variable `"
-                    ^ variable_name
-                    ^ "` is given an initial value several times in the init definition."
-                );
-                false
-            )
-            (* Try to reduce expression to a value *)
-            else if not (ParsingStructureUtilities.is_parsed_global_expression_constant variable_infos converted_expr) then (
-                print_error (
-                    "Init variable \""
-                    ^ variable_name
-                    ^ "\" with a non constant expression \""
-                    ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos converted_expr
-                    ^ "\" is forbidden."
-                );
-                false
-            ) else (
-                let value = ParsingStructureUtilities.try_reduce_parsed_global_expression variable_infos.constants converted_expr in
-                Hashtbl.add init_values_for_discrete discrete_index value;
-                true
-            )
-            *)
-
         )
 
     | _ -> raise (InternalError ("Must have this form since it was checked before."))
@@ -1536,167 +1353,6 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 (************************************************************)
 (** Converting the model *)
 (************************************************************)
-(*
-(*------------------------------------------------------------*)
-(* Try to convert a non-linear expression to a linear *)
-(* If it's not possible (due to non-linear expression involving clocks or parameters *)
-(* we raise an InvalidExpression exception *)
-(*------------------------------------------------------------*)
-
-
-
-(* Try to convert parsed discrete term to a linear term *)
-(* If it's not possible, we raise an InvalidExpression exception *)
-let rec try_convert_linear_term_of_parsed_discrete_term = function
-
-    | Parsed_DT_mul (term, factor) ->
-        (* Check consistency of multiplication, if it keep constant we can convert to a linear term *)
-        let linear_term, linear_factor =
-        try_convert_linear_term_of_parsed_discrete_term term,
-        try_convert_linear_term_of_parsed_discrete_factor factor
-        in
-        (match linear_term, linear_factor with
-            (* Constant multiplied by constant, it's ok*)
-            | Constant l_const_value, Constant r_const_value ->
-                let value = (NumConst.mul l_const_value r_const_value) in
-                Constant value
-            (* Constant multiplied by a variable (commutative), it's ok *)
-            | Variable (var_value, variable_name), Constant const_value
-            | Constant const_value, Variable (var_value, variable_name) ->
-                let value = (NumConst.mul var_value const_value) in
-                Variable (value, variable_name)
-            (* Other cases are non-linears, so it's impossible to make the conversion, we raise an exception *)
-            | _ -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
-        )
-    (* Division is non-linear, so it's impossible to make the conversion, we raise an exception*)
-    | Parsed_DT_div (_, _) -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
-    (* Try to convert factor *)
-    | Parsed_DT_factor parsed_discrete_factor -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
-
-(* Try to convert parsed discrete arithmetic expression (non-linear expression) to a linear expression *)
-(* If it's not possible, we raise an InvalidExpression exception *)
-and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = function
-    | Parsed_DAE_plus (expr, term) -> Linear_plus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
-    | Parsed_DAE_minus (expr, term) -> Linear_minus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
-    | Parsed_DAE_term term -> Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
-
-(* Try to convert parsed discrete factor to a linear term *)
-(* If it's not possible, we raise an InvalidExpression exception *)
-and try_convert_linear_term_of_parsed_discrete_factor = function
-        | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name)
-        | Parsed_DF_constant value -> Constant (numconst_value_or_fail value)
-        | Parsed_DF_unary_min parsed_discrete_factor ->
-            (* Check for unary min, negate variable and constant *)
-            (match parsed_discrete_factor with
-                | Parsed_DF_variable variable_name -> Variable(NumConst.minus_one, variable_name)
-                | Parsed_DF_constant value ->
-                    let numconst_value = numconst_value_or_fail value in
-                    Constant (NumConst.neg numconst_value)
-                | _ -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
-            )
-
-        (* Nested expression used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
-        | Parsed_DF_expression expr ->
-            raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
-
-        | _ as factor ->
-            raise (InvalidExpression ("Use of \"" ^ ParsingStructureUtilities.label_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
-
-let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
-    | Parsed_arithmetic_expression _ ->
-        raise (InvalidExpression "An expression that involve clock(s) / parameter(s) contains a boolean variable")
-    | Parsed_expression (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr) ->
-        Parsed_linear_constraint (
-            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression l_expr,
-            relop,
-            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression r_expr
-        )
-    | Parsed_expression (l_expr, relop, r_expr) ->
-        raise (InvalidExpression "Use of non arithmetic comparison is forbidden in an expression that involve clock(s) / parameter(s)")
-    (* Expression in used ! So it's impossible to make the conversion, we raise an exception*)
-    | Parsed_expression_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
-    | Parsed_boolean_expression _ -> raise (InvalidExpression "A non-convex predicate involve clock(s) / parameter(s)")
-    | Parsed_Not _ -> raise (InvalidExpression "A not expression involve clock(s) / parameter(s)")
-
-(* Convert nonlinear_constraint to linear_constraint if possible
-   and check bad use of non-linear expressions when converting *)
-let linear_constraint_of_nonlinear_constraint = try_convert_linear_expression_of_parsed_discrete_boolean_expression
-*)
-
-(*
-(* Split convex_predicate into two lists *)
-(* One only contain discrete expression to nonlinear_constraint *)
-(* One that doesn't only contain discrete expression to linear_constraint *)
-let split_convex_predicate_into_discrete_and_continuous variable_infos convex_predicate =
-  (* Compute a list of inequalities *)
-  let partitions = List.partition
-    (fun nonlinear_inequality ->
-       match nonlinear_inequality with
-       (* TODO benjamin REFACTOR, in ParsingStructureUtilities create a function that check if a nonlinear constraint is true or false *)
-       | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = true -> true
-       | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = false -> raise False_exception
-       | nonlinear_constraint -> ParsingStructureUtilities.only_discrete_in_nonlinear_expression variable_infos nonlinear_constraint
-    ) convex_predicate
-    in
-    (* Get discrete part as a nonlinear constraint but convert back continuous part to a linear constraint *)
-    let discrete_part, continuous_part = partitions in
-        discrete_part,
-        List.map (fun nonlinear_constraint -> linear_constraint_of_nonlinear_constraint nonlinear_constraint) continuous_part
-*)
-(*
-(*------------------------------------------------------------*)
-(* Convert a guard *)
-(*------------------------------------------------------------*)
-let convert_guard variable_infos guard_convex_predicate =
-  try (
-
-    (* Extract useful infos *)
-    let index_of_variables,
-        type_of_variables,
-        constants =
-        variable_infos.index_of_variables,
-        variable_infos.type_of_variables,
-        variable_infos.constants in
-
-
-
-    (* TODO benjamin make split before type checking *)
-    (* Then convert each part with ExpressionConverter2 *)
-
-    (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
-    let uniform_type_guards, _ = TypeChecker.check_guard variable_infos guard_convex_predicate in
-    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous variable_infos uniform_type_guards in
-
-    match discrete_guard_convex_predicate, continuous_guard_convex_predicate with
-    (* No inequalities: true *)
-    | [] , [] -> True_guard
-    (* Only discrete inequalities: discrete *)
-    | discrete_guard_convex_predicate , [] -> Discrete_guard (nonlinear_constraint_of_nonlinear_convex_predicate variable_infos discrete_guard_convex_predicate)
-    (* Only continuous inequalities: continuous *)
-    | [] , continuous_guard_convex_predicate -> Continuous_guard (linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate)
-    (* Otherwise: both *)
-    | discrete_guard_convex_predicate , continuous_guard_convex_predicate ->
-      (* Convert both parts *)
-      let discrete_guard = nonlinear_constraint_of_nonlinear_convex_predicate variable_infos discrete_guard_convex_predicate in
-      let continuous_guard = linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate in
-
-      (* TODO maybe it's possible to make this optimisation with non linear discrete guard ? *)
-      (*** NOTE: try to simplify a bit if possible (costly, but would save a lot of time later if checks are successful) ***)
-(*      let intersection = LinearConstraint.pxd_intersection_with_d continuous_guard discrete_guard in*)
-
-(*      if LinearConstraint.pxd_is_true intersection then True_guard*)
-(*      else if LinearConstraint.pxd_is_false intersection then False_guard*)
-(*      else*)
-        (* Else create mixed guard as planned *)
-        Discrete_continuous_guard
-        {
-          discrete_guard = discrete_guard;
-          continuous_guard = continuous_guard;
-        }
-    (* If some false construct found: false guard *)
-  ) with False_exception -> False_guard
-*)
-
 
 (*------------------------------------------------------------*)
 (* Create the hash table of constants ; check the validity on-the-fly *)
@@ -2064,7 +1720,8 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
   (* Differentiate between different kinds of clock updates *)
   let clock_updates : clock_updates =
     (* Case 1: no update *)
-    if converted_clock_updates = [] then No_update
+    if converted_clock_updates = [] then
+        No_update
     else (
       (* Case 2: resets only *)
       if only_resets then (
@@ -2138,12 +1795,11 @@ let convert_updates variable_infos updates : updates =
     let conditional_updates_values : conditional_update list = List.map (fun u ->
         let boolean_value, if_updates, else_updates = get_conditional_update_value u in
 
-        (* TYPE CHECK *)
-        let uniformly_typed_bool_expr, _ = TypeChecker.check_conditional variable_infos boolean_value in
+        let convert_boolean_expr = ExpressionConverter2.convert_conditional variable_infos boolean_value in
 
-        let convert_boolean_expr = ExpressionConverter.bool_expression_of_parsed_boolean_expression variable_infos uniformly_typed_bool_expr in
         let convert_if_updates = convert_normal_updates variable_infos if_updates in
         let convert_else_updates = convert_normal_updates variable_infos else_updates in
+
         (convert_boolean_expr, convert_if_updates, convert_else_updates)
     ) conditional_updates in
 
@@ -3338,7 +2994,7 @@ type converted_observer_structure = {
 
 (* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
 let convert_property_option (useful_parsing_model_information : useful_parsing_model_information) (nb_actions : int) (observer_automaton_index_option : automaton_index option) (observer_nosync_index_option : action_index option) (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
-	let constants			= useful_parsing_model_information.constants in
+
 	let index_of_actions	= useful_parsing_model_information.index_of_actions in
 	let index_of_variables	= useful_parsing_model_information.index_of_variables in
 
@@ -3736,18 +3392,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* TYPE CHECKING *)
         let constant = name, expr, var_type in
 
-        (*
-        let converted_expr, expr_type = TypeChecker.check_constant_expression initialized_constants constant in
-        (* Try to get the value *)
-        let value = ParsingStructureUtilities.try_reduce_parsed_global_expression initialized_constants converted_expr in
-        *)
         let typed_expr(*, expr_type *) = ExpressionConverter2.convert_discrete_constant initialized_constants constant in
         let value = DiscreteExpressionEvaluator.try_reduce_global_expression typed_expr in
-        (* TODO benjamin CLEAN comments *)
-(*         Create evaluated constant tuple *)
-(*        let evaluated_constant = name, expr, value, var_type in*)
 
-(*        let name, value = TypeChecker.check_constant_declaration evaluated_constant in*)
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;
         (* Return *)
@@ -3757,8 +3404,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
     (* TYPE CHECKING : CONSTANTS IN DECLARATION *)
-    (* Check type consistency between constant type and value *)
-(*    let constant_tuples = TypeChecker.check_constant_declarations evaluated_constants in*)
     let constant_tuples = evaluated_constants in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

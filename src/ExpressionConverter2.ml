@@ -1263,3 +1263,9 @@ let convert_update variable_infos variable_access expr =
     let typed_variable_access, typed_expr = TypeChecker2.check_update variable_infos variable_access expr in
     variable_access_of_typed_variable_access variable_infos typed_variable_access,
     global_expression_of_typed_global_expression variable_infos typed_expr
+
+let convert_conditional variable_infos expr =
+    (* Check *)
+    let typed_expr = TypeChecker2.check_conditional variable_infos expr in
+    (* Convert *)
+    bool_expression_of_typed_boolean_expression variable_infos typed_expr
