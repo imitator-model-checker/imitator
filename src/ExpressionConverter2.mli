@@ -16,15 +16,15 @@
 
 open ParsingStructure
 open DiscreteExpressions
-(*
-val convert_parsed_global_expression : variable_infos -> ParsingStructure.global_expression -> DiscreteExpressions.global_expression
-val bool_expression_of_parsed_boolean_expression : variable_infos -> ParsingStructure.parsed_boolean_expression -> DiscreteExpressions.boolean_expression
-val bool_expression_of_parsed_discrete_boolean_expression : variable_infos -> ParsingStructure.parsed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
-val int_arithmetic_expression_of_parsed_arithmetic_expression : variable_infos -> ParsingStructure.parsed_discrete_arithmetic_expression -> DiscreteExpressions.int_arithmetic_expression
-val convert_discrete_init : variable_infos -> variable_name -> ParsingStructure.global_expression -> DiscreteExpressions.global_expression
-*)
+
+(** Linear part **)
+
+val linear_term_of_global_expression : variable_infos -> ParsingStructure.global_expression -> LinearConstraint.pxd_linear_term
+(* TODO benjamin replace by variable_infos *)
+val linear_term_of_linear_expression : variable_infos -> ParsingStructure.linear_expression -> LinearConstraint.pxd_linear_term
 val linear_constraint_of_convex_predicate : variable_infos -> ParsingStructure.linear_constraint list -> LinearConstraint.pxd_linear_constraint
 
 val convert_discrete_init3 : variable_infos -> variable_name -> ParsingStructure.global_expression -> DiscreteExpressions.global_expression
 val convert_discrete_constant : constants_table -> variable_name * ParsingStructure.global_expression * DiscreteType.var_type -> DiscreteExpressions.global_expression
 val convert_guard : variable_infos -> ParsingStructure.guard -> AbstractModel.guard
+val convert_update : variable_infos -> variable_access -> ParsingStructure.global_expression -> DiscreteExpressions.discrete_variable_access * DiscreteExpressions.global_expression

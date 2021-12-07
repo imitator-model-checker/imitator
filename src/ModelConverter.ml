@@ -324,29 +324,10 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
   array_of_coef, !constant
 
 
-(*------------------------------------------------------------*)
-(* Convert an array of variable coef into a linear term *)
-(*------------------------------------------------------------*)
-let linear_term_of_array array_of_coef constant =
-  (* Create an empty list of members *)
-  let members = ref [] in
-  (* Iterate on the coef *)
-  Array.iteri (fun variable_index coef ->
-      if NumConst.neq coef NumConst.zero then (
-        (* Add the member *)
-        members := (coef, variable_index) :: !members;
-      );
-    ) array_of_coef;
-  (* Create the linear term *)
-  LinearConstraint.make_pxd_linear_term !members constant
 
 
-(*------------------------------------------------------------*)
-(* Direct conversion of a ParsingStructure.linear_expression into a Parsed_linear_constraint.linear_term *)
-(*------------------------------------------------------------*)
-let linear_term_of_linear_expression index_of_variables constants linear_expression =
-  let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
-  linear_term_of_array array_of_coef constant
+
+
 
 (*
 (*------------------------------------------------------------*)
@@ -1808,7 +1789,7 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
 (* Get all the possible actions for every location of every automaton *)
 (*------------------------------------------------------------*)
 let make_automata (useful_parsing_model_information : useful_parsing_model_information) parsed_automata (with_observer_action : bool) =
-	let constants				= useful_parsing_model_information.constants in
+
 	let index_of_actions		= useful_parsing_model_information.index_of_actions in
 	let index_of_automata		= useful_parsing_model_information.index_of_automata in
 	let index_of_locations		= useful_parsing_model_information.index_of_locations in
@@ -1918,7 +1899,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				| Some cost ->
 					costs.(automaton_index).(location_index) <- Some (
 						LinearConstraint.cast_p_of_pxd_linear_term
-						(linear_term_of_linear_expression index_of_variables constants cost)
+						(ExpressionConverter2.linear_term_of_linear_expression variable_infos cost)
 						true
 					);
 				| None -> ()
@@ -2047,116 +2028,6 @@ let get_conditional_update_value = function
 
 
 
-(*** TODO (though really not critical): try to do some simplifications… ***)
-(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_information pdae =
-
-    let index_of_variables = useful_parsing_model_information.index_of_variables in
-    let constants = useful_parsing_model_information.constants in
-
-	(* Create an array of coef *)
-	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
-	(* Create a zero constant *)
-	let constant = ref NumConst.zero in
-
-	let rec update_coef_array_in_parsed_update_arithmetic_expression mult_factor = function
-		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		(* Update coefficients in the arithmetic expression *)
-		update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
-		(* Update coefficients in the term *)
-		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
-		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		(* Update coefficients in the arithmetic expression *)
-		update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
-		(* Update coefficients in the term: multiply by -1 for negation *)
-		update_coef_array_in_parsed_update_term (NumConst.neg mult_factor) parsed_update_term;
-		| Parsed_DAE_term parsed_update_term ->
-		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
-
-	and update_coef_array_in_parsed_update_term mult_factor = function
-		(* Multiplication is only allowed with a constant multiplier *)
-		| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
-		(* Valuate the term *)
-		let valued_term = ParsingStructureUtilities.try_reduce_parsed_term constants parsed_update_term in
-		let numconst_valued_term = DiscreteValue.numconst_value valued_term in
-		(* Update coefficients *)
-		update_coef_array_in_parsed_update_factor (NumConst.mul numconst_valued_term mult_factor) parsed_update_factor
-
-		| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
-		(* Valuate the discrete factor *)
-		let valued_factor = ParsingStructureUtilities.try_reduce_parsed_factor constants parsed_update_factor in
-		let numconst_valued_factor = DiscreteValue.numconst_value valued_factor in
-		(* Update coefficients *)
-		update_coef_array_in_parsed_update_term (NumConst.div mult_factor numconst_valued_factor) parsed_update_term
-
-		| Parsed_DT_factor parsed_update_factor ->
-		update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
-
-	and update_coef_array_in_parsed_update_factor mult_factor = function
-		| Parsed_DF_variable variable_name ->
-			(* Try to find the variable_index *)
-			if Hashtbl.mem index_of_variables variable_name then (
-				let variable_index = Hashtbl.find index_of_variables variable_name in
-				(* Update the array *)
-				array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (mult_factor);
-				(* Try to find a constant *)
-			) else (
-				if Hashtbl.mem constants variable_name then (
-				(* Retrieve the value of the global constant *)
-				let value = Hashtbl.find constants variable_name in
-				let numconst_value = numconst_value_or_fail value in
-				(* Update the constant *)
-				constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
-				) else (
-				raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'update_coef_array_in_parsed_update_factor' although this should have been checked before."))
-				)
-			)
-		| Parsed_DF_constant var_value ->
-            (* Update the constant *)
-            let numconst_value = numconst_value_or_fail var_value in
-            constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
-		| Parsed_DF_unary_min parsed_discrete_factor ->
-			update_coef_array_in_parsed_update_factor mult_factor parsed_discrete_factor
-		| Parsed_DF_expression parsed_update_arithmetic_expression ->
-            update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
-		| _ as factor ->
-            raise (InternalError ("Use of " ^ ParsingStructureUtilities.label_of_parsed_factor_constructor factor ^ " is forbidden in linear term, something failed before."))
-	in
-
-	(* Call the recursive function updating the coefficients *)
-	update_coef_array_in_parsed_update_arithmetic_expression NumConst.one pdae;
-
-	(* Create the linear term *)
-	linear_term_of_array array_of_coef !constant
-
-let linear_term_of_parsed_discrete_boolean_expression useful_parsing_model_information = function
-    | Parsed_arithmetic_expression expr -> linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_information expr
-
-    | _ as expr ->
-        (* Should never happen because expression should was already type checked *)
-        raise (
-            InternalError (
-                "Impossible to convert boolean expression \""
-                ^ ParsingStructureUtilities.string_of_parsed_discrete_boolean_expression useful_parsing_model_information expr
-                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed"
-            )
-        )
-
-let linear_term_of_parsed_boolean_expression useful_parsing_model_information = function
-    | Parsed_Discrete_boolean_expression expr -> linear_term_of_parsed_discrete_boolean_expression useful_parsing_model_information expr
-
-    | _ as expr ->
-        (* Should never happen because expression should was already type checked *)
-        raise (
-            InternalError (
-                "Impossible to convert boolean expression \""
-                ^ ParsingStructureUtilities.string_of_parsed_boolean_expression useful_parsing_model_information expr
-                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed"
-            )
-        )
-
-let linear_term_of_global_expression useful_parsing_model_information = function
-    | Parsed_global_expression expr -> linear_term_of_parsed_boolean_expression useful_parsing_model_information expr
 
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filtered_updates removed_variable_names updates =
@@ -2175,33 +2046,16 @@ let filtered_updates removed_variable_names updates =
     ) [] updates
 
 
-(** Translate a parsed discrete update into its abstract model *)
-let to_abstract_discrete_update variable_infos (variable_access, parsed_update_expression) =
 
-    let rec to_abstract_variable_access = function
-        | Variable_name variable_name ->
-            let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-            Discrete_variable_index variable_index
-        | Variable_access (variable_access, index_expr) ->
-            Discrete_variable_access (
-                to_abstract_variable_access variable_access,
-                ExpressionConverter.int_arithmetic_expression_of_parsed_arithmetic_expression variable_infos index_expr
-            )
-    in
-
-    (* Convert *)
-    let abstract_variable_access = to_abstract_variable_access variable_access in
-    let global_expression = ExpressionConverter.convert_parsed_global_expression variable_infos parsed_update_expression in
-    (abstract_variable_access, global_expression)
 
 (** Translate a parsed clock update into its abstract model *)
 let to_abstract_clock_update variable_infos only_resets updates_list =
 
   (** Translate parsed clock update into the tuple clock_index, linear_term *)
-  let to_intermediate_abstract_clock_update (variable_access, parsed_update_expression) =
+  let to_intermediate_abstract_clock_update (variable_access, update_expr) =
     let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-    let linear_term = linear_term_of_global_expression variable_infos parsed_update_expression in
+    let linear_term = ExpressionConverter2.linear_term_of_global_expression variable_infos update_expr in
     (variable_index, linear_term)
   in
 
@@ -2213,7 +2067,7 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
     if converted_clock_updates = [] then No_update
     else (
       (* Case 2: resets only *)
-      if !only_resets then (
+      if only_resets then (
         (* Keep only the clock ids, not the linear terms *)
         let clocks_to_reset, _ = List.split converted_clock_updates in
         Resets (List.rev clocks_to_reset)
@@ -2226,19 +2080,24 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
   (** abstract clock updates *)
   clock_updates
 
+(* Check if there is only resets in an update list *)
+let is_only_resets updates =
+    List.for_all (fun (_, update) ->
+        ParsingStructureUtilities.exists_in_parsed_global_expression (function
+            | Leaf_variable _ -> false
+            | Leaf_constant value -> DiscreteValue.is_zero value
+        ) update
+    ) updates
+
 (** Split normal updates into clock, discrete updates *)
-let split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates =
+let split_to_clock_discrete_updates variable_infos updates =
   (** Check if a normal update is a clock update *)
   let is_clock_update (variable_access, parsed_update_expression) =
 
     let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     (* Retrieve variable type *)
-    if type_of_variables (Hashtbl.find index_of_variables variable_name) = DiscreteType.Var_type_clock then (
-      (* Update flag *)
-      if parsed_update_expression <> Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant DiscreteValue.rational_zero))))) then (
-        only_resets := false;
-      );
-      true
+    if variable_infos.type_of_variables (Hashtbl.find variable_infos.index_of_variables variable_name) = DiscreteType.Var_type_clock then (
+        true
     ) else
       false
   in
@@ -2247,32 +2106,21 @@ let split_to_clock_discrete_updates index_of_variables only_resets type_of_varia
 (** Translate a normal parsed update into its abstract model *)
 let convert_normal_updates variable_infos updates_list =
 
-    (* Extract values from model infos *)
-    let index_of_variables, type_of_variables, constants =
-        variable_infos.index_of_variables, variable_infos.type_of_variables,
-        variable_infos.constants in
-
-    (* TYPE CHECK / RESOLVE *)
-    let converted_updates_list = List.map (fun (variable_name, expr) ->
-        TypeChecker.check_update variable_infos variable_name expr
-    ) updates_list in
-
 	(* Flag to check if there are clock resets only to 0 *)
-	let only_resets = ref true in
+    let only_resets = is_only_resets updates_list in
 
-	(** split clock and discrete updates *)
-	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates index_of_variables only_resets type_of_variables converted_updates_list in
+	(** Split clocks and discrete updates *)
+	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates variable_infos updates_list in
 
-	(* Convert the discrete updates *)
-	let discrete_updates : discrete_update list = List.map (to_abstract_discrete_update variable_infos) parsed_discrete_updates in
-
-	(* Convert the clock updates *)
-	let converted_clock_updates : clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
+    (* Convert discrete udpates *)
+    let converted_discrete_updates = List.map (fun (variable_access, expr) -> ExpressionConverter2.convert_update variable_infos variable_access expr) parsed_discrete_updates in
+    (* Convert continuous udpates *)
+    let converted_clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
 
 	(** update abstract model *)
 	{
 		clock = converted_clock_updates;
-		discrete = discrete_updates;
+		discrete = converted_discrete_updates;
 		conditional = [];
 	}
 
@@ -3740,7 +3588,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			let action_index_of_action_name action_name = try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Action `" ^ action_name ^ "` not found in HashTable `index_of_actions` when defining function `action_index_of_action_name`, althoug this should have been checked before.")) in
 			
 			(* Create the function converting a ParsingStructure.parsed_duration into a LinearConstraint.p_linear_term *)
-			let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants parsed_duration) true in
+			let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (ExpressionConverter2.linear_term_of_linear_expression variable_infos parsed_duration) true in
 			
 			(* Get the info from the observer pattern *)
 			let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, abstract_property =

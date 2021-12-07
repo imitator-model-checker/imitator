@@ -97,6 +97,8 @@ val array_value : discrete_value -> discrete_value array
 (* Get list value of discrete value *)
 val list_value : discrete_value -> discrete_value list
 
+val is_zero : discrete_value -> bool
+
 (* Convert any discrete value to NumConst.t value, if possible *)
 val to_numconst_value : discrete_value -> NumConst.t
 (* Convert any discrete value to Int32 value, if possible *)

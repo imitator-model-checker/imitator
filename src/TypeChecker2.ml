@@ -44,7 +44,12 @@ and typed_discrete_factor =
     | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * var_type_discrete
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
 
+type typed_variable_access =
+    | Typed_variable_name of variable_name * var_type_discrete
+    | Typed_variable_access of typed_variable_access * typed_discrete_arithmetic_expression * var_type_discrete
+
 type typed_guard = typed_discrete_boolean_expression list
+
 
 let type_of_typed_global_expression = function
     | Typed_global_expr (_, discrete_type) -> discrete_type
@@ -82,6 +87,9 @@ let type_of_typed_discrete_factor = function
     | Typed_access (_, _, discrete_type (* inner type *), _)
 	| Typed_function_call (_, _, discrete_type) -> discrete_type
 
+let type_of_typed_variable_access = function
+    | Typed_variable_name (_, discrete_type)
+    | Typed_variable_access (_, _, discrete_type) -> discrete_type
 
 let string_format_typed_node str_node discrete_type =
     "{" ^ str_node ^ ":" ^ string_of_var_type_discrete discrete_type ^ "}"
@@ -647,6 +655,10 @@ and type_check_parsed_discrete_factor3 variable_infos = function
 
 
 
+
+
+
+
 let rec convert_typed_global_expression target_type = function
     | Typed_global_expr (expr, discrete_type) ->
         let target_type = default_type_if_needed (greater_defined discrete_type target_type) in
@@ -882,7 +894,30 @@ and convert_typed_discrete_factor target_type = function
 
 
 
+let rec type_check_variable_access variable_infos = function
+    | Variable_name variable_name ->
+        (* Get assigned variable type *)
+        let var_type = get_type_of_variable_by_name variable_infos variable_name in
+        let discrete_type = discrete_type_of_var_type var_type in
+        Typed_variable_name (variable_name, discrete_type)
 
+    | Variable_access (variable_access, index_expr) ->
+
+        let typed_variable_access = type_check_variable_access variable_infos variable_access in
+        let typed_index_expr_type = type_check_parsed_discrete_arithmetic_expression3 variable_infos index_expr in
+
+        let converted_index_expr_type = convert_typed_discrete_arithmetic_expression (Var_type_discrete_number Var_type_discrete_int) typed_index_expr_type in
+
+        let discrete_type = type_of_typed_variable_access typed_variable_access in
+
+        (* Check is an array *)
+        let discrete_type =
+            match discrete_type with
+            | Var_type_discrete_array (inner_type, _)
+            | Var_type_discrete_list inner_type -> inner_type
+            | _ -> raise (TypeError "Trying to make an access to a non-array or a non-list variable")
+        in
+        Typed_variable_access (typed_variable_access, converted_index_expr_type, discrete_type)
 
 
 
@@ -988,3 +1023,44 @@ let check_nonlinear_constraint variable_infos nonlinear_constraint =
 (* return a tuple containing the expression uniformly typed and the resolved type of the expression *)
 let check_guard variable_infos =
     List.map (check_nonlinear_constraint variable_infos)
+
+
+
+
+
+(* Type check an update *)
+let check_update variable_infos variable_access expr =
+
+    print_message Verbose_high "----------";
+    print_message Verbose_high ("Infer update expression: " ^ string_of_parsed_global_expression variable_infos expr);
+
+    (* Resolve typed expression *)
+    let typed_expr = type_check_global_expression3 variable_infos expr in
+    let expr_type = type_of_typed_global_expression typed_expr in
+
+    (* Get assigned variable name *)
+    let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+    (* Get assigned variable type *)
+    let var_type = get_type_of_variable_by_name variable_infos variable_name in
+    let var_type_discrete = DiscreteType.discrete_type_of_var_type var_type in
+
+    let typed_variable_access = type_check_variable_access variable_infos variable_access in
+    let l_value_type = type_of_typed_variable_access typed_variable_access in
+
+    (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
+     if not (DiscreteType.is_discrete_type_compatibles l_value_type expr_type) then (
+        raise (TypeError (
+            "Variable `"
+            ^ variable_name
+            ^ "` of type "
+            ^ (DiscreteType.string_of_var_type var_type)
+            ^ " is not compatible with expression `"
+            ^ (ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr)
+            ^ "` of type "
+            ^ (DiscreteType.string_of_var_type_discrete expr_type)
+            )
+        )
+    );
+
+    typed_variable_access,
+    convert_typed_global_expression l_value_type typed_expr

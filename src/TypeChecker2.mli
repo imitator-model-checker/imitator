@@ -36,6 +36,10 @@ and typed_discrete_factor =
     | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * var_type_discrete
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
 
+type typed_variable_access =
+    | Typed_variable_name of variable_name * var_type_discrete
+    | Typed_variable_access of typed_variable_access * typed_discrete_arithmetic_expression * var_type_discrete
+
 type typed_guard = typed_discrete_boolean_expression list
 
 val string_of_typed_global_expression : variable_infos -> typed_global_expression -> string
@@ -51,3 +55,5 @@ val check_discrete_init3 : variable_infos -> variable_name -> global_expression 
 val check_constant_expression : variable_infos -> variable_name * global_expression * DiscreteType.var_type -> typed_global_expression
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
+
+val check_update : variable_infos -> variable_access -> ParsingStructure.global_expression -> typed_variable_access * typed_global_expression

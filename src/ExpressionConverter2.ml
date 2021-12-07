@@ -52,6 +52,288 @@ let convert_parsed_relop = function
 	| PARSED_OP_G -> OP_G
 
 
+(*------------------------------------------------------------*)
+(* Convert an array of variable coef into a linear term *)
+(*------------------------------------------------------------*)
+let linear_term_of_array array_of_coef constant =
+  (* Create an empty list of members *)
+  let members = ref [] in
+  (* Iterate on the coef *)
+  Array.iteri (fun variable_index coef ->
+      if NumConst.neq coef NumConst.zero then (
+        (* Add the member *)
+        members := (coef, variable_index) :: !members;
+      );
+    ) array_of_coef;
+  (* Create the linear term *)
+  LinearConstraint.make_pxd_linear_term !members constant
+
+
+(*------------------------------------------------------------*)
+(* Convert a ParsingStructure.linear_expression into an array of coef and constant *)
+(*------------------------------------------------------------*)
+let array_of_coef_of_linear_expression index_of_variables constants linear_expression =
+  (* Create an array of coef *)
+  let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
+  (* Create a zero constant *)
+  let constant = ref NumConst.zero in
+
+  (* Internal function to update the array for a linear term *)
+  let update_array_linear_term mul_coef = function
+    (* Case constant -> update the constant with the coef *)
+    | Constant c -> constant := NumConst.add !constant (NumConst.mul c mul_coef);
+      (* Case variables -> update the array with the coef  *)
+    | Variable (coef, variable_name) ->
+      (* Try to find the variable_index *)
+      if Hashtbl.mem index_of_variables variable_name then (
+        let variable_index = Hashtbl.find index_of_variables variable_name in
+        (* Update the variable with its coef *)
+        array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (NumConst.mul coef mul_coef);
+        (* Try to find a constant *)
+      ) else (
+        if Hashtbl.mem constants variable_name then (
+          (* Retrieve the value of the global constant *)
+          let value = Hashtbl.find constants variable_name in
+          let numconst_value = DiscreteValue.to_numconst_value value in
+          (* Update the NumConst *)
+          constant := NumConst.add !constant (NumConst.mul (NumConst.mul numconst_value coef) mul_coef);
+        ) else (
+          raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
+        )
+      );
+  in
+
+  (* Internal function to update the array for a linear expression *)
+  let rec update_array_linear_expression = function
+    | Linear_term lt -> update_array_linear_term NumConst.one lt
+    | Linear_plus_expression (le, lt) ->
+      (* Fill the array with le *)
+      update_array_linear_expression le;
+      (* Fill the array with lt *)
+      update_array_linear_term NumConst.one lt;
+    | Linear_minus_expression (le, lt) ->
+      (* Fill the array with le *)
+      update_array_linear_expression le;
+      (* Fill the array with lt *)
+      update_array_linear_term NumConst.minus_one lt;
+  in
+  (* Call the recursive function *)
+  update_array_linear_expression linear_expression;
+  (* Return the array of coef and the constant *)
+  array_of_coef, !constant
+
+(*------------------------------------------------------------*)
+(* Convert a ParsingStructure.linear_constraint into a Constraint.linear_inequality *)
+(*------------------------------------------------------------*)
+let linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2) =
+    (* Get the array of variables and constant associated to the linear terms *)
+    let array1, constant1 = array_of_coef_of_linear_expression index_of_variables constants linexpr1 in
+    let array2, constant2 = array_of_coef_of_linear_expression index_of_variables constants linexpr2 in
+    (* Consider the operator *)
+    match relop with
+    (* a < b <=> b - a > 0 *)
+    | PARSED_OP_L ->
+        (* Create the array *)
+        let array12 = OCamlUtilities.sub_array array2 array1 in
+        (* Create the constant *)
+        let constant12 = NumConst.sub constant2 constant1 in
+        (* Create the linear_term *)
+        let linear_term = linear_term_of_array array12 constant12 in
+        (* Return the linear_inequality *)
+        LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
+        (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_g *)
+
+    (* a <= b <=> b - a >= 0 *)
+    | PARSED_OP_LEQ ->
+        (* Create the array *)
+        let array12 = OCamlUtilities.sub_array array2 array1 in
+        (* Create the constant *)
+        let constant12 = NumConst.sub constant2 constant1 in
+        (* Create the linear_term *)
+        let linear_term = linear_term_of_array array12 constant12 in
+        (* Return the linear_inequality *)
+        LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
+        (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_ge *)
+
+    (* a = b <=> b - a = 0 *)
+    | PARSED_OP_EQ ->
+        (* Create the array *)
+        let array12 = OCamlUtilities.sub_array array2 array1 in
+        (* Create the constant *)
+        let constant12 = NumConst.sub constant2 constant1 in
+        (* Create the linear_term *)
+        let linear_term = linear_term_of_array array12 constant12 in
+        (* Return the linear_inequality *)
+        LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
+
+        (* 	(Constraint.substract_linear_terms lt1 lt2), Constraint.Op_eq *)
+
+    (* a >= b <=> a - b >= 0 *)
+    | PARSED_OP_GEQ ->
+        (* Create the array *)
+        let array12 = OCamlUtilities.sub_array array1 array2 in
+        (* Create the constant *)
+        let constant12 = NumConst.sub constant1 constant2 in
+        (* Create the linear_term *)
+        let linear_term = linear_term_of_array array12 constant12 in
+        (* Return the linear_inequality *)
+        LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
+        (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_ge *)
+
+    (* a > b <=> a - b > 0 *)
+    | PARSED_OP_G ->
+        (* Create the array *)
+        let array12 = OCamlUtilities.sub_array array1 array2 in
+        (* Create the constant *)
+        let constant12 = NumConst.sub constant1 constant2 in
+        (* Create the linear_term *)
+        let linear_term = linear_term_of_array array12 constant12 in
+        (* Return the linear_inequality *)
+        LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
+        (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_g *)
+
+    | PARSED_OP_NEQ ->
+        raise (InternalError("Inequality <> not yet supported"))
+
+(*------------------------------------------------------------*)
+(* Convert a ParsingStructure.convex_predicate into a Constraint.linear_constraint *)
+(*------------------------------------------------------------*)
+let linear_constraint_of_convex_predicate variable_infos convex_predicate : LinearConstraint.pxd_linear_constraint =
+  try (
+    (* Compute a list of inequalities *)
+    let linear_inequalities = List.fold_left
+        (fun linear_inequalities linear_inequality ->
+           match linear_inequality with
+           | Parsed_true_constraint -> linear_inequalities
+           | Parsed_false_constraint -> raise False_exception
+           | Parsed_linear_constraint (linexpr1, relop, linexpr2) -> (linear_inequality_of_linear_constraint variable_infos.index_of_variables variable_infos.constants (linexpr1, relop, linexpr2)) :: linear_inequalities
+        ) [] convex_predicate
+    in LinearConstraint.make_pxd_constraint linear_inequalities
+    (* Stop if any false constraint is found *)
+  ) with False_exception -> LinearConstraint.pxd_false_constraint ()
+
+(*------------------------------------------------------------*)
+(* Direct conversion of a ParsingStructure.linear_expression into a Parsed_linear_constraint.linear_term *)
+(*------------------------------------------------------------*)
+let linear_term_of_linear_expression variable_infos linear_expression =
+    let index_of_variables = variable_infos.index_of_variables in
+    let constants = variable_infos.constants in
+
+    let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
+    linear_term_of_array array_of_coef constant
+
+(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let linear_term_of_parsed_update_arithmetic_expression variable_infos pdae =
+
+    let index_of_variables = variable_infos.index_of_variables in
+    let constants = variable_infos.constants in
+
+	(* Create an array of coef *)
+	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
+	(* Create a zero constant *)
+	let constant = ref NumConst.zero in
+
+	let rec update_coef_array_in_parsed_update_arithmetic_expression mult_factor = function
+		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		(* Update coefficients in the arithmetic expression *)
+		update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
+		(* Update coefficients in the term *)
+		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
+		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		(* Update coefficients in the arithmetic expression *)
+		update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
+		(* Update coefficients in the term: multiply by -1 for negation *)
+		update_coef_array_in_parsed_update_term (NumConst.neg mult_factor) parsed_update_term;
+		| Parsed_DAE_term parsed_update_term ->
+		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
+
+	and update_coef_array_in_parsed_update_term mult_factor = function
+		(* Multiplication is only allowed with a constant multiplier *)
+		| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
+		(* Valuate the term *)
+		let valued_term = ParsingStructureUtilities.try_reduce_parsed_term constants parsed_update_term in
+		let numconst_valued_term = DiscreteValue.to_numconst_value valued_term in
+		(* Update coefficients *)
+		update_coef_array_in_parsed_update_factor (NumConst.mul numconst_valued_term mult_factor) parsed_update_factor
+
+		| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
+		(* Valuate the discrete factor *)
+		let valued_factor = ParsingStructureUtilities.try_reduce_parsed_factor constants parsed_update_factor in
+		let numconst_valued_factor = DiscreteValue.to_numconst_value valued_factor in
+		(* Update coefficients *)
+		update_coef_array_in_parsed_update_term (NumConst.div mult_factor numconst_valued_factor) parsed_update_term
+
+		| Parsed_DT_factor parsed_update_factor ->
+		update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
+
+	and update_coef_array_in_parsed_update_factor mult_factor = function
+		| Parsed_DF_variable variable_name ->
+			(* Try to find the variable_index *)
+			if Hashtbl.mem index_of_variables variable_name then (
+				let variable_index = Hashtbl.find index_of_variables variable_name in
+				(* Update the array *)
+				array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (mult_factor);
+				(* Try to find a constant *)
+			) else (
+				if Hashtbl.mem constants variable_name then (
+				(* Retrieve the value of the global constant *)
+				let value = Hashtbl.find constants variable_name in
+				let numconst_value = DiscreteValue.to_numconst_value value in
+				(* Update the constant *)
+				constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
+				) else (
+				raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'update_coef_array_in_parsed_update_factor' although this should have been checked before."))
+				)
+			)
+		| Parsed_DF_constant var_value ->
+            (* Update the constant *)
+            let numconst_value = DiscreteValue.to_numconst_value var_value in
+            constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
+		| Parsed_DF_unary_min parsed_discrete_factor ->
+			update_coef_array_in_parsed_update_factor mult_factor parsed_discrete_factor
+		| Parsed_DF_expression parsed_update_arithmetic_expression ->
+            update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
+		| _ as factor ->
+            raise (InternalError ("Use of " ^ ParsingStructureUtilities.label_of_parsed_factor_constructor factor ^ " is forbidden in linear term, something failed before."))
+	in
+
+	(* Call the recursive function updating the coefficients *)
+	update_coef_array_in_parsed_update_arithmetic_expression NumConst.one pdae;
+
+	(* Create the linear term *)
+	linear_term_of_array array_of_coef !constant
+
+let linear_term_of_parsed_discrete_boolean_expression variable_infos = function
+    | Parsed_arithmetic_expression expr ->
+        linear_term_of_parsed_update_arithmetic_expression variable_infos expr
+    | expr ->
+        raise (
+            InternalError (
+                "Impossible to convert boolean expression \""
+                ^ ParsingStructureUtilities.string_of_parsed_discrete_boolean_expression variable_infos expr
+                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed"
+            )
+        )
+
+let linear_term_of_parsed_boolean_expression variable_infos = function
+    | Parsed_Discrete_boolean_expression expr ->
+        linear_term_of_parsed_discrete_boolean_expression variable_infos expr
+    | _ as expr ->
+        raise (
+            InternalError (
+                "Impossible to convert boolean expression \""
+                ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr
+                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed"
+            )
+        )
+
+let linear_term_of_global_expression variable_infos = function
+    | Parsed_global_expression expr ->
+        linear_term_of_parsed_boolean_expression variable_infos expr
+
+
+(* Convert discrete expressions *)
+
 let rec global_expression_of_typed_global_expression variable_infos = function
     | Typed_global_expr (expr, discrete_type) ->
         global_expression_of_typed_boolean_expression variable_infos expr discrete_type
@@ -846,10 +1128,21 @@ and expression_access_type_of_typed_factor variable_infos factor =
         )
     *)
 
-
-
 let nonlinear_constraint_of_typed_nonlinear_constraint = bool_expression_of_typed_discrete_boolean_expression
 
+let rec variable_access_of_typed_variable_access variable_infos = function
+    | Typed_variable_name (variable_name, discrete_type) ->
+        let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+        (match variable_kind with
+        | Constant_kind value -> raise (InternalError "Unable to set a constant expression")
+        | Variable_kind discrete_index -> Discrete_variable_index discrete_index
+        )
+
+    | Typed_variable_access (variable_access, index_expr, discrete_type) ->
+        Discrete_variable_access (
+            variable_access_of_typed_variable_access variable_infos variable_access,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+        )
 
 
 let convert_discrete_init3 variable_infos variable_name expr =
@@ -874,164 +1167,7 @@ let convert_discrete_constant initialized_constants (name, expr, var_type) =
     let typed_expr = TypeChecker2.check_constant_expression variable_infos (name, expr, var_type) in
     global_expression_of_typed_global_expression variable_infos typed_expr
 
-(*------------------------------------------------------------*)
-(* Convert an array of variable coef into a linear term *)
-(*------------------------------------------------------------*)
-let linear_term_of_array array_of_coef constant =
-  (* Create an empty list of members *)
-  let members = ref [] in
-  (* Iterate on the coef *)
-  Array.iteri (fun variable_index coef ->
-      if NumConst.neq coef NumConst.zero then (
-        (* Add the member *)
-        members := (coef, variable_index) :: !members;
-      );
-    ) array_of_coef;
-  (* Create the linear term *)
-  LinearConstraint.make_pxd_linear_term !members constant
 
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.linear_expression into an array of coef and constant *)
-(*------------------------------------------------------------*)
-let array_of_coef_of_linear_expression index_of_variables constants linear_expression =
-  (* Create an array of coef *)
-  let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
-  (* Create a zero constant *)
-  let constant = ref NumConst.zero in
-
-  (* Internal function to update the array for a linear term *)
-  let update_array_linear_term mul_coef = function
-    (* Case constant -> update the constant with the coef *)
-    | Constant c -> constant := NumConst.add !constant (NumConst.mul c mul_coef);
-      (* Case variables -> update the array with the coef  *)
-    | Variable (coef, variable_name) ->
-      (* Try to find the variable_index *)
-      if Hashtbl.mem index_of_variables variable_name then (
-        let variable_index = Hashtbl.find index_of_variables variable_name in
-        (* Update the variable with its coef *)
-        array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (NumConst.mul coef mul_coef);
-        (* Try to find a constant *)
-      ) else (
-        if Hashtbl.mem constants variable_name then (
-          (* Retrieve the value of the global constant *)
-          let value = Hashtbl.find constants variable_name in
-          let numconst_value = DiscreteValue.numconst_value value in
-          (* Update the NumConst *)
-          constant := NumConst.add !constant (NumConst.mul (NumConst.mul numconst_value coef) mul_coef);
-        ) else (
-          raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
-        )
-      );
-  in
-
-  (* Internal function to update the array for a linear expression *)
-  let rec update_array_linear_expression = function
-    | Linear_term lt -> update_array_linear_term NumConst.one lt
-    | Linear_plus_expression (le, lt) ->
-      (* Fill the array with le *)
-      update_array_linear_expression le;
-      (* Fill the array with lt *)
-      update_array_linear_term NumConst.one lt;
-    | Linear_minus_expression (le, lt) ->
-      (* Fill the array with le *)
-      update_array_linear_expression le;
-      (* Fill the array with lt *)
-      update_array_linear_term NumConst.minus_one lt;
-  in
-  (* Call the recursive function *)
-  update_array_linear_expression linear_expression;
-  (* Return the array of coef and the constant *)
-  array_of_coef, !constant
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.linear_constraint into a Constraint.linear_inequality *)
-(*------------------------------------------------------------*)
-let linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2) =
-    (* Get the array of variables and constant associated to the linear terms *)
-    let array1, constant1 = array_of_coef_of_linear_expression index_of_variables constants linexpr1 in
-    let array2, constant2 = array_of_coef_of_linear_expression index_of_variables constants linexpr2 in
-    (* Consider the operator *)
-    match relop with
-    (* a < b <=> b - a > 0 *)
-    | PARSED_OP_L ->
-        (* Create the array *)
-        let array12 = OCamlUtilities.sub_array array2 array1 in
-        (* Create the constant *)
-        let constant12 = NumConst.sub constant2 constant1 in
-        (* Create the linear_term *)
-        let linear_term = linear_term_of_array array12 constant12 in
-        (* Return the linear_inequality *)
-        LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
-        (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_g *)
-
-    (* a <= b <=> b - a >= 0 *)
-    | PARSED_OP_LEQ ->
-        (* Create the array *)
-        let array12 = OCamlUtilities.sub_array array2 array1 in
-        (* Create the constant *)
-        let constant12 = NumConst.sub constant2 constant1 in
-        (* Create the linear_term *)
-        let linear_term = linear_term_of_array array12 constant12 in
-        (* Return the linear_inequality *)
-        LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
-        (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_ge *)
-
-    (* a = b <=> b - a = 0 *)
-    | PARSED_OP_EQ ->
-        (* Create the array *)
-        let array12 = OCamlUtilities.sub_array array2 array1 in
-        (* Create the constant *)
-        let constant12 = NumConst.sub constant2 constant1 in
-        (* Create the linear_term *)
-        let linear_term = linear_term_of_array array12 constant12 in
-        (* Return the linear_inequality *)
-        LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
-
-        (* 	(Constraint.substract_linear_terms lt1 lt2), Constraint.Op_eq *)
-
-    (* a >= b <=> a - b >= 0 *)
-    | PARSED_OP_GEQ ->
-        (* Create the array *)
-        let array12 = OCamlUtilities.sub_array array1 array2 in
-        (* Create the constant *)
-        let constant12 = NumConst.sub constant1 constant2 in
-        (* Create the linear_term *)
-        let linear_term = linear_term_of_array array12 constant12 in
-        (* Return the linear_inequality *)
-        LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
-        (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_ge *)
-
-    (* a > b <=> a - b > 0 *)
-    | PARSED_OP_G ->
-        (* Create the array *)
-        let array12 = OCamlUtilities.sub_array array1 array2 in
-        (* Create the constant *)
-        let constant12 = NumConst.sub constant1 constant2 in
-        (* Create the linear_term *)
-        let linear_term = linear_term_of_array array12 constant12 in
-        (* Return the linear_inequality *)
-        LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
-        (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_g *)
-
-    | PARSED_OP_NEQ ->
-        raise (InternalError("Inequality <> not yet supported"))
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.convex_predicate into a Constraint.linear_constraint *)
-(*------------------------------------------------------------*)
-let linear_constraint_of_convex_predicate variable_infos convex_predicate : LinearConstraint.pxd_linear_constraint =
-  try (
-    (* Compute a list of inequalities *)
-    let linear_inequalities = List.fold_left
-        (fun linear_inequalities linear_inequality ->
-           match linear_inequality with
-           | Parsed_true_constraint -> linear_inequalities
-           | Parsed_false_constraint -> raise False_exception
-           | Parsed_linear_constraint (linexpr1, relop, linexpr2) -> (linear_inequality_of_linear_constraint variable_infos.index_of_variables variable_infos.constants (linexpr1, relop, linexpr2)) :: linear_inequalities
-        ) [] convex_predicate
-    in LinearConstraint.make_pxd_constraint linear_inequalities
-    (* Stop if any false constraint is found *)
-  ) with False_exception -> LinearConstraint.pxd_false_constraint ()
 
 (*------------------------------------------------------------*)
 (* Convert a guard *)
@@ -1122,3 +1258,8 @@ let convert_guard variable_infos guard_convex_predicate =
 
     (* If some false construct found: false guard *)
     ) with False_exception -> False_guard
+
+let convert_update variable_infos variable_access expr =
+    let typed_variable_access, typed_expr = TypeChecker2.check_update variable_infos variable_access expr in
+    variable_access_of_typed_variable_access variable_infos typed_variable_access,
+    global_expression_of_typed_global_expression variable_infos typed_expr

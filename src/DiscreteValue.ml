@@ -173,6 +173,12 @@ let bool_value_false = default_bool
 (* Get true value of Bool_value *)
 let bool_value_true = Bool_value true
 
+let is_zero = function
+    | Number_value value
+    | Rational_value value -> value = NumConst.zero
+    | Int_value value -> value = Int32.zero
+    | value -> false
+
 (** Convert values  **)
 
 (* Get NumConst.t value of rational discrete value *)
