@@ -48,6 +48,30 @@ type typed_variable_access =
     | Typed_variable_name of variable_name * var_type_discrete
     | Typed_variable_access of typed_variable_access * typed_discrete_arithmetic_expression * var_type_discrete
 
+type typed_loc_predicate =
+	| Typed_loc_predicate_EQ of automaton_name * location_name
+	| Typed_loc_predicate_NEQ of automaton_name * location_name
+
+type typed_simple_predicate =
+	| Typed_discrete_boolean_expression of typed_discrete_boolean_expression * var_type_discrete
+	| Typed_loc_predicate of typed_loc_predicate
+	| Typed_state_predicate_true
+	| Typed_state_predicate_false
+	| Typed_state_predicate_accepting
+
+type typed_state_predicate_factor =
+	| Typed_state_predicate_factor_NOT of typed_state_predicate_factor
+	| Typed_simple_predicate of typed_simple_predicate * var_type_discrete
+	| Typed_state_predicate of typed_state_predicate * var_type_discrete
+
+and typed_state_predicate_term =
+	| Typed_state_predicate_term_AND of typed_state_predicate_term * typed_state_predicate_term
+	| Typed_state_predicate_factor of typed_state_predicate_factor * var_type_discrete
+
+and typed_state_predicate =
+	| Typed_state_predicate_OR of typed_state_predicate * typed_state_predicate
+	| Typed_state_predicate_term of typed_state_predicate_term * var_type_discrete
+
 type typed_guard = typed_discrete_boolean_expression list
 
 
@@ -90,6 +114,31 @@ let type_of_typed_discrete_factor = function
 let type_of_typed_variable_access = function
     | Typed_variable_name (_, discrete_type)
     | Typed_variable_access (_, _, discrete_type) -> discrete_type
+
+
+let type_of_typed_loc_predicate = Var_type_discrete_bool
+
+let type_of_typed_simple_predicate = function
+	| Typed_discrete_boolean_expression (_, discrete_type) -> discrete_type
+	| Typed_loc_predicate _
+	| Typed_state_predicate_true
+	| Typed_state_predicate_false
+	| Typed_state_predicate_accepting -> Var_type_discrete_bool
+
+let type_of_typed_state_predicate_factor = function
+	| Typed_simple_predicate (_, discrete_type)
+	| Typed_state_predicate (_, discrete_type) -> discrete_type
+	| Typed_state_predicate_factor_NOT _ -> Var_type_discrete_bool
+
+let type_of_typed_state_predicate_term = function
+	| Typed_state_predicate_term_AND _ -> Var_type_discrete_bool
+	| Typed_state_predicate_factor (_, discrete_type) -> discrete_type
+
+let type_of_typed_state_predicate = function
+	| Typed_state_predicate_OR _ -> Var_type_discrete_bool
+	| Typed_state_predicate_term (_, discrete_type) -> discrete_type
+
+(** Strings **)
 
 let string_format_typed_node str_node discrete_type =
     "{" ^ str_node ^ ":" ^ string_of_var_type_discrete discrete_type ^ "}"
@@ -888,12 +937,6 @@ and convert_typed_discrete_factor target_type = function
 	        target_type
 	    )
 
-
-
-
-
-
-
 let rec type_check_variable_access variable_infos = function
     | Variable_name variable_name ->
         (* Get assigned variable type *)
@@ -919,7 +962,84 @@ let rec type_check_variable_access variable_infos = function
         in
         Typed_variable_access (typed_variable_access, converted_index_expr_type, discrete_type)
 
+let type_check_parsed_loc_predicate variable_infos = function
+	| Parsed_loc_predicate_EQ (automaton_name, loc_name) -> Typed_loc_predicate_EQ (automaton_name, loc_name)
+	| Parsed_loc_predicate_NEQ (automaton_name, loc_name) -> Typed_loc_predicate_NEQ (automaton_name, loc_name)
 
+let rec type_check_parsed_simple_predicate variable_infos = function
+	| Parsed_discrete_boolean_expression expr ->
+	    let typed_expr = type_check_parsed_discrete_boolean_expression3 variable_infos expr in
+        let discrete_type = type_of_typed_discrete_boolean_expression typed_expr in
+
+        if not (DiscreteType.is_discrete_type_bool_type discrete_type) then (
+            raise (TypeError (
+                "Expression `"
+                ^ string_of_parsed_discrete_boolean_expression variable_infos expr
+                ^ "` in property, is not a boolean expression: "
+                ^ DiscreteType.string_of_var_type_discrete discrete_type
+            ))
+        )
+        else
+	        Typed_discrete_boolean_expression (typed_expr, discrete_type)
+
+	| Parsed_loc_predicate predicate ->
+	    let typed_predicate = type_check_parsed_loc_predicate variable_infos predicate in
+	    Typed_loc_predicate typed_predicate
+
+	| Parsed_state_predicate_true -> Typed_state_predicate_true
+	| Parsed_state_predicate_false -> Typed_state_predicate_false
+	| Parsed_state_predicate_accepting -> Typed_state_predicate_accepting
+
+and type_check_parsed_state_predicate variable_infos = function
+	| Parsed_state_predicate_OR (l_expr, r_expr) ->
+	    let l_typed_expr = type_check_parsed_state_predicate variable_infos l_expr in
+	    let r_typed_expr = type_check_parsed_state_predicate variable_infos r_expr in
+	    let l_type = type_of_typed_state_predicate l_typed_expr in
+	    let r_type = type_of_typed_state_predicate r_typed_expr in
+
+	    (match l_type, r_type with
+	    | Var_type_discrete_bool, Var_type_discrete_bool ->
+	        Typed_state_predicate_OR (l_typed_expr, r_typed_expr)
+        | _ -> raise (TypeError "")
+	    )
+
+	| Parsed_state_predicate_term term ->
+	    let typed_expr = type_check_parsed_state_predicate_term variable_infos term in
+	    let discrete_type = type_of_typed_state_predicate_term typed_expr in
+	    Typed_state_predicate_term (typed_expr, discrete_type)
+
+and type_check_parsed_state_predicate_term variable_infos = function
+	| Parsed_state_predicate_term_AND (l_expr, r_expr) ->
+	    let l_typed_expr = type_check_parsed_state_predicate_term variable_infos l_expr in
+	    let r_typed_expr = type_check_parsed_state_predicate_term variable_infos r_expr in
+	    let l_type = type_of_typed_state_predicate_term l_typed_expr in
+	    let r_type = type_of_typed_state_predicate_term r_typed_expr in
+
+	    (match l_type, r_type with
+	    | Var_type_discrete_bool, Var_type_discrete_bool ->
+	        Typed_state_predicate_term_AND (l_typed_expr, r_typed_expr)
+        | _ -> raise (TypeError "")
+	    )
+
+	| Parsed_state_predicate_factor factor ->
+	    let typed_expr = type_check_parsed_state_predicate_factor variable_infos factor in
+	    let discrete_type = type_of_typed_state_predicate_factor typed_expr in
+	    Typed_state_predicate_factor (typed_expr, discrete_type)
+
+and type_check_parsed_state_predicate_factor variable_infos = function
+	| Parsed_state_predicate_factor_NOT factor ->
+	    let typed_expr = type_check_parsed_state_predicate_factor variable_infos factor in
+	    Typed_state_predicate_factor_NOT typed_expr
+
+	| Parsed_simple_predicate predicate ->
+	    let typed_expr = type_check_parsed_simple_predicate variable_infos predicate in
+	    let discrete_type = type_of_typed_simple_predicate typed_expr in
+	    Typed_simple_predicate (typed_expr, discrete_type)
+
+	| Parsed_state_predicate predicate ->
+	    let typed_expr = type_check_parsed_state_predicate variable_infos predicate in
+	    let discrete_type = type_of_typed_state_predicate typed_expr in
+	    Typed_state_predicate (typed_expr, discrete_type)
 
 
 (* Check that an expression assigned to a variable is of the same type *)

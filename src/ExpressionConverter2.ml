@@ -512,7 +512,6 @@ and bool_expression_of_typed_comparison variable_infos l_expr relop r_expr =
             convert_parsed_relop relop,
             list_expression_of_typed_discrete_boolean_expression variable_infos r_expr
         )
-    | _ -> raise (InternalError "h")
 
 and bool_expression_of_typed_arithmetic_expression variable_infos = function
 	| Typed_term (term, _) ->
@@ -1269,3 +1268,77 @@ let convert_conditional variable_infos expr =
     let typed_expr = TypeChecker2.check_conditional variable_infos expr in
     (* Convert *)
     bool_expression_of_typed_boolean_expression variable_infos typed_expr
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*
+(*------------------------------------------------------------*)
+(* Functions for property conversion *)
+(*------------------------------------------------------------*)
+
+(* Convert parsed_loc_predicate *)
+let convert_parsed_loc_predicate useful_parsing_model_information = function
+	| Parsed_loc_predicate_EQ (automaton_name, location_name) ->
+		let automaton_index = Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name in
+		Loc_predicate_EQ ( automaton_index , (Hashtbl.find useful_parsing_model_information.index_of_locations.(automaton_index) location_name))
+	| Parsed_loc_predicate_NEQ (automaton_name, location_name) ->
+		let automaton_index = Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name in
+		Loc_predicate_NEQ (automaton_index , (Hashtbl.find useful_parsing_model_information.index_of_locations.(automaton_index) location_name))
+
+
+(* Convert parsed_simple_predicate *)
+let convert_parsed_simple_predicate useful_parsing_model_information = function
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (ExpressionConverter.bool_expression_of_parsed_discrete_boolean_expression (ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information) parsed_discrete_boolean_expression)
+	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
+	| Parsed_state_predicate_true -> State_predicate_true
+	| Parsed_state_predicate_false -> State_predicate_false
+	| Parsed_state_predicate_accepting -> State_predicate_accepting
+
+
+(* Convert parsed_state_predicate *)
+
+let rec convert_parsed_state_predicate_factor useful_parsing_model_information = function
+	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> State_predicate_factor_NOT (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
+	| Parsed_simple_predicate parsed_simple_predicate -> Simple_predicate (convert_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate)
+	| Parsed_state_predicate parsed_state_predicate -> State_predicate (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+
+and convert_parsed_state_predicate_term useful_parsing_model_information = function
+	| Parsed_state_predicate_term_AND (parsed_state_predicate_term1, parsed_state_predicate_term2) ->
+		State_predicate_term_AND (
+			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term1
+			,
+			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term2
+		)
+	| Parsed_state_predicate_factor parsed_state_predicate_factor -> State_predicate_factor (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
+
+and convert_parsed_state_predicate useful_parsing_model_information = function
+	| Parsed_state_predicate_OR (parsed_state_predicate1, parsed_state_predicate2) ->
+		State_predicate_OR (
+			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate1
+			,
+			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2
+		)
+	| Parsed_state_predicate_term parsed_state_predicate_term -> State_predicate_term (convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term)
+
+(* Try to convert a state predicate after it was type checked *)
+let try_convert_parsed_state_predicate useful_parsing_model_information predicate =
+    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
+    let convert_predicate, _ = TypeChecker.check_parsed_state_predicate variable_infos predicate in
+    convert_parsed_state_predicate useful_parsing_model_information convert_predicate
+*)

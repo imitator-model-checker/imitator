@@ -40,6 +40,31 @@ type typed_variable_access =
     | Typed_variable_name of variable_name * var_type_discrete
     | Typed_variable_access of typed_variable_access * typed_discrete_arithmetic_expression * var_type_discrete
 
+
+type typed_loc_predicate =
+	| Typed_loc_predicate_EQ of automaton_name * location_name
+	| Typed_loc_predicate_NEQ of automaton_name * location_name
+
+type typed_simple_predicate =
+	| Typed_discrete_boolean_expression of typed_discrete_boolean_expression * var_type_discrete
+	| Typed_loc_predicate of typed_loc_predicate
+	| Typed_state_predicate_true
+	| Typed_state_predicate_false
+	| Typed_state_predicate_accepting
+
+type typed_state_predicate_factor =
+	| Typed_state_predicate_factor_NOT of typed_state_predicate_factor
+	| Typed_simple_predicate of typed_simple_predicate * var_type_discrete
+	| Typed_state_predicate of typed_state_predicate * var_type_discrete
+
+and typed_state_predicate_term =
+	| Typed_state_predicate_term_AND of typed_state_predicate_term * typed_state_predicate_term
+	| Typed_state_predicate_factor of typed_state_predicate_factor * var_type_discrete
+
+and typed_state_predicate =
+	| Typed_state_predicate_OR of typed_state_predicate * typed_state_predicate
+	| Typed_state_predicate_term of typed_state_predicate_term * var_type_discrete
+
 type typed_guard = typed_discrete_boolean_expression list
 
 val string_of_typed_global_expression : variable_infos -> typed_global_expression -> string
