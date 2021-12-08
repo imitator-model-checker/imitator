@@ -199,9 +199,12 @@ let rec greater_defined discrete_type_a discrete_type_b =
         discrete_type_a
 
 
+let default_number_type_if_needed = function
+    | Var_type_discrete_unknown_number -> Var_type_discrete_rational
+    | discrete_number_type -> discrete_number_type
 
 let rec default_type_if_needed = function
-    | Var_type_discrete_number Var_type_discrete_unknown_number -> Var_type_discrete_number Var_type_discrete_rational
+    | Var_type_discrete_number discrete_number_type -> Var_type_discrete_number (default_number_type_if_needed discrete_number_type)
     | Var_type_discrete_array (inner_type, length) -> Var_type_discrete_array (default_type_if_needed inner_type, length)
     | Var_type_discrete_list inner_type -> Var_type_discrete_list (default_type_if_needed inner_type)
     | discrete_type -> discrete_type

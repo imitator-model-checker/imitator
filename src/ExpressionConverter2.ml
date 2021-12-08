@@ -339,11 +339,10 @@ let rec global_expression_of_typed_global_expression variable_infos = function
     | Typed_global_expr (expr, discrete_type) ->
         global_expression_of_typed_boolean_expression variable_infos expr discrete_type
 
-(* TODO benjamin pas beau *)
 and global_expression_of_typed_boolean_expression variable_infos expr = function
-    | Var_type_discrete_number _ ->
+    | Var_type_discrete_number discrete_number_type ->
         Arithmetic_expression (
-            discrete_arithmetic_expression_of_typed_boolean_expression variable_infos expr
+            discrete_arithmetic_expression_of_typed_boolean_expression variable_infos discrete_number_type expr
         )
     | Var_type_discrete_bool ->
         Bool_expression (
@@ -362,31 +361,31 @@ and global_expression_of_typed_boolean_expression variable_infos expr = function
             list_expression_of_typed_boolean_expression variable_infos expr
         )
 
-and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos = function
-	| Typed_discrete_bool_expr (expr, discrete_type) ->
-	    (match discrete_type with
-	    | Var_type_discrete_number Var_type_discrete_rational ->
+and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos discrete_number_type = function
+	| Typed_discrete_bool_expr (expr, _) ->
+	    (match discrete_number_type with
+	    | Var_type_discrete_rational ->
 	        Rational_arithmetic_expression (rational_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos expr)
-	    | Var_type_discrete_number Var_type_discrete_int ->
+	    | Var_type_discrete_int ->
 	        Int_arithmetic_expression (int_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos expr)
-	    | _ -> raise (InternalError ("a" ^ DiscreteType.string_of_var_type_discrete discrete_type))
+	    | _ -> raise (InternalError ("a" ^ DiscreteType.string_of_var_type_discrete_number discrete_number_type))
 	    )
 	| _ -> raise (InternalError "b")
 
-and discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos = function
+and discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type = function
 	| Typed_arithmetic_expr (expr, discrete_type) ->
-	    (match discrete_type with
-	    | Var_type_discrete_number Var_type_discrete_rational ->
+	    (match discrete_number_type with
+	    | Var_type_discrete_rational ->
 	        Rational_arithmetic_expression (rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr)
-	    | Var_type_discrete_number Var_type_discrete_int ->
+	    | Var_type_discrete_int ->
 	        Int_arithmetic_expression (int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr)
 	    | _ -> raise (InternalError ("Found `" ^ DiscreteType.string_of_var_type_discrete discrete_type ^ "` in an arithmetic expression, although it was type checked."))
 	    )
 	| _ -> raise (InternalError "d")
 
 (* TODO benjamin CLEAN review this function *)
-and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression variable_infos = function
-	| Typed_plus (expr, term, discrete_number_type) ->
+and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression variable_infos discrete_number_type = function
+	| Typed_plus (expr, term, _) ->
         (match discrete_number_type with
         | Var_type_discrete_rational ->
             Rational_arithmetic_expression (
@@ -405,7 +404,7 @@ and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression varia
         | _ -> raise (InternalError "e")
         )
 
-	| Typed_minus (expr, term, discrete_number_type) ->
+	| Typed_minus (expr, term, _) ->
         (match discrete_number_type with
         | Var_type_discrete_rational ->
             Rational_arithmetic_expression (
@@ -462,11 +461,11 @@ and bool_expression_of_typed_discrete_boolean_expression variable_infos = functi
 	| Typed_comparison (l_expr, relop, r_expr, _, _) ->
 	    bool_expression_of_typed_comparison variable_infos l_expr relop r_expr
 
-	| Typed_comparison_in (in_expr, lw_expr, up_expr, _) ->
+	| Typed_comparison_in (in_expr, lw_expr, up_expr, discrete_number_type) ->
 	    Expression_in (
-	        discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression variable_infos in_expr,
-	        discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression variable_infos lw_expr,
-	        discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression variable_infos up_expr
+	        discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression variable_infos discrete_number_type in_expr,
+	        discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression variable_infos discrete_number_type lw_expr,
+	        discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression variable_infos discrete_number_type up_expr
 	    )
 
 	| Typed_bool_expr (expr, _) ->
@@ -483,11 +482,11 @@ and bool_expression_of_typed_comparison variable_infos l_expr relop r_expr =
     let discrete_type = TypeChecker2.type_of_typed_discrete_boolean_expression l_expr in
 
     match discrete_type with
-    | Var_type_discrete_number _ ->
+    | Var_type_discrete_number discrete_number_type ->
         Expression (
-            discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos l_expr,
+            discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type l_expr,
             convert_parsed_relop relop,
-            discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos r_expr
+            discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type r_expr
         )
     | Var_type_discrete_bool ->
         Boolean_comparison (

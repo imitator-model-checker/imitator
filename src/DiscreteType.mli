@@ -96,4 +96,5 @@ val is_discrete_type_compatibles : var_type_discrete -> var_type_discrete -> boo
 
 val greater_defined : var_type_discrete -> var_type_discrete -> var_type_discrete
 val greater_number_defined : var_type_discrete_number -> var_type_discrete_number -> var_type_discrete_number
+val default_number_type_if_needed : var_type_discrete_number -> var_type_discrete_number
 val default_type_if_needed : var_type_discrete -> var_type_discrete

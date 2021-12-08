@@ -14,7 +14,7 @@ and typed_boolean_expression =
 and typed_discrete_boolean_expression =
     | Typed_arithmetic_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_comparison of typed_discrete_boolean_expression * parsed_relop * typed_discrete_boolean_expression * var_type_discrete * var_type_discrete
-	| Typed_comparison_in of typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * var_type_discrete
+	| Typed_comparison_in of typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * var_type_discrete_number
 	| Typed_bool_expr of typed_boolean_expression * var_type_discrete
 	| Typed_not_expr of typed_boolean_expression
 

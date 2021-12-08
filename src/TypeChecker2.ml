@@ -21,7 +21,7 @@ and typed_boolean_expression =
 and typed_discrete_boolean_expression =
     | Typed_arithmetic_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_comparison of typed_discrete_boolean_expression * parsed_relop * typed_discrete_boolean_expression * var_type_discrete * var_type_discrete
-	| Typed_comparison_in of typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * var_type_discrete
+	| Typed_comparison_in of typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * var_type_discrete_number
 	| Typed_bool_expr of typed_boolean_expression * var_type_discrete
 	| Typed_not_expr of typed_boolean_expression
 
@@ -144,6 +144,9 @@ let type_of_typed_state_predicate = function
 let string_format_typed_node str_node discrete_type =
     "{" ^ str_node ^ ":" ^ string_of_var_type_discrete discrete_type ^ "}"
 
+let string_format_number_typed_node str_node discrete_number_type =
+    "{" ^ str_node ^ ":" ^ string_of_var_type_discrete_number discrete_number_type ^ "}"
+
 let rec string_of_typed_global_expression variable_infos = function
     | Typed_global_expr (expr, _) ->
         string_of_typed_boolean_expression variable_infos expr
@@ -173,14 +176,14 @@ and string_of_typed_discrete_boolean_expression variable_infos = function
         in
         string_format_typed_node str_node discrete_type
 
-	| Typed_comparison_in (in_expr, lw_expr, up_expr, discrete_type) ->
+	| Typed_comparison_in (in_expr, lw_expr, up_expr, discrete_number_type) ->
 	    let str_node =
             string_of_typed_discrete_arithmetic_expression variable_infos in_expr
             ^ Constants.default_string.in_operator
             ^ string_of_typed_discrete_arithmetic_expression variable_infos lw_expr
             ^ string_of_typed_discrete_arithmetic_expression variable_infos up_expr
         in
-        string_format_typed_node str_node discrete_type
+        string_format_number_typed_node str_node discrete_number_type
 
 	| Typed_bool_expr (expr, _) ->
         string_of_typed_boolean_expression variable_infos expr
@@ -308,17 +311,16 @@ let get_discrete_type_of_variable_by_name variable_infos variable_name =
 (* ------------------------------------------------------------------ *)
 (* ------------------------------------------------------------------ *)
 
-
-let rec type_check_global_expression3 variable_infos = function
+let rec type_check_global_expression variable_infos = function
     | Parsed_global_expression expr ->
-        let typed_expr = type_check_parsed_boolean_expression3 variable_infos expr in
+        let typed_expr = type_check_parsed_boolean_expression variable_infos expr in
         let discrete_type = type_of_typed_boolean_expression typed_expr in
         Typed_global_expr (typed_expr, discrete_type)
 
-and type_check_parsed_boolean_expression3 variable_infos = function
+and type_check_parsed_boolean_expression variable_infos = function
 	| Parsed_And (l_expr, r_expr) ->
-        let l_typed_expr = type_check_parsed_boolean_expression3 variable_infos l_expr in
-        let r_typed_expr = type_check_parsed_boolean_expression3 variable_infos r_expr in
+        let l_typed_expr = type_check_parsed_boolean_expression variable_infos l_expr in
+        let r_typed_expr = type_check_parsed_boolean_expression variable_infos r_expr in
         let l_type = type_of_typed_boolean_expression l_typed_expr in
         let r_type = type_of_typed_boolean_expression r_typed_expr in
 
@@ -339,8 +341,8 @@ and type_check_parsed_boolean_expression3 variable_infos = function
 
 	| Parsed_Or (l_expr, r_expr) ->
 
-        let l_typed_expr = type_check_parsed_boolean_expression3 variable_infos l_expr in
-        let r_typed_expr = type_check_parsed_boolean_expression3 variable_infos r_expr in
+        let l_typed_expr = type_check_parsed_boolean_expression variable_infos l_expr in
+        let r_typed_expr = type_check_parsed_boolean_expression variable_infos r_expr in
         let l_type = type_of_typed_boolean_expression l_typed_expr in
         let r_type = type_of_typed_boolean_expression r_typed_expr in
 
@@ -360,20 +362,20 @@ and type_check_parsed_boolean_expression3 variable_infos = function
         )
 
 	| Parsed_Discrete_boolean_expression expr ->
-	    let typed_expr = type_check_parsed_discrete_boolean_expression3 variable_infos expr in
+	    let typed_expr = type_check_parsed_discrete_boolean_expression variable_infos expr in
 	    let discrete_type = type_of_typed_discrete_boolean_expression typed_expr in
 	    Typed_discrete_bool_expr (typed_expr, discrete_type)
 
-and type_check_parsed_discrete_boolean_expression3 variable_infos = function
+and type_check_parsed_discrete_boolean_expression variable_infos = function
     | Parsed_arithmetic_expression expr ->
-	    let typed_expr = type_check_parsed_discrete_arithmetic_expression3 variable_infos expr in
+	    let typed_expr = type_check_parsed_discrete_arithmetic_expression variable_infos expr in
 	    let discrete_type = type_of_typed_discrete_arithmetic_expression typed_expr in
 	    Typed_arithmetic_expr (typed_expr, discrete_type)
 
 	| Parsed_expression (l_expr, relop, r_expr) as outer_expr ->
 
-	    let l_typed_expr = type_check_parsed_discrete_boolean_expression3 variable_infos l_expr in
-	    let r_typed_expr = type_check_parsed_discrete_boolean_expression3 variable_infos r_expr in
+	    let l_typed_expr = type_check_parsed_discrete_boolean_expression variable_infos l_expr in
+	    let r_typed_expr = type_check_parsed_discrete_boolean_expression variable_infos r_expr in
         let l_type = type_of_typed_discrete_boolean_expression l_typed_expr in
         let r_type = type_of_typed_discrete_boolean_expression r_typed_expr in
 
@@ -395,9 +397,9 @@ and type_check_parsed_discrete_boolean_expression3 variable_infos = function
             ));
 
 	| Parsed_expression_in (in_expr, lw_expr, up_expr) ->
-	    let in_typed_expr = type_check_parsed_discrete_arithmetic_expression3 variable_infos in_expr in
-	    let lw_typed_expr = type_check_parsed_discrete_arithmetic_expression3 variable_infos lw_expr in
-	    let up_typed_expr = type_check_parsed_discrete_arithmetic_expression3 variable_infos up_expr in
+	    let in_typed_expr = type_check_parsed_discrete_arithmetic_expression variable_infos in_expr in
+	    let lw_typed_expr = type_check_parsed_discrete_arithmetic_expression variable_infos lw_expr in
+	    let up_typed_expr = type_check_parsed_discrete_arithmetic_expression variable_infos up_expr in
         let in_type = type_of_typed_discrete_arithmetic_expression in_typed_expr in
         let lw_type = type_of_typed_discrete_arithmetic_expression lw_typed_expr in
         let up_type = type_of_typed_discrete_arithmetic_expression up_typed_expr in
@@ -406,21 +408,28 @@ and type_check_parsed_discrete_boolean_expression3 variable_infos = function
         let in_up_compatible = is_discrete_type_compatibles in_type up_type in
         let lw_up_compatible = is_discrete_type_compatibles lw_type up_type in
 
-        let inner_type = greater_defined (greater_defined in_type lw_type) up_type in
+        (* Check that expression are numbers *)
+        let in_number_type, lw_number_type, up_number_type =
+            match in_type, lw_type, up_type with
+            | Var_type_discrete_number in_number_type, Var_type_discrete_number lw_number_type, Var_type_discrete_number up_number_type -> in_number_type, lw_number_type, up_number_type
+            | _ -> raise (TypeError "")
+        in
+
+        let inner_number_type = greater_number_defined (greater_number_defined in_number_type lw_number_type) up_number_type in
 
         if in_lw_compatible && in_up_compatible && lw_up_compatible then (
-            Typed_comparison_in (in_typed_expr, lw_typed_expr, up_typed_expr, inner_type)
+            Typed_comparison_in (in_typed_expr, lw_typed_expr, up_typed_expr, inner_number_type)
         )
         else
             raise (TypeError "c")
 
 	| Parsed_boolean_expression expr ->
-	    let typed_expr = type_check_parsed_boolean_expression3 variable_infos expr in
+	    let typed_expr = type_check_parsed_boolean_expression variable_infos expr in
 	    let discrete_type = type_of_typed_boolean_expression typed_expr in
 	    Typed_bool_expr (typed_expr, discrete_type)
 
 	| Parsed_Not expr ->
-	    let typed_expr = type_check_parsed_boolean_expression3 variable_infos expr in
+	    let typed_expr = type_check_parsed_boolean_expression variable_infos expr in
 	    let discrete_type = type_of_typed_boolean_expression typed_expr in
 
 	    (match discrete_type with
@@ -428,10 +437,10 @@ and type_check_parsed_discrete_boolean_expression3 variable_infos = function
 	    | _ -> raise (TypeError "d")
         )
 
-and type_check_parsed_discrete_arithmetic_expression3 variable_infos = function
+and type_check_parsed_discrete_arithmetic_expression variable_infos = function
 	| Parsed_DAE_plus (expr, term) ->
-	    let l_typed_expr = type_check_parsed_discrete_arithmetic_expression3 variable_infos expr in
-	    let r_typed_expr = type_check_parsed_discrete_term3 variable_infos term in
+	    let l_typed_expr = type_check_parsed_discrete_arithmetic_expression variable_infos expr in
+	    let r_typed_expr = type_check_parsed_discrete_term variable_infos term in
         let l_type = type_of_typed_discrete_arithmetic_expression l_typed_expr in
         let r_type = type_of_typed_discrete_term r_typed_expr in
 
@@ -442,8 +451,8 @@ and type_check_parsed_discrete_arithmetic_expression3 variable_infos = function
         )
 
 	| Parsed_DAE_minus (expr, term) ->
-	    let l_typed_expr = type_check_parsed_discrete_arithmetic_expression3 variable_infos expr in
-	    let r_typed_expr = type_check_parsed_discrete_term3 variable_infos term in
+	    let l_typed_expr = type_check_parsed_discrete_arithmetic_expression variable_infos expr in
+	    let r_typed_expr = type_check_parsed_discrete_term variable_infos term in
         let l_type = type_of_typed_discrete_arithmetic_expression l_typed_expr in
         let r_type = type_of_typed_discrete_term r_typed_expr in
 
@@ -454,18 +463,18 @@ and type_check_parsed_discrete_arithmetic_expression3 variable_infos = function
         )
 
 	| Parsed_DAE_term term ->
-	    let typed_expr = type_check_parsed_discrete_term3 variable_infos term in
+	    let typed_expr = type_check_parsed_discrete_term variable_infos term in
 	    let discrete_type = type_of_typed_discrete_term typed_expr in
 	    Typed_term (typed_expr, discrete_type)
 
-and type_check_parsed_discrete_term3 variable_infos = function
+and type_check_parsed_discrete_term variable_infos = function
     (* Specific case, literal rational => constant / constant *)
     (* Should be reduced before... *)
 
     | Parsed_DT_div ((Parsed_DT_factor (Parsed_DF_constant lv) as term), (Parsed_DF_constant rv as factor)) ->
 
-	    let l_typed_expr = type_check_parsed_discrete_term3 variable_infos term in
-	    let r_typed_expr = type_check_parsed_discrete_factor3 variable_infos factor in
+	    let l_typed_expr = type_check_parsed_discrete_term variable_infos term in
+	    let r_typed_expr = type_check_parsed_discrete_factor variable_infos factor in
         let l_type = type_of_typed_discrete_term l_typed_expr in
         let r_type = type_of_typed_discrete_factor r_typed_expr in
 
@@ -489,8 +498,8 @@ and type_check_parsed_discrete_term3 variable_infos = function
         Typed_div (l_typed_expr, r_typed_expr, discrete_number_type)
 
     | Parsed_DT_mul (term, factor) ->
-	    let l_typed_expr = type_check_parsed_discrete_term3 variable_infos term in
-	    let r_typed_expr = type_check_parsed_discrete_factor3 variable_infos factor in
+	    let l_typed_expr = type_check_parsed_discrete_term variable_infos term in
+	    let r_typed_expr = type_check_parsed_discrete_factor variable_infos factor in
         let l_type = type_of_typed_discrete_term l_typed_expr in
         let r_type = type_of_typed_discrete_factor r_typed_expr in
 
@@ -501,12 +510,10 @@ and type_check_parsed_discrete_term3 variable_infos = function
         )
 
 	| Parsed_DT_div (term, factor) ->
-	    let l_typed_expr = type_check_parsed_discrete_term3 variable_infos term in
-	    let r_typed_expr = type_check_parsed_discrete_factor3 variable_infos factor in
+	    let l_typed_expr = type_check_parsed_discrete_term variable_infos term in
+	    let r_typed_expr = type_check_parsed_discrete_factor variable_infos factor in
         let l_type = type_of_typed_discrete_term l_typed_expr in
         let r_type = type_of_typed_discrete_factor r_typed_expr in
-
-
 
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
@@ -515,11 +522,11 @@ and type_check_parsed_discrete_term3 variable_infos = function
         )
 
 	| Parsed_DT_factor factor ->
-	    let typed_expr = type_check_parsed_discrete_factor3 variable_infos factor in
+	    let typed_expr = type_check_parsed_discrete_factor variable_infos factor in
 	    let discrete_type = type_of_typed_discrete_factor typed_expr in
 	    Typed_factor (typed_expr, discrete_type)
 
-and type_check_parsed_discrete_factor3 variable_infos = function
+and type_check_parsed_discrete_factor variable_infos = function
 	| Parsed_DF_variable variable_name ->
         let discrete_type = get_discrete_type_of_variable_by_name variable_infos variable_name in
         Typed_variable (variable_name, discrete_type)
@@ -529,7 +536,7 @@ and type_check_parsed_discrete_factor3 variable_infos = function
         Typed_constant (value, discrete_type)
 
 	| Parsed_DF_array array_expr ->
-	    let type_check_parsed_boolean_expression_apply = type_check_parsed_boolean_expression3 variable_infos in
+	    let type_check_parsed_boolean_expression_apply = type_check_parsed_boolean_expression variable_infos in
 	    let list_expr = Array.to_list array_expr in
         let typed_expressions = List.map type_check_parsed_boolean_expression_apply list_expr in
 
@@ -545,7 +552,7 @@ and type_check_parsed_discrete_factor3 variable_infos = function
             raise (TypeError "e")
 
 	| Parsed_DF_list list_expr ->
-	    let type_check_parsed_boolean_expression_apply = type_check_parsed_boolean_expression3 variable_infos in
+	    let type_check_parsed_boolean_expression_apply = type_check_parsed_boolean_expression variable_infos in
         let typed_expressions = List.map type_check_parsed_boolean_expression_apply list_expr in
 
         let discrete_types = List.map type_of_typed_boolean_expression typed_expressions in
@@ -560,8 +567,8 @@ and type_check_parsed_discrete_factor3 variable_infos = function
             raise (TypeError "f")
 
     | Parsed_DF_access (factor, index_expr) ->
-        let typed_factor = type_check_parsed_discrete_factor3 variable_infos factor in
-        let typed_index = type_check_parsed_discrete_arithmetic_expression3 variable_infos index_expr in
+        let typed_factor = type_check_parsed_discrete_factor variable_infos factor in
+        let typed_index = type_check_parsed_discrete_arithmetic_expression variable_infos index_expr in
 
         let factor_type = type_of_typed_discrete_factor typed_factor in
         let index_type = type_of_typed_discrete_arithmetic_expression typed_index in
@@ -577,12 +584,12 @@ and type_check_parsed_discrete_factor3 variable_infos = function
         )
 
 	| Parsed_DF_expression expr ->
-	    let typed_expr = type_check_parsed_discrete_arithmetic_expression3 variable_infos expr in
+	    let typed_expr = type_check_parsed_discrete_arithmetic_expression variable_infos expr in
 	    let discrete_type = type_of_typed_discrete_arithmetic_expression typed_expr in
 	    Typed_expr (typed_expr, discrete_type)
 
 	| Parsed_DF_unary_min factor ->
-	    let typed_expr = type_check_parsed_discrete_factor3 variable_infos factor in
+	    let typed_expr = type_check_parsed_discrete_factor variable_infos factor in
 	    let discrete_type = type_of_typed_discrete_factor typed_expr in
 
         (match discrete_type with
@@ -614,7 +621,7 @@ and type_check_parsed_discrete_factor3 variable_infos = function
 
         (* ------- *)
         (* Get inferred types of arguments as a signature *)
-        let type_check_parsed_boolean_expression_apply = type_check_parsed_boolean_expression3 variable_infos in
+        let type_check_parsed_boolean_expression_apply = type_check_parsed_boolean_expression variable_infos in
 
         let typed_expressions = List.map type_check_parsed_boolean_expression_apply argument_expressions in
         let call_signature = List.map (fun typed_expr -> type_of_typed_boolean_expression typed_expr) typed_expressions in
@@ -759,14 +766,20 @@ and convert_typed_discrete_boolean_expression target_type = function
 	        discrete_type
 	    )
 
-	| Typed_comparison_in (in_expr, lw_expr, up_expr, discrete_type) ->
+	| Typed_comparison_in (in_expr, lw_expr, up_expr, discrete_number_type) ->
 	    (* Convert point *)
-        let target_type = default_type_if_needed (greater_defined discrete_type target_type) in
+	    let target_number_type =
+	        match target_type with
+	        | Var_type_discrete_number discrete_number_type -> discrete_number_type
+	        | _ -> raise (InternalError "")
+        in
+
+        let target_number_type = default_number_type_if_needed (greater_number_defined discrete_number_type target_number_type) in
 	    Typed_comparison_in (
 	        convert_typed_discrete_arithmetic_expression target_type in_expr,
 	        convert_typed_discrete_arithmetic_expression target_type lw_expr,
 	        convert_typed_discrete_arithmetic_expression target_type up_expr,
-	        target_type
+	        target_number_type
 	    )
 
 	| Typed_bool_expr (expr, discrete_type) ->
@@ -1017,7 +1030,7 @@ let rec type_check_variable_access variable_infos = function
     | Variable_access (variable_access, index_expr) ->
 
         let typed_variable_access = type_check_variable_access variable_infos variable_access in
-        let typed_index_expr_type = type_check_parsed_discrete_arithmetic_expression3 variable_infos index_expr in
+        let typed_index_expr_type = type_check_parsed_discrete_arithmetic_expression variable_infos index_expr in
 
         let converted_index_expr_type = convert_typed_discrete_arithmetic_expression (Var_type_discrete_number Var_type_discrete_int) typed_index_expr_type in
 
@@ -1038,7 +1051,7 @@ let type_check_parsed_loc_predicate variable_infos = function
 
 let rec type_check_parsed_simple_predicate variable_infos = function
 	| Parsed_discrete_boolean_expression expr ->
-	    let typed_expr = type_check_parsed_discrete_boolean_expression3 variable_infos expr in
+	    let typed_expr = type_check_parsed_discrete_boolean_expression variable_infos expr in
         let discrete_type = type_of_typed_discrete_boolean_expression typed_expr in
 
         if not (DiscreteType.is_discrete_type_bool_type discrete_type) then (
@@ -1131,7 +1144,7 @@ let check_type_assignment3 variable_infos variable_name variable_type expr =
 
 
     (* Resolve typed expression *)
-    let typed_expr = type_check_global_expression3 variable_infos expr in
+    let typed_expr = type_check_global_expression variable_infos expr in
     let expr_var_type_discrete = type_of_typed_global_expression typed_expr in
 
     (* Check expression / variable type consistency *)
@@ -1193,7 +1206,7 @@ let check_nonlinear_constraint variable_infos nonlinear_constraint =
     print_message Verbose_high "----------";
     print_message Verbose_high ("Infer non-linear constraint expression: " ^ string_of_parsed_nonlinear_constraint variable_infos nonlinear_constraint);
 
-    let typed_nonlinear_constraint = type_check_parsed_discrete_boolean_expression3 variable_infos nonlinear_constraint in
+    let typed_nonlinear_constraint = type_check_parsed_discrete_boolean_expression variable_infos nonlinear_constraint in
 
     (* Convert to target type *)
     let typed_nonlinear_constraint = convert_typed_discrete_boolean_expression (Var_type_discrete_number Var_type_discrete_rational) typed_nonlinear_constraint in
@@ -1225,7 +1238,7 @@ let check_update variable_infos variable_access expr =
     print_message Verbose_high ("Infer update expression: " ^ string_of_parsed_global_expression variable_infos expr);
 
     (* Resolve typed expression *)
-    let typed_expr = type_check_global_expression3 variable_infos expr in
+    let typed_expr = type_check_global_expression variable_infos expr in
     let expr_type = type_of_typed_global_expression typed_expr in
 
     (* Get assigned variable name *)
@@ -1262,7 +1275,7 @@ let check_conditional variable_infos expr =
     print_message Verbose_high "----------";
     print_message Verbose_high ("Infer conditional expression: " ^ string_of_parsed_boolean_expression variable_infos expr);
 
-    let typed_expr = type_check_parsed_boolean_expression3 variable_infos expr in
+    let typed_expr = type_check_parsed_boolean_expression variable_infos expr in
     let expr_type = type_of_typed_boolean_expression typed_expr in
 
     (* Check that non-linear constraint is a Boolean expression *)
@@ -1288,7 +1301,7 @@ let check_state_predicate variable_infos predicate =
 (* Check that a discrete boolean expression is well typed *)
 let check_discrete_boolean_expr variable_infos predicate =
     (* Type check *)
-    let typed_expr = type_check_parsed_discrete_boolean_expression3 variable_infos predicate in
+    let typed_expr = type_check_parsed_discrete_boolean_expression variable_infos predicate in
     (* Convert *)
     (* TODO benjamin IMPORTANT make conversion to avoid number *)
     typed_expr
