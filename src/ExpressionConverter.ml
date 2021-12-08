@@ -1,3 +1,4 @@
+(*
 (************************************************************
  *
  *                       IMITATOR
@@ -853,3 +854,4 @@ and expression_access_type_of_parsed_df_access variable_infos factor =
         raise (InternalError
             "An access on other element than an array or a list was found, although it was been type checked before."
         )
+*)

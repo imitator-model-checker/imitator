@@ -1,6 +1,8 @@
 open ParsingStructure
 open DiscreteType
 
+type inner_type = var_type_discrete
+
 type typed_global_expression =
     | Typed_global_expr of typed_boolean_expression * var_type_discrete
 
@@ -84,3 +86,7 @@ val check_guard : variable_infos -> guard -> typed_guard
 val check_update : variable_infos -> variable_access -> ParsingStructure.global_expression -> typed_variable_access * typed_global_expression
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
+(* Check that a predicate is well typed *)
+val check_state_predicate : variable_infos -> parsed_state_predicate -> typed_state_predicate
+(* Check that a discrete boolean expression is well typed *)
+(*val check_discrete_boolean_expr : variable_infos -> parsed_discrete_boolean_expression -> typed_discrete_boolean_expression*)

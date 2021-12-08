@@ -1,3 +1,4 @@
+(*
 (************************************************************
  *
  *                       IMITATOR
@@ -1549,3 +1550,4 @@ let check_discrete_init variable_infos variable_name expr =
     in
 
     converted_expr
+*)

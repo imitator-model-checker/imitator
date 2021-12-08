@@ -1,3 +1,4 @@
+(*
 (************************************************************
  *
  *                       IMITATOR
@@ -73,3 +74,4 @@ val discrete_type_of_parsed_discrete_boolean_expression : variable_infos -> Pars
 val discrete_type_of_parsed_discrete_arithmetic_expression : variable_infos -> ParsingStructure.parsed_discrete_arithmetic_expression -> DiscreteType.var_type_discrete
 val discrete_type_of_parsed_discrete_term : variable_infos -> ParsingStructure.parsed_discrete_term -> DiscreteType.var_type_discrete
 val discrete_type_of_parsed_discrete_factor : variable_infos -> ParsingStructure.parsed_discrete_factor -> DiscreteType.var_type_discrete
+*)

@@ -105,65 +105,6 @@ let numconst_value_or_fail = function
 let is_variable_or_constant_declared index_of_variables constants variable_name =
     Hashtbl.mem index_of_variables variable_name || Hashtbl.mem constants variable_name
 
-(************************************************************)
-(** Converting discrete arithmetic expressions *)
-(************************************************************)
-
-
-
-(*------------------------------------------------------------*)
-(* Functions for property conversion *)
-(*------------------------------------------------------------*)
-
-(* Convert parsed_loc_predicate *)
-let convert_parsed_loc_predicate useful_parsing_model_information = function
-	| Parsed_loc_predicate_EQ (automaton_name, location_name) ->
-		let automaton_index = Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name in
-		Loc_predicate_EQ ( automaton_index , (Hashtbl.find useful_parsing_model_information.index_of_locations.(automaton_index) location_name))
-	| Parsed_loc_predicate_NEQ (automaton_name, location_name) ->
-		let automaton_index = Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name in
-		Loc_predicate_NEQ (automaton_index , (Hashtbl.find useful_parsing_model_information.index_of_locations.(automaton_index) location_name))
-
-
-(* Convert parsed_simple_predicate *)
-let convert_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (ExpressionConverter.bool_expression_of_parsed_discrete_boolean_expression (ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information) parsed_discrete_boolean_expression)
-	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
-	| Parsed_state_predicate_true -> State_predicate_true
-	| Parsed_state_predicate_false -> State_predicate_false
-	| Parsed_state_predicate_accepting -> State_predicate_accepting
-
-
-(* Convert parsed_state_predicate *)
-
-let rec convert_parsed_state_predicate_factor useful_parsing_model_information = function
-	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> State_predicate_factor_NOT (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
-	| Parsed_simple_predicate parsed_simple_predicate -> Simple_predicate (convert_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate)
-	| Parsed_state_predicate parsed_state_predicate -> State_predicate (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
-
-and convert_parsed_state_predicate_term useful_parsing_model_information = function
-	| Parsed_state_predicate_term_AND (parsed_state_predicate_term1, parsed_state_predicate_term2) ->
-		State_predicate_term_AND (
-			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term1
-			,
-			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term2
-		)
-	| Parsed_state_predicate_factor parsed_state_predicate_factor -> State_predicate_factor (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
-
-and convert_parsed_state_predicate useful_parsing_model_information = function
-	| Parsed_state_predicate_OR (parsed_state_predicate1, parsed_state_predicate2) ->
-		State_predicate_OR (
-			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate1
-			,
-			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2
-		)
-	| Parsed_state_predicate_term parsed_state_predicate_term -> State_predicate_term (convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term)
-
-(* Try to convert a state predicate after it was type checked *)
-let try_convert_parsed_state_predicate useful_parsing_model_information predicate =
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
-    let convert_predicate, _ = TypeChecker.check_parsed_state_predicate variable_infos predicate in
-    convert_parsed_state_predicate useful_parsing_model_information convert_predicate
 
 (************************************************************)
 (** Getting variables *)
@@ -3016,14 +2957,14 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		(* Reachability *)
 		| Parsed_EF parsed_state_predicate ->
 			(* Return a property and no observer *)
-			EF (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			EF (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
 			
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate ->
 			(* Return a property and no observer *)
-			AGnot (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			AGnot (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
 		
@@ -3035,7 +2976,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		(* Reachability with minimization of a parameter valuation *)
 		| Parsed_EFpmin (parsed_state_predicate , parameter_name) ->
 			EFpmin (
-				try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate
 				,
 				Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name
 			)
@@ -3045,7 +2986,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		(* Reachability with maximization of a parameter valuation *)
 		| Parsed_EFpmax (parsed_state_predicate , parameter_name) ->
 			EFpmax (
-				try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate
 				,
 				Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name
 			)
@@ -3054,7 +2995,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		
 		(* Reachability with minimal-time *)
 		| Parsed_EFtmin parsed_state_predicate ->
-			EFtmin (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			EFtmin (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
 		
@@ -3065,13 +3006,13 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate ->
-			Cycle_through (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			Cycle_through (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
 		
 		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 		| Parsed_Cycle_Through_generalized parsed_state_predicate_list ->
-			Cycle_through_generalized (List.map (try_convert_parsed_state_predicate useful_parsing_model_information) parsed_state_predicate_list)
+			Cycle_through_generalized (List.map (PropertyConverter.convert_state_predicate useful_parsing_model_information) parsed_state_predicate_list)
 			,
 			None
 
@@ -3106,7 +3047,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 
 		(* PRP *)
 		| Parsed_PRP (parsed_state_predicate , parsed_pval) ->
-			PRP (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_pval useful_parsing_model_information parsed_pval)
+			PRP (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_pval useful_parsing_model_information parsed_pval)
 			,
 			None
 
@@ -3135,7 +3076,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		
 		(** Cover the whole cartography using learning-based abstractions *)
 		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, step) ->
-			Learning_cartography ((try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step))
+			Learning_cartography ((PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step))
 			,
 			None
 		
@@ -3165,7 +3106,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 	
 		(* Parametric reachability preservation *)
 		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, step) ->
-			PRPC (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step)
+			PRPC (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step)
 			,
 			None
 

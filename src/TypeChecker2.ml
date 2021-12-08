@@ -8,6 +8,7 @@ open TypeConstraintResolver
 open CustomModules
 open DiscreteType
 
+type inner_type = var_type_discrete
 
 type typed_global_expression =
     | Typed_global_expr of typed_boolean_expression * var_type_discrete
@@ -707,7 +708,6 @@ and type_check_parsed_discrete_factor3 variable_infos = function
 
 
 
-
 let rec convert_typed_global_expression target_type = function
     | Typed_global_expr (expr, discrete_type) ->
         let target_type = default_type_if_needed (greater_defined discrete_type target_type) in
@@ -936,6 +936,76 @@ and convert_typed_discrete_factor target_type = function
 	        List.map (convert_typed_boolean_expression target_type) list_expr,
 	        target_type
 	    )
+
+
+let convert_typed_loc_predicate target_type = function
+	| Typed_loc_predicate_EQ (automaton_name, loc_name) ->
+	    Typed_loc_predicate_EQ (automaton_name, loc_name)
+
+	| Typed_loc_predicate_NEQ (automaton_name, loc_name) ->
+	    Typed_loc_predicate_NEQ (automaton_name, loc_name)
+
+let rec convert_typed_simple_predicate target_type = function
+	| Typed_discrete_boolean_expression (expr, discrete_type) ->
+        let target_type = default_type_if_needed (greater_defined discrete_type target_type) in
+        Typed_discrete_boolean_expression (
+            convert_typed_discrete_boolean_expression target_type expr,
+            target_type
+        )
+
+	| Typed_loc_predicate predicate -> Typed_loc_predicate predicate
+	| Typed_state_predicate_true -> Typed_state_predicate_true
+	| Typed_state_predicate_false -> Typed_state_predicate_false
+	| Typed_state_predicate_accepting -> Typed_state_predicate_accepting
+
+and convert_typed_state_predicate target_type = function
+	| Typed_state_predicate_OR (l_expr, r_expr) ->
+        Typed_state_predicate_OR (l_expr, r_expr)
+
+	| Typed_state_predicate_term (predicate_term, discrete_type) ->
+        let target_type = default_type_if_needed (greater_defined discrete_type target_type) in
+        ImitatorUtilities.print_message Verbose_standard (
+            "state: "
+            ^ DiscreteType.string_of_var_type_discrete target_type
+            ^ ", "
+            ^ DiscreteType.string_of_var_type_discrete discrete_type
+        );
+	    Typed_state_predicate_term (
+	        convert_typed_state_predicate_term target_type predicate_term,
+	        target_type
+        )
+
+and convert_typed_state_predicate_term target_type = function
+	| Typed_state_predicate_term_AND (l_expr, r_expr) ->
+        Typed_state_predicate_term_AND (l_expr, r_expr)
+
+	| Typed_state_predicate_factor (predicate_factor, discrete_type) ->
+        let target_type = default_type_if_needed (greater_defined discrete_type target_type) in
+	    Typed_state_predicate_factor (
+	        convert_typed_state_predicate_factor target_type predicate_factor,
+	        target_type
+        )
+
+and convert_typed_state_predicate_factor target_type = function
+	| Typed_state_predicate_factor_NOT predicate_factor ->
+	    Typed_state_predicate_factor_NOT predicate_factor
+
+	| Typed_simple_predicate (predicate, discrete_type) ->
+        let target_type = default_type_if_needed (greater_defined discrete_type target_type) in
+	    Typed_simple_predicate (
+	        convert_typed_simple_predicate target_type predicate,
+	        target_type
+        )
+
+	| Typed_state_predicate (predicate_factor, discrete_type) ->
+        let target_type = default_type_if_needed (greater_defined discrete_type target_type) in
+	    Typed_state_predicate (
+	        convert_typed_state_predicate target_type predicate_factor,
+	        target_type
+        )
+
+
+
 
 let rec type_check_variable_access variable_infos = function
     | Variable_name variable_name ->
@@ -1206,3 +1276,20 @@ let check_conditional variable_infos expr =
             ^ "` in conditional statement, is not a Boolean expression"
             )
         )
+
+(* Check that a predicate is well typed *)
+let check_state_predicate variable_infos predicate =
+    (* Type check *)
+    let typed_predicate = type_check_parsed_state_predicate variable_infos predicate in
+    (* Convert *)
+    convert_typed_state_predicate (Var_type_discrete_number Var_type_discrete_rational) typed_predicate
+
+(*
+(* Check that a discrete boolean expression is well typed *)
+let check_discrete_boolean_expr variable_infos predicate =
+    (* Type check *)
+    let typed_expr = type_check_parsed_discrete_boolean_expression3 variable_infos predicate in
+    (* Convert *)
+    (* TODO benjamin IMPORTANT make conversion to avoid number *)
+    typed_expr
+*)
