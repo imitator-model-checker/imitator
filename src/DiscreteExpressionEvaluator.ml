@@ -393,67 +393,64 @@ and try_reduce_discrete_arithmetic_expression = function
     | Int_arithmetic_expression expr ->
         DiscreteValue.Int_value (try_reduce_int_expression expr)
 
-and try_reduce_rational_expression expr =
-    let rec try_reduce_rational_expression_rec = function
-        | DAE_plus (expr, term) ->
-            NumConst.add
-                (try_reduce_rational_expression_rec expr)
-                (try_reduce_rational_term term)
-        | DAE_minus (expr, term) ->
-            NumConst.sub
-                (try_reduce_rational_expression_rec expr)
-                (try_reduce_rational_term term)
-        | DAE_term term ->
-            try_reduce_rational_term term
-
-    and try_reduce_rational_term = function
-        | DT_mul (term, factor) ->
-            NumConst.mul
+and try_reduce_rational_expression = function
+    | DAE_plus (expr, term) ->
+        NumConst.add
+            (try_reduce_rational_expression expr)
             (try_reduce_rational_term term)
-            (try_reduce_rational_factor factor)
-        | DT_div (term, factor) ->
-            let numerator	= (try_reduce_rational_term term) in
-            let denominator	= (try_reduce_rational_factor factor) in
+    | DAE_minus (expr, term) ->
+        NumConst.sub
+            (try_reduce_rational_expression expr)
+            (try_reduce_rational_term term)
+    | DAE_term term ->
+        try_reduce_rational_term term
 
-            (* Check for 0-denominator *)
-            if NumConst.equal denominator NumConst.zero then(
-                raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (NumConst.to_string numerator) ^ " / " ^ (NumConst.to_string denominator) ^ ""))
-            );
+and try_reduce_rational_term = function
+    | DT_mul (term, factor) ->
+        NumConst.mul
+        (try_reduce_rational_term term)
+        (try_reduce_rational_factor factor)
+    | DT_div (term, factor) ->
+        let numerator	= (try_reduce_rational_term term) in
+        let denominator	= (try_reduce_rational_factor factor) in
 
-            (* Divide *)
-            NumConst.div
-                numerator
-                denominator
+        (* Check for 0-denominator *)
+        if NumConst.equal denominator NumConst.zero then(
+            raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (NumConst.to_string numerator) ^ " / " ^ (NumConst.to_string denominator) ^ ""))
+        );
 
-        | DT_factor factor ->
-            try_reduce_rational_factor factor
+        (* Divide *)
+        NumConst.div
+            numerator
+            denominator
 
-    and try_reduce_rational_factor = function
-        | DF_variable variable_index ->
-            raise (InternalError ("Unable to reduce a non-constant expression."))
-        | DF_constant variable_value ->
-            variable_value
-        | Rational_access (access_type, index_expr) ->
-            let value = try_reduce_expression_access_value index_expr access_type in
-            DiscreteValue.numconst_value value
-        | DF_expression expr ->
-            try_reduce_rational_expression_rec expr
-        | DF_rational_of_int expr ->
+    | DT_factor factor ->
+        try_reduce_rational_factor factor
+
+and try_reduce_rational_factor = function
+    | DF_variable variable_index ->
+        raise (InternalError ("Unable to reduce a non-constant expression."))
+    | DF_constant variable_value ->
+        variable_value
+    | Rational_access (access_type, index_expr) ->
+        let value = try_reduce_expression_access_value index_expr access_type in
+        DiscreteValue.numconst_value value
+    | DF_expression expr ->
+        try_reduce_rational_expression expr
+    | DF_rational_of_int expr ->
 (*            ImitatorUtilities.print_message Verbose_standard "Evaluate a int expression";*)
-            ImitatorUtilities.print_warning
-                "Conversion of an int expression to a rational expression
-                may cause overflow if your platform doesn't manage `int` as an exact 32 bits integer.";
-            NumConst.numconst_of_int (Int32.to_int (try_reduce_int_expression expr))
-        | Rational_pow (expr, exp) ->
-            NumConst.pow (try_reduce_rational_expression_rec expr) (try_reduce_int_expression exp)
-        | Rational_list_hd (list_expr) ->
-            let list = try_reduce_list_expression list_expr in
-            let value = List.hd list in
-            DiscreteValue.numconst_value value
-        | DF_unary_min factor ->
-            NumConst.neg (try_reduce_rational_factor factor)
-    in
-    try_reduce_rational_expression_rec expr
+        ImitatorUtilities.print_warning
+            "Conversion of an int expression to a rational expression
+            may cause overflow if your platform doesn't manage `int` as an exact 32 bits integer.";
+        NumConst.numconst_of_int (Int32.to_int (try_reduce_int_expression expr))
+    | Rational_pow (expr, exp) ->
+        NumConst.pow (try_reduce_rational_expression expr) (try_reduce_int_expression exp)
+    | Rational_list_hd (list_expr) ->
+        let list = try_reduce_list_expression list_expr in
+        let value = List.hd list in
+        DiscreteValue.numconst_value value
+    | DF_unary_min factor ->
+        NumConst.neg (try_reduce_rational_factor factor)
 
 and try_reduce_int_expression expr =
     let rec try_reduce_int_expression_rec = function

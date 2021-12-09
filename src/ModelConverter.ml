@@ -1652,8 +1652,8 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
   let to_intermediate_abstract_clock_update (variable_access, update_expr) =
     let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-    let linear_term = ExpressionConverter2.linear_term_of_global_expression variable_infos update_expr in
-    (variable_index, linear_term)
+    let _, converted_update = ExpressionConverter2.convert_continuous_update variable_infos variable_access update_expr in
+    (variable_index, converted_update)
   in
 
   let converted_clock_updates = List.map to_intermediate_abstract_clock_update updates_list in
@@ -3335,7 +3335,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
         let typed_expr(*, expr_type *) = ExpressionConverter2.convert_discrete_constant initialized_constants constant in
         let value = DiscreteExpressionEvaluator.try_reduce_global_expression typed_expr in
-
+        ImitatorUtilities.print_message Verbose_standard (
+            "constant value "
+            ^ DiscreteValue.string_of_value value
+            ^ ":"
+            ^ (DiscreteValue.discrete_type_of_value value |> DiscreteType.string_of_var_type_discrete)
+            ^ ","
+            ^ DiscreteType.string_of_var_type var_type
+        );
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;
         (* Return *)

@@ -7,16 +7,16 @@ type typed_global_expression =
     | Typed_global_expr of typed_boolean_expression * var_type_discrete
 
 and typed_boolean_expression =
-	| Typed_And of typed_boolean_expression * typed_boolean_expression
-	| Typed_Or of typed_boolean_expression * typed_boolean_expression
+	| Typed_And of typed_boolean_expression * typed_boolean_expression (* implicitly bool type *)
+	| Typed_Or of typed_boolean_expression * typed_boolean_expression (* implicitly bool type *)
 	| Typed_discrete_bool_expr of typed_discrete_boolean_expression * var_type_discrete
 
 and typed_discrete_boolean_expression =
     | Typed_arithmetic_expr of typed_discrete_arithmetic_expression * var_type_discrete
-	| Typed_comparison of typed_discrete_boolean_expression * parsed_relop * typed_discrete_boolean_expression * var_type_discrete * var_type_discrete
-	| Typed_comparison_in of typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * var_type_discrete_number
-	| Typed_bool_expr of typed_boolean_expression * var_type_discrete
-	| Typed_not_expr of typed_boolean_expression
+	| Typed_comparison of typed_discrete_boolean_expression * parsed_relop * typed_discrete_boolean_expression * var_type_discrete (* implicitly bool type *)
+	| Typed_comparison_in of typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * var_type_discrete_number (* implicitly bool type *)
+	| Typed_bool_expr of typed_boolean_expression (* implicitly bool type *)
+	| Typed_not_expr of typed_boolean_expression (* implicitly bool type *)
 
 and typed_discrete_arithmetic_expression =
 	| Typed_plus of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number
@@ -31,15 +31,15 @@ and typed_discrete_term =
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete
 	| Typed_constant of DiscreteValue.discrete_value * var_type_discrete
-	| Typed_array of typed_boolean_expression array * var_type_discrete
-	| Typed_list of typed_boolean_expression list * var_type_discrete
+	| Typed_array of typed_boolean_expression array * inner_type
+	| Typed_list of typed_boolean_expression list * inner_type
 	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_unary_min of typed_discrete_factor * var_type_discrete_number
-    | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * var_type_discrete
+    | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * inner_type
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
 
 type typed_variable_access =
-    | Typed_variable_name of variable_name * var_type_discrete
+    | Typed_variable_name of variable_name
     | Typed_variable_access of typed_variable_access * typed_discrete_arithmetic_expression * var_type_discrete
 
 
@@ -69,12 +69,12 @@ and typed_state_predicate =
 
 type typed_guard = typed_discrete_boolean_expression list
 
-val string_of_typed_global_expression : variable_infos -> typed_global_expression -> string
+(*val string_of_typed_global_expression : variable_infos -> typed_global_expression -> string*)
 val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
-val string_of_typed_discrete_factor : variable_infos -> typed_discrete_factor -> string
+(*val string_of_typed_discrete_factor : variable_infos -> typed_discrete_factor -> string*)
 
-val type_of_typed_discrete_boolean_expression : typed_discrete_boolean_expression -> var_type_discrete
-val type_of_typed_discrete_factor : typed_discrete_factor -> var_type_discrete
+(*val type_of_typed_discrete_boolean_expression : typed_discrete_boolean_expression -> var_type_discrete*)
+(*val type_of_typed_discrete_factor : typed_discrete_factor -> var_type_discrete*)
 
 (* Check that a discrete init is well typed *)
 val check_discrete_init3 : variable_infos -> variable_name -> global_expression -> typed_global_expression

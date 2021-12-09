@@ -208,3 +208,20 @@ let rec default_type_if_needed = function
     | Var_type_discrete_array (inner_type, length) -> Var_type_discrete_array (default_type_if_needed inner_type, length)
     | Var_type_discrete_list inner_type -> Var_type_discrete_list (default_type_if_needed inner_type)
     | discrete_type -> discrete_type
+
+let rec replace_unknown_number var_type_discrete_number = function
+    | Var_type_discrete_number Var_type_discrete_unknown_number -> Var_type_discrete_number var_type_discrete_number
+    | Var_type_discrete_array (inner_type, length) -> Var_type_discrete_array (replace_unknown_number var_type_discrete_number inner_type, length)
+    | Var_type_discrete_list inner_type -> Var_type_discrete_list (replace_unknown_number var_type_discrete_number inner_type)
+    | discrete_type -> discrete_type
+
+
+let rec extract_number_of_discrete_type = function
+    | Var_type_discrete_number discrete_number_type -> Some discrete_number_type
+    | Var_type_discrete_array (inner_type, _)
+    | Var_type_discrete_list inner_type -> extract_number_of_discrete_type inner_type
+    | _ -> None
+
+let extract_number_of_type = function
+    | Var_type_discrete discrete_type -> extract_number_of_discrete_type discrete_type
+    | _ -> None

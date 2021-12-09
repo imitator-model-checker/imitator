@@ -98,3 +98,6 @@ val greater_defined : var_type_discrete -> var_type_discrete -> var_type_discret
 val greater_number_defined : var_type_discrete_number -> var_type_discrete_number -> var_type_discrete_number
 val default_number_type_if_needed : var_type_discrete_number -> var_type_discrete_number
 val default_type_if_needed : var_type_discrete -> var_type_discrete
+val replace_unknown_number : var_type_discrete_number -> var_type_discrete -> var_type_discrete
+val extract_number_of_discrete_type : var_type_discrete -> var_type_discrete_number option
+val extract_number_of_type : var_type -> var_type_discrete_number option
