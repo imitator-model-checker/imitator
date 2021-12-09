@@ -119,9 +119,16 @@ let string_of_accepting	= "accepting"
 (************************************************************)
 (** JSON *)
 (************************************************************)
-let json_of_string s = "\"" ^ s ^ "\""
-let json_NULL = "null" (*** NOTE: no quotes ***)
+let json_NULL	= "null" (*** NOTE: no quotes ***)
+let json_TRUE	= "true"
+let json_FALSE	= "false"
 
+let json_of_string s = "\"" ^ s ^ "\""
+
+let json_escape_ampersand str =
+	(Str.global_replace (Str.regexp "\n") (" ")
+		(Str.global_replace (Str.regexp "&") ("AND") str)
+	)
 
 (************************************************************)
 (** Parameter valuation (PVal.pval) *)
@@ -309,6 +316,20 @@ let string_of_guard variable_names = function
 		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
 *)
 
+
+(** Convert a guard into a JSON-style string *)
+let json_of_guard variable_names guard =
+	let customized_boolean_string = Constants.global_default_string in
+	match guard with
+	| True_guard -> json_TRUE
+	| False_guard -> json_FALSE
+	| Discrete_guard discrete_guard -> json_escape_ampersand (NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard)
+	| Continuous_guard continuous_guard -> json_escape_ampersand (LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard)
+	| Discrete_continuous_guard discrete_continuous_guard ->
+		(*** HACK for now (2021/12/09): just replace the " & " with some suited string ***)
+		(json_escape_ampersand (NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard))
+		^ " AND " ^
+		(json_escape_ampersand (LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard))
 
 
 (************************************************************)
@@ -582,7 +603,7 @@ let json_of_transition model automaton_index (transition : transition) =
 	^ "\n\t\t\t\t\t\t" ^ (json_of_string "PTA") ^ ": " ^ (json_of_string (model.automata_names automaton_index)) ^ ","
 	
 	(* Guard *)
-	^ "\n\t\t\t\t\t\t" ^ (json_of_string "guard") ^ ": " ^ (json_of_string (string_of_guard model.variable_names transition.guard)) ^ ","
+	^ "\n\t\t\t\t\t\t" ^ (json_of_string "guard") ^ ": " ^ (json_of_string (json_of_guard model.variable_names transition.guard)) ^ ","
 	
 	(* Updates *)
 	^ "\n\t\t\t\t\t\t" ^ (json_of_string "updates") ^ ": {"
