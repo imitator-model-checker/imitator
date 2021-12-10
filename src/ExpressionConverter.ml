@@ -104,7 +104,6 @@ and bool_expression_of_parsed_boolean_expression variable_infos = function
 	| Parsed_And (e1,e2) -> And_bool ((bool_expression_of_parsed_boolean_expression variable_infos e1), (bool_expression_of_parsed_boolean_expression variable_infos e2))
 	| Parsed_Or (e1, e2) -> Or_bool ((bool_expression_of_parsed_boolean_expression variable_infos e1), (bool_expression_of_parsed_boolean_expression variable_infos e2))
 	| Parsed_Discrete_boolean_expression parsed_discrete_boolean_expression ->
-	    (* TODO benjamin IMPORTANT check for true or false in order to return True_bool / False_bool *)
 		Discrete_boolean_expression (bool_expression_of_parsed_discrete_boolean_expression variable_infos parsed_discrete_boolean_expression)
 
 and bool_expression_of_parsed_discrete_boolean_expression variable_infos = function

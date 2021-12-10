@@ -267,8 +267,6 @@ let rec convert_value_to_discrete_type value target_type =
     (* Rational_value to Int_value *)
     | Rational_value _, Var_type_discrete_number Var_type_discrete_int ->
         Int_value (to_int_value value)
-
-    (* TODO benjamin IMPORTANT CHECK HERE *)
     (* No Conversion *)
     | Bool_value _, Var_type_discrete_bool
     | Binary_word_value _, Var_type_discrete_binary_word _ -> value

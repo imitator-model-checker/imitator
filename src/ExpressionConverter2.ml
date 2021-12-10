@@ -95,13 +95,6 @@ and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos di
 
 and discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type = function
 	| Typed_arithmetic_expr (expr, discrete_type) as x ->
-	    ImitatorUtilities.print_message Verbose_standard (
-	        "convert: "
-	        ^ string_of_typed_discrete_boolean_expression variable_infos x
-	        ^ " to "
-	        ^ DiscreteType.string_of_var_type_discrete_number discrete_number_type
-	        ^ " expression."
-	    );
 	    (match discrete_number_type with
 	    | Var_type_discrete_unknown_number
 	    | Var_type_discrete_rational ->
@@ -109,6 +102,7 @@ and discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable
 	    | Var_type_discrete_int ->
 	        Int_arithmetic_expression (int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr)
 	    )
+
 	| _ -> raise (InternalError "d")
 
 (* TODO benjamin CLEAN review this function *)
@@ -187,7 +181,6 @@ and bool_expression_of_typed_discrete_boolean_expression variable_infos = functi
         bool_expression_of_typed_arithmetic_expression variable_infos expr
 
 	| Typed_comparison (l_expr, relop, r_expr, discrete_type) ->
-	    ImitatorUtilities.print_message Verbose_standard ("yo:" ^ DiscreteType.string_of_var_type_discrete discrete_type);
 	    bool_expression_of_typed_comparison variable_infos l_expr relop r_expr discrete_type
 
 	| Typed_comparison_in (in_expr, lw_expr, up_expr, discrete_number_type) ->

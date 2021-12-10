@@ -88,7 +88,7 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
-    (* TODO benjamin IMPORTANT here decline array_expression to int_array_expression *)
+    (* TODO benjamin here decline array_expression to int_array_expression *)
     | Int_access of expression_access_type * int_arithmetic_expression
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_list_hd of list_expression

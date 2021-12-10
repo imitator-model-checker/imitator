@@ -94,10 +94,16 @@ val is_discrete_type_number_compatibles : var_type_discrete_number -> var_type_d
 (* Check if two discrete types are compatible *)
 val is_discrete_type_compatibles : var_type_discrete -> var_type_discrete -> bool
 
-val greater_defined : var_type_discrete -> var_type_discrete -> var_type_discrete
-val greater_number_defined : var_type_discrete_number -> var_type_discrete_number -> var_type_discrete_number
+(* Get the stronger number type between two given number types *)
+(* order: number < int = rat *)
+val stronger_discrete_number_type_of : var_type_discrete_number -> var_type_discrete_number -> var_type_discrete_number
+(* Get the stronger type between two given types, see stronger_discrete_number_type_of *)
+val stronger_discrete_type_of : var_type_discrete -> var_type_discrete -> var_type_discrete
+
+(*
 val default_number_type_if_needed : var_type_discrete_number -> var_type_discrete_number
 val default_type_if_needed : var_type_discrete -> var_type_discrete
 val replace_unknown_number : var_type_discrete_number -> var_type_discrete -> var_type_discrete
+*)
 val extract_number_of_discrete_type : var_type_discrete -> var_type_discrete_number option
 val extract_number_of_type : var_type -> var_type_discrete_number option

@@ -181,24 +181,27 @@ let rec is_discrete_type_compatibles var_type expr_type =
     (* other are not compatibles *)
     | _, _ -> false
 
-let greater_number_defined discrete_number_type_a discrete_number_type_b =
+(* Get the stronger number type between two given number types *)
+(* order: number < int = rat *)
+let stronger_discrete_number_type_of discrete_number_type_a discrete_number_type_b =
     match discrete_number_type_a, discrete_number_type_b with
     | Var_type_discrete_unknown_number, Var_type_discrete_int
     | Var_type_discrete_unknown_number, Var_type_discrete_rational -> discrete_number_type_b
     | _ -> discrete_number_type_a
 
-let rec greater_defined discrete_type_a discrete_type_b =
+(* Get the stronger type between two given types, see stronger_discrete_number_type_of *)
+let rec stronger_discrete_type_of discrete_type_a discrete_type_b =
     match discrete_type_a, discrete_type_b with
     | Var_type_discrete_number discrete_number_type_a, Var_type_discrete_number discrete_number_type_b ->
-        Var_type_discrete_number (greater_number_defined discrete_number_type_a discrete_number_type_b)
+        Var_type_discrete_number (stronger_discrete_number_type_of discrete_number_type_a discrete_number_type_b)
     | Var_type_discrete_array (inner_type_a, length), Var_type_discrete_array (inner_type_b, _) ->
-        Var_type_discrete_array ((greater_defined inner_type_a inner_type_b), length)
+        Var_type_discrete_array ((stronger_discrete_type_of inner_type_a inner_type_b), length)
     | Var_type_discrete_list inner_type_a, Var_type_discrete_list inner_type_b ->
-        Var_type_discrete_list (greater_defined inner_type_a inner_type_b)
+        Var_type_discrete_list (stronger_discrete_type_of inner_type_a inner_type_b)
     | _ ->
         discrete_type_a
 
-
+(*
 let default_number_type_if_needed = function
     | Var_type_discrete_unknown_number -> Var_type_discrete_rational
     | discrete_number_type -> discrete_number_type
@@ -214,7 +217,7 @@ let rec replace_unknown_number var_type_discrete_number = function
     | Var_type_discrete_array (inner_type, length) -> Var_type_discrete_array (replace_unknown_number var_type_discrete_number inner_type, length)
     | Var_type_discrete_list inner_type -> Var_type_discrete_list (replace_unknown_number var_type_discrete_number inner_type)
     | discrete_type -> discrete_type
-
+*)
 
 let rec extract_number_of_discrete_type = function
     | Var_type_discrete_number discrete_number_type -> Some discrete_number_type

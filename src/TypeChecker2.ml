@@ -357,7 +357,7 @@ and type_check_parsed_discrete_boolean_expression variable_infos infer_type_opt 
 
         (* Check that left and right members are type compatibles *)
         if is_discrete_type_compatibles l_type r_type then (
-            let discrete_type = greater_defined l_type r_type in
+            let discrete_type = stronger_discrete_type_of l_type r_type in
             Typed_comparison (l_typed_expr, relop, r_typed_expr, discrete_type), Var_type_discrete_bool
         )
         else
@@ -394,7 +394,7 @@ and type_check_parsed_discrete_boolean_expression variable_infos infer_type_opt 
         let lw_up_compatible = is_discrete_type_compatibles lw_type up_type in
 
         if in_lw_compatible && in_up_compatible && lw_up_compatible then (
-            let inner_number_type = greater_number_defined (greater_number_defined in_number_type lw_number_type) up_number_type in
+            let inner_number_type = stronger_discrete_number_type_of (stronger_discrete_number_type_of in_number_type lw_number_type) up_number_type in
             Typed_comparison_in (in_typed_expr, lw_typed_expr, up_typed_expr, inner_number_type), Var_type_discrete_bool
         )
         else
@@ -421,7 +421,7 @@ and type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_o
         (* Check that members are numbers and compatibles *)
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
-            let discrete_number_type = greater_number_defined l_number_type r_number_type in
+            let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
             Typed_plus (l_typed_expr, r_typed_expr, discrete_number_type), Var_type_discrete_number discrete_number_type
         | _ -> raise (TypeError "not compatible plus")
         )
@@ -433,7 +433,7 @@ and type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_o
         (* Check that members are numbers and compatibles *)
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
-            let discrete_number_type = greater_number_defined l_number_type r_number_type in
+            let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
             Typed_minus (l_typed_expr, r_typed_expr, discrete_number_type), Var_type_discrete_number discrete_number_type
         | l_type, r_type -> raise (TypeError (
             "not compatible minus: "
@@ -456,25 +456,30 @@ and type_check_parsed_discrete_term variable_infos infer_type_opt = function
 	    let l_typed_expr, l_type = type_check_parsed_discrete_term variable_infos infer_type_opt term in
 	    let r_typed_expr, r_type = type_check_parsed_discrete_factor variable_infos infer_type_opt factor in
 
-        (* TODO benjamin IMPORTANT CHECK TYPES *)
+        (* Check that members are numbers and compatibles *)
+        (match l_type, r_type with
+        | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
 
-        (* Doing division *)
-        let l_numconst = DiscreteValue.to_numconst_value lv in
-        let r_numconst = DiscreteValue.to_numconst_value rv in
-        let numconst_value = NumConst.div l_numconst r_numconst in
-        (* Check if result is representable by an int *)
-        let can_be_int = NumConst.is_int numconst_value in
+            (* Doing division *)
+            let l_numconst = DiscreteValue.to_numconst_value lv in
+            let r_numconst = DiscreteValue.to_numconst_value rv in
+            let numconst_value = NumConst.div l_numconst r_numconst in
+            (* Check if result is representable by an int *)
+            let can_be_int = NumConst.is_int numconst_value in
 
-        (* If it's representable by an int, it can be a rational or an int *)
-        let discrete_number_type =
-            if can_be_int then
-                Var_type_discrete_unknown_number
-            (* If it's not representable by an int, it's a rational *)
-            else
-                Var_type_discrete_rational
-        in
-        let discrete_type = Var_type_discrete_number discrete_number_type in
-        Typed_div (l_typed_expr, r_typed_expr, discrete_number_type), Var_type_discrete_number discrete_number_type
+            (* If it's representable by an int, it can be a rational or an int *)
+            let discrete_number_type =
+                if can_be_int then
+                    Var_type_discrete_unknown_number
+                (* If it's not representable by an int, it's a rational *)
+                else
+                    Var_type_discrete_rational
+            in
+            let discrete_type = Var_type_discrete_number discrete_number_type in
+            Typed_div (l_typed_expr, r_typed_expr, discrete_number_type), Var_type_discrete_number discrete_number_type
+
+        | _ -> raise (TypeError "")
+        )
 
     | Parsed_DT_mul (term, factor) ->
 	    let l_typed_expr, l_type = type_check_parsed_discrete_term variable_infos infer_type_opt term in
@@ -483,7 +488,7 @@ and type_check_parsed_discrete_term variable_infos infer_type_opt = function
         (* Check that members are numbers and compatibles *)
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
-            let discrete_number_type = greater_number_defined l_number_type r_number_type in
+            let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
             Typed_mul (l_typed_expr, r_typed_expr, discrete_number_type), Var_type_discrete_number discrete_number_type
         | _ -> raise (TypeError "not compatible mul")
         )
@@ -495,7 +500,7 @@ and type_check_parsed_discrete_term variable_infos infer_type_opt = function
         (* Check that members are numbers and compatibles *)
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
-            let discrete_number_type = greater_number_defined l_number_type r_number_type in
+            let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
 
             (* If left unknown and not right convert left *)
 
@@ -689,7 +694,6 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
 
         let resolved_signature = TypeConstraintResolver.signature_of_signature_constraint resolved_constraints_table function_signature_constraint in
 
-
         (* Print messages *)
         print_message Verbose_high ("\tInfer signature constraint of `" ^ function_name ^ "`: " ^ FunctionSig.string_of_signature_constraint function_signature_constraint);
 
@@ -700,8 +704,6 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
         print_message Verbose_high ("\tInfer signature of `" ^ string_of_parsed_factor variable_infos func ^ "` resolved as: " ^ FunctionSig.string_of_signature resolved_signature);
 
         let resolved_signature_without_return_type, return_type = FunctionSig.split_signature resolved_signature in
-
-        (* TODO benjamin refaire un type check ici avec inference sur la signature *)
 
         Typed_function_call (function_name, typed_expressions, return_type), return_type
 
@@ -789,9 +791,14 @@ and type_check_parsed_state_predicate_factor variable_infos infer_type_opt = fun
 	| Parsed_state_predicate_factor_NOT factor ->
 	    let typed_expr, discrete_type = type_check_parsed_state_predicate_factor variable_infos infer_type_opt factor in
 
-	    (* TODO benjamin IMPORTANT check is bool *)
-
-	    Typed_state_predicate_factor_NOT typed_expr, discrete_type
+        (* Check that expression type is boolean *)
+	    (match discrete_type with
+	    | Var_type_discrete_bool -> Typed_state_predicate_factor_NOT typed_expr, discrete_type
+	    | _ ->
+	        raise (TypeError (
+	            ""
+	        ))
+        )
 
 	| Parsed_simple_predicate predicate ->
 	    let typed_expr, discrete_type = type_check_parsed_simple_predicate variable_infos infer_type_opt predicate in
@@ -809,7 +816,7 @@ and type_check_parsed_state_predicate_factor variable_infos infer_type_opt = fun
 (* - -- - - - -- - - - -*)
 (* - -- - - - -- - - - -*)
 (* - -- - - - -- - - - -*)
-
+(*
 let infer_discrete_number_type discrete_number_type target_number_type =
     match discrete_number_type, target_number_type with
     (* If discrete type is unknown number, replace by target type *)
@@ -827,13 +834,13 @@ let rec infer_discrete_type discrete_type target_type =
         Var_type_discrete_list (infer_discrete_type inner_type target_inner_type)
     | x, y when x = y -> x
     | _ -> raise (InternalError "Target type for inference should have the same structure as inferred type.")
-
+*)
 (*
 (* Infer is a top-down operation on typed tree *)
 (* It 'downstairs' the type of top node, to descendants (if the type of top node is stronger than descendants types) *)
 let rec infer_typed_global_expression top_type = function
     | Typed_global_expr (expr, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
         Typed_global_expr (
             infer_typed_boolean_expression discrete_type expr,
             discrete_type
@@ -853,7 +860,7 @@ and infer_typed_boolean_expression top_type = function
         )
 
 	| Typed_discrete_bool_expr (expr, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
 	    Typed_discrete_bool_expr (
 	        infer_typed_discrete_boolean_expression greater_type expr,
 	        greater_type
@@ -861,14 +868,14 @@ and infer_typed_boolean_expression top_type = function
 
 and infer_typed_discrete_boolean_expression top_type = function
     | Typed_arithmetic_expr (expr, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
         Typed_arithmetic_expr (
             infer_typed_discrete_arithmetic_expression greater_type expr,
             greater_type
         )
 
 	| Typed_comparison (l_expr, relop, r_expr, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
         Typed_comparison (
             infer_typed_discrete_boolean_expression greater_type l_expr,
             relop,
@@ -882,7 +889,7 @@ and infer_typed_discrete_boolean_expression top_type = function
             | Var_type_discrete_number top_discrete_number_type -> top_discrete_number_type
             | _ -> raise (InternalError "Infer type should have the same structure as inferred node type.")
         in
-        let greater_number_type = greater_number_defined discrete_number_type top_discrete_number_type in
+        let greater_number_type = stronger_discrete_number_type_of discrete_number_type top_discrete_number_type in
         let greater_type = Var_type_discrete_number greater_number_type in
         Typed_comparison_in (
             infer_typed_discrete_arithmetic_expression greater_type in_expr,
@@ -907,7 +914,7 @@ and infer_typed_discrete_arithmetic_expression top_type = function
             | Var_type_discrete_number top_discrete_number_type -> top_discrete_number_type
             | _ -> raise (InternalError "Infer type should have the same structure as inferred node type.")
         in
-        let greater_number_type = greater_number_defined discrete_number_type top_discrete_number_type in
+        let greater_number_type = stronger_discrete_number_type_of discrete_number_type top_discrete_number_type in
         let greater_type = Var_type_discrete_number greater_number_type in
 
         Typed_plus (
@@ -922,7 +929,7 @@ and infer_typed_discrete_arithmetic_expression top_type = function
             | Var_type_discrete_number top_discrete_number_type -> top_discrete_number_type
             | _ -> raise (InternalError "Infer type should have the same structure as inferred node type.")
         in
-        let greater_number_type = greater_number_defined discrete_number_type top_discrete_number_type in
+        let greater_number_type = stronger_discrete_number_type_of discrete_number_type top_discrete_number_type in
         let greater_type = Var_type_discrete_number greater_number_type in
 
         Typed_minus (
@@ -932,7 +939,7 @@ and infer_typed_discrete_arithmetic_expression top_type = function
         )
 
 	| Typed_term (term, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
 	    Typed_term (
 	        infer_typed_discrete_term greater_type term,
             greater_type
@@ -945,7 +952,7 @@ and infer_typed_discrete_term top_type = function
             | Var_type_discrete_number top_discrete_number_type -> top_discrete_number_type
             | _ -> raise (InternalError "Infer type should have the same structure as inferred node type.")
         in
-        let greater_number_type = greater_number_defined discrete_number_type top_discrete_number_type in
+        let greater_number_type = stronger_discrete_number_type_of discrete_number_type top_discrete_number_type in
         let greater_type = Var_type_discrete_number greater_number_type in
 
         Typed_mul (
@@ -960,7 +967,7 @@ and infer_typed_discrete_term top_type = function
             | Var_type_discrete_number top_discrete_number_type -> top_discrete_number_type
             | _ -> raise (InternalError "Infer type should have the same structure as inferred node type.")
         in
-        let greater_number_type = greater_number_defined discrete_number_type top_discrete_number_type in
+        let greater_number_type = stronger_discrete_number_type_of discrete_number_type top_discrete_number_type in
         let greater_type = Var_type_discrete_number greater_number_type in
 
         Typed_div (
@@ -970,7 +977,7 @@ and infer_typed_discrete_term top_type = function
         )
 
 	| Typed_factor (factor, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
 	    Typed_factor (
 	        infer_typed_discrete_factor greater_type factor,
             greater_type
@@ -978,11 +985,11 @@ and infer_typed_discrete_term top_type = function
 
 and infer_typed_discrete_factor top_type = function
 	| Typed_variable (variable_name, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
         Typed_variable (variable_name, greater_type)
 
 	| Typed_constant (value, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
         Typed_constant (value, greater_type)
 
 	| Typed_array (array_expr, inner_type) ->
@@ -991,7 +998,7 @@ and infer_typed_discrete_factor top_type = function
             | Var_type_discrete_array (inner_type, _) -> inner_type
             | _ -> raise (InternalError "Infer type should have the same structure as inferred node type.")
         in
-        let greater_inner_type = greater_defined inner_type inner_top_type in
+        let greater_inner_type = stronger_discrete_type_of inner_type inner_top_type in
         Typed_array (
             Array.map (infer_typed_boolean_expression greater_inner_type) array_expr,
             greater_inner_type
@@ -1003,14 +1010,14 @@ and infer_typed_discrete_factor top_type = function
             | Var_type_discrete_array (inner_type, _) -> inner_type
             | _ -> raise (InternalError "Infer type should have the same structure as inferred node type.")
         in
-        let greater_inner_type = greater_defined inner_type inner_top_type in
+        let greater_inner_type = stronger_discrete_type_of inner_type inner_top_type in
         Typed_list (
             List.map (infer_typed_boolean_expression greater_inner_type) list_expr,
             greater_inner_type
         )
 
 	| Typed_expr (expr, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
 	    Typed_expr (
 	        infer_typed_discrete_arithmetic_expression greater_type expr,
             greater_type
@@ -1022,7 +1029,7 @@ and infer_typed_discrete_factor top_type = function
             | Var_type_discrete_number top_discrete_number_type -> top_discrete_number_type
             | _ -> raise (InternalError "Infer type should have the same structure as inferred node type.")
         in
-        let greater_number_type = greater_number_defined discrete_number_type top_discrete_number_type in
+        let greater_number_type = stronger_discrete_number_type_of discrete_number_type top_discrete_number_type in
         let greater_type = Var_type_discrete_number greater_number_type in
 
         Typed_unary_min (
@@ -1031,14 +1038,14 @@ and infer_typed_discrete_factor top_type = function
         )
 
     | Typed_access (factor, index_expr, discrete_type, inner_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
 	    let inner_top_type =
             match top_type with
             | Var_type_discrete_array (inner_type, _)
             | Var_type_discrete_list inner_type -> inner_type
             | _ -> raise (InternalError "Infer type should have the same structure as inferred node type.")
         in
-        let greater_inner_type = greater_defined inner_type inner_top_type in
+        let greater_inner_type = stronger_discrete_type_of inner_type inner_top_type in
 
         Typed_access (
             infer_typed_discrete_factor greater_type factor,
@@ -1048,7 +1055,7 @@ and infer_typed_discrete_factor top_type = function
         )
 
 	| Typed_function_call (function_name, arg_expressions, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
 
 	    Typed_function_call (
 	        function_name,
@@ -1065,7 +1072,7 @@ let infer_typed_loc_predicate = function
 
 let rec infer_typed_simple_predicate top_type = function
 	| Typed_discrete_boolean_expression (expr, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
         Typed_discrete_boolean_expression (
             infer_typed_discrete_boolean_expression greater_type expr,
             greater_type
@@ -1084,7 +1091,7 @@ and infer_typed_state_predicate top_type = function
 	    )
 
 	| Typed_state_predicate_term (term, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
         Typed_state_predicate_term (
             infer_typed_state_predicate_term greater_type term,
             greater_type
@@ -1098,7 +1105,7 @@ and infer_typed_state_predicate_term top_type = function
 	    )
 
 	| Typed_state_predicate_factor (factor, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
         Typed_state_predicate_factor (
             infer_typed_state_predicate_factor greater_type factor,
             greater_type
@@ -1111,14 +1118,14 @@ and infer_typed_state_predicate_factor top_type = function
         )
 
 	| Typed_simple_predicate (predicate, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
         Typed_simple_predicate (
             infer_typed_simple_predicate greater_type predicate,
             greater_type
         )
 
 	| Typed_state_predicate (predicate, discrete_type) ->
-        let greater_type = greater_defined discrete_type top_type in
+        let greater_type = stronger_discrete_type_of discrete_type top_type in
         Typed_state_predicate (
             infer_typed_state_predicate greater_type predicate,
             greater_type
@@ -1174,7 +1181,6 @@ let check_discrete_init3 variable_infos variable_name expr =
     let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
     (* Get variable type *)
     let var_type = get_type_of_variable variable_infos discrete_index in
-    let var_discrete_type = DiscreteType.discrete_type_of_var_type var_type in
 
     (* Check whether variable is clock or parameter *)
     let is_clock_or_parameter = var_type == DiscreteType.Var_type_clock || var_type == DiscreteType.Var_type_parameter in
@@ -1206,11 +1212,11 @@ let check_nonlinear_constraint variable_infos nonlinear_constraint =
 
     let typed_nonlinear_constraint, discrete_type = type_check_parsed_discrete_boolean_expression variable_infos None nonlinear_constraint in
 
-    ImitatorUtilities.print_message Verbose_standard "-------------------------";
-    ImitatorUtilities.print_message Verbose_standard "infer tree for nonlinear constraint: ";
-    ImitatorUtilities.print_message Verbose_standard "-------------------------";
-    ImitatorUtilities.print_message Verbose_standard (string_of_typed_discrete_boolean_expression variable_infos typed_nonlinear_constraint);
-    ImitatorUtilities.print_message Verbose_standard "-------------------------";
+    ImitatorUtilities.print_message Verbose_high "-------------------------";
+    ImitatorUtilities.print_message Verbose_high "Typed tree of nonlinear constraint: ";
+    ImitatorUtilities.print_message Verbose_high "-------------------------";
+    ImitatorUtilities.print_message Verbose_high (string_of_typed_discrete_boolean_expression variable_infos typed_nonlinear_constraint);
+    ImitatorUtilities.print_message Verbose_high "-------------------------";
 
     (* Check that non-linear constraint is a Boolean expression *)
     match discrete_type with
@@ -1293,11 +1299,11 @@ let check_state_predicate variable_infos predicate =
     (* Type check *)
     let typed_predicate, discrete_type = type_check_parsed_state_predicate variable_infos None predicate in
 
-    ImitatorUtilities.print_message Verbose_standard "-------------------------";
-    ImitatorUtilities.print_message Verbose_standard "infer tree for property: ";
-    ImitatorUtilities.print_message Verbose_standard "-------------------------";
-    ImitatorUtilities.print_message Verbose_standard (string_of_typed_state_predicate variable_infos typed_predicate);
-    ImitatorUtilities.print_message Verbose_standard "-------------------------";
+    ImitatorUtilities.print_message Verbose_high "-------------------------";
+    ImitatorUtilities.print_message Verbose_high "Type tree of property: ";
+    ImitatorUtilities.print_message Verbose_high "-------------------------";
+    ImitatorUtilities.print_message Verbose_high (string_of_typed_state_predicate variable_infos typed_predicate);
+    ImitatorUtilities.print_message Verbose_high "-------------------------";
 
     match discrete_type with
     | Var_type_discrete_bool -> typed_predicate
