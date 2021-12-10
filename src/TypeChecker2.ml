@@ -516,6 +516,8 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
 	| Parsed_DF_variable variable_name ->
         let discrete_type = get_discrete_type_of_variable_by_name variable_infos variable_name in
 
+        (* If infer type is given and discrete type is unknown number *)
+        (* we can infer directly unknown number to infer type *)
         let infer_discrete_type =
             match infer_type_opt, discrete_type with
             | Some infer_type, Var_type_discrete_number Var_type_discrete_unknown_number -> Var_type_discrete_number infer_type
@@ -527,6 +529,8 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
 	| Parsed_DF_constant value ->
         let discrete_type = DiscreteValue.discrete_type_of_value value in
 
+        (* If infer type is given and discrete type is unknown number *)
+        (* we can infer directly unknown number to infer type *)
         let infer_discrete_type =
             match infer_type_opt, discrete_type with
             | Some infer_type, Var_type_discrete_number Var_type_discrete_unknown_number -> Var_type_discrete_number infer_type
@@ -571,7 +575,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
 
     | Parsed_DF_access (factor, index_expr) ->
         let typed_factor, factor_type = type_check_parsed_discrete_factor variable_infos infer_type_opt factor in
-        let typed_index, index_type = type_check_parsed_discrete_arithmetic_expression variable_infos None index_expr in
+        let typed_index, index_type = type_check_parsed_discrete_arithmetic_expression variable_infos None (* None: mean no inference for index *) index_expr in
 
         if not (is_discrete_type_number_type index_type) || is_discrete_type_rational_type index_type then
             raise (TypeError "Index cannot be another type than int.");
@@ -619,7 +623,8 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
             ));
 
         (* ------- *)
-        let type_checks = List.map (type_check_parsed_boolean_expression variable_infos None) argument_expressions in
+        (* We doesn't infer arguments types because arguments types are not dependent of the context *)
+        let type_checks = List.map (type_check_parsed_boolean_expression variable_infos None (* None: mean no inference for arguments *)) argument_expressions in
         let call_signature = List.map (fun (_, discrete_type) -> discrete_type) type_checks in
 
         let typed_expressions = List.map (fun (typed_expr, _) -> typed_expr) type_checks in

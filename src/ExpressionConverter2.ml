@@ -94,7 +94,7 @@ and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos di
 	| _ -> raise (InternalError "b")
 
 and discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type = function
-	| Typed_arithmetic_expr (expr, discrete_type) as x ->
+	| Typed_arithmetic_expr (expr, discrete_type) ->
 	    (match discrete_number_type with
 	    | Var_type_discrete_unknown_number
 	    | Var_type_discrete_rational ->
