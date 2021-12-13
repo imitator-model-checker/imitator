@@ -21,7 +21,7 @@ open AbstractModel
 open AbstractProperty
 open DiscreteExpressions
 open DiscreteType
-open TypeChecker2
+open ExpressionConverter2.TypeChecker
 
 (* Convert parsed_loc_predicate *)
 let loc_predicate_of_typed_loc_predicate model_info = function
@@ -39,7 +39,7 @@ let simple_predicate_of_typed_simple_predicate model_info = function
 	    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model model_info in
 
 	    AbstractProperty.Discrete_boolean_expression (
-            ExpressionConverter2.bool_expression_of_typed_discrete_boolean_expression variable_infos expr
+            ExpressionConverter2.Convert.bool_expression_of_typed_discrete_boolean_expression variable_infos expr
         )
 
 	| Typed_loc_predicate predicate ->
@@ -97,6 +97,6 @@ let convert_state_predicate model_info predicate =
     (* Get variable info *)
     let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model model_info in
     (* Type check *)
-    let typed_predicate = TypeChecker2.check_state_predicate variable_infos predicate in
+    let typed_predicate = ExpressionConverter2.TypeChecker.check_state_predicate variable_infos predicate in
     (* Convert *)
     state_predicate_of_typed_state_predicate model_info typed_predicate

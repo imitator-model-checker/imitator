@@ -85,6 +85,7 @@ let is_resolved_constraints_compatibles constraint_a constraint_b =
         length_a = length_b
     | _ -> false
 
+(*
 (* Special type of constraint, dependent type are type dependent on value *)
 (* for example fill_left : binary(l1) -> l:int -> binary(l1 + l) *)
 (* The type of the returned binary word is dependent on the value of the second argument *)
@@ -111,6 +112,8 @@ let resolve_dependent_type_constraint variable_infos signature_constraint expres
     ) signature_constraint_with_expressions
     in
     dependent_type_constraints
+*)
+
 
 let resolve_constraints variable_infos signature discrete_types expressions =
     (* Zip lists: signature types / discrete types *)

@@ -513,9 +513,10 @@ let string_of_parsed_init_state_predicate variable_infos = function
 	    ^ " = "
 	    ^ string_of_parsed_global_expression variable_infos expr
 
-(* TODO benjamin CLEAN to delete *)
+
 let string_of_parsed_nonlinear_constraint = string_of_parsed_discrete_boolean_expression
 
+(*
 (* Try to reduce a parsed global expression, cannot take into account variables ! *)
 (* This function is used for computing constant values *)
 let rec try_reduce_parsed_global_expression constants = function
@@ -691,6 +692,8 @@ let try_reduce_parsed_term constants term =
 let try_reduce_parsed_factor constants factor =
     let expr = Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor factor)))) in
     try_reduce_parsed_global_expression constants expr
+*)
+
 
 (** Utils **)
 

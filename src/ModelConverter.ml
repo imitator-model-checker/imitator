@@ -1123,7 +1123,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
             (* Get the variable index *)
             let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
             (* TYPE CHECKING *)
-            let converted_expr = ExpressionConverter2.convert_discrete_init3 variable_infos variable_name expr in
+            let converted_expr = DiscreteExpressionConverter.convert_discrete_init3 variable_infos variable_name expr in
 
             (* Check if it was already declared *)
             if Hashtbl.mem init_values_for_discrete discrete_index then (
@@ -1496,7 +1496,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				| Some cost ->
 					costs.(automaton_index).(location_index) <- Some (
 						LinearConstraint.cast_p_of_pxd_linear_term
-						(ExpressionConverter2.linear_term_of_linear_expression variable_infos cost)
+						(ExpressionConverter2.Convert.linear_term_of_linear_expression variable_infos cost)
 						true
 					);
 				| None -> ()
@@ -1522,7 +1522,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
 
 				(* Update the array of invariants *)
-				invariants.(automaton_index).(location_index) <- ExpressionConverter2.convert_guard variable_infos location.invariant;
+				invariants.(automaton_index).(location_index) <- DiscreteExpressionConverter.convert_guard variable_infos location.invariant;
 
 				(* Does the model has stopwatches? *)
 				if location.stopped <> [] then has_non_1rate_clocks := true;
@@ -1652,7 +1652,7 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
   let to_intermediate_abstract_clock_update (variable_access, update_expr) =
     let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-    let _, converted_update = ExpressionConverter2.convert_continuous_update variable_infos variable_access update_expr in
+    let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos variable_access update_expr in
     (variable_index, converted_update)
   in
 
@@ -1711,7 +1711,7 @@ let convert_normal_updates variable_infos updates_list =
 	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates variable_infos updates_list in
 
     (* Convert discrete udpates *)
-    let converted_discrete_updates = List.map (fun (variable_access, expr) -> ExpressionConverter2.convert_update variable_infos variable_access expr) parsed_discrete_updates in
+    let converted_discrete_updates = List.map (fun (variable_access, expr) -> DiscreteExpressionConverter.convert_update variable_infos variable_access expr) parsed_discrete_updates in
     (* Convert continuous udpates *)
     let converted_clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
 
@@ -1736,7 +1736,7 @@ let convert_updates variable_infos updates : updates =
     let conditional_updates_values : conditional_update list = List.map (fun u ->
         let boolean_value, if_updates, else_updates = get_conditional_update_value u in
 
-        let convert_boolean_expr = ExpressionConverter2.convert_conditional variable_infos boolean_value in
+        let convert_boolean_expr = DiscreteExpressionConverter.convert_conditional variable_infos boolean_value in
 
         let convert_if_updates = convert_normal_updates variable_infos if_updates in
         let convert_else_updates = convert_normal_updates variable_infos else_updates in
@@ -1805,7 +1805,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
           List.iter (fun (action_index, guard, updates, target_location_index) ->
 
               (* Convert the guard *)
-              let converted_guard = ExpressionConverter2.convert_guard variable_infos guard in
+              let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
 
               (* Filter the updates that should assign some variable name to be removed to any expression *)
               (* let filtered_updates = List.filter (fun (variable_name, (*linear_expression*)_) ->
@@ -1958,7 +1958,7 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_rational_numconst_pairs in
 
 		(* Create initial constraint (through parsing) *)
-		let initial_constraint = (ExpressionConverter2.linear_constraint_of_convex_predicate variable_infos convex_predicate) in
+		let initial_constraint = (ExpressionConverter2.Convert.linear_constraint_of_convex_predicate variable_infos convex_predicate) in
 
 		(* Intersects initial constraint with discretes *)
 		LinearConstraint.pxd_intersection_assign initial_constraint [discretes];
@@ -3185,7 +3185,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			let action_index_of_action_name action_name = try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Action `" ^ action_name ^ "` not found in HashTable `index_of_actions` when defining function `action_index_of_action_name`, althoug this should have been checked before.")) in
 			
 			(* Create the function converting a ParsingStructure.parsed_duration into a LinearConstraint.p_linear_term *)
-			let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (ExpressionConverter2.linear_term_of_linear_expression variable_infos parsed_duration) true in
+			let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (ExpressionConverter2.Convert.linear_term_of_linear_expression variable_infos parsed_duration) true in
 			
 			(* Get the info from the observer pattern *)
 			let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, abstract_property =
@@ -3333,7 +3333,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* TYPE CHECKING *)
         let constant = name, expr, var_type in
 
-        let typed_expr(*, expr_type *) = ExpressionConverter2.convert_discrete_constant initialized_constants constant in
+        let typed_expr(*, expr_type *) = DiscreteExpressionConverter.convert_discrete_constant initialized_constants constant in
         let value = DiscreteExpressionEvaluator.try_reduce_global_expression typed_expr in
         ImitatorUtilities.print_message Verbose_standard (
             "constant value "
