@@ -705,7 +705,7 @@ and try_reduce_expression_access_value index_expr = function
 (* TODO benjamin REPLACE BY A REAL EVALUATION OF CONSTANT and not this tricky function using try *)
 let is_global_expression_constant expr =
     try (
-        let reduced = try_reduce_global_expression expr in
+        let _ = try_reduce_global_expression expr in
         true
     )
     with _ -> false

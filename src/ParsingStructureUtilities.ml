@@ -516,184 +516,47 @@ let string_of_parsed_init_state_predicate variable_infos = function
 
 let string_of_parsed_nonlinear_constraint = string_of_parsed_discrete_boolean_expression
 
-(*
-(* Try to reduce a parsed global expression, cannot take into account variables ! *)
-(* This function is used for computing constant values *)
-let rec try_reduce_parsed_global_expression constants = function
-        | Parsed_global_expression expr -> try_reduce_parsed_boolean_expression constants expr
-
-and try_reduce_parsed_boolean_expression constants expr =
-
-    let rec try_reduce_parsed_boolean_expression_rec = function
-	    | Parsed_And (l_expr, r_expr) ->
-	        DiscreteValue._and
-                (try_reduce_parsed_boolean_expression_rec l_expr)
-                (try_reduce_parsed_boolean_expression_rec r_expr)
-	    | Parsed_Or (l_expr, r_expr) ->
-	        DiscreteValue._or
-                (try_reduce_parsed_boolean_expression_rec l_expr)
-                (try_reduce_parsed_boolean_expression_rec r_expr)
-	    | Parsed_Discrete_boolean_expression expr ->
-	        try_reduce_parsed_discrete_boolean_expression expr
-
-    and try_reduce_parsed_discrete_boolean_expression = function
-        | Parsed_arithmetic_expression expr ->
-            try_reduce_parsed_arithmetic_expression constants expr
-        | Parsed_expression (l_expr, relop, r_expr) ->
-            eval_parsed_relop
-                relop
-                (try_reduce_parsed_discrete_boolean_expression l_expr)
-                (try_reduce_parsed_discrete_boolean_expression r_expr)
-        | Parsed_expression_in (expr1, expr2, expr3) ->
-		    (* Compute the first one to avoid redundancy *)
-		    let expr1_evaluated = try_reduce_parsed_arithmetic_expression constants expr1 in
-		    let expr2_evaluated = try_reduce_parsed_arithmetic_expression constants expr2 in
-		    let expr3_evaluated = try_reduce_parsed_arithmetic_expression constants expr3 in
-		    DiscreteValue._and
-			    (DiscreteValue.leq expr2_evaluated expr1_evaluated)
-			    (DiscreteValue.leq expr1_evaluated expr3_evaluated)
-        | Parsed_boolean_expression expr ->
-            try_reduce_parsed_boolean_expression_rec expr
-	    | Parsed_Not expr ->
-	        DiscreteValue._not
-	            (try_reduce_parsed_boolean_expression_rec expr)
-
-    and eval_parsed_relop relop value_1 value_2 =
-        	match relop with
-        	| PARSED_OP_L		-> DiscreteValue.l value_1 value_2
-        	| PARSED_OP_LEQ	    -> DiscreteValue.leq value_1 value_2
-        	| PARSED_OP_EQ		-> DiscreteValue.bool_equal value_1  value_2
-        	| PARSED_OP_NEQ	    -> DiscreteValue.bool_neq value_1 value_2
-        	| PARSED_OP_GEQ	    -> DiscreteValue.geq value_1 value_2
-        	| PARSED_OP_G		-> DiscreteValue.g value_1  value_2
-
-    in
-    try_reduce_parsed_boolean_expression_rec expr
-
-and try_reduce_parsed_arithmetic_expression constants expr =
-
-    let rec try_reduce_parsed_arithmetic_expression_rec = function
-        | Parsed_DAE_plus (arithmetic_expr, term) ->
-            DiscreteValue.add
-                (try_reduce_parsed_arithmetic_expression_rec arithmetic_expr)
-                (try_reduce_parsed_term term)
-        | Parsed_DAE_minus (arithmetic_expr, term) ->
-            DiscreteValue.sub
-                (try_reduce_parsed_arithmetic_expression_rec arithmetic_expr)
-                (try_reduce_parsed_term term)
-        | Parsed_DAE_term term ->
-            try_reduce_parsed_term term
-
-    and try_reduce_parsed_term = function
-        | Parsed_DT_mul (term, factor) ->
-            DiscreteValue.mul
-                (try_reduce_parsed_term term)
-                (try_reduce_parsed_factor factor)
-        | Parsed_DT_div (term, factor) ->
-            DiscreteValue.div
-                (try_reduce_parsed_term term)
-                (try_reduce_parsed_factor factor)
-        | Parsed_DT_factor factor ->
-            try_reduce_parsed_factor factor
-
-    and try_reduce_parsed_factor = function
-        | Parsed_DF_variable variable_name ->
-            if (Hashtbl.mem constants variable_name) then (
-                (* Retrieve the value of the global constant *)
-                Hashtbl.find constants variable_name
-            ) else
-                raise (InternalError ("Unable to reduce a non-constant expression: " ^ variable_name ^ " found. It should be checked before."))
-        | Parsed_DF_constant value -> value
-        | Parsed_DF_array expr_array ->
-            let values = Array.map (try_reduce_parsed_boolean_expression constants) expr_array in
-            DiscreteValue.Array_value values
-        | Parsed_DF_list expr_list ->
-            let values = List.map (try_reduce_parsed_boolean_expression constants) expr_list in
-            DiscreteValue.List_value values
-        | Parsed_DF_access (factor, index_expr) ->
-
-            let values = try_reduce_parsed_factor factor in
-            let index = try_reduce_parsed_arithmetic_expression_rec index_expr in
-            (* Get value at index *)
-            (* Factor should be an array or list (checked before by type checker) *)
-            (match values with
-            | DiscreteValue.Array_value array_values ->
-                let int_index = DiscreteValue.int_value index in
-                Array.get array_values (Int32.to_int int_index)
-            | DiscreteValue.List_value list_values ->
-                let int_index = DiscreteValue.int_value index in
-                List.nth list_values (Int32.to_int int_index)
-            | _ ->
-                raise (InternalError
-                    "An access on other element than an array or a list was found, although it was been type checked before."
-                )
-            )
-
-        | Parsed_DF_expression arithmetic_expr -> try_reduce_parsed_arithmetic_expression_rec arithmetic_expr
-        | Parsed_DF_unary_min factor ->
-            DiscreteValue.neg (try_reduce_parsed_factor factor)
-        | Parsed_rational_of_int_function expr ->
-            (* Convert with no problem because it's already type checked *)
-            DiscreteValue.convert_to_rational_value (try_reduce_parsed_arithmetic_expression_rec expr)
-        | Parsed_pow_function (expr, exp) ->
-
-            let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
-            let reduced_exp = try_reduce_parsed_arithmetic_expression_rec exp in
-            Functions.dynamic_function_call "pow" [reduced_expr; reduced_exp]
-
-        | Parsed_shift_function (fun_type, factor, expr) ->
-            let reduced_factor = try_reduce_parsed_factor factor in
-            let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
-            begin
-            match fun_type with
-            | Parsed_shift_left -> DiscreteValue.shift_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
-            | Parsed_shift_right -> DiscreteValue.shift_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
-            | Parsed_fill_left -> DiscreteValue.fill_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
-            | Parsed_fill_right -> DiscreteValue.fill_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
-            end
-
-        | Parsed_bin_log_function (fun_type, l_factor, r_factor) ->
-            let reduced_l_factor = try_reduce_parsed_factor l_factor in
-            let reduced_r_factor = try_reduce_parsed_factor r_factor in
-            begin
-            match fun_type with
-            | Parsed_log_and -> DiscreteValue.log_and reduced_l_factor reduced_r_factor
-            | Parsed_log_or -> DiscreteValue.log_or reduced_l_factor reduced_r_factor
-            | Parsed_log_xor -> DiscreteValue.log_xor reduced_l_factor reduced_r_factor
-            end
-
-        | Parsed_array_append (l_factor, r_factor) ->
-            let reduced_l_factor = try_reduce_parsed_factor l_factor in
-            let reduced_r_factor = try_reduce_parsed_factor r_factor in
-            DiscreteValue.array_append reduced_l_factor reduced_r_factor
-
-        | Parsed_list_cons (expr, factor) ->
-            let reduced_expr = try_reduce_parsed_boolean_expression constants expr in
-            let reduced_factor = try_reduce_parsed_factor factor in
-            DiscreteValue.list_cons reduced_expr reduced_factor
-
-        | Parsed_function_call (variable, argument_expressions) ->
-            let function_name = function_name_of_parsed_factor variable in
-            let reduced_expressions = List.map (try_reduce_parsed_boolean_expression constants) argument_expressions in
-            Functions.dynamic_function_call function_name reduced_expressions
 
 
-        | Parsed_log_not factor ->
+let string_of_parsed_loc_predicate = function
+	| Parsed_loc_predicate_EQ (automaton_name, location_name) ->
+	    automaton_name ^ " = " ^ location_name
+	| Parsed_loc_predicate_NEQ (automaton_name, location_name) ->
+	    automaton_name ^ " <> " ^ location_name
 
-            let reduced_factor = try_reduce_parsed_factor factor in
-            DiscreteValue.log_not reduced_factor
-    in
-    try_reduce_parsed_arithmetic_expression_rec expr
+let string_of_parsed_simple_predicate variable_infos = function
+	| Parsed_discrete_boolean_expression expr -> string_of_parsed_discrete_boolean_expression variable_infos expr
+	| Parsed_loc_predicate parsed_loc_predicate -> string_of_parsed_loc_predicate parsed_loc_predicate
+	| Parsed_state_predicate_true -> Constants.default_string.true_string
+	| Parsed_state_predicate_false -> Constants.default_string.false_string
+	| Parsed_state_predicate_accepting -> "accepting"
 
-let try_reduce_parsed_term constants term =
-    let expr = Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term term))) in
-    try_reduce_parsed_global_expression constants expr
+let rec string_of_parsed_state_predicate_factor variable_infos = function
+	| Parsed_state_predicate_factor_NOT predicate_factor ->
+	    Constants.default_string.not_operator
+	    ^ "(" ^ string_of_parsed_state_predicate_factor variable_infos predicate_factor ^ ")"
+	| Parsed_simple_predicate simple_predicate ->
+	    string_of_parsed_simple_predicate variable_infos simple_predicate
+	| Parsed_state_predicate state_predicate ->
+	    string_of_parsed_state_predicate variable_infos state_predicate
 
-let try_reduce_parsed_factor constants factor =
-    let expr = Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor factor)))) in
-    try_reduce_parsed_global_expression constants expr
-*)
+and string_of_parsed_state_predicate_term variable_infos = function
+	| Parsed_state_predicate_term_AND (l_predicate_term, r_predicate_term) ->
+	    string_of_parsed_state_predicate_term variable_infos l_predicate_term
+	    ^ Constants.default_string.and_operator
+	    ^ string_of_parsed_state_predicate_term variable_infos r_predicate_term
 
+	| Parsed_state_predicate_factor predicate_factor ->
+	    string_of_parsed_state_predicate_factor variable_infos predicate_factor
+
+and string_of_parsed_state_predicate variable_infos = function
+	| Parsed_state_predicate_OR (l_predicate_term, r_predicate_term) ->
+	    string_of_parsed_state_predicate variable_infos l_predicate_term
+	    ^ Constants.default_string.or_operator
+	    ^ string_of_parsed_state_predicate variable_infos r_predicate_term
+
+	| Parsed_state_predicate_term predicate_term ->
+	    string_of_parsed_state_predicate_term variable_infos predicate_term
 
 (** Utils **)
 

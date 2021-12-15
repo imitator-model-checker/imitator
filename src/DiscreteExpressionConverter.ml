@@ -19,16 +19,15 @@ open ParsingStructure
 open AbstractModel
 open DiscreteExpressions
 open DiscreteType
-open TypeChecker2
-open ExpressionConverter2.Convert
+open ExpressionConverter.Convert
 
 let convert_discrete_init3 variable_infos variable_name expr =
     (* Get typed expression *)
-    let typed_expr = ExpressionConverter2.TypeChecker.check_discrete_init3 variable_infos variable_name expr in
+    let typed_expr = ExpressionConverter.TypeChecker.check_discrete_init variable_infos variable_name expr in
     (* Print *)
-(*    ImitatorUtilities.print_message Verbose_standard (ExpressionConverter2.TypeChecker.string_of_typed_global_expression variable_infos typed_expr);*)
+(*    ImitatorUtilities.print_message Verbose_standard (ExpressionConverter.TypeChecker.string_of_typed_global_expression variable_infos typed_expr);*)
     (* Convert *)
-    ExpressionConverter2.Convert.global_expression_of_typed_global_expression variable_infos typed_expr
+    ExpressionConverter.Convert.global_expression_of_typed_global_expression variable_infos typed_expr
 
 let convert_discrete_constant initialized_constants (name, expr, var_type) =
 
@@ -41,8 +40,8 @@ let convert_discrete_constant initialized_constants (name, expr, var_type) =
     }
     in
 
-    let typed_expr = ExpressionConverter2.TypeChecker.check_constant_expression variable_infos (name, expr, var_type) in
-    ExpressionConverter2.Convert.global_expression_of_typed_global_expression variable_infos typed_expr
+    let typed_expr = ExpressionConverter.TypeChecker.check_constant_expression variable_infos (name, expr, var_type) in
+    ExpressionConverter.Convert.global_expression_of_typed_global_expression variable_infos typed_expr
 
 
 
@@ -51,14 +50,14 @@ let convert_discrete_constant initialized_constants (name, expr, var_type) =
 (*------------------------------------------------------------*)
 let nonlinear_constraint_of_convex_predicate variable_infos guard =
     (* Type check guard *)
-    let typed_guard = ExpressionConverter2.TypeChecker.check_guard variable_infos guard in
+    let typed_guard = ExpressionConverter.TypeChecker.check_guard variable_infos guard in
 
 (*    let str_typed_nonlinear_constraints = List.map (string_of_typed_discrete_boolean_expression variable_infos) typed_guard in*)
 (*    let str = OCamlUtilities.string_of_list_of_string_with_sep "\n & " str_typed_nonlinear_constraints in*)
 (*    ImitatorUtilities.print_message Verbose_standard str;*)
 
     (* Convert *)
-    let converted_nonlinear_constraints = List.rev_map (ExpressionConverter2.Convert.nonlinear_constraint_of_typed_nonlinear_constraint variable_infos) typed_guard in
+    let converted_nonlinear_constraints = List.rev_map (ExpressionConverter.Convert.nonlinear_constraint_of_typed_nonlinear_constraint variable_infos) typed_guard in
 
     (* Try reduce *)
     NonlinearConstraint.Nonlinear_constraint converted_nonlinear_constraints
@@ -110,7 +109,7 @@ let convert_guard variable_infos guard_convex_predicate =
         (* Only continuous inequalities: continuous *)
         | [] , continuous_guard_convex_predicate ->
             Continuous_guard (
-                ExpressionConverter2.Convert.linear_constraint_of_convex_predicate variable_infos continuous_guard_convex_predicate
+                ExpressionConverter.Convert.linear_constraint_of_convex_predicate variable_infos continuous_guard_convex_predicate
             )
 
         (* Otherwise: both *)
@@ -137,18 +136,18 @@ let convert_guard variable_infos guard_convex_predicate =
     ) with False_exception -> False_guard
 
 let convert_update variable_infos variable_access expr =
-    let typed_variable_access, typed_expr = ExpressionConverter2.TypeChecker.check_update variable_infos variable_access expr in
-    ExpressionConverter2.Convert.variable_access_of_typed_variable_access variable_infos typed_variable_access,
-    ExpressionConverter2.Convert.global_expression_of_typed_global_expression variable_infos typed_expr
+    let typed_variable_access, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos variable_access expr in
+    ExpressionConverter.Convert.variable_access_of_typed_variable_access variable_infos typed_variable_access,
+    ExpressionConverter.Convert.global_expression_of_typed_global_expression variable_infos typed_expr
 
 let convert_continuous_update variable_infos variable_access expr =
-    let typed_variable_access, typed_expr = ExpressionConverter2.TypeChecker.check_update variable_infos variable_access expr in
-    ExpressionConverter2.Convert.variable_access_of_typed_variable_access variable_infos typed_variable_access,
-    ExpressionConverter2.Convert.linear_term_of_typed_global_expression variable_infos typed_expr
+    let typed_variable_access, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos variable_access expr in
+    ExpressionConverter.Convert.variable_access_of_typed_variable_access variable_infos typed_variable_access,
+    ExpressionConverter.Convert.linear_term_of_typed_global_expression variable_infos typed_expr
 
 
 let convert_conditional variable_infos expr =
     (* Check *)
-    let typed_expr = ExpressionConverter2.TypeChecker.check_conditional variable_infos expr in
+    let typed_expr = ExpressionConverter.TypeChecker.check_conditional variable_infos expr in
     (* Convert *)
-    ExpressionConverter2.Convert.bool_expression_of_typed_boolean_expression variable_infos typed_expr
+    ExpressionConverter.Convert.bool_expression_of_typed_boolean_expression variable_infos typed_expr

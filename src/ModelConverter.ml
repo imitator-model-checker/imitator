@@ -1496,7 +1496,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				| Some cost ->
 					costs.(automaton_index).(location_index) <- Some (
 						LinearConstraint.cast_p_of_pxd_linear_term
-						(ExpressionConverter2.Convert.linear_term_of_linear_expression variable_infos cost)
+						(ExpressionConverter.Convert.linear_term_of_linear_expression variable_infos cost)
 						true
 					);
 				| None -> ()
@@ -1958,7 +1958,7 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_rational_numconst_pairs in
 
 		(* Create initial constraint (through parsing) *)
-		let initial_constraint = (ExpressionConverter2.Convert.linear_constraint_of_convex_predicate variable_infos convex_predicate) in
+		let initial_constraint = (ExpressionConverter.Convert.linear_constraint_of_convex_predicate variable_infos convex_predicate) in
 
 		(* Intersects initial constraint with discretes *)
 		LinearConstraint.pxd_intersection_assign initial_constraint [discretes];
@@ -3185,7 +3185,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			let action_index_of_action_name action_name = try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Action `" ^ action_name ^ "` not found in HashTable `index_of_actions` when defining function `action_index_of_action_name`, althoug this should have been checked before.")) in
 			
 			(* Create the function converting a ParsingStructure.parsed_duration into a LinearConstraint.p_linear_term *)
-			let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (ExpressionConverter2.Convert.linear_term_of_linear_expression variable_infos parsed_duration) true in
+			let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (ExpressionConverter.Convert.linear_term_of_linear_expression variable_infos parsed_duration) true in
 			
 			(* Get the info from the observer pattern *)
 			let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, abstract_property =

@@ -21,6 +21,5 @@ open AbstractModel
 open AbstractProperty
 open DiscreteExpressions
 open DiscreteType
-open TypeChecker2
 
 val convert_state_predicate : useful_parsing_model_information -> parsed_state_predicate -> state_predicate

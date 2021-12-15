@@ -113,14 +113,11 @@ val string_of_parsed_init_state_predicate : variable_infos -> parsed_init_state_
 
 val string_of_parsed_nonlinear_constraint : variable_infos -> nonlinear_constraint -> string
 
-(*
-val try_reduce_parsed_global_expression : constants_table -> global_expression -> DiscreteValue.discrete_value
-val try_reduce_parsed_boolean_expression : constants_table -> parsed_boolean_expression -> DiscreteValue.discrete_value
-val try_reduce_parsed_arithmetic_expression : constants_table -> parsed_discrete_arithmetic_expression -> DiscreteValue.discrete_value
-val try_reduce_parsed_term : constants_table -> parsed_discrete_term -> DiscreteValue.discrete_value
-val try_reduce_parsed_factor : constants_table -> parsed_discrete_factor -> DiscreteValue.discrete_value
-*)
-
+val string_of_parsed_loc_predicate : parsed_loc_predicate -> string
+val string_of_parsed_simple_predicate : variable_infos -> parsed_simple_predicate -> string
+val string_of_parsed_state_predicate_factor : variable_infos -> parsed_state_predicate_factor -> string
+val string_of_parsed_state_predicate_term : variable_infos -> parsed_state_predicate_term -> string
+val string_of_parsed_state_predicate : variable_infos -> parsed_state_predicate -> string
 
 (** Utils **)
 val is_parsed_global_expression_constant : variable_infos -> global_expression -> bool
