@@ -26,6 +26,7 @@ type var_type_discrete_number =
 
 (* Specific type of discrete variables *)
 type var_type_discrete =
+    | Var_type_weak
     | Var_type_discrete_bool
     | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_binary_word of int
@@ -37,13 +38,6 @@ type var_type =
 	| Var_type_clock
 	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
-
-(* Shortcuts to types *)
-val var_type_rational : var_type
-val var_type_int : var_type
-val var_type_unknown_number : var_type
-val var_type_bool : var_type
-val var_type_binary_word : int -> var_type
 
 (************************************************************)
 (** Type functions  *)

@@ -3335,14 +3335,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
         let typed_expr(*, expr_type *) = DiscreteExpressionConverter.convert_discrete_constant initialized_constants constant in
         let value = DiscreteExpressionEvaluator.try_reduce_global_expression typed_expr in
-        ImitatorUtilities.print_message Verbose_standard (
-            "constant value "
-            ^ DiscreteValue.string_of_value value
-            ^ ":"
-            ^ (DiscreteValue.discrete_type_of_value value |> DiscreteType.string_of_var_type_discrete)
-            ^ ","
-            ^ DiscreteType.string_of_var_type var_type
-        );
+        ImitatorUtilities.print_message Verbose_standard "";
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;
         (* Return *)

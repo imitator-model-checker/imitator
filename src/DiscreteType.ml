@@ -26,6 +26,7 @@ type var_type_discrete_number =
 
 (* Specific type of discrete variables *)
 type var_type_discrete =
+    | Var_type_weak
     | Var_type_discrete_bool
     | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_binary_word of int
@@ -37,13 +38,6 @@ type var_type =
 	| Var_type_clock
 	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
-
-(* Shortcuts to types *)
-let var_type_rational = Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
-let var_type_int = Var_type_discrete (Var_type_discrete_number Var_type_discrete_int)
-let var_type_unknown_number = Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number)
-let var_type_bool = Var_type_discrete Var_type_discrete_bool
-let var_type_binary_word l = Var_type_discrete (Var_type_discrete_binary_word l)
 
 
 (************************************************************)
@@ -60,6 +54,7 @@ let string_of_var_type_discrete_number = function
 
 (* String of discrete var type *)
 let rec string_of_var_type_discrete = function
+    | Var_type_weak -> "weak"
     | Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | Var_type_discrete_bool -> "bool"
     | Var_type_discrete_binary_word l -> "binary(" ^ string_of_int l ^ ")"
@@ -168,6 +163,9 @@ let is_discrete_type_number_compatibles type_number_a type_number_b =
 (* Check if two discrete types are compatible *)
 let rec is_discrete_type_compatibles var_type expr_type =
     match var_type, expr_type with
+    (* Any var type with weak type is ok *)
+    | _, Var_type_weak
+    | Var_type_weak, _ -> true
     (* any number type with literal number *)
     | Var_type_discrete_number _, Var_type_discrete_number Var_type_discrete_unknown_number
     | Var_type_discrete_number Var_type_discrete_unknown_number, Var_type_discrete_number _ -> true
@@ -192,6 +190,8 @@ let stronger_discrete_number_type_of discrete_number_type_a discrete_number_type
 (* Get the stronger type between two given types, see stronger_discrete_number_type_of *)
 let rec stronger_discrete_type_of discrete_type_a discrete_type_b =
     match discrete_type_a, discrete_type_b with
+    | _, Var_type_weak -> discrete_type_a
+    | Var_type_weak, _ -> discrete_type_b
     | Var_type_discrete_number discrete_number_type_a, Var_type_discrete_number discrete_number_type_b ->
         Var_type_discrete_number (stronger_discrete_number_type_of discrete_number_type_a discrete_number_type_b)
     | Var_type_discrete_array (inner_type_a, length), Var_type_discrete_array (inner_type_b, _) ->
@@ -201,23 +201,6 @@ let rec stronger_discrete_type_of discrete_type_a discrete_type_b =
     | _ ->
         discrete_type_a
 
-(*
-let default_number_type_if_needed = function
-    | Var_type_discrete_unknown_number -> Var_type_discrete_rational
-    | discrete_number_type -> discrete_number_type
-
-let rec default_type_if_needed = function
-    | Var_type_discrete_number discrete_number_type -> Var_type_discrete_number (default_number_type_if_needed discrete_number_type)
-    | Var_type_discrete_array (inner_type, length) -> Var_type_discrete_array (default_type_if_needed inner_type, length)
-    | Var_type_discrete_list inner_type -> Var_type_discrete_list (default_type_if_needed inner_type)
-    | discrete_type -> discrete_type
-
-let rec replace_unknown_number var_type_discrete_number = function
-    | Var_type_discrete_number Var_type_discrete_unknown_number -> Var_type_discrete_number var_type_discrete_number
-    | Var_type_discrete_array (inner_type, length) -> Var_type_discrete_array (replace_unknown_number var_type_discrete_number inner_type, length)
-    | Var_type_discrete_list inner_type -> Var_type_discrete_list (replace_unknown_number var_type_discrete_number inner_type)
-    | discrete_type -> discrete_type
-*)
 
 let rec extract_number_of_discrete_type = function
     | Var_type_discrete_number discrete_number_type -> Some discrete_number_type

@@ -51,22 +51,22 @@ let rec discrete_type_of_value = function
     | Binary_word_value value -> Var_type_discrete_binary_word (BinaryWord.length value)
     | Array_value a ->
         if Array.length a = 0 then
-            Var_type_discrete_array (Var_type_discrete_number Var_type_discrete_rational, 0)
+            Var_type_discrete_array (Var_type_weak, 0)
         else
             Var_type_discrete_array (discrete_type_of_value (Array.get a 0), Array.length a)
     | List_value l ->
         if List.length l = 0 then
-            Var_type_discrete_list (Var_type_discrete_number Var_type_discrete_rational)
+            Var_type_discrete_list Var_type_weak
         else
             Var_type_discrete_list (discrete_type_of_value (List.nth l 0))
 
 (* Get var type of a discrete value *)
 let rec var_type_of_value = function
-    | Number_value _ -> var_type_unknown_number
-    | Rational_value _ -> var_type_rational
-    | Int_value _ -> var_type_int
-    | Bool_value _ -> var_type_bool
-    | Binary_word_value b -> var_type_binary_word (BinaryWord.length b)
+    | Number_value _ -> Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number)
+    | Rational_value _ -> Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
+    | Int_value _ -> Var_type_discrete (Var_type_discrete_number Var_type_discrete_int)
+    | Bool_value _ -> Var_type_discrete Var_type_discrete_bool
+    | Binary_word_value b -> Var_type_discrete (Var_type_discrete_binary_word (BinaryWord.length b))
     | Array_value a -> Var_type_discrete (Var_type_discrete_array (discrete_type_of_value (Array.get a 0), Array.length a))
     | List_value l -> Var_type_discrete (Var_type_discrete_list (discrete_type_of_value (List.nth l 0)))
 
