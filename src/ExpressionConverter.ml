@@ -1645,13 +1645,13 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
         DF_rational_of_int (
             int_arithmetic_expression_of_typed_boolean_expression variable_infos arg_0
         )
-    (*
+
     | "list_hd" ->
         let arg_0 = List.nth argument_expressions 0 in
         Rational_list_hd (
-            list_expression_of_typed_boolean_expression variable_infos arg_0
+            list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_number Var_type_discrete_rational) arg_0
         )
-    *)
+
     | function_name -> raise (UndefinedFunction function_name)
 
 (* --------------------*)
@@ -2041,7 +2041,7 @@ and list_expression_of_typed_function_call variable_infos discrete_type argument
         )
     | "list_tl" ->
         let arg_0 = List.nth argument_expressions 0 in
-        List_tl (
+        List_list_tl (
             list_expression_of_typed_boolean_expression variable_infos discrete_type arg_0
         )
     | "list_rev" ->

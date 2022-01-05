@@ -545,7 +545,7 @@ and customized_string_of_list_expression_for_jani customized_string variable_nam
             |]
             ~str_comment:(undeclared_function_warning label)
     | List_list_hd list_expr
-    | List_tl list_expr
+    | List_list_tl list_expr
     | List_rev list_expr as func ->
         (* Get label of expression *)
         let label = label_of_list_expression func in

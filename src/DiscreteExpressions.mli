@@ -179,7 +179,7 @@ and list_expression =
     (* Add here some functions on list *)
     | List_cons of global_expression * list_expression
     | List_list_hd of list_expression
-    | List_tl of list_expression
+    | List_list_tl of list_expression
     | List_rev of list_expression
 (*    | List_function_call of string * global_expression list*)
 
@@ -227,5 +227,7 @@ val string_of_discrete_boolean_expression : (Automaton.variable_index -> string)
 
 val customized_string_of_array_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> array_expression -> string
 val string_of_array_expression : (Automaton.variable_index -> string) -> array_expression -> string
+
+val string_of_list_expression : (Automaton.variable_index -> string) -> list_expression -> string
 
 val string_of_discrete_variable_access : (Automaton.variable_index -> string) -> discrete_variable_access -> string

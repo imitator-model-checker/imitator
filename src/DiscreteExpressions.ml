@@ -178,7 +178,7 @@ and list_expression =
     | List_access of expression_access_type * int_arithmetic_expression
     | List_cons of global_expression * list_expression
     | List_list_hd of list_expression
-	| List_tl of list_expression
+	| List_list_tl of list_expression
 	| List_rev of list_expression
 (*    | List_function_call of string * global_expression list*)
 
@@ -429,7 +429,7 @@ let label_of_list_expression = function
     | List_access _ -> "list access"
     | List_cons _ -> "list_cons"
     | List_list_hd _ -> "list_hd"
-    | List_tl _ -> "list_tl"
+    | List_list_tl _ -> "list_tl"
     | List_rev _ -> "list_rev"
 
 (* Check if a binary word encoded on an integer have length greater than 31 bits *)
@@ -522,10 +522,10 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
                     string_of_arithmetic_expression customized_string expr;
                     customized_string_of_int_arithmetic_expression customized_string variable_names exp
                 ]
-        | Rational_list_hd list_expression as factor ->
+        | Rational_list_hd list_expr as factor ->
             print_function
                 (label_of_rational_factor factor)
-                [customized_string_of_list_expression customized_string variable_names list_expression]
+                [customized_string_of_list_expression customized_string variable_names list_expr]
 		| DF_expression discrete_arithmetic_expression ->
 			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 	(* Call top-level *)
@@ -600,10 +600,10 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
                     string_of_int_arithmetic_expression customized_string expr;
                     string_of_int_arithmetic_expression customized_string exp
                 ]
-        | Int_list_hd list_expression as func ->
+        | Int_list_hd list_expr as func ->
             print_function
                 (label_of_int_factor func)
-                [customized_string_of_list_expression customized_string variable_names list_expression]
+                [customized_string_of_list_expression customized_string variable_names list_expr]
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 
@@ -808,7 +808,7 @@ and customized_string_of_list_expression customized_string variable_names = func
         ^ customized_string_of_list_expression customized_string variable_names list_expr
         ^ ")"
     | List_list_hd list_expr
-    | List_tl list_expr
+    | List_list_tl list_expr
     | List_rev list_expr as func ->
         label_of_list_expression func
         ^ "("
@@ -830,6 +830,7 @@ let string_of_int_arithmetic_expression = customized_string_of_int_arithmetic_ex
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.global_default_string
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.global_default_string
 let string_of_array_expression = customized_string_of_array_expression Constants.global_default_string
+let string_of_list_expression = customized_string_of_list_expression Constants.global_default_string
 
 let rec string_of_discrete_variable_access variable_names = function
     | Discrete_variable_index discrete_index ->

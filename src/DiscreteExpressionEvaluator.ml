@@ -10,6 +10,24 @@ let operator_of_relop = function
     | OP_GEQ -> (>=)
     | OP_G -> (>)
 
+let list_hd_fail_message list_expr =
+    let str_expr = DiscreteExpressions.string_of_list_expression (fun i -> "") list_expr in
+    "Use of `list_hd` on empty list `" ^ str_expr ^ "`."
+
+(* Eval list_hd function, if the list is empty, raise a proper exception *)
+let try_eval_list_hd list fail_message =
+    if List.length list = 0 then
+        raise (Out_of_bound fail_message)
+    else
+        List.hd list
+
+(* Eval list_hd function, if the list is empty, raise a proper exception *)
+let try_eval_list_tl list fail_message =
+    if List.length list = 0 then
+        raise (Out_of_bound fail_message)
+    else
+        List.tl list
+
 let rec eval_global_expression discrete_valuation = function
     | Arithmetic_expression expr -> eval_discrete_arithmetic_expression discrete_valuation expr
     | Bool_expression expr -> DiscreteValue.Bool_value (is_boolean_expression_satisfied discrete_valuation expr)
@@ -76,9 +94,10 @@ and eval_rational_expression discrete_valuation expr =
             NumConst.numconst_of_int (Int32.to_int (eval_int_expression discrete_valuation expr))
         | Rational_pow (expr, exp) ->
             NumConst.pow (eval_rational_expression_rec expr) (eval_int_expression discrete_valuation exp)
-        | Rational_list_hd (list_expr) ->
+        | Rational_list_hd list_expr ->
             let list = eval_list_expression discrete_valuation list_expr in
-            let value = List.hd list in
+            let fail_message = list_hd_fail_message list_expr in
+            let value = try_eval_list_hd list fail_message in
             DiscreteValue.numconst_value value
         | DF_unary_min factor ->
             NumConst.neg (eval_rational_factor factor)
@@ -142,9 +161,10 @@ and eval_int_expression discrete_valuation (* expr *) =
             DiscreteValue.int_value value
         | Int_pow (expr, exp) ->
             OCamlUtilities.pow (eval_int_expression_rec expr) (eval_int_expression_rec exp)
-        | Int_list_hd (list_expr) ->
+        | Int_list_hd list_expr ->
             let list = eval_list_expression discrete_valuation list_expr in
-            let value = List.hd list in
+            let fail_message = list_hd_fail_message list_expr in
+            let value = try_eval_list_hd list fail_message in
             DiscreteValue.int_value value
     in
     eval_int_expression_rec
@@ -207,7 +227,8 @@ and check_discrete_boolean_expression discrete_valuation = function
         not (is_boolean_expression_satisfied discrete_valuation b) (* negation *)
     | Bool_list_hd list_expr ->
         let list = eval_list_expression discrete_valuation list_expr in
-        let value = List.hd list in
+        let fail_message = list_hd_fail_message list_expr in
+        let value = try_eval_list_hd list fail_message in
         DiscreteValue.bool_value value
     | List_mem (expr, list_expr) ->
         let value = eval_global_expression discrete_valuation expr in
@@ -256,7 +277,9 @@ and eval_binary_word_expression discrete_valuation = function
         DiscreteValue.binary_word_value value
     | Binary_word_list_hd list_expr ->
         let list = eval_list_expression discrete_valuation list_expr in
-        DiscreteValue.binary_word_value (List.hd list)
+        let fail_message = list_hd_fail_message list_expr in
+        let value = try_eval_list_hd list fail_message in
+        DiscreteValue.binary_word_value value
 
 and eval_array_expression discrete_valuation = function
     | Literal_array array ->
@@ -274,7 +297,9 @@ and eval_array_expression discrete_valuation = function
         Array.append array_0 array_1
     | Array_list_hd list_expr ->
         let list = eval_list_expression discrete_valuation list_expr in
-        DiscreteValue.array_value (List.hd list)
+        let fail_message = list_hd_fail_message list_expr in
+        let value = try_eval_list_hd list fail_message in
+        DiscreteValue.array_value value
 
 and eval_list_expression discrete_valuation = function
     | Literal_list list ->
@@ -292,10 +317,14 @@ and eval_list_expression discrete_valuation = function
         value :: list
     | List_list_hd list_expr ->
         let list = eval_list_expression discrete_valuation list_expr in
-        DiscreteValue.list_value (List.hd list)
-    | List_tl list_expr ->
+        let fail_message = list_hd_fail_message list_expr in
+        let value = try_eval_list_hd list fail_message in
+        DiscreteValue.list_value value
+    | List_list_tl list_expr ->
         let list = eval_list_expression discrete_valuation list_expr in
-        List.tl list
+        let fail_message = list_hd_fail_message list_expr in
+        try_eval_list_tl list fail_message
+
     | List_rev list_expr ->
         let list = eval_list_expression discrete_valuation list_expr in
         List.rev list
@@ -438,7 +467,6 @@ and try_reduce_rational_factor = function
     | DF_expression expr ->
         try_reduce_rational_expression expr
     | DF_rational_of_int expr ->
-(*            ImitatorUtilities.print_message Verbose_standard "Evaluate a int expression";*)
         ImitatorUtilities.print_warning
             "Conversion of an int expression to a rational expression
             may cause overflow if your platform doesn't manage `int` as an exact 32 bits integer.";
@@ -447,8 +475,10 @@ and try_reduce_rational_factor = function
         NumConst.pow (try_reduce_rational_expression expr) (try_reduce_int_expression exp)
     | Rational_list_hd (list_expr) ->
         let list = try_reduce_list_expression list_expr in
-        let value = List.hd list in
+        let fail_message = list_hd_fail_message list_expr in
+        let value = try_eval_list_hd list fail_message in
         DiscreteValue.numconst_value value
+
     | DF_unary_min factor ->
         NumConst.neg (try_reduce_rational_factor factor)
 
@@ -509,10 +539,12 @@ and try_reduce_int_expression expr =
             DiscreteValue.int_value value
         | Int_pow (expr, exp) ->
             OCamlUtilities.pow (try_reduce_int_expression_rec expr) (try_reduce_int_expression_rec exp)
-        | Int_list_hd (list_expr) ->
+        | Int_list_hd list_expr ->
             let list = try_reduce_list_expression list_expr in
-            let value = List.hd list in
+            let fail_message = list_hd_fail_message list_expr in
+            let value = try_eval_list_hd list fail_message in
             DiscreteValue.int_value value
+
     in
     try_reduce_int_expression_rec expr
 
@@ -574,8 +606,10 @@ and try_reduce_discrete_boolean_expression = function
         not (try_reduce_boolean_expression b) (* negation *)
     | Bool_list_hd list_expr ->
         let list = try_reduce_list_expression list_expr in
-        let value = List.hd list in
+        let fail_message = list_hd_fail_message list_expr in
+        let value = try_eval_list_hd list fail_message in
         DiscreteValue.bool_value value
+
     | List_mem (expr, list_expr) ->
         let value = try_reduce_global_expression expr in
         let list = try_reduce_list_expression list_expr in
@@ -622,7 +656,10 @@ and try_reduce_binary_word_expression = function
         DiscreteValue.binary_word_value value
     | Binary_word_list_hd list_expr ->
         let list = try_reduce_list_expression list_expr in
-        DiscreteValue.binary_word_value (List.hd list)
+        let fail_message = list_hd_fail_message list_expr in
+        let value = try_eval_list_hd list fail_message in
+        DiscreteValue.binary_word_value value
+
 
 and try_reduce_array_expression = function
     | Literal_array array ->
@@ -640,7 +677,9 @@ and try_reduce_array_expression = function
         Array.append array_0 array_1
     | Array_list_hd list_expr ->
         let list = try_reduce_list_expression list_expr in
-        DiscreteValue.array_value (List.hd list)
+        let fail_message = list_hd_fail_message list_expr in
+        let value = try_eval_list_hd list fail_message in
+        DiscreteValue.array_value value
 
 and try_reduce_list_expression = function
     | Literal_list list ->
@@ -658,10 +697,16 @@ and try_reduce_list_expression = function
         value :: list
     | List_list_hd list_expr ->
         let list = try_reduce_list_expression list_expr in
-        DiscreteValue.list_value (List.hd list)
-    | List_tl list_expr ->
+        let fail_message = list_hd_fail_message list_expr in
+        let value = try_eval_list_hd list fail_message in
+        DiscreteValue.list_value value
+
+    | List_list_tl list_expr ->
         let list = try_reduce_list_expression list_expr in
-        List.tl list
+        let fail_message = list_hd_fail_message list_expr in
+        let value = try_eval_list_tl list fail_message in
+        value
+
     | List_rev list_expr ->
         let list = try_reduce_list_expression list_expr in
         List.rev list
