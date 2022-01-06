@@ -1953,10 +1953,6 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
 	    Array_constant (DiscreteValue.array_value value)
 
     | Typed_array (expr_array, _) ->
-        ImitatorUtilities.print_message Verbose_standard (
-            "Found " ^ (DiscreteType.string_of_var_type_discrete discrete_type)
-            ^ " literal array"
-        );
         (* Should take inner_type unbox type *)
 
         Literal_array (Array.map (fun expr -> global_expression_of_typed_boolean_expression variable_infos expr discrete_type) expr_array)
