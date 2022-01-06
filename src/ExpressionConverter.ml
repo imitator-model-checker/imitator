@@ -1752,6 +1752,16 @@ and int_expression_of_typed_function_call variable_infos argument_expressions = 
         Int_list_hd (
             list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) arg_0
         )
+    | "array_length" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Array_length (
+            array_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
+    | "list_length" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        List_length (
+            list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
     (* TODO benjamin, in the future replace raise by custom function call as comment below *)
     | function_name -> raise (UndefinedFunction function_name)
 
@@ -1895,6 +1905,18 @@ and binary_expression_of_typed_function_call variable_infos length argument_expr
 (* Array conversion *)
 (* --------------------*)
 
+and array_expression_of_typed_boolean_expression_with_type variable_infos = function
+    | Typed_discrete_bool_expr (expr, discrete_type) ->
+        let inner_type =
+            match discrete_type with
+            | Var_type_discrete_array (inner_type, _) -> inner_type
+            | inner_type -> raise (InternalError ("The expression type indicate that it should be converted to an array expression, but a " ^ (DiscreteType.string_of_var_type_discrete inner_type) ^ " expression is found. Maybe something failed in type checking or conversion."))
+        in
+        array_expression_of_typed_discrete_boolean_expression variable_infos inner_type expr
+    | _ ->
+        raise (InternalError "The expression type indicate that it should be converted to an array expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+
+
 and array_expression_of_typed_boolean_expression variable_infos discrete_type = function
     | Typed_discrete_bool_expr (expr, _) ->
         array_expression_of_typed_discrete_boolean_expression variable_infos discrete_type expr
@@ -1931,6 +1953,12 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
 	    Array_constant (DiscreteValue.array_value value)
 
     | Typed_array (expr_array, _) ->
+        ImitatorUtilities.print_message Verbose_standard (
+            "Found " ^ (DiscreteType.string_of_var_type_discrete discrete_type)
+            ^ " literal array"
+        );
+        (* Should take inner_type unbox type *)
+
         Literal_array (Array.map (fun expr -> global_expression_of_typed_boolean_expression variable_infos expr discrete_type) expr_array)
 
 	| Typed_expr (expr, _) ->
@@ -1972,6 +2000,19 @@ and array_expression_of_typed_function_call variable_infos discrete_type argumen
 (* --------------------*)
 (* List conversion *)
 (* --------------------*)
+
+and list_expression_of_typed_boolean_expression_with_type variable_infos = function
+    | Typed_discrete_bool_expr (expr, discrete_type) ->
+        let inner_type =
+            match discrete_type with
+            | Var_type_discrete_list inner_type -> inner_type
+            | inner_type -> raise (InternalError ("The expression type indicate that it should be converted to a list expression, but a " ^ (DiscreteType.string_of_var_type_discrete inner_type) ^ " expression is found. Maybe something failed in type checking or conversion."))
+        in
+
+        list_expression_of_typed_discrete_boolean_expression variable_infos inner_type expr
+    | _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a list expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+
 
 and list_expression_of_typed_boolean_expression variable_infos discrete_type = function
     | Typed_discrete_bool_expr (expr, _) ->

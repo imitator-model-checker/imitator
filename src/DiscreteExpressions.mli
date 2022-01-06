@@ -92,6 +92,8 @@ and int_factor =
     | Int_access of expression_access_type * int_arithmetic_expression
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_list_hd of list_expression
+    | Array_length of array_expression
+    | List_length of list_expression
 (*    | Int_function_call of string * global_expression list*)
 
 (************************************************************)

@@ -348,6 +348,11 @@ let function_by_name = function
             Defined_type_constraint (List_constraint (Type_name_constraint "a"));
             Defined_type_constraint Bool_constraint
         ]
+    | "list_length" ->
+        [
+            Defined_type_constraint (List_constraint (Type_name_constraint "a"));
+            Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
+        ]
     | "fake" ->
         [
             Defined_type_constraint (List_constraint (Defined_type_constraint (List_constraint (Type_name_constraint "a"))));

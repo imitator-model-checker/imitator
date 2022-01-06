@@ -446,6 +446,18 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
                 label
                 [|customized_string_of_list_expression_for_jani customized_string variable_names list_expr|]
                 ~str_comment:(undeclared_function_warning label)
+        | Array_length array_expr as func ->
+            let label = label_of_int_factor func in
+            jani_function_call
+                label
+                [|customized_string_of_array_expression_for_jani customized_string variable_names array_expr|]
+                ~str_comment:(undeclared_function_warning label)
+        | List_length list_expr as func ->
+            let label = label_of_int_factor func in
+            jani_function_call
+                label
+                [|customized_string_of_list_expression_for_jani customized_string variable_names list_expr|]
+                ~str_comment:(undeclared_function_warning label)
 
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string

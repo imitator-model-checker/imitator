@@ -89,6 +89,8 @@ and int_factor =
     | Int_access of expression_access_type * int_arithmetic_expression
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_list_hd of list_expression
+    | Array_length of array_expression
+    | List_length of list_expression
 (*    | Int_function_call of string * global_expression list*)
 
 (****************************************************************)
@@ -399,6 +401,8 @@ let label_of_int_factor = function
 	| Int_pow _ -> "pow"
 	| Int_access _ -> "int access"
 	| Int_list_hd _ -> "list_hd"
+	| Array_length _ -> "array_length"
+	| List_length _ -> "list_length"
 
 let label_of_binary_word_expression = function
     | Logical_shift_left _ -> "shift_left"
@@ -601,6 +605,14 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
                     string_of_int_arithmetic_expression customized_string exp
                 ]
         | Int_list_hd list_expr as func ->
+            print_function
+                (label_of_int_factor func)
+                [customized_string_of_list_expression customized_string variable_names list_expr]
+        | Array_length array_expr as func ->
+            print_function
+                (label_of_int_factor func)
+                [customized_string_of_array_expression customized_string variable_names array_expr]
+        | List_length list_expr as func ->
             print_function
                 (label_of_int_factor func)
                 [customized_string_of_list_expression customized_string variable_names list_expr]

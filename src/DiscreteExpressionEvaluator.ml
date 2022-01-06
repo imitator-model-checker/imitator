@@ -166,6 +166,12 @@ and eval_int_expression discrete_valuation (* expr *) =
             let fail_message = list_hd_fail_message list_expr in
             let value = try_eval_list_hd list fail_message in
             DiscreteValue.int_value value
+        | Array_length array_expr ->
+            let array = eval_array_expression discrete_valuation array_expr in
+            Int32.of_int (Array.length array)
+        | List_length list_expr ->
+            let list = eval_list_expression discrete_valuation list_expr in
+            Int32.of_int (List.length list)
     in
     eval_int_expression_rec
 
@@ -544,6 +550,12 @@ and try_reduce_int_expression expr =
             let fail_message = list_hd_fail_message list_expr in
             let value = try_eval_list_hd list fail_message in
             DiscreteValue.int_value value
+        | Array_length array_expr ->
+            let array = try_reduce_array_expression array_expr in
+            Int32.of_int (Array.length array)
+        | List_length list_expr ->
+            let list = try_reduce_list_expression list_expr in
+            Int32.of_int (List.length list)
 
     in
     try_reduce_int_expression_rec expr
