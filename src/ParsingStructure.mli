@@ -107,6 +107,9 @@ and parsed_discrete_factor =
     | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min of parsed_discrete_factor
+	| Parsed_function_call of parsed_discrete_factor (* name *) * parsed_boolean_expression list (* arguments *)
+
+	(*
 	(* Functions *)
 	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
 	| Parsed_pow_function of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
@@ -119,8 +122,7 @@ and parsed_discrete_factor =
 
 	| Parsed_array_append of parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_list_cons of parsed_boolean_expression * parsed_discrete_factor
-	| Parsed_function_call of parsed_discrete_factor (* name *) * parsed_boolean_expression list (* arguments *)
-
+    *)
 (*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
 
 and parsed_shift_function_type =

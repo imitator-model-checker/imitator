@@ -154,6 +154,7 @@ let default_discrete_number_value = function
 
 (* Get default discrete value *)
 let rec default_discrete_value = function
+    | Var_type_weak -> raise (InternalError "Unable to have default value of a weak typed variable.")
     | Var_type_discrete_number x -> default_discrete_number_value x
     | Var_type_discrete_bool -> default_bool
     | Var_type_discrete_binary_word l -> default_binary_word_value l

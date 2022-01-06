@@ -102,7 +102,9 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
 	| Parsed_DF_constant value -> leaf_fun (Leaf_constant value)
 	| Parsed_DF_array expr_array -> Array.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_array
 	| Parsed_DF_list expr_list -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_list
-	| Parsed_DF_expression expr
+	| Parsed_DF_expression expr ->
+        fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
+	(*
 	| Parsed_rational_of_int_function expr ->
         fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
 	| Parsed_pow_function (expr_0, expr_1) ->
@@ -122,10 +124,11 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
         operator
             (fold_parsed_boolean_expression operator base leaf_fun expr)
             (fold_parsed_discrete_factor operator base leaf_fun factor)
+    *)
     | Parsed_function_call (_, argument_expressions) ->
         List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression operator base leaf_fun expr) acc) base argument_expressions
     | Parsed_DF_access (factor, _)
-	| Parsed_log_not factor
+	(* | Parsed_log_not factor *)
 	| Parsed_DF_unary_min factor ->
 	    fold_parsed_discrete_factor operator base leaf_fun factor
 
@@ -334,6 +337,7 @@ let label_of_parsed_factor_constructor = function
 	| Parsed_DF_access _ -> "access"
 	| Parsed_DF_expression _ -> "expression"
 	| Parsed_DF_unary_min _ -> "minus"
+	(*
 	| Parsed_rational_of_int_function _ -> "rational_of_int"
 	| Parsed_pow_function _ -> "pow"
 	| Parsed_shift_function (fun_type, _, _) -> label_of_parsed_shift_function_type fun_type
@@ -342,6 +346,7 @@ let label_of_parsed_factor_constructor = function
     | Parsed_log_not _ -> "lognot"
     | Parsed_array_append _ -> "array_append"
     | Parsed_list_cons _ -> "list_cons"
+    *)
     | Parsed_function_call (variable, _) -> function_name_of_parsed_factor variable
 
 
@@ -406,6 +411,7 @@ and string_of_parsed_factor variable_infos = function
     | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
     | Parsed_DF_unary_min factor ->
         "-(" ^ (string_of_parsed_factor variable_infos factor) ^ ")"
+    (*
     | Parsed_rational_of_int_function arithmetic_expr as factor ->
         label_of_parsed_factor_constructor factor
         ^ "(" ^ string_of_parsed_arithmetic_expression variable_infos arithmetic_expr ^ ")"
@@ -438,16 +444,18 @@ and string_of_parsed_factor variable_infos = function
         ^ ", "
         ^ string_of_parsed_factor variable_infos factor
         ^ ")"
+    *)
     | Parsed_function_call (_, argument_expressions) as func ->
         let str_arguments_list = List.map (string_of_parsed_boolean_expression variable_infos) argument_expressions in
         let str_arguments = OCamlUtilities.string_of_list_of_string_with_sep ", " str_arguments_list in
         label_of_parsed_factor_constructor func ^ "(" ^ str_arguments ^ ")"
-
+    (*
     | Parsed_log_not factor as func ->
         label_of_parsed_factor_constructor func
         ^ "("
         ^ string_of_parsed_factor variable_infos factor
         ^ ")"
+    *)
 
 and string_of_parsed_boolean_expression variable_infos = function
     | Parsed_And (l_expr, r_expr) ->
@@ -837,7 +845,7 @@ let is_variable_access_is_a_variable_name = function
 (* If it's not possible, we raise an InvalidExpression exception *)
 let rec try_convert_linear_term_of_parsed_discrete_term = function
     (* TODO benjamin reduction should be made before *)
-    | Parsed_DT_mul (term, factor) as top_term ->
+    | Parsed_DT_mul (term, factor) ->
         (* Check consistency of multiplication, if it keep constant we can convert to a linear term *)
         let linear_term, linear_factor =
         try_convert_linear_term_of_parsed_discrete_term term,
