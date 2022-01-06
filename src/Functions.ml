@@ -22,6 +22,7 @@ open DiscreteValue
 open DiscreteExpressions
 open FunctionSig
 
+(*
 module type FunctionImplementation = sig
 
     val name : string
@@ -54,7 +55,7 @@ module RationalOfIntFunction : FunctionImplementation = struct
     let signature = [Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint))); Defined_type_constraint (Number_constraint (Defined_type_number_constraint Rat_constraint))]
 
 end
-
+*)
 (* binary(l) -> l -> binary(l) *)
 let shift_signature =
     [
@@ -85,7 +86,7 @@ let binary_log_signature =
         Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a")));
         Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a")))
     ]
-
+(*
 (* binary(l) -> i -> binary(l) *)
 module ShiftLeftFunction : FunctionImplementation = struct
 
@@ -291,11 +292,72 @@ let function_module_by_name : string -> (module FunctionImplementation) = functi
     | "list_mem" -> (module ListMemFunction)
     | "fake" -> (module FakeFunction)
     | function_name -> raise (UndefinedFunction function_name)
-
+*)
+let function_by_name = function
+    | "pow" ->
+        [
+            Defined_type_constraint (Number_constraint (Number_type_name_constraint "a"));
+            Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
+            Defined_type_constraint (Number_constraint (Number_type_name_constraint "a"))
+        ]
+    | "rational_of_int" ->
+        [Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint))); Defined_type_constraint (Number_constraint (Defined_type_number_constraint Rat_constraint))]
+    | "shift_left" -> shift_signature
+    | "shift_right" -> shift_signature
+    | "fill_left" -> fill_signature
+    | "fill_right" -> fill_signature
+    | "logand" -> binary_log_signature
+    | "logor" -> binary_log_signature
+    | "logxor" -> binary_log_signature
+    | "lognot" -> unary_log_signature
+    | "array_append" ->
+        [
+            Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l1")));
+            Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l2")));
+            Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_plus_constraint ("l1", Length_constraint_expression (Length_scalar_constraint "l2")))));
+        ]
+    | "array_length" ->
+        [
+            Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l")));
+            Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
+        ]
+    | "list_cons" ->
+        [
+            Type_name_constraint "a";
+            Defined_type_constraint (List_constraint (Type_name_constraint "a"));
+            Defined_type_constraint (List_constraint (Type_name_constraint "a"))
+        ]
+    | "list_hd" ->
+        [
+            Defined_type_constraint (List_constraint (Type_name_constraint "a"));
+            Type_name_constraint "a";
+        ]
+    | "list_tl" ->
+        [
+            Defined_type_constraint (List_constraint (Type_name_constraint "a"));
+            Defined_type_constraint (List_constraint (Type_name_constraint "a"));
+        ]
+    | "list_rev" ->
+        [
+            Defined_type_constraint (List_constraint (Type_name_constraint "a"));
+            Defined_type_constraint (List_constraint (Type_name_constraint "a"));
+        ]
+    | "list_mem" ->
+        [
+            Type_name_constraint "a";
+            Defined_type_constraint (List_constraint (Type_name_constraint "a"));
+            Defined_type_constraint Bool_constraint
+        ]
+    | "fake" ->
+        [
+            Defined_type_constraint (List_constraint (Defined_type_constraint (List_constraint (Type_name_constraint "a"))));
+            Defined_type_constraint (List_constraint (Defined_type_constraint (List_constraint (Type_name_constraint "a"))));
+        ]
+    | function_name -> raise (UndefinedFunction function_name)
 
 (* Get signature constraint of a function given it's name *)
 let signature_constraint_of_function function_name =
-    let module M = (val function_module_by_name function_name : FunctionImplementation) in M.signature
+    function_by_name function_name
 
 (* Get arity of a function given it's name *)
 let arity_of_function function_name =
