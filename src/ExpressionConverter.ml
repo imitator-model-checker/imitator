@@ -1319,6 +1319,15 @@ let rec global_expression_of_typed_global_expression variable_infos = function
     | Typed_global_expr (expr, discrete_type) ->
         global_expression_of_typed_boolean_expression variable_infos expr discrete_type
 
+(* TODO benjamin shouldn't have this function, it's because of global expression that isn't useful *)
+(* I should remove global expression in parsing structure for avoid it *)
+and global_expression_of_typed_boolean_expression_without_type variable_infos = function
+	| Typed_And _
+	| Typed_Or _ as expr ->
+	    global_expression_of_typed_boolean_expression variable_infos expr Var_type_discrete_bool
+	| Typed_discrete_bool_expr (_, discrete_type) as expr ->
+	    global_expression_of_typed_boolean_expression variable_infos expr discrete_type
+
 and global_expression_of_typed_boolean_expression variable_infos expr = function
     | Var_type_discrete_number discrete_number_type ->
         Arithmetic_expression (
@@ -1535,15 +1544,21 @@ and bool_expression_of_typed_function_call variable_infos argument_expressions =
         Bool_list_hd (
             list_expression_of_typed_boolean_expression variable_infos Var_type_discrete_bool arg_0
         )
-    (*
     | "list_mem" ->
         let arg_0 = List.nth argument_expressions 0 in
         let arg_1 = List.nth argument_expressions 1 in
         List_mem (
-            global_expression_of_typed_boolean_expression variable_infos arg_0,
-            list_expression_of_typed_boolean_expression variable_infos arg_1
+            global_expression_of_typed_boolean_expression_without_type variable_infos arg_0,
+            list_expression_of_typed_boolean_expression_with_type variable_infos arg_1
         )
-    *)
+    | "array_mem" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+        Array_mem (
+            global_expression_of_typed_boolean_expression_without_type variable_infos arg_0,
+            array_expression_of_typed_boolean_expression_with_type variable_infos arg_1
+        )
+
     | function_name -> raise (UndefinedFunction function_name)
 
 (* --------------------*)
@@ -1757,6 +1772,7 @@ and int_expression_of_typed_function_call variable_infos argument_expressions = 
         Array_length (
             array_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
+
     | "list_length" ->
         let arg_0 = List.nth argument_expressions 0 in
         List_length (
@@ -1980,6 +1996,7 @@ and array_expression_of_typed_function_call variable_infos discrete_type argumen
             array_expression_of_typed_boolean_expression variable_infos discrete_type arg_0,
             array_expression_of_typed_boolean_expression variable_infos discrete_type arg_1
         )
+
     | "list_hd" ->
         let arg_0 = List.nth argument_expressions 0 in
         Array_list_hd (

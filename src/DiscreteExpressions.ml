@@ -122,11 +122,14 @@ and discrete_boolean_expression =
 	| DB_variable of Automaton.variable_index
 	(** Discrete constant *)
 	| DB_constant of bool
-	(** access to a boolean array **)
+	(** Access to a boolean array **)
     | Bool_access of expression_access_type * int_arithmetic_expression
-    (* Add here some function on array *)
     | Bool_list_hd of list_expression
+    (* Function list_mem *)
     | List_mem of global_expression * list_expression
+    (* Function array_mem *)
+    | Array_mem of global_expression * array_expression
+
 (*    | Bool_function_call of string * global_expression list*)
 
 
@@ -382,6 +385,7 @@ let label_of_bool_factor = function
     | Bool_access _ -> "bool access"
     | Bool_list_hd _ -> "list_hd"
     | List_mem _ -> "list_mem"
+    | Array_mem _ -> "array_mem"
 
 let label_of_rational_factor = function
 	| DF_variable _ -> "rational variable"
@@ -684,6 +688,13 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
             [
                 customized_string_of_global_expression customized_string variable_names expr;
                 customized_string_of_list_expression customized_string variable_names list_expr
+            ]
+    | Array_mem (expr, array_expr) as func ->
+        print_function
+            (label_of_bool_factor func)
+            [
+                customized_string_of_global_expression customized_string variable_names expr;
+                customized_string_of_array_expression customized_string variable_names array_expr
             ]
 
 and customized_string_of_boolean_operations customized_string = function

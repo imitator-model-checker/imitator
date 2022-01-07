@@ -136,6 +136,7 @@ and discrete_boolean_expression =
     (* Add here some function on array *)
     | Bool_list_hd of list_expression
     | List_mem of global_expression * list_expression
+    | Array_mem of global_expression * array_expression
 (*    | Bool_function_call of string * global_expression list*)
 
 (************************************************************)

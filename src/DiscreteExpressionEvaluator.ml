@@ -240,6 +240,10 @@ and check_discrete_boolean_expression discrete_valuation = function
         let value = eval_global_expression discrete_valuation expr in
         let list = eval_list_expression discrete_valuation list_expr in
         List.mem value list
+    | Array_mem (expr, array_expr) ->
+        let value = eval_global_expression discrete_valuation expr in
+        let array = eval_array_expression discrete_valuation array_expr in
+        Array.mem value array
 
 and eval_binary_word_expression discrete_valuation = function
     | Logical_shift_left (binary_word, expr, _) ->
@@ -626,6 +630,11 @@ and try_reduce_discrete_boolean_expression = function
         let value = try_reduce_global_expression expr in
         let list = try_reduce_list_expression list_expr in
         List.mem value list
+
+    | Array_mem (expr, array_expr) ->
+        let value = try_reduce_global_expression expr in
+        let array = try_reduce_array_expression array_expr in
+        Array.mem value array
 
 and try_reduce_binary_word_expression = function
     | Logical_shift_left (binary_word, expr, _) ->

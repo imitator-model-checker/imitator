@@ -76,6 +76,7 @@ and parsed_boolean_expression =
 and parsed_discrete_boolean_expression =
     | Parsed_arithmetic_expression of parsed_discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	(* TODO benjamin rename to Parsed_comparison *)
 	| Parsed_expression of parsed_discrete_boolean_expression * parsed_relop * parsed_discrete_boolean_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
@@ -125,6 +126,7 @@ and parsed_discrete_factor =
     *)
 (*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
 
+(*
 and parsed_shift_function_type =
     | Parsed_shift_left
     | Parsed_shift_right
@@ -135,7 +137,7 @@ and parsed_bin_log_function_type =
     | Parsed_log_and
     | Parsed_log_or
     | Parsed_log_xor
-
+*)
 
 
 

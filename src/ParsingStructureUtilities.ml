@@ -317,7 +317,7 @@ let function_name_of_parsed_factor = function
     | factor -> raise (TypeError "Trying to make a call on a non-function.")
 
 (* Labels of a parsed factors *)
-
+(*
 let label_of_parsed_shift_function_type = function
 	| Parsed_shift_left -> "shift_left"
 	| Parsed_shift_right -> "shift_right"
@@ -328,6 +328,7 @@ let label_of_parsed_bin_log_function_type = function
     | Parsed_log_and -> "logand"
     | Parsed_log_or -> "logor"
     | Parsed_log_xor -> "logxor"
+*)
 
 let label_of_parsed_factor_constructor = function
 	| Parsed_DF_variable _ -> "variable"
