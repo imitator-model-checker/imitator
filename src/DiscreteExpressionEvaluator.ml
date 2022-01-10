@@ -418,7 +418,7 @@ let pack_value variable_names discrete_valuation old_value new_value variable_ac
 
 
 
-
+(* TODO benjamin try to merge try_reduce with eval for reducing code source *)
 let rec try_reduce_global_expression = function
     | Arithmetic_expression expr -> try_reduce_discrete_arithmetic_expression expr
     | Bool_expression expr -> DiscreteValue.Bool_value (try_reduce_boolean_expression expr)

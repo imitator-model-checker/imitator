@@ -955,9 +955,8 @@ let rec type_check_variable_access variable_infos infer_type_opt = function
         (* Check is an array *)
         let discrete_type =
             match discrete_type with
-            | Var_type_discrete_array (inner_type, _)
-            | Var_type_discrete_list inner_type -> inner_type
-            | _ -> raise (TypeError "Trying to make an access to a non-array or a non-list variable.")
+            | Var_type_discrete_array (inner_type, _) -> inner_type
+            | _ -> raise (TypeError "Trying to make a write access to a non-array variable.")
         in
         Typed_variable_access (typed_variable_access, typed_index_expr_type, discrete_type), discrete_type
 
@@ -2123,19 +2122,6 @@ and expression_access_type_of_typed_factor variable_infos factor = function
             "An access on other element than an array or a list was found, "
             ^ " although it was been type checked before."
         ))
-    (*
-    | Typed_access (factor, _, inner_type, discrete_type) as typed_access ->
-        (match discrete_type with
-        | Var_type_discrete_array _ ->
-            Expression_array_access (
-                array_expression_of_typed_factor variable_infos factor
-            )
-        | Var_type_discrete_list _ ->
-            Expression_list_access (
-                list_expression_of_typed_factor variable_infos factor
-            )
-        )
-    *)
 
 let nonlinear_constraint_of_typed_nonlinear_constraint = bool_expression_of_typed_discrete_boolean_expression
 
@@ -2432,7 +2418,6 @@ let linear_term_of_typed_boolean_expression variable_infos = function
         raise (
             InternalError (
                 "Impossible to convert boolean expression \""
-
                 ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed"
             )
         )
