@@ -568,17 +568,71 @@ let all_locations_different =
 (*------------------------------------------------------------*)
 let check_update variable_infos automaton_name update =
 
-(*    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in*)
-
     let check_update_normal (variable_access, global_expression) =
 
+        (* Function that check that variable kind of an update is not a constant *)
+        let check_variable_kind_of_update variable_name =
+
+            (* Get kind of variable (variable / constant) *)
+            let variable_kind = ParsingStructureUtilities.variable_kind_of_variable_name variable_infos variable_name in
+
+            (* Get variable type, if possible *)
+            match variable_kind with
+            | ParsingStructureUtilities.Variable_kind _ ->
+                ExpressionConverter.TypeChecker.get_type_of_variable_by_name_opt variable_infos variable_name
+
+            | ParsingStructureUtilities.Constant_kind _ ->
+                    print_error (
+                        "Trying to update a constant: `"
+                        ^ ParsingStructureUtilities.string_of_variable_access variable_infos variable_access
+                        ^ " := "
+                        ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression
+                        ^ "`"
+                    );
+                    raise InvalidModel
+        in
+
+        (* Function that check that variable type of an update is correct *)
+        let check_variable_type_of_update variable_name = function
+
+            (* Type clock: allow any linear term in updates: so just check that variables have been declared *)
+            | Some DiscreteType.Var_type_clock ->
+                print_message Verbose_total ("                A clock!");
+                true
+
+            (* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
+            | Some DiscreteType.Var_type_discrete var_type_discrete ->
+                let string_of_var_type = DiscreteType.string_of_var_type_discrete var_type_discrete in
+                print_message Verbose_total ("                A " ^ string_of_var_type ^ "!");
+
+                let is_only_discrete = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos global_expression in
+
+                if not is_only_discrete then (
+                    print_error ("The variable `" ^ variable_name ^ "` is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton `" ^ automaton_name ^ "`."); false
+                )
+                else (
+                    print_message Verbose_total ("                Check passed.");
+                    true
+                )
+
+            (* Case of a parameter: forbidden! *)
+            | Some DiscreteType.Var_type_parameter ->
+                print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
+
+            | None ->
+                print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); false
+        in
+
+        (* Function that check update on variable or variable access *)
         let rec check_variable_access = function
+            | Variable_access (variable_access, _) ->
+                check_variable_access variable_access
+
             | Variable_name variable_name ->
 
-                (* Check whether this variable is to be removed because unused elswhere than in resets *)
+                (* Check whether this variable is to be removed because unused elsewhere than in resets *)
                 let to_be_removed = List.mem variable_name variable_infos.removed_variable_names in
 
-                (* TODO benjamin REFACTOR conditional ugly ! *)
                 if to_be_removed then
                     true
                 else (
@@ -586,71 +640,16 @@ let check_update variable_infos automaton_name update =
                     let all_variables_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
 
                     if not all_variables_defined then (
-                        (* TODO benjamin IMPROVE get variable name as before ! *)
+                        (* TODO benjamin IMPROVE get variable names as before ! *)
                         print_error ("A variable used in update \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression ^ "\" in automaton `" ^ automaton_name ^ "` was not declared.");
                         false
                     ) else (
-
-                        (* Get variable type, if possible *)
-                        let variable_type =
-                            if List.mem variable_name variable_infos.variable_names then (
-                                let index = Hashtbl.find variable_infos.index_of_variables variable_name in
-                                Some (variable_infos.type_of_variables index)
-                            ) else if Hashtbl.mem variable_infos.constants variable_name then (
-                                print_error (
-                                    "Trying to update a constant: `"
-                                    ^ ParsingStructureUtilities.string_of_variable_access variable_infos variable_access
-                                    ^ " := "
-                                    ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression
-                                    ^ "`"
-                                );
-                                raise InvalidModel;
-                            ) else (
-                                None
-                            )
-                        in
-
-
-
-                        match variable_type with
-                        (* Type clock: allow any linear term in updates: so just check that variables have been declared *)
-                        | Some DiscreteType.Var_type_clock ->
-                            print_message Verbose_total ("                A clock!");
-                            (* TODO benjamin REFACTOR change to true, because it was checked before *)
-                            ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression
-
-                        (* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
-                        | Some DiscreteType.Var_type_discrete var_type_discrete ->
-                            let string_of_var_type = DiscreteType.string_of_var_type_discrete var_type_discrete in
-                            print_message Verbose_total ("                A " ^ string_of_var_type ^ "!");
-
-                            (* TODO benjamin REFACTOR change to true, because it was checked before *)
-                            let all_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
-
-                            if not all_defined then
-                                false
-                            else (
-
-
-                                let result = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos global_expression in
-
-                                if not result then (
-                                    print_error ("The variable `" ^ variable_name ^ "` is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton `" ^ automaton_name ^ "`."); false
-                                )
-                                else (
-                                    print_message Verbose_total ("                Check passed.");
-                                    true
-                                )
-
-                            )
-                        (* Case of a parameter: forbidden! *)
-                        | Some DiscreteType.Var_type_parameter ->
-                            print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
-                        | None ->
-                            print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); false
+                        (* Check variable kind of update is not a constant *)
+                        let variable_type_opt = check_variable_kind_of_update variable_name in
+                        (* Check type of updated variable *)
+                        check_variable_type_of_update variable_name variable_type_opt
                     )
                 )
-            | Variable_access (variable_access, _) -> check_variable_access variable_access
         in
         check_variable_access variable_access
 

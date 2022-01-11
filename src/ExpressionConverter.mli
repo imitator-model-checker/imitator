@@ -71,12 +71,12 @@ and typed_state_predicate =
 
 type typed_guard = typed_discrete_boolean_expression list
 
-(*val string_of_typed_global_expression : variable_infos -> typed_global_expression -> string*)
-val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
-(*val string_of_typed_discrete_factor : variable_infos -> typed_discrete_factor -> string*)
+val get_type_of_variable_by_name : variable_infos -> variable_name -> var_type
+val get_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type option
+val get_discrete_type_of_variable_by_name : variable_infos -> variable_name -> var_type_discrete
+val get_discrete_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type_discrete option
 
-(*val type_of_typed_discrete_boolean_expression : typed_discrete_boolean_expression -> var_type_discrete*)
-(*val type_of_typed_discrete_factor : typed_discrete_factor -> var_type_discrete*)
+val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
 
 (* Check that a discrete init is well typed *)
 val check_discrete_init : variable_infos -> variable_name -> global_expression -> typed_global_expression

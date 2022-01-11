@@ -81,12 +81,12 @@ and typed_state_predicate =
 
 type typed_guard = typed_discrete_boolean_expression list
 
-(*val string_of_typed_global_expression : variable_infos -> typed_global_expression -> string*)
-val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
-(*val string_of_typed_discrete_factor : variable_infos -> typed_discrete_factor -> string*)
+val get_type_of_variable_by_name : variable_infos -> variable_name -> var_type
+val get_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type option
+val get_discrete_type_of_variable_by_name : variable_infos -> variable_name -> var_type_discrete
+val get_discrete_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type_discrete option
 
-(*val type_of_typed_discrete_boolean_expression : typed_discrete_boolean_expression -> var_type_discrete*)
-(*val type_of_typed_discrete_factor : typed_discrete_factor -> var_type_discrete*)
+val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
 
 (* Check that a discrete init is well typed *)
 val check_discrete_init : variable_infos -> variable_name -> global_expression -> typed_global_expression
@@ -100,9 +100,6 @@ val check_update : variable_infos -> variable_access -> ParsingStructure.global_
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
 val check_state_predicate : variable_infos -> parsed_state_predicate -> typed_state_predicate
-(* Check that a discrete boolean expression is well typed *)
-(*val check_discrete_boolean_expr : variable_infos -> parsed_discrete_boolean_expression -> typed_discrete_boolean_expression*)
-
 
 end = struct
 
@@ -365,27 +362,42 @@ let get_discrete_type_of_variable variable_infos variable_index =
     let var_type = get_type_of_variable variable_infos variable_index in
     DiscreteType.discrete_type_of_var_type var_type
 
-(* Get var type of a variable given it's name *)
-let get_type_of_variable_by_name variable_infos variable_name =
+let get_type_of_variable_by_name_opt variable_infos variable_name =
     if Hashtbl.mem variable_infos.index_of_variables variable_name then (
         (* Get type of variable *)
         let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
         let variable_type = get_type_of_variable variable_infos variable_index in
-        variable_type
+        Some variable_type
     ) else if Hashtbl.mem variable_infos.constants variable_name then (
         (* Retrieve the value of the global constant *)
         let value = Hashtbl.find variable_infos.constants variable_name in
         (* Get type of constant *)
-        DiscreteValue.var_type_of_value value
+        Some (DiscreteValue.var_type_of_value value)
     ) else
+        None
+
+(* Get var type of a variable given it's name *)
+let get_type_of_variable_by_name variable_infos variable_name =
+    let discrete_type_opt = get_type_of_variable_by_name_opt variable_infos variable_name in
+    match discrete_type_opt with
+    | Some discrete_type -> discrete_type
+    | None ->
         raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
 
 
 (* Get discrete type of a variable given it's name *)
+(* Raise an exception if the variable cannot be found *)
 let get_discrete_type_of_variable_by_name variable_infos variable_name =
     let var_type = get_type_of_variable_by_name variable_infos variable_name in
     DiscreteType.discrete_type_of_var_type var_type
 
+(* Get discrete type of a variable given it's name *)
+(* Get Some discrete type if found, otherwise None *)
+let get_discrete_type_of_variable_by_name_opt variable_infos variable_name =
+    let var_type_opt = get_type_of_variable_by_name_opt variable_infos variable_name in
+    match var_type_opt with
+    | Some var_type -> Some (DiscreteType.discrete_type_of_var_type var_type)
+    | None -> None
 
 
 (* ------------------------------------------------------------------ *)
@@ -1293,29 +1305,14 @@ end = struct
 open Constants
 open Exceptions
 open ParsingStructure
+open ParsingStructureUtilities
 open AbstractModel
 open DiscreteExpressions
 open DiscreteType
 open TypeChecker
 
+
 type discrete_index = int
-
-(* Variable kind type represent a variable or a constant kind *)
-type variable_kind =
-    | Variable_kind of discrete_index
-    | Constant_kind of DiscreteValue.discrete_value
-
-(* Know if variable with a given name is a variable or a constant *)
-let variable_kind_of_variable_name variable_infos variable_name =
-
-    (* First check whether this is a constant *)
-    if Hashtbl.mem variable_infos.constants variable_name then (
-        let value = Hashtbl.find variable_infos.constants variable_name in
-        Constant_kind value
-    )
-    (* Otherwise: a variable *)
-    else
-        Variable_kind (Hashtbl.find variable_infos.index_of_variables variable_name)
 
 (** Convert a Boolean operator to its abstract model *)
 let convert_parsed_relop = function

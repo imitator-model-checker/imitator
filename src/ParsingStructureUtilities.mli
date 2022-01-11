@@ -122,6 +122,14 @@ val string_of_parsed_state_predicate_term : variable_infos -> parsed_state_predi
 val string_of_parsed_state_predicate : variable_infos -> parsed_state_predicate -> string
 
 (** Utils **)
+
+(* Variable kind type represent a variable or a constant kind *)
+type variable_kind =
+    | Variable_kind of int
+    | Constant_kind of DiscreteValue.discrete_value
+
+val variable_kind_of_variable_name : variable_infos -> variable_name -> variable_kind
+
 val is_parsed_global_expression_constant : variable_infos -> global_expression -> bool
 val is_parsed_boolean_expression_constant : variable_infos -> parsed_boolean_expression -> bool
 val is_parsed_arithmetic_expression_constant : variable_infos -> parsed_discrete_arithmetic_expression -> bool

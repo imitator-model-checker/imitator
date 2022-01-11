@@ -674,6 +674,24 @@ let no_variables variable_infos = function
         let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
         variable_infos.type_of_variables variable_index = DiscreteType.Var_type_parameter
 
+(* Variable kind type represent a variable or a constant kind *)
+type variable_kind =
+    | Variable_kind of int
+    | Constant_kind of DiscreteValue.discrete_value
+
+(* Know if variable with a given name is a variable or a constant *)
+let variable_kind_of_variable_name variable_infos variable_name =
+
+    (* First check whether this is a constant *)
+    if Hashtbl.mem variable_infos.constants variable_name then (
+        let value = Hashtbl.find variable_infos.constants variable_name in
+        Constant_kind value
+    )
+    (* Otherwise: a variable *)
+    else
+        Variable_kind (Hashtbl.find variable_infos.index_of_variables variable_name)
+
+
 (* Check if a parsed global expression is constant *)
 let is_parsed_global_expression_constant variable_infos =
     for_all_in_parsed_global_expression (is_constant variable_infos)
