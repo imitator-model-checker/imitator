@@ -105,6 +105,8 @@ val string_of_parsed_term : variable_infos -> parsed_discrete_term -> string
 val string_of_parsed_factor : variable_infos -> parsed_discrete_factor -> string
 val string_of_parsed_relop : parsed_relop -> string -> string -> string
 
+val string_of_variable_access : variable_infos -> variable_access -> string
+
 (* Parsed linear constraint to string *)
 val string_of_parsed_linear_constraint : variable_infos -> linear_constraint -> string
 val string_of_linear_expression : variable_infos -> linear_expression -> string

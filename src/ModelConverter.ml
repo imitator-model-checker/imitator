@@ -597,8 +597,14 @@ let check_update variable_infos automaton_name update =
                                 let index = Hashtbl.find variable_infos.index_of_variables variable_name in
                                 Some (variable_infos.type_of_variables index)
                             ) else if Hashtbl.mem variable_infos.constants variable_name then (
-                                let value = Hashtbl.find variable_infos.constants variable_name in
-                                Some (DiscreteValue.var_type_of_value value)
+                                print_error (
+                                    "Trying to update a constant: `"
+                                    ^ ParsingStructureUtilities.string_of_variable_access variable_infos variable_access
+                                    ^ " := "
+                                    ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression
+                                    ^ "`"
+                                );
+                                raise InvalidModel;
                             ) else (
                                 None
                             )
@@ -624,7 +630,10 @@ let check_update variable_infos automaton_name update =
                             if not all_defined then
                                 false
                             else (
+
+
                                 let result = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos global_expression in
+
                                 if not result then (
                                     print_error ("The variable `" ^ variable_name ^ "` is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton `" ^ automaton_name ^ "`."); false
                                 )
@@ -632,6 +641,7 @@ let check_update variable_infos automaton_name update =
                                     print_message Verbose_total ("                Check passed.");
                                     true
                                 )
+
                             )
                         (* Case of a parameter: forbidden! *)
                         | Some DiscreteType.Var_type_parameter ->

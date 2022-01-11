@@ -514,6 +514,15 @@ and string_of_linear_term variable_infos = function
 	| Variable (coef, variable_name) when NumConst.equal NumConst.one coef -> variable_name
 	| Variable (coef, variable_name) -> (NumConst.string_of_numconst coef)
 
+(* Get variable name from a variable access *)
+(* ex : my_var[0][0] -> my_var *)
+let rec string_of_variable_access variable_infos = function
+    | Variable_name variable_name -> variable_name
+    | Variable_access (variable_access, expr) ->
+        let l_del, r_del = Constants.default_array_string.array_access_delimiter in
+        string_of_variable_access variable_infos variable_access
+        ^ l_del ^ string_of_parsed_arithmetic_expression variable_infos expr ^ r_del
+
 let string_of_parsed_init_state_predicate variable_infos = function
 	| Parsed_loc_assignment (automaton_name, location_name) -> "loc[" ^ automaton_name ^ "] = " ^ location_name
 	| Parsed_linear_predicate linear_constraint -> string_of_parsed_linear_constraint variable_infos linear_constraint

@@ -274,7 +274,7 @@ and string_of_typed_discrete_factor variable_infos discrete_type = function
 	| Typed_list (list_expr, _) ->
 	    let l_del, r_del = Constants.default_array_string.array_literal_delimiter in
 	    let str_list = List.map (string_of_typed_boolean_expression variable_infos) list_expr in
-	    let str_node = l_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_list ^ r_del in
+	    let str_node = "list(" ^ l_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_list ^ r_del ^ ")" in
 	    string_format_typed_node str_node discrete_type
 
 	| Typed_expr (expr, _) ->
@@ -1098,8 +1098,6 @@ let check_type_assignment variable_infos variable_name variable_type expr =
 
 (* Check that a discrete variable initialization is well typed *)
 let check_discrete_init variable_infos variable_name expr =
-    print_message Verbose_high "----------";
-    print_message Verbose_high ("Infer init expression: " ^ string_of_parsed_global_expression variable_infos expr);
 
     (* Get the variable index *)
     let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
@@ -1117,17 +1115,31 @@ let check_discrete_init variable_infos variable_name expr =
     (* Get variable type *)
     let variable_type = get_discrete_type_of_variable_by_name variable_infos variable_name in
     (* Check expression / variable type consistency *)
-    check_type_assignment variable_infos variable_name variable_type expr
+    let typed_expr = check_type_assignment variable_infos variable_name variable_type expr in
+    (* Print type annotations *)
+    ImitatorUtilities.print_message Verbose_standard (
+        "annot - inits - "
+        ^ variable_name
+        ^ " := "
+        ^ string_of_typed_global_expression variable_infos typed_expr
+    );
+    typed_expr
 
 
 let check_constant_expression variable_infos (name, expr, var_type) =
-    print_message Verbose_high "----------";
-    print_message Verbose_high ("Infer constant expression: " ^ string_of_parsed_global_expression variable_infos expr);
 
     (* Get variable type *)
     let discrete_type = DiscreteType.discrete_type_of_var_type var_type in
     (* Check expression / variable type consistency *)
-    check_type_assignment variable_infos name discrete_type expr
+    let typed_expr = check_type_assignment variable_infos name discrete_type expr in
+    (* Print type annotations *)
+    ImitatorUtilities.print_message Verbose_standard (
+        "annot - constants - "
+        ^ name
+        ^ " := "
+        ^ string_of_typed_global_expression variable_infos typed_expr
+    );
+    typed_expr
 
 
 (* Type non-linear constraint *)
@@ -1164,9 +1176,6 @@ let check_guard variable_infos =
 (* Type check an update *)
 let check_update variable_infos variable_access expr =
 
-    print_message Verbose_high "----------";
-    print_message Verbose_high ("Infer update expression: " ^ string_of_parsed_global_expression variable_infos expr);
-
     (* Get assigned variable name *)
     let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     (* Get assigned variable type *)
@@ -1198,6 +1207,14 @@ let check_update variable_infos variable_access expr =
             ^ (DiscreteType.string_of_var_type_discrete expr_type)
             )
         )
+    );
+
+    (* Print type annotations *)
+    ImitatorUtilities.print_message Verbose_standard (
+        "annot - updates - "
+        ^ variable_name
+        ^ " := "
+        ^ string_of_typed_global_expression variable_infos typed_expr
     );
 
     typed_variable_access,

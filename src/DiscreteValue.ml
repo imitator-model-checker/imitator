@@ -61,14 +61,8 @@ let rec discrete_type_of_value = function
             Var_type_discrete_list (discrete_type_of_value (List.nth l 0))
 
 (* Get var type of a discrete value *)
-let rec var_type_of_value = function
-    | Number_value _ -> Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number)
-    | Rational_value _ -> Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational)
-    | Int_value _ -> Var_type_discrete (Var_type_discrete_number Var_type_discrete_int)
-    | Bool_value _ -> Var_type_discrete Var_type_discrete_bool
-    | Binary_word_value b -> Var_type_discrete (Var_type_discrete_binary_word (BinaryWord.length b))
-    | Array_value a -> Var_type_discrete (Var_type_discrete_array (discrete_type_of_value (Array.get a 0), Array.length a))
-    | List_value l -> Var_type_discrete (Var_type_discrete_list (discrete_type_of_value (List.nth l 0)))
+let var_type_of_value value =
+    Var_type_discrete (discrete_type_of_value value)
 
 (* Check if a value is compatible with given type *)
 let check_value_compatible_with_type value var_type =
