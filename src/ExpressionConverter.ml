@@ -1130,7 +1130,7 @@ let check_discrete_init variable_infos variable_name expr =
     (* Check expression / variable type consistency *)
     let typed_expr = check_type_assignment variable_infos variable_name variable_type expr in
     (* Print type annotations *)
-    ImitatorUtilities.print_message Verbose_standard (
+    ImitatorUtilities.print_message Verbose_high (
         "annot - inits - "
         ^ variable_name
         ^ " := "
@@ -1146,7 +1146,7 @@ let check_constant_expression variable_infos (name, expr, var_type) =
     (* Check expression / variable type consistency *)
     let typed_expr = check_type_assignment variable_infos name discrete_type expr in
     (* Print type annotations *)
-    ImitatorUtilities.print_message Verbose_standard (
+    ImitatorUtilities.print_message Verbose_high (
         "annot - constants - "
         ^ name
         ^ " := "
@@ -1162,12 +1162,11 @@ let check_nonlinear_constraint variable_infos nonlinear_constraint =
     let typed_nonlinear_constraint, discrete_type = type_check_parsed_discrete_boolean_expression variable_infos None nonlinear_constraint in
 
     (* Print type annotations *)
-    (*
-    ImitatorUtilities.print_message Verbose_standard (
+    ImitatorUtilities.print_message Verbose_high (
         "annot - guards - "
         ^ string_of_typed_discrete_boolean_expression variable_infos typed_nonlinear_constraint
     );
-    *)
+
     (* Check that non-linear constraint is a Boolean expression *)
     match discrete_type with
     | DiscreteType.Var_type_discrete_bool -> typed_nonlinear_constraint
@@ -1224,7 +1223,7 @@ let check_update variable_infos variable_access expr =
     );
 
     (* Print type annotations *)
-    ImitatorUtilities.print_message Verbose_standard (
+    ImitatorUtilities.print_message Verbose_high (
         "annot - updates - "
         ^ variable_name
         ^ " := "
