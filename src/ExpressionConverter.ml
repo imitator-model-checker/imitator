@@ -2413,6 +2413,7 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 		| Typed_expr (parsed_update_arithmetic_expression, _) ->
             update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
 		| factor ->
+		    (* TODO benjamin replace TODO *)
             raise (InternalError ("Use of TODO is forbidden in linear term, something failed before."))
 	in
 

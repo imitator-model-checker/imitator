@@ -13,7 +13,7 @@ type nonlinear_constraint =
 
 (* if all true, it's satisfied *)
 let check_nonlinear_inequalities discrete_valuation =
-  List.for_all (DiscreteExpressionEvaluator.check_discrete_boolean_expression discrete_valuation)
+  List.for_all (DiscreteExpressionEvaluator.eval_discrete_boolean_expression (Some discrete_valuation))
 
 (* Check if a nonlinear constraint is satisfied *)
 let check_nonlinear_constraint discrete_valuation = function
@@ -42,6 +42,3 @@ let customized_string_of_nonlinear_constraint customized_string variable_names =
 (* Get string of non-linear constraint inequalities with default strings *)
 let string_of_nonlinear_constraint = customized_string_of_nonlinear_constraint global_default_string
 
-let try_reduce_nonlinear_constraint = function
-    | Nonlinear_constraint nonlinear_constraint ->
-        List.map DiscreteExpressionEvaluator.try_reduce_discrete_boolean_expression nonlinear_constraint
