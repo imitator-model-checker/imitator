@@ -86,6 +86,7 @@ val get_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_ty
 val get_discrete_type_of_variable_by_name : variable_infos -> variable_name -> var_type_discrete
 val get_discrete_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type_discrete option
 
+val string_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> string
 val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
 
 (* Check that a discrete init is well typed *)
@@ -1160,12 +1161,13 @@ let check_nonlinear_constraint variable_infos nonlinear_constraint =
 
     let typed_nonlinear_constraint, discrete_type = type_check_parsed_discrete_boolean_expression variable_infos None nonlinear_constraint in
 
-    ImitatorUtilities.print_message Verbose_high "-------------------------";
-    ImitatorUtilities.print_message Verbose_high "Typed tree of nonlinear constraint: ";
-    ImitatorUtilities.print_message Verbose_high "-------------------------";
-    ImitatorUtilities.print_message Verbose_high (string_of_typed_discrete_boolean_expression variable_infos typed_nonlinear_constraint);
-    ImitatorUtilities.print_message Verbose_high "-------------------------";
-
+    (* Print type annotations *)
+    (*
+    ImitatorUtilities.print_message Verbose_standard (
+        "annot - guards - "
+        ^ string_of_typed_discrete_boolean_expression variable_infos typed_nonlinear_constraint
+    );
+    *)
     (* Check that non-linear constraint is a Boolean expression *)
     match discrete_type with
     | DiscreteType.Var_type_discrete_bool -> typed_nonlinear_constraint
@@ -1341,7 +1343,17 @@ and global_expression_of_typed_boolean_expression_without_type variable_infos = 
 	| Typed_discrete_bool_expr (_, discrete_type) as expr ->
 	    global_expression_of_typed_boolean_expression variable_infos expr discrete_type
 
-and global_expression_of_typed_boolean_expression variable_infos expr = function
+and global_expression_of_typed_boolean_expression variable_infos expr discrete_type =
+    (*
+    ImitatorUtilities.print_message Verbose_standard (
+        "Convert: "
+        ^ string_of_typed_boolean_expression variable_infos expr
+        ^ " to "
+        ^ DiscreteType.string_of_var_type_discrete discrete_type
+        ^ " expression."
+    );
+    *)
+    match discrete_type with
     | Var_type_discrete_number discrete_number_type ->
         Arithmetic_expression (
             discrete_arithmetic_expression_of_typed_boolean_expression variable_infos discrete_number_type expr
@@ -1658,7 +1670,7 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 	    rational_expression_of_typed_function_call variable_infos argument_expressions function_name
 
 	| _ ->
-        raise (InternalError "The expression type indicate that it should be converted to an arithmetic expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to a rational arithmetic expression, but a non rational arithmetic expression is found. Maybe something failed in type checking or conversion.")
 
 and rational_expression_of_typed_function_call variable_infos argument_expressions = function
     | "pow" ->
@@ -1763,9 +1775,8 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
 	    int_expression_of_typed_function_call variable_infos argument_expressions function_name
-
 	| _ ->
-        raise (InternalError "The expression type indicate that it should be converted to an arithmetic expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to an int arithmetic expression, but a non int arithmetic expression is found. Maybe something failed in type checking or conversion.")
 
 and int_expression_of_typed_function_call variable_infos argument_expressions = function
     | "pow" ->
@@ -2006,14 +2017,14 @@ and array_expression_of_typed_function_call variable_infos discrete_type argumen
         let arg_0 = List.nth argument_expressions 0 in
         let arg_1 = List.nth argument_expressions 1 in
         Array_concat (
-            array_expression_of_typed_boolean_expression variable_infos discrete_type arg_0,
-            array_expression_of_typed_boolean_expression variable_infos discrete_type arg_1
+            array_expression_of_typed_boolean_expression_with_type variable_infos arg_0,
+            array_expression_of_typed_boolean_expression_with_type variable_infos arg_1
         )
 
     | "list_hd" ->
         let arg_0 = List.nth argument_expressions 0 in
         Array_list_hd (
-            list_expression_of_typed_boolean_expression variable_infos discrete_type arg_0
+            list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
     | function_name -> raise (UndefinedFunction function_name)
     (*
@@ -2099,22 +2110,22 @@ and list_expression_of_typed_function_call variable_infos discrete_type argument
         let arg_1 = List.nth argument_expressions 1 in
         List_cons (
             global_expression_of_typed_boolean_expression variable_infos arg_0 discrete_type,
-            list_expression_of_typed_boolean_expression variable_infos discrete_type arg_1
+            list_expression_of_typed_boolean_expression_with_type variable_infos arg_1
         )
     | "list_hd" ->
         let arg_0 = List.nth argument_expressions 0 in
         List_list_hd (
-            list_expression_of_typed_boolean_expression variable_infos discrete_type arg_0
+            list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
     | "list_tl" ->
         let arg_0 = List.nth argument_expressions 0 in
         List_list_tl (
-            list_expression_of_typed_boolean_expression variable_infos discrete_type arg_0
+            list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
     | "list_rev" ->
         let arg_0 = List.nth argument_expressions 0 in
         List_rev (
-            list_expression_of_typed_boolean_expression variable_infos discrete_type arg_0
+            list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
     | function_name -> raise (UndefinedFunction function_name)
 

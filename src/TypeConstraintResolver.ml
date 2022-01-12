@@ -139,19 +139,20 @@ let resolve_constraints variable_infos signature discrete_types expressions =
     ) resolved_constraint_group_by_constraint_name
     in
 
-    (* Reduce well formed constraints *)
+    (* Reduce well formed constraints with multiple resolutions to one good resolution *)
     let well_formed_constraint_resolutions = List.map (fun (constraint_name, resolutions) ->
 
         let first_known_constraint_opt = List.find_opt (function
             | Resolved_type_constraint discrete_type ->
                 DiscreteType.is_discrete_type_holding_number_type discrete_type && DiscreteType.is_discrete_type_holding_known_number_type discrete_type
                 || not (DiscreteType.is_discrete_type_holding_number_type discrete_type)
-            | _ -> true
+            | Resolved_length_constraint _ -> true
         ) resolutions
         in
-        (* If all type constraint on particular constraint are unknown numbers, transform current constraint to rational *)
+        (* If all type constraint on particular constraint are unknown numbers, transform current constraint to unknown *)
         match first_known_constraint_opt with
-        | None -> constraint_name, Resolved_type_constraint (Var_type_discrete_number Var_type_discrete_unknown_number)
+        (* If all the resolutions for a constraint are unknown number so, return arbitrary the first *)
+        | None -> constraint_name, List.nth resolutions 0
         | Some first_known_constraint -> constraint_name, first_known_constraint
 
     ) well_formed_constraint_resolutions
