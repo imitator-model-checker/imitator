@@ -897,6 +897,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
                 let converted_expr = Convert.global_expression_of_typed_boolean_expression variable_infos expr (Var_type_discrete_number Var_type_discrete_int) in
 
                 if not (DiscreteExpressionEvaluator.is_global_expression_constant converted_expr) then (
+                    (* TODO benjamin fill type error *)
                     raise (TypeError (""));
                 )
                 else (
@@ -948,6 +949,12 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
         print_message Verbose_high ("\tInfer signature of `" ^ string_of_parsed_factor variable_infos func ^ "` resolved as: " ^ FunctionSig.string_of_signature resolved_signature);
 
         let resolved_signature_without_return_type, return_type = FunctionSig.split_signature resolved_signature in
+
+        (* Now we had resolved discrete type of arguments, we can infer arguments to these types *)
+        let combine = List.combine argument_expressions resolved_signature_without_return_type in
+        let type_checks = List.map (fun (argument_exp, discrete_type) -> type_check_parsed_boolean_expression variable_infos (Some discrete_type) (* inference to type deduced from signature *) argument_exp) combine in
+        (* Get typed arguments expressions *)
+        let typed_expressions = List.map (fun (typed_expr, _) -> typed_expr) type_checks in
 
         Typed_function_call (function_name, typed_expressions, return_type), return_type
 
