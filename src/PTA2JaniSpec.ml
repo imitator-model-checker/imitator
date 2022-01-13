@@ -304,63 +304,63 @@ and customized_string_of_arithmetic_expression_for_jani customized_string variab
 and customized_string_of_rational_arithmetic_expression_for_jani customized_string variable_names =
     let rec string_of_arithmetic_expression customized_string = function
         (* Shortcut: Remove the "+0" / -"0" cases *)
-        | DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
-        | DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
+        | Rational_plus (discrete_arithmetic_expression, Rational_factor (Rational_constant c))
+        | Rational_minus (discrete_arithmetic_expression, Rational_factor (Rational_constant c)) when NumConst.equal c NumConst.zero ->
             string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 
-        | DAE_plus (discrete_arithmetic_expression, discrete_term) ->
+        | Rational_plus (discrete_arithmetic_expression, discrete_term) ->
             jani_binary_operator
                 customized_string.arithmetic_string.plus_string
                 (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
                 (string_of_term customized_string discrete_term)
 
 
-        | DAE_minus (discrete_arithmetic_expression, discrete_term) ->
+        | Rational_minus (discrete_arithmetic_expression, discrete_term) ->
             jani_binary_operator
                 customized_string.arithmetic_string.minus_string
                 (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
                 (string_of_term customized_string discrete_term)
 
 
-        | DAE_term discrete_term ->
+        | Rational_term discrete_term ->
             string_of_term customized_string discrete_term
 
 	and string_of_term customized_string = function
 		(* Eliminate the '1' coefficient *)
-		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
+		| Rational_mul (Rational_factor (Rational_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
 			string_of_factor customized_string discrete_factor
-		| DT_mul (discrete_term, discrete_factor) ->
+		| Rational_mul (discrete_term, discrete_factor) ->
             jani_binary_operator
                 customized_string.arithmetic_string.mul_string
                 (string_of_term customized_string discrete_term)
                 (string_of_factor customized_string discrete_factor)
 
 
-		| DT_div (discrete_term, discrete_factor) ->
+		| Rational_div (discrete_term, discrete_factor) ->
 		    jani_binary_operator
 		        customized_string.arithmetic_string.div_string
 		        (string_of_term customized_string discrete_term)
                 (string_of_factor customized_string discrete_factor)
 
 
-		| DT_factor discrete_factor ->
+		| Rational_factor discrete_factor ->
 		    string_of_factor customized_string discrete_factor
 
 	and string_of_factor customized_string = function
-		| DF_variable discrete_index -> json_quoted (variable_names discrete_index)
-		| DF_constant value -> NumConst.jani_string_of_numconst value
+		| Rational_variable discrete_index -> json_quoted (variable_names discrete_index)
+		| Rational_constant value -> NumConst.jani_string_of_numconst value
         | Rational_access (access_type, index_expr) ->
             string_of_expression_access_for_jani customized_string variable_names access_type index_expr
 
-		| DF_unary_min discrete_factor ->
+		| Rational_unary_min discrete_factor ->
 		    jani_binary_operator
 		        customized_string.arithmetic_string.unary_min_string
 		        "0"
                 (string_of_factor customized_string discrete_factor)
 
-		| DF_expression expr ->
+		| Rational_expression expr ->
 			string_of_arithmetic_expression customized_string expr
-		| DF_rational_of_int expr ->
+		| Rational_of_int expr ->
 		    customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
         | Rational_pow (expr, exp) as factor ->
             jani_binary_operator

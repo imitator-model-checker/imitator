@@ -46,22 +46,24 @@ and discrete_arithmetic_expression =
 (** Rational arithmetic expressions for discrete variables *)
 (****************************************************************)
 and rational_arithmetic_expression =
-	| DAE_plus of rational_arithmetic_expression * rational_term
-	| DAE_minus of rational_arithmetic_expression * rational_term
-	| DAE_term of rational_term
+	| Rational_plus of rational_arithmetic_expression * rational_term
+	| Rational_minus of rational_arithmetic_expression * rational_term
+	| Rational_term of rational_term
 
 and rational_term =
-	| DT_mul of rational_term * rational_factor
-	| DT_div of rational_term * rational_factor
-	| DT_factor of rational_factor
+	| Rational_mul of rational_term * rational_factor
+	| Rational_div of rational_term * rational_factor
+	| Rational_factor of rational_factor
 
 and rational_factor =
-	| DF_variable of Automaton.variable_index
-	| DF_constant of NumConst.t
+	| Rational_variable of Automaton.variable_index
+	| Rational_constant of NumConst.t
     | Rational_access of expression_access_type * int_arithmetic_expression
-	| DF_expression of rational_arithmetic_expression
-	| DF_rational_of_int of int_arithmetic_expression
-	| DF_unary_min of rational_factor
+	| Rational_expression of rational_arithmetic_expression
+
+	| Rational_unary_min of rational_factor
+
+    | Rational_of_int of int_arithmetic_expression
     | Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
     | Rational_list_hd of list_expression
 (*    | Rational_function_call of string * global_expression list*)
@@ -199,20 +201,20 @@ type discrete_variable_access =
 (** Check linearity of a discrete expression **)
 
 let rec is_variable_rational_arithmetic_expression = function
-    | DAE_plus _
-    | DAE_minus _ -> false
-    | DAE_term term ->
+    | Rational_plus _
+    | Rational_minus _ -> false
+    | Rational_term term ->
         is_variable_rational_term term
 
 and is_variable_rational_term = function
-    | DT_mul _
-    | DT_div _ -> false
-    | DT_factor factor -> is_variable_rational_factor factor
+    | Rational_mul _
+    | Rational_div _ -> false
+    | Rational_factor factor -> is_variable_rational_factor factor
 
 and is_variable_rational_factor = function
-    | DF_variable _ -> true
-    | DF_unary_min factor -> is_variable_rational_factor factor
-    | DF_expression expr -> is_variable_rational_arithmetic_expression expr
+    | Rational_variable _ -> true
+    | Rational_unary_min factor -> is_variable_rational_factor factor
+    | Rational_expression expr -> is_variable_rational_arithmetic_expression expr
     | _ -> false
 
 let rec is_linear_global_expression = function
@@ -245,27 +247,27 @@ and is_linear_arithmetic_expression = function
     | Int_arithmetic_expression expr -> false
 
 and is_linear_rational_arithmetic_expression = function
-    | DAE_plus (expr, term) ->
+    | Rational_plus (expr, term) ->
         is_linear_rational_arithmetic_expression expr &&
         is_linear_rational_term term
-    | DAE_minus (expr, term) ->
+    | Rational_minus (expr, term) ->
         is_linear_rational_arithmetic_expression expr &&
         is_linear_rational_term term
-    | DAE_term term ->
+    | Rational_term term ->
         is_linear_rational_term term
 
 and is_linear_rational_term = function
-    | DT_mul (term, factor) ->
+    | Rational_mul (term, factor) ->
         (* Two variable ? false, otherwise true *)
         not (is_variable_rational_term term && is_variable_rational_factor factor)
-    | DT_div _ -> false
-    | DT_factor factor -> is_linear_rational_factor factor
+    | Rational_div _ -> false
+    | Rational_factor factor -> is_linear_rational_factor factor
 
 and is_linear_rational_factor = function
-    | DF_variable _
-    | DF_constant _ -> true
-    | DF_unary_min factor -> is_linear_rational_factor factor
-    | DF_expression expr -> is_linear_rational_arithmetic_expression expr
+    | Rational_variable _
+    | Rational_constant _ -> true
+    | Rational_unary_min factor -> is_linear_rational_factor factor
+    | Rational_expression expr -> is_linear_rational_arithmetic_expression expr
     | _ -> false
 
 (****************************************************************)
@@ -274,14 +276,14 @@ and is_linear_rational_factor = function
 
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_discrete_factor_has_parenthesis = function
-    | DF_unary_min _
-    | DF_expression(DAE_plus _)
-    | DF_expression(DAE_minus _) -> true
+    | Rational_unary_min _
+    | Rational_expression(Rational_plus _)
+    | Rational_expression(Rational_minus _) -> true
     | _ -> false
 
 (* Check if discrete factor is a multiplication *)
 let is_discrete_factor_is_mul = function
-    | DF_expression(DAE_term(DT_mul _)) -> true
+    | Rational_expression(Rational_term(Rational_mul _)) -> true
     | _ -> false
 
 (* Check if a left expression should have parenthesis *)
@@ -290,7 +292,7 @@ let is_discrete_factor_is_mul = function
 (* or (x + y) / z *)
 (* or (x - y) / z *)
 let is_left_expr_has_parenthesis = function
-    | DT_factor factor -> is_discrete_factor_has_parenthesis factor
+    | Rational_factor factor -> is_discrete_factor_has_parenthesis factor
     | _ -> false
 
 (* Check if a right expression should have parenthesis *)
@@ -301,11 +303,11 @@ let is_left_expr_has_parenthesis = function
 (* or x / (y * z) *)
 let is_right_expr_has_parenthesis = function
     (* check x / (y * z) *)
-    | DT_div (discrete_term, discrete_factor) when is_discrete_factor_is_mul discrete_factor -> true
+    | Rational_div (discrete_term, discrete_factor) when is_discrete_factor_is_mul discrete_factor -> true
     (* check x / (y + z) or x / (y - z) *)
-    | DT_div (discrete_term, discrete_factor)
+    | Rational_div (discrete_term, discrete_factor)
     (* check x * (y + z) or x * (y - z) *)
-    | DT_mul (discrete_term, discrete_factor) -> is_discrete_factor_has_parenthesis discrete_factor
+    | Rational_mul (discrete_term, discrete_factor) -> is_discrete_factor_has_parenthesis discrete_factor
     | _ -> false
 
 let add_left_parenthesis expr str =
@@ -315,7 +317,7 @@ let add_right_parenthesis str expr =
     if is_right_expr_has_parenthesis expr then "(" ^ str ^ ")" else str
 
 let add_parenthesis_to_unary_minus str = function
-    | DF_expression _ -> "(" ^ str ^ ")"
+    | Rational_expression _ -> "(" ^ str ^ ")"
     | _ -> str
 
 
@@ -388,11 +390,11 @@ let label_of_bool_factor = function
     | Array_mem _ -> "array_mem"
 
 let label_of_rational_factor = function
-	| DF_variable _ -> "rational variable"
-	| DF_constant _ -> "rational constant"
-	| DF_expression _ -> "rational expression"
-	| DF_unary_min _ -> "rational minus"
-	| DF_rational_of_int _ -> "rational_of_int"
+	| Rational_variable _ -> "rational variable"
+	| Rational_constant _ -> "rational constant"
+	| Rational_expression _ -> "rational expression"
+	| Rational_unary_min _ -> "rational minus"
+	| Rational_of_int _ -> "rational_of_int"
 	| Rational_pow _ -> "pow"
 	| Rational_access _ -> "rational access"
 	| Rational_list_hd _ -> "list_hd"
@@ -468,25 +470,25 @@ and customized_string_of_arithmetic_expression customized_string variable_names 
 and customized_string_of_rational_arithmetic_expression customized_string variable_names =
     let rec string_of_arithmetic_expression customized_string = function
         (* Shortcut: Remove the "+0" / -"0" cases *)
-        | DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
-        | DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
+        | Rational_plus (discrete_arithmetic_expression, Rational_factor (Rational_constant c))
+        | Rational_minus (discrete_arithmetic_expression, Rational_factor (Rational_constant c)) when NumConst.equal c NumConst.zero ->
             string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 
-		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
+		| Rational_plus (discrete_arithmetic_expression, discrete_term) ->
             (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
             ^ Constants.default_arithmetic_string.plus_string
             ^ (string_of_term customized_string discrete_term)
-		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
+		| Rational_minus (discrete_arithmetic_expression, discrete_term) ->
             (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
             ^ Constants.default_arithmetic_string.minus_string
             ^ (string_of_term customized_string discrete_term)
-        | DAE_term discrete_term -> string_of_term customized_string discrete_term
+        | Rational_term discrete_term -> string_of_term customized_string discrete_term
 
 	and string_of_term customized_string = function
 		(* Eliminate the '1' coefficient *)
-		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
+		| Rational_mul (Rational_factor (Rational_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
 			string_of_factor customized_string discrete_factor
-		| DT_mul (discrete_term, discrete_factor) as expr ->
+		| Rational_mul (discrete_term, discrete_factor) as expr ->
 		add_left_parenthesis discrete_term (
 			(string_of_term customized_string discrete_term)
 		)
@@ -496,7 +498,7 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
             string_of_factor customized_string discrete_factor
         ) expr)
 
-		| DT_div (discrete_term, discrete_factor) as expr ->
+		| Rational_div (discrete_term, discrete_factor) as expr ->
 		add_left_parenthesis discrete_term (
 			(string_of_term customized_string discrete_term)
         )
@@ -506,20 +508,20 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
             string_of_factor customized_string discrete_factor
         ) expr)
 
-		| DT_factor discrete_factor -> string_of_factor customized_string discrete_factor
+		| Rational_factor discrete_factor -> string_of_factor customized_string discrete_factor
 
 	and string_of_factor customized_string = function
-		| DF_variable discrete_index -> variable_names discrete_index
-		| DF_constant value -> NumConst.to_string value
+		| Rational_variable discrete_index -> variable_names discrete_index
+		| Rational_constant value -> NumConst.to_string value
 		| Rational_access (access_type, index_expr) ->
 		    string_of_expression_access customized_string variable_names access_type index_expr
 
-		| DF_unary_min discrete_factor ->
+		| Rational_unary_min discrete_factor ->
 		    Constants.default_arithmetic_string.unary_min_string ^
 		    add_parenthesis_to_unary_minus (
 		         (string_of_factor customized_string discrete_factor)
 		    ) discrete_factor
-		| DF_rational_of_int discrete_arithmetic_expression as factor ->
+		| Rational_of_int discrete_arithmetic_expression as factor ->
             print_function
                 (label_of_rational_factor factor)
                 [customized_string_of_int_arithmetic_expression customized_string variable_names discrete_arithmetic_expression]
@@ -534,7 +536,7 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
             print_function
                 (label_of_rational_factor factor)
                 [customized_string_of_list_expression customized_string variable_names list_expr]
-		| DF_expression discrete_arithmetic_expression ->
+		| Rational_expression discrete_arithmetic_expression ->
 			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 	(* Call top-level *)
 	in string_of_arithmetic_expression customized_string

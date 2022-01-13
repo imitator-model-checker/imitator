@@ -49,22 +49,22 @@ and discrete_arithmetic_expression =
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
 and rational_arithmetic_expression =
-	| DAE_plus of rational_arithmetic_expression * rational_term
-	| DAE_minus of rational_arithmetic_expression * rational_term
-	| DAE_term of rational_term
+	| Rational_plus of rational_arithmetic_expression * rational_term
+	| Rational_minus of rational_arithmetic_expression * rational_term
+	| Rational_term of rational_term
 
 and rational_term =
-	| DT_mul of rational_term * rational_factor
-	| DT_div of rational_term * rational_factor
-	| DT_factor of rational_factor
+	| Rational_mul of rational_term * rational_factor
+	| Rational_div of rational_term * rational_factor
+	| Rational_factor of rational_factor
 
 and rational_factor =
-	| DF_variable of Automaton.variable_index
-	| DF_constant of NumConst.t
+	| Rational_variable of Automaton.variable_index
+	| Rational_constant of NumConst.t
     | Rational_access of expression_access_type * int_arithmetic_expression
-	| DF_expression of rational_arithmetic_expression
-	| DF_rational_of_int of int_arithmetic_expression
-	| DF_unary_min of rational_factor
+	| Rational_expression of rational_arithmetic_expression
+	| Rational_unary_min of rational_factor
+	| Rational_of_int of int_arithmetic_expression
 	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
 	| Rational_list_hd of list_expression
 (*	| Rational_function_call of string * global_expression list*)

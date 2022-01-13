@@ -49,23 +49,23 @@ and eval_discrete_arithmetic_expression discrete_valuation = function
         DiscreteValue.Int_value (eval_int_expression discrete_valuation expr)
 
 and eval_rational_expression discrete_valuation = function
-        | DAE_plus (expr, term) ->
+        | Rational_plus (expr, term) ->
             NumConst.add
                 (eval_rational_expression discrete_valuation expr)
                 (eval_rational_term discrete_valuation term)
-        | DAE_minus (expr, term) ->
+        | Rational_minus (expr, term) ->
             NumConst.sub
                 (eval_rational_expression discrete_valuation expr)
                 (eval_rational_term discrete_valuation term)
-        | DAE_term term ->
+        | Rational_term term ->
             eval_rational_term discrete_valuation term
 
 and eval_rational_term discrete_valuation = function
-    | DT_mul (term, factor) ->
+    | Rational_mul (term, factor) ->
         NumConst.mul
         (eval_rational_term discrete_valuation term)
         (eval_rational_factor discrete_valuation factor)
-    | DT_div (term, factor) ->
+    | Rational_div (term, factor) ->
         let numerator	= (eval_rational_term discrete_valuation term) in
         let denominator	= (eval_rational_factor discrete_valuation factor) in
 
@@ -79,20 +79,20 @@ and eval_rational_term discrete_valuation = function
             numerator
             denominator
 
-    | DT_factor factor ->
+    | Rational_factor factor ->
         eval_rational_factor discrete_valuation factor
 
 and eval_rational_factor discrete_valuation = function
-    | DF_variable variable_index ->
+    | Rational_variable variable_index ->
         DiscreteValue.numconst_value (try_eval_variable variable_index discrete_valuation)
-    | DF_constant variable_value ->
+    | Rational_constant variable_value ->
         variable_value
     | Rational_access (access_type, index_expr) ->
         let value = get_expression_access_value discrete_valuation index_expr access_type in
         DiscreteValue.numconst_value value
-    | DF_expression expr ->
+    | Rational_expression expr ->
         eval_rational_expression discrete_valuation expr
-    | DF_rational_of_int expr ->
+    | Rational_of_int expr ->
         ImitatorUtilities.print_warning
             "Conversion of an int expression to a rational expression
             may cause overflow if your platform doesn't manage `int` as an exact 32 bits integer.";
@@ -104,7 +104,7 @@ and eval_rational_factor discrete_valuation = function
         let fail_message = list_hd_fail_message list_expr in
         let value = try_eval_list_hd list fail_message in
         DiscreteValue.numconst_value value
-    | DF_unary_min factor ->
+    | Rational_unary_min factor ->
         NumConst.neg (eval_rational_factor discrete_valuation factor)
 
 and eval_int_expression discrete_valuation (* expr *) =

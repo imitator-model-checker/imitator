@@ -1403,7 +1403,7 @@ and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression varia
         | Var_type_discrete_unknown_number
         | Var_type_discrete_rational ->
             Rational_arithmetic_expression (
-                DAE_plus (
+                Rational_plus (
                     rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
                     rational_arithmetic_expression_of_typed_term variable_infos term
                 )
@@ -1422,7 +1422,7 @@ and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression varia
         | Var_type_discrete_unknown_number
         | Var_type_discrete_rational ->
             Rational_arithmetic_expression (
-                DAE_minus (
+                Rational_minus (
                     rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
                     rational_arithmetic_expression_of_typed_term variable_infos term
                 )
@@ -1440,7 +1440,7 @@ and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression varia
         (match discrete_number_type with
         | Var_type_discrete_unknown_number
         | Var_type_discrete_rational ->
-            Rational_arithmetic_expression (DAE_term (rational_arithmetic_expression_of_typed_term variable_infos term))
+            Rational_arithmetic_expression (Rational_term (rational_arithmetic_expression_of_typed_term variable_infos term))
         | Var_type_discrete_int ->
             Int_arithmetic_expression (Int_term (int_arithmetic_expression_of_typed_term variable_infos term))
         )
@@ -1604,58 +1604,58 @@ and rational_arithmetic_expression_of_typed_discrete_boolean_expression variable
 
 and rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos = function
 	| Typed_plus (expr, term, _) ->
-	    DAE_plus (
+	    Rational_plus (
 	        rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
 	        rational_arithmetic_expression_of_typed_term variable_infos term
 	    )
 
 	| Typed_minus (expr, term, _) ->
-	    DAE_minus (
+	    Rational_minus (
 	        rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
 	        rational_arithmetic_expression_of_typed_term variable_infos term
 	    )
 
 	| Typed_term (term, _) ->
-	    DAE_term (
+	    Rational_term (
 	        rational_arithmetic_expression_of_typed_term variable_infos term
 	    )
 
 and rational_arithmetic_expression_of_typed_term variable_infos = function
 	| Typed_mul (term, factor, _) ->
-	    DT_mul (
+	    Rational_mul (
 	        rational_arithmetic_expression_of_typed_term variable_infos term,
 	        rational_arithmetic_expression_of_typed_factor variable_infos factor
 	    )
 
 	| Typed_div (term, factor, _) ->
-	    DT_div (
+	    Rational_div (
 	        rational_arithmetic_expression_of_typed_term variable_infos term,
 	        rational_arithmetic_expression_of_typed_factor variable_infos factor
 	    )
 
 	| Typed_factor (factor, _) ->
-	    DT_factor (
+	    Rational_factor (
 	        rational_arithmetic_expression_of_typed_factor variable_infos factor
 	    )
 
 and rational_arithmetic_expression_of_typed_factor variable_infos = function
 	| Typed_unary_min (factor, _) ->
-	    DF_unary_min (
+	    Rational_unary_min (
 	        rational_arithmetic_expression_of_typed_factor variable_infos factor
 	    )
 
 	| Typed_variable (variable_name, _) ->
         let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
         (match variable_kind with
-        | Constant_kind value -> DF_constant (DiscreteValue.to_numconst_value value)
-        | Variable_kind discrete_index -> DF_variable discrete_index
+        | Constant_kind value -> Rational_constant (DiscreteValue.to_numconst_value value)
+        | Variable_kind discrete_index -> Rational_variable discrete_index
         )
 
 	| Typed_constant (value, _) ->
-	    DF_constant (DiscreteValue.to_numconst_value value)
+	    Rational_constant (DiscreteValue.to_numconst_value value)
 
 	| Typed_expr (expr, _) ->
-	    DF_expression (
+	    Rational_expression (
 	        rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr
         )
 
@@ -1681,7 +1681,7 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
         )
     | "rational_of_int" ->
         let arg_0 = List.nth argument_expressions 0 in
-        DF_rational_of_int (
+        Rational_of_int (
             int_arithmetic_expression_of_typed_boolean_expression variable_infos arg_0
         )
 

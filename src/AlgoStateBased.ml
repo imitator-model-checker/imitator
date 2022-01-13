@@ -359,13 +359,13 @@ let split_guards_into_discrete_and_continuous =
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
 let evaluate_discrete_arithmetic_expression v =
 	let rec evaluate_discrete_arithmetic_expression_rec = function
-		| DAE_plus (discrete_arithmetic_expression, discrete_term) -> NumConst.add (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
-		| DAE_minus (discrete_arithmetic_expression, discrete_term) -> NumConst.sub (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
-		| DAE_term discrete_term -> evaluate_discrete_term discrete_term
+		| Rational_plus (discrete_arithmetic_expression, discrete_term) -> NumConst.add (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
+		| Rational_minus (discrete_arithmetic_expression, discrete_term) -> NumConst.sub (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
+		| Rational_term discrete_term -> evaluate_discrete_term discrete_term
 
 	and evaluate_discrete_term = function
-		| DT_mul (discrete_term, discrete_factor) -> NumConst.mul (evaluate_discrete_term discrete_term) (evaluate_discrete_factor discrete_factor)
-		| DT_div (discrete_term, discrete_factor) ->
+		| Rational_mul (discrete_term, discrete_factor) -> NumConst.mul (evaluate_discrete_term discrete_term) (evaluate_discrete_factor discrete_factor)
+		| Rational_div (discrete_term, discrete_factor) ->
 			(*** NOTE: here comes the infamous division by 0 ***)
 			(* Compute the denominator *)
 			let denominator = evaluate_discrete_factor discrete_factor in
@@ -376,13 +376,13 @@ let evaluate_discrete_arithmetic_expression v =
 			(* Else go on with division *)
 			else
 			NumConst.div (evaluate_discrete_term discrete_term) denominator
-		| DT_factor discrete_factor -> evaluate_discrete_factor discrete_factor
+		| Rational_factor discrete_factor -> evaluate_discrete_factor discrete_factor
 
 	and evaluate_discrete_factor = function
-		| DF_variable discrete_index -> v discrete_index
-		| DF_constant discrete_value -> discrete_value
-		| DF_unary_min discrete_factor -> NumConst.neg (evaluate_discrete_factor discrete_factor)
-		| DF_expression discrete_arithmetic_expression -> evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression
+		| Rational_variable discrete_index -> v discrete_index
+		| Rational_constant discrete_value -> discrete_value
+		| Rational_unary_min discrete_factor -> NumConst.neg (evaluate_discrete_factor discrete_factor)
+		| Rational_expression discrete_arithmetic_expression -> evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression
 	in
 	evaluate_discrete_arithmetic_expression_rec*)
 
