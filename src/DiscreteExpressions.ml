@@ -114,14 +114,14 @@ and discrete_boolean_expression =
 	| List_comparison of list_expression * relop * list_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
-	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
+	(** Boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression of boolean_expression
-	(** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | }*)
+	(** Boolean expression of the form not(Expr ~ Expr), with ~ = { &, | }*)
 	| Not_bool of boolean_expression (** Negation *)
-	(** Discrete variable *)
-	| DB_variable of Automaton.variable_index
-	(** Discrete constant *)
-	| DB_constant of bool
+	(** Discrete boolean variable *)
+	| Bool_variable of Automaton.variable_index
+	(** Discrete boolean constant *)
+	| Bool_constant of bool
 	(** Access to a boolean array **)
     | Bool_access of expression_access_type * int_arithmetic_expression
     | Bool_list_hd of list_expression
@@ -237,7 +237,7 @@ and is_linear_discrete_boolean_expression = function
 	        is_linear_arithmetic_expression expr_2 &&
 	        is_linear_arithmetic_expression expr_3
 	    )
-    | DB_constant _ -> true
+    | Bool_constant _ -> true
     | _ -> false
 
 and is_linear_arithmetic_expression = function
@@ -380,8 +380,8 @@ let label_of_bool_factor = function
 	| Expression_in _ -> "in expression"
 	| Boolean_expression _ -> "bool expression"
 	| Not_bool _ -> "bool negation expression"
-	| DB_variable _ -> "bool variable"
-	| DB_constant _ -> "bool constant"
+	| Bool_variable _ -> "bool variable"
+	| Bool_constant _ -> "bool constant"
     | Bool_access _ -> "bool access"
     | Bool_list_hd _ -> "list_hd"
     | List_mem _ -> "list_mem"
@@ -674,8 +674,8 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
         "(" ^ customized_string_of_boolean_expression customized_string variable_names boolean_expression ^ ")"
 	| Not_bool b ->
 	    customized_string.boolean_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
-    | DB_variable discrete_index -> variable_names discrete_index
-    | DB_constant value -> customized_string_of_bool_value customized_string.boolean_string value
+    | Bool_variable discrete_index -> variable_names discrete_index
+    | Bool_constant value -> customized_string_of_bool_value customized_string.boolean_string value
     | Bool_access (access_type, index_expr) ->
         string_of_expression_access customized_string variable_names access_type index_expr
     | Bool_list_hd list_expr as func ->

@@ -25,11 +25,11 @@ let is_linear_nonlinear_constraint = function
 
 (* Get True non-linear constraint *)
 let true_nonlinear_constraint =
-    Nonlinear_constraint [DB_constant true]
+    Nonlinear_constraint [Bool_constant true]
 
 (* Get False non-linear constraint *)
 let false_nonlinear_constraint =
-    Nonlinear_constraint [DB_constant false]
+    Nonlinear_constraint [Bool_constant false]
 
 (* Get string of non-linear constraint inequalities with customized strings *)
 let customized_string_of_nonlinear_constraint customized_string variable_names = function

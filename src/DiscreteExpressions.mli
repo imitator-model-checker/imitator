@@ -127,9 +127,9 @@ and discrete_boolean_expression =
 	(** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
 	| Not_bool of boolean_expression (** Negation *)
 	(** discrete variable in boolean expression *)
-	| DB_variable of Automaton.variable_index
+	| Bool_variable of Automaton.variable_index
 	(** discrete constant in boolean expression *)
-	| DB_constant of bool
+	| Bool_constant of bool
 	(** access to a boolean array **)
 	(* TODO benjamin IMPORTANT here decline array_expression to bool_array_expression *)
     | Bool_access of expression_access_type * int_arithmetic_expression

@@ -292,8 +292,8 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
 	        customized_string.boolean_string.not_operator
 	        (customized_string_of_boolean_expression_for_jani customized_string variable_names b)
 
-    | DB_variable discrete_index -> json_quoted (variable_names discrete_index)
-    | DB_constant value -> DiscreteExpressions.customized_string_of_bool_value customized_string.boolean_string value
+    | Bool_variable discrete_index -> json_quoted (variable_names discrete_index)
+    | Bool_constant value -> DiscreteExpressions.customized_string_of_bool_value customized_string.boolean_string value
     | Bool_access (access_type, index_expr) ->
         string_of_expression_access_for_jani customized_string variable_names access_type index_expr
 

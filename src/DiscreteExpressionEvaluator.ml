@@ -188,9 +188,9 @@ and eval_boolean_expression discrete_valuation = function
 
 (** Check if a discrete boolean expression is satisfied *)
 and eval_discrete_boolean_expression discrete_valuation = function
-    | DB_variable variable_index ->
+    | Bool_variable variable_index ->
         DiscreteValue.bool_value (try_eval_variable variable_index discrete_valuation)
-    | DB_constant value ->
+    | Bool_constant value ->
         value
     | Bool_access (access_type, index_expr) ->
         let value = get_expression_access_value discrete_valuation index_expr access_type in

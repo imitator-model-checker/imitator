@@ -1540,12 +1540,12 @@ and bool_expression_of_typed_factor variable_infos = function
 	| Typed_variable (variable_name, _) ->
         let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
         (match variable_kind with
-        | Constant_kind value -> DB_constant (DiscreteValue.bool_value value)
-        | Variable_kind discrete_index -> DB_variable discrete_index
+        | Constant_kind value -> Bool_constant (DiscreteValue.bool_value value)
+        | Variable_kind discrete_index -> Bool_variable discrete_index
         )
 
 	| Typed_constant (value, _) ->
-	    DB_constant (DiscreteValue.bool_value value)
+	    Bool_constant (DiscreteValue.bool_value value)
 
     | Typed_expr (expr, _) ->
         bool_expression_of_typed_arithmetic_expression variable_infos expr
