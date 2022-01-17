@@ -79,13 +79,13 @@ val get_discrete_type_of_variable_by_name_opt : variable_infos -> variable_name 
 val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
 
 (* Check that a discrete init is well typed *)
-val check_discrete_init : variable_infos -> variable_name -> global_expression -> typed_global_expression
+val check_discrete_init : variable_infos -> variable_name -> parsed_global_expression -> typed_global_expression
 (* Check that a constant declarations is well typed *)
-val check_constant_expression : variable_infos -> variable_name * global_expression * DiscreteType.var_type -> typed_global_expression
+val check_constant_expression : variable_infos -> variable_name * parsed_global_expression * DiscreteType.var_type -> typed_global_expression
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
 (* Check that an update is well typed *)
-val check_update : variable_infos -> variable_access -> ParsingStructure.global_expression -> typed_variable_access * typed_global_expression
+val check_update : variable_infos -> variable_access -> ParsingStructure.parsed_global_expression -> typed_variable_access * typed_global_expression
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)

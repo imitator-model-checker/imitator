@@ -17,9 +17,9 @@
 open ParsingStructure
 open DiscreteExpressions
 
-val convert_discrete_init3 : variable_infos -> variable_name -> ParsingStructure.global_expression -> DiscreteExpressions.global_expression
-val convert_discrete_constant : constants_table -> variable_name * ParsingStructure.global_expression * DiscreteType.var_type -> DiscreteExpressions.global_expression
+val convert_discrete_init : variable_infos -> variable_name -> ParsingStructure.parsed_global_expression -> DiscreteExpressions.global_expression
+val convert_discrete_constant : constants_table -> variable_name * ParsingStructure.parsed_global_expression * DiscreteType.var_type -> DiscreteExpressions.global_expression
 val convert_guard : variable_infos -> ParsingStructure.guard -> AbstractModel.guard
-val convert_update : variable_infos -> variable_access -> ParsingStructure.global_expression -> DiscreteExpressions.discrete_variable_access * DiscreteExpressions.global_expression
-val convert_continuous_update : variable_infos -> variable_access -> ParsingStructure.global_expression -> DiscreteExpressions.discrete_variable_access * LinearConstraint.pxd_linear_term
+val convert_update : variable_infos -> variable_access -> ParsingStructure.parsed_global_expression -> DiscreteExpressions.discrete_variable_access * DiscreteExpressions.global_expression
+val convert_continuous_update : variable_infos -> variable_access -> ParsingStructure.parsed_global_expression -> DiscreteExpressions.discrete_variable_access * LinearConstraint.pxd_linear_term
 val convert_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> DiscreteExpressions.boolean_expression
