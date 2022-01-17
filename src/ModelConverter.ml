@@ -1131,7 +1131,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
             (* Get the variable index *)
             let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
             (* TYPE CHECKING *)
-            let converted_expr = DiscreteExpressionConverter.convert_discrete_init3 variable_infos variable_name expr in
+            let converted_expr = DiscreteExpressionConverter.convert_discrete_init variable_infos variable_name expr in
 
             (* Check if it was already declared *)
             if Hashtbl.mem init_values_for_discrete discrete_index then (

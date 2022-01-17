@@ -21,7 +21,7 @@ open DiscreteExpressions
 open DiscreteType
 open ExpressionConverter.Convert
 
-let convert_discrete_init3 variable_infos variable_name expr =
+let convert_discrete_init variable_infos variable_name expr =
     (* Get typed expression *)
     let typed_expr = ExpressionConverter.TypeChecker.check_discrete_init variable_infos variable_name expr in
     (* Print *)

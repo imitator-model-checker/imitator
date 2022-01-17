@@ -59,7 +59,7 @@ type var_type =
 (** Global expression *)
 (****************************************************************)
 (* TODO benjamin CLEAN rename to parsed_global_expression *)
-type global_expression =
+type parsed_global_expression =
     | Parsed_global_expression of parsed_boolean_expression
 
 (****************************************************************)
@@ -122,7 +122,7 @@ and parsed_discrete_factor =
 	| Parsed_array_append of parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_list_cons of parsed_boolean_expression * parsed_discrete_factor
     *)
-(*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
+(*    | Parsed_user_function of string (* name *) * list (parsed_global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
 
 (*
 and parsed_shift_function_type =
@@ -145,7 +145,7 @@ and parsed_bin_log_function_type =
 
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
-type variable_declaration = var_type * (variable_name * global_expression option) list
+type variable_declaration = var_type * (variable_name * parsed_global_expression option) list
 type variable_declarations = variable_declaration list
 
 (****************************************************************)
@@ -205,7 +205,7 @@ and variable_access =
     | Variable_name of variable_name
     | Variable_access of variable_access * parsed_discrete_arithmetic_expression
 (** basic updating *)
-and normal_update = variable_access * global_expression
+and normal_update = variable_access * parsed_global_expression
 (** conditional updating *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 
@@ -250,7 +250,7 @@ type parsed_automaton = automaton_name * sync_name list * parsed_location list
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
 	| Parsed_linear_predicate of linear_constraint
-	| Parsed_discrete_predicate of string * global_expression
+	| Parsed_discrete_predicate of string * parsed_global_expression
 
 type init_definition = parsed_init_state_predicate list
 
