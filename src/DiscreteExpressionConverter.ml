@@ -60,7 +60,7 @@ let nonlinear_constraint_of_convex_predicate variable_infos guard =
     let converted_nonlinear_constraints = List.rev_map (ExpressionConverter.Convert.nonlinear_constraint_of_typed_nonlinear_constraint variable_infos) typed_guard in
 
     (* Try reduce *)
-    NonlinearConstraint.Nonlinear_constraint converted_nonlinear_constraints
+    converted_nonlinear_constraints
     (* TODO benjamin IMPORTANT here add reducing with Some *)
     (*
     let reduced_nonlinear_constraints = converted_nonlinear_constraints in

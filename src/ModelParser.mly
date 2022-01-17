@@ -627,19 +627,14 @@ nonlinear_convex_predicate:
 ;
 
 nonlinear_convex_predicate_fol:
-	| nonlinear_constraint AMPERSAND nonlinear_convex_predicate { $1 :: $3 }
-	| nonlinear_constraint { [$1] }
+	| discrete_boolean_expression AMPERSAND nonlinear_convex_predicate { $1 :: $3 }
+	| discrete_boolean_expression { [$1] }
 ;
 
 linear_constraint:
 	| linear_expression relop linear_expression { Parsed_linear_constraint ($1, $2, $3) }
 	| CT_TRUE { Parsed_true_constraint }
 	| CT_FALSE { Parsed_false_constraint }
-;
-
-/* TODO benjamin CLEAN to delete */
-nonlinear_constraint:
-	| discrete_boolean_expression { $1 }
 ;
 
 relop:

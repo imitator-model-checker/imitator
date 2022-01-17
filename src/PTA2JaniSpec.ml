@@ -580,9 +580,8 @@ and string_of_expression_access_for_jani customized_string variable_names access
 
 
 (* Get list of non-linear constraint inequalities with customized strings *)
-let customized_strings_of_nonlinear_constraint_for_jani customized_string variable_names = function
-    | Nonlinear_constraint nonlinear_constraint ->
-	(List.rev_map (customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names ) nonlinear_constraint)
+let customized_strings_of_nonlinear_constraint_for_jani customized_string variable_names (* nonlinear_constraint *) =
+    List.rev_map (customized_string_of_discrete_boolean_expression_for_jani customized_string variable_names ) (* nonlinear_constraint *)
 
 
 

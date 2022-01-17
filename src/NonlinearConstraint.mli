@@ -7,8 +7,7 @@ type variable = int
 type nonlinear_inequality = DiscreteExpressions.discrete_arithmetic_expression * DiscreteExpressions.relop * DiscreteExpressions.discrete_arithmetic_expression
 
 (*type nonlinear_constraint = nonlinear_inequality list*)
-type nonlinear_constraint =
-  | Nonlinear_constraint of DiscreteExpressions.discrete_boolean_expression list
+type nonlinear_constraint = DiscreteExpressions.discrete_boolean_expression list
 
 (* Evaluations *)
 val check_nonlinear_constraint : DiscreteExpressions.discrete_valuation -> nonlinear_constraint -> bool
