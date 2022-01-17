@@ -157,7 +157,6 @@ and fold_parsed_linear_term operator leaf_fun = function
     | Variable (value, variable_name) -> leaf_fun (Leaf_linear_variable (value, variable_name))
 
 (** Fold a parsed linear constraint using operator applying custom function on leafs **)
-(* TODO benjamin CLEAN to delete *)
 let fold_parsed_nonlinear_constraint = fold_parsed_discrete_boolean_expression
 
 (** Fold a parsed update expression using operator applying custom function on leafs **)
@@ -405,8 +404,9 @@ and string_of_parsed_factor variable_infos = function
     | Parsed_DF_constant value -> DiscreteValue.string_of_value value
     | Parsed_DF_array expr_array ->
         "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (string_of_parsed_boolean_expression variable_infos) expr_array) ^ "]"
-    | Parsed_DF_list expr_list ->
-        "list([" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (string_of_parsed_boolean_expression variable_infos) expr_list) ^ "])"
+    | Parsed_DF_list expr_list as list_expr ->
+        label_of_parsed_factor_constructor list_expr
+        ^ "([" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (string_of_parsed_boolean_expression variable_infos) expr_list) ^ "])"
     | Parsed_DF_access (factor, expr) ->
         string_of_parsed_factor variable_infos factor ^ "[" ^ string_of_parsed_arithmetic_expression variable_infos expr ^ "]"
     | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression variable_infos arithmetic_expr

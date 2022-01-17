@@ -426,16 +426,16 @@ let label_of_binary_word_expression = function
 
 let label_of_array_expression = function
     | Literal_array _ -> "literal array"
-    | Array_constant _ -> "array constant"
-    | Array_variable _ -> "array variable"
+    | Array_constant _ -> "array"
+    | Array_variable _ -> "array"
     | Array_access _ -> "array access"
     | Array_concat _ -> "array_append"
     | Array_list_hd _ -> "list_hd"
 
 let label_of_list_expression = function
     | Literal_list _ -> "literal list"
-    | List_constant _ -> "list constant"
-    | List_variable _ -> "list variable"
+    | List_constant _ -> "list"
+    | List_variable _ -> "list"
     | List_access _ -> "list access"
     | List_cons _ -> "list_cons"
     | List_list_hd _ -> "list_hd"
@@ -812,16 +812,16 @@ and customized_string_of_array_expression customized_string variable_names = fun
             [customized_string_of_list_expression customized_string variable_names list_expr]
 
 and customized_string_of_list_expression customized_string variable_names = function
-    | Literal_list expr_list ->
+    | Literal_list expr_list as list_expr ->
         let str_expr = List.map (customized_string_of_global_expression customized_string variable_names) expr_list in
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        (* TODO benjamin REFACTOR change hardcoded list *)
-        "list(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_expr ^ r_delimiter ^ ")"
-    | List_constant values ->
+        label_of_list_expression list_expr
+        ^ "(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_expr ^ r_delimiter ^ ")"
+    | List_constant values as list_expr ->
         let str_values = List.map DiscreteValue.string_of_value values in
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        (* TODO benjamin REFACTOR change hardcoded list *)
-        "list(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_delimiter ^ ")"
+        label_of_list_expression list_expr
+        ^ "(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_delimiter ^ ")"
     | List_variable variable_index -> variable_names variable_index
     | List_access (access_type, index_expr) ->
         string_of_expression_access customized_string variable_names access_type index_expr
