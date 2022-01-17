@@ -52,8 +52,6 @@ type var_type_discrete =
 (* Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
-	(* TODO benjamin remove Var_type_constant (useless) *)
-	| Var_type_constant
 	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
 

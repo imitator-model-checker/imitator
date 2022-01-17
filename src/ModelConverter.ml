@@ -78,7 +78,6 @@ let rec convert_var_type_discrete = function
 (* Convert var type from parsing structure to abstract model *)
 let convert_var_type = function
     | ParsingStructure.Var_type_clock -> DiscreteType.Var_type_clock
-    | ParsingStructure.Var_type_constant -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational)
     | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteType.Var_type_discrete (convert_var_type_discrete var_type_discrete)
     | ParsingStructure.Var_type_parameter -> DiscreteType.Var_type_parameter
 
@@ -295,8 +294,8 @@ let get_declared_variable_names variable_declarations =
     match var_type with
     | ParsingStructure.Var_type_clock ->
       (List.rev_append new_list clocks, discrete_rational, parameters, List.rev_append new_constants constants, unassigned_constants)
-    | ParsingStructure.Var_type_constant ->
-      (clocks, discrete_rational, parameters, List.rev_append new_constants constants, List.rev_append new_list unassigned_constants)
+(*    | ParsingStructure.Var_type_constant ->*)
+(*      (clocks, discrete_rational, parameters, List.rev_append new_constants constants, List.rev_append new_list unassigned_constants)*)
     | ParsingStructure.Var_type_discrete _ ->
       (clocks, List.rev_append new_list discrete_rational, parameters, List.rev_append new_constants constants, unassigned_constants)
     | ParsingStructure.Var_type_parameter ->
