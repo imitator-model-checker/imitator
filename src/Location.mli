@@ -59,7 +59,7 @@ val initialize : int -> int -> int -> unit
 val make_location : (automaton_index * location_index) list -> (discrete_index * DiscreteValue.discrete_value) list -> global_location
 
 (** 'update_location locations discrete_values location' creates a new location from the original location, and update the given automata and discrete variables. *)
-val update_location : (automaton_index * location_index) list -> (discrete_index * DiscreteValue.discrete_value) list -> global_location -> global_location
+(*val update_location : (automaton_index * location_index) list -> (discrete_index * DiscreteValue.discrete_value) list -> global_location -> global_location*)
 
 (** Side-effet version of update_location. *)
 val update_location_with : (automaton_index * location_index) list -> (discrete_index * DiscreteValue.discrete_value) list -> global_location -> unit

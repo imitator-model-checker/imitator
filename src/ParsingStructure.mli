@@ -171,7 +171,6 @@ type linear_constraint =
 	| Parsed_linear_constraint of linear_expression * parsed_relop * linear_expression
 
 (** Non-linear expressions *)
-(* TODO benjamin CLEAN remove Variant type : nonlinear_constraint = parsed_discrete_boolean_expression *)
 type nonlinear_constraint = parsed_discrete_boolean_expression
 
 type convex_predicate = nonlinear_constraint list

@@ -897,8 +897,16 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
                 let converted_expr = Convert.global_expression_of_typed_boolean_expression variable_infos expr (Var_type_discrete_number Var_type_discrete_int) in
 
                 if not (DiscreteExpressionEvaluator.is_global_expression_constant converted_expr) then (
-                    (* TODO benjamin fill type error *)
-                    raise (TypeError (""));
+                    raise (TypeError (
+                        "Function `"
+                        ^ string_of_parsed_factor variable_infos func
+                        ^ " : "
+                        ^ FunctionSig.string_of_signature_constraint function_signature_constraint
+                        ^ "` return type is a dependent type that depend of the value of the constraint `"
+                        ^ constraint_name
+                        ^ "`."
+                        ^ " This value must be a constant expression."
+                    ));
                 )
                 else (
                     let value = DiscreteExpressionEvaluator.try_reduce_global_expression converted_expr in
@@ -2434,11 +2442,10 @@ let linear_term_of_typed_discrete_boolean_expression variable_infos = function
     | Typed_arithmetic_expr (expr, _) ->
         linear_term_of_typed_update_arithmetic_expression variable_infos expr
     | expr ->
-        (* TODO benjamin FILL *)
         raise (
             InternalError (
                 "Impossible to convert boolean expression \""
-                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed"
+                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed."
             )
         )
 
@@ -2446,11 +2453,10 @@ let linear_term_of_typed_boolean_expression variable_infos = function
     | Typed_discrete_bool_expr (expr, _) ->
         linear_term_of_typed_discrete_boolean_expression variable_infos expr
     | _ ->
-        (* TODO benjamin FILL *)
         raise (
             InternalError (
                 "Impossible to convert boolean expression \""
-                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed"
+                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed."
             )
         )
 

@@ -805,8 +805,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 			(* Get value *)
 			let zero_value = match model.type_of_variables variable_index with
 				| DiscreteType.Var_type_discrete _ ->
-				    (* TODO check with étienne, seems to be variable that control the clock flow ? *)
-					Location.get_discrete_value initial_state.global_location variable_index (* TODO benjamin : not sure about Var_type_discrete _*)
+					Location.get_discrete_value initial_state.global_location variable_index
 				| DiscreteType.Var_type_clock ->
 					DiscreteValue.Rational_value (initial_state.px_valuation variable_index)
 				| _ -> raise (InternalError "Clock or discrete variable expected in draw_concrete_run")

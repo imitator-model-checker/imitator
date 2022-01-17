@@ -170,7 +170,7 @@ let copy_location location =
 	(* Return the new location *)
 	locations, discrete
 
-(* TODO benjamin CLEAN, this function below, not seems to be used anymore *)
+(*
 (** 'update_location locations discrete_values location' creates a new location from the original location, and update the given automata and discrete variables. *)
 let update_location locations_per_automaton discrete_values location =
 	(* Create an array for locations *)
@@ -183,7 +183,7 @@ let update_location locations_per_automaton discrete_values location =
 	List.iter (fun (discrete_index, value) -> discrete.(discrete_index - !min_discrete_index) <- value) discrete_values;
 	(* Return the new location *)
 	locations, discrete
-
+*)
 
 (** Side-effet version of 'update_location'. *)
 let update_location_with locations_per_automaton discrete_values (locations, discrete) =
