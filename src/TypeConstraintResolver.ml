@@ -2,8 +2,6 @@
  *
  *                       IMITATOR
  *
- * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description:
@@ -76,7 +74,7 @@ and resolve_length_constraint_expression length = function
     (* Difficult to resolve constraint here ! *)
     | Length_plus_constraint (constraint_name, length_constraint) -> []
 
-(* Check whether two constraint resolutions are compatibles *)
+(* Check whether two constraint resolutions are compatible *)
 let is_resolved_constraints_compatibles constraint_a constraint_b =
     match constraint_a, constraint_b with
     | Resolved_type_constraint type_a, Resolved_type_constraint type_b ->
@@ -133,8 +131,8 @@ let resolve_constraints variable_infos signature discrete_types expressions =
 
     (* Now we have to partition list between well-formed constraints and mal-formed constraints *)
     let well_formed_constraint_resolutions, malformed_constraint_resolutions = List.partition (fun (constraint_name, resolutions) ->
-        (* For a particular constraint name (for example 'a), check that resolutions are compatibles *)
-        (* If different resolutions for the same constraint are not compatibles, then constraint is malformed *)
+        (* For a particular constraint name (for example 'a), check that resolutions are compatible *)
+        (* If different resolutions for the same constraint are not compatible, then constraint is malformed *)
         OCamlUtilities.for_all_in_arrangement is_resolved_constraints_compatibles resolutions
     ) resolved_constraint_group_by_constraint_name
     in

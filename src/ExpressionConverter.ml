@@ -415,7 +415,7 @@ let ill_typed_message_of_expressions str_expressions discrete_types str_outer_ex
     ^ str_expressions_with_type
     ^ " in `"
     ^ str_outer_expr
-    ^ "` are ill-typed or not compatibles."
+    ^ "` are ill-typed or of incompatible types."
 
 let ill_typed_message str_left_expr str_right_expr str_outer_expr l_type r_type =
     "Some of the expressions `"
@@ -428,7 +428,7 @@ let ill_typed_message str_left_expr str_right_expr str_outer_expr l_type r_type 
     ^ DiscreteType.string_of_var_type_discrete r_type
     ^ "` in `"
     ^ str_outer_expr
-    ^ "` are ill-typed or not compatibles."
+    ^ "` are ill-typed or of incompatible types."
 
 (* Get inner type of a collection analysing types of it's elements *)
 (* If the collection is empty, it's type will be inferred by the context *)
@@ -457,7 +457,7 @@ and type_check_parsed_boolean_expression variable_infos infer_type_opt = functio
         let l_typed_expr, l_type = type_check_parsed_boolean_expression variable_infos infer_type_opt l_expr in
         let r_typed_expr, r_type = type_check_parsed_boolean_expression variable_infos infer_type_opt r_expr in
 
-        (* Check that left and right members are boolean *)
+        (* Check that left and right members are Boolean *)
         (match l_type, r_type with
         | Var_type_discrete_bool, Var_type_discrete_bool -> Typed_And (l_typed_expr, r_typed_expr), Var_type_discrete_bool
         | _ -> raise (TypeError (
@@ -478,7 +478,7 @@ and type_check_parsed_boolean_expression variable_infos infer_type_opt = functio
         let l_typed_expr, l_type = type_check_parsed_boolean_expression variable_infos infer_type_opt l_expr in
         let r_typed_expr, r_type = type_check_parsed_boolean_expression variable_infos infer_type_opt r_expr in
 
-        (* Check that left and right members are boolean *)
+        (* Check that left and right members are Boolean *)
         (match l_type, r_type with
         | Var_type_discrete_bool, Var_type_discrete_bool -> Typed_Or (l_typed_expr, r_typed_expr), Var_type_discrete_bool
         | _ ->
@@ -573,7 +573,7 @@ and type_check_parsed_discrete_boolean_expression variable_infos infer_type_opt 
 	| Parsed_Not expr as outer_expr ->
 	    let typed_expr, discrete_type = type_check_parsed_boolean_expression variable_infos infer_type_opt expr in
 
-        (* Check that expression type is boolean *)
+        (* Check that expression type is Boolean *)
 	    (match discrete_type with
 	    | Var_type_discrete_bool -> Typed_not_expr typed_expr, Var_type_discrete_bool
 	    | _ ->
@@ -584,7 +584,7 @@ and type_check_parsed_discrete_boolean_expression variable_infos infer_type_opt 
                 ^ DiscreteType.string_of_var_type_discrete discrete_type
                 ^ "` in `"
                 ^ string_of_parsed_discrete_boolean_expression variable_infos outer_expr
-                ^ "` is not a boolean expression."
+                ^ "` is not a Boolean expression."
             ));
         )
 
@@ -593,7 +593,7 @@ and type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_o
 	    let l_typed_expr, l_type = type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_opt expr in
 	    let r_typed_expr, r_type = type_check_parsed_discrete_term variable_infos infer_type_opt term in
 
-        (* Check that members are numbers and compatibles *)
+        (* Check that members are numbers and compatible *)
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
             let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
@@ -614,7 +614,7 @@ and type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_o
 	    let l_typed_expr, l_type = type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_opt expr in
 	    let r_typed_expr, r_type = type_check_parsed_discrete_term variable_infos infer_type_opt term in
 
-        (* Check that members are numbers and compatibles *)
+        (* Check that members are numbers and compatible *)
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
             let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
@@ -643,7 +643,7 @@ and type_check_parsed_discrete_term variable_infos infer_type_opt = function
 	    let l_typed_expr, l_type = type_check_parsed_discrete_term variable_infos infer_type_opt term in
 	    let r_typed_expr, r_type = type_check_parsed_discrete_factor variable_infos infer_type_opt factor in
 
-        (* Check that members are numbers and compatibles *)
+        (* Check that members are numbers and compatible *)
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
 
@@ -681,7 +681,7 @@ and type_check_parsed_discrete_term variable_infos infer_type_opt = function
 	    let l_typed_expr, l_type = type_check_parsed_discrete_term variable_infos infer_type_opt term in
 	    let r_typed_expr, r_type = type_check_parsed_discrete_factor variable_infos infer_type_opt factor in
 
-        (* Check that members are numbers and compatibles *)
+        (* Check that members are numbers and compatible *)
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
             let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
@@ -700,7 +700,7 @@ and type_check_parsed_discrete_term variable_infos infer_type_opt = function
 	    let l_typed_expr, l_type = type_check_parsed_discrete_term variable_infos infer_type_opt term in
 	    let r_typed_expr, r_type = type_check_parsed_discrete_factor variable_infos infer_type_opt factor in
 
-        (* Check that members are numbers and compatibles *)
+        (* Check that members are numbers and compatible *)
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
             let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
@@ -758,7 +758,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
 
         let all_compatibles = OCamlUtilities.for_all_in_arrangement (fun a b -> is_discrete_type_compatibles a b) discrete_types in
 
-        (* Check that all elements types are compatibles *)
+        (* Check that all elements types are compatible *)
         if all_compatibles then (
             (* Get inner type of a collection analysing types of it's elements *)
             (* If the collection is empty, it's type will be inferred by the context *)
@@ -784,7 +784,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
 
         let all_compatibles = OCamlUtilities.for_all_in_arrangement (fun a b -> is_discrete_type_compatibles a b) discrete_types in
 
-        (* Check that all elements types are compatibles *)
+        (* Check that all elements types are compatible *)
         if all_compatibles then (
             (* Get inner type of a collection analysing types of it's elements *)
             (* If the collection is empty, it's type will be inferred by the context *)
@@ -1000,7 +1000,7 @@ let rec type_check_parsed_simple_predicate variable_infos infer_type_opt = funct
             raise (TypeError (
                 "Expression `"
                 ^ string_of_parsed_discrete_boolean_expression variable_infos expr
-                ^ "` in property, is not a boolean expression: "
+                ^ "` in property, is not a Boolean expression: "
                 ^ DiscreteType.string_of_var_type_discrete discrete_type
                 ^ "."
             ))
@@ -1189,7 +1189,7 @@ let check_nonlinear_constraint variable_infos nonlinear_constraint =
         raise (TypeError (
             "Guard or invariant expression `"
             ^ string_of_parsed_nonlinear_constraint variable_infos nonlinear_constraint
-            ^ "` is not a boolean expression"
+            ^ "` is not a Boolean expression"
         ))
 
 (* Type check guard / invariant *)
@@ -1285,7 +1285,7 @@ let check_state_predicate variable_infos predicate =
     | _ -> raise (TypeError (
             "Property `"
             ^ string_of_typed_state_predicate variable_infos typed_predicate
-            ^ "` is not a boolean expression."
+            ^ "` is not a Boolean expression."
         ))
 
 end
@@ -1398,7 +1398,7 @@ and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos di
 	    | Var_type_discrete_int ->
 	        Int_arithmetic_expression (int_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos expr)
 	    )
-	| _ -> raise (InternalError "Trying to convert boolean expression to arithmetic one. Maybe something failed in type checking or conversion.")
+	| _ -> raise (InternalError "Trying to convert Boolean expression to arithmetic one. Maybe something failed in type checking or conversion.")
 
 and discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type = function
 	| Typed_arithmetic_expr (expr, discrete_type) ->
@@ -1410,7 +1410,7 @@ and discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable
 	        Int_arithmetic_expression (int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr)
 	    )
 
-	| _ -> raise (InternalError "Trying to convert boolean expression to arithmetic one. Maybe something failed in type checking or conversion.")
+	| _ -> raise (InternalError "Trying to convert Boolean expression to arithmetic one. Maybe something failed in type checking or conversion.")
 
 and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression variable_infos discrete_number_type = function
 	| Typed_plus (expr, term, _) ->
@@ -1542,14 +1542,14 @@ and bool_expression_of_typed_arithmetic_expression variable_infos = function
 	| Typed_term (term, _) ->
 	    bool_expression_of_typed_term variable_infos term
 	| _ ->
-	    raise (InternalError "The expression type indicate that it should be converted to a boolean expression, but an arithmetic operator is found. Maybe something failed in type checking or conversion.")
+	    raise (InternalError "The expression type indicate that it should be converted to a Boolean expression, but an arithmetic operator is found. Maybe something failed in type checking or conversion.")
 
 
 and bool_expression_of_typed_term variable_infos = function
 	| Typed_factor (factor, _) ->
 	    bool_expression_of_typed_factor variable_infos factor
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to a boolean expression, but an arithmetic operator is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to a Boolean expression, but an arithmetic operator is found. Maybe something failed in type checking or conversion.")
 
 and bool_expression_of_typed_factor variable_infos = function
 	| Typed_variable (variable_name, _) ->
@@ -1575,7 +1575,7 @@ and bool_expression_of_typed_factor variable_infos = function
 	    bool_expression_of_typed_function_call variable_infos argument_expressions function_name
 
 	| _ ->
-        raise (InternalError "The expression type indicate that it should be converted to a boolean expression, but a non boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to a Boolean expression, but a non-Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 and bool_expression_of_typed_function_call variable_infos argument_expressions = function
     | "list_hd" ->
@@ -1608,14 +1608,14 @@ and rational_arithmetic_expression_of_typed_boolean_expression variable_infos = 
     | Typed_discrete_bool_expr (expr, _) ->
         rational_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos expr
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to an arithmetic expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to an arithmetic expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 
 and rational_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos = function
     | Typed_arithmetic_expr (expr, discrete_type) ->
         rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to an arithmetic expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to an arithmetic expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 and rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos = function
 	| Typed_plus (expr, term, _) ->
@@ -1716,13 +1716,13 @@ and int_arithmetic_expression_of_typed_boolean_expression variable_infos = funct
     | Typed_discrete_bool_expr (expr, _) ->
         int_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos expr
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to an arithmetic expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to an arithmetic expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 and int_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos = function
     | Typed_arithmetic_expr (expr, discrete_type) ->
         int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to an arithmetic expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to an arithmetic expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 and int_arithmetic_expression_of_typed_arithmetic_expression variable_infos = function
 	| Typed_plus (expr, term, _) ->
@@ -1827,13 +1827,13 @@ and binary_expression_of_typed_boolean_expression variable_infos length = functi
     | Typed_discrete_bool_expr (expr, _) ->
         binary_expression_of_typed_discrete_boolean_expression variable_infos length expr
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to a binary expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to a binary expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 and binary_expression_of_typed_discrete_boolean_expression variable_infos length = function
     | Typed_arithmetic_expr (expr, discrete_type) ->
         binary_expression_of_typed_arithmetic_expression variable_infos length expr
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to a binary expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to a binary expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 and binary_expression_of_typed_arithmetic_expression variable_infos length = function
 	| Typed_term (term, _) ->
@@ -1968,20 +1968,20 @@ and array_expression_of_typed_boolean_expression_with_type variable_infos = func
         in
         array_expression_of_typed_discrete_boolean_expression variable_infos inner_type expr
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to an array expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to an array expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 
 and array_expression_of_typed_boolean_expression variable_infos discrete_type = function
     | Typed_discrete_bool_expr (expr, _) ->
         array_expression_of_typed_discrete_boolean_expression variable_infos discrete_type expr
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to an array expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to an array expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 and array_expression_of_typed_discrete_boolean_expression variable_infos discrete_type = function
     | Typed_arithmetic_expr (expr, _) ->
         array_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to an array expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to an array expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 and array_expression_of_typed_arithmetic_expression variable_infos discrete_type = function
 	| Typed_term (term, _) ->
@@ -2062,20 +2062,20 @@ and list_expression_of_typed_boolean_expression_with_type variable_infos = funct
 
         list_expression_of_typed_discrete_boolean_expression variable_infos inner_type expr
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to a list expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to a list expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 
 and list_expression_of_typed_boolean_expression variable_infos discrete_type = function
     | Typed_discrete_bool_expr (expr, _) ->
         list_expression_of_typed_discrete_boolean_expression variable_infos discrete_type expr
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to a list expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to a list expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 and list_expression_of_typed_discrete_boolean_expression variable_infos discrete_type = function
     | Typed_arithmetic_expr (expr, _) ->
         list_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
     | _ ->
-        raise (InternalError "The expression type indicate that it should be converted to a list expression, but a boolean expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to a list expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 and list_expression_of_typed_arithmetic_expression variable_infos discrete_type = function
 	| Typed_term (term, _) ->
@@ -2444,7 +2444,7 @@ let linear_term_of_typed_discrete_boolean_expression variable_infos = function
     | expr ->
         raise (
             InternalError (
-                "Impossible to convert boolean expression \""
+                "Impossible to convert Boolean expression \""
                 ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed."
             )
         )
