@@ -439,11 +439,12 @@ Examples of array definitions are given below:
 
 %------------------------------------------------------------
 \begin{IMITATORmodel}
-	my_rational_array    : rational array(5);
-	my_int_array         : int array(2);
-	my_bool_array        : bool array(3);
-	my_binary_word_array : binary(4) array(2);
-	my_2d_int_array      : int array(2) array(2);
+	my_const_rational_array = [1, 2, 3] : rational array(3)
+	my_rational_array    	: rational array(5);
+	my_int_array         	: int array(2);
+	my_bool_array        	: bool array(3);
+	my_binary_word_array 	: binary(4) array(2);
+	my_2d_int_array      	: int array(2) array(2);
 \end{IMITATORmodel}
 %------------------------------------------------------------
 
@@ -464,6 +465,7 @@ Examples of list definitions are given below:
 
 %------------------------------------------------------------
 \begin{IMITATORmodel}
+	my_const_rational_list = list([1, 2, 3]) : rational list;
 	my_rational_list 			: rational list;
 	my_int_list						: int list;
 	my_bool_list        	: bool list;
@@ -479,10 +481,76 @@ Examples of list definitions are given below:
 
 \imitator{} 3.1 and higher comes with some built-in functions over discrete variables:
 
+
+\begin{table}[h!]
+	\caption{Built-in functions summary}
+	{\centering
+		\begin{tabular}{ | l | l | }
+
+			% Non-nested CTL
+			\hline
+			\rowHeader{} Name & Description \\
+			\hline
+		 	\multicolumn{2}{|c|}{Arithmetic} \\
+			\hline
+			\hyperref[item:lbl-pow]{\styleIMI{pow}} & Pow a number        \\
+			\hline
+			\hyperref[item:lbl-rational_of_int]{\styleIMI{rational\_of\_int}} & Convert an int expression to a rational one        \\
+			\hline
+		 	\multicolumn{2}{|c|}{Binary words} \\
+			\hline
+			\hyperref[item:lbl-shift_left]{\styleIMI{shift\_left}} & Shift a binary to the left (truncate to the binary word length) \\
+			\hline
+			\hyperref[item:lbl-shift_right]{\styleIMI{shift\_right}} & Shift a binary to the right (truncate to the binary word length) \\
+			\hline
+			\hyperref[item:lbl-fill_left]{\styleIMI{fill\_left}} & Shift a binary to the left (no truncate) \\
+			\hline
+			\hyperref[item:lbl-fill_right]{\styleIMI{fill\_right}} & Shift a binary to the right (no truncate) \\
+			\hline
+			\hyperref[item:lbl-logand]{\styleIMI{logand}} & And bitwise on binary numbers \\
+			\hline
+			\hyperref[item:lbl-logor]{\styleIMI{logor}} & Or bitwise on binary numbers \\
+			\hline
+			\hyperref[item:lbl-logxor]{\styleIMI{logxor}} & Xor bitwise on binary numbers \\
+			\hline
+			\hyperref[item:lbl-lognot]{\styleIMI{lognot}} & Not bitwise on a binary number \\
+			\hline
+			\multicolumn{2}{|c|}{Array} \\
+			\hline
+			\hyperref[item:lbl-array_append]{\styleIMI{array\_append}} & Concatenate two arrays \\
+			\hline
+			\hyperref[item:lbl-array_length]{\styleIMI{array\_length}} & Get length of an array \\
+			\hline
+			\hyperref[item:lbl-array_mem]{\styleIMI{array\_mem}} & Search existence of an element in an array \\
+			\hline
+			\multicolumn{2}{|c|}{List} \\
+			\hline
+			\hyperref[item:lbl-list_cons]{\styleIMI{list\_cons}} & Construct a list by adding an element to the beginning \\
+			\hline
+			\hyperref[item:lbl-list_hd]{\styleIMI{list\_hd}} & Get head of a list \\
+			\hline
+			\hyperref[item:lbl-list_length]{\styleIMI{list\_length}} & Get length of a list \\
+			\hline
+			\hyperref[item:lbl-list_rev]{\styleIMI{list\_rev}} & Reverse a list \\
+			\hline
+			\hyperref[item:lbl-list_mem]{\styleIMI{list\_mem}} & Search existence of an element in a list \\
+			\hline
+			\hyperref[item:lbl-list_tl]{\styleIMI{list\_tl}} & Get tail of a list \\
+			\hline
+		\end{tabular}
+
+	}
+
+	\label{table:summary:builtin-functions}
+\end{table}
+
+
+
+
 \paragraph{Arithmetic functions}
 
 \begin{itemize}
-    \item \styleIMI{pow(x:'a number, e:int):'a with 'a number:[rational|int]} - compute the power of a number
+    \item \label{item:lbl-pow} \styleIMI{pow(x:'a number, e:int):'a with 'a number:[rational|int]} - compute the power of a number
 \end{itemize}
 
 %------------------------------------------------------------
@@ -500,7 +568,7 @@ Examples of list definitions are given below:
 \paragraph{Conversion functions}
 
 \begin{itemize}
-    \item \styleIMI{rational\_of\_int(x:int):rational} - convert an int number to a rational one
+    \item \label{item:lbl-rational_of_int} \styleIMI{rational\_of\_int(x:int):rational} - convert an int number to a rational one
 \end{itemize}
 
 %------------------------------------------------------------
@@ -520,14 +588,14 @@ Examples of list definitions are given below:
 \paragraph{Binary word functions}
 
 \begin{itemize}
-    \item \styleIMI{shift\_left(b:binary\_word(l), i:int):binary\_word(l)} - shift a binary word of length \styleIMI{l} to left
-		\item \styleIMI{shift\_right(b:binary\_word(l), i:int):binary\_word(l)} - shift a binary word of length \styleIMI{l} to right
-		\item \styleIMI{fill\_left(b:binary\_word(l), i:const int):binary\_word(l + i)} - shift a binary word of length \styleIMI{l} to left (non destructive)
-		\item \styleIMI{fill\_right(b:binary\_word(l), i:const int):binary\_word(l + i)} - shift a binary word of length \styleIMI{l} to right (non destructive)
-		\item \styleIMI{logand(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply AND bitwise operation to two binary words of length \styleIMI{l}
-		\item \styleIMI{logor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply OR bitwise operation to two binary words of length \styleIMI{l}
-		\item \styleIMI{logxor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply XOR bitwise operation to two binary words of length \styleIMI{l}
-		\item \styleIMI{lognot(b:binary\_word(l)):binary\_word(l)} - apply NOT bitwise operation to a binary word of length \styleIMI{l}
+    \item \label{item:lbl-shift_left} \styleIMI{shift\_left(b:binary\_word(l), i:int):binary\_word(l)} - shift a binary word of length \styleIMI{l} to left
+		\item \label{item:lbl-shift_right} \styleIMI{shift\_right(b:binary\_word(l), i:int):binary\_word(l)} - shift a binary word of length \styleIMI{l} to right
+		\item \label{item:lbl-fill_left} \styleIMI{fill\_left(b:binary\_word(l), i:const int):binary\_word(l + i)} - shift a binary word of length \styleIMI{l} to left (non destructive)
+		\item \label{item:lbl-fill_right} \styleIMI{fill\_right(b:binary\_word(l), i:const int):binary\_word(l + i)} - shift a binary word of length \styleIMI{l} to right (non destructive)
+		\item \label{item:lbl-logand} \styleIMI{logand(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply AND bitwise operation to two binary words of length \styleIMI{l}
+		\item \label{item:lbl-logor} \styleIMI{logor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply OR bitwise operation to two binary words of length \styleIMI{l}
+		\item \label{item:lbl-logxor} \styleIMI{logxor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply XOR bitwise operation to two binary words of length \styleIMI{l}
+		\item \label{item:lbl-lognot} \styleIMI{lognot(b:binary\_word(l)):binary\_word(l)} - apply NOT bitwise operation to a binary word of length \styleIMI{l}
 \end{itemize}
 
 %------------------------------------------------------------
@@ -554,9 +622,9 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 \paragraph{Array functions}
 
 \begin{itemize}
-	\item \styleIMI{array\_append(a1:'a array(l1), a2:'a array(l2)):'a array(l1+l2) with 'a:any} - concatenates an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting in an array of length \styleIMI{l1 + l2}
-	\item \styleIMI{array\_length(a1:'a array(l1)):int=l1 with 'a:any} - length of the array \styleIMI{a1}
-	\item \styleIMI{array\_mem(a1:'a, l:'a array(l1)):bool with 'a:any} - true if \styleIMI{e} is in the the array \styleIMI{a1}
+	\item \label{item:lbl-array_append} \styleIMI{array\_append(a1:'a array(l1), a2:'a array(l2)):'a array(l1+l2) with 'a:any} - concatenates an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting in an array of length \styleIMI{l1 + l2}
+	\item \label{item:lbl-array_length} \styleIMI{array\_length(a1:'a array(l1)):int=l1 with 'a:any} - length of the array \styleIMI{a1}
+	\item \label{item:lbl-array_mem} \styleIMI{array\_mem(a1:'a, l:'a array(l1)):bool with 'a:any} - true if \styleIMI{e} is in the the array \styleIMI{a1}
 \end{itemize}
 
 %------------------------------------------------------------
@@ -580,12 +648,12 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 \paragraph{List functions}
 
 \begin{itemize}
-	\item \styleIMI{list\_cons(e:'a, l:'a list):'a list with 'a:any} - construct a list by inserting a new element \styleIMI{e} at the beginning of \styleIMI{l}
-	\item \styleIMI{list\_hd(l:'a list):'a with 'a:any} - head element of a list \styleIMI{l}
-	\item \styleIMI{list\_length(l:'a list): int with 'a:any} - length of the list \styleIMI{l}
-	\item \styleIMI{list\_mem(e:'a, l:'a list):bool with 'a:any} - true if \styleIMI{e} is in the the list \styleIMI{l}
-	\item \styleIMI{list\_rev(l:'a list):'a list with 'a:any} - reverse the the list \styleIMI{l}
-	\item \styleIMI{list\_tl(l:'a list):'a list with 'a:any} - tail of the list \styleIMI{l}
+	\item \label{item:lbl-list_cons} \styleIMI{list\_cons(e:'a, l:'a list):'a list with 'a:any} - construct a list by inserting a new element \styleIMI{e} at the beginning of \styleIMI{l}
+	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a with 'a:any} - head element of a list \styleIMI{l}
+	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list): int with 'a:any} - length of the list \styleIMI{l}
+	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool with 'a:any} - true if \styleIMI{e} is in the the list \styleIMI{l}
+	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list with 'a:any} - reverse the the list \styleIMI{l}
+	\item \label{item:lbl-list_tl} \styleIMI{list\_tl(l:'a list):'a list with 'a:any} - tail of the list \styleIMI{l}
 \end{itemize}
 
 %------------------------------------------------------------
