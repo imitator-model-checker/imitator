@@ -69,6 +69,12 @@ automaton P
     (* Check function call on array element access *)
     & logxor(my_bin_array[0], my_bin_array[1]) = 0b1100
 
+    (* Test complex function calls *)
+    & array_append([list([2])], [list([1])]) = [list([2]), list([1])]
+    & array_append([[1,2]],[[3,4]]) = [[1,2],[3,4]]
+    & array_length([1, 2, 3]) = 3
+    & array_mem(4, [1, 6, 4])
+
   do {
 
     (* Update arrays *)

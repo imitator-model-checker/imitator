@@ -3079,6 +3079,48 @@ Error                                   : index out of range
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
+	# BEGIN : Test list expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		'author': 'lbinria',
+		'purpose'    : 'Test general behavior of list expressions (computing)',
+		'tags':'list, computing, semantic',
+		'input_files': ['list_expressions/list.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'list-statespace.states' , 'content' : """
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1, list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([1]), rational_list = list([1]) ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  pta: lend, list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([2, 1]), rational_list = list([1]) ==>
+&True
+
+  Projection onto the parameters:
+  True
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test list expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
 	# BEGIN : Test type checking
 	#------------------------------------------------------------
 
