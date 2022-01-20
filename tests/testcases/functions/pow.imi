@@ -7,8 +7,8 @@
  * Scalable         : No
  * Generated        : No
  * Categories       : Semantic, Behavior
- * Source           : 
- * bibkey           : 
+ * Source           :
+ * bibkey           :
  * Author           : Benjamin L.
  * Modeling         : Benjamin L.
  * Input by         : Benjamin L.
@@ -20,22 +20,22 @@
  *
  * IMITATOR version : 3.1.0
  ************************************************************)
-var 
-    n, 
-    i, 
-    j, 
+var
+    n,
+    i,
+    j,
     k = 1
         : int;
-    
-    r1, 
-    r2, 
+
+    r1,
+    r2,
     kr = 1,
-    
+
     projected_result_1,
     projected_result_2
-    
+
         : rational;
-    
+
     p1, p2
         : parameter;
 
@@ -43,40 +43,44 @@ var
 (************************************************************)
  automaton pta
 (************************************************************)
- 
+
 loc l1: invariant n <= 2
 
-    (* Pow on int expression, result type should be int , so try to add with int constant *)
-	when 
-        n = 0 
-        & pow(i, j) + k = 82 
+  (* Pow on int expression, result type should be int , so try to add with int constant *)
+	when
+        n = 0
+        & pow(i, j) + k = 82
         & pow(j, i) + k = 65
-    do { 
-        n := n + 1, 
+        (* test pow with weak (type unknown) number *)
+        & pow(2, 3) = 8
+        (* test pow with literal rational number *)
+        & pow(2.0, 3) = 8
+    do {
+        n := n + 1,
         projected_result_1 := rational_of_int(pow(i, j) + k),
-        projected_result_2 := rational_of_int(pow(j, i) + k) 
+        projected_result_2 := rational_of_int(pow(j, i) + k)
     } goto l1;
-	
+
     (* Pow on rational expression, result type should be rational, so try to add with rational constant *)
-	when 
-        n = 1 
-        & pow(r1, j) + kr = 82 
+	when
+        n = 1
+        & pow(r1, j) + kr = 82
         & pow(r2, i) + kr = 65
-    do { 
-        n := n + 1, 
+    do {
+        n := n + 1,
         projected_result_1 := pow(r1, j) + kr,
-        projected_result_2 := pow(r2, i) + kr 
+        projected_result_2 := pow(r2, i) + kr
     } goto l1;
-	
-	when 
-        n = 2 
+
+	when
+        n = 2
         (* Project result to parameter *)
-        & p1 = projected_result_1 
-        & p2 = projected_result_2 
-    do { 
-        n := n + 1 
+        & p1 = projected_result_1
+        & p2 = projected_result_2
+    do {
+        n := n + 1
     } goto lend;
-	
+
 accepting loc lend: invariant True
 
  end (* pta *)
@@ -90,12 +94,12 @@ accepting loc lend: invariant True
 
 init := {
 
-    continuous = 
+    continuous =
         & p1 >= 0
         & p1 >= 0
     ;
 
-    discrete = 
+    discrete =
         loc[pta] := l1,
         n := 0,
         i := 3,
@@ -105,7 +109,7 @@ init := {
         projected_result_1 := 0,
         projected_result_2 := 0,
     ;
-    
+
 }
 
 

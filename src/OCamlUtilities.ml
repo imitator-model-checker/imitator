@@ -268,6 +268,16 @@ let hashtbl_group_by keySelector l =
     done;
     table
 
+(* Check if predicate is true for all arrangement of list *)
+let for_all_in_arrangement predicate l =
+    let result = ref true in
+    for i = 0 to (List.length l) - 1 do
+        for j = i to (List.length l) - 1 do
+            result := !result && predicate (List.nth l i) (List.nth l j)
+        done
+    done;
+    !result
+
 (************************************************************)
 (** Useful functions on arrays *)
 (************************************************************)
@@ -319,6 +329,17 @@ let array_exists p a =
 (*** WARNING: not a real shuffle! the first element is always at the end... ***)
 let array_shuffle a = Array.sort (fun _ _ -> (Random.int 3) - 1) a
 
+(** Perform the substraction of 2 NumConst array of same size **)
+let sub_array array1 array2 =
+  (* Create the result *)
+  let result = Array.make (Array.length array1) NumConst.zero in
+  (* Iterate on both arrays *)
+  for i = 0 to (Array.length array1) - 1 do
+    (* Perform array1 - array2 *)
+    result.(i) <- NumConst.sub array1.(i) array2.(i);
+  done;
+  (* Return the result *)
+  result
 
 
 (************************************************************)
@@ -356,6 +377,13 @@ let hashtbl_get_or_default hashtbl key default_value =
 (** function to filter hash table with a predicate on keys *)
 let hashtbl_filter pred =
 	Hashtbl.filter_map_inplace (fun k v -> if pred k then Some v else None)
+
+let hashtbl_of_tuples tuples =
+    let table = Hashtbl.create (List.length tuples) in
+    List.iter (fun (a, b) ->
+        Hashtbl.add table a b
+    ) tuples;
+    table
 
 (************************************************************)
 (** Useful functions on string *)

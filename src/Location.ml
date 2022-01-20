@@ -35,7 +35,7 @@ type global_location_index = int
 (* Array automaton_index -> location_index *)
 type locations = location_index array
 
-(* Array discrete_index -> NumConst.t *)
+(* Array discrete_index -> discrete_value *)
 type discrete = DiscreteValue.discrete_value array
 
 (* Global location: location for each automaton + value of the discrete *)
@@ -170,7 +170,7 @@ let copy_location location =
 	(* Return the new location *)
 	locations, discrete
 
-(* TODO benjamin CLEAN, this function below, not seems to be used anymore *)
+(*
 (** 'update_location locations discrete_values location' creates a new location from the original location, and update the given automata and discrete variables. *)
 let update_location locations_per_automaton discrete_values location =
 	(* Create an array for locations *)
@@ -183,7 +183,7 @@ let update_location locations_per_automaton discrete_values location =
 	List.iter (fun (discrete_index, value) -> discrete.(discrete_index - !min_discrete_index) <- value) discrete_values;
 	(* Return the new location *)
 	locations, discrete
-
+*)
 
 (** Side-effet version of 'update_location'. *)
 let update_location_with locations_per_automaton discrete_values (locations, discrete) =
@@ -258,7 +258,7 @@ let match_simple_predicate (locations_acceptance_condition : automaton_index -> 
 	match simple_predicate with
 
 	(* Here convert the global_location to a variable valuation *)
-	| Discrete_boolean_expression discrete_boolean_expression -> DiscreteExpressionEvaluator.check_discrete_boolean_expression (get_discrete_value global_location) discrete_boolean_expression
+	| Discrete_boolean_expression discrete_boolean_expression -> DiscreteExpressionEvaluator.eval_discrete_boolean_expression (Some (get_discrete_value global_location)) discrete_boolean_expression
 	
 	| Loc_predicate loc_predicate -> match_loc_predicate loc_predicate global_location
 

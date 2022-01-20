@@ -359,13 +359,13 @@ let split_guards_into_discrete_and_continuous =
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
 let evaluate_discrete_arithmetic_expression v =
 	let rec evaluate_discrete_arithmetic_expression_rec = function
-		| DAE_plus (discrete_arithmetic_expression, discrete_term) -> NumConst.add (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
-		| DAE_minus (discrete_arithmetic_expression, discrete_term) -> NumConst.sub (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
-		| DAE_term discrete_term -> evaluate_discrete_term discrete_term
+		| Rational_plus (discrete_arithmetic_expression, discrete_term) -> NumConst.add (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
+		| Rational_minus (discrete_arithmetic_expression, discrete_term) -> NumConst.sub (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
+		| Rational_term discrete_term -> evaluate_discrete_term discrete_term
 
 	and evaluate_discrete_term = function
-		| DT_mul (discrete_term, discrete_factor) -> NumConst.mul (evaluate_discrete_term discrete_term) (evaluate_discrete_factor discrete_factor)
-		| DT_div (discrete_term, discrete_factor) ->
+		| Rational_mul (discrete_term, discrete_factor) -> NumConst.mul (evaluate_discrete_term discrete_term) (evaluate_discrete_factor discrete_factor)
+		| Rational_div (discrete_term, discrete_factor) ->
 			(*** NOTE: here comes the infamous division by 0 ***)
 			(* Compute the denominator *)
 			let denominator = evaluate_discrete_factor discrete_factor in
@@ -376,13 +376,13 @@ let evaluate_discrete_arithmetic_expression v =
 			(* Else go on with division *)
 			else
 			NumConst.div (evaluate_discrete_term discrete_term) denominator
-		| DT_factor discrete_factor -> evaluate_discrete_factor discrete_factor
+		| Rational_factor discrete_factor -> evaluate_discrete_factor discrete_factor
 
 	and evaluate_discrete_factor = function
-		| DF_variable discrete_index -> v discrete_index
-		| DF_constant discrete_value -> discrete_value
-		| DF_unary_min discrete_factor -> NumConst.neg (evaluate_discrete_factor discrete_factor)
-		| DF_expression discrete_arithmetic_expression -> evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression
+		| Rational_variable discrete_index -> v discrete_index
+		| Rational_constant discrete_value -> discrete_value
+		| Rational_unary_min discrete_factor -> NumConst.neg (evaluate_discrete_factor discrete_factor)
+		| Rational_expression discrete_arithmetic_expression -> evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression
 	in
 	evaluate_discrete_arithmetic_expression_rec*)
 
@@ -596,7 +596,7 @@ let apply_updates_assign_gen (time_direction: time_direction) (linear_constraint
 						(* Consider cases for clocks *)
 						match model.type_of_variables variable_index with
 						(* Clocks: X = 0 *)
-						| DiscreteValue.Var_type_clock ->
+						| DiscreteType.Var_type_clock ->
 							let x_lt = LinearConstraint.make_pxd_linear_term [
 								NumConst.one, variable_index;
 							] NumConst.zero in
@@ -1372,7 +1372,7 @@ let get_updates (source_location : Location.global_location) (updates : Abstract
 	List.fold_left (
 	fun (acc_clock, acc_discrete) (conditional_update : AbstractModel.conditional_update) ->
 		let boolean_expr, if_updates, else_updates = conditional_update in
-		let filter_updates = if (is_boolean_expression_satisfied (Location.get_discrete_value source_location) boolean_expr) then if_updates else else_updates in
+		let filter_updates = if (eval_boolean_expression (Some (Location.get_discrete_value source_location)) boolean_expr) then if_updates else else_updates in
 		(merge_clock_updates acc_clock filter_updates.clock, list_append acc_discrete filter_updates.discrete)
 	) (updates.clock, updates.discrete) updates.conditional
 
@@ -1445,10 +1445,11 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
             let discrete_index = discrete_index_of_variable_access discrete_variable_access in
 
             let old_value = discrete_valuation discrete_index in
+            let discrete_valuation_opt = Some discrete_valuation in
 
             (* Compute its new value *)
-            let new_value = eval_global_expression discrete_valuation global_expression in
-            let new_value = pack_value model.variable_names discrete_valuation old_value new_value discrete_variable_access in
+            let new_value = eval_global_expression discrete_valuation_opt global_expression in
+            let new_value = pack_value model.variable_names discrete_valuation_opt old_value new_value discrete_variable_access in
 
             (*
             print_message Verbose_standard (
@@ -2483,9 +2484,9 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(*** NOTE: we need a px AND d valuation, therefore a bit a hack here ***)
 		let pxd_valuation = fun variable_index ->
 			match model.type_of_variables variable_index with
-			| DiscreteValue.Var_type_clock
-			| DiscreteValue.Var_type_parameter -> valuation_n variable_index
-			| DiscreteValue.Var_type_discrete _ -> Location.get_discrete_rational_value location_n variable_index (* TODO benjamin : check with étienne, what is it ? is it computing of linear part ? *)
+			| DiscreteType.Var_type_clock
+			| DiscreteType.Var_type_parameter -> valuation_n variable_index
+			| DiscreteType.Var_type_discrete _ -> Location.get_discrete_rational_value location_n variable_index (* TODO benjamin : check with étienne, what is it ? is it computing of linear part ? *)
 		in
 		
 		(* Add the valuation to the list, and replace n+1 with n *)
@@ -3774,8 +3775,8 @@ class virtual algoStateBased =
 				(* Construct the px-valuation *)
 				(*** NOTE: technically (internally), the concrete_x_valuation already contains the parameter valuations! but for type soundness, we pretend to take parameters from pval ***)
 				let concrete_px_valuation_i variable_index = match model.type_of_variables variable_index with
-					| DiscreteValue.Var_type_clock -> concrete_x_valuation variable_index
-					| DiscreteValue.Var_type_parameter -> functional_pval_positive variable_index
+					| DiscreteType.Var_type_clock -> concrete_x_valuation variable_index
+					| DiscreteType.Var_type_parameter -> functional_pval_positive variable_index
 					| _ -> raise (InternalError ("Only clocks or parameters are expected at this point (in AlgoStateBased.exhibit_negative_counterexamples)"))
 				in
 (*							(*** NOTE: technically (internally), the concrete_x_valuation already contains the parameter valuations! but for type soundness, we pretend to re-intersect with the pval ***)

@@ -41,6 +41,13 @@ type nonlinear_constraint_leaf =
 type init_state_predicate_leaf =
     | Leaf_loc_assignment of automaton_name * location_name
 
+type state_predicate_leaf =
+    | Leaf_predicate_true
+    | Leaf_predicate_false
+    | Leaf_predicate_accepting
+    | Leaf_predicate_EQ of string (* automaton name *) * string (* location name *)
+    | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
+
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
 let rec fold_parsed_global_expression operator base leaf_fun = function
@@ -94,7 +101,10 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
 	| Parsed_DF_variable variable_name -> leaf_fun (Leaf_variable variable_name)
 	| Parsed_DF_constant value -> leaf_fun (Leaf_constant value)
 	| Parsed_DF_array expr_array -> Array.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_array
-	| Parsed_DF_expression expr
+	| Parsed_DF_list expr_list -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_list
+	| Parsed_DF_expression expr ->
+        fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
+	(*
 	| Parsed_rational_of_int_function expr ->
         fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
 	| Parsed_pow_function (expr_0, expr_1) ->
@@ -106,12 +116,19 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
             (fold_parsed_discrete_factor operator base leaf_fun factor)
             (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
 	| Parsed_bin_log_function (_, factor_0, factor_1)
-	| Parsed_array_concat (factor_0, factor_1) ->
+	| Parsed_array_append (factor_0, factor_1) ->
         operator
             (fold_parsed_discrete_factor operator base leaf_fun factor_0)
             (fold_parsed_discrete_factor operator base leaf_fun factor_1)
+    | Parsed_list_cons (expr, factor) ->
+        operator
+            (fold_parsed_boolean_expression operator base leaf_fun expr)
+            (fold_parsed_discrete_factor operator base leaf_fun factor)
+    *)
+    | Parsed_function_call (_, argument_expressions) ->
+        List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression operator base leaf_fun expr) acc) base argument_expressions
     | Parsed_DF_access (factor, _)
-	| Parsed_log_not factor
+	(* | Parsed_log_not factor *)
 	| Parsed_DF_unary_min factor ->
 	    fold_parsed_discrete_factor operator base leaf_fun factor
 
@@ -140,9 +157,7 @@ and fold_parsed_linear_term operator leaf_fun = function
     | Variable (value, variable_name) -> leaf_fun (Leaf_linear_variable (value, variable_name))
 
 (** Fold a parsed linear constraint using operator applying custom function on leafs **)
-let fold_parsed_nonlinear_constraint operator base leaf_fun nonlinear_constraint_leaf_fun = function
-    | Parsed_nonlinear_constraint expr ->
-        fold_parsed_discrete_boolean_expression operator base leaf_fun expr
+let fold_parsed_nonlinear_constraint = fold_parsed_discrete_boolean_expression
 
 (** Fold a parsed update expression using operator applying custom function on leafs **)
 (** As update expression contain list of leaf, it return list of result from function applications **)
@@ -164,69 +179,144 @@ let fold_init_state_predicate operator base loc_assignment_leaf_fun linear_expre
 	| Parsed_linear_predicate linear_constraint -> fold_parsed_linear_constraint operator linear_expression_leaf_fun linear_constraint_leaf_fun linear_constraint
 	| Parsed_discrete_predicate (_, expr) -> fold_parsed_global_expression operator base leaf_fun expr
 
+let fold_parsed_loc_predicate operator base predicate_leaf_fun leaf_fun = function
+    | Parsed_loc_predicate_EQ (automaton_name, loc_name) ->
+        predicate_leaf_fun (Leaf_predicate_EQ (automaton_name, loc_name))
+    | Parsed_loc_predicate_NEQ (automaton_name, loc_name) ->
+        predicate_leaf_fun (Leaf_predicate_NEQ (automaton_name, loc_name))
+
+let fold_parsed_simple_predicate operator base predicate_leaf_fun leaf_fun = function
+	| Parsed_discrete_boolean_expression expr ->
+        fold_parsed_discrete_boolean_expression operator base leaf_fun expr
+	| Parsed_loc_predicate predicate ->
+		fold_parsed_loc_predicate operator base predicate_leaf_fun leaf_fun predicate
+	| Parsed_state_predicate_true -> predicate_leaf_fun Leaf_predicate_true
+	| Parsed_state_predicate_false -> predicate_leaf_fun Leaf_predicate_false
+	| Parsed_state_predicate_accepting -> predicate_leaf_fun Leaf_predicate_accepting
+
+let rec fold_parsed_state_predicate_factor operator base predicate_leaf_fun leaf_fun = function
+	| Parsed_state_predicate predicate ->
+	    fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun predicate
+	| Parsed_state_predicate_factor_NOT predicate ->
+	    fold_parsed_state_predicate_factor operator base predicate_leaf_fun leaf_fun predicate
+	| Parsed_simple_predicate predicate ->
+	    fold_parsed_simple_predicate operator base predicate_leaf_fun leaf_fun predicate
+
+and fold_parsed_state_predicate_term operator base predicate_leaf_fun leaf_fun = function
+	| Parsed_state_predicate_term_AND (l_predicate, r_predicate) ->
+	    operator
+	        (fold_parsed_state_predicate_term operator base predicate_leaf_fun leaf_fun l_predicate)
+	        (fold_parsed_state_predicate_term operator base predicate_leaf_fun leaf_fun r_predicate)
+	| Parsed_state_predicate_factor predicate ->
+	    fold_parsed_state_predicate_factor operator base predicate_leaf_fun leaf_fun predicate
+
+and fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun = function
+	| Parsed_state_predicate_OR (l_predicate, r_predicate) ->
+        operator
+            (fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun l_predicate)
+            (fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun r_predicate)
+	| Parsed_state_predicate_term predicate_term ->
+	    fold_parsed_state_predicate_term operator base predicate_leaf_fun leaf_fun predicate_term
+
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
-let for_all_in_parsed_global_expression = fold_parsed_global_expression (OCamlUtilities.evaluate_and) true
-let for_all_in_parsed_boolean_expression = fold_parsed_boolean_expression (OCamlUtilities.evaluate_and) true
-let for_all_in_parsed_discrete_boolean_expression = fold_parsed_discrete_boolean_expression (OCamlUtilities.evaluate_and) true
-let for_all_in_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithmetic_expression (OCamlUtilities.evaluate_and) true
-let for_all_in_parsed_discrete_term = fold_parsed_discrete_term (OCamlUtilities.evaluate_and) true
-let for_all_in_parsed_discrete_factor = fold_parsed_discrete_factor (OCamlUtilities.evaluate_and) true
+(* Apply to a fold function the standard parameters for evaluate AND *)
+let apply_evaluate_and fold_func = fold_func (OCamlUtilities.evaluate_and)
+let apply_evaluate_and_with_base fold_func = fold_func (OCamlUtilities.evaluate_and) true
+
+let for_all_in_parsed_global_expression = apply_evaluate_and_with_base fold_parsed_global_expression
+let for_all_in_parsed_boolean_expression = apply_evaluate_and_with_base fold_parsed_boolean_expression
+let for_all_in_parsed_discrete_boolean_expression = apply_evaluate_and_with_base fold_parsed_discrete_boolean_expression
+let for_all_in_parsed_discrete_arithmetic_expression = apply_evaluate_and_with_base fold_parsed_discrete_arithmetic_expression
+let for_all_in_parsed_discrete_term = apply_evaluate_and_with_base fold_parsed_discrete_term
+let for_all_in_parsed_discrete_factor = apply_evaluate_and_with_base fold_parsed_discrete_factor
 
 (** Check if all leaf of a linear expression satisfy the predicate **)
-let for_all_in_parsed_linear_expression = fold_parsed_linear_expression (OCamlUtilities.evaluate_and)
+let for_all_in_parsed_linear_expression = apply_evaluate_and fold_parsed_linear_expression
 (** Check if all leaf of a linear term satisfy the predicate **)
-let for_all_in_parsed_linear_term = fold_parsed_linear_term (OCamlUtilities.evaluate_and)
+let for_all_in_parsed_linear_term = apply_evaluate_and fold_parsed_linear_term
 (** Check if all leaf of a linear constraint satisfy the predicate **)
-let for_all_in_parsed_linear_constraint = fold_parsed_linear_constraint (OCamlUtilities.evaluate_and)
+let for_all_in_parsed_linear_constraint = apply_evaluate_and fold_parsed_linear_constraint
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
-let for_all_in_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint (OCamlUtilities.evaluate_and) true
+let for_all_in_parsed_nonlinear_constraint = apply_evaluate_and_with_base fold_parsed_nonlinear_constraint
 (** Check if all leaf of a parsed update satisfy the predicate **)
-let for_all_in_parsed_update = fold_parsed_update (OCamlUtilities.evaluate_and) true
+let for_all_in_parsed_update = apply_evaluate_and_with_base fold_parsed_update
+
+let for_all_in_parsed_loc_predicate = apply_evaluate_and_with_base fold_parsed_loc_predicate
+let for_all_in_parsed_simple_predicate = apply_evaluate_and_with_base fold_parsed_simple_predicate
+let for_all_in_parsed_state_predicate_factor = apply_evaluate_and_with_base fold_parsed_state_predicate_factor
+let for_all_in_parsed_state_predicate_term = apply_evaluate_and_with_base fold_parsed_state_predicate_term
+let for_all_in_parsed_state_predicate = apply_evaluate_and_with_base fold_parsed_state_predicate
 
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
-let exists_in_parsed_global_expression = fold_parsed_global_expression (||) false
-let exists_in_parsed_boolean_expression = fold_parsed_boolean_expression (||) false
-let exists_in_parsed_discrete_boolean_expression = fold_parsed_discrete_boolean_expression (||) false
-let exists_in_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithmetic_expression (||) false
-let exists_in_parsed_discrete_term = fold_parsed_discrete_term (||) false
-let exists_in_parsed_discrete_factor = fold_parsed_discrete_factor (||) false
+(* Apply to a fold function the standard parameters for evaluate OR *)
+let apply_evaluate_or fold_func = fold_func (||)
+let apply_evaluate_or_with_base fold_func = fold_func (||) false
+
+let exists_in_parsed_global_expression = apply_evaluate_or_with_base fold_parsed_global_expression
+let exists_in_parsed_boolean_expression = apply_evaluate_or_with_base fold_parsed_boolean_expression
+let exists_in_parsed_discrete_boolean_expression = apply_evaluate_or_with_base fold_parsed_discrete_boolean_expression
+let exists_in_parsed_discrete_arithmetic_expression = apply_evaluate_or_with_base fold_parsed_discrete_arithmetic_expression
+let exists_in_parsed_discrete_term = apply_evaluate_or_with_base fold_parsed_discrete_term
+let exists_in_parsed_discrete_factor = apply_evaluate_or_with_base fold_parsed_discrete_factor
 
 (** Check if any leaf of a linear expression satisfy the predicate **)
-let exists_in_parsed_linear_expression = fold_parsed_linear_expression (||)
+let exists_in_parsed_linear_expression = apply_evaluate_or fold_parsed_linear_expression
 (** Check if any leaf of a linear term satisfy the predicate **)
-let exists_in_parsed_linear_term = fold_parsed_linear_term (||)
+let exists_in_parsed_linear_term = apply_evaluate_or fold_parsed_linear_term
 (** Check if any leaf of a linear constraint satisfy the predicate **)
-let exists_in_parsed_linear_constraint = fold_parsed_linear_constraint (||)
+let exists_in_parsed_linear_constraint = apply_evaluate_or fold_parsed_linear_constraint
 (** Check if any leaf of a non-linear constraint satisfy the predicate **)
-let exists_in_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint (||) false
+let exists_in_parsed_nonlinear_constraint = apply_evaluate_or_with_base fold_parsed_nonlinear_constraint
 (** Check if any leaf of a parsed update satisfy the predicate **)
-let exists_in_parsed_update = fold_parsed_update (||) false
+let exists_in_parsed_update = apply_evaluate_or_with_base fold_parsed_update
+
+let exists_in_parsed_loc_predicate = apply_evaluate_or_with_base fold_parsed_loc_predicate
+let exists_in_parsed_simple_predicate = apply_evaluate_or_with_base fold_parsed_simple_predicate
+let exists_in_parsed_state_predicate_factor = apply_evaluate_or_with_base fold_parsed_state_predicate_factor
+let exists_in_parsed_state_predicate_term = apply_evaluate_or_with_base fold_parsed_state_predicate_term
+let exists_in_parsed_state_predicate = apply_evaluate_or_with_base fold_parsed_state_predicate
 
 (** Iterate over a parsing structure **)
 
 let binunit (a : unit) (b : unit) = a; b; ()
-let iterate_parsed_global_expression = fold_parsed_global_expression binunit ()
-let iterate_parsed_boolean_expression = fold_parsed_boolean_expression binunit ()
-let iterate_parsed_discrete_boolean_expression = fold_parsed_discrete_boolean_expression binunit ()
-let iterate_parsed_discrete_arithmetic_expression = fold_parsed_discrete_arithmetic_expression binunit ()
-let iterate_parsed_discrete_term  = fold_parsed_discrete_term binunit ()
-let iterate_parsed_discrete_factor = fold_parsed_discrete_factor binunit ()
+(* Apply to a fold function the standard parameters for evaluate unit *)
+let apply_evaluate_unit fold_func = fold_func binunit
+let apply_evaluate_unit_with_base fold_func = fold_func binunit ()
+
+
+let iterate_parsed_global_expression = apply_evaluate_unit_with_base fold_parsed_global_expression
+let iterate_parsed_boolean_expression = apply_evaluate_unit_with_base fold_parsed_boolean_expression
+let iterate_parsed_discrete_boolean_expression = apply_evaluate_unit_with_base fold_parsed_discrete_boolean_expression
+let iterate_parsed_discrete_arithmetic_expression = apply_evaluate_unit_with_base fold_parsed_discrete_arithmetic_expression
+let iterate_parsed_discrete_term  = apply_evaluate_unit_with_base fold_parsed_discrete_term
+let iterate_parsed_discrete_factor = apply_evaluate_unit_with_base fold_parsed_discrete_factor
 
 (** Iterate over a linear expression **)
-let iterate_parsed_linear_expression = fold_parsed_linear_expression binunit
+let iterate_parsed_linear_expression = apply_evaluate_unit fold_parsed_linear_expression
 (** Iterate over a linear term **)
-let iterate_parsed_linear_term = fold_parsed_linear_term binunit
+let iterate_parsed_linear_term = apply_evaluate_unit fold_parsed_linear_term
 (** Iterate over a linear constraint **)
-let iterate_parsed_linear_constraint = fold_parsed_linear_constraint binunit
+let iterate_parsed_linear_constraint = apply_evaluate_unit fold_parsed_linear_constraint
 (** Iterate over a non-linear constraint **)
-let iterate_parsed_nonlinear_constraint = fold_parsed_nonlinear_constraint binunit ()
+let iterate_parsed_nonlinear_constraint = apply_evaluate_unit_with_base fold_parsed_nonlinear_constraint
 
-let iterate_parsed_update = fold_parsed_update binunit ()
+let iterate_parsed_update = apply_evaluate_unit_with_base fold_parsed_update
+
+let iterate_in_parsed_loc_predicate = apply_evaluate_unit_with_base fold_parsed_loc_predicate
+let iterate_in_parsed_simple_predicate = apply_evaluate_unit_with_base fold_parsed_simple_predicate
+let iterate_in_parsed_state_predicate_factor = apply_evaluate_unit_with_base fold_parsed_state_predicate_factor
+let iterate_in_parsed_state_predicate_term = apply_evaluate_unit_with_base fold_parsed_state_predicate_term
+let iterate_in_parsed_state_predicate = apply_evaluate_unit_with_base fold_parsed_state_predicate
+
+(* Extract function name from parsed factor *)
+let function_name_of_parsed_factor = function
+	| Parsed_DF_variable name -> name
+    | factor -> raise (TypeError "Trying to make a call on a non-function.")
 
 (* Labels of a parsed factors *)
-
+(*
 let label_of_parsed_shift_function_type = function
 	| Parsed_shift_left -> "shift_left"
 	| Parsed_shift_right -> "shift_right"
@@ -237,26 +327,43 @@ let label_of_parsed_bin_log_function_type = function
     | Parsed_log_and -> "logand"
     | Parsed_log_or -> "logor"
     | Parsed_log_xor -> "logxor"
+*)
 
 let label_of_parsed_factor_constructor = function
 	| Parsed_DF_variable _ -> "variable"
 	| Parsed_DF_constant _ -> "constant"
 	| Parsed_DF_array _ -> "array"
-	| Parsed_DF_access _ -> "array access"
+	| Parsed_DF_list _ -> "list"
+	| Parsed_DF_access _ -> "access"
 	| Parsed_DF_expression _ -> "expression"
 	| Parsed_DF_unary_min _ -> "minus"
+	(*
 	| Parsed_rational_of_int_function _ -> "rational_of_int"
 	| Parsed_pow_function _ -> "pow"
 	| Parsed_shift_function (fun_type, _, _) -> label_of_parsed_shift_function_type fun_type
 	| Parsed_bin_log_function (fun_type, _, _) -> label_of_parsed_bin_log_function_type fun_type
 
     | Parsed_log_not _ -> "lognot"
-    | Parsed_array_concat _ -> "array_concat"
+    | Parsed_array_append _ -> "array_append"
+    | Parsed_list_cons _ -> "list_cons"
+    *)
+    | Parsed_function_call (variable, _) -> function_name_of_parsed_factor variable
 
 
 
 (* String of a parsed expression *)
-(* Used for error message on type checking *)
+(* Used when needed to display an error message (ie : error on type checking) *)
+
+(* String of relational operator *)
+let string_of_parsed_relop relop value_1 value_2 =
+    match relop with
+    | PARSED_OP_L		-> value_1 ^ " < " ^ value_2
+    | PARSED_OP_LEQ	    -> value_1 ^ " <= " ^ value_2
+    | PARSED_OP_EQ		-> value_1 ^ " = " ^ value_2
+    | PARSED_OP_NEQ	    -> value_1 ^ " <> " ^ value_2
+    | PARSED_OP_GEQ	    -> value_1 ^ " >= " ^ value_2
+    | PARSED_OP_G		-> value_1 ^ " > " ^ value_2
+
 let rec string_of_parsed_global_expression variable_infos = function
     | Parsed_global_expression expr -> string_of_parsed_boolean_expression variable_infos expr
 
@@ -297,11 +404,15 @@ and string_of_parsed_factor variable_infos = function
     | Parsed_DF_constant value -> DiscreteValue.string_of_value value
     | Parsed_DF_array expr_array ->
         "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (string_of_parsed_boolean_expression variable_infos) expr_array) ^ "]"
+    | Parsed_DF_list expr_list as list_expr ->
+        label_of_parsed_factor_constructor list_expr
+        ^ "([" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (string_of_parsed_boolean_expression variable_infos) expr_list) ^ "])"
     | Parsed_DF_access (factor, expr) ->
         string_of_parsed_factor variable_infos factor ^ "[" ^ string_of_parsed_arithmetic_expression variable_infos expr ^ "]"
     | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
     | Parsed_DF_unary_min factor ->
         "-(" ^ (string_of_parsed_factor variable_infos factor) ^ ")"
+    (*
     | Parsed_rational_of_int_function arithmetic_expr as factor ->
         label_of_parsed_factor_constructor factor
         ^ "(" ^ string_of_parsed_arithmetic_expression variable_infos arithmetic_expr ^ ")"
@@ -320,18 +431,32 @@ and string_of_parsed_factor variable_infos = function
         ^ string_of_parsed_arithmetic_expression variable_infos expr
         ^ ")"
     | Parsed_bin_log_function (_, l_factor, r_factor)
-    | Parsed_array_concat (l_factor, r_factor) as func ->
+    | Parsed_array_append (l_factor, r_factor) as func ->
         label_of_parsed_factor_constructor func
         ^ "("
         ^ string_of_parsed_factor variable_infos l_factor
         ^ ", "
         ^ string_of_parsed_factor variable_infos r_factor
         ^ ")"
+    | Parsed_list_cons (expr, factor) as func ->
+        label_of_parsed_factor_constructor func
+        ^ "("
+        ^ string_of_parsed_boolean_expression variable_infos expr
+        ^ ", "
+        ^ string_of_parsed_factor variable_infos factor
+        ^ ")"
+    *)
+    | Parsed_function_call (_, argument_expressions) as func ->
+        let str_arguments_list = List.map (string_of_parsed_boolean_expression variable_infos) argument_expressions in
+        let str_arguments = OCamlUtilities.string_of_list_of_string_with_sep ", " str_arguments_list in
+        label_of_parsed_factor_constructor func ^ "(" ^ str_arguments ^ ")"
+    (*
     | Parsed_log_not factor as func ->
         label_of_parsed_factor_constructor func
         ^ "("
         ^ string_of_parsed_factor variable_infos factor
         ^ ")"
+    *)
 
 and string_of_parsed_boolean_expression variable_infos = function
     | Parsed_And (l_expr, r_expr) ->
@@ -364,15 +489,6 @@ and string_of_parsed_discrete_boolean_expression variable_infos = function
     | Parsed_Not expr ->
             "not (" ^ (string_of_parsed_boolean_expression variable_infos expr) ^ ")"
 
-and string_of_parsed_relop relop value_1 value_2 =
-        match relop with
-        | PARSED_OP_L		-> value_1 ^ " < " ^ value_2
-        | PARSED_OP_LEQ	    -> value_1 ^ " <= " ^ value_2
-        | PARSED_OP_EQ		-> value_1 ^ " = " ^ value_2
-        | PARSED_OP_NEQ	    -> value_1 ^ " <> " ^ value_2
-        | PARSED_OP_GEQ	    -> value_1 ^ " >= " ^ value_2
-        | PARSED_OP_G		-> value_1 ^ " > " ^ value_2
-
 let rec string_of_parsed_linear_constraint variable_infos = function
 	| Parsed_true_constraint -> "True"
 	| Parsed_false_constraint -> "False"
@@ -398,6 +514,15 @@ and string_of_linear_term variable_infos = function
 	| Variable (coef, variable_name) when NumConst.equal NumConst.one coef -> variable_name
 	| Variable (coef, variable_name) -> (NumConst.string_of_numconst coef)
 
+(* Get variable name from a variable access *)
+(* ex : my_var[0][0] -> my_var *)
+let rec string_of_variable_access variable_infos = function
+    | Variable_name variable_name -> variable_name
+    | Variable_access (variable_access, expr) ->
+        let l_del, r_del = Constants.default_array_string.array_access_delimiter in
+        string_of_variable_access variable_infos variable_access
+        ^ l_del ^ string_of_parsed_arithmetic_expression variable_infos expr ^ r_del
+
 let string_of_parsed_init_state_predicate variable_infos = function
 	| Parsed_loc_assignment (automaton_name, location_name) -> "loc[" ^ automaton_name ^ "] = " ^ location_name
 	| Parsed_linear_predicate linear_constraint -> string_of_parsed_linear_constraint variable_infos linear_constraint
@@ -406,183 +531,50 @@ let string_of_parsed_init_state_predicate variable_infos = function
 	    ^ " = "
 	    ^ string_of_parsed_global_expression variable_infos expr
 
-let string_of_parsed_nonlinear_constraint variable_infos = function
-    | Parsed_nonlinear_constraint expr -> string_of_parsed_discrete_boolean_expression variable_infos expr
 
-(* Try to reduce a parsed global expression, cannot take into account variables ! *)
-(* This function is used for computing constant values *)
-let rec try_reduce_parsed_global_expression constants = function
-        | Parsed_global_expression expr -> try_reduce_parsed_boolean_expression constants expr
+let string_of_parsed_nonlinear_constraint = string_of_parsed_discrete_boolean_expression
 
-and try_reduce_parsed_boolean_expression constants expr =
 
-    let rec try_reduce_parsed_boolean_expression_rec = function
-	    | Parsed_And (l_expr, r_expr) ->
-	        DiscreteValue._and
-                (try_reduce_parsed_boolean_expression_rec l_expr)
-                (try_reduce_parsed_boolean_expression_rec r_expr)
-	    | Parsed_Or (l_expr, r_expr) ->
-	        DiscreteValue._or
-                (try_reduce_parsed_boolean_expression_rec l_expr)
-                (try_reduce_parsed_boolean_expression_rec r_expr)
-	    | Parsed_Discrete_boolean_expression expr ->
-	        try_reduce_parsed_discrete_boolean_expression expr
 
-    and try_reduce_parsed_discrete_boolean_expression = function
-        | Parsed_arithmetic_expression expr ->
-            try_reduce_parsed_arithmetic_expression constants expr
-        | Parsed_expression (l_expr, relop, r_expr) ->
-            eval_parsed_relop
-                relop
-                (try_reduce_parsed_discrete_boolean_expression l_expr)
-                (try_reduce_parsed_discrete_boolean_expression r_expr)
-        | Parsed_expression_in (expr1, expr2, expr3) ->
-		    (* Compute the first one to avoid redundancy *)
-		    let expr1_evaluated = try_reduce_parsed_arithmetic_expression constants expr1 in
-		    let expr2_evaluated = try_reduce_parsed_arithmetic_expression constants expr2 in
-		    let expr3_evaluated = try_reduce_parsed_arithmetic_expression constants expr3 in
-		    DiscreteValue._and
-			    (DiscreteValue.leq expr2_evaluated expr1_evaluated)
-			    (DiscreteValue.leq expr1_evaluated expr3_evaluated)
-        | Parsed_boolean_expression expr ->
-            try_reduce_parsed_boolean_expression_rec expr
-	    | Parsed_Not expr ->
-	        DiscreteValue.not
-	            (try_reduce_parsed_boolean_expression_rec expr)
+let string_of_parsed_loc_predicate = function
+	| Parsed_loc_predicate_EQ (automaton_name, location_name) ->
+	    automaton_name ^ " = " ^ location_name
+	| Parsed_loc_predicate_NEQ (automaton_name, location_name) ->
+	    automaton_name ^ " <> " ^ location_name
 
-    and eval_parsed_relop relop value_1 value_2 =
-        	match relop with
-        	| PARSED_OP_L		-> DiscreteValue.l value_1 value_2
-        	| PARSED_OP_LEQ	    -> DiscreteValue.leq value_1 value_2
-        	| PARSED_OP_EQ		-> DiscreteValue.bool_equal value_1  value_2
-        	| PARSED_OP_NEQ	    -> DiscreteValue.bool_neq value_1 value_2
-        	| PARSED_OP_GEQ	    -> DiscreteValue.geq value_1 value_2
-        	| PARSED_OP_G		-> DiscreteValue.g value_1  value_2
+let string_of_parsed_simple_predicate variable_infos = function
+	| Parsed_discrete_boolean_expression expr -> string_of_parsed_discrete_boolean_expression variable_infos expr
+	| Parsed_loc_predicate parsed_loc_predicate -> string_of_parsed_loc_predicate parsed_loc_predicate
+	| Parsed_state_predicate_true -> Constants.default_string.true_string
+	| Parsed_state_predicate_false -> Constants.default_string.false_string
+	| Parsed_state_predicate_accepting -> "accepting"
 
-    in
-    try_reduce_parsed_boolean_expression_rec expr
+let rec string_of_parsed_state_predicate_factor variable_infos = function
+	| Parsed_state_predicate_factor_NOT predicate_factor ->
+	    Constants.default_string.not_operator
+	    ^ "(" ^ string_of_parsed_state_predicate_factor variable_infos predicate_factor ^ ")"
+	| Parsed_simple_predicate simple_predicate ->
+	    string_of_parsed_simple_predicate variable_infos simple_predicate
+	| Parsed_state_predicate state_predicate ->
+	    string_of_parsed_state_predicate variable_infos state_predicate
 
-and try_reduce_parsed_arithmetic_expression constants expr =
+and string_of_parsed_state_predicate_term variable_infos = function
+	| Parsed_state_predicate_term_AND (l_predicate_term, r_predicate_term) ->
+	    string_of_parsed_state_predicate_term variable_infos l_predicate_term
+	    ^ Constants.default_string.and_operator
+	    ^ string_of_parsed_state_predicate_term variable_infos r_predicate_term
 
-    let rec try_reduce_parsed_arithmetic_expression_rec = function
-        | Parsed_DAE_plus (arithmetic_expr, term) ->
-            DiscreteValue.add
-                (try_reduce_parsed_arithmetic_expression_rec arithmetic_expr)
-                (try_reduce_parsed_term term)
-        | Parsed_DAE_minus (arithmetic_expr, term) ->
-            DiscreteValue.sub
-                (try_reduce_parsed_arithmetic_expression_rec arithmetic_expr)
-                (try_reduce_parsed_term term)
-        | Parsed_DAE_term term ->
-            try_reduce_parsed_term term
+	| Parsed_state_predicate_factor predicate_factor ->
+	    string_of_parsed_state_predicate_factor variable_infos predicate_factor
 
-    and try_reduce_parsed_term = function
-        | Parsed_DT_mul (term, factor) ->
-            DiscreteValue.mul
-                (try_reduce_parsed_term term)
-                (try_reduce_parsed_factor factor)
-        | Parsed_DT_div (term, factor) ->
-            DiscreteValue.div
-                (try_reduce_parsed_term term)
-                (try_reduce_parsed_factor factor)
-        | Parsed_DT_factor factor ->
-            try_reduce_parsed_factor factor
+and string_of_parsed_state_predicate variable_infos = function
+	| Parsed_state_predicate_OR (l_predicate_term, r_predicate_term) ->
+	    string_of_parsed_state_predicate variable_infos l_predicate_term
+	    ^ Constants.default_string.or_operator
+	    ^ string_of_parsed_state_predicate variable_infos r_predicate_term
 
-    and try_reduce_parsed_factor = function
-        | Parsed_DF_variable variable_name ->
-            if (Hashtbl.mem constants variable_name) then (
-                (* Retrieve the value of the global constant *)
-                Hashtbl.find constants variable_name
-            ) else
-                raise (InternalError ("Unable to reduce a non-constant expression: " ^ variable_name ^ " found. It should be checked before."))
-        | Parsed_DF_constant value -> value
-        | Parsed_DF_array expr_array ->
-            let values = Array.map (try_reduce_parsed_boolean_expression constants) expr_array in
-            DiscreteValue.Array_value values
-        | Parsed_DF_access (factor, index_expr) ->
-            (* factor should be an array (checked by type checker) *)
-            let values = try_reduce_parsed_factor factor in
-            let index = try_reduce_parsed_arithmetic_expression_rec index_expr in
-            (* Get value at index *)
-            let array_values = DiscreteValue.array_value values in
-            let int_index = DiscreteValue.int_value index in
-            Array.get array_values (Int32.to_int int_index)
-
-        | Parsed_DF_expression arithmetic_expr -> try_reduce_parsed_arithmetic_expression_rec arithmetic_expr
-        | Parsed_DF_unary_min factor ->
-            DiscreteValue.neg (try_reduce_parsed_factor factor)
-        | Parsed_rational_of_int_function expr ->
-            (* Convert with no problem because it's already type checked *)
-            DiscreteValue.convert_to_rational_value (try_reduce_parsed_arithmetic_expression_rec expr)
-        | Parsed_pow_function (expr, exp) ->
-
-            let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
-            let reduced_exp = try_reduce_parsed_arithmetic_expression_rec exp in
-            (* we have to know type of expr *)
-            let value_type = DiscreteValue.discrete_type_of_value reduced_expr in
-            (match value_type with
-            | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
-                let numconst_expr = DiscreteValue.numconst_value reduced_expr in
-                let int_exp = DiscreteValue.int_value reduced_exp in
-                let numconst_result = NumConst.pow numconst_expr int_exp in
-                DiscreteValue.of_numconst numconst_result
-            | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
-                let int_expr = DiscreteValue.int_value reduced_expr in
-                let int_exp = DiscreteValue.int_value reduced_exp in
-                let int_result = OCamlUtilities.pow int_expr int_exp in
-                DiscreteValue.of_int int_result
-            (* Should never happen *)
-            | DiscreteValue.Var_type_discrete_bool
-            | DiscreteValue.Var_type_discrete_binary_word _
-            | DiscreteValue.Var_type_discrete_array _
-            | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number as t ->
-                raise (InternalError (
-                    "Try to reduce a pow function on a "
-                    ^ DiscreteValue.string_of_var_type_discrete t
-                    ^ " expression, altough it was checked before by the type checker. Maybe type checking has failed before"
-                ))
-            )
-        | Parsed_shift_function (fun_type, factor, expr) ->
-            let reduced_factor = try_reduce_parsed_factor factor in
-            let reduced_expr = try_reduce_parsed_arithmetic_expression_rec expr in
-            begin
-            match fun_type with
-            | Parsed_shift_left -> DiscreteValue.shift_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
-            | Parsed_shift_right -> DiscreteValue.shift_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
-            | Parsed_fill_left -> DiscreteValue.fill_left (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
-            | Parsed_fill_right -> DiscreteValue.fill_right (Int32.to_int (DiscreteValue.int_value reduced_expr))  reduced_factor
-            end
-
-        | Parsed_bin_log_function (fun_type, l_factor, r_factor) ->
-            let reduced_l_factor = try_reduce_parsed_factor l_factor in
-            let reduced_r_factor = try_reduce_parsed_factor r_factor in
-            begin
-            match fun_type with
-            | Parsed_log_and -> DiscreteValue.log_and reduced_l_factor reduced_r_factor
-            | Parsed_log_or -> DiscreteValue.log_or reduced_l_factor reduced_r_factor
-            | Parsed_log_xor -> DiscreteValue.log_xor reduced_l_factor reduced_r_factor
-            end
-
-        | Parsed_array_concat (l_factor, r_factor) ->
-
-            let reduced_l_factor = try_reduce_parsed_factor l_factor in
-            let reduced_r_factor = try_reduce_parsed_factor r_factor in
-            DiscreteValue.array_concat reduced_l_factor reduced_r_factor
-
-        | Parsed_log_not factor ->
-
-            let reduced_factor = try_reduce_parsed_factor factor in
-            DiscreteValue.log_not reduced_factor
-    in
-    try_reduce_parsed_arithmetic_expression_rec expr
-
-let try_reduce_parsed_term constants term =
-    let expr = Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term term))) in
-    try_reduce_parsed_global_expression constants expr
-
-let try_reduce_parsed_factor constants factor =
-    let expr = Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor factor)))) in
-    try_reduce_parsed_global_expression constants expr
+	| Parsed_state_predicate_term predicate_term ->
+	    string_of_parsed_state_predicate_term variable_infos predicate_term
 
 (** Utils **)
 
@@ -614,7 +606,7 @@ let is_variable_defined_with_callback variable_infos callback = function
 
 let is_variable_defined variable_infos = is_variable_defined_with_callback variable_infos None
 
-(* Check if leaf is a variable that is defined *)
+(* Check if linear expression leaf is a variable that is defined *)
 let is_variable_defined_in_linear_expression variable_infos callback_fail = function
     | Leaf_linear_constant _ -> true
     | Leaf_linear_variable (_, variable_name) ->
@@ -623,6 +615,35 @@ let is_variable_defined_in_linear_expression variable_infos callback_fail = func
         )
         else
             true
+
+(* Check if a state predicate leaf has it's automaton / location defined *)
+let is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_info undefined_automaton_callback_opt undefined_loc_callback_opt = function
+    | Leaf_predicate_false
+    | Leaf_predicate_true
+    | Leaf_predicate_accepting -> true
+    | Leaf_predicate_EQ (automaton_name, location_name)
+    | Leaf_predicate_NEQ (automaton_name, location_name) ->
+        (* Find the automaton *)
+        if not (Hashtbl.mem parsing_info.index_of_automata automaton_name) then (
+            (match undefined_automaton_callback_opt with
+            | Some callback -> callback automaton_name
+            | None -> ()
+            );
+            false
+        ) else (
+            let automaton_index : Automaton.automaton_index = Hashtbl.find parsing_info.index_of_automata automaton_name in
+            (* Find the location *)
+            if not (Hashtbl.mem parsing_info.index_of_locations.(automaton_index) location_name) then (
+                (match undefined_loc_callback_opt with
+                | Some callback -> callback automaton_name location_name
+                | None -> ()
+                );
+                false
+            ) else (
+                (* Both checks passed *)
+                true
+            )
+        )
 
 (* Check if leaf is only a discrete variable *)
 let is_only_discrete variable_infos = function
@@ -634,7 +655,7 @@ let is_only_discrete variable_infos = function
         ||
         try(
             let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-            DiscreteValue.is_discrete_type (variable_infos.type_of_variables variable_index)
+            DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
         ) with Not_found -> (
             (* Variable not found! *)
             (*** TODO: why is this checked here…? It should have been checked before ***)
@@ -651,41 +672,67 @@ let no_variables variable_infos = function
         (* Or parameter *)
         ||
         let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-        variable_infos.type_of_variables variable_index = DiscreteValue.Var_type_parameter
+        variable_infos.type_of_variables variable_index = DiscreteType.Var_type_parameter
 
-(* Check if a global expression is constant *)
+(* Variable kind type represent a variable or a constant kind *)
+type variable_kind =
+    | Variable_kind of int
+    | Constant_kind of DiscreteValue.discrete_value
+
+(* Know if variable with a given name is a variable or a constant *)
+let variable_kind_of_variable_name variable_infos variable_name =
+
+    (* First check whether this is a constant *)
+    if Hashtbl.mem variable_infos.constants variable_name then (
+        let value = Hashtbl.find variable_infos.constants variable_name in
+        Constant_kind value
+    )
+    (* Otherwise: a variable *)
+    else
+        Variable_kind (Hashtbl.find variable_infos.index_of_variables variable_name)
+
+
+(* Check if a parsed global expression is constant *)
 let is_parsed_global_expression_constant variable_infos =
     for_all_in_parsed_global_expression (is_constant variable_infos)
 
-(* Check if an arithmetic expression is constant *)
+(* Check if a parsed boolean expression is constant *)
+let is_parsed_boolean_expression_constant variable_infos =
+    for_all_in_parsed_boolean_expression (is_constant variable_infos)
+
+(* Check if a parsed arithmetic expression is constant *)
 let is_parsed_arithmetic_expression_constant variable_infos =
     for_all_in_parsed_discrete_arithmetic_expression (is_constant variable_infos)
 
-(* Check that all variables in a parsed global expression are effectivily be defined *)
+(* Check that all variables in a parsed global expression are effectively be defined *)
 let all_variables_defined_in_parsed_global_expression variable_infos expr =
     for_all_in_parsed_global_expression (is_variable_defined variable_infos) expr
 
-(* Check that all variables in a parsed parsed boolean expression are effectivily be defined *)
-let all_variables_defined_in_parsed_boolean_expression variable_infos expr =
-    for_all_in_parsed_boolean_expression (is_variable_defined variable_infos) expr
+(* Check that all variables in a parsed boolean expression are effectively be defined *)
+let all_variables_defined_in_parsed_boolean_expression variable_infos callback expr =
+    for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos callback) expr
 
-(* Check that all variables in a linear expression are effectivily be defined *)
+(* Check that all variables in a parsed discrete boolean expression are effectively be defined *)
+let all_variables_defined_in_parsed_discrete_boolean_expression variable_infos callback expr =
+    for_all_in_parsed_discrete_boolean_expression (is_variable_defined_with_callback variable_infos callback) expr
+
+(* Check that all variables in a linear expression are effectively be defined *)
 let all_variables_defined_in_linear_expression variable_infos callback_fail expr =
     for_all_in_parsed_linear_expression (is_variable_defined_in_linear_expression variable_infos callback_fail) expr
 
-(* Check that all variables in a linear constraint are effectivily be defined *)
+(* Check that all variables in a linear constraint are effectively be defined *)
 let all_variables_defined_in_linear_constraint variable_infos callback_fail expr =
     for_all_in_parsed_linear_constraint
         (is_variable_defined_in_linear_expression variable_infos callback_fail)
         (function | Leaf_false_linear_constraint | Leaf_true_linear_constraint -> true) expr
 
-(* Check that all variables in a non-linear constraint are effectivily be defined *)
+(* Check that all variables in a non-linear constraint are effectively be defined *)
 let all_variables_defined_in_nonlinear_constraint variable_infos callback expr =
     for_all_in_parsed_nonlinear_constraint
         (is_variable_defined_with_callback variable_infos callback)
-        (function | Leaf_false_nonlinear_constraint | Leaf_true_nonlinear_constraint -> true) expr
+        expr
 
-(* Check that all variables in a non-linear convex predicate (non-linear constraint list) are effectivily be defined *)
+(* Check that all variables in a non-linear convex predicate (non-linear constraint list) are effectively be defined *)
 let all_variables_defined_in_nonlinear_convex_predicate variable_infos callback non_linear_convex_predicate =
   List.fold_left
     (fun all_defined nonlinear_constraint ->
@@ -693,6 +740,13 @@ let all_variables_defined_in_nonlinear_convex_predicate variable_infos callback 
     )
     true
     non_linear_convex_predicate
+
+(* Check that all variables in a state predicate are effectively be defined *)
+let all_variable_in_parsed_state_predicate parsing_infos variable_infos undefined_variable_callback_opt undefined_automaton_callback_opt undefined_loc_callback_opt expr =
+    for_all_in_parsed_state_predicate
+        (is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_infos undefined_automaton_callback_opt undefined_loc_callback_opt)
+        (is_variable_defined_with_callback variable_infos undefined_variable_callback_opt)
+        expr
 
 (* Check that there is only discrete variables in a parsed global expression *)
 let only_discrete_in_parsed_global_expression variable_infos expr =
@@ -717,6 +771,7 @@ let add_variable_of_linear_expression variables_used_ref = function
         (* Add the variable name to the set and update the reference *)
         variables_used_ref := StringSet.add variable_name !variables_used_ref
 
+(* Gather all variable names used in a discrete boolean expression *)
 let add_variable_of_discrete_boolean_expression variables_used_ref = function
     | Leaf_constant _ -> ()
     | Leaf_variable variable_name ->
@@ -746,10 +801,7 @@ let get_variables_in_linear_constraint_with_accumulator variables_used_ref =
         (function | Leaf_true_linear_constraint | Leaf_false_linear_constraint -> ())
 
 (* Gather all variable names used in a non-linear constraint in a given accumulator *)
-let get_variables_in_nonlinear_constraint_with_accumulator variables_used_ref =
-    iterate_parsed_nonlinear_constraint
-        (add_variable_of_discrete_boolean_expression variables_used_ref)
-        (function | Leaf_true_nonlinear_constraint | Leaf_false_nonlinear_constraint -> ())
+let get_variables_in_nonlinear_constraint_with_accumulator = get_variables_in_parsed_discrete_boolean_expression_with_accumulator
 
 (* Gather all variable names used in an update in a given accumulator *)
 let get_variables_in_parsed_update_with_accumulator variables_used_ref =
@@ -805,6 +857,110 @@ let is_variable_access_is_a_variable_name = function
     | Variable_name _ -> true
     | Variable_access _ -> false
 
+
+(* - --- - -- - *)
+
+
+(*------------------------------------------------------------*)
+(* Try to convert a non-linear expression to a linear *)
+(* If it's not possible (due to non-linear expression involving clocks or parameters *)
+(* we raise an InvalidExpression exception *)
+(*------------------------------------------------------------*)
+
+
+
+(* Try to convert parsed discrete term to a linear term *)
+(* If it's not possible, we raise an InvalidExpression exception *)
+let rec try_convert_linear_term_of_parsed_discrete_term = function
+    (* TODO benjamin reduction should be made before *)
+    | Parsed_DT_mul (term, factor) ->
+        (* Check consistency of multiplication, if it keep constant we can convert to a linear term *)
+        let linear_term, linear_factor =
+        try_convert_linear_term_of_parsed_discrete_term term,
+        try_convert_linear_term_of_parsed_discrete_factor factor
+        in
+        (match linear_term, linear_factor with
+            (* Constant multiplied by constant, it's ok*)
+            | Constant l_const_value, Constant r_const_value ->
+                let value = (NumConst.mul l_const_value r_const_value) in
+                Constant value
+            (* Constant multiplied by a variable (commutative), it's ok *)
+            | Variable (var_value, variable_name), Constant const_value
+            | Constant const_value, Variable (var_value, variable_name) ->
+                let value = NumConst.mul var_value const_value in
+                Variable (value, variable_name)
+            (* Other cases are non-linears, so it's impossible to make the conversion, we raise an exception *)
+            | _ ->
+                raise (InvalidExpression ("A non-linear arithmetic expression involve clock(s) / parameter(s)"))
+        )
+    | Parsed_DT_div (term, factor) ->
+        (* Check consistency of division, if it keep constants we can convert to a linear term *)
+        let linear_term, linear_factor =
+        try_convert_linear_term_of_parsed_discrete_term term,
+        try_convert_linear_term_of_parsed_discrete_factor factor
+        in
+        (match linear_term, linear_factor with
+            (* Constant divided by constant, it's ok*)
+            | Constant l_const_value, Constant r_const_value ->
+                let value = NumConst.div l_const_value r_const_value in
+                Constant value
+            (* Other cases are non-linear, so it's impossible to make the conversion, we raise an exception *)
+            | _ ->
+                raise (InvalidExpression ("A non-linear arithmetic expression involve clock(s) / parameter(s)"))
+        )
+    (* Try to convert factor *)
+    | Parsed_DT_factor parsed_discrete_factor -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
+
+(* Try to convert parsed discrete arithmetic expression (non-linear expression) to a linear expression *)
+(* If it's not possible, we raise an InvalidExpression exception *)
+and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = function
+    | Parsed_DAE_plus (expr, term) -> Linear_plus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
+    | Parsed_DAE_minus (expr, term) -> Linear_minus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
+    | Parsed_DAE_term term -> Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
+
+(* Try to convert parsed discrete factor to a linear term *)
+(* If it's not possible, we raise an InvalidExpression exception *)
+and try_convert_linear_term_of_parsed_discrete_factor = function
+        | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name)
+        | Parsed_DF_constant value -> Constant (DiscreteValue.to_numconst_value value)
+        | Parsed_DF_unary_min parsed_discrete_factor ->
+            (* Check for unary min, negate variable and constant *)
+            (match parsed_discrete_factor with
+                | Parsed_DF_variable variable_name -> Variable(NumConst.minus_one, variable_name)
+                | Parsed_DF_constant value ->
+                    let numconst_value = DiscreteValue.to_numconst_value value in
+                    Constant (NumConst.neg numconst_value)
+                | _ -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
+            )
+
+        (* Nested expression used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
+        | Parsed_DF_expression expr ->
+            raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
+
+        | _ as factor ->
+            raise (InvalidExpression ("Use of \"" ^ label_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
+
+let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
+    | Parsed_arithmetic_expression _ ->
+        raise (InvalidExpression "An expression that involve clock(s) / parameter(s) contains a boolean variable")
+    | Parsed_expression (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr) ->
+        Parsed_linear_constraint (
+            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression l_expr,
+            relop,
+            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression r_expr
+        )
+    | Parsed_expression (l_expr, relop, r_expr) ->
+        raise (InvalidExpression "Use of non arithmetic comparison is forbidden in an expression that involve clock(s) / parameter(s)")
+    (* Expression in used ! So it's impossible to make the conversion, we raise an exception*)
+    | Parsed_expression_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
+    | Parsed_boolean_expression _ -> raise (InvalidExpression "A non-convex predicate involve clock(s) / parameter(s)")
+    | Parsed_Not _ -> raise (InvalidExpression "A not expression involve clock(s) / parameter(s)")
+
+let linear_constraint_of_nonlinear_constraint = try_convert_linear_expression_of_parsed_discrete_boolean_expression
+
+
+
+
 (* Extract variable infos from useful_parsing_model_information *)
 let variable_infos_of_parsed_model (parsed_model : useful_parsing_model_information) =
     {
@@ -814,3 +970,5 @@ let variable_infos_of_parsed_model (parsed_model : useful_parsing_model_informat
         type_of_variables = parsed_model.type_of_variables;
         removed_variable_names = parsed_model.removed_variable_names;
     }
+
+

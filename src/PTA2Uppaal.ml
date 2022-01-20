@@ -61,25 +61,27 @@ let scaling_factor = 200
 
 (* Customized string of discrete number type *)
 let string_of_var_type_discrete_number = function
-    | DiscreteValue.Var_type_discrete_unknown_number
-    | DiscreteValue.Var_type_discrete_rational -> "int"
-    | DiscreteValue.Var_type_discrete_int -> "int"
+    | DiscreteType.Var_type_discrete_unknown_number
+    | DiscreteType.Var_type_discrete_rational -> "int"
+    | DiscreteType.Var_type_discrete_int -> "int"
 
 (* Customized string of discrete var type *)
 let rec string_of_var_type_discrete = function
-    | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
-    | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_binary_word length ->
+    | DiscreteType.Var_type_discrete_number x -> string_of_var_type_discrete_number x
+    | DiscreteType.Var_type_discrete_bool -> "bool"
+    | DiscreteType.Var_type_discrete_binary_word length ->
         let warning_in_comment = if length > 31 then ", WARNING: length > 31 can lead to overflow !" else "" in
         let comment = "/* binary(" ^ string_of_int length ^ ")" ^ warning_in_comment ^ " */" in
         "int " ^ comment
-    | DiscreteValue.Var_type_discrete_array (discrete_type, length) -> string_of_var_type_discrete discrete_type
+    | DiscreteType.Var_type_discrete_array (inner_type, _)
+    | DiscreteType.Var_type_discrete_list inner_type ->
+        string_of_var_type_discrete inner_type
 
 (* Customized string of var_type *)
 let string_of_var_type = function
-	| DiscreteValue.Var_type_clock -> "clock"
-	| DiscreteValue.Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
-	| DiscreteValue.Var_type_parameter -> "parameter"
+	| DiscreteType.Var_type_clock -> "clock"
+	| DiscreteType.Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
+	| DiscreteType.Var_type_parameter -> "parameter"
 
 (* Get the UPPAAL string representation of a value according to it's IMITATOR type *)
 (* For example a literal array is translated from `[1,2,..,n]` to `{1,2,..,n}` *)
@@ -99,17 +101,21 @@ let rec string_of_value = function
     | DiscreteValue.Array_value a ->
         let string_array = Array.map (fun x -> string_of_value x) a in
         "{" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "}"
+    | DiscreteValue.List_value l ->
+        let string_list = List.map (fun x -> string_of_value x) l in
+        "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
+
 
 (* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
 (* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
 let rec string_of_discrete_name_from_var_type discrete_name = function
-    | DiscreteValue.Var_type_discrete discrete_type -> string_of_discrete_name_from_var_type_discrete discrete_name discrete_type
+    | DiscreteType.Var_type_discrete discrete_type -> string_of_discrete_name_from_var_type_discrete discrete_name discrete_type
     | _ -> discrete_name
 
 (* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
 (* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
 and string_of_discrete_name_from_var_type_discrete discrete_name = function
-    | DiscreteValue.Var_type_discrete_array (inner_type, length) ->
+    | DiscreteType.Var_type_discrete_array (inner_type, length) ->
         string_of_discrete_name_from_var_type_discrete discrete_name inner_type
         ^ "["
         ^ string_of_int length

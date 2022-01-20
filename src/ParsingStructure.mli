@@ -37,6 +37,7 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 
 (* Specific type of number *)
 type var_type_discrete_number =
+    (* TODO benjamin CLEAN rename to Var_type_discrete_rat *)
     | Var_type_discrete_rational
     | Var_type_discrete_int
 
@@ -46,27 +47,34 @@ type var_type_discrete =
     | Var_type_discrete_bool
     | Var_type_discrete_binary_word of int
     | Var_type_discrete_array of var_type_discrete * int
+    | Var_type_discrete_list of var_type_discrete
 
 (* Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
-	| Var_type_constant
 	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
 
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
-type global_expression =
+(* TODO benjamin CLEAN rename to parsed_global_expression *)
+type parsed_global_expression =
     | Parsed_global_expression of parsed_boolean_expression
 
 (****************************************************************)
 (** Boolean expressions *)
 (****************************************************************)
+and parsed_boolean_expression =
+    (* TODO benjamin Group And and Or in another type for don't repeat yourself in pattern matching *)
+	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
+	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
+	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
 
 and parsed_discrete_boolean_expression =
     | Parsed_arithmetic_expression of parsed_discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	(* TODO benjamin rename to Parsed_comparison *)
 	| Parsed_expression of parsed_discrete_boolean_expression * parsed_relop * parsed_discrete_boolean_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
@@ -75,21 +83,17 @@ and parsed_discrete_boolean_expression =
     (** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
 	| Parsed_Not of parsed_boolean_expression (** Negation *)
 
-
-and parsed_boolean_expression =
-	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
-	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
-	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
-
 (****************************************************************)
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
 and parsed_discrete_arithmetic_expression =
+    (* TODO benjamin Group plus and minus in another type for don't repeat yourself in pattern matching *)
 	| Parsed_DAE_plus of parsed_discrete_arithmetic_expression * parsed_discrete_term
 	| Parsed_DAE_minus of parsed_discrete_arithmetic_expression * parsed_discrete_term
 	| Parsed_DAE_term of parsed_discrete_term
 
 and parsed_discrete_term =
+    (* TODO benjamin Group mul and div in another type for don't repeat yourself in pattern matching *)
 	| Parsed_DT_mul of parsed_discrete_term * parsed_discrete_factor
 	| Parsed_DT_div of parsed_discrete_term * parsed_discrete_factor
 	| Parsed_DT_factor of parsed_discrete_factor
@@ -98,9 +102,13 @@ and parsed_discrete_factor =
 	| Parsed_DF_variable of variable_name
 	| Parsed_DF_constant of DiscreteValue.discrete_value
 	| Parsed_DF_array of parsed_boolean_expression array
+	| Parsed_DF_list of parsed_boolean_expression list
     | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min of parsed_discrete_factor
+	| Parsed_function_call of parsed_discrete_factor (* name *) * parsed_boolean_expression list (* arguments *)
+
+	(*
 	(* Functions *)
 	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
 	| Parsed_pow_function of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
@@ -111,9 +119,12 @@ and parsed_discrete_factor =
     | Parsed_bin_log_function of parsed_bin_log_function_type * parsed_discrete_factor * parsed_discrete_factor
 	| Parsed_log_not of parsed_discrete_factor
 
-	| Parsed_array_concat of parsed_discrete_factor * parsed_discrete_factor
-(*    | Parsed_user_function of string (* name *) * list (global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
+	| Parsed_array_append of parsed_discrete_factor * parsed_discrete_factor
+	| Parsed_list_cons of parsed_boolean_expression * parsed_discrete_factor
+    *)
+(*    | Parsed_user_function of string (* name *) * list (parsed_global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
 
+(*
 and parsed_shift_function_type =
     | Parsed_shift_left
     | Parsed_shift_right
@@ -124,9 +135,17 @@ and parsed_bin_log_function_type =
     | Parsed_log_and
     | Parsed_log_or
     | Parsed_log_xor
+*)
+
+
+
+
+
+
+
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
-type variable_declaration = var_type * (variable_name * global_expression option) list
+type variable_declaration = var_type * (variable_name * parsed_global_expression option) list
 type variable_declarations = variable_declaration list
 
 (****************************************************************)
@@ -152,9 +171,7 @@ type linear_constraint =
 	| Parsed_linear_constraint of linear_expression * parsed_relop * linear_expression
 
 (** Non-linear expressions *)
-(* TODO benjamin CLEAN remove Variant type : nonlinear_constraint = parsed_discrete_boolean_expression *)
-type nonlinear_constraint =
-    | Parsed_nonlinear_constraint of parsed_discrete_boolean_expression
+type nonlinear_constraint = parsed_discrete_boolean_expression
 
 type convex_predicate = nonlinear_constraint list
 
@@ -188,7 +205,7 @@ and variable_access =
     | Variable_name of variable_name
     | Variable_access of variable_access * parsed_discrete_arithmetic_expression
 (** basic updating *)
-and normal_update = variable_access * global_expression
+and normal_update = variable_access * parsed_global_expression
 (** conditional updating *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 
@@ -233,7 +250,7 @@ type parsed_automaton = automaton_name * sync_name list * parsed_location list
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
 	| Parsed_linear_predicate of linear_constraint
-	| Parsed_discrete_predicate of string * global_expression
+	| Parsed_discrete_predicate of string * parsed_global_expression
 
 type init_definition = parsed_init_state_predicate list
 
@@ -469,6 +486,7 @@ type parsed_property = {
 (** Useful data structure to avoid multiple parameters in functions *)
 (************************************************************)
 (************************************************************)
+type constants_table = (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t
 
 type useful_parsing_model_information = {
 	(* The locations for each automaton: automaton_index -> location_index -> location_name *)
@@ -476,7 +494,7 @@ type useful_parsing_model_information = {
 	array_of_location_names				: location_name array array;
 	automata							: Automaton.automaton_index list;
 	automata_names						: (Automaton.automaton_index -> automaton_name);
-	constants							: (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t;
+	constants							: constants_table;
 	discrete							: Automaton.variable_index list;
 	index_of_actions					: (Automaton.action_name , Automaton.action_index) Hashtbl.t;
 	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
@@ -486,16 +504,16 @@ type useful_parsing_model_information = {
 	nb_parameters						: int;
 	parameter_names						: variable_name list;
 	removed_action_names				: Automaton.action_name list;
-	type_of_variables					: Automaton.variable_index -> DiscreteValue.var_type;
+	type_of_variables					: Automaton.variable_index -> DiscreteType.var_type;
 	variable_names						: variable_name list;
 	variables							: variable_name array;
 	removed_variable_names				: variable_name list;
 }
 
 type variable_infos = {
-	constants							: (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t;
+	constants							: constants_table;
     variable_names						: variable_name list;
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
-	type_of_variables					: Automaton.variable_index -> DiscreteValue.var_type;
+	type_of_variables					: Automaton.variable_index -> DiscreteType.var_type;
 	removed_variable_names				: variable_name list;
 }

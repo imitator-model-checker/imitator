@@ -39,6 +39,7 @@ type global_expression =
     | Bool_expression of boolean_expression
     | Binary_word_expression of binary_word_expression
     | Array_expression of array_expression
+    | List_expression of list_expression
 
 and discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
@@ -48,23 +49,25 @@ and discrete_arithmetic_expression =
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
 and rational_arithmetic_expression =
-	| DAE_plus of rational_arithmetic_expression * rational_term
-	| DAE_minus of rational_arithmetic_expression * rational_term
-	| DAE_term of rational_term
+	| Rational_plus of rational_arithmetic_expression * rational_term
+	| Rational_minus of rational_arithmetic_expression * rational_term
+	| Rational_term of rational_term
 
 and rational_term =
-	| DT_mul of rational_term * rational_factor
-	| DT_div of rational_term * rational_factor
-	| DT_factor of rational_factor
+	| Rational_mul of rational_term * rational_factor
+	| Rational_div of rational_term * rational_factor
+	| Rational_factor of rational_factor
 
 and rational_factor =
-	| DF_variable of Automaton.variable_index
-	| DF_constant of NumConst.t
-    | Rational_array_access of array_expression * int_arithmetic_expression
-	| DF_expression of rational_arithmetic_expression
-	| DF_rational_of_int of int_arithmetic_expression
-	| DF_unary_min of rational_factor
-	| DF_pow of rational_arithmetic_expression * int_arithmetic_expression
+	| Rational_variable of Automaton.variable_index
+	| Rational_constant of NumConst.t
+    | Rational_access of expression_access_type * int_arithmetic_expression
+	| Rational_expression of rational_arithmetic_expression
+	| Rational_unary_min of rational_factor
+	| Rational_of_int of int_arithmetic_expression
+	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
+	| Rational_list_hd of list_expression
+(*	| Rational_function_call of string * global_expression list*)
 
 (************************************************************)
 (** Int arithmetic expressions for discrete variables *)
@@ -85,9 +88,13 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
+    (* TODO benjamin here decline array_expression to int_array_expression *)
+    | Int_access of expression_access_type * int_arithmetic_expression
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
-    (* TODO benjamin IMPORTANT here decline array_expression to int_array_expression *)
-    | Int_array_access of array_expression * int_arithmetic_expression
+    | Int_list_hd of list_expression
+    | Array_length of array_expression
+    | List_length of list_expression
+(*    | Int_function_call of string * global_expression list*)
 
 (************************************************************)
 (************************************************************)
@@ -106,10 +113,13 @@ and boolean_expression =
 
 and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	(* TODO benjamin create another type regrouping all comparisons *)
+    (* TODO benjamin look for Expression because even if it was type checked before it's structure can potentially compare different type *)
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
     | Boolean_comparison of discrete_boolean_expression * relop * discrete_boolean_expression
     | Binary_comparison of binary_word_expression * relop * binary_word_expression
     | Array_comparison of array_expression * relop * array_expression
+    | List_comparison of list_expression * relop * list_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
@@ -117,12 +127,17 @@ and discrete_boolean_expression =
 	(** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
 	| Not_bool of boolean_expression (** Negation *)
 	(** discrete variable in boolean expression *)
-	| DB_variable of Automaton.variable_index
+	| Bool_variable of Automaton.variable_index
 	(** discrete constant in boolean expression *)
-	| DB_constant of bool
+	| Bool_constant of bool
 	(** access to a boolean array **)
 	(* TODO benjamin IMPORTANT here decline array_expression to bool_array_expression *)
-    | Bool_array_access of array_expression * int_arithmetic_expression
+    | Bool_access of expression_access_type * int_arithmetic_expression
+    (* Add here some function on array *)
+    | Bool_list_hd of list_expression
+    | List_mem of global_expression * list_expression
+    | Array_mem of global_expression * array_expression
+(*    | Bool_function_call of string * global_expression list*)
 
 (************************************************************)
 (************************************************************)
@@ -143,15 +158,37 @@ and binary_word_expression =
     | Logical_not of binary_word_expression * int
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
-    | Binary_word_array_access of array_expression * int_arithmetic_expression * int
+    | Binary_word_access of expression_access_type * int_arithmetic_expression * int
+    | Binary_word_list_hd of list_expression
+(*    | Binary_word_function_call of string * global_expression list*)
 
+(** Array expression **)
 and array_expression =
     | Literal_array of global_expression array
     | Array_constant of DiscreteValue.discrete_value array
     | Array_variable of Automaton.variable_index
-    | Array_array_access of array_expression * int_arithmetic_expression
-    (* Add here some function on array *)
+    | Array_access of expression_access_type * int_arithmetic_expression
+    (* Add here some functions on array *)
     | Array_concat of array_expression * array_expression
+    | Array_list_hd of list_expression
+(*    | Array_function_call of string * global_expression list*)
+
+(** List expression **)
+and list_expression =
+    | Literal_list of global_expression list
+    | List_constant of DiscreteValue.discrete_value list
+    | List_variable of Automaton.variable_index
+    | List_access of expression_access_type * int_arithmetic_expression
+    (* Add here some functions on list *)
+    | List_cons of global_expression * list_expression
+    | List_list_hd of list_expression
+    | List_list_tl of list_expression
+    | List_rev of list_expression
+(*    | List_function_call of string * global_expression list*)
+
+and expression_access_type =
+    | Expression_array_access of array_expression
+    | Expression_list_access of list_expression
 
 type discrete_variable_access =
     | Discrete_variable_index of Automaton.discrete_index
@@ -162,10 +199,12 @@ val is_linear_discrete_boolean_expression : discrete_boolean_expression -> bool
 (* String *)
 
 (* Constructors strings *)
+val label_of_bool_factor : discrete_boolean_expression -> string
 val label_of_rational_factor : rational_factor -> string
 val label_of_int_factor : int_factor -> string
 val label_of_binary_word_expression : binary_word_expression -> string
 val label_of_array_expression : array_expression -> string
+val label_of_list_expression : list_expression -> string
 
 (* String representation of boolean according to customized string *)
 val customized_string_of_bool_value : Constants.customized_boolean_string -> bool -> string
@@ -191,5 +230,7 @@ val string_of_discrete_boolean_expression : (Automaton.variable_index -> string)
 
 val customized_string_of_array_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> array_expression -> string
 val string_of_array_expression : (Automaton.variable_index -> string) -> array_expression -> string
+
+val string_of_list_expression : (Automaton.variable_index -> string) -> list_expression -> string
 
 val string_of_discrete_variable_access : (Automaton.variable_index -> string) -> discrete_variable_access -> string

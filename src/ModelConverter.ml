@@ -27,6 +27,7 @@ open ImitatorUtilities
 open Options
 open Automaton
 open DiscreteExpressions
+open DiscreteExpressionEvaluator
 open AbstractModel
 open ParsingStructure
 open AbstractProperty
@@ -38,13 +39,12 @@ open CustomModules
 (** Exceptions *)
 (************************************************************)
 (************************************************************)
-(* For constraint conversion *)
-exception False_exception
+
 
 (* For detecting strongly deterministic PTAs *)
 exception Not_strongly_deterministic
 
-exception InvalidModel
+
 
 exception InvalidProperty
 
@@ -54,43 +54,40 @@ exception InvalidProperty
 (************************************************************)
 (************************************************************)
 
+(************************************************************)
+(************************************************************)
+(** Type conversions *)
+(************************************************************)
+(************************************************************)
 
 
-(************************************************************)
-(************************************************************)
-(** Checking and converting discrete arithmetic expressions *)
-(************************************************************)
-(************************************************************)
 
-(************************************************************)
-(** Getting variables *)
-(************************************************************)
-
+(* Convert var type number from parsing structure to abstract model *)
 let convert_var_type_discrete_number = function
-    | ParsingStructure.Var_type_discrete_rational -> DiscreteValue.Var_type_discrete_rational
-    | ParsingStructure.Var_type_discrete_int -> DiscreteValue.Var_type_discrete_int
+    | ParsingStructure.Var_type_discrete_rational -> DiscreteType.Var_type_discrete_rational
+    | ParsingStructure.Var_type_discrete_int -> DiscreteType.Var_type_discrete_int
 
 (* Convert discrete var type from parsing structure to abstract model *)
 let rec convert_var_type_discrete = function
-    | ParsingStructure.Var_type_discrete_number x -> DiscreteValue.Var_type_discrete_number (convert_var_type_discrete_number x)
-    | ParsingStructure.Var_type_discrete_bool -> DiscreteValue.Var_type_discrete_bool
-    | ParsingStructure.Var_type_discrete_binary_word l -> DiscreteValue.Var_type_discrete_binary_word l
-    | ParsingStructure.Var_type_discrete_array (t, l) -> DiscreteValue.Var_type_discrete_array (convert_var_type_discrete t, l)
+    | ParsingStructure.Var_type_discrete_number x -> DiscreteType.Var_type_discrete_number (convert_var_type_discrete_number x)
+    | ParsingStructure.Var_type_discrete_bool -> DiscreteType.Var_type_discrete_bool
+    | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteType.Var_type_discrete_binary_word length
+    | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteType.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
+    | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteType.Var_type_discrete_list (convert_var_type_discrete inner_type)
 
 (* Convert var type from parsing structure to abstract model *)
 let convert_var_type = function
-    | ParsingStructure.Var_type_clock -> DiscreteValue.Var_type_clock
-    | ParsingStructure.Var_type_constant -> DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
-    | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteValue.Var_type_discrete (convert_var_type_discrete var_type_discrete)
-    | ParsingStructure.Var_type_parameter -> DiscreteValue.Var_type_parameter
+    | ParsingStructure.Var_type_clock -> DiscreteType.Var_type_clock
+    | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteType.Var_type_discrete (convert_var_type_discrete var_type_discrete)
+    | ParsingStructure.Var_type_parameter -> DiscreteType.Var_type_parameter
 
-
+(* Get rational value or print error message (for linear expression that doesn't support other type than rational) *)
 let numconst_value_or_fail = function
     | DiscreteValue.Number_value x
     | DiscreteValue.Rational_value x -> x
     | x ->
         let str_value = DiscreteValue.string_of_value x in
-        let str_type = DiscreteValue.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value x) in
+        let str_type = DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value x) in
         let error_msg =
             "Linear expressions only support rational literals and constants, value "
             ^ str_value
@@ -100,597 +97,13 @@ let numconst_value_or_fail = function
         in
         raise (InvalidExpression  error_msg)
 
+(************************************************************)
+(** Getting variables *)
+(************************************************************)
+
 let is_variable_or_constant_declared index_of_variables constants variable_name =
     Hashtbl.mem index_of_variables variable_name || Hashtbl.mem constants variable_name
 
-(************************************************************)
-(** Converting discrete arithmetic expressions *)
-(************************************************************)
-
-(* Variable kind type represent a variable or a constant kind *)
-type variable_kind =
-    | Variable_kind of discrete_index
-    | Constant_kind of DiscreteValue.discrete_value
-
-(* Know if variable with a given name is a variable or a constant *)
-let variable_kind_of_variable_name variable_infos variable_name =
-
-    (* First check whether this is a constant *)
-    if Hashtbl.mem variable_infos.constants variable_name then (
-        let value = Hashtbl.find variable_infos.constants variable_name in
-        Constant_kind value
-    )
-    (* Otherwise: a variable *)
-    else
-        Variable_kind (Hashtbl.find variable_infos.index_of_variables variable_name)
-
-(** Convert a Boolean operator to its abstract model *)
-let convert_parsed_relop = function
-	| PARSED_OP_L	-> OP_L
-	| PARSED_OP_LEQ	-> OP_LEQ
-	| PARSED_OP_EQ	-> OP_EQ
-	| PARSED_OP_NEQ	-> OP_NEQ
-	| PARSED_OP_GEQ	-> OP_GEQ
-	| PARSED_OP_G 	-> OP_G
-
-(* Convert parsed_discrete_arithmetic_expression *)
-let rec convert_parsed_discrete_arithmetic_expression_with_model variable_infos =
-    convert_parsed_discrete_arithmetic_expression variable_infos
-
-(* Convert a parsed global expression to an abstract model expression *)
-and convert_parsed_global_expression variable_infos = function
-    | Parsed_global_expression expr as global_expr ->
-        (* TYPE CHECK *)
-        let discrete_type = TypeChecker.discrete_type_of_expression variable_infos global_expr in
-
-        match discrete_type with
-        | DiscreteValue.Var_type_discrete_bool ->
-            bool_expression_of_parsed_expression variable_infos expr
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
-            rational_expression_of_parsed_expression variable_infos expr
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
-            int_expression_of_parsed_expression variable_infos expr
-        | DiscreteValue.Var_type_discrete_binary_word _ ->
-            Binary_word_expression (binary_word_expression_of_parsed_boolean_expression variable_infos expr)
-        | DiscreteValue.Var_type_discrete_array (discrete_type, length) ->
-            Array_expression (array_expression_of_parsed_boolean_expression variable_infos expr)
-        (* Should never happen *)
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
-            raise (InternalError "An expression still contains unknown literal number after type checking")
-
-(* Get typed rational expression of global parsed expression *)
-(* Extract arithmetic expression from parsed_discrete_boolean_expression *)
-and rational_expression_of_parsed_expression variable_infos (* expr *) =
-
-    let rec rational_expression_of_parsed_expression = function
-        | Parsed_Discrete_boolean_expression expr -> rational_expression_of_parsed_discrete_boolean_expression expr
-        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-    and rational_expression_of_parsed_discrete_boolean_expression = function
-        | Parsed_arithmetic_expression expr ->
-            Arithmetic_expression (Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression variable_infos expr))
-        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-    in
-    rational_expression_of_parsed_expression (* expr *)
-
-(* Get typed int expression of global parsed expression *)
-(* Extract arithmetic expression from parsed_discrete_boolean_expression *)
-and int_expression_of_parsed_expression variable_infos (* expr *) =
-
-    let rec int_expression_of_parsed_expression = function
-        | Parsed_Discrete_boolean_expression expr -> int_expression_of_parsed_discrete_boolean_expression expr
-        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-    and int_expression_of_parsed_discrete_boolean_expression = function
-        | Parsed_arithmetic_expression expr ->
-            Arithmetic_expression (Int_arithmetic_expression (convert_parsed_int_arithmetic_expression variable_infos expr))
-        | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-    in
-    int_expression_of_parsed_expression
-(* Get typed bool expression of global parsed expression *)
-(* discrete type is the inner type of the boolean expression, for example : *)
-(* if x + 1 > 0 then x else y with x : int, give a Bool_expression (expr, Var_type_discrete_int) *)
-and bool_expression_of_parsed_expression variable_infos expr =
-     Bool_expression (convert_bool_expr variable_infos expr)
-
-(** Convert a boolean expression in its abstract model *)
-and convert_bool_expr variable_infos = function
-	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr variable_infos e1), (convert_bool_expr variable_infos e2))
-	| Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr variable_infos e1), (convert_bool_expr variable_infos e2))
-	| Parsed_Discrete_boolean_expression parsed_discrete_boolean_expression ->
-	    (* TODO benjamin IMPORTANT check for true or false in order to return True_bool / False_bool *)
-		Discrete_boolean_expression (convert_discrete_bool_expr variable_infos parsed_discrete_boolean_expression)
-
-and convert_discrete_bool_expr variable_infos = function
-    | Parsed_arithmetic_expression expr ->
-        (* Search boolean variables, constants in DF_variable, DF_constant *)
-        search_variable_of_discrete_arithmetic_expression variable_infos expr
-
-    | Parsed_expression (l_expr, relop, r_expr) ->
-        let t = TypeChecker.discrete_type_of_parsed_discrete_boolean_expression variable_infos l_expr in
-
-        (match t with
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
-            Expression (
-                (arithmetic_expression_of_parsed_discrete_boolean_expression variable_infos l_expr),
-                (convert_parsed_relop relop),
-                (arithmetic_expression_of_parsed_discrete_boolean_expression variable_infos r_expr)
-            )
-        | DiscreteValue.Var_type_discrete_bool ->
-            Boolean_comparison (
-                convert_discrete_bool_expr variable_infos l_expr,
-                convert_parsed_relop relop,
-                convert_discrete_bool_expr variable_infos r_expr
-            )
-        | DiscreteValue.Var_type_discrete_binary_word l ->
-            Binary_comparison (
-                binary_word_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
-                convert_parsed_relop relop,
-                binary_word_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
-            )
-        | DiscreteValue.Var_type_discrete_array _ ->
-            Array_comparison (
-                array_expression_of_parsed_discrete_boolean_expression variable_infos l_expr,
-                convert_parsed_relop relop,
-                array_expression_of_parsed_discrete_boolean_expression variable_infos r_expr
-            )
-        | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
-            raise (InvalidModel) (* should never happen, if type checking failed before *)
-        )
-	| Parsed_expression_in (expr1, expr2, expr3) -> Expression_in (
-		(convert_parsed_discrete_arithmetic_expression variable_infos expr1),
-		(convert_parsed_discrete_arithmetic_expression variable_infos expr2),
-		(convert_parsed_discrete_arithmetic_expression variable_infos expr3)
-		)
-    | Parsed_boolean_expression parsed_boolean_expression ->
-        Boolean_expression (convert_bool_expr variable_infos parsed_boolean_expression)
-	| Parsed_Not e ->
-	    Not_bool (convert_bool_expr variable_infos e)
-
-(* Search of boolean variables / constants in parsed discrete arithmetic expression *)
-and search_variable_of_discrete_arithmetic_expression variable_infos expr =
-
-    let rec search_variable_of_discrete_arithmetic_expression_rec = function
-        | Parsed_DAE_plus _
-        | Parsed_DAE_minus _ ->
-            raise (InternalError (
-                "Search of boolean variable in arithmetic expression, something failed.
-                Maybe an arithmetic expression was resolved as boolean expression before"
-            ))
-        | Parsed_DAE_term term -> search_variable_of_discrete_term term
-
-    and search_variable_of_discrete_term = function
-        | Parsed_DT_mul _
-        | Parsed_DT_div _ ->
-            raise (InternalError (
-                "Search of boolean variable in arithmetic expression, something failed.
-                Maybe an arithmetic expression was resolved as boolean expression before"
-            ))
-        | Parsed_DT_factor factor -> search_variable_of_discrete_factor factor
-
-    and search_variable_of_discrete_factor = function
-        | Parsed_DF_expression expr -> search_variable_of_discrete_arithmetic_expression_rec expr
-        | Parsed_DF_unary_min _ ->
-            raise (InternalError (
-                "Search of boolean variable in arithmetic expression, something failed.
-                Maybe an arithmetic expression was resolved as boolean expression before"
-            ))
-        | Parsed_DF_variable variable_name ->
-            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
-            (match variable_kind with
-            | Constant_kind value -> DB_constant (DiscreteValue.bool_value value)
-            | Variable_kind discrete_index -> DB_variable discrete_index
-            )
-        | Parsed_DF_constant var_value ->
-            let bool_value = DiscreteValue.bool_value var_value in
-            DB_constant bool_value
-        | Parsed_DF_access (factor, index_expr) ->
-            Bool_array_access (
-                array_expression_of_parsed_factor variable_infos factor,
-                convert_parsed_int_arithmetic_expression variable_infos index_expr
-            )
-        | Parsed_DF_array expr_array ->
-            raise (InternalError (
-                "Search of boolean variable in an array expression, something failed.
-                Maybe an arithmetic expression was resolved as an array expression before"
-            ))
-        | Parsed_rational_of_int_function _
-        | Parsed_pow_function _
-        | Parsed_shift_function _
-        | Parsed_bin_log_function _
-        | Parsed_log_not _
-        | Parsed_array_concat _ ->
-            raise (InternalError (
-                "Search of boolean variable in binary word expression, something failed.
-                Maybe an arithmetic expression was resolved as binary expression before"
-            ))
-    in
-    search_variable_of_discrete_arithmetic_expression_rec expr
-
-
-
-and arithmetic_expression_of_parsed_discrete_boolean_expression variable_infos = function
-    | Parsed_arithmetic_expression expr -> convert_parsed_discrete_arithmetic_expression variable_infos expr
-    | _ -> raise (InternalError "Unable to create an arithmetic expression from another constructor of `discrete_boolean_expression` than `Parsed_arithmetic_expression`")
-
-(* Convert a parsed discrete arithmetic expression *)
-(* to a rational arithmetic expression or an int arithmetic expression *)
-(* according to the type of the parsed discrete arithmetic expression *)
-and convert_parsed_discrete_arithmetic_expression variable_infos expr =
-
-    (* Get the deduced type of the parsed arithmetic expression *)
-    let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_arithmetic_expression variable_infos expr in
-
-    match discrete_type with
-    | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational ->
-        Rational_arithmetic_expression (convert_parsed_rational_arithmetic_expression variable_infos expr)
-    | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_int ->
-        Int_arithmetic_expression (convert_parsed_int_arithmetic_expression variable_infos expr)
-
-    (* Other cases mean that type checking has failed *)
-    | DiscreteValue.Var_type_discrete_bool
-    | DiscreteValue.Var_type_discrete_binary_word _
-    | DiscreteValue.Var_type_discrete_array _ as t ->
-        raise (InternalError ("An arithmetic expression was deduced as " ^ DiscreteValue.string_of_var_type_discrete t ^ " expression, maybe type checking has failed before"))
-    | DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_unknown_number ->
-        raise (InternalError "An arithmetic expression still contains unknown literal numbers after type checking, maybe type checking has failed before")
-
-(* Convert a parsed discrete arithmetic expression to a rational arithmetic expression *)
-and convert_parsed_rational_arithmetic_expression variable_infos (* expr *) =
-    let rec convert_parsed_rational_arithmetic_expression_rec = function
-        | Parsed_DAE_plus (expr , term) ->
-            DAE_plus (
-                (convert_parsed_rational_arithmetic_expression_rec expr),
-                (convert_parsed_rational_term term)
-            )
-        | Parsed_DAE_minus (expr , term) ->
-            DAE_minus (
-                (convert_parsed_rational_arithmetic_expression_rec expr),
-                (convert_parsed_rational_term term)
-            )
-        | Parsed_DAE_term term ->
-            DAE_term (convert_parsed_rational_term term)
-
-    and convert_parsed_rational_term = function
-        | Parsed_DT_mul (term , factor) ->
-            DT_mul (
-                (convert_parsed_rational_term term),
-                (convert_parsed_rational_factor factor)
-            )
-        | Parsed_DT_div (term, factor) ->
-            DT_div (
-                (convert_parsed_rational_term term) ,
-                (convert_parsed_rational_factor factor)
-            )
-        | Parsed_DT_factor factor ->
-            DT_factor (convert_parsed_rational_factor factor)
-
-    and convert_parsed_rational_factor = function
-        | Parsed_DF_variable variable_name ->
-            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
-            (match variable_kind with
-            | Constant_kind value -> DF_constant (DiscreteValue.to_numconst_value value)
-            | Variable_kind discrete_index -> DF_variable discrete_index
-            )
-
-        | Parsed_DF_access (factor, index_expr) ->
-            Rational_array_access (
-                array_expression_of_parsed_factor variable_infos factor,
-                convert_parsed_int_arithmetic_expression variable_infos index_expr
-            )
-
-        | Parsed_DF_constant var_value -> DF_constant (DiscreteValue.to_numconst_value var_value)
-        | Parsed_DF_expression expr -> DF_expression (convert_parsed_rational_arithmetic_expression_rec expr)
-        | Parsed_rational_of_int_function expr -> DF_rational_of_int (convert_parsed_int_arithmetic_expression variable_infos expr)
-        | Parsed_pow_function (expr, exp) -> DF_pow (convert_parsed_rational_arithmetic_expression_rec expr, convert_parsed_int_arithmetic_expression variable_infos exp)
-        | Parsed_DF_unary_min factor -> DF_unary_min (convert_parsed_rational_factor factor)
-        (* Should never happen, because it was checked by type checker before *)
-        | Parsed_DF_array _
-        | Parsed_shift_function _
-        | Parsed_bin_log_function _
-        | Parsed_log_not _
-        | Parsed_array_concat _ as factor ->
-            raise (InternalError (
-                "There is a call to \""
-                ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
-                ^ "\" in an rational expression, although it was checked before by type checking. Maybe something fail in type checking"
-            ))
-    in
-    convert_parsed_rational_arithmetic_expression_rec
-
-(* Convert a parsed discrete arithmetic expression to an int arithmetic expression *)
-and convert_parsed_int_arithmetic_expression variable_infos (* expr *) =
-    let rec convert_parsed_int_arithmetic_expression_rec = function
-        | Parsed_DAE_plus (expr , term) ->
-            Int_plus (
-                (convert_parsed_int_arithmetic_expression_rec expr),
-                (convert_parsed_int_term term)
-            )
-        | Parsed_DAE_minus (expr , term) ->
-            Int_minus (
-                (convert_parsed_int_arithmetic_expression_rec expr),
-                (convert_parsed_int_term term)
-            )
-        | Parsed_DAE_term term ->
-            Int_term (convert_parsed_int_term term)
-
-    and convert_parsed_int_term = function
-        | Parsed_DT_mul (term , factor) ->
-            Int_mul (
-                (convert_parsed_int_term term),
-                (convert_parsed_int_factor factor)
-            )
-        | Parsed_DT_div (term, factor) as div ->
-
-            ImitatorUtilities.print_message Verbose_low (
-                "Non-integer division of type int may happen in the following expression `"
-                ^ ParsingStructureUtilities.string_of_parsed_term variable_infos div
-                ^ "`: this may lead to a truncated integer (rounded down), with a potentially invalid result. This will be checked at runtime, and a warning will be triggered if this happens."
-            );
-
-            Int_div (
-                (convert_parsed_int_term term) ,
-                (convert_parsed_int_factor factor)
-            )
-        | Parsed_DT_factor factor ->
-            Int_factor (convert_parsed_int_factor factor)
-
-    and convert_parsed_int_factor = function
-        | Parsed_DF_variable variable_name ->
-
-            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
-            (match variable_kind with
-            | Constant_kind value -> Int_constant (DiscreteValue.int_value value)
-            | Variable_kind discrete_index -> Int_variable discrete_index
-            )
-
-        | Parsed_DF_constant var_value -> Int_constant (DiscreteValue.int_value var_value)
-        | Parsed_DF_expression expr -> Int_expression (convert_parsed_int_arithmetic_expression_rec expr)
-        | Parsed_pow_function (expr, exp) -> Int_pow (convert_parsed_int_arithmetic_expression_rec expr, convert_parsed_int_arithmetic_expression_rec exp)
-
-        | Parsed_DF_unary_min factor -> Int_unary_min (convert_parsed_int_factor factor)
-
-        | Parsed_DF_access (factor, index_expr) ->
-            Int_array_access (
-                array_expression_of_parsed_factor variable_infos factor,
-                convert_parsed_int_arithmetic_expression_rec index_expr
-            )
-
-        (* Should never happen, because it was checked by type checker before *)
-        | Parsed_DF_array _
-        | Parsed_rational_of_int_function _
-        | Parsed_shift_function _
-        | Parsed_bin_log_function _
-        | Parsed_log_not _
-        | Parsed_array_concat _ as factor ->
-            raise (InternalError (
-                "There is a call to \""
-                ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
-                ^ "\" in an int expression, although it was checked before by type checking. Maybe something fail in type checking"
-            ))
-    in
-    convert_parsed_int_arithmetic_expression_rec
-
-
-(* Try to convert a parsed boolean expression to abstract binary word expression *)
-and binary_word_expression_of_parsed_boolean_expression variable_infos = function
-    (* A binary word can only be found in parsed factor *)
-    | Parsed_Discrete_boolean_expression expr ->
-        binary_word_expression_of_parsed_discrete_boolean_expression variable_infos expr
-    (* Other cases mean that type checking has failed before *)
-    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-(* Try to convert a parsed discrete boolean expression to abstract binary word expression *)
-and binary_word_expression_of_parsed_discrete_boolean_expression variable_infos = function
-    (* A binary word can only be found in parsed factor *)
-    | Parsed_arithmetic_expression expr ->
-        binary_word_expression_of_parsed_discrete_arithmetic_expression variable_infos expr
-    (* Other cases mean that type checking has failed before *)
-    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-(* Try to convert a parsed arithmetic expression to abstract binary word expression *)
-and binary_word_expression_of_parsed_discrete_arithmetic_expression variable_infos = function
-    (* A binary word can only be found in parsed factor *)
-    | Parsed_DAE_term term ->
-        binary_word_expression_of_parsed_term variable_infos term
-    (* Other cases mean that type checking has failed before *)
-    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-(* Try to convert a parsed term to abstract binary word expression *)
-and binary_word_expression_of_parsed_term variable_infos = function
-    (* A binary word can only be found in parsed factor *)
-    | Parsed_DT_factor factor ->
-        binary_word_expression_of_parsed_factor variable_infos factor
-    (* Other cases mean that type checking has failed before *)
-    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-(* Try to convert a parsed factor to abstract binary word expression *)
-and binary_word_expression_of_parsed_factor variable_infos factor =
-
-    let discrete_type = TypeChecker.discrete_type_of_parsed_discrete_factor variable_infos factor in
-    let binary_word_length =
-        match discrete_type with
-        | DiscreteValue.Var_type_discrete_binary_word length -> length
-        | _ -> raise (InternalError "Binary word expression hold another type than binary word, although it was type checked before.")
-    in
-
-    let binary_word_expression_of_parsed_factor_inner = function
-    | Parsed_DF_variable variable_name ->
-
-        let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
-        (match variable_kind with
-        | Constant_kind value -> Binary_word_constant (DiscreteValue.binary_word_value value)
-        | Variable_kind discrete_index -> Binary_word_variable (discrete_index, binary_word_length)
-        )
-
-    | Parsed_DF_constant value ->
-        let binary_word_value = DiscreteValue.binary_word_value value in
-        Binary_word_constant binary_word_value
-
-    | Parsed_DF_access (factor, index_expr) ->
-        Binary_word_array_access (
-            array_expression_of_parsed_factor variable_infos factor,
-            convert_parsed_int_arithmetic_expression variable_infos index_expr,
-            binary_word_length
-        )
-
-    | Parsed_shift_function (fun_type, factor, expr) ->
-        let binary_word_expr = binary_word_expression_of_parsed_factor variable_infos factor in
-        let int_expr = convert_parsed_int_arithmetic_expression variable_infos expr in
-
-        (match fun_type with
-        | Parsed_shift_left -> Logical_shift_left (binary_word_expr, int_expr, binary_word_length)
-        | Parsed_shift_right -> Logical_shift_right (binary_word_expr, int_expr, binary_word_length)
-        | Parsed_fill_left -> Logical_fill_left (binary_word_expr, int_expr, binary_word_length)
-        | Parsed_fill_right -> Logical_fill_right (binary_word_expr, int_expr, binary_word_length)
-        )
-    | Parsed_bin_log_function (fun_type, l_factor, r_factor) ->
-        let l_binary_word_expr = binary_word_expression_of_parsed_factor variable_infos l_factor in
-        let r_binary_word_expr = binary_word_expression_of_parsed_factor variable_infos r_factor in
-
-        (match fun_type with
-        | Parsed_log_and -> Logical_and (l_binary_word_expr, r_binary_word_expr, binary_word_length)
-        | Parsed_log_or -> Logical_or (l_binary_word_expr, r_binary_word_expr, binary_word_length)
-        | Parsed_log_xor -> Logical_xor (l_binary_word_expr, r_binary_word_expr, binary_word_length)
-        )
-    | Parsed_log_not factor ->
-        Logical_not (
-            binary_word_expression_of_parsed_factor variable_infos factor,
-            binary_word_length
-        )
-    | Parsed_DF_expression expression ->
-        binary_word_expression_of_parsed_discrete_arithmetic_expression variable_infos expression
-    | Parsed_DF_array _
-    | Parsed_DF_unary_min _
-    | Parsed_rational_of_int_function _
-    | Parsed_pow_function _
-    | Parsed_array_concat _ as factor ->
-        raise (InternalError (
-            "There is a call to \""
-            ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
-            ^ "\" in a binary expression, although it was checked before by type checking. Maybe something fail in type checking"
-        ))
-    in
-    binary_word_expression_of_parsed_factor_inner factor
-
-
-(* Try to convert a parsed boolean expression to abstract binary word expression *)
-and array_expression_of_parsed_boolean_expression variable_infos = function
-    (* A binary word can only be found in parsed factor *)
-    | Parsed_Discrete_boolean_expression expr ->
-        array_expression_of_parsed_discrete_boolean_expression variable_infos expr
-    (* Other cases mean that type checking has failed before *)
-    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-(* Try to convert a parsed discrete boolean expression to abstract binary word expression *)
-and array_expression_of_parsed_discrete_boolean_expression variable_infos = function
-    (* A binary word can only be found in parsed factor *)
-    | Parsed_arithmetic_expression expr ->
-        array_expression_of_parsed_discrete_arithmetic_expression variable_infos expr
-    (* Other cases mean that type checking has failed before *)
-    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-(* Try to convert a parsed arithmetic expression to abstract binary word expression *)
-and array_expression_of_parsed_discrete_arithmetic_expression variable_infos = function
-    (* A binary word can only be found in parsed factor *)
-    | Parsed_DAE_term term ->
-        array_expression_of_parsed_term variable_infos term
-    (* Other cases mean that type checking has failed before *)
-    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-(* Try to convert a parsed term to abstract binary word expression *)
-and array_expression_of_parsed_term variable_infos = function
-    (* A binary word can only be found in parsed factor *)
-    | Parsed_DT_factor factor ->
-        array_expression_of_parsed_factor variable_infos factor
-    (* Other cases mean that type checking has failed before *)
-    | _ -> raise (InvalidModel) (* can only happen if type checking fail *)
-
-(* Try to convert a parsed factor to abstract binary word expression *)
-and array_expression_of_parsed_factor variable_infos = function
-    | Parsed_DF_variable variable_name ->
-
-        let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
-        (match variable_kind with
-        | Constant_kind value -> Array_constant (DiscreteValue.array_value value)
-        | Variable_kind discrete_index -> Array_variable discrete_index
-        )
-
-    | Parsed_DF_array expr_array ->
-        Literal_array (Array.map (fun expr -> convert_parsed_global_expression variable_infos (Parsed_global_expression expr)) expr_array)
-
-    | Parsed_DF_access (factor, index_expr) ->
-        Array_array_access (
-            array_expression_of_parsed_factor variable_infos factor,
-            convert_parsed_int_arithmetic_expression variable_infos index_expr
-        )
-    | Parsed_array_concat (factor_0, factor_1) ->
-        Array_concat (
-            array_expression_of_parsed_factor variable_infos factor_0,
-            array_expression_of_parsed_factor variable_infos factor_1
-        )
-    | _ as factor ->
-        raise (InternalError (
-            "Use of \""
-            ^ ParsingStructureUtilities.string_of_parsed_factor variable_infos factor
-            ^ "\" in an array expression, although it was checked before by type checking. Maybe something fail in type checking"
-        ))
-
-
-(*------------------------------------------------------------*)
-(* Functions for property conversion *)
-(*------------------------------------------------------------*)
-
-(* Convert parsed_loc_predicate *)
-let convert_parsed_loc_predicate useful_parsing_model_information = function
-	| Parsed_loc_predicate_EQ (automaton_name, location_name) ->
-		let automaton_index = Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name in
-		Loc_predicate_EQ ( automaton_index , (Hashtbl.find useful_parsing_model_information.index_of_locations.(automaton_index) location_name))
-	| Parsed_loc_predicate_NEQ (automaton_name, location_name) ->
-		let automaton_index = Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name in
-		Loc_predicate_NEQ (automaton_index , (Hashtbl.find useful_parsing_model_information.index_of_locations.(automaton_index) location_name))
-
-
-(* Convert parsed_simple_predicate *)
-let convert_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_discrete_bool_expr (ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information) parsed_discrete_boolean_expression)
-	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
-	| Parsed_state_predicate_true -> State_predicate_true
-	| Parsed_state_predicate_false -> State_predicate_false
-	| Parsed_state_predicate_accepting -> State_predicate_accepting
-
-
-(* Convert parsed_state_predicate *)
-
-let rec convert_parsed_state_predicate_factor useful_parsing_model_information = function
-	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> State_predicate_factor_NOT (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
-	| Parsed_simple_predicate parsed_simple_predicate -> Simple_predicate (convert_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate)
-	| Parsed_state_predicate parsed_state_predicate -> State_predicate (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
-
-and convert_parsed_state_predicate_term useful_parsing_model_information = function
-	| Parsed_state_predicate_term_AND (parsed_state_predicate_term1, parsed_state_predicate_term2) ->
-		State_predicate_term_AND (
-			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term1
-			,
-			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term2
-		)
-	| Parsed_state_predicate_factor parsed_state_predicate_factor -> State_predicate_factor (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
-
-and convert_parsed_state_predicate useful_parsing_model_information = function
-	| Parsed_state_predicate_OR (parsed_state_predicate1, parsed_state_predicate2) ->
-		State_predicate_OR (
-			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate1
-			,
-			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2
-		)
-	| Parsed_state_predicate_term parsed_state_predicate_term -> State_predicate_term (convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term)
-
-(* Try to convert a state predicate after it was type checked *)
-let try_convert_parsed_state_predicate useful_parsing_model_information predicate =
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
-    let convert_predicate, _ = TypeChecker.check_parsed_state_predicate variable_infos predicate in
-    convert_parsed_state_predicate useful_parsing_model_information convert_predicate
 
 (************************************************************)
 (** Getting variables *)
@@ -792,6 +205,7 @@ let undeclared_variable_in_linear_constraint_message variable_name =
 let undeclared_variable_in_boolean_expression_message variable_name =
     print_error ("The variable `" ^ variable_name ^ "` used in a boolean expression was not declared.")
 
+
 (************************************************************)
 (** Converting linear constraints *)
 (************************************************************)
@@ -850,175 +264,6 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
   array_of_coef, !constant
 
 
-(*------------------------------------------------------------*)
-(* Convert an array of variable coef into a linear term *)
-(*------------------------------------------------------------*)
-let linear_term_of_array array_of_coef constant =
-  (* Create an empty list of members *)
-  let members = ref [] in
-  (* Iterate on the coef *)
-  Array.iteri (fun variable_index coef ->
-      if NumConst.neq coef NumConst.zero then (
-        (* Add the member *)
-        members := (coef, variable_index) :: !members;
-      );
-    ) array_of_coef;
-  (* Create the linear term *)
-  LinearConstraint.make_pxd_linear_term !members constant
-
-
-(*------------------------------------------------------------*)
-(* Direct conversion of a ParsingStructure.linear_expression into a Parsed_linear_constraint.linear_term *)
-(*------------------------------------------------------------*)
-let linear_term_of_linear_expression index_of_variables constants linear_expression =
-  let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
-  linear_term_of_array array_of_coef constant
-
-
-(*------------------------------------------------------------*)
-(* Perform the substraction of 2 NumConst array of same size *)
-(*------------------------------------------------------------*)
-let sub_array array1 array2 =
-  (* Create the result *)
-  let result = Array.make (Array.length array1) NumConst.zero in
-  (* Iterate on both arrays *)
-  for i = 0 to (Array.length array1) - 1 do
-    (* Perform array1 - array2 *)
-    result.(i) <- NumConst.sub array1.(i) array2.(i);
-  done;
-  (* Return the result *)
-  result
-
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.linear_constraint into a Constraint.linear_inequality *)
-(*------------------------------------------------------------*)
-let linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2) =
-  (* Get the array of variables and constant associated to the linear terms *)
-  let array1, constant1 = array_of_coef_of_linear_expression index_of_variables constants linexpr1 in
-  let array2, constant2 = array_of_coef_of_linear_expression index_of_variables constants linexpr2 in
-  (* Consider the operator *)
-  match relop with
-  (* a < b <=> b - a > 0 *)
-  | PARSED_OP_L ->
-    (* Create the array *)
-    let array12 = sub_array array2 array1 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant2 constant1 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
-  (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_g *)
-
-  (* a <= b <=> b - a >= 0 *)
-  | PARSED_OP_LEQ ->
-    (* Create the array *)
-    let array12 = sub_array array2 array1 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant2 constant1 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
-  (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_ge *)
-
-  (* a = b <=> b - a = 0 *)
-  | PARSED_OP_EQ ->
-    (* Create the array *)
-    let array12 = sub_array array2 array1 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant2 constant1 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
-
-  (* 	(Constraint.substract_linear_terms lt1 lt2), Constraint.Op_eq *)
-
-  (* a >= b <=> a - b >= 0 *)
-  | PARSED_OP_GEQ ->
-    (* Create the array *)
-    let array12 = sub_array array1 array2 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant1 constant2 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
-  (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_ge *)
-
-  (* a > b <=> a - b > 0 *)
-  | PARSED_OP_G ->
-    (* Create the array *)
-    let array12 = sub_array array1 array2 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant1 constant2 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
-  (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_g *)
-
-  | PARSED_OP_NEQ ->
-    raise (InternalError("Inequality <> not yet supported"))
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.convex_predicate into a Constraint.linear_constraint *)
-(*------------------------------------------------------------*)
-let linear_constraint_of_convex_predicate index_of_variables constants convex_predicate : LinearConstraint.pxd_linear_constraint =
-  try(
-    (* Compute a list of inequalities *)
-    let linear_inequalities = List.fold_left
-        (fun linear_inequalities linear_inequality ->
-           match linear_inequality with
-           | Parsed_true_constraint -> linear_inequalities
-           | Parsed_false_constraint -> raise False_exception
-           | Parsed_linear_constraint (linexpr1, relop, linexpr2) -> (linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2)) :: linear_inequalities
-        ) [] convex_predicate
-    in LinearConstraint.make_pxd_constraint linear_inequalities
-    (* Stop if any false constraint is found *)
-  ) with False_exception -> LinearConstraint.pxd_false_constraint ()
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.convex_predicate into a nonlinear_constraint *)
-(*------------------------------------------------------------*)
-let nonlinear_constraint_of_nonlinear_convex_predicate variable_infos convex_predicate : NonlinearConstraint.nonlinear_constraint =
-    try (
-
-
-        (* Compute a list of inequalities from convex_predicate list *)
-        let nonlinear_inequalities = List.fold_left
-        (fun nonlinear_inequalities nonlinear_inequality ->
-
-            (* TODO benjamin CHECKING IS MADE ON GUARD LEVEL, IF THERE IS ANY TYPE CHECKING ISSUE, WE SHOULD MOVE TYPE CHECKING HERE AND ON LINEAR EXPRESSION *)
-            (* Get typed non-linear constraint inequality *)
-(*            let uniform_typed_nonlinear_inequality, _ = TypeChecker.check_nonlinear_constraint variable_infos nonlinear_inequality in*)
-(*            match uniform_typed_nonlinear_inequality with*)
-
-            match nonlinear_inequality with
-            (* TODO benjamin REFACTOR, in ParsingStructureUtilities create a function that check if a nonlinear constraint is true or false *)
-            | Parsed_nonlinear_constraint (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v)))) when DiscreteValue.bool_value v = true -> nonlinear_inequalities
-            | Parsed_nonlinear_constraint (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v)))) when DiscreteValue.bool_value v = false -> raise False_exception
-            | Parsed_nonlinear_constraint nonlinear_constraint  ->
-                (* Convert non-linear constraint to abstract model *)
-                let convert_nonlinear_constraint = convert_discrete_bool_expr variable_infos nonlinear_constraint in
-                (* Add typed discrete boolean expression to inequality list *)
-                convert_nonlinear_constraint :: nonlinear_inequalities
-
-        ) [] convex_predicate
-        in
-
-
-
-        match nonlinear_inequalities with
-        | [] -> NonlinearConstraint.true_nonlinear_constraint
-        | _ -> NonlinearConstraint.Nonlinear_constraint nonlinear_inequalities
-        (* Stop if any false constraint is found *)
-    )
-    with False_exception -> NonlinearConstraint.false_nonlinear_constraint
-
-
 (************************************************************)
 (************************************************************)
 (** Checking and converting model *)
@@ -1049,8 +294,8 @@ let get_declared_variable_names variable_declarations =
     match var_type with
     | ParsingStructure.Var_type_clock ->
       (List.rev_append new_list clocks, discrete_rational, parameters, List.rev_append new_constants constants, unassigned_constants)
-    | ParsingStructure.Var_type_constant ->
-      (clocks, discrete_rational, parameters, List.rev_append new_constants constants, List.rev_append new_list unassigned_constants)
+(*    | ParsingStructure.Var_type_constant ->*)
+(*      (clocks, discrete_rational, parameters, List.rev_append new_constants constants, List.rev_append new_list unassigned_constants)*)
     | ParsingStructure.Var_type_discrete _ ->
       (clocks, List.rev_append new_list discrete_rational, parameters, List.rev_append new_constants constants, unassigned_constants)
     | ParsingStructure.Var_type_parameter ->
@@ -1322,17 +567,71 @@ let all_locations_different =
 (*------------------------------------------------------------*)
 let check_update variable_infos automaton_name update =
 
-(*    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in*)
-
     let check_update_normal (variable_access, global_expression) =
 
+        (* Function that check that variable kind of an update is not a constant *)
+        let check_variable_kind_of_update variable_name =
+
+            (* Get kind of variable (variable / constant) *)
+            let variable_kind = ParsingStructureUtilities.variable_kind_of_variable_name variable_infos variable_name in
+
+            (* Get variable type, if possible *)
+            match variable_kind with
+            | ParsingStructureUtilities.Variable_kind _ ->
+                ExpressionConverter.TypeChecker.get_type_of_variable_by_name_opt variable_infos variable_name
+
+            | ParsingStructureUtilities.Constant_kind _ ->
+                    print_error (
+                        "Trying to update a constant: `"
+                        ^ ParsingStructureUtilities.string_of_variable_access variable_infos variable_access
+                        ^ " := "
+                        ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression
+                        ^ "`"
+                    );
+                    raise InvalidModel
+        in
+
+        (* Function that check that variable type of an update is correct *)
+        let check_variable_type_of_update variable_name = function
+
+            (* Type clock: allow any linear term in updates: so just check that variables have been declared *)
+            | Some DiscreteType.Var_type_clock ->
+                print_message Verbose_total ("                A clock!");
+                true
+
+            (* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
+            | Some DiscreteType.Var_type_discrete var_type_discrete ->
+                let string_of_var_type = DiscreteType.string_of_var_type_discrete var_type_discrete in
+                print_message Verbose_total ("                A " ^ string_of_var_type ^ "!");
+
+                let is_only_discrete = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos global_expression in
+
+                if not is_only_discrete then (
+                    print_error ("The variable `" ^ variable_name ^ "` is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton `" ^ automaton_name ^ "`."); false
+                )
+                else (
+                    print_message Verbose_total ("                Check passed.");
+                    true
+                )
+
+            (* Case of a parameter: forbidden! *)
+            | Some DiscreteType.Var_type_parameter ->
+                print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
+
+            | None ->
+                print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); false
+        in
+
+        (* Function that check update on variable or variable access *)
         let rec check_variable_access = function
+            | Variable_access (variable_access, _) ->
+                check_variable_access variable_access
+
             | Variable_name variable_name ->
 
-                (* Check whether this variable is to be removed because unused elswhere than in resets *)
+                (* Check whether this variable is to be removed because unused elsewhere than in resets *)
                 let to_be_removed = List.mem variable_name variable_infos.removed_variable_names in
 
-                (* TODO benjamin REFACTOR conditional ugly ! *)
                 if to_be_removed then
                     true
                 else (
@@ -1340,61 +639,16 @@ let check_update variable_infos automaton_name update =
                     let all_variables_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
 
                     if not all_variables_defined then (
-                        (* TODO benjamin IMPROVE get variable name as before ! *)
+                        (* TODO benjamin IMPROVE get variable names as before ! *)
                         print_error ("A variable used in update \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression ^ "\" in automaton `" ^ automaton_name ^ "` was not declared.");
                         false
                     ) else (
-
-                        (* Get variable type, if possible *)
-                        let variable_type =
-                            if List.mem variable_name variable_infos.variable_names then (
-                                let index = Hashtbl.find variable_infos.index_of_variables variable_name in
-                                Some (variable_infos.type_of_variables index)
-                            ) else if Hashtbl.mem variable_infos.constants variable_name then (
-                                let value = Hashtbl.find variable_infos.constants variable_name in
-                                Some (DiscreteValue.var_type_of_value value)
-                            ) else (
-                                None
-                            )
-                        in
-
-
-
-                        match variable_type with
-                        (* Type clock: allow any linear term in updates: so just check that variables have been declared *)
-                        | Some DiscreteValue.Var_type_clock ->
-                            print_message Verbose_total ("                A clock!");
-                            (* TODO benjamin REFACTOR change to true, because it was checked before *)
-                            ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression
-
-                        (* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
-                        | Some DiscreteValue.Var_type_discrete var_type_discrete ->
-                            let string_of_var_type = DiscreteValue.string_of_var_type_discrete var_type_discrete in
-                            print_message Verbose_total ("                A " ^ string_of_var_type ^ "!");
-
-                            (* TODO benjamin REFACTOR change to true, because it was checked before *)
-                            let all_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
-
-                            if not all_defined then
-                                false
-                            else (
-                                let result = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos global_expression in
-                                if not result then (
-                                    print_error ("The variable `" ^ variable_name ^ "` is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton `" ^ automaton_name ^ "`."); false
-                                )
-                                else (
-                                    print_message Verbose_total ("                Check passed.");
-                                    true
-                                )
-                            )
-                        (* Case of a parameter: forbidden! *)
-                        | Some DiscreteValue.Var_type_parameter ->
-                            print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
-                        | None ->
-                            print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); false
+                        (* Check variable kind of update is not a constant *)
+                        let variable_type_opt = check_variable_kind_of_update variable_name in
+                        (* Check type of updated variable *)
+                        check_variable_type_of_update variable_name variable_type_opt
                     )
                 )
-            | Variable_access (variable_access, _) -> check_variable_access variable_access
         in
         check_variable_access variable_access
 
@@ -1418,8 +672,8 @@ let check_update variable_infos automaton_name update =
             in
             match variable_type with
             | None -> print_error ("Variable or constant \"" ^ variable_name ^ "\" in the condition of a conditional update is not declared."); false
-            | Some DiscreteValue.Var_type_clock -> print_error ("The variable " ^ variable_name ^ " is a clock and cannot be used in the condition of a conditional update."); false
-            | Some DiscreteValue.Var_type_parameter -> print_error ("The variable " ^ variable_name ^ " is a parameter and cannot be used in the condition of a conditional update."); false
+            | Some DiscreteType.Var_type_clock -> print_error ("The variable " ^ variable_name ^ " is a clock and cannot be used in the condition of a conditional update."); false
+            | Some DiscreteType.Var_type_parameter -> print_error ("The variable " ^ variable_name ^ " is a parameter and cannot be used in the condition of a conditional update."); false
             | _ -> print_message Verbose_total ("                Check passed."); true
 
     in
@@ -1495,7 +749,7 @@ let check_stopwatches index_of_variables type_of_variables location_name stopwat
 		(* Get variable name *)
 		try (
 			let variable_index = Hashtbl.find index_of_variables stopwatch in
-			if type_of_variables variable_index <> DiscreteValue.Var_type_clock then (
+			if type_of_variables variable_index <> DiscreteType.Var_type_clock then (
 			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined as a clock.");
 			ok := false;
 			);
@@ -1525,7 +779,7 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 			let variable_index = Hashtbl.find index_of_variables clock_name in
 
 			(* Check variable type *)
-			if type_of_variables variable_index <> DiscreteValue.Var_type_clock then (
+			if type_of_variables variable_index <> DiscreteType.Var_type_clock then (
 				print_error ("The variable `" ^ clock_name ^ "` used in a flow in location `" ^ location_name ^ "` is not defined as a clock.");
 				ok := false;
 			);
@@ -1800,7 +1054,7 @@ let partition_discrete_continuous variable_infos filtered_init_inequalities =
 			if (Hashtbl.mem variable_infos.index_of_variables variable_name) then (
 				let variable_index =  Hashtbl.find variable_infos.index_of_variables variable_name in
 				(* Keep if this is a discrete *)
-				DiscreteValue.is_discrete_type (variable_infos.type_of_variables variable_index)
+				DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
 			) else if (Hashtbl.mem variable_infos.constants variable_name) then
 			    false
             else (
@@ -1872,10 +1126,12 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
             false
         )
         else (
+
+
             (* Get the variable index *)
             let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
             (* TYPE CHECKING *)
-            let converted_expr = TypeChecker.check_discrete_init variable_infos variable_name expr in
+            let converted_expr = DiscreteExpressionConverter.convert_discrete_init variable_infos variable_name expr in
 
             (* Check if it was already declared *)
             if Hashtbl.mem init_values_for_discrete discrete_index then (
@@ -1887,20 +1143,22 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
                 false
             )
             (* Try to reduce expression to a value *)
-            else if not (ParsingStructureUtilities.is_parsed_global_expression_constant variable_infos converted_expr) then (
+            else if not (DiscreteExpressionEvaluator.is_global_expression_constant converted_expr) then (
+                (* TODO benjamin CLEAN REPLACE BY STRING OF DiscreteExpression *)
                 print_error (
                     "Init variable \""
                     ^ variable_name
                     ^ "\" with a non constant expression \""
-                    ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos converted_expr
+                    ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
                     ^ "\" is forbidden."
                 );
                 false
             ) else (
-                let value = ParsingStructureUtilities.try_reduce_parsed_global_expression variable_infos.constants converted_expr in
+                let value = DiscreteExpressionEvaluator.try_reduce_global_expression converted_expr in
                 Hashtbl.add init_values_for_discrete discrete_index value;
                 true
             )
+
         )
 
     | _ -> raise (InternalError ("Must have this form since it was checked before."))
@@ -2002,13 +1260,13 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
         let non_rational_variable_names = StringSet.filter (fun variable_name ->
             if Hashtbl.mem index_of_variables variable_name then (
                 let variable_index = Hashtbl.find index_of_variables variable_name in
-                let variable_type = DiscreteValue.discrete_type_of_var_type (type_of_variables variable_index) in
-                not (DiscreteValue.is_discrete_type_rational_type variable_type)
+                let variable_type = DiscreteType.discrete_type_of_var_type (type_of_variables variable_index) in
+                not (DiscreteType.is_discrete_type_rational_type variable_type)
             )
             else if Hashtbl.mem constants variable_name then (
                 let value =  Hashtbl.find constants variable_name in
                 let variable_type = DiscreteValue.discrete_type_of_value value in
-                not (DiscreteValue.is_discrete_type_rational_type variable_type)
+                not (DiscreteType.is_discrete_type_rational_type variable_type)
             )
             else (
                 (* Otherwise problem ! *)
@@ -2025,7 +1283,7 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
                 ^ "` used in init constraint \""
                 ^ ParsingStructureUtilities.string_of_parsed_init_state_predicate variable_infos lp
                 ^ "\" should be "
-                ^ DiscreteValue.string_of_var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
+                ^ DiscreteType.string_of_var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational)
             );
             continuous_init_error := true;
         ) non_rational_variable_names
@@ -2046,171 +1304,6 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(* Try to convert a non-linear expression to a linear *)
-(* If it's not possible (due to non-linear expression involving clocks or parameters *)
-(* we raise an InvalidExpression exception *)
-(*------------------------------------------------------------*)
-
-
-
-(* Try to convert parsed discrete term to a linear term *)
-(* If it's not possible, we raise an InvalidExpression exception *)
-let rec try_convert_linear_term_of_parsed_discrete_term = function
-
-    | Parsed_DT_mul (term, factor) ->
-        (* Check consistency of multiplication, if it keep constant we can convert to a linear term *)
-        let linear_term, linear_factor =
-        try_convert_linear_term_of_parsed_discrete_term term,
-        try_convert_linear_term_of_parsed_discrete_factor factor
-        in
-        (match linear_term, linear_factor with
-            (* Constant multiplied by constant, it's ok*)
-            | Constant l_const_value, Constant r_const_value ->
-                let value = (NumConst.mul l_const_value r_const_value) in
-                Constant value
-            (* Constant multiplied by a variable (commutative), it's ok *)
-            | Variable (var_value, variable_name), Constant const_value
-            | Constant const_value, Variable (var_value, variable_name) ->
-                let value = (NumConst.mul var_value const_value) in
-                Variable (value, variable_name)
-            (* Other cases are non-linears, so it's impossible to make the conversion, we raise an exception *)
-            | _ -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
-        )
-    (* Division is non-linear, so it's impossible to make the conversion, we raise an exception*)
-    | Parsed_DT_div (_, _) -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
-    (* Try to convert factor *)
-    | Parsed_DT_factor parsed_discrete_factor -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
-
-(* Try to convert parsed discrete arithmetic expression (non-linear expression) to a linear expression *)
-(* If it's not possible, we raise an InvalidExpression exception *)
-and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = function
-    | Parsed_DAE_plus (expr, term) -> Linear_plus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
-    | Parsed_DAE_minus (expr, term) -> Linear_minus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
-    | Parsed_DAE_term term -> Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
-
-(* Try to convert parsed discrete factor to a linear term *)
-(* If it's not possible, we raise an InvalidExpression exception *)
-and try_convert_linear_term_of_parsed_discrete_factor = function
-        | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name)
-        | Parsed_DF_constant value -> Constant (numconst_value_or_fail value)
-        | Parsed_DF_unary_min parsed_discrete_factor ->
-            (* Check for unary min, negate variable and constant *)
-            (match parsed_discrete_factor with
-                | Parsed_DF_variable variable_name -> Variable(NumConst.minus_one, variable_name)
-                | Parsed_DF_constant value ->
-                    let numconst_value = numconst_value_or_fail value in
-                    Constant (NumConst.neg numconst_value)
-                | _ -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
-            )
-
-        (* Nested expression used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
-        | Parsed_DF_expression expr ->
-            raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
-
-        | Parsed_DF_array _
-        | Parsed_DF_access _
-        | Parsed_rational_of_int_function _
-        | Parsed_pow_function _
-        | Parsed_shift_function _
-        | Parsed_bin_log_function _
-        | Parsed_log_not _
-        | Parsed_array_concat _ as factor ->
-            raise (InvalidExpression ("Use of \"" ^ ParsingStructureUtilities.label_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
-
-let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
-    | Parsed_arithmetic_expression _ ->
-        raise (InvalidExpression "An expression that involve clock(s) / parameter(s) contains a boolean variable")
-    | Parsed_expression (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr) ->
-        Parsed_linear_constraint (
-            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression l_expr,
-            relop,
-            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression r_expr
-        )
-    | Parsed_expression (l_expr, relop, r_expr) ->
-        raise (InvalidExpression "Use of non arithmetic comparison is forbidden in an expression that involve clock(s) / parameter(s)")
-    (* Expression in used ! So it's impossible to make the conversion, we raise an exception*)
-    | Parsed_expression_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
-    | Parsed_boolean_expression _ -> raise (InvalidExpression "A non-convex predicate involve clock(s) / parameter(s)")
-    | Parsed_Not _ -> raise (InvalidExpression "A not expression involve clock(s) / parameter(s)")
-
-(* Convert nonlinear_constraint to linear_constraint if possible
-   and check bad use of non-linear expressions when converting *)
-let linear_constraint_of_nonlinear_constraint = function
-    | Parsed_nonlinear_constraint nonlinear_constraint ->
-        try_convert_linear_expression_of_parsed_discrete_boolean_expression nonlinear_constraint
-
-(* Split convex_predicate into two lists *)
-(* One only contain discrete expression to nonlinear_constraint *)
-(* One that doesn't only contain discrete expression to linear_constraint *)
-let split_convex_predicate_into_discrete_and_continuous variable_infos convex_predicate =
-  (* Compute a list of inequalities *)
-  let partitions = List.partition
-    (fun nonlinear_inequality ->
-       match nonlinear_inequality with
-       (* TODO benjamin REFACTOR, in ParsingStructureUtilities create a function that check if a nonlinear constraint is true or false *)
-       | Parsed_nonlinear_constraint (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v)))) when DiscreteValue.bool_value v = true -> true
-       | Parsed_nonlinear_constraint (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v)))) when DiscreteValue.bool_value v = true -> raise False_exception
-       | Parsed_nonlinear_constraint nonlinear_constraint -> ParsingStructureUtilities.only_discrete_in_nonlinear_expression variable_infos nonlinear_constraint
-    ) convex_predicate
-    in
-    (* Get discrete part as a nonlinear constraint but convert back continuous part to a linear constraint *)
-    let discrete_part, continuous_part = partitions in
-        discrete_part,
-        List.map (fun nonlinear_constraint -> linear_constraint_of_nonlinear_constraint nonlinear_constraint) continuous_part
-
-(*------------------------------------------------------------*)
-(* Convert a guard *)
-(*------------------------------------------------------------*)
-let convert_guard variable_infos guard_convex_predicate =
-  try (
-
-    (* Extract useful infos *)
-    let index_of_variables,
-        type_of_variables,
-        constants =
-        variable_infos.index_of_variables,
-        variable_infos.type_of_variables,
-        variable_infos.constants in
-
-
-
-    (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
-(*    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous variable_infos guard_convex_predicate in*)
-    (* TODO benjamin check here ? *)
-    let uniform_type_guards, _ = TypeChecker.check_guard variable_infos guard_convex_predicate in
-    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous variable_infos uniform_type_guards in
-
-    match discrete_guard_convex_predicate, continuous_guard_convex_predicate with
-    (* No inequalities: true *)
-    | [] , [] -> True_guard
-    (* Only discrete inequalities: discrete *)
-    | discrete_guard_convex_predicate , [] -> Discrete_guard (nonlinear_constraint_of_nonlinear_convex_predicate variable_infos discrete_guard_convex_predicate)
-    (* Only continuous inequalities: continuous *)
-    | [] , continuous_guard_convex_predicate -> Continuous_guard (linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate)
-    (* Otherwise: both *)
-    | discrete_guard_convex_predicate , continuous_guard_convex_predicate ->
-      (* Convert both parts *)
-      let discrete_guard = nonlinear_constraint_of_nonlinear_convex_predicate variable_infos discrete_guard_convex_predicate in
-      let continuous_guard = linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate in
-
-      (* TODO maybe it's possible to make this optimisation with non linear discrete guard ? *)
-      (*** NOTE: try to simplify a bit if possible (costly, but would save a lot of time later if checks are successful) ***)
-(*      let intersection = LinearConstraint.pxd_intersection_with_d continuous_guard discrete_guard in*)
-
-(*      if LinearConstraint.pxd_is_true intersection then True_guard*)
-(*      else if LinearConstraint.pxd_is_false intersection then False_guard*)
-(*      else*)
-        (* Else create mixed guard as planned *)
-        Discrete_continuous_guard
-        {
-          discrete_guard = discrete_guard;
-          continuous_guard = continuous_guard;
-        }
-    (* If some false construct found: false guard *)
-  ) with False_exception -> False_guard
-
-
-(*------------------------------------------------------------*)
 (* Create the hash table of constants ; check the validity on-the-fly *)
 (*------------------------------------------------------------*)
 let make_constants constants =
@@ -2218,7 +1311,7 @@ let make_constants constants =
   let constants_hashtable : (string, DiscreteValue.discrete_value) Hashtbl.t = Hashtbl.create (List.length constants) in
   (* Manage Boolean for checking errors *)
   let correct = ref true in
-  List.iter (fun (name, value) ->
+  List.iter (fun (name, value(*, discrete_type *)) ->
       if (Hashtbl.mem constants_hashtable name) then (
         let old_value = Hashtbl.find constants_hashtable name in
         (* If same: warning *)
@@ -2230,7 +1323,20 @@ let make_constants constants =
           correct := false;
         );
       )else(
+        (*
         (* Otherwise: add it *)
+        (* Make value of the same type as the type declaration of the constant *)
+        (* It was already type checked ! *)
+        let converted_value = DiscreteValue.convert_value_to_discrete_type value discrete_type in
+        ImitatorUtilities.print_message Verbose_standard (
+            "add constant "
+            ^ DiscreteType.string_of_var_type_discrete discrete_type
+            ^ " with value "
+            ^ DiscreteValue.string_of_value converted_value
+            ^ " of type "
+            ^ DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value converted_value)
+        );
+        *)
         Hashtbl.add constants_hashtable name value;
       );
     ) constants;
@@ -2288,7 +1394,7 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
 (* Get all the possible actions for every location of every automaton *)
 (*------------------------------------------------------------*)
 let make_automata (useful_parsing_model_information : useful_parsing_model_information) parsed_automata (with_observer_action : bool) =
-	let constants				= useful_parsing_model_information.constants in
+
 	let index_of_actions		= useful_parsing_model_information.index_of_actions in
 	let index_of_automata		= useful_parsing_model_information.index_of_automata in
 	let index_of_locations		= useful_parsing_model_information.index_of_locations in
@@ -2398,7 +1504,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				| Some cost ->
 					costs.(automaton_index).(location_index) <- Some (
 						LinearConstraint.cast_p_of_pxd_linear_term
-						(linear_term_of_linear_expression index_of_variables constants cost)
+						(ExpressionConverter.Convert.linear_term_of_linear_expression variable_infos cost)
 						true
 					);
 				| None -> ()
@@ -2424,7 +1530,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
 
 				(* Update the array of invariants *)
-				invariants.(automaton_index).(location_index) <- convert_guard variable_infos location.invariant;
+				invariants.(automaton_index).(location_index) <- DiscreteExpressionConverter.convert_guard variable_infos location.invariant;
 
 				(* Does the model has stopwatches? *)
 				if location.stopped <> [] then has_non_1rate_clocks := true;
@@ -2527,134 +1633,6 @@ let get_conditional_update_value = function
 
 
 
-(*** TODO (though really not critical): try to do some simplifications… ***)
-(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_information pdae =
-
-    let index_of_variables = useful_parsing_model_information.index_of_variables in
-    let constants = useful_parsing_model_information.constants in
-
-	(* Create an array of coef *)
-	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
-	(* Create a zero constant *)
-	let constant = ref NumConst.zero in
-
-	let rec update_coef_array_in_parsed_update_arithmetic_expression mult_factor = function
-		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		(* Update coefficients in the arithmetic expression *)
-		update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
-		(* Update coefficients in the term *)
-		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
-		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		(* Update coefficients in the arithmetic expression *)
-		update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
-		(* Update coefficients in the term: multiply by -1 for negation *)
-		update_coef_array_in_parsed_update_term (NumConst.neg mult_factor) parsed_update_term;
-		| Parsed_DAE_term parsed_update_term ->
-		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
-
-	and update_coef_array_in_parsed_update_term mult_factor = function
-		(* Multiplication is only allowed with a constant multiplier *)
-		| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
-		(* Valuate the term *)
-		let valued_term = ParsingStructureUtilities.try_reduce_parsed_term constants parsed_update_term in
-		let numconst_valued_term = DiscreteValue.numconst_value valued_term in
-		(* Update coefficients *)
-		update_coef_array_in_parsed_update_factor (NumConst.mul numconst_valued_term mult_factor) parsed_update_factor
-
-		| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
-		(* Valuate the discrete factor *)
-		let valued_factor = ParsingStructureUtilities.try_reduce_parsed_factor constants parsed_update_factor in
-		let numconst_valued_factor = DiscreteValue.numconst_value valued_factor in
-		(* Update coefficients *)
-		update_coef_array_in_parsed_update_term (NumConst.div mult_factor numconst_valued_factor) parsed_update_term
-
-		| Parsed_DT_factor parsed_update_factor ->
-		update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
-
-	and update_coef_array_in_parsed_update_factor mult_factor = function
-		| Parsed_DF_variable variable_name ->
-			(* Try to find the variable_index *)
-			if Hashtbl.mem index_of_variables variable_name then (
-				let variable_index = Hashtbl.find index_of_variables variable_name in
-				(* Update the array *)
-				array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (mult_factor);
-				(* Try to find a constant *)
-			) else (
-				if Hashtbl.mem constants variable_name then (
-				(* Retrieve the value of the global constant *)
-				let value = Hashtbl.find constants variable_name in
-				let numconst_value = numconst_value_or_fail value in
-				(* Update the constant *)
-				constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
-				) else (
-				raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'update_coef_array_in_parsed_update_factor' although this should have been checked before."))
-				)
-			)
-		| Parsed_DF_constant var_value ->
-            (* Update the constant *)
-            let numconst_value = numconst_value_or_fail var_value in
-            constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
-		| Parsed_DF_unary_min parsed_discrete_factor ->
-			update_coef_array_in_parsed_update_factor mult_factor parsed_discrete_factor
-		| Parsed_DF_expression parsed_update_arithmetic_expression
-		(* Treat Parsed_rational_of_int_function case, *)
-		(* even if it was checked before in try_convert_linear_term_of_parsed_discrete_factor *)
-		(* as a forbidden expression in linear expression *)
-		| Parsed_rational_of_int_function parsed_update_arithmetic_expression ->
-		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
-        (* Same comment for case above *)
-        | Parsed_pow_function (expr, exp_expr) ->
-		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor expr;
-		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor exp_expr
-        (* Same comment for case above *)
-        | Parsed_shift_function (_, factor, expr) ->
-		    update_coef_array_in_parsed_update_factor mult_factor factor;
-		    update_coef_array_in_parsed_update_arithmetic_expression mult_factor expr
-        | Parsed_log_not factor ->
-            update_coef_array_in_parsed_update_factor mult_factor factor
-        | Parsed_bin_log_function _
-        | Parsed_DF_array _
-        | Parsed_DF_access _
-        | Parsed_array_concat _ as factor ->
-            raise (InternalError ("Use of " ^ ParsingStructureUtilities.label_of_parsed_factor_constructor factor ^ " is forbidden in linear term, something failed before."))
-
-	in
-
-	(* Call the recursive function updating the coefficients *)
-	update_coef_array_in_parsed_update_arithmetic_expression NumConst.one pdae;
-
-	(* Create the linear term *)
-	linear_term_of_array array_of_coef !constant
-
-let linear_term_of_parsed_discrete_boolean_expression useful_parsing_model_information = function
-    | Parsed_arithmetic_expression expr -> linear_term_of_parsed_update_arithmetic_expression useful_parsing_model_information expr
-
-    | _ as expr ->
-        (* Should never happen because expression should was already type checked *)
-        raise (
-            InternalError (
-                "Impossible to convert boolean expression \""
-                ^ ParsingStructureUtilities.string_of_parsed_discrete_boolean_expression useful_parsing_model_information expr
-                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed"
-            )
-        )
-
-let linear_term_of_parsed_boolean_expression useful_parsing_model_information = function
-    | Parsed_Discrete_boolean_expression expr -> linear_term_of_parsed_discrete_boolean_expression useful_parsing_model_information expr
-
-    | _ as expr ->
-        (* Should never happen because expression should was already type checked *)
-        raise (
-            InternalError (
-                "Impossible to convert boolean expression \""
-                ^ ParsingStructureUtilities.string_of_parsed_boolean_expression useful_parsing_model_information expr
-                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed"
-            )
-        )
-
-let linear_term_of_global_expression useful_parsing_model_information = function
-    | Parsed_global_expression expr -> linear_term_of_parsed_boolean_expression useful_parsing_model_information expr
 
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filtered_updates removed_variable_names updates =
@@ -2673,34 +1651,17 @@ let filtered_updates removed_variable_names updates =
     ) [] updates
 
 
-(** Translate a parsed discrete update into its abstract model *)
-let to_abstract_discrete_update variable_infos (variable_access, parsed_update_expression) =
 
-    let rec to_abstract_variable_access = function
-        | Variable_name variable_name ->
-            let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-            Discrete_variable_index variable_index
-        | Variable_access (variable_access, index_expr) ->
-            Discrete_variable_access (
-                to_abstract_variable_access variable_access,
-                convert_parsed_int_arithmetic_expression variable_infos index_expr
-            )
-    in
-
-    (* Convert *)
-    let abstract_variable_access = to_abstract_variable_access variable_access in
-    let global_expression = convert_parsed_global_expression variable_infos parsed_update_expression in
-    (abstract_variable_access, global_expression)
 
 (** Translate a parsed clock update into its abstract model *)
 let to_abstract_clock_update variable_infos only_resets updates_list =
 
   (** Translate parsed clock update into the tuple clock_index, linear_term *)
-  let to_intermediate_abstract_clock_update (variable_access, parsed_update_expression) =
+  let to_intermediate_abstract_clock_update (variable_access, update_expr) =
     let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-    let linear_term = linear_term_of_global_expression variable_infos parsed_update_expression in
-    (variable_index, linear_term)
+    let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos variable_access update_expr in
+    (variable_index, converted_update)
   in
 
   let converted_clock_updates = List.map to_intermediate_abstract_clock_update updates_list in
@@ -2708,10 +1669,11 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
   (* Differentiate between different kinds of clock updates *)
   let clock_updates : clock_updates =
     (* Case 1: no update *)
-    if converted_clock_updates = [] then No_update
+    if converted_clock_updates = [] then
+        No_update
     else (
       (* Case 2: resets only *)
-      if !only_resets then (
+      if only_resets then (
         (* Keep only the clock ids, not the linear terms *)
         let clocks_to_reset, _ = List.split converted_clock_updates in
         Resets (List.rev clocks_to_reset)
@@ -2724,19 +1686,24 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
   (** abstract clock updates *)
   clock_updates
 
+(* Check if there is only resets in an update list *)
+let is_only_resets updates =
+    List.for_all (fun (_, update) ->
+        ParsingStructureUtilities.exists_in_parsed_global_expression (function
+            | Leaf_variable _ -> false
+            | Leaf_constant value -> DiscreteValue.is_zero value
+        ) update
+    ) updates
+
 (** Split normal updates into clock, discrete updates *)
-let split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates =
+let split_to_clock_discrete_updates variable_infos updates =
   (** Check if a normal update is a clock update *)
   let is_clock_update (variable_access, parsed_update_expression) =
 
     let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     (* Retrieve variable type *)
-    if type_of_variables (Hashtbl.find index_of_variables variable_name) = DiscreteValue.Var_type_clock then (
-      (* Update flag *)
-      if parsed_update_expression <> Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant DiscreteValue.rational_zero))))) then (
-        only_resets := false;
-      );
-      true
+    if variable_infos.type_of_variables (Hashtbl.find variable_infos.index_of_variables variable_name) = DiscreteType.Var_type_clock then (
+        true
     ) else
       false
   in
@@ -2745,32 +1712,21 @@ let split_to_clock_discrete_updates index_of_variables only_resets type_of_varia
 (** Translate a normal parsed update into its abstract model *)
 let convert_normal_updates variable_infos updates_list =
 
-    (* Extract values from model infos *)
-    let index_of_variables, type_of_variables, constants =
-        variable_infos.index_of_variables, variable_infos.type_of_variables,
-        variable_infos.constants in
-
-    (* TYPE CHECK / RESOLVE *)
-    let converted_updates_list = List.map (fun (variable_name, expr) ->
-        TypeChecker.check_update variable_infos variable_name expr
-    ) updates_list in
-
 	(* Flag to check if there are clock resets only to 0 *)
-	let only_resets = ref true in
+    let only_resets = is_only_resets updates_list in
 
-	(** split clock and discrete updates *)
-	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates index_of_variables only_resets type_of_variables converted_updates_list in
+	(** Split clocks and discrete updates *)
+	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates variable_infos updates_list in
 
-	(* Convert the discrete updates *)
-	let discrete_updates : discrete_update list = List.map (to_abstract_discrete_update variable_infos) parsed_discrete_updates in
-
-	(* Convert the clock updates *)
-	let converted_clock_updates : clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
+    (* Convert discrete udpates *)
+    let converted_discrete_updates = List.map (fun (variable_access, expr) -> DiscreteExpressionConverter.convert_update variable_infos variable_access expr) parsed_discrete_updates in
+    (* Convert continuous udpates *)
+    let converted_clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
 
 	(** update abstract model *)
 	{
 		clock = converted_clock_updates;
-		discrete = discrete_updates;
+		discrete = converted_discrete_updates;
 		conditional = [];
 	}
 
@@ -2788,12 +1744,11 @@ let convert_updates variable_infos updates : updates =
     let conditional_updates_values : conditional_update list = List.map (fun u ->
         let boolean_value, if_updates, else_updates = get_conditional_update_value u in
 
-        (* TYPE CHECK *)
-        let uniformly_typed_bool_expr, _ = TypeChecker.check_conditional variable_infos boolean_value in
+        let convert_boolean_expr = DiscreteExpressionConverter.convert_conditional variable_infos boolean_value in
 
-        let convert_boolean_expr = convert_bool_expr variable_infos uniformly_typed_bool_expr in
         let convert_if_updates = convert_normal_updates variable_infos if_updates in
         let convert_else_updates = convert_normal_updates variable_infos else_updates in
+
         (convert_boolean_expr, convert_if_updates, convert_else_updates)
     ) conditional_updates in
 
@@ -2858,7 +1813,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
           List.iter (fun (action_index, guard, updates, target_location_index) ->
 
               (* Convert the guard *)
-              let converted_guard = convert_guard variable_infos guard in
+              let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
 
               (* Filter the updates that should assign some variable name to be removed to any expression *)
               (* let filtered_updates = List.filter (fun (variable_name, (*linear_expression*)_) ->
@@ -2943,7 +1898,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 (*------------------------------------------------------------*)
 (* Create the initial state *)
 (*------------------------------------------------------------*)
-let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition =
+let make_initial_state variable_infos index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
 		| Parsed_loc_assignment _ -> true
@@ -2978,7 +1933,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 				if (Hashtbl.mem index_of_variables variable_name) then (
 				let variable_index =  Hashtbl.find index_of_variables variable_name in
 				(* Keep if this is a discrete *)
-				DiscreteValue.is_discrete_type (type_of_variables variable_index)
+				DiscreteType.is_discrete_type (type_of_variables variable_index)
 				) else (
 				(* Case constant *)
 				if (Hashtbl.mem constants variable_name) then false
@@ -3011,7 +1966,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_rational_numconst_pairs in
 
 		(* Create initial constraint (through parsing) *)
-		let initial_constraint = (linear_constraint_of_convex_predicate index_of_variables constants convex_predicate) in
+		let initial_constraint = (ExpressionConverter.Convert.linear_constraint_of_convex_predicate variable_infos convex_predicate) in
 
 		(* Intersects initial constraint with discretes *)
 		LinearConstraint.pxd_intersection_assign initial_constraint [discretes];
@@ -3542,90 +2497,21 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 *)
 
 (*------------------------------------------------------------*)
-(** Check a discrete Boolean expression *)
-(*------------------------------------------------------------*)
-
-(* TODO benjamin REFACTOR into ParsingStructureUtilities *)
-let is_variable_defined_in_property variable_infos = function
-    | Leaf_constant _ -> true
-    | Leaf_variable variable_name ->
-        if not (Hashtbl.mem variable_infos.index_of_variables variable_name) && not (Hashtbl.mem variable_infos.constants variable_name) then (
-            print_error ("Undefined variable name `" ^ variable_name ^ "` in the property");
-            false
-        )
-        else
-            true
-
-(*------------------------------------------------------------*)
 (** Check a state predicate *)
 (*------------------------------------------------------------*)
 
-(* TODO benjamin REFACTOR with ParsingStructureUtilities *)
-let check_parsed_loc_predicate useful_parsing_model_information = function
-	| Parsed_loc_predicate_EQ (automaton_name , location_name)
-	| Parsed_loc_predicate_NEQ (automaton_name , location_name)
-		->
-		(* Useful variables *)
-		let index_of_automata  = useful_parsing_model_information.index_of_automata  in
-		let index_of_locations : ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array = useful_parsing_model_information.index_of_locations in
-		
-		(* Find the automaton *)
-		if not (Hashtbl.mem index_of_automata automaton_name) then(
-			print_error ("Unknown automaton name `" ^ automaton_name ^ "` in the property.");
-			false
-		)else(
-			let automaton_index : Automaton.automaton_index = Hashtbl.find index_of_automata automaton_name in
-			(* Find the location *)
-			if not (Hashtbl.mem index_of_locations.(automaton_index) location_name) then(
-				print_error ("Unknown location name `" ^ location_name ^ "` in automaton `" ^ automaton_name ^ "` in the property.");
-				false
-			)else(
-				(* Both checks passed *)
-				true
-			)
-		)
-
-
-(* TODO benjamin REFACTOR with ParsingStructureUtilities *)
-let check_parsed_simple_predicate (useful_parsing_model_information : useful_parsing_model_information) = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression ->
-		ParsingStructureUtilities.for_all_in_parsed_discrete_boolean_expression (is_variable_defined_in_property (ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information)) parsed_discrete_boolean_expression
-	| Parsed_loc_predicate parsed_loc_predicate ->
-		check_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate
-	| Parsed_state_predicate_true | Parsed_state_predicate_false | Parsed_state_predicate_accepting ->
-		true
-
-(* TODO benjamin REFACTOR with ParsingStructureUtilities *)
-let rec check_parsed_state_predicate useful_parsing_model_information = function
-	| Parsed_state_predicate_OR (parsed_state_predicate_1 , parsed_state_predicate_2) ->
-		(* Check both even if one fails, so as to provide users with more errors at once *)
-		evaluate_and
-			(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_1)
-			(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_2)
-		
-	| Parsed_state_predicate_term parsed_state_predicate_term ->
-		check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term
-
-(* TODO benjamin REFACTOR with ParsingStructureUtilities *)
-and check_parsed_state_predicate_term useful_parsing_model_information = function
-	| Parsed_state_predicate_term_AND (parsed_state_predicate_term_1 , parsed_state_predicate_term_2) ->
-		(* Check both even if one fails, so as to provide users with more errors at once *)
-		evaluate_and
-			(check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term_1)
-			(check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term_2)
-	| Parsed_state_predicate_factor parsed_state_predicate_factor ->
-		check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
-
-(* TODO benjamin REFACTOR with ParsingStructureUtilities *)
-and check_parsed_state_predicate_factor useful_parsing_model_information = function
-	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor ->
-		check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
-	| Parsed_simple_predicate parsed_simple_predicate ->
-		check_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate
-	| Parsed_state_predicate parsed_state_predicate ->
-		check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-
-
+let check_parsed_state_predicate parsing_infos expr =
+    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model parsing_infos in
+    ParsingStructureUtilities.all_variable_in_parsed_state_predicate
+        parsing_infos
+        variable_infos
+        (* Undefined variable name callback, triggered if an undefined variable is found *)
+        (Some (fun variable_name -> print_error ("Undefined variable name `" ^ variable_name ^ "` in the property")))
+        (* Undefined automaton name callback, triggered if an undefined automaton is found *)
+        (Some (fun automaton_name -> print_error ("Unknown automaton name `" ^ automaton_name ^ "` in the property.")))
+        (* Undefined location name callback, triggered if an undefined location is found *)
+        (Some (fun automaton_name loc_name -> print_error ("Unknown location name `" ^ loc_name ^ "` in automaton `" ^ automaton_name ^ "` in the property.")))
+        expr
 
 (*------------------------------------------------------------*)
 (** Generic function checking whether a name is a valid parameter name *)
@@ -3637,7 +2523,7 @@ let check_parameter_name suffix_explanation_string variable_infos parameter_name
 		false
 	) else(
 		let parameter_index = Hashtbl.find variable_infos.index_of_variables parameter_name in
-		if not(variable_infos.type_of_variables parameter_index = DiscreteValue.Var_type_parameter) then(
+		if not(variable_infos.type_of_variables parameter_index = DiscreteType.Var_type_parameter) then(
 			print_error ("Variable " ^ parameter_name ^ " is not a parameter" ^ suffix_explanation_string);
 			false
 		)else true
@@ -4057,7 +2943,7 @@ type converted_observer_structure = {
 
 (* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
 let convert_property_option (useful_parsing_model_information : useful_parsing_model_information) (nb_actions : int) (observer_automaton_index_option : automaton_index option) (observer_nosync_index_option : action_index option) (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
-	let constants			= useful_parsing_model_information.constants in
+
 	let index_of_actions	= useful_parsing_model_information.index_of_actions in
 	let index_of_variables	= useful_parsing_model_information.index_of_variables in
 
@@ -4079,14 +2965,14 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		(* Reachability *)
 		| Parsed_EF parsed_state_predicate ->
 			(* Return a property and no observer *)
-			EF (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			EF (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
 			
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate ->
 			(* Return a property and no observer *)
-			AGnot (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			AGnot (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
 		
@@ -4098,7 +2984,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		(* Reachability with minimization of a parameter valuation *)
 		| Parsed_EFpmin (parsed_state_predicate , parameter_name) ->
 			EFpmin (
-				try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate
 				,
 				Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name
 			)
@@ -4108,7 +2994,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		(* Reachability with maximization of a parameter valuation *)
 		| Parsed_EFpmax (parsed_state_predicate , parameter_name) ->
 			EFpmax (
-				try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate
 				,
 				Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name
 			)
@@ -4117,7 +3003,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		
 		(* Reachability with minimal-time *)
 		| Parsed_EFtmin parsed_state_predicate ->
-			EFtmin (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			EFtmin (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
 		
@@ -4128,13 +3014,13 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate ->
-			Cycle_through (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			Cycle_through (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
 		
 		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 		| Parsed_Cycle_Through_generalized parsed_state_predicate_list ->
-			Cycle_through_generalized (List.map (try_convert_parsed_state_predicate useful_parsing_model_information) parsed_state_predicate_list)
+			Cycle_through_generalized (List.map (PropertyConverter.convert_state_predicate useful_parsing_model_information) parsed_state_predicate_list)
 			,
 			None
 
@@ -4169,7 +3055,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 
 		(* PRP *)
 		| Parsed_PRP (parsed_state_predicate , parsed_pval) ->
-			PRP (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_pval useful_parsing_model_information parsed_pval)
+			PRP (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_pval useful_parsing_model_information parsed_pval)
 			,
 			None
 
@@ -4198,7 +3084,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		
 		(** Cover the whole cartography using learning-based abstractions *)
 		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, step) ->
-			Learning_cartography ((try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step))
+			Learning_cartography ((PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step))
 			,
 			None
 		
@@ -4228,7 +3114,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 	
 		(* Parametric reachability preservation *)
 		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, step) ->
-			PRPC (try_convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step)
+			PRPC (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step)
 			,
 			None
 
@@ -4307,7 +3193,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			let action_index_of_action_name action_name = try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Action `" ^ action_name ^ "` not found in HashTable `index_of_actions` when defining function `action_index_of_action_name`, althoug this should have been checked before.")) in
 			
 			(* Create the function converting a ParsingStructure.parsed_duration into a LinearConstraint.p_linear_term *)
-			let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants parsed_duration) true in
+			let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (ExpressionConverter.Convert.linear_term_of_linear_expression variable_infos parsed_duration) true in
 			
 			(* Get the info from the observer pattern *)
 			let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, abstract_property =
@@ -4431,7 +3317,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         variable_names = [];
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];
-        type_of_variables = fun i -> DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational);
+        type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational);
     }
     in
 
@@ -4454,24 +3340,19 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
         (* TYPE CHECKING *)
         let constant = name, expr, var_type in
-        let converted_expr, _ = TypeChecker.check_constant_expression initialized_constants constant in
-        (* Try to get the value *)
-        let value = ParsingStructureUtilities.try_reduce_parsed_global_expression initialized_constants converted_expr in
-(*         Create evaluated constant tuple *)
-(*        let evaluated_constant = name, expr, value, var_type in*)
 
-(*        let name, value = TypeChecker.check_constant_declaration evaluated_constant in*)
+        let typed_expr(*, expr_type *) = DiscreteExpressionConverter.convert_discrete_constant initialized_constants constant in
+        let value = DiscreteExpressionEvaluator.try_reduce_global_expression typed_expr in
+        ImitatorUtilities.print_message Verbose_standard "";
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;
         (* Return *)
-        name, value
+        name, value(*, expr_type *)
     ) (List.rev constants) in
 
 
 
     (* TYPE CHECKING : CONSTANTS IN DECLARATION *)
-    (* Check type consistency between constant type and value *)
-(*    let constant_tuples = TypeChecker.check_constant_declarations evaluated_constants in*)
     let constant_tuples = evaluated_constants in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4756,9 +3637,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let first_discrete_index  = first_clock_index + nb_clocks in
 
 	(* An array `variable index -> AbstractModel.var_type` *)
-	let type_of_variables = Array.make nb_variables DiscreteValue.Var_type_parameter in
+	let type_of_variables = Array.make nb_variables DiscreteType.Var_type_parameter in
 	for i = first_clock_index to first_discrete_index - 1 do
-		type_of_variables.(i) <- DiscreteValue.Var_type_clock;
+		type_of_variables.(i) <- DiscreteType.Var_type_clock;
 	done;
 
     (* Print some information *)
@@ -4771,7 +3652,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* Convert var_type from ParsingStructure to AbstractModel *)
 		type_of_variables.(i) <- var_type;
         (* Print type infos *)
-		print_message Verbose_high ("variable " ^ v ^ " : " ^ (DiscreteValue.string_of_var_type type_of_variables.(i)))
+		print_message Verbose_high ("variable " ^ v ^ " : " ^ (DiscreteType.string_of_var_type type_of_variables.(i)))
 	done;
 
 	(* Functional representation *)
@@ -4784,8 +3665,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 	(* Create the type check functions *)
-	let is_clock = (fun variable_index -> try (type_of_variables variable_index = DiscreteValue.Var_type_clock) with Invalid_argument _ ->  false) in
-	let is_discrete = (fun variable_index -> try (DiscreteValue.is_discrete_type (type_of_variables variable_index)) with Invalid_argument _ ->  false) in
+	let is_clock = (fun variable_index -> try (type_of_variables variable_index = DiscreteType.Var_type_clock) with Invalid_argument _ ->  false) in
+	let is_discrete = (fun variable_index -> try (DiscreteType.is_discrete_type (type_of_variables variable_index)) with Invalid_argument _ ->  false) in
 
 
 	(* Detect the clock with a special global time name, if any *)
@@ -5453,7 +4334,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Building initial state…");
 
 	let (initial_location, initial_constraint) =
-		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs parsed_model.init_definition in
+		make_initial_state variable_infos index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs parsed_model.init_definition in
 
 	(* Add the observer initial constraint *)
 	begin

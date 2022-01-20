@@ -92,6 +92,9 @@ val list_set_nth : int -> 'a -> 'a list -> 'a list
 (** Get combination of two list **)
 val list_combination : 'a list -> 'a list -> ('a * 'a) list
 
+(* Check if predicate is true for all arrangement of list *)
+val for_all_in_arrangement : ('a -> 'a -> bool) -> 'a list -> bool
+
 (** Select the sublist of a list from position i to position j *)
 val sublist : int -> int -> 'a list -> 'a list
 
@@ -104,6 +107,10 @@ val group_by_and_map : ('a -> 'b) -> ('a -> 'c) -> 'a list -> ('b * 'c list) lis
 
 (* Partition list by grouping elements by keys in a hashtable *)
 val hashtbl_group_by : ('a -> 'b) -> 'a list -> ('b, 'a list) Hashtbl.t
+
+(* Create an hashtbl from a list of tuples *)
+(* Raise an error if two pairs have the same key *)
+val hashtbl_of_tuples : ('a * 'b) list -> ('a, 'b) Hashtbl.t
 
 (************************************************************)
 (** Useful functions on arrays *)
@@ -127,6 +134,8 @@ val array_exists : ('a -> bool) -> 'a array -> bool
 (** Shuffles the values of an array *)
 val array_shuffle : 'a array -> unit
 
+(** Perform the substraction of 2 NumConst array of same size **)
+val sub_array : NumConst.t array -> NumConst.t array -> NumConst.t array
 
 (************************************************************)
 (** Useful functions on dynamic arrays *)

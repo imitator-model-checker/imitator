@@ -19,6 +19,9 @@
 (** Exceptions *)
 (****************************************************************)
 
+(* For constraint conversion *)
+exception False_exception
+
 (** Exception raised when a division by 0 is found *)
 exception Division_by_0 of string
 
@@ -32,6 +35,8 @@ exception IncludeFileNotFound of string
 
 (** Exception when interfacing with another program *)
 exception InterfacingError of string
+
+exception InvalidModel
 
 exception InternalError of string
 
@@ -66,3 +71,6 @@ exception InvalidExpression of string
 
 (* Used when an expression is ill-typed formed or when computing on not compatible types *)
 exception TypeError of string
+
+(* Used when a function isn't found *)
+exception UndefinedFunction of string
