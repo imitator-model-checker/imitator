@@ -45,6 +45,7 @@ let rec eval_global_expression discrete_valuation = function
     | Binary_word_expression expr -> DiscreteValue.Binary_word_value (eval_binary_word_expression discrete_valuation expr)
     | Array_expression expr -> DiscreteValue.Array_value (eval_array_expression discrete_valuation expr)
     | List_expression expr -> DiscreteValue.List_value (eval_list_expression discrete_valuation expr)
+    | Stack_expression expr -> DiscreteValue.Stack_value (eval_stack_expression discrete_valuation expr)
 
 and eval_discrete_arithmetic_expression discrete_valuation = function
     | Rational_arithmetic_expression expr ->
@@ -96,6 +97,9 @@ and eval_rational_factor discrete_valuation = function
         DiscreteValue.numconst_value value
     | Rational_expression expr ->
         eval_rational_expression discrete_valuation expr
+    | Rational_unary_min factor ->
+        NumConst.neg (eval_rational_factor discrete_valuation factor)
+
     | Rational_of_int expr ->
         ImitatorUtilities.print_warning
             "Conversion of an int expression to a rational expression
@@ -108,8 +112,12 @@ and eval_rational_factor discrete_valuation = function
         let fail_message = list_hd_fail_message list_expr in
         let value = try_eval_list_hd list fail_message in
         DiscreteValue.numconst_value value
-    | Rational_unary_min factor ->
-        NumConst.neg (eval_rational_factor discrete_valuation factor)
+    | Rational_stack_pop stack_expr ->
+        let stack = eval_stack_expression discrete_valuation stack_expr in
+        let stack_cpy = Stack.copy stack in
+        (* TODO benjamin IMPORTANT try_eval_stack_pop *)
+        let value = Stack.pop stack_cpy in
+        DiscreteValue.numconst_value value
 
 and eval_int_expression discrete_valuation (* expr *) =
     let rec eval_int_expression_rec = function
@@ -222,6 +230,10 @@ and eval_discrete_boolean_expression discrete_valuation = function
         (operator_of_relop relop)
             (eval_list_expression discrete_valuation l_expr)
             (eval_list_expression discrete_valuation r_expr)
+    | Stack_comparison (l_expr, relop, r_expr) ->
+        (operator_of_relop relop)
+            (eval_stack_expression discrete_valuation l_expr)
+            (eval_stack_expression discrete_valuation r_expr)
 
     (** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
     | Expression_in (discrete_arithmetic_expression_1, discrete_arithmetic_expression_2, discrete_arithmetic_expression_3) ->
@@ -345,6 +357,16 @@ and eval_list_expression discrete_valuation = function
     | List_rev list_expr ->
         let list = eval_list_expression discrete_valuation list_expr in
         List.rev list
+
+and eval_stack_expression discrete_valuation = function
+    | Stack_variable variable_index ->
+        DiscreteValue.stack_value (try_eval_variable variable_index discrete_valuation)
+    | Stack_push (expr, stack_expr) ->
+        let e = eval_global_expression discrete_valuation expr in
+        let stack = eval_stack_expression discrete_valuation stack_expr in
+        let stack_cpy = Stack.copy stack in
+        Stack.push e stack_cpy;
+        stack_cpy
 
 and get_array_value_at discrete_valuation array_expr index_expr =
 

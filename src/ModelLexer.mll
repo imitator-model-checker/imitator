@@ -129,6 +129,7 @@ rule token = parse
   | "list_cons"      { CT_LIST_CONS }
   *)
   | "list"           { CT_LIST }
+  | "stack"          { CT_STACK }
 
 
 

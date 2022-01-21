@@ -74,6 +74,7 @@ let rec convert_var_type_discrete = function
     | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteType.Var_type_discrete_binary_word length
     | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteType.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
     | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteType.Var_type_discrete_list (convert_var_type_discrete inner_type)
+    | ParsingStructure.Var_type_discrete_stack inner_type -> DiscreteType.Var_type_discrete_stack (convert_var_type_discrete inner_type)
 
 (* Convert var type from parsing structure to abstract model *)
 let convert_var_type = function
@@ -1324,20 +1325,6 @@ let make_constants constants =
           correct := false;
         );
       )else(
-        (*
-        (* Otherwise: add it *)
-        (* Make value of the same type as the type declaration of the constant *)
-        (* It was already type checked ! *)
-        let converted_value = DiscreteValue.convert_value_to_discrete_type value discrete_type in
-        ImitatorUtilities.print_message Verbose_standard (
-            "add constant "
-            ^ DiscreteType.string_of_var_type_discrete discrete_type
-            ^ " with value "
-            ^ DiscreteValue.string_of_value converted_value
-            ^ " of type "
-            ^ DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value converted_value)
-        );
-        *)
         Hashtbl.add constants_hashtable name value;
       );
     ) constants;

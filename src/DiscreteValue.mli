@@ -29,6 +29,7 @@ type discrete_value =
     (* TODO benjamin REFACTOR maybe Collection_value *)
     | Array_value of discrete_value array
     | List_value of discrete_value list
+    | Stack_value of discrete_value Stack.t
 
 (*
 type (_, _) discrete_value =
@@ -96,6 +97,8 @@ val binary_word_value : discrete_value -> BinaryWord.t
 val array_value : discrete_value -> discrete_value array
 (* Get list value of discrete value *)
 val list_value : discrete_value -> discrete_value list
+(* Get stack value of discrete value *)
+val stack_value : discrete_value -> discrete_value Stack.t
 
 val is_zero : discrete_value -> bool
 
@@ -119,7 +122,7 @@ val of_bool : bool -> discrete_value
 (*(* Convert discrete value to another var type *)*)
 (*val convert_value : discrete_value -> var_type -> discrete_value*)
 (* Convert discrete value to another discrete type *)
-val convert_value_to_discrete_type : discrete_value -> var_type_discrete -> discrete_value
+(*val convert_value_to_discrete_type : discrete_value -> var_type_discrete -> discrete_value*)
 
 (* Convert any discrete value to a Rational_value *)
 val convert_to_rational_value : discrete_value -> discrete_value

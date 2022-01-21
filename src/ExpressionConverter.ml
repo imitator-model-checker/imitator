@@ -1400,6 +1400,10 @@ and global_expression_of_typed_boolean_expression variable_infos expr discrete_t
         )
     | Var_type_weak ->
         raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
+    | Var_type_discrete_stack inner_type ->
+        Stack_expression (
+            stack_expression_of_typed_boolean_expression variable_infos inner_type expr
+        )
 
 and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos discrete_number_type = function
 	| Typed_discrete_bool_expr (expr, _) ->
@@ -1551,6 +1555,12 @@ and bool_expression_of_typed_comparison variable_infos l_expr relop r_expr = fun
         )
     | Var_type_weak ->
         raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
+    | Var_type_discrete_stack inner_type ->
+        Stack_comparison (
+            stack_expression_of_typed_discrete_boolean_expression variable_infos inner_type l_expr,
+            convert_parsed_relop relop,
+            stack_expression_of_typed_discrete_boolean_expression variable_infos inner_type r_expr
+        )
 
 and bool_expression_of_typed_arithmetic_expression variable_infos = function
 	| Typed_term (term, _) ->
@@ -1718,6 +1728,11 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
         let arg_0 = List.nth argument_expressions 0 in
         Rational_list_hd (
             list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_number Var_type_discrete_rational) arg_0
+        )
+    | "stack_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Rational_stack_pop (
+            stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
 
     | function_name -> raise (UndefinedFunction function_name)
@@ -2154,6 +2169,74 @@ and list_expression_of_typed_function_call variable_infos discrete_type argument
         let arg_0 = List.nth argument_expressions 0 in
         List_rev (
             list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
+    | function_name -> raise (UndefinedFunction function_name)
+
+and stack_expression_of_typed_boolean_expression_with_type variable_infos = function
+    | Typed_discrete_bool_expr (expr, discrete_type) ->
+        let inner_type =
+            match discrete_type with
+            | Var_type_discrete_stack inner_type -> inner_type
+            | inner_type -> raise (InternalError ("The expression type indicate that it should be converted to a stack expression, but a " ^ (DiscreteType.string_of_var_type_discrete inner_type) ^ " expression is found. Maybe something failed in type checking or conversion."))
+        in
+
+        stack_expression_of_typed_discrete_boolean_expression variable_infos inner_type expr
+    | _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a list expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
+
+
+and stack_expression_of_typed_boolean_expression variable_infos discrete_type = function
+    | Typed_discrete_bool_expr (expr, _) ->
+        stack_expression_of_typed_discrete_boolean_expression variable_infos discrete_type expr
+    | _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a stack expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
+
+and stack_expression_of_typed_discrete_boolean_expression variable_infos discrete_type = function
+    | Typed_arithmetic_expr (expr, _) ->
+        stack_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
+    | _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a stack expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
+
+and stack_expression_of_typed_arithmetic_expression variable_infos discrete_type = function
+	| Typed_term (term, _) ->
+        stack_expression_of_typed_term variable_infos discrete_type term
+    | _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a stack expression, but an arithmetic expression is found. Maybe something failed in type checking or conversion.")
+
+and stack_expression_of_typed_term variable_infos discrete_type = function
+	| Typed_factor (factor, _) ->
+        stack_expression_of_typed_factor variable_infos discrete_type factor
+    | _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a stack expression, but an arithmetic expression is found. Maybe something failed in type checking or conversion.")
+
+and stack_expression_of_typed_factor variable_infos discrete_type = function
+	| Typed_variable (variable_name, _) ->
+        let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+        (match variable_kind with
+        | Constant_kind value ->
+            raise (InternalError "")
+        | Variable_kind discrete_index -> Stack_variable discrete_index
+        )
+    (*
+    | Typed_list (expr_list, _) ->
+        Literal_list (List.map (fun expr -> global_expression_of_typed_boolean_expression variable_infos expr discrete_type) expr_list)
+    *)
+	| Typed_expr (expr, _) ->
+        stack_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
+
+	| Typed_function_call (function_name, argument_expressions, _) ->
+	    stack_expression_of_typed_function_call variable_infos discrete_type argument_expressions function_name
+
+	| _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a list expression, but a non list expression is found. Maybe something failed in type checking or conversion.")
+
+and stack_expression_of_typed_function_call variable_infos discrete_type argument_expressions = function
+    | "stack_push" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+        Stack_push (
+            global_expression_of_typed_boolean_expression variable_infos arg_0 discrete_type,
+            stack_expression_of_typed_boolean_expression_with_type variable_infos arg_1
         )
     | function_name -> raise (UndefinedFunction function_name)
 

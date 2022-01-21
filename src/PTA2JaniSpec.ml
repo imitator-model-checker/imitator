@@ -216,6 +216,10 @@ let rec string_of_value = function
         let str_values = List.map string_of_value value in
         jani_array_value (Array.of_list str_values)
 
+    | DiscreteValue.Stack_value value ->
+        let str_values = Stack.fold (fun acc x -> acc @ [string_of_value x]) [] value in
+        jani_array_value (Array.of_list str_values)
+
     | DiscreteValue.Binary_word_value value ->
         let bool_array = BinaryWord.to_array value in
         let str_values = Array.map (fun x -> if x then "true" else "false") bool_array in

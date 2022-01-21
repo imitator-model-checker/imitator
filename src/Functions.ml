@@ -359,6 +359,17 @@ let function_by_name = function
             Defined_type_constraint (List_constraint (Type_name_constraint "a"));
             Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
         ]
+    | "stack_push" ->
+        [
+            Type_name_constraint "a";
+            Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
+            Defined_type_constraint (Stack_constraint (Type_name_constraint "a"))
+        ]
+    | "stack_pop" ->
+        [
+            Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
+            Type_name_constraint "a"
+        ]
     | "fake" ->
         [
             Defined_type_constraint (List_constraint (Defined_type_constraint (List_constraint (Type_name_constraint "a"))));

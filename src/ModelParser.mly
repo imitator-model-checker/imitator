@@ -87,7 +87,7 @@ let unzip l = List.fold_left
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
-    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST
+    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK
 
 
 %token EOF
@@ -197,6 +197,7 @@ var_type_discrete:
     | CT_BINARY_WORD LPAREN pos_integer RPAREN { Var_type_discrete_binary_word (NumConst.to_bounded_int $3) }
     | var_type_discrete_array { $1 }
     | var_type_discrete_list { $1 }
+    | var_type_discrete_stack { $1 }
 ;
 
 var_type_discrete_array:
@@ -207,6 +208,11 @@ var_type_discrete_array:
 var_type_discrete_list:
   | var_type_discrete CT_LIST { Var_type_discrete_list $1 }
   | var_type_discrete_list CT_LIST { Var_type_discrete_list $1 }
+;
+
+var_type_discrete_stack:
+  | var_type_discrete CT_STACK { Var_type_discrete_stack $1 }
+  | var_type_discrete_stack CT_STACK { Var_type_discrete_stack $1 }
 ;
 
 var_type_discrete_number:

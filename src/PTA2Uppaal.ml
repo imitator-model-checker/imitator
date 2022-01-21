@@ -75,10 +75,12 @@ let rec string_of_var_type_discrete = function
         let comment = "/* binary(" ^ string_of_int length ^ ")" ^ warning_in_comment ^ " */" in
         "int " ^ comment
     | DiscreteType.Var_type_discrete_array (inner_type, _)
-    | DiscreteType.Var_type_discrete_list inner_type ->
+    | DiscreteType.Var_type_discrete_list inner_type
+    | DiscreteType.Var_type_discrete_stack inner_type ->
         string_of_var_type_discrete inner_type
     | DiscreteType.Var_type_weak ->
         raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
+
 
 
 (* Customized string of var_type *)
@@ -103,10 +105,15 @@ let rec string_of_value = function
         string_of_int (BinaryWord.to_int value)
 
     | DiscreteValue.Array_value a ->
-        let string_array = Array.map (fun x -> string_of_value x) a in
+        let string_array = Array.map string_of_value a in
         "{" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "}"
+
     | DiscreteValue.List_value l ->
-        let string_list = List.map (fun x -> string_of_value x) l in
+        let string_list = List.map string_of_value l in
+        "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
+
+    | DiscreteValue.Stack_value l ->
+        let string_list = Stack.fold (fun acc x -> acc @ [string_of_value x]) [] l in
         "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
 
 

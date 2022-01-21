@@ -40,6 +40,7 @@ type global_expression =
     | Binary_word_expression of binary_word_expression
     | Array_expression of array_expression
     | List_expression of list_expression
+    | Stack_expression of stack_expression
 
 and discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
@@ -67,6 +68,7 @@ and rational_factor =
 	| Rational_of_int of int_arithmetic_expression
 	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
 	| Rational_list_hd of list_expression
+    | Rational_stack_pop of stack_expression
 (*	| Rational_function_call of string * global_expression list*)
 
 (************************************************************)
@@ -120,6 +122,7 @@ and discrete_boolean_expression =
     | Binary_comparison of binary_word_expression * relop * binary_word_expression
     | Array_comparison of array_expression * relop * array_expression
     | List_comparison of list_expression * relop * list_expression
+    | Stack_comparison of stack_expression * relop * stack_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
@@ -185,6 +188,10 @@ and list_expression =
     | List_list_tl of list_expression
     | List_rev of list_expression
 (*    | List_function_call of string * global_expression list*)
+
+and stack_expression =
+    | Stack_variable of Automaton.variable_index
+    | Stack_push of global_expression * stack_expression
 
 and expression_access_type =
     | Expression_array_access of array_expression
