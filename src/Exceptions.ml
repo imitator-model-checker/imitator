@@ -25,8 +25,11 @@ exception False_exception
 (** Exception raised when a division by 0 is found *)
 exception Division_by_0 of string
 
-(** Exception raised when trying an out of bound access to an array *)
+(** Exception raised when trying an out of bound access to an array or list *)
 exception Out_of_bound of string
+
+(** Exception raised when trying to access an element on an empty collection *)
+exception Empty_collection of string
 
 exception Found
 

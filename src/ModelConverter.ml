@@ -625,6 +625,8 @@ let check_update variable_infos automaton_name update =
 
         (* Function that check update on variable or variable access *)
         let rec check_variable_access = function
+            | Wildcard -> true
+
             | Variable_access (variable_access, _) ->
                 check_variable_access variable_access
 
@@ -1625,12 +1627,15 @@ let get_conditional_update_value = function
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filtered_updates removed_variable_names updates =
   let not_removed_variable (variable_access, _) =
-    let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
-    not (List.mem variable_name removed_variable_names)
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+    match variable_name_opt with
+    | Some variable_name ->
+        not (List.mem variable_name removed_variable_names)
+    | None -> true
   in
   List.fold_left (fun acc u ->
       match u with
-      | Normal (update) ->
+      | Normal update ->
         if (not_removed_variable update) then u::acc else acc
       | Condition (bool, updates_if, updates_else) ->
         let filtered_if = List.filter (not_removed_variable) updates_if in
@@ -1646,10 +1651,13 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
 
   (** Translate parsed clock update into the tuple clock_index, linear_term *)
   let to_intermediate_abstract_clock_update (variable_access, update_expr) =
-    let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
-    let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-    let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos variable_access update_expr in
-    (variable_index, converted_update)
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+    match variable_name_opt with
+    | Some variable_name ->
+        let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+        let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos variable_access update_expr in
+        (variable_index, converted_update)
+    | None -> raise (InternalError "Try to convert a unit expression to a clock.")
   in
 
   let converted_clock_updates = List.map to_intermediate_abstract_clock_update updates_list in
@@ -1688,12 +1696,15 @@ let split_to_clock_discrete_updates variable_infos updates =
   (** Check if a normal update is a clock update *)
   let is_clock_update (variable_access, parsed_update_expression) =
 
-    let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
-    (* Retrieve variable type *)
-    if variable_infos.type_of_variables (Hashtbl.find variable_infos.index_of_variables variable_name) = DiscreteType.Var_type_clock then (
-        true
-    ) else
-      false
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+    match variable_name_opt with
+    | Some variable_name ->
+        (* Retrieve variable type *)
+        if variable_infos.type_of_variables (Hashtbl.find variable_infos.index_of_variables variable_name) = DiscreteType.Var_type_clock then (
+            true
+        ) else
+          false
+    | None -> false (* Unit update, so it's not a clock *)
   in
   List.partition is_clock_update updates
 

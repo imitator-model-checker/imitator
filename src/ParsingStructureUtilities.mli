@@ -166,7 +166,7 @@ val get_variables_in_nonlinear_constraint : nonlinear_constraint -> StringSet.t
 val get_variables_in_init_state_predicate : parsed_init_state_predicate -> StringSet.t
 val get_variables_in_nonlinear_convex_predicate : nonlinear_constraint list -> StringSet.t
 
-val variable_name_of_variable_access : variable_access -> variable_name
+val variable_name_of_variable_access : variable_access -> variable_name option
 val is_variable_access_is_a_variable_name : variable_access -> bool
 
 val linear_constraint_of_nonlinear_constraint : nonlinear_constraint -> linear_constraint

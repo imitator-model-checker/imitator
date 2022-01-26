@@ -69,6 +69,7 @@ and rational_factor =
 	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
 	| Rational_list_hd of list_expression
     | Rational_stack_pop of stack_expression
+    | Rational_stack_top of stack_expression
 (*	| Rational_function_call of string * global_expression list*)
 
 (************************************************************)
@@ -96,6 +97,7 @@ and int_factor =
     | Int_list_hd of list_expression
     | Array_length of array_expression
     | List_length of list_expression
+    | Stack_length of stack_expression
 (*    | Int_function_call of string * global_expression list*)
 
 (************************************************************)
@@ -140,6 +142,7 @@ and discrete_boolean_expression =
     | Bool_list_hd of list_expression
     | List_mem of global_expression * list_expression
     | Array_mem of global_expression * array_expression
+    | Stack_is_empty of stack_expression
 (*    | Bool_function_call of string * global_expression list*)
 
 (************************************************************)
@@ -192,6 +195,7 @@ and list_expression =
 and stack_expression =
     | Stack_variable of Automaton.variable_index
     | Stack_push of global_expression * stack_expression
+    | Stack_clear of stack_expression
 
 and expression_access_type =
     | Expression_array_access of array_expression
@@ -200,6 +204,8 @@ and expression_access_type =
 type discrete_variable_access =
     | Discrete_variable_index of Automaton.discrete_index
     | Discrete_variable_access of discrete_variable_access * int_arithmetic_expression
+    | Discrete_wildcard
+
 
 val is_linear_discrete_boolean_expression : discrete_boolean_expression -> bool
 
@@ -212,6 +218,7 @@ val label_of_int_factor : int_factor -> string
 val label_of_binary_word_expression : binary_word_expression -> string
 val label_of_array_expression : array_expression -> string
 val label_of_list_expression : list_expression -> string
+val label_of_stack_expression : stack_expression -> string
 
 (* String representation of boolean according to customized string *)
 val customized_string_of_bool_value : Constants.customized_boolean_string -> bool -> string
@@ -239,5 +246,6 @@ val customized_string_of_array_expression : Constants.customized_string -> (Auto
 val string_of_array_expression : (Automaton.variable_index -> string) -> array_expression -> string
 
 val string_of_list_expression : (Automaton.variable_index -> string) -> list_expression -> string
+val string_of_stack_expression : (Automaton.variable_index -> string) -> stack_expression -> string
 
 val string_of_discrete_variable_access : (Automaton.variable_index -> string) -> discrete_variable_access -> string

@@ -53,7 +53,7 @@ and typed_discrete_factor =
 type typed_variable_access =
     | Typed_variable_name of variable_name
     | Typed_variable_access of typed_variable_access * typed_discrete_arithmetic_expression * var_type_discrete
-
+    | Typed_wildcard
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
@@ -146,6 +146,7 @@ and typed_discrete_factor =
 type typed_variable_access =
     | Typed_variable_name of variable_name
     | Typed_variable_access of typed_variable_access * typed_discrete_arithmetic_expression * var_type_discrete
+    | Typed_wildcard
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
@@ -988,6 +989,8 @@ let rec type_check_variable_access variable_infos infer_type_opt = function
         in
         Typed_variable_access (typed_variable_access, typed_index_expr_type, discrete_type), discrete_type
 
+    | Wildcard -> Typed_wildcard, Var_type_weak
+
 let type_check_parsed_loc_predicate variable_infos infer_type_opt = function
 	| Parsed_loc_predicate_EQ (automaton_name, loc_name) -> Typed_loc_predicate_EQ (automaton_name, loc_name), Var_type_discrete_bool
 	| Parsed_loc_predicate_NEQ (automaton_name, loc_name) -> Typed_loc_predicate_NEQ (automaton_name, loc_name), Var_type_discrete_bool
@@ -1205,12 +1208,16 @@ let check_guard variable_infos =
 let check_update variable_infos variable_access expr =
 
     (* Get assigned variable name *)
-    let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+
     (* Get assigned variable type *)
-    let var_type = get_type_of_variable_by_name variable_infos variable_name in
+    let variable_name, var_type =
+        match variable_name_opt with
+        | Some variable_name -> variable_name, get_type_of_variable_by_name variable_infos variable_name
+        | None -> "", Var_type_discrete Var_type_weak
+    in
 
     (* Eventually get a number type to infer *)
-(*    let variable_number_type_opt = DiscreteType.extract_number_of_type var_type in*)
     let variable_number_type_opt =
         match var_type with
         | Var_type_clock
@@ -1622,6 +1629,12 @@ and bool_expression_of_typed_function_call variable_infos argument_expressions =
             array_expression_of_typed_boolean_expression_with_type variable_infos arg_1
         )
 
+    | "stack_is_empty" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Stack_is_empty (
+            stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
+
     | function_name -> raise (UndefinedFunction function_name)
 
 (* --------------------*)
@@ -1734,6 +1747,11 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
         Rational_stack_pop (
             stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
+    | "stack_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Rational_stack_top (
+            stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
 
     | function_name -> raise (UndefinedFunction function_name)
 
@@ -1844,6 +1862,12 @@ and int_expression_of_typed_function_call variable_infos argument_expressions = 
         let arg_0 = List.nth argument_expressions 0 in
         List_length (
             list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
+
+    | "stack_length" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Stack_length (
+            stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
     (* TODO benjamin, in the future replace raise by custom function call as comment below *)
     | function_name -> raise (UndefinedFunction function_name)
@@ -2238,6 +2262,13 @@ and stack_expression_of_typed_function_call variable_infos discrete_type argumen
             global_expression_of_typed_boolean_expression variable_infos arg_0 discrete_type,
             stack_expression_of_typed_boolean_expression_with_type variable_infos arg_1
         )
+
+    | "stack_clear" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Stack_clear (
+            stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
+
     | function_name -> raise (UndefinedFunction function_name)
 
 (* --------------------*)
@@ -2275,6 +2306,7 @@ let rec variable_access_of_typed_variable_access variable_infos = function
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
+    | Typed_wildcard -> Discrete_wildcard
 
 
 (*------------------------------------------------------------*)

@@ -148,9 +148,27 @@ let make_location locations_per_automaton discrete_values =
 	(* Return the new location *)
 	locations, discrete
 
-
+(* We have to copy discrete values of arrays and stacks *)
+(* Because of array and stack are references in OCaml, if we don't copy their content *)
+(* discrete values stay the same between previous location and new location leading to a misbehavior. *)
+(* This is due to the fact that the update in-place of their values or their content will update old and new location *)
+(* as it was the same references. *)
+(* As it was possible to update content of array in IMITATOR via a[i] = x, or stack by stack_push(x, s) *)
+(* List isn't concerned because we doesn't have ability to modify it's content in IMITATOR. *)
 let rec copy_discrete = function
     | DiscreteValue.Array_value values -> DiscreteValue.Array_value (Array.map copy_discrete values)
+    | DiscreteValue.Stack_value values ->
+        (* Copy stack values *)
+        let stack_cpy =
+            values
+            |> Stack.to_seq
+            |> List.of_seq
+            |> List.map copy_discrete
+            |> List.rev
+            |> List.to_seq
+            |> Stack.of_seq
+        in
+        DiscreteValue.Stack_value stack_cpy
     | value -> value
 
 let copy_discrete_at_location location =

@@ -243,6 +243,7 @@ let rec customized_string_of_global_expression_for_jani customized_string variab
     | Binary_word_expression expr -> customized_string_of_binary_word_expression_for_jani customized_string variable_names expr
     | Array_expression expr -> customized_string_of_array_expression_for_jani customized_string variable_names expr
     | List_expression expr -> customized_string_of_list_expression_for_jani customized_string variable_names expr
+    | Stack_expression expr -> customized_string_of_stack_expression_for_jani customized_string variable_names expr
 
 and customized_string_of_boolean_expression_for_jani customized_string variable_names = function
 	| True_bool -> customized_string.boolean_string.true_string
@@ -278,6 +279,9 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
 
     | List_comparison (l_expr, relop, r_expr) ->
         string_of_comparison customized_string variable_names l_expr relop r_expr customized_string_of_list_expression_for_jani
+
+    | Stack_comparison (l_expr, relop, r_expr) ->
+        string_of_comparison customized_string variable_names l_expr relop r_expr customized_string_of_stack_expression_for_jani
 
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	(*Done for jani, but without test*)
@@ -326,6 +330,12 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
             |]
             ~str_comment:(undeclared_function_warning label)
 
+    | Stack_is_empty stack_expr as func ->
+        let label = label_of_bool_factor func in
+        jani_function_call
+            label
+            [|customized_string_of_stack_expression_for_jani customized_string variable_names stack_expr|]
+            ~str_comment:(undeclared_function_warning label)
 
 and customized_string_of_arithmetic_expression_for_jani customized_string variable_names = function
     | Rational_arithmetic_expression expr -> customized_string_of_rational_arithmetic_expression_for_jani customized_string variable_names expr
@@ -403,6 +413,21 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
                 label
                 [|customized_string_of_list_expression_for_jani customized_string variable_names list_expr|]
                 ~str_comment:(undeclared_function_warning label)
+
+        | Rational_stack_pop stack_expr as func ->
+            let label = label_of_rational_factor func in
+            jani_function_call
+                label
+                [|customized_string_of_stack_expression_for_jani customized_string variable_names stack_expr|]
+                ~str_comment:(undeclared_function_warning label)
+
+        | Rational_stack_top stack_expr as func ->
+            let label = label_of_rational_factor func in
+            jani_function_call
+                label
+                [|customized_string_of_stack_expression_for_jani customized_string variable_names stack_expr|]
+                ~str_comment:(undeclared_function_warning label)
+
 
 	(* Call top-level *)
 	in string_of_arithmetic_expression customized_string
@@ -487,6 +512,13 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
             jani_function_call
                 label
                 [|customized_string_of_list_expression_for_jani customized_string variable_names list_expr|]
+                ~str_comment:(undeclared_function_warning label)
+
+        | Stack_length stack_expr as func ->
+            let label = label_of_int_factor func in
+            jani_function_call
+                label
+                [|customized_string_of_stack_expression_for_jani customized_string variable_names stack_expr|]
                 ~str_comment:(undeclared_function_warning label)
 
 	(* Call top-level *)
@@ -603,11 +635,31 @@ and customized_string_of_list_expression_for_jani customized_string variable_nam
     | List_rev list_expr as func ->
         (* Get label of expression *)
         let label = label_of_list_expression func in
-
         jani_function_call
             label
             [| customized_string_of_list_expression_for_jani customized_string variable_names list_expr |]
             ~str_comment:(undeclared_function_warning label)
+
+and customized_string_of_stack_expression_for_jani customized_string variable_names = function
+    | Stack_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
+    | Stack_push (expr, stack_expr) as func ->
+        (* Get label of expression *)
+        let label = label_of_stack_expression func in
+        jani_function_call
+            label
+            [|
+                customized_string_of_global_expression_for_jani customized_string variable_names expr;
+                customized_string_of_stack_expression_for_jani customized_string variable_names stack_expr
+            |]
+            ~str_comment:(undeclared_function_warning label)
+    | Stack_clear stack_expr as func ->
+        (* Get label of expression *)
+        let label = label_of_stack_expression func in
+        jani_function_call
+            label
+            [|customized_string_of_stack_expression_for_jani customized_string variable_names stack_expr|]
+            ~str_comment:(undeclared_function_warning label)
+
 
 and string_of_expression_of_access_for_jani customized_string variable_names = function
     | Expression_array_access array_expr ->
@@ -739,7 +791,8 @@ let rec string_of_var_type_discrete_for_jani = function
         |]
 
     | DiscreteType.Var_type_discrete_array (inner_type, _)
-    | DiscreteType.Var_type_discrete_list inner_type ->
+    | DiscreteType.Var_type_discrete_list inner_type
+    | DiscreteType.Var_type_discrete_stack inner_type ->
         json_struct [|
             json_property "kind" (json_quoted "array");
             json_property "base" (string_of_var_type_discrete_for_jani inner_type)

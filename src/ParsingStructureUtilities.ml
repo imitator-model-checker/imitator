@@ -522,6 +522,7 @@ let rec string_of_variable_access variable_infos = function
         let l_del, r_del = Constants.default_array_string.array_access_delimiter in
         string_of_variable_access variable_infos variable_access
         ^ l_del ^ string_of_parsed_arithmetic_expression variable_infos expr ^ r_del
+    | Wildcard -> ""
 
 let string_of_parsed_init_state_predicate variable_infos = function
 	| Parsed_loc_assignment (automaton_name, location_name) -> "loc[" ^ automaton_name ^ "] = " ^ location_name
@@ -848,14 +849,17 @@ let get_variables_in_nonlinear_convex_predicate convex_predicate =
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
 let rec variable_name_of_variable_access = function
-    | Variable_name variable_name -> variable_name
+    | Variable_name variable_name -> Some variable_name
     | Variable_access (variable_access, _) -> variable_name_of_variable_access variable_access
+    | Wildcard -> None
 
 (* Check if variable access is a variable name directly *)
 (* ex : my_var -> true, my_var[i] -> false *)
 let is_variable_access_is_a_variable_name = function
     | Variable_name _ -> true
+    | Wildcard
     | Variable_access _ -> false
+
 
 
 (* - --- - -- - *)

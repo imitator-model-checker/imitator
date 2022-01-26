@@ -370,6 +370,26 @@ let function_by_name = function
             Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
             Type_name_constraint "a"
         ]
+    | "stack_top" ->
+        [
+            Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
+            Type_name_constraint "a"
+        ]
+    | "stack_clear" ->
+        [
+            Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
+            Defined_type_constraint (Stack_constraint (Type_name_constraint "a"))
+        ]
+    | "stack_is_empty" ->
+        [
+            Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
+            Defined_type_constraint Bool_constraint
+        ]
+    | "stack_length" ->
+        [
+            Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
+            Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
+        ]
     | "fake" ->
         [
             Defined_type_constraint (List_constraint (Defined_type_constraint (List_constraint (Type_name_constraint "a"))));

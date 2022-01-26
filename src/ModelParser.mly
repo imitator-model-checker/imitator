@@ -485,6 +485,7 @@ update:
 	}
 
 	| variable_access OP_ASSIGN expression { ($1, $3) }
+  | expression { (Wildcard, $1) }
 ;
 
 /** List containing only normal updates.

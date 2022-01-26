@@ -202,9 +202,13 @@ type invariant = convex_predicate
 type update =
 	| Normal of normal_update (** Updates withput conditions *)
 	| Condition of condition_update (** Updates with conditions *)
+
+(* Variable name or variable access (x or x[index]) *)
 and variable_access =
     | Variable_name of variable_name
     | Variable_access of variable_access * parsed_discrete_arithmetic_expression
+    | Wildcard
+
 (** basic updating *)
 and normal_update = variable_access * parsed_global_expression
 (** conditional updating *)

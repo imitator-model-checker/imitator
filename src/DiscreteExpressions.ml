@@ -68,6 +68,7 @@ and rational_factor =
     | Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
     | Rational_list_hd of list_expression
     | Rational_stack_pop of stack_expression
+    | Rational_stack_top of stack_expression
 (*    | Rational_function_call of string * global_expression list*)
 
 
@@ -95,6 +96,7 @@ and int_factor =
     | Int_list_hd of list_expression
     | Array_length of array_expression
     | List_length of list_expression
+    | Stack_length of stack_expression
 (*    | Int_function_call of string * global_expression list*)
 
 (****************************************************************)
@@ -134,7 +136,7 @@ and discrete_boolean_expression =
     | List_mem of global_expression * list_expression
     (* Function array_mem *)
     | Array_mem of global_expression * array_expression
-
+    | Stack_is_empty of stack_expression
 (*    | Bool_function_call of string * global_expression list*)
 
 
@@ -195,6 +197,7 @@ and list_expression =
 and stack_expression =
     | Stack_variable of Automaton.variable_index
     | Stack_push of global_expression * stack_expression
+    | Stack_clear of stack_expression
 
 and expression_access_type =
     | Expression_array_access of array_expression
@@ -203,7 +206,7 @@ and expression_access_type =
 type discrete_variable_access =
     | Discrete_variable_index of Automaton.discrete_index
     | Discrete_variable_access of discrete_variable_access * int_arithmetic_expression
-
+    | Discrete_wildcard
 
 (** Check linearity of a discrete expression **)
 
@@ -385,6 +388,7 @@ let label_of_bool_factor = function
     | Boolean_comparison _
     | Binary_comparison _
     | Array_comparison _
+    | Stack_comparison _
     | List_comparison _ -> "bool comparison"
 	| Expression_in _ -> "in expression"
 	| Boolean_expression _ -> "bool expression"
@@ -395,6 +399,7 @@ let label_of_bool_factor = function
     | Bool_list_hd _ -> "list_hd"
     | List_mem _ -> "list_mem"
     | Array_mem _ -> "array_mem"
+    | Stack_is_empty _ -> "stack_is_empty"
 
 let label_of_rational_factor = function
 	| Rational_variable _ -> "rational variable"
@@ -405,6 +410,8 @@ let label_of_rational_factor = function
 	| Rational_pow _ -> "pow"
 	| Rational_access _ -> "rational access"
 	| Rational_list_hd _ -> "list_hd"
+	| Rational_stack_pop _ -> "stack_pop"
+	| Rational_stack_top _ -> "stack_top"
 
 let label_of_int_factor = function
 	| Int_variable _ -> "int variable"
@@ -416,6 +423,7 @@ let label_of_int_factor = function
 	| Int_list_hd _ -> "list_hd"
 	| Array_length _ -> "array_length"
 	| List_length _ -> "list_length"
+	| Stack_length _ -> "stack_length"
 
 let label_of_binary_word_expression = function
     | Logical_shift_left _ -> "shift_left"
@@ -449,6 +457,11 @@ let label_of_list_expression = function
     | List_list_tl _ -> "list_tl"
     | List_rev _ -> "list_rev"
 
+let label_of_stack_expression = function
+    | Stack_variable _ -> "stack"
+    | Stack_push _ -> "stack_push"
+    | Stack_clear _ -> "stack_clear"
+
 (* Check if a binary word encoded on an integer have length greater than 31 bits *)
 (* If it's the case, print a warning *)
 let print_binary_word_overflow_warning_if_needed expr length = function
@@ -467,6 +480,7 @@ let rec customized_string_of_global_expression customized_string variable_names 
     | Binary_word_expression expr -> customized_string_of_binary_word_expression customized_string variable_names expr
     | Array_expression expr -> customized_string_of_array_expression customized_string variable_names expr
     | List_expression expr -> customized_string_of_list_expression customized_string variable_names expr
+    | Stack_expression expr -> customized_string_of_stack_expression customized_string variable_names expr
 
 (* Convert an arithmetic expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
@@ -543,6 +557,17 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
             print_function
                 (label_of_rational_factor factor)
                 [customized_string_of_list_expression customized_string variable_names list_expr]
+
+        | Rational_stack_pop stack_expr as factor ->
+            print_function
+                (label_of_rational_factor factor)
+                [customized_string_of_stack_expression customized_string variable_names stack_expr]
+
+        | Rational_stack_top stack_expr as factor ->
+            print_function
+                (label_of_rational_factor factor)
+                [customized_string_of_stack_expression customized_string variable_names stack_expr]
+
 		| Rational_expression discrete_arithmetic_expression ->
 			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 	(* Call top-level *)
@@ -629,6 +654,10 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
             print_function
                 (label_of_int_factor func)
                 [customized_string_of_list_expression customized_string variable_names list_expr]
+        | Stack_length stack_expr as func ->
+            print_function
+                (label_of_int_factor func)
+                [customized_string_of_stack_expression customized_string variable_names stack_expr]
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 
@@ -670,6 +699,10 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
         customized_string_of_list_expression customized_string variable_names l_expr
         ^ customized_string_of_boolean_operations customized_string.boolean_string relop
         ^ customized_string_of_list_expression customized_string variable_names r_expr
+    | Stack_comparison (l_expr, relop, r_expr) ->
+        customized_string_of_stack_expression customized_string variable_names l_expr
+        ^ customized_string_of_boolean_operations customized_string.boolean_string relop
+        ^ customized_string_of_stack_expression  customized_string variable_names r_expr
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
 		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
@@ -705,6 +738,11 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
                 customized_string_of_global_expression customized_string variable_names expr;
                 customized_string_of_array_expression customized_string variable_names array_expr
             ]
+
+    | Stack_is_empty stack_expr as func ->
+        print_function
+            (label_of_bool_factor func)
+            [customized_string_of_stack_expression customized_string variable_names stack_expr]
 
 and customized_string_of_boolean_operations customized_string = function
 	| OP_L		-> customized_string.l_operator
@@ -807,6 +845,7 @@ and customized_string_of_array_expression customized_string variable_names = fun
         string_of_expression_access customized_string variable_names access_type index_expr
 
     | Array_concat (array_expr_0, array_expr_1) as func ->
+        (* TODO benjamin CLEAN use print_function *)
         label_of_array_expression func
         ^ "("
         ^ customized_string_of_array_expression customized_string variable_names array_expr_0
@@ -833,6 +872,7 @@ and customized_string_of_list_expression customized_string variable_names = func
     | List_access (access_type, index_expr) ->
         string_of_expression_access customized_string variable_names access_type index_expr
     | List_cons (global_expression, list_expr) as func ->
+        (* TODO benjamin CLEAN use print_function *)
         label_of_list_expression func
         ^ "("
         ^ customized_string_of_global_expression customized_string variable_names global_expression
@@ -842,10 +882,25 @@ and customized_string_of_list_expression customized_string variable_names = func
     | List_list_hd list_expr
     | List_list_tl list_expr
     | List_rev list_expr as func ->
+        (* TODO benjamin CLEAN use print_function *)
         label_of_list_expression func
         ^ "("
         ^ customized_string_of_list_expression customized_string variable_names list_expr
         ^ ")"
+
+and customized_string_of_stack_expression customized_string variable_names = function
+    | Stack_variable variable_index -> variable_names variable_index
+    | Stack_push (expr, stack_expr) as func ->
+        print_function
+            (label_of_stack_expression func)
+            [
+                customized_string_of_global_expression customized_string variable_names expr;
+                customized_string_of_stack_expression customized_string variable_names stack_expr
+            ]
+    | Stack_clear stack_expr as func ->
+        print_function
+            (label_of_stack_expression func)
+            [customized_string_of_stack_expression customized_string variable_names stack_expr]
 
 and string_of_expression_of_access customized_string variable_names = function
     | Expression_array_access array_expr ->
@@ -863,6 +918,7 @@ let string_of_boolean_expression = customized_string_of_boolean_expression Const
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.global_default_string
 let string_of_array_expression = customized_string_of_array_expression Constants.global_default_string
 let string_of_list_expression = customized_string_of_list_expression Constants.global_default_string
+let string_of_stack_expression = customized_string_of_stack_expression Constants.global_default_string
 
 let rec string_of_discrete_variable_access variable_names = function
     | Discrete_variable_index discrete_index ->

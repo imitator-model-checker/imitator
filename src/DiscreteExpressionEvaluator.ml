@@ -18,6 +18,10 @@ let list_tl_fail_message list_expr =
     let str_expr = DiscreteExpressions.string_of_list_expression (fun i -> "") list_expr in
     "Use of `list_tl` on empty list `" ^ str_expr ^ "`."
 
+let stack_pop_fail_message stack_expr =
+    let str_expr = DiscreteExpressions.string_of_stack_expression (fun i -> "") stack_expr in
+    "Use of `stack_pop` on empty stack `" ^ str_expr ^ "`."
+
 (* Eval list_hd function, if the list is empty, raise a proper exception *)
 let try_eval_list_hd list fail_message =
     if List.length list = 0 then
@@ -31,6 +35,18 @@ let try_eval_list_tl list fail_message =
         raise (Out_of_bound fail_message)
     else
         List.tl list
+
+let try_eval_stack_pop stack fail_message =
+    if Stack.length stack = 0 then
+        raise (Empty_collection fail_message)
+    else
+        Stack.pop stack
+
+let try_eval_stack_top stack fail_message =
+    if Stack.length stack = 0 then
+        raise (Empty_collection fail_message)
+    else
+        Stack.top stack
 
 (* Try evaluating variable value if a discrete valuation is given *)
 (* Otherwise, it means that we are trying to evaluate an expression that should have to be constant (without variable) *)
@@ -114,9 +130,14 @@ and eval_rational_factor discrete_valuation = function
         DiscreteValue.numconst_value value
     | Rational_stack_pop stack_expr ->
         let stack = eval_stack_expression discrete_valuation stack_expr in
-        let stack_cpy = Stack.copy stack in
-        (* TODO benjamin IMPORTANT try_eval_stack_pop *)
-        let value = Stack.pop stack_cpy in
+        let fail_message = stack_pop_fail_message stack_expr in
+        let value = try_eval_stack_pop stack fail_message in
+        DiscreteValue.numconst_value value
+
+    | Rational_stack_top stack_expr ->
+        let stack = eval_stack_expression discrete_valuation stack_expr in
+        let fail_message = stack_pop_fail_message stack_expr in
+        let value = try_eval_stack_top stack fail_message in
         DiscreteValue.numconst_value value
 
 and eval_int_expression discrete_valuation (* expr *) =
@@ -187,6 +208,9 @@ and eval_int_expression discrete_valuation (* expr *) =
         | List_length list_expr ->
             let list = eval_list_expression discrete_valuation list_expr in
             Int32.of_int (List.length list)
+        | Stack_length stack_expr ->
+            let stack = eval_stack_expression discrete_valuation stack_expr in
+            Int32.of_int (Stack.length stack)
     in
     eval_int_expression_rec
 
@@ -263,6 +287,9 @@ and eval_discrete_boolean_expression discrete_valuation = function
         let value = eval_global_expression discrete_valuation expr in
         let array = eval_array_expression discrete_valuation array_expr in
         Array.mem value array
+    | Stack_is_empty stack_expr ->
+        let stack = eval_stack_expression discrete_valuation stack_expr in
+        Stack.is_empty stack
 
 and eval_binary_word_expression discrete_valuation = function
     | Logical_shift_left (binary_word, expr, _) ->
@@ -364,9 +391,11 @@ and eval_stack_expression discrete_valuation = function
     | Stack_push (expr, stack_expr) ->
         let e = eval_global_expression discrete_valuation expr in
         let stack = eval_stack_expression discrete_valuation stack_expr in
-        let stack_cpy = Stack.copy stack in
-        Stack.push e stack_cpy;
-        stack_cpy
+        Stack.push e stack; stack
+
+    | Stack_clear stack_expr ->
+        let stack = eval_stack_expression discrete_valuation stack_expr in
+        Stack.clear stack; stack
 
 and get_array_value_at discrete_valuation array_expr index_expr =
 
@@ -415,6 +444,7 @@ and get_expression_access_value discrete_valuation index_expr = function
 let pack_value variable_names discrete_valuation old_value new_value variable_access =
 
     let rec pack_value_rec = function
+        | Discrete_wildcard -> old_value, [||], None
         | Discrete_variable_index discrete_index -> old_value, [||], None
         | Discrete_variable_access (inner_variable_access, index_expr) ->
 
