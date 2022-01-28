@@ -20,6 +20,7 @@
  - check if all the "string_of" were translated
  *)
 
+open Exceptions
 open Constants
 open OCamlUtilities
 open ImitatorUtilities
@@ -296,6 +297,31 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
     | Bool_constant value -> DiscreteExpressions.customized_string_of_bool_value customized_string.boolean_string value
     | Bool_access (access_type, index_expr) ->
         string_of_expression_access_for_jani customized_string variable_names access_type index_expr
+    | Bool_list_hd list_expr as func ->
+        let label = label_of_bool_factor func in
+        jani_function_call
+            label
+            [|customized_string_of_list_expression_for_jani customized_string variable_names list_expr|]
+            ~str_comment:(undeclared_function_warning label)
+    | List_mem (expr, list_expr) as func ->
+        let label = label_of_bool_factor func in
+        jani_function_call
+            label
+            [|
+                customized_string_of_global_expression_for_jani customized_string variable_names expr;
+                customized_string_of_list_expression_for_jani customized_string variable_names list_expr
+            |]
+            ~str_comment:(undeclared_function_warning label)
+    | Array_mem (expr, array_expr) as func ->
+        let label = label_of_bool_factor func in
+        jani_function_call
+            label
+            [|
+                customized_string_of_global_expression_for_jani customized_string variable_names expr;
+                customized_string_of_array_expression_for_jani customized_string variable_names array_expr
+            |]
+            ~str_comment:(undeclared_function_warning label)
+
 
 and customized_string_of_arithmetic_expression_for_jani customized_string variable_names = function
     | Rational_arithmetic_expression expr -> customized_string_of_rational_arithmetic_expression_for_jani customized_string variable_names expr
@@ -507,7 +533,11 @@ and customized_string_of_binary_word_expression_for_jani customized_string varia
         | Binary_word_variable (variable_index, _) -> "\"" ^ variable_names variable_index ^ "\""
         | Binary_word_access (access_type, index_expr, _) ->
             string_of_expression_access_for_jani customized_string variable_names access_type index_expr
-
+        | Binary_word_list_hd list_expr ->
+            jani_function_call
+                label
+                [|customized_string_of_list_expression_for_jani customized_string variable_names list_expr|]
+                ~str_comment:(Lazy.force undeclared_function_warning)
     in
     customized_string_of_binary_word_expression_for_jani binary_word_expr
 
@@ -526,12 +556,20 @@ and customized_string_of_array_expression_for_jani customized_string variable_na
 
     | Array_concat (array_expr_0, array_expr_1) as func ->
         (* Get label of expression *)
-        let function_name = label_of_array_expression func in
-        (* Prepare undeclared_function_warning function with given function name *)
-        let undeclared_function_warning = lazy(undeclared_function_warning function_name) in
-        let str_arg_array_expr_0 = customized_string_of_array_expression_for_jani customized_string variable_names array_expr_0 in
-        let str_arg_array_expr_1 = customized_string_of_array_expression_for_jani customized_string variable_names array_expr_1 in
-        jani_function_call function_name [|str_arg_array_expr_0;str_arg_array_expr_1|] ~str_comment:(Lazy.force undeclared_function_warning)
+        let label = label_of_array_expression func in
+        jani_function_call label
+            [|
+                customized_string_of_array_expression_for_jani customized_string variable_names array_expr_0;
+                customized_string_of_array_expression_for_jani customized_string variable_names array_expr_1
+            |]
+            ~str_comment:(undeclared_function_warning label)
+
+    | Array_list_hd list_expr as func ->
+        (* Get label of expression *)
+        let label = label_of_array_expression func in
+        jani_function_call label
+            [|customized_string_of_list_expression_for_jani customized_string variable_names list_expr|]
+            ~str_comment:(undeclared_function_warning label)
 
 and customized_string_of_list_expression_for_jani customized_string variable_names = function
     | Literal_list expr_list ->
@@ -702,6 +740,9 @@ let rec string_of_var_type_discrete_for_jani = function
             json_property "kind" (json_quoted "array");
             json_property "base" (string_of_var_type_discrete_for_jani inner_type)
         |]
+    | DiscreteType.Var_type_weak ->
+        raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
+
 
 (* Convert the initial discrete var declarations into a string *)
 let string_of_discrete model =

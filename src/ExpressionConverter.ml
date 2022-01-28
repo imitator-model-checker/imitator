@@ -1388,6 +1388,8 @@ and global_expression_of_typed_boolean_expression variable_infos expr discrete_t
         List_expression (
             list_expression_of_typed_boolean_expression variable_infos inner_type expr
         )
+    | Var_type_weak ->
+        raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
 
 and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos discrete_number_type = function
 	| Typed_discrete_bool_expr (expr, _) ->
@@ -1537,6 +1539,8 @@ and bool_expression_of_typed_comparison variable_infos l_expr relop r_expr = fun
             convert_parsed_relop relop,
             list_expression_of_typed_discrete_boolean_expression variable_infos inner_type r_expr
         )
+    | Var_type_weak ->
+        raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
 
 and bool_expression_of_typed_arithmetic_expression variable_infos = function
 	| Typed_term (term, _) ->

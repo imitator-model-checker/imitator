@@ -14,6 +14,7 @@
  *
  ************************************************************)
 
+open Exceptions
 open Constants
 open OCamlUtilities
 open ImitatorUtilities
@@ -76,6 +77,9 @@ let rec string_of_var_type_discrete = function
     | DiscreteType.Var_type_discrete_array (inner_type, _)
     | DiscreteType.Var_type_discrete_list inner_type ->
         string_of_var_type_discrete inner_type
+    | DiscreteType.Var_type_weak ->
+        raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
+
 
 (* Customized string of var_type *)
 let string_of_var_type = function
