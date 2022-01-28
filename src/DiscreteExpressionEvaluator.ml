@@ -22,6 +22,10 @@ let stack_pop_fail_message stack_expr =
     let str_expr = DiscreteExpressions.string_of_stack_expression (fun i -> "") stack_expr in
     "Use of `stack_pop` on empty stack `" ^ str_expr ^ "`."
 
+let stack_top_fail_message stack_expr =
+    let str_expr = DiscreteExpressions.string_of_stack_expression (fun i -> "") stack_expr in
+    "Use of `stack_top` on empty stack `" ^ str_expr ^ "`."
+
 (* Eval list_hd function, if the list is empty, raise a proper exception *)
 let try_eval_list_hd list fail_message =
     if List.length list = 0 then
@@ -136,7 +140,7 @@ and eval_rational_factor discrete_valuation = function
 
     | Rational_stack_top stack_expr ->
         let stack = eval_stack_expression discrete_valuation stack_expr in
-        let fail_message = stack_pop_fail_message stack_expr in
+        let fail_message = stack_top_fail_message stack_expr in
         let value = try_eval_stack_top stack fail_message in
         DiscreteValue.numconst_value value
 
