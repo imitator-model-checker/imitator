@@ -87,7 +87,7 @@ let unzip l = List.fold_left
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
-    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK
+    CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
 
 
 %token EOF
@@ -198,6 +198,7 @@ var_type_discrete:
     | var_type_discrete_array { $1 }
     | var_type_discrete_list { $1 }
     | var_type_discrete_stack { $1 }
+    | var_type_discrete_queue { $1 }
 ;
 
 var_type_discrete_array:
@@ -214,6 +215,12 @@ var_type_discrete_stack:
   | var_type_discrete CT_STACK { Var_type_discrete_stack $1 }
   | var_type_discrete_stack CT_STACK { Var_type_discrete_stack $1 }
 ;
+
+var_type_discrete_queue:
+  | var_type_discrete CT_QUEUE { Var_type_discrete_queue $1 }
+  | var_type_discrete_queue CT_QUEUE { Var_type_discrete_queue $1 }
+;
+
 
 var_type_discrete_number:
     | CT_DISCRETE { Var_type_discrete_rational }
@@ -461,8 +468,8 @@ update_nonempty_list:
 
 /* Variable or variable access */
 variable_access:
-  | NAME { Variable_name $1 }
-  | variable_access LSQBRA arithmetic_expression RSQBRA { Variable_access ($1, $3) }
+  | NAME { Parsed_variable_update $1 }
+  | variable_access LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
 ;
 
 /** Normal updates */
@@ -470,22 +477,22 @@ update:
 	/*** NOTE: deprecated syntax ***/
 	| NAME APOSTROPHE OP_EQ expression {
 		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
-		(Variable_name $1, $4)
+		(Parsed_variable_update $1, $4)
 		}
 
 		/** NOT ALLOWED FROM 3.2 (2021/10) */
 /*	| NAME APOSTROPHE OP_ASSIGN expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
-		(Variable_name $1, $4)
+		(Parsed_variable_update $1, $4)
 	}*/
 	/*** NOTE: deprecated syntax ***/
 	| NAME OP_EQ expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
-		(Variable_name $1, $3)
+		(Parsed_variable_update $1, $3)
 	}
 
 	| variable_access OP_ASSIGN expression { ($1, $3) }
-  | expression { (Wildcard, $1) }
+  | expression { (Parsed_void_update, $1) }
 ;
 
 /** List containing only normal updates.

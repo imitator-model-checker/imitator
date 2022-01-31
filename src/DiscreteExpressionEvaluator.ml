@@ -66,6 +66,7 @@ let rec eval_global_expression discrete_valuation = function
     | Array_expression expr -> DiscreteValue.Array_value (eval_array_expression discrete_valuation expr)
     | List_expression expr -> DiscreteValue.List_value (eval_list_expression discrete_valuation expr)
     | Stack_expression expr -> DiscreteValue.Stack_value (eval_stack_expression discrete_valuation expr)
+    | Queue_expression expr -> DiscreteValue.Queue_value (eval_queue_expression discrete_valuation expr)
 
 and eval_discrete_arithmetic_expression discrete_valuation = function
     | Rational_arithmetic_expression expr ->
@@ -262,6 +263,10 @@ and eval_discrete_boolean_expression discrete_valuation = function
         (operator_of_relop relop)
             (eval_stack_expression discrete_valuation l_expr)
             (eval_stack_expression discrete_valuation r_expr)
+    | Queue_comparison (l_expr, relop, r_expr) ->
+        (operator_of_relop relop)
+            (eval_queue_expression discrete_valuation l_expr)
+            (eval_queue_expression discrete_valuation r_expr)
 
     (** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
     | Expression_in (discrete_arithmetic_expression_1, discrete_arithmetic_expression_2, discrete_arithmetic_expression_3) ->
@@ -401,6 +406,10 @@ and eval_stack_expression discrete_valuation = function
         let stack = eval_stack_expression discrete_valuation stack_expr in
         Stack.clear stack; stack
 
+and eval_queue_expression discrete_valuation = function
+    | Queue_variable variable_index ->
+        DiscreteValue.queue_value (try_eval_variable variable_index discrete_valuation)
+
 and get_array_value_at discrete_valuation array_expr index_expr =
 
     let values = eval_array_expression discrete_valuation array_expr in
@@ -448,9 +457,9 @@ and get_expression_access_value discrete_valuation index_expr = function
 let pack_value variable_names discrete_valuation old_value new_value variable_access =
 
     let rec pack_value_rec = function
-        | Discrete_wildcard -> old_value, [||], None
-        | Discrete_variable_index discrete_index -> old_value, [||], None
-        | Discrete_variable_access (inner_variable_access, index_expr) ->
+        | Void_update -> old_value, [||], None
+        | Variable_update discrete_index -> old_value, [||], None
+        | Indexed_update (inner_variable_access, index_expr) ->
 
             let old_value, _, _ = pack_value_rec inner_variable_access in
 
@@ -462,7 +471,7 @@ let pack_value variable_names discrete_valuation old_value new_value variable_ac
 
             (* Check bounds *)
             if index >= Array.length old_array || index < 0 then (
-                let str_variable_access = DiscreteExpressions.string_of_discrete_variable_access variable_names variable_access in
+                let str_variable_access = DiscreteExpressions.string_of_variable_update_type variable_names variable_access in
                 raise (Out_of_bound ("Array index out of range: `" ^ str_variable_access ^ "`"))
             );
 

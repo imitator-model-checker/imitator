@@ -75,6 +75,7 @@ let rec convert_var_type_discrete = function
     | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteType.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
     | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteType.Var_type_discrete_list (convert_var_type_discrete inner_type)
     | ParsingStructure.Var_type_discrete_stack inner_type -> DiscreteType.Var_type_discrete_stack (convert_var_type_discrete inner_type)
+    | ParsingStructure.Var_type_discrete_queue inner_type -> DiscreteType.Var_type_discrete_queue (convert_var_type_discrete inner_type)
 
 (* Convert var type from parsing structure to abstract model *)
 let convert_var_type = function
@@ -625,12 +626,12 @@ let check_update variable_infos automaton_name update =
 
         (* Function that check update on variable or variable access *)
         let rec check_variable_access = function
-            | Wildcard -> true
+            | Parsed_void_update -> true
 
-            | Variable_access (variable_access, _) ->
+            | Parsed_indexed_update (variable_access, _) ->
                 check_variable_access variable_access
 
-            | Variable_name variable_name ->
+            | Parsed_variable_update variable_name ->
 
                 (* Check whether this variable is to be removed because unused elsewhere than in resets *)
                 let to_be_removed = List.mem variable_name variable_infos.removed_variable_names in

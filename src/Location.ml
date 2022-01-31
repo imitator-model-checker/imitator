@@ -169,6 +169,19 @@ let rec copy_discrete = function
             |> Stack.of_seq
         in
         DiscreteValue.Stack_value stack_cpy
+
+    | DiscreteValue.Queue_value values ->
+        (* Copy queue values *)
+        let queue_cpy =
+            values
+            |> Queue.to_seq
+            |> List.of_seq
+            |> List.map copy_discrete
+            |> List.rev
+            |> List.to_seq
+            |> Queue.of_seq
+        in
+        DiscreteValue.Queue_value queue_cpy
     | value -> value
 
 let copy_discrete_at_location location =

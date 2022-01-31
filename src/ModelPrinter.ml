@@ -473,18 +473,19 @@ let json_of_clock_updates model clock_updates =
 
 
 (* Access to either variable or array *)
-let rec string_of_discrete_variable_access model = function
-	| Discrete_variable_index (variable_index) ->
+let rec string_of_variable_update_type model = function
+	| Variable_update (variable_index) ->
 		model.variable_names variable_index
-	| Discrete_variable_access (variable_access, index_expr) ->
-		string_of_discrete_variable_access model variable_access
+	| Indexed_update (variable_access, index_expr) ->
+		string_of_variable_update_type model variable_access
 		^ "[" ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names index_expr  ^ "]"
+    | Void_update -> ""
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
 	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_access, arithmetic_expression) ->
 		(* Convert the variable name *)
-		string_of_discrete_variable_access model variable_access
+		string_of_variable_update_type model variable_access
 		^ " := "
 		(* Convert the arithmetic_expression *)
 		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
@@ -494,7 +495,7 @@ let string_of_discrete_updates ?(sep=", ") model updates =
 let json_of_discrete_updates ?(sep=", ") model updates =
 	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_access, arithmetic_expression) ->
 		(* Convert the variable name *)
-		"" ^ (json_of_string (string_of_discrete_variable_access model variable_access)) ^ ""
+		"" ^ (json_of_string (string_of_variable_update_type model variable_access)) ^ ""
 		^ ": "
 		(* Convert the arithmetic_expression *)
 		^ "" ^ (json_of_string (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)) ^ ""
@@ -752,9 +753,10 @@ let string_of_automata model =
 
 
 let rec customized_string_of_variable_access customized_string model = function
-    | Discrete_variable_index variable_index -> model.variable_names variable_index
-    | Discrete_variable_access (variable_access, index_expr) ->
+    | Variable_update variable_index -> model.variable_names variable_index
+    | Indexed_update (variable_access, index_expr) ->
         customized_string_of_variable_access customized_string model variable_access ^ "[" ^ DiscreteExpressions.customized_string_of_int_arithmetic_expression customized_string model.variable_names index_expr ^ "]"
+    | Void_update -> ""
 
 let string_of_variable_access = customized_string_of_variable_access Constants.global_default_string
 

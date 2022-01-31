@@ -49,7 +49,8 @@ let rec resolve_constraint defined_type_constraint discrete_type =
     | Array_constraint (type_constraint, length_constraint), Var_type_discrete_array (inner_type, length) ->
         resolve_type_constraint inner_type type_constraint @ resolve_length_constraint length length_constraint
     | List_constraint type_constraint, Var_type_discrete_list inner_type
-    | Stack_constraint type_constraint, Var_type_discrete_stack inner_type ->
+    | Stack_constraint type_constraint, Var_type_discrete_stack inner_type
+    | Queue_constraint type_constraint, Var_type_discrete_queue inner_type ->
         resolve_type_constraint inner_type type_constraint
     | _ -> []
 
@@ -206,6 +207,10 @@ let rec discrete_type_of_defined_type_constraint resolved_constraints_table = fu
         )
     | Stack_constraint type_constraint ->
         Var_type_discrete_stack (
+            discrete_type_of_type_constraint_name resolved_constraints_table type_constraint
+        )
+    | Queue_constraint type_constraint ->
+        Var_type_discrete_queue (
             discrete_type_of_type_constraint_name resolved_constraints_table type_constraint
         )
 

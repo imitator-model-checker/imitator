@@ -38,6 +38,7 @@ type global_expression =
     | Array_expression of array_expression
     | List_expression of list_expression
     | Stack_expression of stack_expression
+    | Queue_expression of queue_expression
 
 and discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
@@ -119,6 +120,7 @@ and discrete_boolean_expression =
 	| Array_comparison of array_expression * relop * array_expression
 	| List_comparison of list_expression * relop * list_expression
     | Stack_comparison of stack_expression * relop * stack_expression
+    | Queue_comparison of queue_expression * relop * queue_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
@@ -199,14 +201,21 @@ and stack_expression =
     | Stack_push of global_expression * stack_expression
     | Stack_clear of stack_expression
 
+and queue_expression =
+    | Queue_variable of Automaton.variable_index
+
 and expression_access_type =
     | Expression_array_access of array_expression
     | Expression_list_access of list_expression
 
-type discrete_variable_access =
-    | Discrete_variable_index of Automaton.discrete_index
-    | Discrete_variable_access of discrete_variable_access * int_arithmetic_expression
-    | Discrete_wildcard
+(* Update type *)
+type variable_update_type =
+    (* Variable update, ie: x := 1 *)
+    | Variable_update of Automaton.discrete_index
+    (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
+    | Indexed_update of variable_update_type * int_arithmetic_expression
+    (* Unit expression, side effect expression without assignment, ie: stack_pop(s) *)
+    | Void_update
 
 (** Check linearity of a discrete expression **)
 
@@ -388,8 +397,9 @@ let label_of_bool_factor = function
     | Boolean_comparison _
     | Binary_comparison _
     | Array_comparison _
+    | List_comparison _
     | Stack_comparison _
-    | List_comparison _ -> "bool comparison"
+    | Queue_comparison _ -> "bool comparison"
 	| Expression_in _ -> "in expression"
 	| Boolean_expression _ -> "bool expression"
 	| Not_bool _ -> "bool negation expression"
@@ -481,6 +491,7 @@ let rec customized_string_of_global_expression customized_string variable_names 
     | Array_expression expr -> customized_string_of_array_expression customized_string variable_names expr
     | List_expression expr -> customized_string_of_list_expression customized_string variable_names expr
     | Stack_expression expr -> customized_string_of_stack_expression customized_string variable_names expr
+    | Queue_expression expr -> customized_string_of_queue_expression customized_string variable_names expr
 
 (* Convert an arithmetic expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
@@ -703,6 +714,10 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
         customized_string_of_stack_expression customized_string variable_names l_expr
         ^ customized_string_of_boolean_operations customized_string.boolean_string relop
         ^ customized_string_of_stack_expression  customized_string variable_names r_expr
+    | Queue_comparison (l_expr, relop, r_expr) ->
+        customized_string_of_queue_expression customized_string variable_names l_expr
+        ^ customized_string_of_boolean_operations customized_string.boolean_string relop
+        ^ customized_string_of_queue_expression  customized_string variable_names r_expr
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
 		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
@@ -902,6 +917,9 @@ and customized_string_of_stack_expression customized_string variable_names = fun
             (label_of_stack_expression func)
             [customized_string_of_stack_expression customized_string variable_names stack_expr]
 
+and customized_string_of_queue_expression customized_string variable_names = function
+    | Queue_variable variable_index -> variable_names variable_index
+
 and string_of_expression_of_access customized_string variable_names = function
     | Expression_array_access array_expr ->
         customized_string_of_array_expression customized_string variable_names array_expr
@@ -920,11 +938,12 @@ let string_of_array_expression = customized_string_of_array_expression Constants
 let string_of_list_expression = customized_string_of_list_expression Constants.global_default_string
 let string_of_stack_expression = customized_string_of_stack_expression Constants.global_default_string
 
-let rec string_of_discrete_variable_access variable_names = function
-    | Discrete_variable_index discrete_index ->
+let rec string_of_variable_update_type variable_names = function
+    | Variable_update discrete_index ->
         variable_names discrete_index
-    | Discrete_variable_access (variable_access, index_expr) ->
-        string_of_discrete_variable_access variable_names variable_access
+    | Indexed_update (variable_access, index_expr) ->
+        string_of_variable_update_type variable_names variable_access
         ^ "["
         ^ string_of_int_arithmetic_expression variable_names index_expr
         ^ "]"
+    | Void_update -> ""

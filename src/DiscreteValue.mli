@@ -30,6 +30,7 @@ type discrete_value =
     | Array_value of discrete_value array
     | List_value of discrete_value list
     | Stack_value of discrete_value Stack.t
+    | Queue_value of discrete_value Queue.t
 
 (*
 type (_, _) discrete_value =
@@ -99,6 +100,8 @@ val array_value : discrete_value -> discrete_value array
 val list_value : discrete_value -> discrete_value list
 (* Get stack value of discrete value *)
 val stack_value : discrete_value -> discrete_value Stack.t
+(* Get queue value of discrete value *)
+val queue_value : discrete_value -> discrete_value Queue.t
 
 val is_zero : discrete_value -> bool
 

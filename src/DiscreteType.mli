@@ -33,6 +33,7 @@ type var_type_discrete =
     | Var_type_discrete_array of var_type_discrete * int
     | Var_type_discrete_list of var_type_discrete
     | Var_type_discrete_stack of var_type_discrete
+    | Var_type_discrete_queue of var_type_discrete
 
 (* Type of variable in declarations *)
 type var_type =

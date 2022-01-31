@@ -49,6 +49,7 @@ type var_type_discrete =
     | Var_type_discrete_array of var_type_discrete * int
     | Var_type_discrete_list of var_type_discrete
     | Var_type_discrete_stack of var_type_discrete
+    | Var_type_discrete_queue of var_type_discrete
 
 (* Type of variable in declarations *)
 type var_type =
@@ -204,10 +205,11 @@ type update =
 	| Condition of condition_update (** Updates with conditions *)
 
 (* Variable name or variable access (x or x[index]) *)
+(* TODO benjamin REFACTOR rename to variable_update_type (test already make but change 21 files) *)
 and variable_access =
-    | Variable_name of variable_name
-    | Variable_access of variable_access * parsed_discrete_arithmetic_expression
-    | Wildcard
+    | Parsed_variable_update of variable_name
+    | Parsed_indexed_update of variable_access * parsed_discrete_arithmetic_expression
+    | Parsed_void_update
 
 (** basic updating *)
 and normal_update = variable_access * parsed_global_expression

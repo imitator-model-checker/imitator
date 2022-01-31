@@ -41,6 +41,7 @@ type global_expression =
     | Array_expression of array_expression
     | List_expression of list_expression
     | Stack_expression of stack_expression
+    | Queue_expression of queue_expression
 
 and discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
@@ -125,6 +126,7 @@ and discrete_boolean_expression =
     | Array_comparison of array_expression * relop * array_expression
     | List_comparison of list_expression * relop * list_expression
     | Stack_comparison of stack_expression * relop * stack_expression
+    | Queue_comparison of queue_expression * relop * queue_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
@@ -197,14 +199,21 @@ and stack_expression =
     | Stack_push of global_expression * stack_expression
     | Stack_clear of stack_expression
 
+and queue_expression =
+    | Queue_variable of Automaton.variable_index
+
 and expression_access_type =
     | Expression_array_access of array_expression
     | Expression_list_access of list_expression
 
-type discrete_variable_access =
-    | Discrete_variable_index of Automaton.discrete_index
-    | Discrete_variable_access of discrete_variable_access * int_arithmetic_expression
-    | Discrete_wildcard
+(* Update type *)
+type variable_update_type =
+    (* Variable update, ie: x := 1 *)
+    | Variable_update of Automaton.discrete_index
+    (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
+    | Indexed_update of variable_update_type * int_arithmetic_expression
+    (* Unit expression, side effect expression without assignment, ie: stack_pop(s) *)
+    | Void_update
 
 
 val is_linear_discrete_boolean_expression : discrete_boolean_expression -> bool
@@ -248,4 +257,4 @@ val string_of_array_expression : (Automaton.variable_index -> string) -> array_e
 val string_of_list_expression : (Automaton.variable_index -> string) -> list_expression -> string
 val string_of_stack_expression : (Automaton.variable_index -> string) -> stack_expression -> string
 
-val string_of_discrete_variable_access : (Automaton.variable_index -> string) -> discrete_variable_access -> string
+val string_of_variable_update_type : (Automaton.variable_index -> string) -> variable_update_type -> string

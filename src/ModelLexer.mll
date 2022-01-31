@@ -130,6 +130,7 @@ rule token = parse
   *)
   | "list"           { CT_LIST }
   | "stack"          { CT_STACK }
+  | "queue"          { CT_QUEUE }
 
 
 

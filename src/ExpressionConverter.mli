@@ -111,6 +111,6 @@ val bool_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 
-val variable_access_of_typed_variable_access : variable_infos -> TypeChecker.typed_variable_access -> DiscreteExpressions.discrete_variable_access
+val variable_access_of_typed_variable_access : variable_infos -> TypeChecker.typed_variable_access -> DiscreteExpressions.variable_update_type
 
 end

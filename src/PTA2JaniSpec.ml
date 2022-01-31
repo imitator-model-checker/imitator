@@ -220,6 +220,10 @@ let rec string_of_value = function
         let str_values = Stack.fold (fun acc x -> acc @ [string_of_value x]) [] value in
         jani_array_value (Array.of_list str_values)
 
+    | DiscreteValue.Queue_value value ->
+        let str_values = Queue.fold (fun acc x -> acc @ [string_of_value x]) [] value in
+        jani_array_value (Array.of_list str_values)
+
     | DiscreteValue.Binary_word_value value ->
         let bool_array = BinaryWord.to_array value in
         let str_values = Array.map (fun x -> if x then "true" else "false") bool_array in
@@ -244,6 +248,7 @@ let rec customized_string_of_global_expression_for_jani customized_string variab
     | Array_expression expr -> customized_string_of_array_expression_for_jani customized_string variable_names expr
     | List_expression expr -> customized_string_of_list_expression_for_jani customized_string variable_names expr
     | Stack_expression expr -> customized_string_of_stack_expression_for_jani customized_string variable_names expr
+    | Queue_expression expr -> customized_string_of_queue_expression_for_jani customized_string variable_names expr
 
 and customized_string_of_boolean_expression_for_jani customized_string variable_names = function
 	| True_bool -> customized_string.boolean_string.true_string
@@ -282,6 +287,10 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
 
     | Stack_comparison (l_expr, relop, r_expr) ->
         string_of_comparison customized_string variable_names l_expr relop r_expr customized_string_of_stack_expression_for_jani
+
+    | Queue_comparison (l_expr, relop, r_expr) ->
+        string_of_comparison customized_string variable_names l_expr relop r_expr customized_string_of_queue_expression_for_jani
+
 
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	(*Done for jani, but without test*)
@@ -660,6 +669,8 @@ and customized_string_of_stack_expression_for_jani customized_string variable_na
             [|customized_string_of_stack_expression_for_jani customized_string variable_names stack_expr|]
             ~str_comment:(undeclared_function_warning label)
 
+and customized_string_of_queue_expression_for_jani customized_string variable_names = function
+    | Queue_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
 
 and string_of_expression_of_access_for_jani customized_string variable_names = function
     | Expression_array_access array_expr ->
@@ -792,7 +803,8 @@ let rec string_of_var_type_discrete_for_jani = function
 
     | DiscreteType.Var_type_discrete_array (inner_type, _)
     | DiscreteType.Var_type_discrete_list inner_type
-    | DiscreteType.Var_type_discrete_stack inner_type ->
+    | DiscreteType.Var_type_discrete_stack inner_type
+    | DiscreteType.Var_type_discrete_queue inner_type ->
         json_struct [|
             json_property "kind" (json_quoted "array");
             json_property "base" (string_of_var_type_discrete_for_jani inner_type)

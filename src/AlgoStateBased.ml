@@ -1412,9 +1412,9 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
 
     let rec discrete_index_of_variable_access = function
-        | Discrete_variable_index discrete_index -> Some discrete_index
-        | Discrete_variable_access (variable_access, _) -> discrete_index_of_variable_access variable_access
-        | Discrete_wildcard -> None
+        | Variable_update discrete_index -> Some discrete_index
+        | Indexed_update (variable_access, _) -> discrete_index_of_variable_access variable_access
+        | Void_update -> None
     in
 
 	(* make a copy of the location *)
@@ -1436,10 +1436,10 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		let clock_updates, discrete_updates = get_updates source_location updates in
 
 		(* Update discrete *)
-		List.iter (fun (discrete_variable_access, global_expression) ->
+		List.iter (fun (variable_update_type, global_expression) ->
 
             let discrete_valuation = Location.get_discrete_value location in
-            let discrete_index_opt = discrete_index_of_variable_access discrete_variable_access in
+            let discrete_index_opt = discrete_index_of_variable_access variable_update_type in
 
             match discrete_index_opt with
             | None ->
@@ -1453,7 +1453,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
                 (* Compute its new value *)
                 let new_value = eval_global_expression discrete_valuation_opt global_expression in
-                let new_value = pack_value model.variable_names discrete_valuation_opt old_value new_value discrete_variable_access in
+                let new_value = pack_value model.variable_names discrete_valuation_opt old_value new_value variable_update_type in
 
                 (*
                 print_message Verbose_standard (

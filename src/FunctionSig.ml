@@ -55,6 +55,7 @@ and defined_type_constraint =
     | Array_constraint of type_constraint * length_constraint
     | List_constraint of type_constraint
     | Stack_constraint of type_constraint
+    | Queue_constraint of type_constraint
 
 (* Signature constraint is a list of type constraint *)
 type signature_constraint = type_constraint list
@@ -98,6 +99,8 @@ let rec string_of_defined_type_constraint = function
         string_of_type_constraint type_constraint ^ " list"
     | Stack_constraint type_constraint ->
         string_of_type_constraint type_constraint ^ " stack"
+    | Queue_constraint type_constraint ->
+        string_of_type_constraint type_constraint ^ " queue"
 
 and string_of_type_constraint = function
     | Type_name_constraint constraint_name -> "'" ^ constraint_name
@@ -170,7 +173,8 @@ and is_discrete_type_compatible_with_defined_type_constraint discrete_type defin
         is_discrete_type_compatible_with_type_constraint inner_type type_constraint
         && is_discrete_type_compatible_with_length_constraint length length_constraint
     | Var_type_discrete_list inner_type, List_constraint type_constraint
-    | Var_type_discrete_stack inner_type, Stack_constraint type_constraint ->
+    | Var_type_discrete_stack inner_type, Stack_constraint type_constraint
+    | Var_type_discrete_queue inner_type, Queue_constraint type_constraint ->
         is_discrete_type_compatible_with_type_constraint inner_type type_constraint
     | _ -> false
 

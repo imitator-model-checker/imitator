@@ -974,13 +974,13 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
 
 
 let rec type_check_variable_access variable_infos infer_type_opt = function
-    | Variable_name variable_name ->
+    | Parsed_variable_update variable_name ->
         (* Get assigned variable type *)
         let var_type = get_type_of_variable_by_name variable_infos variable_name in
         let discrete_type = discrete_type_of_var_type var_type in
         Typed_variable_name variable_name, discrete_type, false (* no side effect *)
 
-    | Variable_access (variable_access, index_expr) ->
+    | Parsed_indexed_update (variable_access, index_expr) ->
 
         let typed_variable_access, discrete_type, is_variable_access_has_side_effects = type_check_variable_access variable_infos infer_type_opt variable_access in
         let typed_index_expr_type, _, is_index_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_opt index_expr in
@@ -993,7 +993,7 @@ let rec type_check_variable_access variable_infos infer_type_opt = function
         in
         Typed_variable_access (typed_variable_access, typed_index_expr_type, discrete_type), discrete_type, is_variable_access_has_side_effects || is_index_expr_has_side_effects
 
-    | Wildcard -> Typed_wildcard, Var_type_weak, false
+    | Parsed_void_update -> Typed_wildcard, Var_type_weak, false
 
 let type_check_parsed_loc_predicate variable_infos infer_type_opt = function
 	| Parsed_loc_predicate_EQ (automaton_name, loc_name) -> Typed_loc_predicate_EQ (automaton_name, loc_name), Var_type_discrete_bool, false
@@ -1348,7 +1348,7 @@ val bool_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 
-val variable_access_of_typed_variable_access : variable_infos -> TypeChecker.typed_variable_access -> DiscreteExpressions.discrete_variable_access
+val variable_access_of_typed_variable_access : variable_infos -> TypeChecker.typed_variable_access -> DiscreteExpressions.variable_update_type
 
 
 end = struct
@@ -1433,12 +1433,17 @@ and global_expression_of_typed_boolean_expression variable_infos expr discrete_t
         List_expression (
             list_expression_of_typed_boolean_expression variable_infos inner_type expr
         )
-    | Var_type_weak ->
-        raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
     | Var_type_discrete_stack inner_type ->
         Stack_expression (
             stack_expression_of_typed_boolean_expression variable_infos inner_type expr
         )
+    | Var_type_discrete_queue inner_type ->
+        Queue_expression (
+            queue_expression_of_typed_boolean_expression variable_infos inner_type expr
+        )
+    | Var_type_weak ->
+        raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
+
 
 and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos discrete_number_type = function
 	| Typed_discrete_bool_expr (expr, _) ->
@@ -1588,14 +1593,21 @@ and bool_expression_of_typed_comparison variable_infos l_expr relop r_expr = fun
             convert_parsed_relop relop,
             list_expression_of_typed_discrete_boolean_expression variable_infos inner_type r_expr
         )
-    | Var_type_weak ->
-        raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
     | Var_type_discrete_stack inner_type ->
         Stack_comparison (
             stack_expression_of_typed_discrete_boolean_expression variable_infos inner_type l_expr,
             convert_parsed_relop relop,
             stack_expression_of_typed_discrete_boolean_expression variable_infos inner_type r_expr
         )
+    | Var_type_discrete_queue inner_type ->
+        Queue_comparison (
+            queue_expression_of_typed_discrete_boolean_expression variable_infos inner_type l_expr,
+            convert_parsed_relop relop,
+            queue_expression_of_typed_discrete_boolean_expression variable_infos inner_type r_expr
+        )
+    | Var_type_weak ->
+        raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
+
 
 and bool_expression_of_typed_arithmetic_expression variable_infos = function
 	| Typed_term (term, _) ->
@@ -2280,7 +2292,7 @@ and stack_expression_of_typed_factor variable_infos discrete_type = function
 	    stack_expression_of_typed_function_call variable_infos discrete_type argument_expressions function_name
 
 	| _ ->
-        raise (InternalError "The expression type indicate that it should be converted to a list expression, but a non list expression is found. Maybe something failed in type checking or conversion.")
+        raise (InternalError "The expression type indicate that it should be converted to a stack expression, but a non list expression is found. Maybe something failed in type checking or conversion.")
 
 and stack_expression_of_typed_function_call variable_infos discrete_type argument_expressions = function
     | "stack_push" ->
@@ -2298,6 +2310,66 @@ and stack_expression_of_typed_function_call variable_infos discrete_type argumen
         )
 
     | function_name -> raise (UndefinedFunction function_name)
+
+
+and queue_expression_of_typed_boolean_expression_with_type variable_infos = function
+    | Typed_discrete_bool_expr (expr, discrete_type) ->
+        let inner_type =
+            match discrete_type with
+            | Var_type_discrete_stack inner_type -> inner_type
+            | inner_type -> raise (InternalError ("The expression type indicate that it should be converted to a queue expression, but a " ^ (DiscreteType.string_of_var_type_discrete inner_type) ^ " expression is found. Maybe something failed in type checking or conversion."))
+        in
+
+        queue_expression_of_typed_discrete_boolean_expression variable_infos inner_type expr
+    | _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a list expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
+
+
+and queue_expression_of_typed_boolean_expression variable_infos discrete_type = function
+    | Typed_discrete_bool_expr (expr, _) ->
+        queue_expression_of_typed_discrete_boolean_expression variable_infos discrete_type expr
+    | _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a queue expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
+
+and queue_expression_of_typed_discrete_boolean_expression variable_infos discrete_type = function
+    | Typed_arithmetic_expr (expr, _) ->
+        queue_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
+    | _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a queue expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
+
+and queue_expression_of_typed_arithmetic_expression variable_infos discrete_type = function
+	| Typed_term (term, _) ->
+        queue_expression_of_typed_term variable_infos discrete_type term
+    | _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a queue expression, but an arithmetic expression is found. Maybe something failed in type checking or conversion.")
+
+and queue_expression_of_typed_term variable_infos discrete_type = function
+	| Typed_factor (factor, _) ->
+        queue_expression_of_typed_factor variable_infos discrete_type factor
+    | _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a queue expression, but an arithmetic expression is found. Maybe something failed in type checking or conversion.")
+
+and queue_expression_of_typed_factor variable_infos discrete_type = function
+	| Typed_variable (variable_name, _) ->
+        let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+        (match variable_kind with
+        | Constant_kind value ->
+            raise (InternalError "")
+        | Variable_kind discrete_index -> Queue_variable discrete_index
+        )
+	| Typed_expr (expr, _) ->
+        queue_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
+
+	| Typed_function_call (function_name, argument_expressions, _) ->
+	    queue_expression_of_typed_function_call variable_infos discrete_type argument_expressions function_name
+
+	| _ ->
+        raise (InternalError "The expression type indicate that it should be converted to a queue expression, but a non list expression is found. Maybe something failed in type checking or conversion.")
+
+and queue_expression_of_typed_function_call variable_infos discrete_type argument_expressions = function
+
+    | function_name -> raise (UndefinedFunction function_name)
+
 
 (* --------------------*)
 (* Access conversion *)
@@ -2325,16 +2397,16 @@ let rec variable_access_of_typed_variable_access variable_infos = function
         let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
         (match variable_kind with
         | Constant_kind value -> raise (InternalError "Unable to set a constant expression")
-        | Variable_kind discrete_index -> Discrete_variable_index discrete_index
+        | Variable_kind discrete_index -> Variable_update discrete_index
         )
 
     | Typed_variable_access (variable_access, index_expr, _) ->
-        Discrete_variable_access (
+        Indexed_update (
             variable_access_of_typed_variable_access variable_infos variable_access,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
-    | Typed_wildcard -> Discrete_wildcard
+    | Typed_wildcard -> Void_update
 
 
 (*------------------------------------------------------------*)
