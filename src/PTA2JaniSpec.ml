@@ -346,6 +346,13 @@ and customized_string_of_discrete_boolean_expression_for_jani customized_string 
             [|customized_string_of_stack_expression_for_jani customized_string variable_names stack_expr|]
             ~str_comment:(undeclared_function_warning label)
 
+    | Queue_is_empty queue_expr as func ->
+        let label = label_of_bool_factor func in
+        jani_function_call
+            label
+            [|customized_string_of_queue_expression_for_jani customized_string variable_names queue_expr|]
+            ~str_comment:(undeclared_function_warning label)
+
 and customized_string_of_arithmetic_expression_for_jani customized_string variable_names = function
     | Rational_arithmetic_expression expr -> customized_string_of_rational_arithmetic_expression_for_jani customized_string variable_names expr
     | Int_arithmetic_expression expr -> customized_string_of_int_arithmetic_expression_for_jani customized_string variable_names expr
@@ -437,6 +444,19 @@ and customized_string_of_rational_arithmetic_expression_for_jani customized_stri
                 [|customized_string_of_stack_expression_for_jani customized_string variable_names stack_expr|]
                 ~str_comment:(undeclared_function_warning label)
 
+        | Rational_queue_pop queue_expr as func ->
+            let label = label_of_rational_factor func in
+            jani_function_call
+                label
+                [|customized_string_of_queue_expression_for_jani customized_string variable_names queue_expr|]
+                ~str_comment:(undeclared_function_warning label)
+
+        | Rational_queue_top queue_expr as func ->
+            let label = label_of_rational_factor func in
+            jani_function_call
+                label
+                [|customized_string_of_queue_expression_for_jani customized_string variable_names queue_expr|]
+                ~str_comment:(undeclared_function_warning label)
 
 	(* Call top-level *)
 	in string_of_arithmetic_expression customized_string
@@ -528,6 +548,13 @@ and customized_string_of_int_arithmetic_expression_for_jani customized_string va
             jani_function_call
                 label
                 [|customized_string_of_stack_expression_for_jani customized_string variable_names stack_expr|]
+                ~str_comment:(undeclared_function_warning label)
+
+        | Queue_length queue_expr as func ->
+            let label = label_of_int_factor func in
+            jani_function_call
+                label
+                [|customized_string_of_queue_expression_for_jani customized_string variable_names queue_expr|]
                 ~str_comment:(undeclared_function_warning label)
 
 	(* Call top-level *)
@@ -671,6 +698,24 @@ and customized_string_of_stack_expression_for_jani customized_string variable_na
 
 and customized_string_of_queue_expression_for_jani customized_string variable_names = function
     | Queue_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
+    | Queue_push (expr, queue_expr) as func ->
+        (* Get label of expression *)
+        let label = label_of_queue_expression func in
+        jani_function_call
+            label
+            [|
+                customized_string_of_global_expression_for_jani customized_string variable_names expr;
+                customized_string_of_queue_expression_for_jani customized_string variable_names queue_expr
+            |]
+            ~str_comment:(undeclared_function_warning label)
+    | Queue_clear queue_expr as func ->
+        (* Get label of expression *)
+        let label = label_of_queue_expression func in
+        jani_function_call
+            label
+            [|customized_string_of_queue_expression_for_jani customized_string variable_names queue_expr|]
+            ~str_comment:(undeclared_function_warning label)
+
 
 and string_of_expression_of_access_for_jani customized_string variable_names = function
     | Expression_array_access array_expr ->

@@ -154,6 +154,38 @@ let function_by_name = function
             Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
             Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
         ], No_side_effect
+    | "queue_push" ->
+        [
+            Type_name_constraint "a";
+            Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
+            Defined_type_constraint (Queue_constraint (Type_name_constraint "a"))
+        ], Side_effect
+    | "queue_pop" ->
+        [
+            Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
+            Type_name_constraint "a"
+        ], Side_effect
+    | "queue_top" ->
+        [
+            Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
+            Type_name_constraint "a"
+        ], No_side_effect
+    | "queue_clear" ->
+        [
+            Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
+            Defined_type_constraint (Queue_constraint (Type_name_constraint "a"))
+        ], Side_effect
+    | "queue_is_empty" ->
+        [
+            Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
+            Defined_type_constraint Bool_constraint
+        ], No_side_effect
+    | "queue_length" ->
+        [
+            Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
+            Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
+        ], No_side_effect
+
     | "fake" ->
         [
             Defined_type_constraint (List_constraint (Defined_type_constraint (List_constraint (Type_name_constraint "a"))));

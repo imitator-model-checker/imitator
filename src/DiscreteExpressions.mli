@@ -69,8 +69,11 @@ and rational_factor =
 	| Rational_of_int of int_arithmetic_expression
 	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
 	| Rational_list_hd of list_expression
+	(* TODO benjamin REFACTORUS duplicates *)
     | Rational_stack_pop of stack_expression
     | Rational_stack_top of stack_expression
+    | Rational_queue_pop of queue_expression
+    | Rational_queue_top of queue_expression
 (*	| Rational_function_call of string * global_expression list*)
 
 (************************************************************)
@@ -92,13 +95,15 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
-    (* TODO benjamin here decline array_expression to int_array_expression *)
+    (* TODO benjamin REFACTORUS here decline array_expression to int_array_expression *)
     | Int_access of expression_access_type * int_arithmetic_expression
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_list_hd of list_expression
+    (* TODO benjamin REFACTORUS replace all X_length by new variant *)
     | Array_length of array_expression
     | List_length of list_expression
     | Stack_length of stack_expression
+    | Queue_length of queue_expression
 (*    | Int_function_call of string * global_expression list*)
 
 (************************************************************)
@@ -118,7 +123,7 @@ and boolean_expression =
 
 and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	(* TODO benjamin create another type regrouping all comparisons *)
+	(* TODO benjamin REFACTORUS create another type regrouping all comparisons *)
     (* TODO benjamin look for Expression because even if it was type checked before it's structure can potentially compare different type *)
 	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
     | Boolean_comparison of discrete_boolean_expression * relop * discrete_boolean_expression
@@ -145,6 +150,7 @@ and discrete_boolean_expression =
     | List_mem of global_expression * list_expression
     | Array_mem of global_expression * array_expression
     | Stack_is_empty of stack_expression
+    | Queue_is_empty of queue_expression
 (*    | Bool_function_call of string * global_expression list*)
 
 (************************************************************)
@@ -201,6 +207,8 @@ and stack_expression =
 
 and queue_expression =
     | Queue_variable of Automaton.variable_index
+    | Queue_push of global_expression * queue_expression
+    | Queue_clear of queue_expression
 
 and expression_access_type =
     | Expression_array_access of array_expression
@@ -228,6 +236,7 @@ val label_of_binary_word_expression : binary_word_expression -> string
 val label_of_array_expression : array_expression -> string
 val label_of_list_expression : list_expression -> string
 val label_of_stack_expression : stack_expression -> string
+val label_of_queue_expression : queue_expression -> string
 
 (* String representation of boolean according to customized string *)
 val customized_string_of_bool_value : Constants.customized_boolean_string -> bool -> string
@@ -256,5 +265,6 @@ val string_of_array_expression : (Automaton.variable_index -> string) -> array_e
 
 val string_of_list_expression : (Automaton.variable_index -> string) -> list_expression -> string
 val string_of_stack_expression : (Automaton.variable_index -> string) -> stack_expression -> string
+val string_of_queue_expression : (Automaton.variable_index -> string) -> queue_expression -> string
 
 val string_of_variable_update_type : (Automaton.variable_index -> string) -> variable_update_type -> string

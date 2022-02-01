@@ -70,6 +70,8 @@ and rational_factor =
     | Rational_list_hd of list_expression
     | Rational_stack_pop of stack_expression
     | Rational_stack_top of stack_expression
+    | Rational_queue_pop of queue_expression
+    | Rational_queue_top of queue_expression
 (*    | Rational_function_call of string * global_expression list*)
 
 
@@ -98,6 +100,7 @@ and int_factor =
     | Array_length of array_expression
     | List_length of list_expression
     | Stack_length of stack_expression
+    | Queue_length of queue_expression
 (*    | Int_function_call of string * global_expression list*)
 
 (****************************************************************)
@@ -139,6 +142,7 @@ and discrete_boolean_expression =
     (* Function array_mem *)
     | Array_mem of global_expression * array_expression
     | Stack_is_empty of stack_expression
+    | Queue_is_empty of queue_expression
 (*    | Bool_function_call of string * global_expression list*)
 
 
@@ -203,6 +207,8 @@ and stack_expression =
 
 and queue_expression =
     | Queue_variable of Automaton.variable_index
+    | Queue_push of global_expression * queue_expression
+    | Queue_clear of queue_expression
 
 and expression_access_type =
     | Expression_array_access of array_expression
@@ -410,6 +416,7 @@ let label_of_bool_factor = function
     | List_mem _ -> "list_mem"
     | Array_mem _ -> "array_mem"
     | Stack_is_empty _ -> "stack_is_empty"
+    | Queue_is_empty _ -> "queue_is_empty"
 
 let label_of_rational_factor = function
 	| Rational_variable _ -> "rational variable"
@@ -422,6 +429,8 @@ let label_of_rational_factor = function
 	| Rational_list_hd _ -> "list_hd"
 	| Rational_stack_pop _ -> "stack_pop"
 	| Rational_stack_top _ -> "stack_top"
+	| Rational_queue_pop _ -> "queue_pop"
+	| Rational_queue_top _ -> "queue_top"
 
 let label_of_int_factor = function
 	| Int_variable _ -> "int variable"
@@ -434,6 +443,7 @@ let label_of_int_factor = function
 	| Array_length _ -> "array_length"
 	| List_length _ -> "list_length"
 	| Stack_length _ -> "stack_length"
+	| Queue_length _ -> "queue_length"
 
 let label_of_binary_word_expression = function
     | Logical_shift_left _ -> "shift_left"
@@ -471,6 +481,11 @@ let label_of_stack_expression = function
     | Stack_variable _ -> "stack"
     | Stack_push _ -> "stack_push"
     | Stack_clear _ -> "stack_clear"
+
+let label_of_queue_expression = function
+    | Queue_variable _ -> "queue"
+    | Queue_push _ -> "queue_push"
+    | Queue_clear _ -> "queue_clear"
 
 (* Check if a binary word encoded on an integer have length greater than 31 bits *)
 (* If it's the case, print a warning *)
@@ -579,6 +594,16 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
                 (label_of_rational_factor factor)
                 [customized_string_of_stack_expression customized_string variable_names stack_expr]
 
+        | Rational_queue_pop queue_expr as factor ->
+            print_function
+                (label_of_rational_factor factor)
+                [customized_string_of_queue_expression customized_string variable_names queue_expr]
+
+        | Rational_queue_top queue_expr as factor ->
+            print_function
+                (label_of_rational_factor factor)
+                [customized_string_of_queue_expression customized_string variable_names queue_expr]
+
 		| Rational_expression discrete_arithmetic_expression ->
 			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 	(* Call top-level *)
@@ -669,6 +694,10 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
             print_function
                 (label_of_int_factor func)
                 [customized_string_of_stack_expression customized_string variable_names stack_expr]
+        | Queue_length queue_expr as func ->
+            print_function
+                (label_of_int_factor func)
+                [customized_string_of_queue_expression customized_string variable_names queue_expr]
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 
@@ -758,6 +787,11 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
         print_function
             (label_of_bool_factor func)
             [customized_string_of_stack_expression customized_string variable_names stack_expr]
+
+    | Queue_is_empty queue_expr as func ->
+        print_function
+            (label_of_bool_factor func)
+            [customized_string_of_queue_expression customized_string variable_names queue_expr]
 
 and customized_string_of_boolean_operations customized_string = function
 	| OP_L		-> customized_string.l_operator
@@ -919,6 +953,17 @@ and customized_string_of_stack_expression customized_string variable_names = fun
 
 and customized_string_of_queue_expression customized_string variable_names = function
     | Queue_variable variable_index -> variable_names variable_index
+    | Queue_push (expr, queue_expr) as func ->
+        print_function
+            (label_of_queue_expression func)
+            [
+                customized_string_of_global_expression customized_string variable_names expr;
+                customized_string_of_queue_expression customized_string variable_names queue_expr
+            ]
+    | Queue_clear queue_expr as func ->
+        print_function
+            (label_of_queue_expression func)
+            [customized_string_of_queue_expression customized_string variable_names queue_expr]
 
 and string_of_expression_of_access customized_string variable_names = function
     | Expression_array_access array_expr ->
@@ -937,6 +982,7 @@ let string_of_discrete_boolean_expression = customized_string_of_discrete_boolea
 let string_of_array_expression = customized_string_of_array_expression Constants.global_default_string
 let string_of_list_expression = customized_string_of_list_expression Constants.global_default_string
 let string_of_stack_expression = customized_string_of_stack_expression Constants.global_default_string
+let string_of_queue_expression = customized_string_of_queue_expression Constants.global_default_string
 
 let rec string_of_variable_update_type variable_names = function
     | Variable_update discrete_index ->

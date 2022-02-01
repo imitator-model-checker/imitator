@@ -26,31 +26,30 @@ let stack_top_fail_message stack_expr =
     let str_expr = DiscreteExpressions.string_of_stack_expression (fun i -> "") stack_expr in
     "Use of `stack_top` on empty stack `" ^ str_expr ^ "`."
 
-(* Eval list_hd function, if the list is empty, raise a proper exception *)
-let try_eval_list_hd list fail_message =
-    if List.length list = 0 then
-        raise (Out_of_bound fail_message)
-    else
-        List.hd list
+let queue_pop_fail_message queue_expr =
+    let str_expr = DiscreteExpressions.string_of_queue_expression (fun i -> "") queue_expr in
+    "Use of `queue_pop` on empty queue `" ^ str_expr ^ "`."
 
-(* Eval list_hd function, if the list is empty, raise a proper exception *)
-let try_eval_list_tl list fail_message =
-    if List.length list = 0 then
-        raise (Out_of_bound fail_message)
-    else
-        List.tl list
+let queue_top_fail_message queue_expr =
+    let str_expr = DiscreteExpressions.string_of_queue_expression (fun i -> "") queue_expr in
+    "Use of `queue_top` on empty queue `" ^ str_expr ^ "`."
 
-let try_eval_stack_pop stack fail_message =
-    if Stack.length stack = 0 then
+(* Evaluate function on a sequence, raise an exception if sequence is empty *)
+let eval_if_not_empty eval_length_function eval_function collection fail_message =
+    if eval_length_function collection = 0 then
         raise (Empty_collection fail_message)
     else
-        Stack.pop stack
+        eval_function collection
 
-let try_eval_stack_top stack fail_message =
-    if Stack.length stack = 0 then
-        raise (Empty_collection fail_message)
-    else
-        Stack.top stack
+let try_eval_list_hd seq (* fail_message *) = eval_if_not_empty List.length List.hd seq (* fail_message *)
+let try_eval_list_tl seq (* fail_message *) = eval_if_not_empty List.length List.tl seq (* fail_message *)
+let try_eval_stack_pop seq (* fail_message *) = eval_if_not_empty Stack.length Stack.pop seq (* fail_message *)
+let try_eval_stack_top seq (* fail_message *) = eval_if_not_empty Stack.length Stack.top seq (* fail_message *)
+let try_eval_queue_pop seq (* fail_message *) = eval_if_not_empty Queue.length Queue.pop seq (* fail_message *)
+let try_eval_queue_top seq (* fail_message *) = eval_if_not_empty Queue.length Queue.top seq (* fail_message *)
+
+
+
 
 (* Try evaluating variable value if a discrete valuation is given *)
 (* Otherwise, it means that we are trying to evaluate an expression that should have to be constant (without variable) *)
@@ -145,6 +144,18 @@ and eval_rational_factor discrete_valuation = function
         let value = try_eval_stack_top stack fail_message in
         DiscreteValue.numconst_value value
 
+    | Rational_queue_pop queue_expr ->
+        let queue = eval_queue_expression discrete_valuation queue_expr in
+        let fail_message = queue_pop_fail_message queue_expr in
+        let value = try_eval_queue_pop queue fail_message in
+        DiscreteValue.numconst_value value
+
+    | Rational_queue_top queue_expr ->
+        let queue = eval_queue_expression discrete_valuation queue_expr in
+        let fail_message = queue_top_fail_message queue_expr in
+        let value = try_eval_queue_top queue fail_message in
+        DiscreteValue.numconst_value value
+
 and eval_int_expression discrete_valuation (* expr *) =
     let rec eval_int_expression_rec = function
         | Int_plus (expr, term) ->
@@ -207,6 +218,7 @@ and eval_int_expression discrete_valuation (* expr *) =
             let fail_message = list_hd_fail_message list_expr in
             let value = try_eval_list_hd list fail_message in
             DiscreteValue.int_value value
+
         | Array_length array_expr ->
             let array = eval_array_expression discrete_valuation array_expr in
             Int32.of_int (Array.length array)
@@ -216,6 +228,9 @@ and eval_int_expression discrete_valuation (* expr *) =
         | Stack_length stack_expr ->
             let stack = eval_stack_expression discrete_valuation stack_expr in
             Int32.of_int (Stack.length stack)
+        | Queue_length queue_expr ->
+            let queue = eval_queue_expression discrete_valuation queue_expr in
+            Int32.of_int (Queue.length queue)
     in
     eval_int_expression_rec
 
@@ -299,6 +314,9 @@ and eval_discrete_boolean_expression discrete_valuation = function
     | Stack_is_empty stack_expr ->
         let stack = eval_stack_expression discrete_valuation stack_expr in
         Stack.is_empty stack
+    | Queue_is_empty queue_expr ->
+        let queue = eval_queue_expression discrete_valuation queue_expr in
+        Queue.is_empty queue
 
 and eval_binary_word_expression discrete_valuation = function
     | Logical_shift_left (binary_word, expr, _) ->
@@ -409,6 +427,14 @@ and eval_stack_expression discrete_valuation = function
 and eval_queue_expression discrete_valuation = function
     | Queue_variable variable_index ->
         DiscreteValue.queue_value (try_eval_variable variable_index discrete_valuation)
+    | Queue_push (expr, queue_expr) ->
+        let e = eval_global_expression discrete_valuation expr in
+        let queue = eval_queue_expression discrete_valuation queue_expr in
+        Queue.push e queue; queue
+
+    | Queue_clear queue_expr ->
+        let queue = eval_queue_expression discrete_valuation queue_expr in
+        Queue.clear queue; queue
 
 and get_array_value_at discrete_valuation array_expr index_expr =
 

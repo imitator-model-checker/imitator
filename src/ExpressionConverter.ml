@@ -1674,6 +1674,11 @@ and bool_expression_of_typed_function_call variable_infos argument_expressions =
         Stack_is_empty (
             stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
+    | "queue_is_empty" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Queue_is_empty (
+            queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
 
     | function_name -> raise (UndefinedFunction function_name)
 
@@ -1792,7 +1797,16 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
         Rational_stack_top (
             stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
-
+    | "queue_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Rational_queue_pop (
+            queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
+    | "queue_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Rational_queue_top (
+            queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
     | function_name -> raise (UndefinedFunction function_name)
 
 (* --------------------*)
@@ -1908,6 +1922,11 @@ and int_expression_of_typed_function_call variable_infos argument_expressions = 
         let arg_0 = List.nth argument_expressions 0 in
         Stack_length (
             stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
+    | "queue_length" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Queue_length (
+            queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
     (* TODO benjamin, in the future replace raise by custom function call as comment below *)
     | function_name -> raise (UndefinedFunction function_name)
@@ -2316,7 +2335,7 @@ and queue_expression_of_typed_boolean_expression_with_type variable_infos = func
     | Typed_discrete_bool_expr (expr, discrete_type) ->
         let inner_type =
             match discrete_type with
-            | Var_type_discrete_stack inner_type -> inner_type
+            | Var_type_discrete_queue inner_type -> inner_type
             | inner_type -> raise (InternalError ("The expression type indicate that it should be converted to a queue expression, but a " ^ (DiscreteType.string_of_var_type_discrete inner_type) ^ " expression is found. Maybe something failed in type checking or conversion."))
         in
 
@@ -2367,7 +2386,19 @@ and queue_expression_of_typed_factor variable_infos discrete_type = function
         raise (InternalError "The expression type indicate that it should be converted to a queue expression, but a non list expression is found. Maybe something failed in type checking or conversion.")
 
 and queue_expression_of_typed_function_call variable_infos discrete_type argument_expressions = function
+    | "queue_push" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        let arg_1 = List.nth argument_expressions 1 in
+        Queue_push (
+            global_expression_of_typed_boolean_expression variable_infos arg_0 discrete_type,
+            queue_expression_of_typed_boolean_expression_with_type variable_infos arg_1
+        )
 
+    | "queue_clear" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Queue_clear (
+            queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
     | function_name -> raise (UndefinedFunction function_name)
 
 

@@ -624,10 +624,23 @@ let check_update variable_infos automaton_name update =
                 print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); false
         in
 
+        (* Function that check if all variables are defined in update *)
+        let check_all_variables_defined_in_update variable_name =
+            let all_variables_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
+
+            if not all_variables_defined then (
+                (* TODO benjamin IMPROVE get variable names as before ! *)
+                print_error ("A variable used in update \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression ^ "\" in automaton `" ^ automaton_name ^ "` was not declared.");
+            );
+            all_variables_defined
+        in
+
         (* Function that check update on variable or variable access *)
         let rec check_variable_access = function
-            | Parsed_void_update -> true
+            | Parsed_void_update ->
+                check_all_variables_defined_in_update "_"
 
+            (* TODO benjamin IMPORTANT check if no error when variable not declared in index expression *)
             | Parsed_indexed_update (variable_access, _) ->
                 check_variable_access variable_access
 
