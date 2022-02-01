@@ -7,12 +7,11 @@
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: This module enable definition of customs IMITATOR functions
- * In order to define a new IMITATOR function, just create a module typed as FunctionImplementation
- * and fill the let-bindings.
+ * In order to define a new IMITATOR function, just add it's signature and tag to know if it is subject to side effects
  *
  * File contributors : Benjamin L.
  * Created           : 2021/11/20
- * Last modified     : 2021/11/20
+ * Last modified     : 2022/02/01
  *
  ************************************************************)
 
@@ -197,7 +196,7 @@ let function_by_name = function
 let signature_constraint_of_function function_name =
     let signature, _ = function_by_name function_name in signature
 
-(**)
+(* Get if function is subject to side-effects *)
 let is_function_subject_to_side_effect function_name =
     let _, side_effect_marker = function_by_name function_name in
     match side_effect_marker with
