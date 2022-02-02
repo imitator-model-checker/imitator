@@ -101,7 +101,14 @@ and int_factor =
     | List_length of list_expression
     | Stack_length of stack_expression
     | Queue_length of queue_expression
+    | Collection_length of sequence_expression
 (*    | Int_function_call of string * global_expression list*)
+
+and sequence_expression =
+    | Array_sequence of array_expression
+    | List_sequence of list_expression
+    | Stack_sequence of stack_expression
+    | Queue_sequence of queue_expression
 
 (****************************************************************)
 (** Boolean expressions for discrete variables *)

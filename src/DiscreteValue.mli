@@ -32,17 +32,6 @@ type discrete_value =
     | Stack_value of discrete_value Stack.t
     | Queue_value of discrete_value Queue.t
 
-(*
-type (_, _) discrete_value =
-    | Number_value : NumConst.t -> ('e, NumConst.t) discrete_value
-    | Rational_value : NumConst.t -> ('e, NumConst.t) discrete_value
-    | Int_value : Int32.t -> ('e, Int32.t) discrete_value
-    | Bool_value : bool -> ('e, bool) discrete_value
-    | Binary_word_value : BinaryWord.t -> ('e, BinaryWord.t) discrete_value
-    | Array_value : ('e, 'a) discrete_value array -> ('e, ('e, 'a) discrete_value array) discrete_value
-    | List_value : ('e, 'a) discrete_value list -> ('e, ('e, 'a) discrete_value list) discrete_value
-*)
-
 (** Values and types  **)
 
 (* Get var type of a discrete value *)

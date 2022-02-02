@@ -31,18 +31,35 @@ type discrete_value =
     | Stack_value of discrete_value Stack.t
     | Queue_value of discrete_value Queue.t
 
-
 (*
-type (_, _) discrete_value =
-    | Number_value : NumConst.t -> ('e, NumConst.t) discrete_value
-    | Rational_value : NumConst.t -> ('e, NumConst.t) discrete_value
-    | Int_value : Int32.t -> ('e, Int32.t) discrete_value
-    | Bool_value : bool -> ('e, bool) discrete_value
-    | Binary_word_value : BinaryWord.t -> ('e, BinaryWord.t) discrete_value
-    | Array_value : ('e, 'a) discrete_value array -> ('e, ('e, 'a) discrete_value array) discrete_value
-    | List_value : ('e, 'a) discrete_value list -> ('e, ('e, 'a) discrete_value list) discrete_value
-*)
+type rational_t
+type number_t
+type fake_array
+type fake_list
+type fake_stack
+type fake_queue
+type 'a array_t = 'a array
+type 'a list_t = 'a list
+type 'a stack_t = 'a * fake_stack
+type 'a queue_t = 'a * fake_queue
 
+type _ discrete_value2 =
+    | Number_value : NumConst.t -> number_t discrete_value2
+    | Rational_value : NumConst.t -> rational_t discrete_value2
+    | Int_value : Int32.t -> Int32.t discrete_value2
+    | Bool_value : Bool.t -> Bool.t discrete_value2
+    | Binary_word_value : BinaryWord.t -> BinaryWord.t discrete_value2
+    | Array_value : ('a discrete_value2) array -> ('a array_t) discrete_value2
+    | List_value : 'a discrete_value2 list -> 'a list_t discrete_value2
+    | Stack_value : 'a discrete_value2 Stack.t -> 'a stack_t discrete_value2
+    | Queue_value : 'a discrete_value2 Queue.t -> 'a queue_t discrete_value2
+
+let add (type t) (a : t discrete_value2) (b : t discrete_value2) : t discrete_value2 =
+  match a, b with
+  | Number_value a, Number_value b -> Number_value (NumConst.add a b)
+  | Rational_value a, Rational_value b -> Rational_value (NumConst.add a b)
+  | Int_value a, Int_value b -> Int_value (Int32.add a b)
+*)
 
 (* Get discrete var type of a discrete value *)
 let rec discrete_type_of_value = function
