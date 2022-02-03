@@ -353,15 +353,19 @@ discrete_boolean_predicate:
 ;
 
 discrete_expression:
-	| discrete_expression OP_PLUS discrete_term { Parsed_DAE_plus ($1, $3) }
-	| discrete_expression OP_MINUS discrete_term { Parsed_DAE_minus ($1, $3) }
+	| discrete_expression OP_PLUS discrete_term { Parsed_sum_diff ($1, $3, Parsed_plus) }
+	| discrete_expression OP_MINUS discrete_term { Parsed_sum_diff ($1, $3, Parsed_minus) }
 	| discrete_term { Parsed_DAE_term $1 }
 ;
 
 discrete_term:
-	| discrete_term OP_MUL discrete_factor { Parsed_DT_mul ($1, $3) }
-	| discrete_term OP_DIV discrete_factor { Parsed_DT_div ($1, $3) }
+	| discrete_term product_quotient discrete_factor { Parsed_product_quotient ($1, $3, $2) }
 	| discrete_factor { Parsed_DT_factor $1 }
+;
+
+product_quotient:
+    | OP_MUL { Parsed_mul }
+    | OP_DIV { Parsed_div }
 ;
 
 discrete_factor:

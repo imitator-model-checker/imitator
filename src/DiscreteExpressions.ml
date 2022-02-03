@@ -48,14 +48,20 @@ and discrete_arithmetic_expression =
 (** Rational arithmetic expressions for discrete variables *)
 (****************************************************************)
 and rational_arithmetic_expression =
-	| Rational_plus of rational_arithmetic_expression * rational_term
-	| Rational_minus of rational_arithmetic_expression * rational_term
+    | Rational_sum_diff of rational_arithmetic_expression * rational_term * sum_diff
 	| Rational_term of rational_term
 
+and sum_diff =
+    | Plus
+    | Minus
+
 and rational_term =
-	| Rational_mul of rational_term * rational_factor
-	| Rational_div of rational_term * rational_factor
+	| Rational_product_quotient of rational_term * rational_factor * product_quotient
 	| Rational_factor of rational_factor
+
+and product_quotient =
+    | Mul
+    | Div
 
 and rational_factor =
 	| Rational_variable of Automaton.variable_index
@@ -80,13 +86,11 @@ and rational_factor =
 (************************************************************)
 (************************************************************)
 and int_arithmetic_expression =
-	| Int_plus of int_arithmetic_expression * int_term
-	| Int_minus of int_arithmetic_expression * int_term
+    | Int_sum_diff  of int_arithmetic_expression * int_term * sum_diff
 	| Int_term of int_term
 
 and int_term =
-	| Int_mul of int_term * int_factor
-	| Int_div of int_term * int_factor
+	| Int_product_quotient of int_term * int_factor * product_quotient
 	| Int_factor of int_factor
 
 and int_factor =
@@ -101,14 +105,8 @@ and int_factor =
     | List_length of list_expression
     | Stack_length of stack_expression
     | Queue_length of queue_expression
-    | Collection_length of sequence_expression
 (*    | Int_function_call of string * global_expression list*)
 
-and sequence_expression =
-    | Array_sequence of array_expression
-    | List_sequence of list_expression
-    | Stack_sequence of stack_expression
-    | Queue_sequence of queue_expression
 
 (****************************************************************)
 (** Boolean expressions for discrete variables *)
@@ -148,6 +146,7 @@ and discrete_boolean_expression =
     | List_mem of global_expression * list_expression
     (* Function array_mem *)
     | Array_mem of global_expression * array_expression
+    | List_is_empty of list_expression
     | Stack_is_empty of stack_expression
     | Queue_is_empty of queue_expression
 (*    | Bool_function_call of string * global_expression list*)
@@ -233,14 +232,12 @@ type variable_update_type =
 (** Check linearity of a discrete expression **)
 
 let rec is_variable_rational_arithmetic_expression = function
-    | Rational_plus _
-    | Rational_minus _ -> false
+    | Rational_sum_diff _ -> false
     | Rational_term term ->
         is_variable_rational_term term
 
 and is_variable_rational_term = function
-    | Rational_mul _
-    | Rational_div _ -> false
+    | Rational_product_quotient _ -> false
     | Rational_factor factor -> is_variable_rational_factor factor
 
 and is_variable_rational_factor = function
@@ -279,20 +276,17 @@ and is_linear_arithmetic_expression = function
     | Int_arithmetic_expression expr -> false
 
 and is_linear_rational_arithmetic_expression = function
-    | Rational_plus (expr, term) ->
-        is_linear_rational_arithmetic_expression expr &&
-        is_linear_rational_term term
-    | Rational_minus (expr, term) ->
+    | Rational_sum_diff (expr, term, _) ->
         is_linear_rational_arithmetic_expression expr &&
         is_linear_rational_term term
     | Rational_term term ->
         is_linear_rational_term term
 
 and is_linear_rational_term = function
-    | Rational_mul (term, factor) ->
+    | Rational_product_quotient (term, factor, Mul) ->
         (* Two variable ? false, otherwise true *)
         not (is_variable_rational_term term && is_variable_rational_factor factor)
-    | Rational_div _ -> false
+    | Rational_product_quotient (_, _, Div) -> false
     | Rational_factor factor -> is_linear_rational_factor factor
 
 and is_linear_rational_factor = function
@@ -309,13 +303,12 @@ and is_linear_rational_factor = function
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_discrete_factor_has_parenthesis = function
     | Rational_unary_min _
-    | Rational_expression(Rational_plus _)
-    | Rational_expression(Rational_minus _) -> true
+    | Rational_expression (Rational_sum_diff _) -> true
     | _ -> false
 
 (* Check if discrete factor is a multiplication *)
 let is_discrete_factor_is_mul = function
-    | Rational_expression(Rational_term(Rational_mul _)) -> true
+    | Rational_expression (Rational_term (Rational_product_quotient (_, _, Mul))) -> true
     | _ -> false
 
 (* Check if a left expression should have parenthesis *)
@@ -335,11 +328,10 @@ let is_left_expr_has_parenthesis = function
 (* or x / (y * z) *)
 let is_right_expr_has_parenthesis = function
     (* check x / (y * z) *)
-    | Rational_div (discrete_term, discrete_factor) when is_discrete_factor_is_mul discrete_factor -> true
+    | Rational_product_quotient (discrete_term, discrete_factor, Div) when is_discrete_factor_is_mul discrete_factor -> true
     (* check x / (y + z) or x / (y - z) *)
-    | Rational_div (discrete_term, discrete_factor)
     (* check x * (y + z) or x * (y - z) *)
-    | Rational_mul (discrete_term, discrete_factor) -> is_discrete_factor_has_parenthesis discrete_factor
+    | Rational_product_quotient (discrete_term, discrete_factor, _) -> is_discrete_factor_has_parenthesis discrete_factor
     | _ -> false
 
 let add_left_parenthesis expr str =
@@ -360,13 +352,12 @@ let add_parenthesis_to_unary_minus str = function
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_int_factor_has_parenthesis = function
     | Int_unary_min _
-    | Int_expression(Int_plus _)
-    | Int_expression(Int_minus _) -> true
+    | Int_expression(Int_sum_diff _) -> true
     | _ -> false
 
 (* Check if discrete factor is a multiplication *)
 let is_int_factor_is_mul = function
-    | Int_expression(Int_term(Int_mul _)) -> true
+    | Int_expression (Int_term (Int_product_quotient _)) -> true
     | _ -> false
 
 (* Check if a left expression should have parenthesis *)
@@ -386,11 +377,10 @@ let is_left_int_expr_has_parenthesis = function
 (* or x / (y * z) *)
 let is_right_int_expr_has_parenthesis = function
     (* check x / (y * z) *)
-    | Int_div (term, factor) when is_int_factor_is_mul factor -> true
+    | Int_product_quotient (term, factor, Div) when is_int_factor_is_mul factor -> true
     (* check x / (y + z) or x / (y - z) *)
-    | Int_div (term, factor)
     (* check x * (y + z) or x * (y - z) *)
-    | Int_mul (term, factor) -> is_int_factor_has_parenthesis factor
+    | Int_product_quotient (term, factor, _) -> is_int_factor_has_parenthesis factor
     | _ -> false
 
 let add_left_parenthesis_int expr str =
@@ -422,6 +412,7 @@ let label_of_bool_factor = function
     | Bool_list_hd _ -> "list_hd"
     | List_mem _ -> "list_mem"
     | Array_mem _ -> "array_mem"
+    | List_is_empty _ -> "list_is_empty"
     | Stack_is_empty _ -> "stack_is_empty"
     | Queue_is_empty _ -> "queue_is_empty"
 
@@ -506,6 +497,14 @@ let print_binary_word_overflow_warning_if_needed expr length = function
 
 let print_function function_name str_arguments = function_name ^ "(" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_arguments ^ ")"
 
+let string_of_sum_diff = function
+    | Plus -> Constants.default_arithmetic_string.plus_string
+    | Minus -> Constants.default_arithmetic_string.minus_string
+
+let string_of_product_quotient = function
+    | Mul -> Constants.default_arithmetic_string.mul_string
+    | Div -> Constants.default_arithmetic_string.div_string
+
 let rec customized_string_of_global_expression customized_string variable_names = function
     | Arithmetic_expression expr -> customized_string_of_arithmetic_expression customized_string variable_names expr
     | Bool_expression expr -> customized_string_of_boolean_expression customized_string variable_names expr
@@ -524,43 +523,24 @@ and customized_string_of_arithmetic_expression customized_string variable_names 
 and customized_string_of_rational_arithmetic_expression customized_string variable_names =
     let rec string_of_arithmetic_expression customized_string = function
         (* Shortcut: Remove the "+0" / -"0" cases *)
-        | Rational_plus (discrete_arithmetic_expression, Rational_factor (Rational_constant c))
-        | Rational_minus (discrete_arithmetic_expression, Rational_factor (Rational_constant c)) when NumConst.equal c NumConst.zero ->
+        | Rational_sum_diff (discrete_arithmetic_expression, Rational_factor (Rational_constant c), _) when NumConst.equal c NumConst.zero ->
             string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 
-		| Rational_plus (discrete_arithmetic_expression, discrete_term) ->
-            (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
-            ^ Constants.default_arithmetic_string.plus_string
-            ^ (string_of_term customized_string discrete_term)
-		| Rational_minus (discrete_arithmetic_expression, discrete_term) ->
-            (string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
-            ^ Constants.default_arithmetic_string.minus_string
-            ^ (string_of_term customized_string discrete_term)
+		| Rational_sum_diff (discrete_arithmetic_expression, discrete_term, sum_diff) ->
+            string_of_arithmetic_expression customized_string discrete_arithmetic_expression
+            ^ string_of_sum_diff sum_diff
+            ^ string_of_term customized_string discrete_term
+
         | Rational_term discrete_term -> string_of_term customized_string discrete_term
 
 	and string_of_term customized_string = function
 		(* Eliminate the '1' coefficient *)
-		| Rational_mul (Rational_factor (Rational_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
+		| Rational_product_quotient (Rational_factor (Rational_constant c), discrete_factor, Mul) when NumConst.equal c NumConst.one ->
 			string_of_factor customized_string discrete_factor
-		| Rational_mul (discrete_term, discrete_factor) as expr ->
-		add_left_parenthesis discrete_term (
-			(string_of_term customized_string discrete_term)
-		)
-        ^ Constants.default_arithmetic_string.mul_string
-        ^
-        (add_right_parenthesis (
-            string_of_factor customized_string discrete_factor
-        ) expr)
-
-		| Rational_div (discrete_term, discrete_factor) as expr ->
-		add_left_parenthesis discrete_term (
-			(string_of_term customized_string discrete_term)
-        )
-        ^ Constants.default_arithmetic_string.div_string
-        ^
-        (add_right_parenthesis (
-            string_of_factor customized_string discrete_factor
-        ) expr)
+		| Rational_product_quotient (discrete_term, discrete_factor, product_quotient) as expr ->
+		    add_left_parenthesis discrete_term (string_of_term customized_string discrete_term)
+            ^ string_of_product_quotient product_quotient
+            ^ add_right_parenthesis (string_of_factor customized_string discrete_factor) expr
 
 		| Rational_factor discrete_factor -> string_of_factor customized_string discrete_factor
 
@@ -621,47 +601,26 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 
     let rec string_of_int_arithmetic_expression customized_string = function
         (* Shortcut: Remove the "+0" / -"0" cases *)
-        | Int_plus (expr, Int_factor (Int_constant c))
-        | Int_minus (expr, Int_factor (Int_constant c)) when Int32.equal c Int32.zero ->
+        | Int_sum_diff (expr, Int_factor (Int_constant c), _) when Int32.equal c Int32.zero ->
             string_of_int_arithmetic_expression customized_string expr
 
-		| Int_plus (expr, term) ->
-            (string_of_int_arithmetic_expression customized_string expr)
-            ^ Constants.default_arithmetic_string.plus_string
-            ^ (string_of_int_term customized_string term)
-
-		| Int_minus (expr, term) ->
-            (string_of_int_arithmetic_expression customized_string expr)
-            ^ Constants.default_arithmetic_string.minus_string
-            ^ (string_of_int_term customized_string term)
+		| Int_sum_diff (expr, term, sum_diff) ->
+            string_of_int_arithmetic_expression customized_string expr
+            ^ string_of_sum_diff sum_diff
+            ^ string_of_int_term customized_string term
 
         | Int_term term ->
             string_of_int_term customized_string term
 
 	and string_of_int_term customized_string = function
 		(* Eliminate the '1' coefficient *)
-		| Int_mul (Int_factor (Int_constant c), factor) when Int32.equal c Int32.one ->
+		| Int_product_quotient (Int_factor (Int_constant c), factor, Mul) when Int32.equal c Int32.one ->
 			string_of_int_factor customized_string factor
 
-		| Int_mul (term, factor) as expr ->
-            add_left_parenthesis_int term (
-                (string_of_int_term customized_string term)
-            )
-            ^ Constants.default_arithmetic_string.mul_string
-            ^
-            (add_right_parenthesis_int (
-                string_of_int_factor customized_string factor
-            ) expr)
-
-		| Int_div (term, factor) as expr ->
-            add_left_parenthesis_int term (
-                (string_of_int_term customized_string term)
-            )
-            ^ Constants.default_arithmetic_string.div_string
-            ^
-            (add_right_parenthesis_int (
-                string_of_int_factor customized_string factor
-            ) expr)
+		| Int_product_quotient (term, factor, product_quotient) as expr ->
+            add_left_parenthesis_int term (string_of_int_term customized_string term)
+            ^ string_of_product_quotient product_quotient
+            ^ add_right_parenthesis_int (string_of_int_factor customized_string factor) expr
 
 		| Int_factor factor ->
 		    string_of_int_factor customized_string factor
@@ -789,6 +748,11 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
                 customized_string_of_global_expression customized_string variable_names expr;
                 customized_string_of_array_expression customized_string variable_names array_expr
             ]
+
+    | List_is_empty list_expr as func ->
+        print_function
+            (label_of_bool_factor func)
+            [customized_string_of_list_expression customized_string variable_names list_expr]
 
     | Stack_is_empty stack_expr as func ->
         print_function

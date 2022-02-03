@@ -231,6 +231,14 @@ let rec string_of_value = function
 (* Convert an expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
 
+let string_of_sum_diff = function
+    | Plus -> jani_strings.arithmetic_string.plus_string
+    | Minus -> jani_strings.arithmetic_string.minus_string
+
+let string_of_product_quotient = function
+    | Mul -> jani_strings.arithmetic_string.mul_string
+    | Div -> jani_strings.arithmetic_string.div_string
+
 let string_of_comparison variable_names l_expr relop r_expr string_fun =
     jani_binary_operator
         (DiscreteExpressions.customized_string_of_boolean_operations jani_strings.boolean_string relop)
@@ -335,6 +343,13 @@ and string_of_discrete_boolean_expression variable_names = function
             |]
             ~str_comment:(undeclared_function_warning label)
 
+    | List_is_empty list_expr as func ->
+        let label = label_of_bool_factor func in
+        jani_function_call
+            label
+            [|string_of_list_expression variable_names list_expr|]
+            ~str_comment:(undeclared_function_warning label)
+
     | Stack_is_empty stack_expr as func ->
         let label = label_of_bool_factor func in
         jani_function_call
@@ -356,44 +371,27 @@ and string_of_arithmetic_expression variable_names = function
 and string_of_rational_arithmetic_expression variable_names =
     let rec string_of_arithmetic_expression = function
         (* Shortcut: Remove the "+0" / -"0" cases *)
-        | Rational_plus (discrete_arithmetic_expression, Rational_factor (Rational_constant c))
-        | Rational_minus (discrete_arithmetic_expression, Rational_factor (Rational_constant c)) when NumConst.equal c NumConst.zero ->
+        | Rational_sum_diff (discrete_arithmetic_expression, Rational_factor (Rational_constant c), _) when NumConst.equal c NumConst.zero ->
             string_of_arithmetic_expression discrete_arithmetic_expression
 
-        | Rational_plus (discrete_arithmetic_expression, discrete_term) ->
+        | Rational_sum_diff (discrete_arithmetic_expression, discrete_term, sum_diff) ->
             jani_binary_operator
-                jani_strings.arithmetic_string.plus_string
+                (string_of_sum_diff sum_diff)
                 (string_of_arithmetic_expression discrete_arithmetic_expression)
                 (string_of_term discrete_term)
-
-
-        | Rational_minus (discrete_arithmetic_expression, discrete_term) ->
-            jani_binary_operator
-                jani_strings.arithmetic_string.minus_string
-                (string_of_arithmetic_expression discrete_arithmetic_expression)
-                (string_of_term discrete_term)
-
 
         | Rational_term discrete_term ->
             string_of_term discrete_term
 
 	and string_of_term = function
 		(* Eliminate the '1' coefficient *)
-		| Rational_mul (Rational_factor (Rational_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
+		| Rational_product_quotient (Rational_factor (Rational_constant c), discrete_factor, Mul) when NumConst.equal c NumConst.one ->
 			string_of_factor discrete_factor
-		| Rational_mul (discrete_term, discrete_factor) ->
+		| Rational_product_quotient (discrete_term, discrete_factor, product_quotient) ->
             jani_binary_operator
-                jani_strings.arithmetic_string.mul_string
+                (string_of_product_quotient product_quotient)
                 (string_of_term discrete_term)
                 (string_of_factor discrete_factor)
-
-
-		| Rational_div (discrete_term, discrete_factor) ->
-		    jani_binary_operator
-		        jani_strings.arithmetic_string.div_string
-		        (string_of_term discrete_term)
-                (string_of_factor discrete_factor)
-
 
 		| Rational_factor discrete_factor ->
 		    string_of_factor discrete_factor
@@ -460,43 +458,26 @@ and string_of_rational_arithmetic_expression variable_names =
 and string_of_int_arithmetic_expression variable_names =
     let rec string_of_int_arithmetic_expression = function
         (* Shortcut: Remove the "+0" / -"0" cases *)
-        | Int_plus (discrete_arithmetic_expression, Int_factor (Int_constant c))
-        | Int_minus (discrete_arithmetic_expression, Int_factor (Int_constant c)) when Int32.equal c Int32.zero ->
+        | Int_sum_diff (discrete_arithmetic_expression, Int_factor (Int_constant c), _) when Int32.equal c Int32.zero ->
             string_of_int_arithmetic_expression discrete_arithmetic_expression
 
-	| Int_plus (discrete_arithmetic_expression, discrete_term) ->
-	    jani_binary_operator
-		    jani_strings.arithmetic_string.plus_string
-            (string_of_int_arithmetic_expression discrete_arithmetic_expression)
-            (string_of_int_term discrete_term)
-
-
-	| Int_minus (discrete_arithmetic_expression, discrete_term) ->
-	    jani_binary_operator
-		    jani_strings.arithmetic_string.minus_string
-            (string_of_int_arithmetic_expression discrete_arithmetic_expression)
-            (string_of_int_term discrete_term)
-
+        | Int_sum_diff (discrete_arithmetic_expression, discrete_term, sum_diff) ->
+            jani_binary_operator
+                (string_of_sum_diff sum_diff)
+                (string_of_int_arithmetic_expression discrete_arithmetic_expression)
+                (string_of_int_term discrete_term)
 
         | Int_term discrete_term -> string_of_int_term discrete_term
 
 	and string_of_int_term = function
 		(* Eliminate the '1' coefficient *)
-		| Int_mul (Int_factor (Int_constant c), discrete_factor) when Int32.equal c Int32.one ->
+		| Int_product_quotient (Int_factor (Int_constant c), discrete_factor, Mul) when Int32.equal c Int32.one ->
 			string_of_int_factor discrete_factor
-		| Int_mul (discrete_term, discrete_factor) ->
+		| Int_product_quotient (discrete_term, discrete_factor, product_quotient) ->
 		    jani_binary_operator
-                jani_strings.arithmetic_string.mul_string
+                (string_of_product_quotient product_quotient)
                 (string_of_int_term discrete_term)
                 (string_of_int_factor discrete_factor)
-
-
-		| Int_div (discrete_term, discrete_factor) ->
-		    jani_binary_operator
-                jani_strings.arithmetic_string.div_string
-                (string_of_int_term discrete_term)
-                (string_of_int_factor discrete_factor)
-
 
 		| Int_factor discrete_factor -> string_of_int_factor discrete_factor
 

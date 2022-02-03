@@ -21,14 +21,20 @@ and typed_discrete_boolean_expression =
 	| Typed_not_expr of typed_boolean_expression (* implicitly bool type *)
 
 and typed_discrete_arithmetic_expression =
-	| Typed_plus of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number
-	| Typed_minus of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number
+    | Typed_sum_diff of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number * typed_sum_diff
 	| Typed_term of typed_discrete_term * var_type_discrete
 
+and typed_sum_diff =
+    | Typed_plus
+    | Typed_minus
+
 and typed_discrete_term =
-	| Typed_mul of typed_discrete_term * typed_discrete_factor * var_type_discrete_number
-	| Typed_div of typed_discrete_term * typed_discrete_factor * var_type_discrete_number
+    | Typed_product_quotient of typed_discrete_term * typed_discrete_factor * var_type_discrete_number * typed_product_quotient
 	| Typed_factor of typed_discrete_factor * var_type_discrete
+
+and typed_product_quotient =
+    | Typed_mul
+    | Typed_div
 
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete

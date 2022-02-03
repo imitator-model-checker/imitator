@@ -31,14 +31,20 @@ and typed_discrete_boolean_expression =
 	| Typed_not_expr of typed_boolean_expression (* implicitly bool type *)
 
 and typed_discrete_arithmetic_expression =
-	| Typed_plus of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number
-	| Typed_minus of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number
+    | Typed_sum_diff of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number * typed_sum_diff
 	| Typed_term of typed_discrete_term * var_type_discrete
 
+and typed_sum_diff =
+    | Typed_plus
+    | Typed_minus
+
 and typed_discrete_term =
-	| Typed_mul of typed_discrete_term * typed_discrete_factor * var_type_discrete_number
-	| Typed_div of typed_discrete_term * typed_discrete_factor * var_type_discrete_number
+    | Typed_product_quotient of typed_discrete_term * typed_discrete_factor * var_type_discrete_number * typed_product_quotient
 	| Typed_factor of typed_discrete_factor * var_type_discrete
+
+and typed_product_quotient =
+    | Typed_mul
+    | Typed_div
 
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete
@@ -124,14 +130,20 @@ and typed_discrete_boolean_expression =
 	| Typed_not_expr of typed_boolean_expression (* implicitly bool type *)
 
 and typed_discrete_arithmetic_expression =
-	| Typed_plus of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number
-	| Typed_minus of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number
+    | Typed_sum_diff of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number * typed_sum_diff
 	| Typed_term of typed_discrete_term * var_type_discrete
 
+and typed_sum_diff =
+    | Typed_plus
+    | Typed_minus
+
 and typed_discrete_term =
-	| Typed_mul of typed_discrete_term * typed_discrete_factor * var_type_discrete_number
-	| Typed_div of typed_discrete_term * typed_discrete_factor * var_type_discrete_number
+    | Typed_product_quotient of typed_discrete_term * typed_discrete_factor * var_type_discrete_number * typed_product_quotient
 	| Typed_factor of typed_discrete_factor * var_type_discrete
+
+and typed_product_quotient =
+    | Typed_mul
+    | Typed_div
 
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete
@@ -183,6 +195,14 @@ let string_format_typed_node str_node discrete_type =
 let string_format_number_typed_node str_node discrete_number_type =
     "{" ^ str_node ^ ":" ^ string_of_var_type_discrete_number discrete_number_type ^ "}"
 
+let string_of_typed_sum_diff = function
+    | Typed_plus -> Constants.default_arithmetic_string.plus_string
+    | Typed_minus -> Constants.default_arithmetic_string.minus_string
+
+let string_of_type_product_quotient = function
+    | Typed_mul -> Constants.default_arithmetic_string.mul_string
+    | Typed_div -> Constants.default_arithmetic_string.div_string
+
 let rec string_of_typed_global_expression variable_infos = function
     | Typed_global_expr (expr, _) ->
         string_of_typed_boolean_expression variable_infos expr
@@ -232,29 +252,19 @@ and string_of_typed_discrete_boolean_expression variable_infos = function
         ^ ")"
 
 and string_of_typed_discrete_arithmetic_expression variable_infos discrete_type = function
-	| Typed_plus (l_expr, r_expr, _) ->
+	| Typed_sum_diff (l_expr, r_expr, _, typed_sum_diff) ->
 	        string_of_typed_discrete_arithmetic_expression variable_infos discrete_type l_expr
-	        ^ Constants.default_arithmetic_string.plus_string
-	        ^ string_of_typed_discrete_term variable_infos discrete_type r_expr
-
-	| Typed_minus (l_expr, r_expr, _) ->
-	        string_of_typed_discrete_arithmetic_expression variable_infos discrete_type l_expr
-	        ^ Constants.default_arithmetic_string.minus_string
+	        ^ string_of_typed_sum_diff typed_sum_diff
 	        ^ string_of_typed_discrete_term variable_infos discrete_type r_expr
 
 	| Typed_term (term, _) ->
 	        string_of_typed_discrete_term variable_infos discrete_type term
 
 and string_of_typed_discrete_term variable_infos discrete_type = function
-	| Typed_mul (l_expr, r_expr, _) ->
-	        string_of_typed_discrete_term variable_infos discrete_type l_expr
-	        ^ Constants.default_arithmetic_string.mul_string
-            ^ string_of_typed_discrete_factor variable_infos discrete_type r_expr
-
-	| Typed_div (l_expr, r_expr, _) ->
-	        string_of_typed_discrete_term variable_infos discrete_type l_expr
-	        ^ Constants.default_arithmetic_string.div_string
-            ^ string_of_typed_discrete_factor variable_infos discrete_type r_expr
+	| Typed_product_quotient (l_expr, r_expr, _, typed_product_quotient) ->
+        string_of_typed_discrete_term variable_infos discrete_type l_expr
+        ^ string_of_type_product_quotient typed_product_quotient
+        ^ string_of_typed_discrete_factor variable_infos discrete_type r_expr
 
 	| Typed_factor (factor, _) ->
             string_of_typed_discrete_factor variable_infos discrete_type factor
@@ -590,15 +600,21 @@ and type_check_parsed_discrete_boolean_expression variable_infos infer_type_opt 
         )
 
 and type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_opt = function
-	| Parsed_DAE_plus (expr, term) as outer_expr ->
+	| Parsed_sum_diff (expr, term, sum_diff) as outer_expr ->
 	    let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_opt expr in
 	    let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_discrete_term variable_infos infer_type_opt term in
+
+        let typed_sum_diff =
+            match sum_diff with
+            | Parsed_plus -> Typed_plus
+            | Parsed_minus -> Typed_minus
+        in
 
         (* Check that members are numbers and compatible *)
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
             let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
-            Typed_plus (l_typed_expr, r_typed_expr, discrete_number_type), Var_type_discrete_number discrete_number_type, l_has_side_effects || r_has_side_effects
+            Typed_sum_diff (l_typed_expr, r_typed_expr, discrete_number_type, typed_sum_diff), Var_type_discrete_number discrete_number_type, l_has_side_effects || r_has_side_effects
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -611,26 +627,6 @@ and type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_o
             ))
         )
 
-	| Parsed_DAE_minus (expr, term) as outer_expr ->
-	    let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_opt expr in
-	    let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_discrete_term variable_infos infer_type_opt term in
-
-        (* Check that members are numbers and compatible *)
-        (match l_type, r_type with
-        | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
-            let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
-            Typed_minus (l_typed_expr, r_typed_expr, discrete_number_type), Var_type_discrete_number discrete_number_type, l_has_side_effects || r_has_side_effects
-        | _ ->
-            raise (TypeError (
-                ill_typed_message
-                    (string_of_parsed_arithmetic_expression variable_infos expr)
-                    (string_of_parsed_term variable_infos term)
-                    (string_of_parsed_arithmetic_expression variable_infos outer_expr)
-                    l_type
-                    r_type
-            ))
-        )
-
 	| Parsed_DAE_term term ->
 	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_discrete_term variable_infos infer_type_opt term in
 	    Typed_term (typed_expr, discrete_type), discrete_type, has_side_effects
@@ -639,7 +635,7 @@ and type_check_parsed_discrete_term variable_infos infer_type_opt = function
     (* Specific case, literal rational => constant / constant *)
     (* Should be reduced before... *)
 
-    | Parsed_DT_div ((Parsed_DT_factor (Parsed_DF_constant lv) as term), (Parsed_DF_constant rv as factor)) as outer_expr ->
+    | Parsed_product_quotient ((Parsed_DT_factor (Parsed_DF_constant lv) as term), (Parsed_DF_constant rv as factor), Parsed_div) as outer_expr ->
 
 	    let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_discrete_term variable_infos infer_type_opt term in
 	    let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_discrete_factor variable_infos infer_type_opt factor in
@@ -664,7 +660,7 @@ and type_check_parsed_discrete_term variable_infos infer_type_opt = function
                     Var_type_discrete_rational
             in
 
-            Typed_div (l_typed_expr, r_typed_expr, discrete_number_type), Var_type_discrete_number discrete_number_type, l_has_side_effects || r_has_side_effects
+            Typed_product_quotient (l_typed_expr, r_typed_expr, discrete_number_type, Typed_div), Var_type_discrete_number discrete_number_type, l_has_side_effects || r_has_side_effects
 
         | _ ->
 
@@ -678,37 +674,21 @@ and type_check_parsed_discrete_term variable_infos infer_type_opt = function
             ))
         )
 
-    | Parsed_DT_mul (term, factor) as outer_expr ->
+    | Parsed_product_quotient (term, factor, parsed_product_quotient) as outer_expr ->
 	    let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_discrete_term variable_infos infer_type_opt term in
 	    let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_discrete_factor variable_infos infer_type_opt factor in
+
+        let typed_product_quotient =
+            match parsed_product_quotient with
+            | Parsed_mul -> Typed_mul
+            | Parsed_div -> Typed_div
+        in
 
         (* Check that members are numbers and compatible *)
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
             let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
-            Typed_mul (l_typed_expr, r_typed_expr, discrete_number_type), Var_type_discrete_number discrete_number_type, l_has_side_effects || r_has_side_effects
-        | _ -> raise (TypeError (
-            ill_typed_message
-                (string_of_parsed_term variable_infos term)
-                (string_of_parsed_factor variable_infos factor)
-                (string_of_parsed_term variable_infos outer_expr)
-                l_type
-                r_type
-        ))
-        )
-
-	| Parsed_DT_div (term, factor) as outer_expr ->
-	    let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_discrete_term variable_infos infer_type_opt term in
-	    let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_discrete_factor variable_infos infer_type_opt factor in
-
-        (* Check that members are numbers and compatible *)
-        (match l_type, r_type with
-        | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
-            let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
-
-            (* If left unknown and not right convert left *)
-
-            Typed_div (l_typed_expr, r_typed_expr, discrete_number_type), Var_type_discrete_number discrete_number_type, l_has_side_effects || r_has_side_effects
+            Typed_product_quotient (l_typed_expr, r_typed_expr, discrete_number_type, typed_product_quotient), Var_type_discrete_number discrete_number_type, l_has_side_effects || r_has_side_effects
         | _ -> raise (TypeError (
             ill_typed_message
                 (string_of_parsed_term variable_infos term)
@@ -1389,6 +1369,14 @@ let convert_parsed_relop = function
 
 (* Convert discrete expressions *)
 
+let sum_diff_of_typed_sum_diff = function
+    | Typed_plus -> Plus
+    | Typed_minus -> Minus
+
+let product_quotient_of_typed_product_quotient = function
+    | Typed_mul -> Mul
+    | Typed_div -> Div
+
 let rec global_expression_of_typed_global_expression variable_infos = function
     | Typed_global_expr (expr, discrete_type) ->
         global_expression_of_typed_boolean_expression variable_infos expr discrete_type
@@ -1469,40 +1457,26 @@ and discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable
 	| _ -> raise (InternalError "Trying to convert Boolean expression to arithmetic one. Maybe something failed in type checking or conversion.")
 
 and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression variable_infos discrete_number_type = function
-	| Typed_plus (expr, term, _) ->
-        (match discrete_number_type with
-        | Var_type_discrete_unknown_number
-        | Var_type_discrete_rational ->
-            Rational_arithmetic_expression (
-                Rational_plus (
-                    rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
-                    rational_arithmetic_expression_of_typed_term variable_infos term
-                )
-            )
-        | Var_type_discrete_int ->
-            Int_arithmetic_expression (
-                Int_plus (
-                    int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
-                    int_arithmetic_expression_of_typed_term variable_infos term
-                )
-            )
-        )
+	| Typed_sum_diff (expr, term, _, typed_sum_diff) ->
 
-	| Typed_minus (expr, term, _) ->
+	    let sum_diff = sum_diff_of_typed_sum_diff typed_sum_diff in
+
         (match discrete_number_type with
         | Var_type_discrete_unknown_number
         | Var_type_discrete_rational ->
             Rational_arithmetic_expression (
-                Rational_minus (
+                Rational_sum_diff (
                     rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
-                    rational_arithmetic_expression_of_typed_term variable_infos term
+                    rational_arithmetic_expression_of_typed_term variable_infos term,
+                    sum_diff
                 )
             )
         | Var_type_discrete_int ->
             Int_arithmetic_expression (
-                Int_minus (
+                Int_sum_diff (
                     int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
-                    int_arithmetic_expression_of_typed_term variable_infos term
+                    int_arithmetic_expression_of_typed_term variable_infos term,
+                    sum_diff
                 )
             )
         )
@@ -1668,6 +1642,11 @@ and bool_expression_of_typed_function_call variable_infos argument_expressions =
             global_expression_of_typed_boolean_expression_without_type variable_infos arg_0,
             array_expression_of_typed_boolean_expression_with_type variable_infos arg_1
         )
+    | "list_is_empty" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        List_is_empty (
+            list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
 
     | "stack_is_empty" ->
         let arg_0 = List.nth argument_expressions 0 in
@@ -1700,16 +1679,13 @@ and rational_arithmetic_expression_of_typed_discrete_boolean_expression variable
         raise (InternalError "The expression type indicate that it should be converted to an arithmetic expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 and rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos = function
-	| Typed_plus (expr, term, _) ->
-	    Rational_plus (
-	        rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
-	        rational_arithmetic_expression_of_typed_term variable_infos term
-	    )
+	| Typed_sum_diff (expr, term, _, typed_sum_diff) ->
+	    let sum_diff = sum_diff_of_typed_sum_diff typed_sum_diff in
 
-	| Typed_minus (expr, term, _) ->
-	    Rational_minus (
+	    Rational_sum_diff (
 	        rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
-	        rational_arithmetic_expression_of_typed_term variable_infos term
+	        rational_arithmetic_expression_of_typed_term variable_infos term,
+	        sum_diff
 	    )
 
 	| Typed_term (term, _) ->
@@ -1718,16 +1694,14 @@ and rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos
 	    )
 
 and rational_arithmetic_expression_of_typed_term variable_infos = function
-	| Typed_mul (term, factor, _) ->
-	    Rational_mul (
-	        rational_arithmetic_expression_of_typed_term variable_infos term,
-	        rational_arithmetic_expression_of_typed_factor variable_infos factor
-	    )
+	| Typed_product_quotient (term, factor, _, typed_product_quotient) ->
 
-	| Typed_div (term, factor, _) ->
-	    Rational_div (
+	    let product_quotient = product_quotient_of_typed_product_quotient typed_product_quotient in
+
+	    Rational_product_quotient (
 	        rational_arithmetic_expression_of_typed_term variable_infos term,
-	        rational_arithmetic_expression_of_typed_factor variable_infos factor
+	        rational_arithmetic_expression_of_typed_factor variable_infos factor,
+	        product_quotient
 	    )
 
 	| Typed_factor (factor, _) ->
@@ -1826,16 +1800,13 @@ and int_arithmetic_expression_of_typed_discrete_boolean_expression variable_info
         raise (InternalError "The expression type indicate that it should be converted to an arithmetic expression, but a Boolean expression is found. Maybe something failed in type checking or conversion.")
 
 and int_arithmetic_expression_of_typed_arithmetic_expression variable_infos = function
-	| Typed_plus (expr, term, _) ->
-	    Int_plus (
-	        int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
-	        int_arithmetic_expression_of_typed_term variable_infos term
-	    )
+	| Typed_sum_diff (expr, term, _, typed_sum_diff) ->
+	    let sum_diff = sum_diff_of_typed_sum_diff typed_sum_diff in
 
-	| Typed_minus (expr, term, _) ->
-	    Int_minus (
+	    Int_sum_diff (
 	        int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
-	        int_arithmetic_expression_of_typed_term variable_infos term
+	        int_arithmetic_expression_of_typed_term variable_infos term,
+	        sum_diff
 	    )
 
 	| Typed_term (term, _) ->
@@ -1844,16 +1815,14 @@ and int_arithmetic_expression_of_typed_arithmetic_expression variable_infos = fu
 	    )
 
 and int_arithmetic_expression_of_typed_term variable_infos = function
-	| Typed_mul (term, factor, _) ->
-	    Int_mul (
-	        int_arithmetic_expression_of_typed_term variable_infos term,
-	        int_arithmetic_expression_of_typed_factor variable_infos factor
-	    )
+	| Typed_product_quotient (term, factor, _, typed_product_quotient) ->
 
-	| Typed_div (term, factor, _) ->
-	    Int_div (
+	    let product_quotient = product_quotient_of_typed_product_quotient typed_product_quotient in
+
+	    Int_product_quotient (
 	        int_arithmetic_expression_of_typed_term variable_infos term,
-	        int_arithmetic_expression_of_typed_factor variable_infos factor
+	        int_arithmetic_expression_of_typed_factor variable_infos factor,
+	        product_quotient
 	    )
 
 	| Typed_factor (factor, _) ->
@@ -2622,12 +2591,12 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 	let constant = ref NumConst.zero in
 
 	let rec update_coef_array_in_typed_update_arithmetic_expression mult_factor = function
-		| Typed_plus (parsed_update_arithmetic_expression, parsed_update_term, _) ->
+		| Typed_sum_diff (parsed_update_arithmetic_expression, parsed_update_term, _, Typed_plus) ->
 		(* Update coefficients in the arithmetic expression *)
 		update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
 		(* Update coefficients in the term *)
 		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
-		| Typed_minus (parsed_update_arithmetic_expression, parsed_update_term, _) ->
+		| Typed_sum_diff (parsed_update_arithmetic_expression, parsed_update_term, _, Typed_minus) ->
 		(* Update coefficients in the arithmetic expression *)
 		update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
 		(* Update coefficients in the term: multiply by -1 for negation *)
@@ -2637,7 +2606,7 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 
 	and update_coef_array_in_parsed_update_term mult_factor = function
 		(* Multiplication is only allowed with a constant multiplier *)
-		| Typed_mul (parsed_update_term, parsed_update_factor, _) ->
+		| Typed_product_quotient (parsed_update_term, parsed_update_factor, _, Typed_mul) ->
 
 		(* Convert to abstract tree *)
 		let converted_term = rational_arithmetic_expression_of_typed_term variable_infos parsed_update_term in
@@ -2647,7 +2616,7 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 		(* Update coefficients *)
 		update_coef_array_in_parsed_update_factor (NumConst.mul numconst_valued_term mult_factor) parsed_update_factor
 
-		| Typed_div (parsed_update_term, parsed_update_factor, _) ->
+		| Typed_product_quotient (parsed_update_term, parsed_update_factor, _, Typed_div) ->
 
 		(* Convert to abstract tree *)
 		let converted_factor = rational_arithmetic_expression_of_typed_factor variable_infos parsed_update_factor in

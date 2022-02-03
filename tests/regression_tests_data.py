@@ -21289,46 +21289,188 @@ system pta1, pta2, pta3;
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'FMTV challenge: Test EF with project-result -verbose mute',
-		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-EF.imiprop'],
-		'options'    : '',
+		# Test version             : 1
+		# Test since               : 2022/02/04
+		# Last modified            : 2022/02/04
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test translation to Jani',
+		'author': 'lbinria',
+		'tags' : 'translation, jani',
+		'input_files': ['translations/jani.imi'],
+		'options'    : '-imi2Jani',
 		'expectations' : [
-			{'file': 'fmtv1A1-v2.res' , 'content' : """
-BEGIN CONSTRAINT
- 18126 >= 125*e2e
-& e2e >= 63
-END CONSTRAINT
+			{'file': 'jani.jani' , 'content' : """
+	"functions":
+	[
 
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
+	]
 	,
+	"actions":
+	[
 
-	#------------------------------------------------------------
+	]
+	,
+	"variables":
+	[
+
+		{
+			"name":"i",
+			"type":"real",
+			"initial-value":6
+		}
+		,
+
+		{
+			"name":"r",
+			"type":"real",
+			"initial-value":2
+		}
+
+	]
+	,
+	"properties":
+	[
+
+	]
+	,
+	"automata":
+	[
+
+		{
+			"name": "pta",
+			"locations":
+			[
+
+				{
+					"name": "l1"
+				}
+				,
+
+				{
+					"name": "lend"
+				}
+
+			]
+			,
+			"initial-locations":
+			[
+				"l1"
+			]
+			,
+			"edges":
+			[
+
+				{
+					"location": "l1",
+					"guard":
+					{
+						"exp":
+						{
+							"op":"=",
+							"left":
+							{
+								"op":"/",
+								"left":
+								{
+									"op":"-",
+									"left":
+									{
+										"op":"+",
+										"left":"i",
+										"right":1
+									}
+									,
+									"right":2
+								}
+								,
+								"right":2
+							}
+							,
+							"right":
+							{
+								"op":"/",
+								"left":
+								{
+									"op":"+",
+									"left":
+									{
+										"op":"*",
+										"left":"r",
+										"right":2
+									}
+									,
+									"right":1
+								}
+								,
+								"right":2
+							}
+
+						}
+
+					}
+					,
+					"destinations":
+					[
+
+						{
+							"location": "lend",
+							"assignments":
+							[
+
+								{
+									"ref": "i",
+									 "value" :
+									{
+										"op":"+",
+										"left":
+										{
+											"op":"*",
+											"left":5,
+											"right":3
+										}
+										,
+										"right":
+										{
+											"op":"pow",
+											"left":"r",
+											"right":2
+										}
+
+									}
+
+								}
+
+							]
+
+						}
+
+					]
+
+				}
+
+			]
+
+		}
+
+	]
+	,
+	"system":
 	{
-		'purpose'    : 'FMTV challenge: Test EFmin',
-		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-min.imiprop'],
-		'options'    : '-verbose mute',
-		'expectations' : [
-			{'file': 'fmtv1A1-v2.res' , 'content' : """
-BEGIN CONSTRAINT
- e2e >= 63
-END CONSTRAINT
+		"elements":
+		[
 
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
+			{
+				"automaton": "pta"
+			}
+
+		]
+		,
+		"syncs":
+		[
+
+		]
+
+	}
 """
 			} # end result file
 			,

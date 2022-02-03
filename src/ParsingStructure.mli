@@ -89,16 +89,20 @@ and parsed_discrete_boolean_expression =
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
 and parsed_discrete_arithmetic_expression =
-    (* TODO benjamin Group plus and minus in another type for don't repeat yourself in pattern matching *)
-	| Parsed_DAE_plus of parsed_discrete_arithmetic_expression * parsed_discrete_term
-	| Parsed_DAE_minus of parsed_discrete_arithmetic_expression * parsed_discrete_term
+    | Parsed_sum_diff of parsed_discrete_arithmetic_expression * parsed_discrete_term * parsed_sum_diff
 	| Parsed_DAE_term of parsed_discrete_term
 
+and parsed_sum_diff =
+    | Parsed_plus
+    | Parsed_minus
+
 and parsed_discrete_term =
-    (* TODO benjamin Group mul and div in another type for don't repeat yourself in pattern matching *)
-	| Parsed_DT_mul of parsed_discrete_term * parsed_discrete_factor
-	| Parsed_DT_div of parsed_discrete_term * parsed_discrete_factor
+	| Parsed_product_quotient of parsed_discrete_term * parsed_discrete_factor * parsed_product_quotient
 	| Parsed_DT_factor of parsed_discrete_factor
+
+and parsed_product_quotient =
+    | Parsed_mul
+    | Parsed_div
 
 and parsed_discrete_factor =
 	| Parsed_DF_variable of variable_name

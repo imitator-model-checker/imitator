@@ -80,8 +80,7 @@ and fold_parsed_discrete_boolean_expression operator base leaf_fun = function
         fold_parsed_boolean_expression operator base leaf_fun expr
 
 and fold_parsed_discrete_arithmetic_expression operator base leaf_fun = function
-	| Parsed_DAE_plus (expr, term)
-	| Parsed_DAE_minus (expr, term) ->
+	| Parsed_sum_diff (expr, term, _) ->
         operator
             (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
             (fold_parsed_discrete_term operator base leaf_fun term)
@@ -89,8 +88,7 @@ and fold_parsed_discrete_arithmetic_expression operator base leaf_fun = function
         fold_parsed_discrete_term operator base leaf_fun term
 
 and fold_parsed_discrete_term operator base leaf_fun = function
-	| Parsed_DT_mul (term, factor)
-	| Parsed_DT_div (term, factor) ->
+	| Parsed_product_quotient (term, factor, _) ->
 	    operator
 	        (fold_parsed_discrete_term operator base leaf_fun term)
 	        (fold_parsed_discrete_factor operator base leaf_fun factor)
@@ -364,30 +362,32 @@ let string_of_parsed_relop relop value_1 value_2 =
     | PARSED_OP_GEQ	    -> value_1 ^ " >= " ^ value_2
     | PARSED_OP_G		-> value_1 ^ " > " ^ value_2
 
+let string_of_parsed_sum_diff = function
+    | Parsed_plus -> Constants.default_arithmetic_string.plus_string
+    | Parsed_minus -> Constants.default_arithmetic_string.minus_string
+
+let string_of_parsed_product_quotient = function
+    | Parsed_mul -> Constants.default_arithmetic_string.mul_string
+    | Parsed_div -> Constants.default_arithmetic_string.div_string
+
 let rec string_of_parsed_global_expression variable_infos = function
     | Parsed_global_expression expr -> string_of_parsed_boolean_expression variable_infos expr
 
 and string_of_parsed_arithmetic_expression variable_infos = function
-    | Parsed_DAE_plus (arithmetic_expr, term) ->
-            (string_of_parsed_arithmetic_expression variable_infos arithmetic_expr) ^
-            " + " ^
-            (string_of_parsed_term variable_infos term)
-    | Parsed_DAE_minus (arithmetic_expr, term) ->
-            (string_of_parsed_arithmetic_expression variable_infos arithmetic_expr) ^
-            " - " ^
-            (string_of_parsed_term variable_infos term)
+    | Parsed_sum_diff (arithmetic_expr, term, sum_diff) ->
+            string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
+            ^ string_of_parsed_sum_diff sum_diff
+            ^ string_of_parsed_term variable_infos term
+
     | Parsed_DAE_term term ->
         string_of_parsed_term variable_infos term
 
 and string_of_parsed_term variable_infos = function
-    | Parsed_DT_mul (term, factor) ->
-            (string_of_parsed_term variable_infos term) ^
-            " * " ^
-            (string_of_parsed_factor variable_infos factor)
-    | Parsed_DT_div (term, factor) ->
-            (string_of_parsed_term variable_infos term) ^
-            " / " ^
-            (string_of_parsed_factor variable_infos factor)
+    | Parsed_product_quotient (term, factor, parsed_product_quotient) ->
+        string_of_parsed_term variable_infos term
+        ^ string_of_parsed_product_quotient parsed_product_quotient
+        ^ string_of_parsed_factor variable_infos factor
+
     | Parsed_DT_factor factor ->
         string_of_parsed_factor variable_infos factor
 
@@ -871,22 +871,20 @@ let is_variable_access_is_a_variable_name = function
 (* we raise an InvalidExpression exception *)
 (*------------------------------------------------------------*)
 
-
-
 (* Try to convert parsed discrete term to a linear term *)
 (* If it's not possible, we raise an InvalidExpression exception *)
 let rec try_convert_linear_term_of_parsed_discrete_term = function
     (* TODO benjamin reduction should be made before *)
-    | Parsed_DT_mul (term, factor) ->
+    | Parsed_product_quotient (term, factor, Parsed_mul) ->
         (* Check consistency of multiplication, if it keep constant we can convert to a linear term *)
         let linear_term, linear_factor =
-        try_convert_linear_term_of_parsed_discrete_term term,
-        try_convert_linear_term_of_parsed_discrete_factor factor
+            try_convert_linear_term_of_parsed_discrete_term term,
+            try_convert_linear_term_of_parsed_discrete_factor factor
         in
         (match linear_term, linear_factor with
             (* Constant multiplied by constant, it's ok*)
             | Constant l_const_value, Constant r_const_value ->
-                let value = (NumConst.mul l_const_value r_const_value) in
+                let value = NumConst.mul l_const_value r_const_value in
                 Constant value
             (* Constant multiplied by a variable (commutative), it's ok *)
             | Variable (var_value, variable_name), Constant const_value
@@ -897,7 +895,7 @@ let rec try_convert_linear_term_of_parsed_discrete_term = function
             | _ ->
                 raise (InvalidExpression ("A non-linear arithmetic expression involve clock(s) / parameter(s)"))
         )
-    | Parsed_DT_div (term, factor) ->
+    | Parsed_product_quotient (term, factor, Parsed_div) ->
         (* Check consistency of division, if it keep constants we can convert to a linear term *)
         let linear_term, linear_factor =
         try_convert_linear_term_of_parsed_discrete_term term,
@@ -918,9 +916,17 @@ let rec try_convert_linear_term_of_parsed_discrete_term = function
 (* Try to convert parsed discrete arithmetic expression (non-linear expression) to a linear expression *)
 (* If it's not possible, we raise an InvalidExpression exception *)
 and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = function
-    | Parsed_DAE_plus (expr, term) -> Linear_plus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
-    | Parsed_DAE_minus (expr, term) -> Linear_minus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
-    | Parsed_DAE_term term -> Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
+    | Parsed_sum_diff (expr, term, sum_diff) ->
+        let linear_expr, linear_term =
+            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr,
+            try_convert_linear_term_of_parsed_discrete_term term
+        in
+        (match sum_diff with
+        | Parsed_plus -> Linear_plus_expression (linear_expr, linear_term)
+        | Parsed_minus ->  Linear_minus_expression (linear_expr, linear_term)
+        )
+    | Parsed_DAE_term term ->
+        Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
 
 (* Try to convert parsed discrete factor to a linear term *)
 (* If it's not possible, we raise an InvalidExpression exception *)

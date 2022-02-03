@@ -75,35 +75,34 @@ and eval_discrete_arithmetic_expression discrete_valuation = function
         Int_value (eval_int_expression discrete_valuation expr)
 
 and eval_rational_expression discrete_valuation = function
-        | Rational_plus (expr, term) ->
-            NumConst.add
+        | Rational_sum_diff (expr, term, sum_diff) ->
+            let sum_function =
+                match sum_diff with
+                | Plus -> NumConst.add
+                | Minus -> NumConst.sub
+            in
+            sum_function
                 (eval_rational_expression discrete_valuation expr)
                 (eval_rational_term discrete_valuation term)
-        | Rational_minus (expr, term) ->
-            NumConst.sub
-                (eval_rational_expression discrete_valuation expr)
-                (eval_rational_term discrete_valuation term)
+
         | Rational_term term ->
             eval_rational_term discrete_valuation term
 
 and eval_rational_term discrete_valuation = function
-    | Rational_mul (term, factor) ->
-        NumConst.mul
-        (eval_rational_term discrete_valuation term)
-        (eval_rational_factor discrete_valuation factor)
-    | Rational_div (term, factor) ->
-        let numerator	= (eval_rational_term discrete_valuation term) in
-        let denominator	= (eval_rational_factor discrete_valuation factor) in
-
-        (* Check for 0-denominator *)
-        if NumConst.equal denominator NumConst.zero then(
-            raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (NumConst.to_string numerator) ^ " / " ^ (NumConst.to_string denominator) ^ ""))
-        );
-
-        (* Divide *)
-        NumConst.div
-            numerator
-            denominator
+    | Rational_product_quotient (term, factor, product_quotient) ->
+        let a = eval_rational_term discrete_valuation term in
+        let b = eval_rational_factor discrete_valuation factor in
+        (match product_quotient with
+        | Mul -> NumConst.mul a b
+        | Div ->
+            let numerator, denominator = a, b in
+            (* Check for 0-denominator *)
+            if NumConst.equal denominator NumConst.zero then(
+                raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (NumConst.to_string numerator) ^ " / " ^ (NumConst.to_string denominator) ^ ""))
+            );
+            (* Divide *)
+            NumConst.div numerator denominator
+        )
 
     | Rational_factor factor ->
         eval_rational_factor discrete_valuation factor
@@ -159,43 +158,44 @@ and eval_rational_factor discrete_valuation = function
 
 and eval_int_expression discrete_valuation (* expr *) =
     let rec eval_int_expression_rec = function
-        | Int_plus (expr, term) ->
-            Int32.add
+        | Int_sum_diff (expr, term, sum_diff) ->
+            let sum_function =
+                match sum_diff with
+                | Plus -> Int32.add
+                | Minus -> Int32.sub
+            in
+            sum_function
                 (eval_int_expression_rec expr)
                 (eval_int_term term)
-        | Int_minus (expr, term) ->
-            Int32.sub
-                (eval_int_expression_rec expr)
-                (eval_int_term term)
+
         | Int_term term ->
             eval_int_term term
 
     and eval_int_term = function
-        | Int_mul (term, factor) ->
-            Int32.mul
-                (eval_int_term term)
-                (eval_int_factor factor)
-        | Int_div (term, factor) ->
-            let numerator	= (eval_int_term term) in
-            let denominator	= (eval_int_factor factor) in
+        | Int_product_quotient (term, factor, product_quotient) ->
+            let a = eval_int_term term in
+            let b = eval_int_factor factor in
+            (match product_quotient with
+            | Mul -> Int32.mul a b
+            | Div ->
+                let numerator, denominator = a, b in
 
-            (* Check for 0-denominator *)
-            if Int32.equal denominator Int32.zero then (
-                raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (Int32.to_string numerator) ^ " / " ^ (Int32.to_string denominator) ^ ""))
-            );
-
-            (* Check for non-int division *)
-            if OCamlUtilities.modulo numerator denominator <> Int32.zero then
-                ImitatorUtilities.print_warning (
-                    "Non-integer division of type int was spotted! This means that an int variable was rounded down to the nearest integer instead of a rational result (`"
-                    ^ Int32.to_string numerator ^ " / " ^ Int32.to_string denominator
-                    ^ "`). The overall result may now be invalid."
+                (* Check for 0-denominator *)
+                if Int32.equal denominator Int32.zero then (
+                    raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (Int32.to_string numerator) ^ " / " ^ (Int32.to_string denominator) ^ ""))
                 );
 
-            (* Divide *)
-            Int32.div
-                numerator
-                denominator
+                (* Check for non-int division *)
+                if OCamlUtilities.modulo numerator denominator <> Int32.zero then
+                    ImitatorUtilities.print_warning (
+                        "Non-integer division of type int was spotted! This means that an int variable was rounded down to the nearest integer instead of a rational result (`"
+                        ^ Int32.to_string numerator ^ " / " ^ Int32.to_string denominator
+                        ^ "`). The overall result may now be invalid."
+                    );
+
+                (* Divide *)
+                Int32.div numerator denominator
+            )
 
         | Int_factor factor ->
             eval_int_factor factor
@@ -312,6 +312,9 @@ and eval_discrete_boolean_expression discrete_valuation = function
         let value = eval_global_expression discrete_valuation expr in
         let array = eval_array_expression discrete_valuation array_expr in
         Array.mem value array
+    | List_is_empty list_expr ->
+        let list = eval_list_expression discrete_valuation list_expr in
+        List.length list = 0
     | Stack_is_empty stack_expr ->
         let stack = eval_stack_expression discrete_valuation stack_expr in
         Stack.is_empty stack

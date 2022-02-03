@@ -1121,9 +1121,10 @@ let discrete_predicate_of_discrete_linear_predicate = function
                     Parsed_Discrete_boolean_expression (
                     Parsed_arithmetic_expression (
                     Parsed_DAE_term (
-                    Parsed_DT_mul (
+                    Parsed_product_quotient (
                     Parsed_DT_factor (Parsed_DF_constant coef_rational_value),
-                    Parsed_DF_variable variable_name)))))
+                    Parsed_DF_variable variable_name,
+                    Parsed_mul)))))
                 )
                 in
                 Some discrete_predicate

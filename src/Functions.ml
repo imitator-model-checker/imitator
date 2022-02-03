@@ -85,6 +85,11 @@ let function_by_name = function
             Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l")));
             Defined_type_constraint Bool_constraint
         ], No_side_effect
+    | "list_is_empty" ->
+        [
+            Defined_type_constraint (List_constraint (Type_name_constraint "a"));
+            Defined_type_constraint Bool_constraint
+        ], No_side_effect
     | "array_length" ->
         [
             Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l")));

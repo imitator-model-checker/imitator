@@ -531,18 +531,27 @@ syn_label:
 
 arithmetic_expression:
 	| arithmetic_term { Parsed_DAE_term $1 }
-	| arithmetic_expression OP_PLUS arithmetic_term { Parsed_DAE_plus ($1, $3) }
-	| arithmetic_expression OP_MINUS arithmetic_term { Parsed_DAE_minus ($1, $3) }
+	| arithmetic_expression sum_diff arithmetic_term { Parsed_sum_diff ($1, $3, $2) }
+;
+
+sum_diff:
+  | OP_PLUS { Parsed_plus }
+  | OP_MINUS { Parsed_minus }
 ;
 
 /* Term over variables and rationals (includes recursion with arithmetic_expression) */
 arithmetic_term:
 	| arithmetic_factor { Parsed_DT_factor $1 }
 	/* Shortcut for syntax rational NAME without the multiplication operator */
-	| number NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant ($1)), Parsed_DF_variable $2) }
-	| arithmetic_term OP_MUL arithmetic_factor { Parsed_DT_mul ($1, $3) }
-	| arithmetic_term OP_DIV arithmetic_factor { Parsed_DT_div ($1, $3) }
+	| number NAME { Parsed_product_quotient (Parsed_DT_factor (Parsed_DF_constant ($1)), Parsed_DF_variable $2, Parsed_mul) }
+	| arithmetic_term product_quotient arithmetic_factor { Parsed_product_quotient ($1, $3, $2) }
+	| arithmetic_term product_quotient arithmetic_factor { Parsed_product_quotient ($1, $3, $2) }
 	| OP_MINUS arithmetic_factor { Parsed_DT_factor(Parsed_DF_unary_min $2) }
+;
+
+product_quotient:
+  | OP_MUL { Parsed_mul }
+  | OP_DIV { Parsed_div }
 ;
 
 /*

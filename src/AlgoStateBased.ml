@@ -355,38 +355,6 @@ let split_guards_into_discrete_and_continuous =
 			discrete_continuous_guard.discrete_guard :: current_discrete_guards, discrete_continuous_guard.continuous_guard :: current_continuous_guards
 	) ([], [])
 
-(*
-(* Evaluate a discrete_arithmetic_expression using a discrete variable valuation *)
-(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let evaluate_discrete_arithmetic_expression v =
-	let rec evaluate_discrete_arithmetic_expression_rec = function
-		| Rational_plus (discrete_arithmetic_expression, discrete_term) -> NumConst.add (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
-		| Rational_minus (discrete_arithmetic_expression, discrete_term) -> NumConst.sub (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
-		| Rational_term discrete_term -> evaluate_discrete_term discrete_term
-
-	and evaluate_discrete_term = function
-		| Rational_mul (discrete_term, discrete_factor) -> NumConst.mul (evaluate_discrete_term discrete_term) (evaluate_discrete_factor discrete_factor)
-		| Rational_div (discrete_term, discrete_factor) ->
-			(*** NOTE: here comes the infamous division by 0 ***)
-			(* Compute the denominator *)
-			let denominator = evaluate_discrete_factor discrete_factor in
-			(* Check if 0 *)
-			if NumConst.equal denominator NumConst.zero then(
-				raise Division_by_0_while_evaluating_discrete
-			)
-			(* Else go on with division *)
-			else
-			NumConst.div (evaluate_discrete_term discrete_term) denominator
-		| Rational_factor discrete_factor -> evaluate_discrete_factor discrete_factor
-
-	and evaluate_discrete_factor = function
-		| Rational_variable discrete_index -> v discrete_index
-		| Rational_constant discrete_value -> discrete_value
-		| Rational_unary_min discrete_factor -> NumConst.neg (evaluate_discrete_factor discrete_factor)
-		| Rational_expression discrete_arithmetic_expression -> evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression
-	in
-	evaluate_discrete_arithmetic_expression_rec*)
-
 (*------------------------------------------------------------*)
 (* Create a PXD constraint of the form D_i = d_i for the discrete variables *)
 (*------------------------------------------------------------*)

@@ -51,14 +51,20 @@ and discrete_arithmetic_expression =
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
 and rational_arithmetic_expression =
-	| Rational_plus of rational_arithmetic_expression * rational_term
-	| Rational_minus of rational_arithmetic_expression * rational_term
+    | Rational_sum_diff of rational_arithmetic_expression * rational_term * sum_diff
 	| Rational_term of rational_term
 
+and sum_diff =
+    | Plus
+    | Minus
+
 and rational_term =
-	| Rational_mul of rational_term * rational_factor
-	| Rational_div of rational_term * rational_factor
+	| Rational_product_quotient of rational_term * rational_factor * product_quotient
 	| Rational_factor of rational_factor
+
+and product_quotient =
+    | Mul
+    | Div
 
 and rational_factor =
 	| Rational_variable of Automaton.variable_index
@@ -81,13 +87,11 @@ and rational_factor =
 (************************************************************)
 (************************************************************)
 and int_arithmetic_expression =
-	| Int_plus of int_arithmetic_expression * int_term
-	| Int_minus of int_arithmetic_expression * int_term
+    | Int_sum_diff  of int_arithmetic_expression * int_term * sum_diff
 	| Int_term of int_term
 
 and int_term =
-	| Int_mul of int_term * int_factor
-	| Int_div of int_term * int_factor
+	| Int_product_quotient of int_term * int_factor * product_quotient
 	| Int_factor of int_factor
 
 and int_factor =
@@ -104,16 +108,9 @@ and int_factor =
     | List_length of list_expression
     | Stack_length of stack_expression
     | Queue_length of queue_expression
-    | Collection_length of sequence_expression
 
 (*    | Int_function_call of string * global_expression list*)
 
-
-and sequence_expression =
-    | Array_sequence of array_expression
-    | List_sequence of list_expression
-    | Stack_sequence of stack_expression
-    | Queue_sequence of queue_expression
 
 (************************************************************)
 (************************************************************)
@@ -158,6 +155,7 @@ and discrete_boolean_expression =
     | Bool_list_hd of list_expression
     | List_mem of global_expression * list_expression
     | Array_mem of global_expression * array_expression
+    | List_is_empty of list_expression
     | Stack_is_empty of stack_expression
     | Queue_is_empty of queue_expression
 (*    | Bool_function_call of string * global_expression list*)
