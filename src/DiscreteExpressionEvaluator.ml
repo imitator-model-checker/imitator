@@ -14,6 +14,10 @@ let list_hd_fail_message list_expr =
     let str_expr = DiscreteExpressions.string_of_list_expression (fun i -> "") list_expr in
     "Use of `list_hd` on empty list `" ^ str_expr ^ "`."
 
+let list_tl_fail_message list_expr =
+    let str_expr = DiscreteExpressions.string_of_list_expression (fun i -> "") list_expr in
+    "Use of `list_tl` on empty list `" ^ str_expr ^ "`."
+
 (* Eval list_hd function, if the list is empty, raise a proper exception *)
 let try_eval_list_hd list fail_message =
     if List.length list = 0 then
@@ -335,7 +339,7 @@ and eval_list_expression discrete_valuation = function
         DiscreteValue.list_value value
     | List_list_tl list_expr ->
         let list = eval_list_expression discrete_valuation list_expr in
-        let fail_message = list_hd_fail_message list_expr in
+        let fail_message = list_tl_fail_message list_expr in
         try_eval_list_tl list fail_message
 
     | List_rev list_expr ->
