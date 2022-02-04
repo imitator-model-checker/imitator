@@ -1330,6 +1330,16 @@ open TypeChecker
 
 type discrete_index = int
 
+let label_of_typed_factor_constructor = function
+	| Typed_variable _ -> "variable"
+	| Typed_constant _ -> "constant"
+	| Typed_array _ -> "array"
+	| Typed_list _ -> "list"
+	| Typed_access _ -> "access"
+	| Typed_expr _ -> "expression"
+	| Typed_unary_min _ -> "minus"
+    | Typed_function_call (function_name, _, _) -> function_name
+
 (** Convert a Boolean operator to its abstract model *)
 let convert_parsed_relop = function
 	| PARSED_OP_L -> OP_L
@@ -2420,7 +2430,7 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 				(* Update the constant *)
 				constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
 				) else (
-				raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'update_coef_array_in_parsed_update_factor' although this should have been checked before."))
+				raise (InvalidExpression ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'update_coef_array_in_parsed_update_factor' although this should have been checked before."))
 				)
 			)
 		| Typed_constant (var_value, _) ->
@@ -2432,8 +2442,7 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 		| Typed_expr (parsed_update_arithmetic_expression, _) ->
             update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
 		| factor ->
-		    (* TODO benjamin replace TODO *)
-            raise (InternalError ("Use of TODO is forbidden in linear term, something failed before."))
+            raise (InvalidExpression ("Use of `" ^ label_of_typed_factor_constructor factor ^ "` is forbidden in linear term, something failed before."))
 	in
 
 	(* Call the recursive function updating the coefficients *)
@@ -2447,7 +2456,7 @@ let linear_term_of_typed_discrete_boolean_expression variable_infos = function
         linear_term_of_typed_update_arithmetic_expression variable_infos expr
     | expr ->
         raise (
-            InternalError (
+            InvalidExpression (
                 "Impossible to convert Boolean expression \""
                 ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed."
             )
@@ -2458,7 +2467,7 @@ let linear_term_of_typed_boolean_expression variable_infos = function
         linear_term_of_typed_discrete_boolean_expression variable_infos expr
     | _ ->
         raise (
-            InternalError (
+            InvalidExpression (
                 "Impossible to convert boolean expression \""
                 ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed."
             )
