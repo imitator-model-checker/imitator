@@ -351,7 +351,7 @@ Discrete variables can be tested in guards, and updated along transitions.
 	\item Boolean-valued variables
 	\item binary word variables, allowing to use bitwise binary operations.
 \end{enumerate}
-In addition, \emph{arrays} and \emph{lists} (of elementary types, or of other arrays or lists) can be used.
+In addition, \emph{arrays} (of elementary types, or of arrays) can be used.
 
 %------------------------------------------------------------
 \subsubsection{Rational-valued variables}
@@ -371,7 +371,6 @@ Note that floating-point numbers (``float'') are totally absent from the \imitat
 In the following, we define the set of rational variables as $\RVar = \{ \rvar_1, \dots, \rvar_\RVarCard \} $;
 a rational variable valuation is a function $\rval : \RVar \rightarrow \setQ$.
 
-Rational-valued variables can be directly compared to clocks and parameters within linear constraints.
 
 
 %------------------------------------------------------------
@@ -392,8 +391,6 @@ Int variables are encoded in \imitator{} using the \texttt{int} type of OCaml.
 Formally, the set of integer variables is $\IVar = \{ \ivar_1, \dots, \ivar_\IVarCard \} $;
 an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \cap \left[-2,147,483,648, +2,147,483,647\right]$.
 
-Int-valued variables (nor the upcoming Boolean and binary word variables) \emph{cannot} be compared to clocks and parameters within linear constraints.
-They can however be compared with other variables of compatible type.
 
 %------------------------------------------------------------
 \subsubsection{Boolean variables}
@@ -435,19 +432,19 @@ We denote by~$\WVar$ the set of binary word variables.
 
 Array variables are fixed length collections of indexed elements.
 Array elements can be accessed or updated using an integer-valued arithmetic expression as index.
-An array variable always has a fixed length and an underlying type, which can be any of the available (discrete) types of \imitator{} (including arrays and lists, but excluding clock and parameters).
+An array variable always has a fixed length and an underlying type, which can be any of the available types of \imitator{} (including arrays and lists).
 For example, it is possible to declare an array of integers, of Booleans, of arrays of arrays of Booleans---which can be seen as a multidimensional array.
 
 Examples of array definitions are given below:
 
 %------------------------------------------------------------
 \begin{IMITATORmodel}
-my_const_rational_array = [1, 2, 3] : rational array(3)
-my_rational_array       : rational array(5);
-my_int_array            : int array(2);
-my_bool_array           : bool array(3);
-my_binary_word_array    : binary(4) array(2);
-my_2d_int_array         : int array(2) array(2);
+	my_const_rational_array = [1, 2, 3] : rational array(3)
+	my_rational_array    	: rational array(5);
+	my_int_array         	: int array(2);
+	my_bool_array        	: bool array(3);
+	my_binary_word_array 	: binary(4) array(2);
+	my_2d_int_array      	: int array(2) array(2);
 \end{IMITATORmodel}
 %------------------------------------------------------------
 
@@ -459,22 +456,21 @@ my_2d_int_array         : int array(2) array(2);
 \subsubsection{Lists}
 %------------------------------------------------------------
 
-Lists are collections of dynamic length.
-Contrarily to arrays, the type of a list does not depend on its length; it is thus possible to compare two lists of different lengths.
-List elements can only be accessed---not updated---using an integer-valued arithmetic expression as index.
-A list always has an underlying type, which can be any of the available (discrete) types of \imitator{} (including arrays and lists, but excluding clock and parameters).
-For example, it is possible to declare a list of integers, of Booleans, of list of list of Booleans, etc.
+Lists are collections of variable length - contrary to arrays, the type of a list doesn't depend on it's length, thus it's possible to compare two lists of different lengths.
+List elements can only be accessed - not updated - using an integer-valued arithmetic expression as index.
+A list variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays and lists).
+For example, it is possible to declare a list of integers, of Booleans, of list of list of Booleans---which can be seen as a multidimensional list.
 
 Examples of list definitions are given below:
 
 %------------------------------------------------------------
 \begin{IMITATORmodel}
-my_const_rational_list = list([1, 2, 3]) : rational list;
-my_rational_list       : rational list;
-my_int_list            : int list;
-my_bool_list           : bool list;
-my_binary_word_list    : binary(4) list;
-my_2d_int_list         : int list list;
+	my_const_rational_list = list([1, 2, 3]) : rational list;
+	my_rational_list 			: rational list;
+	my_int_list						: int list;
+	my_bool_list        	: bool list;
+	my_binary_word_list 	: binary(4) list;
+	my_2d_int_list      	: int list list;
 \end{IMITATORmodel}
 %------------------------------------------------------------
 
@@ -483,15 +479,15 @@ my_2d_int_list         : int list list;
 \subsubsection{Built-in functions over discrete variables}\label{section:builtin-functions}
 %------------------------------------------------------------
 
-\imitator{} 3.1 and higher comes with some built-in functions over discrete variables, summarized in \cref{table:summary:builtin-functions} and described in the following.
+\imitator{} 3.1 and higher comes with some built-in functions over discrete variables:
 
 
-%------------------------------------------------------------
-\begin{table}[tb]
+\begin{table}[h!]
 	\caption{Built-in functions summary}
 	{\centering
 		\begin{tabular}{ | l | l | }
 
+			% Non-nested CTL
 			\hline
 			\rowHeader{} Name & Description \\
 			\hline
@@ -547,7 +543,6 @@ my_2d_int_list         : int list list;
 
 	\label{table:summary:builtin-functions}
 \end{table}
-%------------------------------------------------------------
 
 
 
@@ -555,7 +550,7 @@ my_2d_int_list         : int list list;
 \paragraph{Arithmetic functions}
 
 \begin{itemize}
-    \item \label{item:lbl-pow} \styleIMI{pow(x:'a number, e:int):'a with 'a number:[rational|int]}: compute the power of a number
+    \item \label{item:lbl-pow} \styleIMI{pow(x:'a number, e:int):'a with 'a number:[rational|int]} - compute the power of a number
 \end{itemize}
 
 %------------------------------------------------------------
@@ -573,7 +568,7 @@ my_2d_int_list         : int list list;
 \paragraph{Conversion functions}
 
 \begin{itemize}
-    \item \label{item:lbl-rational_of_int} \styleIMI{rational\_of\_int(x:int):rational}: convert an int number to a rational one
+    \item \label{item:lbl-rational_of_int} \styleIMI{rational\_of\_int(x:int):rational} - convert an int number to a rational one
 \end{itemize}
 
 %------------------------------------------------------------
@@ -593,14 +588,14 @@ my_2d_int_list         : int list list;
 \paragraph{Binary word functions}
 
 \begin{itemize}
-    \item \label{item:lbl-shift_left} \styleIMI{shift\_left(b:binary\_word(l), i:int):binary\_word(l)}: shift a binary word of length \styleIMI{l} to left
-		\item \label{item:lbl-shift_right} \styleIMI{shift\_right(b:binary\_word(l), i:int):binary\_word(l)}: shift a binary word of length \styleIMI{l} to right
-		\item \label{item:lbl-fill_left} \styleIMI{fill\_left(b:binary\_word(l), i:const int):binary\_word(l + i)}: shift a binary word of length \styleIMI{l} to left (non destructive)
-		\item \label{item:lbl-fill_right} \styleIMI{fill\_right(b:binary\_word(l), i:const int):binary\_word(l + i)}: shift a binary word of length \styleIMI{l} to right (non destructive)
-		\item \label{item:lbl-logand} \styleIMI{logand(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)}: apply AND bitwise operation to two binary words of length \styleIMI{l}
-		\item \label{item:lbl-logor} \styleIMI{logor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)}: apply OR bitwise operation to two binary words of length \styleIMI{l}
-		\item \label{item:lbl-logxor} \styleIMI{logxor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)}: apply XOR bitwise operation to two binary words of length \styleIMI{l}
-		\item \label{item:lbl-lognot} \styleIMI{lognot(b:binary\_word(l)):binary\_word(l)}: apply NOT bitwise operation to a binary word of length \styleIMI{l}
+    \item \label{item:lbl-shift_left} \styleIMI{shift\_left(b:binary\_word(l), i:int):binary\_word(l)} - shift a binary word of length \styleIMI{l} to left
+		\item \label{item:lbl-shift_right} \styleIMI{shift\_right(b:binary\_word(l), i:int):binary\_word(l)} - shift a binary word of length \styleIMI{l} to right
+		\item \label{item:lbl-fill_left} \styleIMI{fill\_left(b:binary\_word(l), i:const int):binary\_word(l + i)} - shift a binary word of length \styleIMI{l} to left (non destructive)
+		\item \label{item:lbl-fill_right} \styleIMI{fill\_right(b:binary\_word(l), i:const int):binary\_word(l + i)} - shift a binary word of length \styleIMI{l} to right (non destructive)
+		\item \label{item:lbl-logand} \styleIMI{logand(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply AND bitwise operation to two binary words of length \styleIMI{l}
+		\item \label{item:lbl-logor} \styleIMI{logor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply OR bitwise operation to two binary words of length \styleIMI{l}
+		\item \label{item:lbl-logxor} \styleIMI{logxor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply XOR bitwise operation to two binary words of length \styleIMI{l}
+		\item \label{item:lbl-lognot} \styleIMI{lognot(b:binary\_word(l)):binary\_word(l)} - apply NOT bitwise operation to a binary word of length \styleIMI{l}
 \end{itemize}
 
 %------------------------------------------------------------
@@ -627,9 +622,10 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 \paragraph{Array functions}
 
 \begin{itemize}
-	\item \label{item:lbl-array_append} \styleIMI{array\_append(a1:'a array(l1), a2:'a array(l2)):'a array(l1+l2) with 'a:any}: concatenates an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting in an array of length \styleIMI{l1 + l2}
-	\item \label{item:lbl-array_length} \styleIMI{array\_length(a1:'a array(l1)):int=l1 with 'a:any}: length of the array \styleIMI{a1}
-	\item \label{item:lbl-array_mem} \styleIMI{array\_mem(a1:'a, l:'a array(l1)):bool with 'a:any}: true if \styleIMI{e} is in the the array \styleIMI{a1}
+	\item \styleIMI{a[i:int]:'a with 'a:any} - access to element of array \styleIMI{a} at index \styleIMI{i}
+	\item \label{item:lbl-array_append} \styleIMI{array\_append(a1:'a array(l1), a2:'a array(l2)):'a array(l1+l2) with 'a:any} - concatenates an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting in an array of length \styleIMI{l1 + l2}
+	\item \label{item:lbl-array_length} \styleIMI{array\_length(a1:'a array(l1)):int=l1 with 'a:any} - length of the array \styleIMI{a1}
+	\item \label{item:lbl-array_mem} \styleIMI{array\_mem(a1:'a, l:'a array(l1)):bool with 'a:any} - true if \styleIMI{e} is in the the array \styleIMI{a1}
 \end{itemize}
 
 %------------------------------------------------------------
@@ -639,6 +635,7 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
 		when
+			& my_const_rational_array[0] = 1
 			& array_append([1, 2, 3], [4, 5, 6]) = [1, 2, 3, 4, 5, 6]
 			& array_append([[1, 2]], [[3, 4]]) = [[1, 2], [3, 4]]
 			& array_length([1, 1, 1]) = 3
@@ -653,12 +650,13 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 \paragraph{List functions}
 
 \begin{itemize}
-	\item \label{item:lbl-list_cons} \styleIMI{list\_cons(e:'a, l:'a list):'a list with 'a:any}: construct a list by inserting a new element \styleIMI{e} at the beginning of \styleIMI{l}
-	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a with 'a:any}: head element of a list \styleIMI{l}
-	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list): int with 'a:any}: length of the list \styleIMI{l}
-	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool with 'a:any}: true if \styleIMI{e} is in the the list \styleIMI{l}
-	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list with 'a:any}: reverse the the list \styleIMI{l}
-	\item \label{item:lbl-list_tl} \styleIMI{list\_tl(l:'a list):'a list with 'a:any}: tail of the list \styleIMI{l}
+	\item \styleIMI{l[i:int]:'a with 'a:any} - access to element of list \styleIMI{l} at index \styleIMI{i}
+	\item \label{item:lbl-list_cons} \styleIMI{list\_cons(e:'a, l:'a list):'a list with 'a:any} - construct a list by inserting a new element \styleIMI{e} at the beginning of \styleIMI{l}
+	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a with 'a:any} - head element of a list \styleIMI{l}
+	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list): int with 'a:any} - length of the list \styleIMI{l}
+	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool with 'a:any} - true if \styleIMI{e} is in the the list \styleIMI{l}
+	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list with 'a:any} - reverse the the list \styleIMI{l}
+	\item \label{item:lbl-list_tl} \styleIMI{list\_tl(l:'a list):'a list with 'a:any} - tail of the list \styleIMI{l}
 \end{itemize}
 
 %------------------------------------------------------------
@@ -668,6 +666,7 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
 		when
+			& my_int_list[0] = 1
 			& list_cons(1, list([2, 3])) = list([1, 2, 3])
 			& list_hd(list([3,4])) = 3
 		  & list_length(list([1, 1, 1])) = 3
