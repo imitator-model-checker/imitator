@@ -19,6 +19,7 @@
 # ************************************************************
 from __future__ import print_function
 
+import time
 import datetime
 import os
 import subprocess
@@ -176,6 +177,7 @@ def test(binary_name, tests, logfile, logfile_name):
     # Number of passed test cases
     passed_test_cases = 0
 
+    stopwatch_start = time.time()
     for test_case in tests:
         # Initially everything is ok
         passed = True
@@ -282,9 +284,12 @@ def test(binary_name, tests, logfile, logfile_name):
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     # THE END
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+    stopwatch_end = time.time()
+
     print_to_log(
         '\n\n############################################################')
 
+    print_to_screen_and_log('Total time: {}'.format(str(stopwatch_end - stopwatch_start)))
     # NOTE: ugly…
     total_benchmarks = benchmark_id - 1
     total_test_cases = test_case_id - 1
