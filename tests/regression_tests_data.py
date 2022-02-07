@@ -21482,6 +21482,57 @@ system pta1, pta2, pta3;
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'FMTV challenge: Test EF with project-result -verbose mute',
+		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-EF.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'fmtv1A1-v2.res' , 'content' : """
+BEGIN CONSTRAINT
+ 18126 >= 125*e2e
+& e2e >= 63
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'FMTV challenge: Test EFmin',
+		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-min.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'fmtv1A1-v2.res' , 'content' : """
+BEGIN CONSTRAINT
+ e2e >= 63
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'FMTV challenge: Test EFmax',
 		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-max.imiprop'],
 		'options'    : '-verbose mute',
