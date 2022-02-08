@@ -5,6 +5,12 @@ open DiscreteType
 
 type inner_type = var_type_discrete
 
+type typed_sequence_type =
+    | Typed_array
+    | Typed_list
+    | Typed_stack
+    | Typed_queue
+
 type typed_global_expression =
     | Typed_global_expr of typed_boolean_expression * var_type_discrete
 
@@ -39,8 +45,7 @@ and typed_product_quotient =
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete
 	| Typed_constant of DiscreteValue.discrete_value * var_type_discrete
-	| Typed_array of typed_boolean_expression array * inner_type
-	| Typed_list of typed_boolean_expression list * inner_type
+	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
 	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_unary_min of typed_discrete_factor * var_type_discrete_number
     | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * inner_type

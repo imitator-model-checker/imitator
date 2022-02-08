@@ -57,6 +57,13 @@ type var_type =
 	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
 
+(* Type of the sequence *)
+type parsed_sequence_type =
+    | Parsed_array
+    | Parsed_list
+    | Parsed_stack
+    | Parsed_queue
+
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
@@ -107,13 +114,14 @@ and parsed_product_quotient =
 and parsed_discrete_factor =
 	| Parsed_DF_variable of variable_name
 	| Parsed_DF_constant of DiscreteValue.discrete_value
-	| Parsed_DF_array of parsed_boolean_expression array
-	| Parsed_DF_list of parsed_boolean_expression list
+	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
     | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min of parsed_discrete_factor
 	| Parsed_function_call of parsed_discrete_factor (* name *) * parsed_boolean_expression list (* arguments *)
 
+
+    (* TODO benjamin CLEAN remove comments *)
 	(*
 	(* Functions *)
 	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression

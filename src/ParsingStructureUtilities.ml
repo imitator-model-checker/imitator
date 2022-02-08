@@ -98,8 +98,7 @@ and fold_parsed_discrete_term operator base leaf_fun = function
 and fold_parsed_discrete_factor operator base leaf_fun = function
 	| Parsed_DF_variable variable_name -> leaf_fun (Leaf_variable variable_name)
 	| Parsed_DF_constant value -> leaf_fun (Leaf_constant value)
-	| Parsed_DF_array expr_array -> Array.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_array
-	| Parsed_DF_list expr_list -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_list
+	| Parsed_sequence (expr_list, _) -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_list
 	| Parsed_DF_expression expr ->
         fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
 	(*
@@ -327,11 +326,16 @@ let label_of_parsed_bin_log_function_type = function
     | Parsed_log_xor -> "logxor"
 *)
 
+let label_of_parsed_sequence_type = function
+    | Parsed_array -> "array"
+    | Parsed_list -> "list"
+    | Parsed_stack -> "stack"
+    | Parsed_queue -> "queue"
+
 let label_of_parsed_factor_constructor = function
 	| Parsed_DF_variable _ -> "variable"
 	| Parsed_DF_constant _ -> "constant"
-	| Parsed_DF_array _ -> "array"
-	| Parsed_DF_list _ -> "list"
+	| Parsed_sequence (_, seq_type) -> label_of_parsed_sequence_type seq_type
 	| Parsed_DF_access _ -> "access"
 	| Parsed_DF_expression _ -> "expression"
 	| Parsed_DF_unary_min _ -> "minus"
@@ -402,11 +406,15 @@ and string_of_parsed_factor variable_infos = function
         ) else
             variable_name
     | Parsed_DF_constant value -> DiscreteValue.string_of_value value
-    | Parsed_DF_array expr_array ->
-        "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (string_of_parsed_boolean_expression variable_infos) expr_array) ^ "]"
-    | Parsed_DF_list expr_list as list_expr ->
-        label_of_parsed_factor_constructor list_expr
-        ^ "([" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (string_of_parsed_boolean_expression variable_infos) expr_list) ^ "])"
+    | Parsed_sequence (expr_list, seq_type) as seq ->
+        let str_elements = List.map (string_of_parsed_boolean_expression variable_infos) expr_list in
+        let str_array = "[" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_elements ^ "]" in
+        (match seq_type with
+        | Parsed_array -> str_array
+        | Parsed_list
+        | Parsed_stack
+        | Parsed_queue -> label_of_parsed_factor_constructor seq ^ "(" ^ str_array ^ ")"
+        )
     | Parsed_DF_access (factor, expr) ->
         string_of_parsed_factor variable_infos factor ^ "[" ^ string_of_parsed_arithmetic_expression variable_infos expr ^ "]"
     | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression variable_infos arithmetic_expr

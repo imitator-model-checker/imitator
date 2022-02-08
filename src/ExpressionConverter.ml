@@ -15,6 +15,12 @@ module rec TypeChecker : sig
 
 type inner_type = var_type_discrete
 
+type typed_sequence_type =
+    | Typed_array
+    | Typed_list
+    | Typed_stack
+    | Typed_queue
+
 type typed_global_expression =
     | Typed_global_expr of typed_boolean_expression * var_type_discrete
 
@@ -49,8 +55,7 @@ and typed_product_quotient =
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete
 	| Typed_constant of DiscreteValue.discrete_value * var_type_discrete
-	| Typed_array of typed_boolean_expression array * inner_type
-	| Typed_list of typed_boolean_expression list * inner_type
+	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
 	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_unary_min of typed_discrete_factor * var_type_discrete_number
     | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * inner_type
@@ -114,6 +119,12 @@ end = struct
 
 type inner_type = var_type_discrete
 
+type typed_sequence_type =
+    | Typed_array
+    | Typed_list
+    | Typed_stack
+    | Typed_queue
+
 type typed_global_expression =
     | Typed_global_expr of typed_boolean_expression * var_type_discrete
 
@@ -148,9 +159,8 @@ and typed_product_quotient =
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete
 	| Typed_constant of DiscreteValue.discrete_value * var_type_discrete
-	| Typed_array of typed_boolean_expression array * inner_type
-	| Typed_list of typed_boolean_expression list * inner_type
-	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
+    | Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
+    | Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_unary_min of typed_discrete_factor * var_type_discrete_number
     | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * inner_type
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
@@ -274,16 +284,20 @@ and string_of_typed_discrete_factor variable_infos discrete_type = function
 	    string_format_typed_node variable_name discrete_type
 	| Typed_constant (value, _) ->
         string_format_typed_node (DiscreteValue.string_of_value value) discrete_type
-	| Typed_array (array_expr, _) ->
-	    let l_del, r_del = Constants.default_array_string.array_literal_delimiter in
-	    let str_array = Array.map (string_of_typed_boolean_expression variable_infos) array_expr in
-	    let str_node = l_del ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_array ^ r_del in
-	    string_format_typed_node str_node discrete_type
 
-	| Typed_list (list_expr, _) ->
+    | Typed_sequence (list_expr, _, seq_type) ->
 	    let l_del, r_del = Constants.default_array_string.array_literal_delimiter in
-	    let str_list = List.map (string_of_typed_boolean_expression variable_infos) list_expr in
-	    let str_node = "list(" ^ l_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_list ^ r_del ^ ")" in
+	    let str_elements = List.map (string_of_typed_boolean_expression variable_infos) list_expr in
+	    let str_array = l_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_elements ^ r_del in
+	    (* TODO benjamin REFACTOR hard-coded list / stack / queue *)
+	    let str_node =
+	        match seq_type with
+	        | Typed_array -> str_array
+	        | Typed_list -> "list(" ^ str_array ^ ")"
+	        | Typed_stack -> "stack(" ^ str_array ^ ")"
+	        | Typed_queue -> "queue(" ^ str_array ^ ")"
+        in
+
 	    string_format_typed_node str_node discrete_type
 
 	| Typed_expr (expr, _) ->
@@ -729,10 +743,8 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
         in
 
         Typed_constant (value, infer_discrete_type), infer_discrete_type, false
-    (* TODO benjamin REFACTOR Merge DF_array and list into one type and subtype *)
-	| Parsed_DF_array array_expr as outer_expr ->
 
-	    let list_expr = Array.to_list array_expr in
+	| Parsed_sequence (list_expr, seq_type) as outer_expr ->
         let type_checks = List.map (type_check_parsed_boolean_expression variable_infos infer_type_opt) list_expr in
         let typed_expressions = List.map (fun (typed_expr, _, _) -> typed_expr) type_checks in
         let discrete_types = List.map (fun (_, discrete_type, _) -> discrete_type) type_checks in
@@ -745,34 +757,15 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
             (* Get inner type of a collection analysing types of it's elements *)
             (* If the collection is empty, it's type will be inferred by the context *)
             let inner_type = type_check_collection discrete_types infer_type_opt in
-            let discrete_type = Var_type_discrete_array (inner_type, List.length list_expr) in
-            Typed_array (Array.of_list typed_expressions, inner_type), discrete_type, has_side_effects
-        )
-        else (
-            let str_expressions = List.map (string_of_parsed_boolean_expression variable_infos) list_expr in
-
-            raise (TypeError (
-                ill_typed_message_of_expressions
-                    str_expressions
-                    discrete_types
-                    (string_of_parsed_factor variable_infos outer_expr)
-            ))
-        )
-
-	| Parsed_DF_list list_expr as outer_expr ->
-        let type_checks = List.map (type_check_parsed_boolean_expression variable_infos infer_type_opt) list_expr in
-        let typed_expressions = List.map (fun (typed_expr, _, _) -> typed_expr) type_checks in
-        let discrete_types = List.map (fun (_, discrete_type, _) -> discrete_type) type_checks in
-        let has_side_effects = List.exists (fun (_, _, side_effects) -> side_effects) type_checks in
-
-        let all_compatibles = OCamlUtilities.for_all_in_arrangement (fun a b -> is_discrete_type_compatibles a b) discrete_types in
-
-        (* Check that all elements types are compatible *)
-        if all_compatibles then (
-            (* Get inner type of a collection analysing types of it's elements *)
-            (* If the collection is empty, it's type will be inferred by the context *)
-            let inner_type = type_check_collection discrete_types infer_type_opt in
-            Typed_list (typed_expressions, inner_type), Var_type_discrete_list inner_type, has_side_effects
+            (* Determine discrete type and typed sequence type *)
+            let discrete_type, seq_type =
+                match seq_type with
+                    | Parsed_array ->
+                        Var_type_discrete_array (inner_type, List.length list_expr), Typed_array
+                    | Parsed_list ->
+                        Var_type_discrete_list inner_type, Typed_list
+            in
+            Typed_sequence (typed_expressions, inner_type, seq_type), discrete_type, has_side_effects
         )
         else (
             let str_expressions = List.map (string_of_parsed_boolean_expression variable_infos) list_expr in
@@ -1345,11 +1338,16 @@ open TypeChecker
 
 type discrete_index = int
 
+let label_of_typed_sequence_type = function
+	| Typed_array -> "array"
+	| Typed_list -> "list"
+	| Typed_stack -> "stack"
+	| Typed_queue -> "queue"
+
 let label_of_typed_factor_constructor = function
 	| Typed_variable _ -> "variable"
 	| Typed_constant _ -> "constant"
-	| Typed_array _ -> "array"
-	| Typed_list _ -> "list"
+	| Typed_sequence (_, _, seq_type) -> label_of_typed_sequence_type seq_type
 	| Typed_access _ -> "access"
 	| Typed_expr _ -> "expression"
 	| Typed_unary_min _ -> "minus"
@@ -2087,10 +2085,10 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
 	| Typed_constant (value, _) ->
 	    Array_constant (DiscreteValue.array_value value)
 
-    | Typed_array (expr_array, _) ->
+    | Typed_sequence (expr_list, _, Typed_array) ->
         (* Should take inner_type unbox type *)
-
-        Literal_array (Array.map (fun expr -> global_expression_of_typed_boolean_expression variable_infos expr discrete_type) expr_array)
+        let expressions = List.map (fun expr -> global_expression_of_typed_boolean_expression variable_infos expr discrete_type) expr_list in
+        Literal_array (Array.of_list expressions)
 
 	| Typed_expr (expr, _) ->
         array_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
@@ -2181,7 +2179,7 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
 	| Typed_constant (value, _) ->
 	    List_constant (DiscreteValue.list_value value)
 
-    | Typed_list (expr_list, _) ->
+    | Typed_sequence (expr_list, _, Typed_list) ->
         Literal_list (List.map (fun expr -> global_expression_of_typed_boolean_expression variable_infos expr discrete_type) expr_list)
 
 	| Typed_expr (expr, _) ->
@@ -2269,10 +2267,6 @@ and stack_expression_of_typed_factor variable_infos discrete_type = function
             raise (InternalError "")
         | Variable_kind discrete_index -> Stack_variable discrete_index
         )
-    (*
-    | Typed_list (expr_list, _) ->
-        Literal_list (List.map (fun expr -> global_expression_of_typed_boolean_expression variable_infos expr discrete_type) expr_list)
-    *)
 	| Typed_expr (expr, _) ->
         stack_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
 

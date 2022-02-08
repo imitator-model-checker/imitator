@@ -125,13 +125,14 @@ let rec customized_string_of_value customized_string = function
     | Stack_value s ->
         let str_values = Stack.fold (fun acc x -> acc ^ customized_string_of_value customized_string x ^ ", ") "" s in
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        (* TODO benjamin remove hardcoded "stack([a,b,c])" *)
-        "stack(" ^ l_delimiter ^ str_values ^ r_delimiter ^ ")"
+        (* TODO benjamin CLEAN remove hardcoded "stack([a,b,c])" *)
+        if str_values = "" then "stack()" else "stack(" ^ l_delimiter ^ str_values ^ r_delimiter ^ ")"
+
     | Queue_value s ->
         let str_values = Queue.fold (fun acc x -> acc ^ customized_string_of_value customized_string x ^ ", ") "" s in
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        (* TODO benjamin remove hardcoded "queue([a,b,c])" *)
-        "queue(" ^ l_delimiter ^ str_values ^ r_delimiter ^ ")"
+        (* TODO benjamin CLEAN remove hardcoded "queue([a,b,c])" *)
+        if str_values = "" then "queue()" else "queue(" ^ l_delimiter ^ str_values ^ r_delimiter ^ ")"
 
 let string_of_value = customized_string_of_value global_default_string
 

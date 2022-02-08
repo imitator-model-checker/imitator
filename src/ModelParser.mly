@@ -581,8 +581,10 @@ literal_scalar_constant:
 /* TODO benjamin see if possible to encapsulate array / list to Parsed_DF_constant */
 /* in this case, move these elements of that rule to `literal_scalar_constant` */
 literal_non_scalar_constant:
-  | literal_array { Parsed_DF_array (Array.of_list $1) }
-  | CT_LIST LPAREN literal_array RPAREN { Parsed_DF_list $3 }
+  | literal_array { Parsed_sequence ($1, Parsed_array) }
+  | CT_LIST LPAREN literal_array RPAREN { Parsed_sequence ($3, Parsed_list) }
+  | CT_STACK LPAREN RPAREN { Parsed_sequence ([], Parsed_stack) }
+  | CT_QUEUE LPAREN RPAREN { Parsed_sequence ([], Parsed_queue) }
 ;
 
 literal_array:
