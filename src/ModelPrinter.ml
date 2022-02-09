@@ -150,7 +150,7 @@ let json_of_pval model pval =
 	(* Hack for empty model *)
 	if model.nb_parameters = 0 then json_NULL
 	else(
-		"{\n\t\t\t" ^ (
+		"{" ^ (
 		string_of_list_of_string_with_sep "," (
 			List.map (fun parameter ->
 				"\n\t\t\t"
