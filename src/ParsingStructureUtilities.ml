@@ -65,11 +65,11 @@ and fold_parsed_boolean_expression operator base leaf_fun = function
 and fold_parsed_discrete_boolean_expression operator base leaf_fun = function
     | Parsed_arithmetic_expression expr ->
         fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
-	| Parsed_expression (l_expr, _, r_expr) ->
+	| Parsed_comparison (l_expr, _, r_expr) ->
 	    operator
 	        (fold_parsed_discrete_boolean_expression operator base leaf_fun l_expr)
 	        (fold_parsed_discrete_boolean_expression operator base leaf_fun r_expr)
-	| Parsed_expression_in (lower_expr, expr, upper_expr) ->
+	| Parsed_comparison_in (lower_expr, expr, upper_expr) ->
 	    operator
 	        (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
             (operator
@@ -450,12 +450,12 @@ and string_of_parsed_boolean_expression variable_infos = function
 and string_of_parsed_discrete_boolean_expression variable_infos = function
     | Parsed_arithmetic_expression expr ->
         string_of_parsed_arithmetic_expression variable_infos expr
-    | Parsed_expression (l_expr, relop, r_expr) ->
+    | Parsed_comparison (l_expr, relop, r_expr) ->
         string_of_parsed_relop
             relop
             (string_of_parsed_discrete_boolean_expression variable_infos l_expr)
             (string_of_parsed_discrete_boolean_expression variable_infos r_expr)
-    | Parsed_expression_in (expr1, expr2, expr3) ->
+    | Parsed_comparison_in (expr1, expr2, expr3) ->
         (* Compute the first one to avoid redundancy *)
         let str_expr1 = string_of_parsed_arithmetic_expression variable_infos expr1 in
         let str_expr2 = string_of_parsed_arithmetic_expression variable_infos expr2 in
@@ -930,16 +930,16 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
 let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
     | Parsed_arithmetic_expression _ ->
         raise (InvalidExpression "An expression that involve clock(s) / parameter(s) contains a boolean variable")
-    | Parsed_expression (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr) ->
+    | Parsed_comparison (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr) ->
         Parsed_linear_constraint (
             try_convert_linear_expression_of_parsed_discrete_arithmetic_expression l_expr,
             relop,
             try_convert_linear_expression_of_parsed_discrete_arithmetic_expression r_expr
         )
-    | Parsed_expression (l_expr, relop, r_expr) ->
+    | Parsed_comparison (l_expr, relop, r_expr) ->
         raise (InvalidExpression "Use of non arithmetic comparison is forbidden in an expression that involve clock(s) / parameter(s)")
     (* Expression in used ! So it's impossible to make the conversion, we raise an exception*)
-    | Parsed_expression_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
+    | Parsed_comparison_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
     | Parsed_boolean_expression _ -> raise (InvalidExpression "A non-convex predicate involve clock(s) / parameter(s)")
     | Parsed_Not _ -> raise (InvalidExpression "A not expression involve clock(s) / parameter(s)")
 

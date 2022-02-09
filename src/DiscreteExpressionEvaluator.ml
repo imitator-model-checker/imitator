@@ -255,7 +255,7 @@ and eval_discrete_boolean_expression discrete_valuation = function
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
     (* TODO benjamin WARNING here we compare a DiscreteValue.discrete_value type with operator it's bad *)
     (* We just have to create a Rational_comparison and a Int_comparison to solve this *)
-    | Expression (l_expr, relop, r_expr) ->
+    | Arithmetic_comparison (l_expr, relop, r_expr) ->
         (operator_of_relop relop)
             (eval_discrete_arithmetic_expression discrete_valuation l_expr)
             (eval_discrete_arithmetic_expression discrete_valuation r_expr)

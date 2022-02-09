@@ -75,7 +75,7 @@ and rational_factor =
 	| Rational_of_int of int_arithmetic_expression
 	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
 	| Rational_list_hd of list_expression
-	(* TODO benjamin REFACTORUS duplicates *)
+	(* TODO benjamin REFACTOR duplicates *)
     | Rational_stack_pop of stack_expression
     | Rational_stack_top of stack_expression
     | Rational_queue_pop of queue_expression
@@ -99,11 +99,11 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
-    (* TODO benjamin REFACTORUS here decline array_expression to int_array_expression *)
+    (* TODO benjamin REFACTOR here decline array_expression to int_array_expression *)
     | Int_access of expression_access_type * int_arithmetic_expression
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_list_hd of list_expression
-    (* TODO benjamin REFACTORUS replace all X_length by new variant *)
+    (* TODO benjamin REFACTOR replace all X_length by new variant *)
     | Array_length of array_expression
     | List_length of list_expression
     | Stack_length of stack_expression
@@ -129,9 +129,9 @@ and boolean_expression =
 
 and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	(* TODO benjamin REFACTORUS create another type regrouping all comparisons *)
-    (* TODO benjamin look for Expression because even if it was type checked before it's structure can potentially compare different type *)
-	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
+	(* TODO benjamin REFACTOR create another type regrouping all comparisons *)
+    (* TODO benjamin look for Arithmetic_comparison because even if it was type checked before it's structure can potentially compare different type *)
+	| Arithmetic_comparison of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
     | Boolean_comparison of discrete_boolean_expression * relop * discrete_boolean_expression
     | Binary_comparison of binary_word_expression * relop * binary_word_expression
     | Array_comparison of array_expression * relop * array_expression

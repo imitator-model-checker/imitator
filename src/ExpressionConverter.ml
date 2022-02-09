@@ -527,7 +527,7 @@ and type_check_parsed_discrete_boolean_expression variable_infos infer_type_opt 
 	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_opt expr in
 	    Typed_arithmetic_expr (typed_expr, discrete_type), discrete_type, has_side_effects
 
-	| Parsed_expression (l_expr, relop, r_expr) as outer_expr ->
+	| Parsed_comparison (l_expr, relop, r_expr) as outer_expr ->
 
 	    let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_discrete_boolean_expression variable_infos infer_type_opt l_expr in
 	    let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_discrete_boolean_expression variable_infos infer_type_opt r_expr in
@@ -548,7 +548,7 @@ and type_check_parsed_discrete_boolean_expression variable_infos infer_type_opt 
                     (string_of_parsed_discrete_boolean_expression variable_infos outer_expr)
             ))
 
-	| Parsed_expression_in (in_expr, lw_expr, up_expr) as outer_expr ->
+	| Parsed_comparison_in (in_expr, lw_expr, up_expr) as outer_expr ->
 	    let in_typed_expr, in_type, in_has_side_effects = type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_opt in_expr in
 	    let lw_typed_expr, lw_type, lw_has_side_effects = type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_opt lw_expr in
 	    let up_typed_expr, up_type, up_has_side_effects = type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_opt up_expr in
@@ -1527,7 +1527,7 @@ and bool_expression_of_typed_discrete_boolean_expression variable_infos = functi
 
 and bool_expression_of_typed_comparison variable_infos l_expr relop r_expr = function
     | Var_type_discrete_number discrete_number_type ->
-        Expression (
+        Arithmetic_comparison (
             discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type l_expr,
             convert_parsed_relop relop,
             discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type r_expr

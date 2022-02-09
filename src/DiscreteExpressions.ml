@@ -122,7 +122,7 @@ and boolean_expression =
 
 and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
+	| Arithmetic_comparison of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
 	| Boolean_comparison of discrete_boolean_expression * relop * discrete_boolean_expression
 	| Binary_comparison of binary_word_expression * relop * binary_word_expression
 	| Array_comparison of array_expression * relop * array_expression
@@ -260,7 +260,7 @@ and is_linear_boolean_expression = function
 		is_linear_discrete_boolean_expression expr
 
 and is_linear_discrete_boolean_expression = function
-	| Expression (l_expr, _, r_expr) ->
+	| Arithmetic_comparison (l_expr, _, r_expr) ->
 	    is_linear_arithmetic_expression l_expr &&
 	    is_linear_arithmetic_expression r_expr
 	| Expression_in (expr_1, expr_2, expr_3) ->
@@ -396,7 +396,7 @@ let add_parenthesis_to_unary_minus_int str = function
 (* Constructors strings *)
 
 let label_of_bool_factor = function
-	| Expression _
+	| Arithmetic_comparison _
     | Boolean_comparison _
     | Binary_comparison _
     | Array_comparison _
@@ -685,7 +685,7 @@ and customized_string_of_boolean_expression customized_string variable_names = f
 (** Convert a discrete_boolean_expression into a string *)
 and customized_string_of_discrete_boolean_expression customized_string variable_names = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
+	| Arithmetic_comparison (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
 		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
 		^ (customized_string_of_boolean_operations customized_string.boolean_string relop)
 		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)

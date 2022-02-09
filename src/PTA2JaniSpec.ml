@@ -274,7 +274,7 @@ and string_of_boolean_expression variable_names = function
 
 (** Convert a discrete_boolean_expression into a string *)
 and string_of_discrete_boolean_expression variable_names = function
-	| Expression (l_expr, relop, r_expr) ->
+	| Arithmetic_comparison (l_expr, relop, r_expr) ->
         string_of_comparison variable_names l_expr relop r_expr string_of_arithmetic_expression
 
     | Boolean_comparison (l_expr, relop, r_expr) ->
