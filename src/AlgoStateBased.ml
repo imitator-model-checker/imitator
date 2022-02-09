@@ -3849,6 +3849,9 @@ class virtual algoStateBased =
 					(* Get the initial global_time_clock value *)
 					let initial_time = concrete_run_prefix.initial_state.px_valuation global_time_clock in
 					
+					(* Print some information *)
+					print_message Verbose_medium ("Absolute time in the initial concrete state: " ^ (NumConst.string_of_numconst initial_time));
+
 					(* Let initial_time elapse, and remove initial_time time units from the initial valuation to get it back to 0 *)
 					
 					let state_i_plus_one : state_index = nth_state_index_of_symbolic_run symbolic_run (!i+1)
