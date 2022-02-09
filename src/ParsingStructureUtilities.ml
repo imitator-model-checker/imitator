@@ -101,27 +101,6 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
 	| Parsed_sequence (expr_list, _) -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_list
 	| Parsed_DF_expression expr ->
         fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
-	(*
-	| Parsed_rational_of_int_function expr ->
-        fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
-	| Parsed_pow_function (expr_0, expr_1) ->
-        operator
-            (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr_0)
-            (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr_1)
-	| Parsed_shift_function (_, factor, expr) ->
-        operator
-            (fold_parsed_discrete_factor operator base leaf_fun factor)
-            (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
-	| Parsed_bin_log_function (_, factor_0, factor_1)
-	| Parsed_array_append (factor_0, factor_1) ->
-        operator
-            (fold_parsed_discrete_factor operator base leaf_fun factor_0)
-            (fold_parsed_discrete_factor operator base leaf_fun factor_1)
-    | Parsed_list_cons (expr, factor) ->
-        operator
-            (fold_parsed_boolean_expression operator base leaf_fun expr)
-            (fold_parsed_discrete_factor operator base leaf_fun factor)
-    *)
     | Parsed_function_call (_, argument_expressions) ->
         List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression operator base leaf_fun expr) acc) base argument_expressions
     | Parsed_DF_access (factor, _)
@@ -339,16 +318,6 @@ let label_of_parsed_factor_constructor = function
 	| Parsed_DF_access _ -> "access"
 	| Parsed_DF_expression _ -> "expression"
 	| Parsed_DF_unary_min _ -> "minus"
-	(*
-	| Parsed_rational_of_int_function _ -> "rational_of_int"
-	| Parsed_pow_function _ -> "pow"
-	| Parsed_shift_function (fun_type, _, _) -> label_of_parsed_shift_function_type fun_type
-	| Parsed_bin_log_function (fun_type, _, _) -> label_of_parsed_bin_log_function_type fun_type
-
-    | Parsed_log_not _ -> "lognot"
-    | Parsed_array_append _ -> "array_append"
-    | Parsed_list_cons _ -> "list_cons"
-    *)
     | Parsed_function_call (variable, _) -> function_name_of_parsed_factor variable
 
 

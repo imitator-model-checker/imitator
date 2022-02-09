@@ -121,42 +121,6 @@ and parsed_discrete_factor =
 	| Parsed_function_call of parsed_discrete_factor (* name *) * parsed_boolean_expression list (* arguments *)
 
 
-    (* TODO benjamin CLEAN remove comments *)
-	(*
-	(* Functions *)
-	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
-	| Parsed_pow_function of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
-
-    (* All shift functions of the form : factor * arithmetic_expression *)
-	| Parsed_shift_function of parsed_shift_function_type * parsed_discrete_factor * parsed_discrete_arithmetic_expression
-    (* All binary log functions of the form : factor * factor *)
-    | Parsed_bin_log_function of parsed_bin_log_function_type * parsed_discrete_factor * parsed_discrete_factor
-	| Parsed_log_not of parsed_discrete_factor
-
-	| Parsed_array_append of parsed_discrete_factor * parsed_discrete_factor
-	| Parsed_list_cons of parsed_boolean_expression * parsed_discrete_factor
-    *)
-(*    | Parsed_user_function of string (* name *) * list (parsed_global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
-
-(*
-and parsed_shift_function_type =
-    | Parsed_shift_left
-    | Parsed_shift_right
-    | Parsed_fill_left
-    | Parsed_fill_right
-
-and parsed_bin_log_function_type =
-    | Parsed_log_and
-    | Parsed_log_or
-    | Parsed_log_xor
-*)
-
-
-
-
-
-
-
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
 type variable_declaration = var_type * (variable_name * parsed_global_expression option) list

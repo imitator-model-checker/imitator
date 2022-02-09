@@ -1389,15 +1389,6 @@ and global_expression_of_typed_boolean_expression_without_type variable_infos = 
 	    global_expression_of_typed_boolean_expression variable_infos expr discrete_type
 
 and global_expression_of_typed_boolean_expression variable_infos expr discrete_type =
-    (*
-    ImitatorUtilities.print_message Verbose_standard (
-        "Convert: "
-        ^ string_of_typed_boolean_expression variable_infos expr
-        ^ " to "
-        ^ DiscreteType.string_of_var_type_discrete discrete_type
-        ^ " expression."
-    );
-    *)
     match discrete_type with
     | Var_type_discrete_number discrete_number_type ->
         Arithmetic_expression (
