@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2021/11/30
+ * Last modified     : 2022/02/09
  *
  ************************************************************)
 
@@ -3796,6 +3796,9 @@ class virtual algoStateBased =
 				(*------------------------------------------------------------*)
 				
 				(*** WARNING/BADPROG: the following few lines are duplicate code with above ***)
+				
+				(* Print some information *)
+				print_message Verbose_low ("Generating the concrete run prefix from position 0 to position " ^ (string_of_int (!i-1)) ^ "…");
 
 				(* Cut the symbolic run *)
 				let symbolic_run_prefix : StateSpace.symbolic_run = {
@@ -3840,6 +3843,9 @@ class virtual algoStateBased =
 				let impossible_step_i =
 				(* Special case: if the concrete run is empty (a single state), we need to be careful, as the chosen point may not be the initial point! (global_time_clock > 0) *)
 				if concrete_run_prefix.steps = [] then(
+					(* Print some information *)
+					print_message Verbose_medium ("Special case: the concrete run prefix is empty");
+					
 					(* Get the initial global_time_clock value *)
 					let initial_time = concrete_run_prefix.initial_state.px_valuation global_time_clock in
 					
@@ -3864,6 +3870,8 @@ class virtual algoStateBased =
 					}
 				
 				)else(
+					(* Print some information *)
+					print_message Verbose_high ("Normal case: the concrete run prefix is not empty");
 				
 					(*** NOTE: now, the only way to choose the NEXT point at position i+1 is to consider a 0-time transition from position i, because we know that the point exhibited at position i does not belong to the i+1 zone ***)
 					
