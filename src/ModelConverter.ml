@@ -636,9 +636,10 @@ let check_update variable_infos automaton_name update =
                     true
                 else (
 
+                    let is_updated_variable_defined = List.mem variable_name variable_infos.variable_names in
                     let all_variables_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
 
-                    if not all_variables_defined then (
+                    if not (all_variables_defined && is_updated_variable_defined) then (
                         (* TODO benjamin IMPROVE get variable names as before ! *)
                         print_error ("A variable used in update \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression ^ "\" in automaton `" ^ automaton_name ^ "` was not declared.");
                         false
