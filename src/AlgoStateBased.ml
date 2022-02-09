@@ -3671,7 +3671,7 @@ class virtual algoStateBased =
 				print_message Verbose_standard "Negative counterexample run constructed for a negative parameter valuation!";
 				if verbose_mode_greater Verbose_low then (
 					(* Debug print *)
-					print_message Verbose_low (ModelPrinter.string_of_impossible_concrete_run model impossible_concrete_run);
+					print_message Verbose_low (ModelPrinter.debug_string_of_impossible_concrete_run model impossible_concrete_run);
 				);
 				
 				(* Add the run to the list of results *)
@@ -3936,7 +3936,7 @@ class virtual algoStateBased =
 				print_message Verbose_standard "Negative counterexample run constructed for the positive parameter valuation!";
 				if verbose_mode_greater Verbose_low then (
 					(* Debug print *)
-					print_message Verbose_low (ModelPrinter.string_of_impossible_concrete_run model impossible_concrete_run);
+					print_message Verbose_low (ModelPrinter.debug_string_of_impossible_concrete_run model impossible_concrete_run);
 				);
 
 				(* Add the run to the list of results *)

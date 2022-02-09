@@ -1277,7 +1277,7 @@ let debug_string_of_symbolic_run model state_space (symbolic_run : StateSpace.sy
 
 
 
-let string_of_concrete_steps model concrete_steps =
+let debug_string_of_concrete_steps model concrete_steps =
 	(* Iterate on following steps *)
 	(string_of_list_of_string_with_sep "\n" (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
 		  ("\n | ")
@@ -1319,12 +1319,12 @@ let debug_string_of_concrete_run model (concrete_run : StateSpace.concrete_run) 
 	^ "\n" ^ (string_of_concrete_state model concrete_run.initial_state)
 	
 	(* Iterate on following steps *)
-	^ (string_of_concrete_steps model concrete_run.steps)
+	^ (debug_string_of_concrete_steps model concrete_run.steps)
 
 
 
 (** Convert an impossible_concrete_run to a string (for debug-purpose) *)
-let string_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) =
+let debug_string_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) =
 	(* First recall the parameter valuation *)
 	"Impossible concrete run for parameter valuation:"
 	^ "\n" ^ (string_of_pval model impossible_concrete_run.p_valuation)
@@ -1335,7 +1335,7 @@ let string_of_impossible_concrete_run model (impossible_concrete_run : StateSpac
 	^ "\n" ^ (string_of_concrete_state model impossible_concrete_run.initial_state)
 	
 	(* Iterate on following concrete steps *)
-	^ (string_of_concrete_steps model impossible_concrete_run.steps)
+	^ (debug_string_of_concrete_steps model impossible_concrete_run.steps)
 	
 	(*** NOTE: only the first step is impossible; others are "arbitrary" ***)
 	^ (match impossible_concrete_run.impossible_steps with
