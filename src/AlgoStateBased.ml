@@ -3798,7 +3798,7 @@ class virtual algoStateBased =
 				(*** WARNING/BADPROG: the following few lines are duplicate code with above ***)
 				
 				(* Print some information *)
-				print_message Verbose_low ("Generating the concrete run prefix from position 0 to position " ^ (string_of_int (!i-1)) ^ "…");
+				print_message Verbose_low ("Generating the concrete run prefix from position 0 to position " ^ (string_of_int !i) ^ "…");
 
 				(* Cut the symbolic run *)
 				let symbolic_run_prefix : StateSpace.symbolic_run = {
