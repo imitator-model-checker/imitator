@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2021/12/09
+ * Last modified     : 2022/02/09
  *
  ************************************************************)
 
@@ -1339,15 +1339,20 @@ let string_of_concrete_steps model concrete_steps =
 	) concrete_steps))
 
 
-let string_of_impossible_concrete_steps model impossible_concrete_steps =
+let string_of_arbitrary_or_impossible_concrete_step_gen (step_description : string) model (concrete_step : StateSpace.impossible_concrete_step)=
+		("\n | ")
+	^ ("\n | via d = " ^ (NumConst.string_of_numconst concrete_step.time))
+	^ ("\n | followed by " ^ step_description ^ " transition labeled with " ^ (model.action_names concrete_step.action))
+	^ ("\n | ")
+	^ ("\n v ")
+	^ (" " ^ (string_of_concrete_state model concrete_step.target))
+
+let string_of_impossible_concrete_step = string_of_arbitrary_or_impossible_concrete_step_gen "impossible"
+
+let string_of_arbitrary_concrete_steps model impossible_concrete_steps =
 	(* Iterate on following steps *)
 	(string_of_list_of_string_with_sep "\n" (List.map (fun (impossible_concrete_step : StateSpace.impossible_concrete_step)  ->
-		  ("\n | ")
-		^ ("\n | via d = " ^ (NumConst.string_of_numconst impossible_concrete_step.time))
-		^ ("\n | followed by impossible transition labeled with " ^ (model.action_names impossible_concrete_step.action))
-		^ ("\n | ")
-		^ ("\n v ")
-		^ (" " ^ (string_of_concrete_state model impossible_concrete_step.target))
+		string_of_arbitrary_or_impossible_concrete_step_gen "arbitrary" model impossible_concrete_step
 	) impossible_concrete_steps))
 
 
@@ -1404,8 +1409,17 @@ let string_of_impossible_concrete_run model (impossible_concrete_run : StateSpac
 	(* Iterate on following concrete steps *)
 	^ (string_of_concrete_steps model impossible_concrete_run.steps)
 	
-	(* Iterate on following impossible steps *)
-	^ (string_of_impossible_concrete_steps model impossible_concrete_run.impossible_steps)
+	(*** NOTE: only the first step is impossible; others are "arbitrary" ***)
+	^ (match impossible_concrete_run.impossible_steps with
+	| [] -> ""
+	| first_step :: following_steps ->
 	
+		(* Convert the first impossible step *)
+		(string_of_impossible_concrete_step model first_step)
+
+		(* Iterate on following impossible steps *)
+		^ (string_of_arbitrary_concrete_steps model following_steps)
+
+	)
 
 
