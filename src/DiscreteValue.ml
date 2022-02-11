@@ -19,6 +19,24 @@ open Exceptions
 open DiscreteType
 
 (* Discrete value of different specific types *)
+(*
+type discrete_number_value =
+    | Weak_number_value of NumConst.t
+    | Rational_value2 of NumConst.t
+    | Int_value2 of Int32.t
+
+type discrete_scalar_value =
+    | Number_value of discrete_number_value
+    | Bool_value2 of bool
+    | Binary_word_value2 of BinaryWord.t
+
+type xxx =
+    | Scalar_value of discrete_scalar_value
+    | Array_value2 of discrete_scalar_value array
+    | List_value2 of discrete_scalar_value list
+    | Stack_value2 of discrete_scalar_value Stack.t
+    | Queue_value2 of discrete_scalar_value Queue.t
+*)
 
 type discrete_value =
     | Number_value of NumConst.t

@@ -35,6 +35,10 @@ let queue_top_fail_message queue_expr =
     let str_expr = DiscreteExpressions.string_of_queue_expression (fun i -> "") queue_expr in
     "Use of `queue_top` on empty queue `" ^ str_expr ^ "`."
 
+let sequence_operation_fail_message seq_expr str_func function_name =
+    let str_expr = str_func (fun i -> "") seq_expr in
+    "Use of `" ^ function_name ^ "` on empty queue `" ^ str_expr ^ "`."
+
 (* Evaluate function on a sequence, raise an exception if sequence is empty *)
 let eval_if_not_empty eval_length_function eval_function collection fail_message =
     if eval_length_function collection = 0 then
@@ -150,9 +154,9 @@ and eval_rational_factor discrete_valuation = function
         let value = try_eval_queue_pop queue fail_message in
         numconst_value value
 
-    | Rational_queue_top queue_expr ->
+    | Rational_queue_top queue_expr as func ->
         let queue = eval_queue_expression discrete_valuation queue_expr in
-        let fail_message = queue_top_fail_message queue_expr in
+        let fail_message = sequence_operation_fail_message queue_expr DiscreteExpressions.string_of_queue_expression (label_of_rational_factor func) in
         let value = try_eval_queue_top queue fail_message in
         numconst_value value
 
