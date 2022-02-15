@@ -432,7 +432,7 @@ We denote by~$\WVar$ the set of binary word variables.
 
 Array variables are fixed length collections of indexed elements.
 Array elements can be accessed or updated using an integer-valued arithmetic expression as index.
-An array variable always has a fixed length and an underlying type, which can be any of the available types of \imitator{} (including arrays and lists).
+An array variable always has a fixed length and an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
 For example, it is possible to declare an array of integers, of Booleans, of arrays of arrays of Booleans---which can be seen as a multidimensional array.
 
 Examples of array definitions are given below:
@@ -458,7 +458,7 @@ Examples of array definitions are given below:
 
 Lists are collections of variable length - contrary to arrays, the type of a list doesn't depend on it's length, thus it's possible to compare two lists of different lengths.
 List elements can only be accessed - not updated - using an integer-valued arithmetic expression as index.
-A list variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays and lists).
+A list variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
 For example, it is possible to declare a list of integers, of Booleans, of list of list of Booleans---which can be seen as a multidimensional list.
 
 Examples of list definitions are given below:
@@ -471,6 +471,56 @@ Examples of list definitions are given below:
 	my_bool_list        	: bool list;
 	my_binary_word_list 	: binary(4) list;
 	my_2d_int_list      	: int list list;
+\end{IMITATORmodel}
+%------------------------------------------------------------
+
+%------------------------------------------------------------
+\subsubsection{Stacks}
+%------------------------------------------------------------
+
+Stacks are LIFO collections (Last In First Out) of variable length - contrary to arrays, the type of a stack doesn't depend on it's length, thus it's possible to compare two stacks of different lengths.
+Stack elements can only be accessed - not updated - using pop or top functions.
+A stack variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stack and queue).
+For example, it is possible to declare a stack of integers, of Booleans, of stack of stack of Booleans---which can be seen as a multidimensional stack.
+\begin{remark}
+A literal stack value can only be an empty stack.
+\end{remark}
+
+Examples of stack definitions are given below:
+
+%------------------------------------------------------------
+\begin{IMITATORmodel}
+	my_const_rational_stack = stack() : rational stack; (* useless but possible *)
+	my_rational_stack			: rational stack;
+	my_int_stack					: int stack;
+	my_bool_stack        	: bool stack;
+	my_binary_word_stack 	: binary(4) stack;
+	my_2d_int_stack      	: int stack stack;
+\end{IMITATORmodel}
+%------------------------------------------------------------
+
+%------------------------------------------------------------
+\subsubsection{Queues}
+%------------------------------------------------------------
+
+Queues are FIFO collections (First In First Out) of variable length - contrary to arrays, the type of a queue doesn't depend on it's length, thus it's possible to compare two queues of different lengths.
+Queue elements can only be accessed - not updated - using pop or top functions.
+A queue variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stack and queue).
+For example, it is possible to declare a queue of integers, of Booleans, of queue of queue of Booleans---which can be seen as a multidimensional queue.
+\begin{remark}
+A literal queue value can only be an empty queue.
+\end{remark}
+
+Examples of queue definitions are given below:
+
+%------------------------------------------------------------
+\begin{IMITATORmodel}
+	my_const_rational_queue = queue() : rational queue; (* useless but possible *)
+	my_rational_queue			: rational queue;
+	my_int_queue					: int queue;
+	my_bool_queue        	: bool queue;
+	my_binary_word_queue 	: binary(4) queue;
+	my_2d_int_queue      	: int queue queue;
 \end{IMITATORmodel}
 %------------------------------------------------------------
 
@@ -529,6 +579,8 @@ Examples of list definitions are given below:
 			\hline
 			\hyperref[item:lbl-list_hd]{\styleIMI{list\_hd}} & Get head of a list \\
 			\hline
+			\hyperref[item:lbl-list_is_empty]{\styleIMI{list\_is\_empty}} & Check if a list has elements \\
+			\hline
 			\hyperref[item:lbl-list_length]{\styleIMI{list\_length}} & Get length of a list \\
 			\hline
 			\hyperref[item:lbl-list_rev]{\styleIMI{list\_rev}} & Reverse a list \\
@@ -537,6 +589,34 @@ Examples of list definitions are given below:
 			\hline
 			\hyperref[item:lbl-list_tl]{\styleIMI{list\_tl}} & Get tail of a list \\
 			\hline
+			\multicolumn{2}{|c|}{Stack} \\
+			\hline
+			\hyperref[item:lbl-stack_push]{\styleIMI{stack\_push}} & Push an element on the top of a stack - the stack is modified \\
+			\hline
+			\hyperref[item:lbl-stack_pop]{\styleIMI{stack\_pop}} & Get and remove the element on the top of a stack - the stack is modified \\
+			\hline
+			\hyperref[item:lbl-stack_top]{\styleIMI{stack\_top}} & Get the element on the top of a stack without modifying it \\
+			\hline
+			\hyperref[item:lbl-stack_clear]{\styleIMI{stack\_clear}} & Remove all elements of a stack - the stack is modified \\
+			\hline
+			\hyperref[item:lbl-stack_is_empty]{\styleIMI{stack\_is\_empty}} & Check if the stack has elements  \\
+			\hline
+			\hyperref[item:lbl-stack_length]{\styleIMI{stack\_length}} & Get the number of elements of a stack \\
+			\hline
+			\multicolumn{2}{|c|}{Queue} \\
+			\hline
+			\hyperref[item:lbl-queue_push]{\styleIMI{queue\_push}} & Add an element at the beginning of a queue - the queue is modified \\
+			\hline
+			\hyperref[item:lbl-queue_pop]{\styleIMI{queue\_pop}} & Get and remove the last element of a queue - the queue is modified \\
+			\hline
+			\hyperref[item:lbl-queue_top]{\styleIMI{queue\_top}} & Get the last element of a queue without modifying it \\
+			\hline
+			\hyperref[item:lbl-queue_clear]{\styleIMI{queue\_clear}} & Remove all elements of a queue - the queue is modified \\
+			\hline
+			\hyperref[item:lbl-queue_is_empty]{\styleIMI{queue\_is\_empty}} & Check if the queue has elements  \\
+			\hline
+			\hyperref[item:lbl-queue_length]{\styleIMI{queue\_length}} & Get the number of elements of a queue \\
+			\hline
 		\end{tabular}
 
 	}
@@ -544,8 +624,10 @@ Examples of list definitions are given below:
 	\label{table:summary:builtin-functions}
 \end{table}
 
-
-
+\begin{remark}
+Some function, mistakenly called "Side-effects functions" allow modification of collections "in-place" and therefore are subject to side-effects.
+Side-effects functions can only be used in updates.
+\end{remark}
 
 \paragraph{Arithmetic functions}
 
@@ -653,6 +735,7 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 	\item \styleIMI{l[i:int]:'a with 'a:any} - access to element of list \styleIMI{l} at index \styleIMI{i}
 	\item \label{item:lbl-list_cons} \styleIMI{list\_cons(e:'a, l:'a list):'a list with 'a:any} - construct a list by inserting a new element \styleIMI{e} at the beginning of \styleIMI{l}
 	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a with 'a:any} - head element of a list \styleIMI{l}
+	\item \label{item:lbl-list_is_empty} \styleIMI{list\_is\_empty(l:'a list):bool with 'a:any} - Check if the list \styleIMI{l} has elements
 	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list): int with 'a:any} - length of the list \styleIMI{l}
 	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool with 'a:any} - true if \styleIMI{e} is in the the list \styleIMI{l}
 	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list with 'a:any} - reverse the the list \styleIMI{l}
@@ -669,6 +752,7 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 			& my_int_list[0] = 1
 			& list_cons(1, list([2, 3])) = list([1, 2, 3])
 			& list_hd(list([3,4])) = 3
+			& list_is_empty(list([]))
 		  & list_length(list([1, 1, 1])) = 3
 		  & list_mem(2, list([8, 6, 2]))
 		  & list_rev(list([1, 2, 3])) = list([3, 2, 1])
@@ -679,6 +763,101 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 
 \end{example}
 %------------------------------------------------------------
+
+\paragraph{Stack functions}
+
+\begin{itemize}
+	\item \label{item:lbl-stack_push} \styleIMI{stack\_push(e:'a, s:'a stack):'a stack with 'a:any} - Add an element \styleIMI{e} at the top of the stack \styleIMI{s} and return the stack - the stack is modified, this function is subject to side-effects
+	\item \label{item:lbl-stack_pop} \styleIMI{stack\_pop(s:'a stack):'a with 'a:any} - Get and remove the element at the top of the stack \styleIMI{s} - the stack is modified, this function is subject to side-effects
+	\item \label{item:lbl-stack_top} \styleIMI{stack\_top(s:'a stack):'a with 'a:any} - Get the element at the top of the stack \styleIMI{s}
+	\item \label{item:lbl-stack_clear} \styleIMI{stack\_clear(s:'a stack):'a stack with 'a:any} - Remove all elements of the stack \styleIMI{s} and return the stack - the stack is modified, this function is subject to side-effects
+	\item \label{item:lbl-stack_is_empty} \styleIMI{stack\_is\_empty(s:'a stack):bool with 'a:any} - Check if the stack \styleIMI{s} has elements
+	\item \label{item:lbl-stack_length} \styleIMI{stack\_length(s:'a stack):int with 'a:any} - Get the number of elements in the stack \styleIMI{s}
+\end{itemize}
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate the stacks operations, note that the following guard in the model fragment below will evaluate to true:
+
+%------------------------------------------------------------
+	\begin{IMITATORmodel}
+		when
+			& True
+			do {
+				stack_push(1, s),
+				stack_push(2, s),
+				i := stack_top(s),
+				j := stack_pop(s),
+			}
+		goto l1;
+
+		loc l1: invariant
+			i = j
+			& i = 2
+			& stack_length(s) = 1
+			& not(stack_is_empty(s))
+		when
+			& True
+		do {
+			stack_clear(s)
+		}
+		goto l2;
+
+		loc l2: invariant stack_is_empty(s)
+
+	\end{IMITATORmodel}
+%------------------------------------------------------------
+
+\end{example}
+%------------------------------------------------------------
+
+\paragraph{Queue functions}
+
+\begin{itemize}
+	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue):'a queue with 'a:any} - Add an element \styleIMI{e} at the beginning of the queue \styleIMI{q} and return the queue - the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_pop} \styleIMI{queue\_pop(q:'a queue):'a with 'a:any} - Get and remove the last element of the queue \styleIMI{q} - the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_top} \styleIMI{queue\_top(q:'a queue):'a with 'a:any} - Get the last element of the queue \styleIMI{q}
+	\item \label{item:lbl-queue_clear} \styleIMI{queue\_clear(q:'a queue):'a queue with 'a:any} - Remove all elements of the queue \styleIMI{q} and return the queue - the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_is_empty} \styleIMI{queue\_is\_empty(q:'a queue):bool with 'a:any} - Check if the queue \styleIMI{q} has elements
+	\item \label{item:lbl-queue_length} \styleIMI{queue\_length(q:'a queue):int with 'a:any} - Get the number of elements in the queue \styleIMI{q}
+\end{itemize}
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate the queues operations, note that the following guard in the model fragment below will evaluate to true:
+
+%------------------------------------------------------------
+	\begin{IMITATORmodel}
+		when
+			& True
+			do {
+				queue_push(1, q),
+				queue_push(2, q),
+				i := stack_top(q),
+				j := stack_pop(q),
+			}
+		goto l1;
+
+		loc l1: invariant
+			i = j
+			& i = 1
+			& queue_length(q) = 1
+			& not(queue_is_empty(q))
+		when
+			& True
+		do {
+			queue_clear(q)
+		}
+		goto l2;
+
+		loc l2: invariant queue_is_empty(q)
+
+	\end{IMITATORmodel}
+%------------------------------------------------------------
+
+\end{example}
+%------------------------------------------------------------
+
 
 %------------------------------------------------------------
 \subsubsection{Discrete variables definition}
