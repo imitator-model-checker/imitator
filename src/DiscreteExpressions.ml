@@ -207,11 +207,13 @@ and list_expression =
 (*    | List_function_call of string * global_expression list*)
 
 and stack_expression =
+    | Literal_stack
     | Stack_variable of Automaton.variable_index
     | Stack_push of global_expression * stack_expression
     | Stack_clear of stack_expression
 
 and queue_expression =
+    | Literal_queue
     | Queue_variable of Automaton.variable_index
     | Queue_push of global_expression * queue_expression
     | Queue_clear of queue_expression
@@ -476,11 +478,13 @@ let label_of_list_expression = function
     | List_rev _ -> "list_rev"
 
 let label_of_stack_expression = function
+    | Literal_stack -> "literal stack"
     | Stack_variable _ -> "stack"
     | Stack_push _ -> "stack_push"
     | Stack_clear _ -> "stack_clear"
 
 let label_of_queue_expression = function
+    | Literal_queue -> "literal queue"
     | Queue_variable _ -> "queue"
     | Queue_push _ -> "queue_push"
     | Queue_clear _ -> "queue_clear"
@@ -909,6 +913,9 @@ and customized_string_of_list_expression customized_string variable_names = func
         ^ ")"
 
 and customized_string_of_stack_expression customized_string variable_names = function
+    | Literal_stack as stack_expr ->
+        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
+        label_of_stack_expression stack_expr ^ "(" ^ l_delimiter ^ r_delimiter ^ ")"
     | Stack_variable variable_index -> variable_names variable_index
     | Stack_push (expr, stack_expr) as func ->
         print_function
@@ -923,6 +930,9 @@ and customized_string_of_stack_expression customized_string variable_names = fun
             [customized_string_of_stack_expression customized_string variable_names stack_expr]
 
 and customized_string_of_queue_expression customized_string variable_names = function
+    | Literal_queue as stack_expr ->
+        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
+        label_of_queue_expression stack_expr ^ "(" ^ l_delimiter ^ r_delimiter ^ ")"
     | Queue_variable variable_index -> variable_names variable_index
     | Queue_push (expr, queue_expr) as func ->
         print_function

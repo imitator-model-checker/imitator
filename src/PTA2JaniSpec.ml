@@ -654,6 +654,11 @@ and string_of_list_expression variable_names = function
             ~str_comment:(undeclared_function_warning label)
 
 and string_of_stack_expression variable_names = function
+    | Literal_stack as expr_stack ->
+        (* Get label of expression *)
+        let label = label_of_stack_expression expr_stack in
+        jani_function_call label [||] ~str_comment:(undeclared_function_warning label)
+
     | Stack_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
     | Stack_push (expr, stack_expr) as func ->
         (* Get label of expression *)
@@ -674,6 +679,11 @@ and string_of_stack_expression variable_names = function
             ~str_comment:(undeclared_function_warning label)
 
 and string_of_queue_expression variable_names = function
+    | Literal_queue as expr_queue ->
+        (* Get label of expression *)
+        let label = label_of_queue_expression expr_queue in
+        jani_function_call label [||] ~str_comment:(undeclared_function_warning label)
+
     | Queue_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
     | Queue_push (expr, queue_expr) as func ->
         (* Get label of expression *)

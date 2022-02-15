@@ -767,6 +767,10 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
                         Var_type_discrete_array (inner_type, List.length list_expr), Typed_array
                     | Parsed_list ->
                         Var_type_discrete_list inner_type, Typed_list
+                    | Parsed_stack ->
+                        Var_type_discrete_stack inner_type, Typed_stack
+                    | Parsed_queue ->
+                        Var_type_discrete_queue inner_type, Typed_queue
             in
             Typed_sequence (typed_expressions, inner_type, seq_type), discrete_type, has_side_effects
         )
@@ -2326,12 +2330,13 @@ and stack_expression_of_typed_factor variable_infos discrete_type = function
 	| Typed_variable (variable_name, _) ->
         let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
         (match variable_kind with
-        | Constant_kind value ->
-            raise (InternalError "")
+        | Constant_kind value -> Literal_stack
         | Variable_kind discrete_index -> Stack_variable discrete_index
         )
 	| Typed_expr (expr, _) ->
         stack_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
+
+    | Typed_sequence (_, _, Typed_stack) -> Literal_stack
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
 	    stack_expression_of_typed_function_call variable_infos discrete_type argument_expressions function_name
@@ -2411,12 +2416,13 @@ and queue_expression_of_typed_factor variable_infos discrete_type = function
 	| Typed_variable (variable_name, _) ->
         let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
         (match variable_kind with
-        | Constant_kind value ->
-            raise (InternalError "")
+        | Constant_kind value -> Literal_queue
         | Variable_kind discrete_index -> Queue_variable discrete_index
         )
 	| Typed_expr (expr, _) ->
         queue_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
+
+    | Typed_sequence (_, _, Typed_queue) -> Literal_queue
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
 	    queue_expression_of_typed_function_call variable_infos discrete_type argument_expressions function_name

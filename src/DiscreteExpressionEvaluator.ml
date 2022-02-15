@@ -102,7 +102,7 @@ and eval_rational_term discrete_valuation = function
             let numerator, denominator = a, b in
             (* Check for 0-denominator *)
             if NumConst.equal denominator NumConst.zero then(
-                raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (NumConst.to_string numerator) ^ " / " ^ (NumConst.to_string denominator) ^ ""))
+                raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ NumConst.to_string numerator ^ " / " ^ NumConst.to_string denominator ^ ""))
             );
             (* Divide *)
             NumConst.div numerator denominator
@@ -421,6 +421,7 @@ and eval_list_expression discrete_valuation = function
         List.rev list
 
 and eval_stack_expression discrete_valuation = function
+    | Literal_stack -> Stack.create ()
     | Stack_variable variable_index ->
         stack_value (try_eval_variable variable_index discrete_valuation)
     | Stack_push (expr, stack_expr) ->
@@ -433,6 +434,7 @@ and eval_stack_expression discrete_valuation = function
         Stack.clear stack; stack
 
 and eval_queue_expression discrete_valuation = function
+    | Literal_queue -> Queue.create ()
     | Queue_variable variable_index ->
         queue_value (try_eval_variable variable_index discrete_valuation)
     | Queue_push (expr, queue_expr) ->

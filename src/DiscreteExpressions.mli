@@ -208,11 +208,13 @@ and list_expression =
 (*    | List_function_call of string * global_expression list*)
 
 and stack_expression =
+    | Literal_stack
     | Stack_variable of Automaton.variable_index
     | Stack_push of global_expression * stack_expression
     | Stack_clear of stack_expression
 
 and queue_expression =
+    | Literal_queue
     | Queue_variable of Automaton.variable_index
     | Queue_push of global_expression * queue_expression
     | Queue_clear of queue_expression
