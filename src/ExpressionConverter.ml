@@ -1616,9 +1616,11 @@ and bool_expression_of_typed_factor variable_infos = function
         bool_expression_of_typed_arithmetic_expression variable_infos expr
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Bool_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
-            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+        Bool_sequence_function (
+            Array_access (
+                expression_access_type_of_typed_factor variable_infos factor discrete_type,
+                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+            )
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -1632,8 +1634,38 @@ and bool_expression_of_typed_factor variable_infos = function
 and bool_expression_of_typed_function_call variable_infos argument_expressions = function
     | "list_hd" ->
         let arg_0 = List.nth argument_expressions 0 in
-        Bool_list_hd (
-            list_expression_of_typed_boolean_expression variable_infos Var_type_discrete_bool arg_0
+        Bool_sequence_function (
+            List_hd (
+                list_expression_of_typed_boolean_expression variable_infos Var_type_discrete_bool arg_0
+            )
+        )
+    | "stack_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Bool_sequence_function (
+            Stack_pop (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "stack_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Bool_sequence_function (
+            Stack_top (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Bool_sequence_function (
+            Queue_pop (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Bool_sequence_function (
+            Queue_top (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
         )
     | "list_mem" ->
         let arg_0 = List.nth argument_expressions 0 in
@@ -1742,9 +1774,11 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
         )
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Rational_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
-            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+        Rational_sequence_function (
+            Array_access (
+                expression_access_type_of_typed_factor variable_infos factor discrete_type,
+                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+            )
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -1771,28 +1805,38 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
 
     | "list_hd" ->
         let arg_0 = List.nth argument_expressions 0 in
-        Rational_list_hd (
-            list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_number Var_type_discrete_rational) arg_0
+        Rational_sequence_function (
+            List_hd (
+                list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_number Var_type_discrete_rational) arg_0
+            )
         )
     | "stack_pop" ->
         let arg_0 = List.nth argument_expressions 0 in
-        Rational_stack_pop (
-            stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        Rational_sequence_function (
+            Stack_pop (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
         )
     | "stack_top" ->
         let arg_0 = List.nth argument_expressions 0 in
-        Rational_stack_top (
-            stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        Rational_sequence_function (
+            Stack_top (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
         )
     | "queue_pop" ->
         let arg_0 = List.nth argument_expressions 0 in
-        Rational_queue_pop (
-            queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        Rational_sequence_function (
+            Queue_pop (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
         )
     | "queue_top" ->
         let arg_0 = List.nth argument_expressions 0 in
-        Rational_queue_top (
-            queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        Rational_sequence_function (
+            Queue_top (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
         )
     | function_name -> raise (UndefinedFunction function_name)
 
@@ -1869,9 +1913,11 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
         )
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Int_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
-            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+        Int_sequence_function (
+            Array_access (
+                expression_access_type_of_typed_factor variable_infos factor discrete_type,
+                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+            )
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -1892,8 +1938,38 @@ and int_expression_of_typed_function_call variable_infos argument_expressions = 
         )
     | "list_hd" ->
         let arg_0 = List.nth argument_expressions 0 in
-        Int_list_hd (
-            list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) arg_0
+        Int_sequence_function (
+            List_hd (
+                list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) arg_0
+            )
+        )
+    | "stack_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Int_sequence_function (
+            Stack_pop (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "stack_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Int_sequence_function (
+            Stack_top (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Int_sequence_function (
+            Queue_pop (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Int_sequence_function (
+            Queue_top (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
         )
     | "array_length" ->
         let arg_0 = List.nth argument_expressions 0 in
@@ -1972,11 +2048,11 @@ and binary_expression_of_typed_factor variable_infos length = function
         binary_expression_of_typed_arithmetic_expression variable_infos length expr
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-
-        Binary_word_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
-            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr,
-            length
+        Binary_word_sequence_function (
+            Array_access (
+                expression_access_type_of_typed_factor variable_infos factor discrete_type,
+                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+            )
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -2061,8 +2137,38 @@ and binary_expression_of_typed_function_call variable_infos length argument_expr
         )
     | "list_hd" ->
         let arg_0 = List.nth argument_expressions 0 in
-        Binary_word_list_hd (
-            list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_binary_word length) arg_0
+        Binary_word_sequence_function (
+            List_hd (
+                list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_binary_word length) arg_0
+            )
+        )
+    | "stack_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Binary_word_sequence_function (
+            Stack_pop (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "stack_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Binary_word_sequence_function (
+            Stack_top (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Binary_word_sequence_function (
+            Queue_pop (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Binary_word_sequence_function (
+            Queue_top (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
         )
     | function_name -> raise (UndefinedFunction function_name)
 
@@ -2137,9 +2243,11 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
         array_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
-            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+        Array_sequence_function (
+            Array_access (
+                expression_access_type_of_typed_factor variable_infos factor discrete_type,
+                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+            )
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -2161,8 +2269,38 @@ and array_expression_of_typed_function_call variable_infos discrete_type argumen
 
     | "list_hd" ->
         let arg_0 = List.nth argument_expressions 0 in
-        Array_list_hd (
-            list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        Array_sequence_function (
+            List_hd (
+                list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "stack_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Array_sequence_function (
+            Stack_pop (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "stack_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Array_sequence_function (
+            Stack_top (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Array_sequence_function (
+            Queue_pop (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Array_sequence_function (
+            Queue_top (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
         )
     | function_name -> raise (UndefinedFunction function_name)
     (*
@@ -2241,9 +2379,11 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
         list_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        List_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
-            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+        List_sequence_function (
+            Array_access (
+                expression_access_type_of_typed_factor variable_infos factor discrete_type,
+                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+            )
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -2264,8 +2404,38 @@ and list_expression_of_typed_function_call variable_infos discrete_type argument
         )
     | "list_hd" ->
         let arg_0 = List.nth argument_expressions 0 in
-        List_list_hd (
-            list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        List_sequence_function (
+            List_hd (
+                list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "stack_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        List_sequence_function (
+            Stack_pop (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "stack_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        List_sequence_function (
+            Stack_top (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        List_sequence_function (
+            Queue_pop (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        List_sequence_function (
+            Queue_top (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
         )
     | "list_tl" ->
         let arg_0 = List.nth argument_expressions 0 in
@@ -2336,6 +2506,14 @@ and stack_expression_of_typed_factor variable_infos discrete_type = function
 	| Typed_expr (expr, _) ->
         stack_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
 
+    | Typed_access (factor, index_expr, discrete_type, _) ->
+        Stack_sequence_function (
+            Array_access (
+                expression_access_type_of_typed_factor variable_infos factor discrete_type,
+                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+            )
+        )
+
     | Typed_sequence (_, _, Typed_stack) -> Literal_stack
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -2347,6 +2525,13 @@ and stack_expression_of_typed_factor variable_infos discrete_type = function
 	    raise (InternalError fail_message)
 
 and stack_expression_of_typed_function_call variable_infos discrete_type argument_expressions = function
+    | "list_hd" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Stack_sequence_function (
+            List_hd (
+                list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
     | "stack_push" ->
         let arg_0 = List.nth argument_expressions 0 in
         let arg_1 = List.nth argument_expressions 1 in
@@ -2359,6 +2544,35 @@ and stack_expression_of_typed_function_call variable_infos discrete_type argumen
         let arg_0 = List.nth argument_expressions 0 in
         Stack_clear (
             stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+        )
+
+    | "stack_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Stack_sequence_function (
+            Stack_pop (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "stack_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Stack_sequence_function (
+            Stack_top (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Stack_sequence_function (
+            Queue_pop (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Stack_sequence_function (
+            Queue_top (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
         )
 
     | function_name -> raise (UndefinedFunction function_name)
@@ -2422,6 +2636,14 @@ and queue_expression_of_typed_factor variable_infos discrete_type = function
 	| Typed_expr (expr, _) ->
         queue_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
 
+    | Typed_access (factor, index_expr, discrete_type, _) ->
+        Queue_sequence_function (
+            Array_access (
+                expression_access_type_of_typed_factor variable_infos factor discrete_type,
+                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+            )
+        )
+
     | Typed_sequence (_, _, Typed_queue) -> Literal_queue
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -2433,6 +2655,13 @@ and queue_expression_of_typed_factor variable_infos discrete_type = function
 	    raise (InternalError fail_message)
 
 and queue_expression_of_typed_function_call variable_infos discrete_type argument_expressions = function
+    | "list_hd" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Queue_sequence_function (
+            List_hd (
+                list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
     | "queue_push" ->
         let arg_0 = List.nth argument_expressions 0 in
         let arg_1 = List.nth argument_expressions 1 in
@@ -2446,6 +2675,36 @@ and queue_expression_of_typed_function_call variable_infos discrete_type argumen
         Queue_clear (
             queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
+
+    | "stack_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Queue_sequence_function (
+            Stack_pop (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "stack_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Queue_sequence_function (
+            Stack_top (
+                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_pop" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Queue_sequence_function (
+            Queue_pop (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+    | "queue_top" ->
+        let arg_0 = List.nth argument_expressions 0 in
+        Queue_sequence_function (
+            Queue_top (
+                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
+            )
+        )
+
     | function_name -> raise (UndefinedFunction function_name)
 
 

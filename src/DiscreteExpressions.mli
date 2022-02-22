@@ -69,18 +69,20 @@ and product_quotient =
 and rational_factor =
 	| Rational_variable of Automaton.variable_index
 	| Rational_constant of NumConst.t
-    | Rational_access of expression_access_type * int_arithmetic_expression
 	| Rational_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
 	| Rational_of_int of int_arithmetic_expression
 	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
-	| Rational_list_hd of list_expression
-	(* TODO benjamin REFACTOR duplicates *)
-    | Rational_stack_pop of stack_expression
-    | Rational_stack_top of stack_expression
-    | Rational_queue_pop of queue_expression
-    | Rational_queue_top of queue_expression
+    | Rational_sequence_function of sequence_function
 (*	| Rational_function_call of string * global_expression list*)
+
+and sequence_function =
+    | Array_access of expression_access_type * int_arithmetic_expression
+    | List_hd of list_expression
+    | Stack_pop of stack_expression
+    | Stack_top of stack_expression
+    | Queue_pop of queue_expression
+    | Queue_top of queue_expression
 
 (************************************************************)
 (** Int arithmetic expressions for discrete variables *)
@@ -99,10 +101,8 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
-    (* TODO benjamin REFACTOR here decline array_expression to int_array_expression *)
-    | Int_access of expression_access_type * int_arithmetic_expression
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
-    | Int_list_hd of list_expression
+    | Int_sequence_function of sequence_function
     (* TODO benjamin REFACTOR replace all X_length by new variant *)
     | Array_length of array_expression
     | List_length of list_expression
@@ -148,11 +148,8 @@ and discrete_boolean_expression =
 	| Bool_variable of Automaton.variable_index
 	(** discrete constant in boolean expression *)
 	| Bool_constant of bool
-	(** access to a boolean array **)
-	(* TODO benjamin IMPORTANT here decline array_expression to bool_array_expression *)
-    | Bool_access of expression_access_type * int_arithmetic_expression
     (* Add here some function on array *)
-    | Bool_list_hd of list_expression
+    | Bool_sequence_function of sequence_function
     | List_mem of global_expression * list_expression
     | Array_mem of global_expression * array_expression
     | List_is_empty of list_expression
@@ -179,8 +176,7 @@ and binary_word_expression =
     | Logical_not of binary_word_expression * int
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
-    | Binary_word_access of expression_access_type * int_arithmetic_expression * int
-    | Binary_word_list_hd of list_expression
+    | Binary_word_sequence_function of sequence_function
 (*    | Binary_word_function_call of string * global_expression list*)
 
 (** Array expression **)
@@ -188,10 +184,9 @@ and array_expression =
     | Literal_array of global_expression array
     | Array_constant of DiscreteValue.discrete_value array
     | Array_variable of Automaton.variable_index
-    | Array_access of expression_access_type * int_arithmetic_expression
     (* Add here some functions on array *)
     | Array_concat of array_expression * array_expression
-    | Array_list_hd of list_expression
+    | Array_sequence_function of sequence_function
 (*    | Array_function_call of string * global_expression list*)
 
 (** List expression **)
@@ -199,10 +194,9 @@ and list_expression =
     | Literal_list of global_expression list
     | List_constant of DiscreteValue.discrete_value list
     | List_variable of Automaton.variable_index
-    | List_access of expression_access_type * int_arithmetic_expression
     (* Add here some functions on list *)
     | List_cons of global_expression * list_expression
-    | List_list_hd of list_expression
+    | List_sequence_function of sequence_function
     | List_list_tl of list_expression
     | List_rev of list_expression
 (*    | List_function_call of string * global_expression list*)
@@ -212,12 +206,14 @@ and stack_expression =
     | Stack_variable of Automaton.variable_index
     | Stack_push of global_expression * stack_expression
     | Stack_clear of stack_expression
+    | Stack_sequence_function of sequence_function
 
 and queue_expression =
     | Literal_queue
     | Queue_variable of Automaton.variable_index
     | Queue_push of global_expression * queue_expression
     | Queue_clear of queue_expression
+    | Queue_sequence_function of sequence_function
 
 
 
@@ -240,6 +236,7 @@ val is_linear_discrete_boolean_expression : discrete_boolean_expression -> bool
 (* String *)
 
 (* Constructors strings *)
+val label_of_sequence_function : sequence_function -> string
 val label_of_bool_factor : discrete_boolean_expression -> string
 val label_of_rational_factor : rational_factor -> string
 val label_of_int_factor : int_factor -> string

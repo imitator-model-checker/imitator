@@ -116,9 +116,6 @@ and eval_rational_factor discrete_valuation = function
         numconst_value (try_eval_variable variable_index discrete_valuation)
     | Rational_constant variable_value ->
         variable_value
-    | Rational_access (access_type, index_expr) ->
-        let value = get_expression_access_value discrete_valuation index_expr access_type in
-        numconst_value value
     | Rational_expression expr ->
         eval_rational_expression discrete_valuation expr
     | Rational_unary_min factor ->
@@ -131,34 +128,39 @@ and eval_rational_factor discrete_valuation = function
         NumConst.numconst_of_int (Int32.to_int (eval_int_expression discrete_valuation expr))
     | Rational_pow (expr, exp) ->
         NumConst.pow (eval_rational_expression discrete_valuation expr) (eval_int_expression discrete_valuation exp)
-    | Rational_list_hd list_expr ->
+
+    | Rational_sequence_function func ->
+        let value = eval_sequence_function discrete_valuation func in
+        numconst_value value
+
+and eval_sequence_function discrete_valuation = function
+    | Array_access (access_type, index_expr) ->
+        get_expression_access_value discrete_valuation index_expr access_type
+
+    | List_hd list_expr ->
         let list = eval_list_expression discrete_valuation list_expr in
         let fail_message = list_hd_fail_message list_expr in
-        let value = try_eval_list_hd list fail_message in
-        numconst_value value
-    | Rational_stack_pop stack_expr ->
+        try_eval_list_hd list fail_message
+
+    | Stack_pop stack_expr ->
         let stack = eval_stack_expression discrete_valuation stack_expr in
         let fail_message = stack_pop_fail_message stack_expr in
-        let value = try_eval_stack_pop stack fail_message in
-        numconst_value value
+        try_eval_stack_pop stack fail_message
 
-    | Rational_stack_top stack_expr ->
+    | Stack_top stack_expr ->
         let stack = eval_stack_expression discrete_valuation stack_expr in
         let fail_message = stack_top_fail_message stack_expr in
-        let value = try_eval_stack_top stack fail_message in
-        numconst_value value
+        try_eval_stack_top stack fail_message
 
-    | Rational_queue_pop queue_expr ->
+    | Queue_pop queue_expr ->
         let queue = eval_queue_expression discrete_valuation queue_expr in
         let fail_message = queue_pop_fail_message queue_expr in
-        let value = try_eval_queue_pop queue fail_message in
-        numconst_value value
+        try_eval_queue_pop queue fail_message
 
-    | Rational_queue_top queue_expr as func ->
+    | Queue_top queue_expr ->
         let queue = eval_queue_expression discrete_valuation queue_expr in
-        let fail_message = sequence_operation_fail_message queue_expr DiscreteExpressions.string_of_queue_expression (label_of_rational_factor func) in
-        let value = try_eval_queue_top queue fail_message in
-        numconst_value value
+        let fail_message = queue_top_fail_message queue_expr in
+        try_eval_queue_top queue fail_message
 
 and eval_int_expression discrete_valuation (* expr *) =
     let rec eval_int_expression_rec = function
@@ -213,17 +215,12 @@ and eval_int_expression discrete_valuation (* expr *) =
             eval_int_expression_rec expr
         | Int_unary_min factor ->
             Int32.neg (eval_int_factor factor)
-        | Int_access (access_type, index_expr) ->
-            let value = get_expression_access_value discrete_valuation index_expr access_type in
-            int_value value
         | Int_pow (expr, exp) ->
             OCamlUtilities.pow (eval_int_expression_rec expr) (eval_int_expression_rec exp)
-        | Int_list_hd list_expr ->
-            let list = eval_list_expression discrete_valuation list_expr in
-            let fail_message = list_hd_fail_message list_expr in
-            let value = try_eval_list_hd list fail_message in
-            int_value value
 
+        | Int_sequence_function func ->
+            let value = eval_sequence_function discrete_valuation func in
+            int_value value
         | Array_length array_expr ->
             let array = eval_array_expression discrete_valuation array_expr in
             Int32.of_int (Array.length array)
@@ -253,9 +250,6 @@ and eval_discrete_boolean_expression discrete_valuation = function
         bool_value (try_eval_variable variable_index discrete_valuation)
     | Bool_constant value ->
         value
-    | Bool_access (access_type, index_expr) ->
-        let value = get_expression_access_value discrete_valuation index_expr access_type in
-        bool_value value
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
     (* TODO benjamin WARNING here we compare a DiscreteValue.discrete_value type with operator it's bad *)
     (* We just have to create a Rational_comparison and a Int_comparison to solve this *)
@@ -303,10 +297,8 @@ and eval_discrete_boolean_expression discrete_valuation = function
         eval_boolean_expression discrete_valuation boolean_expression
     | Not_bool b ->
         not (eval_boolean_expression discrete_valuation b) (* negation *)
-    | Bool_list_hd list_expr ->
-        let list = eval_list_expression discrete_valuation list_expr in
-        let fail_message = list_hd_fail_message list_expr in
-        let value = try_eval_list_hd list fail_message in
+    | Bool_sequence_function func ->
+        let value = eval_sequence_function discrete_valuation func in
         bool_value value
     | List_mem (expr, list_expr) ->
         let value = eval_global_expression discrete_valuation expr in
@@ -363,13 +355,8 @@ and eval_binary_word_expression discrete_valuation = function
     | Binary_word_variable (variable_index, _) ->
         binary_word_value (try_eval_variable variable_index discrete_valuation)
 
-    | Binary_word_access (access_type, index_expr, _) ->
-        let value = get_expression_access_value discrete_valuation index_expr access_type in
-        binary_word_value value
-    | Binary_word_list_hd list_expr ->
-        let list = eval_list_expression discrete_valuation list_expr in
-        let fail_message = list_hd_fail_message list_expr in
-        let value = try_eval_list_hd list fail_message in
+    | Binary_word_sequence_function func ->
+        let value = eval_sequence_function discrete_valuation func in
         binary_word_value value
 
 and eval_array_expression discrete_valuation = function
@@ -379,17 +366,12 @@ and eval_array_expression discrete_valuation = function
         array_value (try_eval_variable variable_index discrete_valuation)
     | Array_constant values ->
         values
-    | Array_access (access_type, index_expr) ->
-        let value = get_expression_access_value discrete_valuation index_expr access_type in
-        array_value value
     | Array_concat (array_expr_0, array_expr_1) ->
         let array_0 = eval_array_expression discrete_valuation array_expr_0 in
         let array_1 = eval_array_expression discrete_valuation array_expr_1 in
         Array.append array_0 array_1
-    | Array_list_hd list_expr ->
-        let list = eval_list_expression discrete_valuation list_expr in
-        let fail_message = list_hd_fail_message list_expr in
-        let value = try_eval_list_hd list fail_message in
+    | Array_sequence_function func ->
+        let value = eval_sequence_function discrete_valuation func in
         array_value value
 
 and eval_list_expression discrete_valuation = function
@@ -399,18 +381,14 @@ and eval_list_expression discrete_valuation = function
         list_value (try_eval_variable variable_index discrete_valuation)
     | List_constant values ->
         values
-    | List_access (access_type, index_expr) ->
-        let value = get_expression_access_value discrete_valuation index_expr access_type in
-        list_value value
     | List_cons (expr, list_expr) ->
         let list = eval_list_expression discrete_valuation list_expr in
         let value = eval_global_expression discrete_valuation expr in
         value :: list
-    | List_list_hd list_expr ->
-        let list = eval_list_expression discrete_valuation list_expr in
-        let fail_message = list_hd_fail_message list_expr in
-        let value = try_eval_list_hd list fail_message in
+    | List_sequence_function func ->
+        let value = eval_sequence_function discrete_valuation func in
         list_value value
+
     | List_list_tl list_expr ->
         let list = eval_list_expression discrete_valuation list_expr in
         let fail_message = list_tl_fail_message list_expr in
@@ -433,6 +411,10 @@ and eval_stack_expression discrete_valuation = function
         let stack = eval_stack_expression discrete_valuation stack_expr in
         Stack.clear stack; stack
 
+    | Stack_sequence_function func ->
+        let value = eval_sequence_function discrete_valuation func in
+        stack_value value
+
 and eval_queue_expression discrete_valuation = function
     | Literal_queue -> Queue.create ()
     | Queue_variable variable_index ->
@@ -445,6 +427,10 @@ and eval_queue_expression discrete_valuation = function
     | Queue_clear queue_expr ->
         let queue = eval_queue_expression discrete_valuation queue_expr in
         Queue.clear queue; queue
+
+    | Queue_sequence_function func ->
+        let value = eval_sequence_function discrete_valuation func in
+        queue_value value
 
 and get_array_value_at discrete_valuation array_expr index_expr =
 

@@ -316,14 +316,10 @@ and string_of_discrete_boolean_expression variable_names = function
 
     | Bool_variable discrete_index -> json_quoted (variable_names discrete_index)
     | Bool_constant value -> DiscreteExpressions.customized_string_of_bool_value jani_strings.boolean_string value
-    | Bool_access (access_type, index_expr) ->
-        string_of_expression_access_for_jani variable_names access_type index_expr
-    | Bool_list_hd list_expr as func ->
-        let label = label_of_bool_factor func in
-        jani_function_call
-            label
-            [|string_of_list_expression variable_names list_expr|]
-            ~str_comment:(undeclared_function_warning label)
+
+    | Bool_sequence_function func ->
+        string_of_sequence_function variable_names func
+
     | List_mem (expr, list_expr) as func ->
         let label = label_of_bool_factor func in
         jani_function_call
@@ -333,6 +329,7 @@ and string_of_discrete_boolean_expression variable_names = function
                 string_of_list_expression variable_names list_expr
             |]
             ~str_comment:(undeclared_function_warning label)
+
     | Array_mem (expr, array_expr) as func ->
         let label = label_of_bool_factor func in
         jani_function_call
@@ -399,8 +396,6 @@ and string_of_rational_arithmetic_expression variable_names =
 	and string_of_factor = function
 		| Rational_variable discrete_index -> json_quoted (variable_names discrete_index)
 		| Rational_constant value -> NumConst.jani_string_of_numconst value
-        | Rational_access (access_type, index_expr) ->
-            string_of_expression_access_for_jani variable_names access_type index_expr
 
 		| Rational_unary_min discrete_factor ->
 		    jani_binary_operator
@@ -417,40 +412,9 @@ and string_of_rational_arithmetic_expression variable_names =
                 (label_of_rational_factor factor)
                 (string_of_arithmetic_expression expr)
                 (string_of_int_arithmetic_expression variable_names exp)
-        | Rational_list_hd list_expr as func ->
-            let label = label_of_rational_factor func in
-            jani_function_call
-                label
-                [|string_of_list_expression variable_names list_expr|]
-                ~str_comment:(undeclared_function_warning label)
 
-        | Rational_stack_pop stack_expr as func ->
-            let label = label_of_rational_factor func in
-            jani_function_call
-                label
-                [|string_of_stack_expression variable_names stack_expr|]
-                ~str_comment:(undeclared_function_warning label)
-
-        | Rational_stack_top stack_expr as func ->
-            let label = label_of_rational_factor func in
-            jani_function_call
-                label
-                [|string_of_stack_expression variable_names stack_expr|]
-                ~str_comment:(undeclared_function_warning label)
-
-        | Rational_queue_pop queue_expr as func ->
-            let label = label_of_rational_factor func in
-            jani_function_call
-                label
-                [|string_of_queue_expression variable_names queue_expr|]
-                ~str_comment:(undeclared_function_warning label)
-
-        | Rational_queue_top queue_expr as func ->
-            let label = label_of_rational_factor func in
-            jani_function_call
-                label
-                [|string_of_queue_expression variable_names queue_expr|]
-                ~str_comment:(undeclared_function_warning label)
+        | Rational_sequence_function func ->
+            string_of_sequence_function variable_names func
 
 	(* Call top-level *)
 	in string_of_arithmetic_expression
@@ -484,8 +448,6 @@ and string_of_int_arithmetic_expression variable_names =
 	and string_of_int_factor = function
 		| Int_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
 		| Int_constant value -> Int32.to_string value
-        | Int_access (access_type, index_expr) ->
-            string_of_expression_access_for_jani variable_names access_type index_expr
 
 		| Int_unary_min discrete_factor ->
 		    jani_unary_operator
@@ -501,12 +463,10 @@ and string_of_int_arithmetic_expression variable_names =
                     string_of_int_arithmetic_expression expr;
                     string_of_int_arithmetic_expression exp
                 |]
-        | Int_list_hd list_expr as func ->
-            let label = label_of_int_factor func in
-            jani_function_call
-                label
-                [|string_of_list_expression variable_names list_expr|]
-                ~str_comment:(undeclared_function_warning label)
+
+        | Int_sequence_function func ->
+            string_of_sequence_function variable_names func
+
         | Array_length array_expr as func ->
             let label = label_of_int_factor func in
             jani_function_call
@@ -580,13 +540,8 @@ and string_of_binary_word_expression variable_names binary_word_expr =
 
         | Binary_word_constant value -> string_of_value (Binary_word_value value)
         | Binary_word_variable (variable_index, _) -> "\"" ^ variable_names variable_index ^ "\""
-        | Binary_word_access (access_type, index_expr, _) ->
-            string_of_expression_access_for_jani variable_names access_type index_expr
-        | Binary_word_list_hd list_expr ->
-            jani_function_call
-                label
-                [|string_of_list_expression variable_names list_expr|]
-                ~str_comment:(Lazy.force undeclared_function_warning)
+        | Binary_word_sequence_function func ->
+            string_of_sequence_function variable_names func
     in
     string_of_binary_word_expression binary_word_expr
 
@@ -600,8 +555,6 @@ and string_of_array_expression variable_names = function
         jani_array_value str_values
 
     | Array_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
-    | Array_access (access_type, index_expr) ->
-        string_of_expression_access_for_jani variable_names access_type index_expr
 
     | Array_concat (array_expr_0, array_expr_1) as func ->
         (* Get label of expression *)
@@ -613,12 +566,8 @@ and string_of_array_expression variable_names = function
             |]
             ~str_comment:(undeclared_function_warning label)
 
-    | Array_list_hd list_expr as func ->
-        (* Get label of expression *)
-        let label = label_of_array_expression func in
-        jani_function_call label
-            [|string_of_list_expression variable_names list_expr|]
-            ~str_comment:(undeclared_function_warning label)
+    | Array_sequence_function func ->
+        string_of_sequence_function variable_names func
 
 and string_of_list_expression variable_names = function
     | Literal_list expr_list ->
@@ -630,8 +579,6 @@ and string_of_list_expression variable_names = function
         jani_array_value (Array.of_list str_values)
 
     | List_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
-    | List_access (access_type, index_expr) ->
-        string_of_expression_access_for_jani variable_names access_type index_expr
     | List_cons (expr, list_expr) as func ->
         (* Get label of expression *)
         let label = label_of_list_expression func in
@@ -643,7 +590,6 @@ and string_of_list_expression variable_names = function
                 string_of_list_expression variable_names list_expr
             |]
             ~str_comment:(undeclared_function_warning label)
-    | List_list_hd list_expr
     | List_list_tl list_expr
     | List_rev list_expr as func ->
         (* Get label of expression *)
@@ -652,6 +598,8 @@ and string_of_list_expression variable_names = function
             label
             [| string_of_list_expression variable_names list_expr |]
             ~str_comment:(undeclared_function_warning label)
+    | List_sequence_function func ->
+        string_of_sequence_function variable_names func
 
 and string_of_stack_expression variable_names = function
     | Literal_stack as expr_stack ->
@@ -677,6 +625,8 @@ and string_of_stack_expression variable_names = function
             label
             [|string_of_stack_expression variable_names stack_expr|]
             ~str_comment:(undeclared_function_warning label)
+    | Stack_sequence_function func ->
+        string_of_sequence_function variable_names func
 
 and string_of_queue_expression variable_names = function
     | Literal_queue as expr_queue ->
@@ -702,7 +652,47 @@ and string_of_queue_expression variable_names = function
             label
             [|string_of_queue_expression variable_names queue_expr|]
             ~str_comment:(undeclared_function_warning label)
+    | Queue_sequence_function func ->
+        string_of_sequence_function variable_names func
 
+and string_of_sequence_function variable_names = function
+    | Array_access (access_type, index_expr) ->
+        string_of_expression_access variable_names access_type index_expr
+        
+    | List_hd list_expr as func ->
+        let label = label_of_sequence_function func in
+        jani_function_call
+            label
+            [|string_of_list_expression variable_names list_expr|]
+            ~str_comment:(undeclared_function_warning label)
+
+    | Stack_pop stack_expr as func ->
+        let label = label_of_sequence_function func in
+        jani_function_call
+            label
+            [|string_of_stack_expression variable_names stack_expr|]
+            ~str_comment:(undeclared_function_warning label)
+
+    | Stack_top stack_expr as func ->
+        let label = label_of_sequence_function func in
+        jani_function_call
+            label
+            [|string_of_stack_expression variable_names stack_expr|]
+            ~str_comment:(undeclared_function_warning label)
+
+    | Queue_pop queue_expr as func ->
+        let label = label_of_sequence_function func in
+        jani_function_call
+            label
+            [|string_of_queue_expression variable_names queue_expr|]
+            ~str_comment:(undeclared_function_warning label)
+
+    | Queue_top queue_expr as func ->
+        let label = label_of_sequence_function func in
+        jani_function_call
+            label
+            [|string_of_queue_expression variable_names queue_expr|]
+            ~str_comment:(undeclared_function_warning label)
 
 and string_of_expression_of_access_for_jani variable_names = function
     | Expression_array_access array_expr ->
@@ -710,7 +700,7 @@ and string_of_expression_of_access_for_jani variable_names = function
     | Expression_list_access list_expr ->
         string_of_list_expression variable_names list_expr
 
-and string_of_expression_access_for_jani variable_names access_type index_expr =
+and string_of_expression_access variable_names access_type index_expr =
     let str_expr = string_of_expression_of_access_for_jani variable_names access_type in
     let str_index_expr = string_of_int_arithmetic_expression variable_names index_expr in
     jani_array_access str_expr str_index_expr
