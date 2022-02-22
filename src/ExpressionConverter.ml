@@ -61,10 +61,11 @@ and typed_discrete_factor =
     | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * inner_type
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
 
+(* TODO benjamin CLEAN rename to typed_variable_update_type *)
 type typed_variable_access =
     | Typed_variable_name of variable_name
     | Typed_variable_access of typed_variable_access * typed_discrete_arithmetic_expression * var_type_discrete
-    | Typed_wildcard
+    | Typed_void_update
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
@@ -171,7 +172,7 @@ and typed_discrete_factor =
 type typed_variable_access =
     | Typed_variable_name of variable_name
     | Typed_variable_access of typed_variable_access * typed_discrete_arithmetic_expression * var_type_discrete
-    | Typed_wildcard
+    | Typed_void_update
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
@@ -953,17 +954,22 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
 
 
 
-let rec type_check_variable_access variable_infos infer_type_opt = function
+let rec type_check_variable_access variable_infos = function
     | Parsed_variable_update variable_name ->
         (* Get assigned variable type *)
         let var_type = get_type_of_variable_by_name variable_infos variable_name in
         let discrete_type = discrete_type_of_var_type var_type in
         Typed_variable_name variable_name, discrete_type, false (* no side effect *)
 
-    | Parsed_indexed_update (variable_access, index_expr) ->
+    | Parsed_indexed_update (variable_access, index_expr) as indexed_update ->
 
-        let typed_variable_access, discrete_type, is_variable_access_has_side_effects = type_check_variable_access variable_infos infer_type_opt variable_access in
-        let typed_index_expr_type, _, is_index_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression variable_infos infer_type_opt index_expr in
+        let typed_variable_access, discrete_type, is_variable_access_has_side_effects = type_check_variable_access variable_infos variable_access in
+
+        let typed_index_expr_type, index_discrete_type, is_index_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) index_expr in
+
+        (* Check that index expression is an int expression *)
+        if index_discrete_type <> Var_type_discrete_number Var_type_discrete_int then
+            raise (TypeError ("Index of expression `" ^ ParsingStructureUtilities.string_of_variable_access variable_infos indexed_update ^ "` is not an integer."));
 
         (* Check is an array *)
         let discrete_type =
@@ -973,7 +979,7 @@ let rec type_check_variable_access variable_infos infer_type_opt = function
         in
         Typed_variable_access (typed_variable_access, typed_index_expr_type, discrete_type), discrete_type, is_variable_access_has_side_effects || is_index_expr_has_side_effects
 
-    | Parsed_void_update -> Typed_wildcard, Var_type_weak, false
+    | Parsed_void_update -> Typed_void_update, Var_type_weak, false
 
 let type_check_parsed_loc_predicate variable_infos infer_type_opt = function
 	| Parsed_loc_predicate_EQ (automaton_name, loc_name) -> Typed_loc_predicate_EQ (automaton_name, loc_name), Var_type_discrete_bool, false
@@ -1227,7 +1233,7 @@ let check_update variable_infos variable_access expr =
     (* Resolve typed expression *)
     let typed_expr, expr_type, _ (* side effects *) = type_check_global_expression variable_infos variable_number_type_opt expr in
 
-    let typed_variable_access, l_value_type, _ (* side effects *) = type_check_variable_access variable_infos variable_number_type_opt variable_access in
+    let typed_variable_access, l_value_type, _ (* side effects *) = type_check_variable_access variable_infos variable_access in
 
     (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
      if not (DiscreteType.is_discrete_type_compatibles l_value_type expr_type) then (
@@ -2743,7 +2749,7 @@ let rec variable_access_of_typed_variable_access variable_infos = function
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
-    | Typed_wildcard -> Void_update
+    | Typed_void_update -> Void_update
 
 
 (*------------------------------------------------------------*)

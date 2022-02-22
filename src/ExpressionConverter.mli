@@ -54,7 +54,7 @@ and typed_discrete_factor =
 type typed_variable_access =
     | Typed_variable_name of variable_name
     | Typed_variable_access of typed_variable_access * typed_discrete_arithmetic_expression * var_type_discrete
-    | Typed_wildcard
+    | Typed_void_update
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
