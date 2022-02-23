@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/10/01
+ * Last modified     : 2022/02/23
  *
  ************************************************************)
 
@@ -354,6 +354,8 @@ let pxd_dim			= ref 0
 (*** NOTE: would be smarter to compute this list only once, when the dimensions have been initialized ***)
 (* let nonparameters () = list_of_interval !nb_parameters (!pxd_dim - 1) *)
 let clocks () = list_of_interval !nb_parameters (!px_dim - 1)
+
+let discretes () = list_of_interval (!nb_parameters + !nb_clocks) (!pxd_dim - 1)
 
 let parameters () = list_of_interval 0 (!nb_parameters - 1)
 
@@ -1802,6 +1804,9 @@ let pxd_of_px_constraint c =
 	(* Return *)
 	pxd_constraint
 
+(*** NOTE: conversion OK because x are actually px ***)
+let pxd_of_x_constraint = pxd_of_px_constraint
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2354,19 +2359,37 @@ let px_hide_allclocks_and_someparameters_and_collapse parameters_to_hide px_line
 
 
 
-let pxd_hide_discrete_and_collapse pxd_linear_constraint = 
-	(*** TODO: to move elsewhere, and to compute once for all, when the dimensions have been set ***)
-	let discretes = list_of_interval (!nb_parameters + !nb_clocks) (!pxd_dim - 1) in
+(** Eliminate (using existential quantification) the discrete variables and the parameters in a pxd_linear constraint, and remove the corresponding dimensions *)
+let pxd_hide_discrete_and_collapse (pxd_linear_constraint : pxd_linear_constraint) : px_linear_constraint = 
+	let variables_to_hide : variable list = discretes () in
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
 			"Function `LinearConstraint.pxd_hide_discrete_and_collapse`: hiding variables "
-			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int discretes) )
+			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int variables_to_hide) )
 			^ "."
 		);
 	(* First hide *)
-	let result = pxd_hide discretes pxd_linear_constraint in
+	let result : px_linear_constraint = pxd_hide variables_to_hide pxd_linear_constraint in
+	(* Remove higher space dimensions *)
+	ippl_remove_higher_dimensions result !px_dim;
+	(* Return result *)
+	result
+
+(** Eliminate (using existential quantification) the discrete variables and the parameters in a pxd_linear constraint, and remove the corresponding dimensions *)
+let pxd_hide_discrete_and_parameters_and_collapse (pxd_linear_constraint : pxd_linear_constraint) : x_linear_constraint = 
+	let variables_to_hide : variable list = List.rev_append (discretes ()) (parameters ()) in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (
+			"Function `LinearConstraint.pxd_hide_discrete_and_parameters_and_collapse`: hiding variables "
+			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int variables_to_hide) )
+			^ "."
+		);
+	(* First hide *)
+	let result : x_linear_constraint = pxd_hide variables_to_hide pxd_linear_constraint in
 	(* Remove higher space dimensions *)
 	ippl_remove_higher_dimensions result !px_dim;
 	(* Return result *)
@@ -2376,7 +2399,7 @@ let pxd_hide_discrete_and_collapse pxd_linear_constraint =
 (** Valuate the parameters in a px_linear_constraint and obtain a x_linear_constraint *)
 let px_valuate_parameters (p_valuation : p_valuation) (px_linear_constraint : px_linear_constraint) : x_linear_constraint =
 	(* Construct a linear constraint p_i = pval(p_i) *)
-	let variables_list : (variable * coef) list = List.map (fun variable_index -> variable_index , p_valuation variable_index) (parameters ()) in
+	let variables_list : (variable * coef) list = List.map (fun variable -> variable , p_valuation variable) (parameters ()) in
 	let resulting_constraint : px_linear_constraint = px_of_p_constraint (p_constraint_of_point variables_list) in
 	
 	(* Intersect *)

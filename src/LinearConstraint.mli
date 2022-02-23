@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/06/11
+ * Last modified     : 2022/02/23
  *
  ************************************************************)
 
@@ -441,6 +441,9 @@ val px_hide_allclocks_and_someparameters_and_collapse : variable list -> px_line
 (** Eliminate (using existential quantification) the discrete variables in a pxd_linear constraint, and remove the corresponding dimensions *)
 val pxd_hide_discrete_and_collapse : pxd_linear_constraint -> px_linear_constraint
 
+(** Eliminate (using existential quantification) the discrete variables and the parameters in a pxd_linear constraint, and remove the corresponding dimensions *)
+val pxd_hide_discrete_and_parameters_and_collapse : pxd_linear_constraint -> x_linear_constraint
+
 (** Eliminate (using existential quantification) the non-parameters in a pxd_linear constraint, and remove the corresponding dimensions *)
 (* val pxd_hide_nonparameters_and_collapse : pxd_linear_constraint -> p_linear_constraint *)
 
@@ -538,9 +541,10 @@ val partition_pi0_compatible : p_valuation -> p_linear_constraint -> (p_linear_i
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
-val px_of_p_constraint : p_linear_constraint -> px_linear_constraint
-val pxd_of_p_constraint : p_linear_constraint -> pxd_linear_constraint
+val px_of_p_constraint   : p_linear_constraint  -> px_linear_constraint
+val pxd_of_p_constraint  : p_linear_constraint  -> pxd_linear_constraint
 val pxd_of_px_constraint : px_linear_constraint -> pxd_linear_constraint
+val pxd_of_x_constraint  : x_linear_constraint  -> pxd_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
