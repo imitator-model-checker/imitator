@@ -216,7 +216,11 @@ let update_location locations_per_automaton discrete_values location =
 	locations, discrete
 *)
 
-(** Side-effet version of 'update_location'. *)
+(* Side-effect function for updating a discrete variable given a value at given location *)
+let update_discrete_with (discrete_index, value) (_, discrete) =
+    discrete.(discrete_index - !min_discrete_index) <- value
+
+(** Side-effect version of 'update_location'. *)
 let update_location_with locations_per_automaton discrete_values (locations, discrete) =
 	(* Iterate on locations *)
 	List.iter (fun (automaton_index, location_index) -> locations.(automaton_index) <- location_index) locations_per_automaton;

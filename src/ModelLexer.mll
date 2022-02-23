@@ -79,6 +79,8 @@ rule token = parse
 	| "binary"         { CT_BINARY_WORD }
   | "array"          { CT_ARRAY }
 	| "do"             { CT_DO }
+  | "pre"            { CT_PRE }
+  | "post"           { CT_POST }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
  	| "eventually"     { CT_EVENTUALLY }

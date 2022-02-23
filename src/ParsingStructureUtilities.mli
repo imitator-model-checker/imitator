@@ -171,4 +171,7 @@ val is_variable_access_is_a_variable_name : variable_access -> bool
 
 val linear_constraint_of_nonlinear_constraint : nonlinear_constraint -> linear_constraint
 
+(* Gather all updates of update section (pre-updates, updates and post-updates) *)
+val updates_of_update_section : update_section -> update list
+
 val variable_infos_of_parsed_model : useful_parsing_model_information -> variable_infos

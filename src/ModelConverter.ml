@@ -444,13 +444,14 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 
 			(* Gather in transitions *)
 			print_message Verbose_total ("          Gathering variables in transitions");
-			List.iter (fun (convex_predicate, updates, (*sync*)_, (*target_location_name*)_) ->
+			List.iter (fun (convex_predicate, update_section, (*sync*)_, (*target_location_name*)_) ->
 				(* Gather in the convex predicate (guard) *)
 				print_message Verbose_total ("            Gathering variables in convex predicate");
 				all_variables_used := StringSet.union !all_variables_used (ParsingStructureUtilities.get_variables_in_nonlinear_convex_predicate convex_predicate);
 
 				(* Gather in the updates *)
 				print_message Verbose_total ("            Gathering variables in updates");
+				let updates = ParsingStructureUtilities.updates_of_update_section update_section in
 				(* List.iter (fun (variable_name, arithmetic_expression) -> *)
 				List.iter (fun update_expression ->
 					(*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
@@ -885,12 +886,13 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 
 			(* Check transitions *)
 			print_message Verbose_total ("          Checking transitions");
-			List.iter (fun (convex_predicate, updates, sync, target_location_name) ->
+			List.iter (fun (convex_predicate, update_section, sync, target_location_name) ->
 				(* Check the convex predicate *)
 				print_message Verbose_total ("            Checking convex predicate");
 				if not (ParsingStructureUtilities.all_variables_defined_in_nonlinear_convex_predicate variable_infos (Some undeclared_variable_in_boolean_expression_message) convex_predicate) then well_formed := false;
 				(* Check the updates *)
 				print_message Verbose_total ("            Checking updates");
+				let updates = ParsingStructureUtilities.updates_of_update_section update_section in
 				List.iter (fun update -> if not (check_update variable_infos automaton_name update) then well_formed := false) updates;
 				(* Check the sync *)
 				print_message Verbose_total ("            Checking sync name ");
@@ -1640,7 +1642,7 @@ let get_conditional_update_value = function
 
 
 (* Filter the updates that should assign some variable name to be removed to any expression *)
-let filtered_updates removed_variable_names updates =
+let filter_updates removed_variable_names updates =
   let not_removed_variable (variable_access, _) =
     let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
     match variable_name_opt with
@@ -1798,7 +1800,9 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
   let dummy_transition = {
 	guard		= True_guard;
 	action		= -1;
+	pre_updates	= { clock = No_update; discrete = [] ; conditional = []};
 	updates		= { clock = No_update; discrete = [] ; conditional = []};
+	post_updates= { clock = No_update; discrete = [] ; conditional = []};
 	target		= -1;
 	} in
   let transitions_description : AbstractModel.transition array = Array.make nb_transitions dummy_transition in
@@ -1824,7 +1828,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
           array_of_transitions.(automaton_index).(location_index) <- Array.make nb_actions [];
 
           (* Iterate on transitions *)
-          List.iter (fun (action_index, guard, updates, target_location_index) ->
+          List.iter (fun (action_index, guard, update_section, target_location_index) ->
 
               (* Convert the guard *)
               let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
@@ -1834,8 +1838,11 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
                  					not (List.mem variable_name removed_variable_names)
                  				) updates
                  				in *)
+              let pre_updates, updates, post_updates = update_section in
 
-              let filtered_updates = filtered_updates removed_variable_names updates in
+              let filtered_pre_updates = filter_updates removed_variable_names pre_updates in
+              let filtered_updates = filter_updates removed_variable_names updates in
+              let filtered_post_updates = filter_updates removed_variable_names post_updates in
 
               (* Flag to check if there are clock resets only to 0 *)
               (* let only_resets = ref true in *)
@@ -1858,7 +1865,9 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
                  				in *)
 
               (* translate parsed updates into their abstract model *)
+              let converted_pre_updates = convert_updates variable_infos filtered_pre_updates in
               let converted_updates = convert_updates variable_infos filtered_updates in
+              let converted_post_updates = convert_updates variable_infos filtered_post_updates in
 
               (* Convert the updates *)
               (* let converted_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
@@ -1890,7 +1899,9 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               transitions_description.(!transition_index) <- {
 					guard   = converted_guard;
 					action  = action_index;
+					pre_updates = converted_pre_updates;
 					updates = converted_updates;
+					post_updates = converted_post_updates;
 					target  = target_location_index;
 				};
               (* Add the automaton *)

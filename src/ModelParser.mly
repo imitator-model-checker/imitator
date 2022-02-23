@@ -69,7 +69,7 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY CT_DO
+	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY CT_DO CT_PRE CT_POST
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -435,9 +435,9 @@ transition:
 
 /* A l'origine de 3 conflits ("2 shift/reduce conflicts, 1 reduce/reduce conflict.") donc petit changement */
 update_synchronization:
-	| { [], NoSync }
+	| { ([], [], []), NoSync }
 	| updates { $1, NoSync }
-	| syn_label { [], (Sync $1) }
+	| syn_label { ([], [], []), (Sync $1) }
 	| updates syn_label { $1, (Sync $2) }
 	| syn_label updates { $2, (Sync $1) }
 ;
@@ -445,10 +445,20 @@ update_synchronization:
 /************************************************************/
 
 updates:
-	| CT_DO LBRACE update_list RBRACE { $3 }
+	| CT_DO LBRACE pre_update_list_opt update_list post_update_list_opt RBRACE { $3, $4, $5 }
 ;
 
 /************************************************************/
+
+pre_update_list_opt:
+  | CT_PRE LBRACE update_seq_list RBRACE { $3 }
+  | { [] }
+;
+
+post_update_list_opt:
+  | CT_POST LBRACE update_seq_list RBRACE { $3 }
+  | { [] }
+;
 
 update_list:
 	| update_nonempty_list { $1 }
@@ -463,6 +473,19 @@ update_nonempty_list:
 	| condition_update COMMA update_nonempty_list { Condition $1 :: $3}
 	| condition_update comma_opt { [Condition $1] }
 ;
+
+update_seq_list:
+	| update_seq_nonempty_list { $1 }
+	| { [] }
+;
+
+update_seq_nonempty_list:
+	| update SEMICOLON update_nonempty_list { Normal $1 :: $3}
+	| update semicolon_opt { [Normal $1] }
+	| condition_update SEMICOLON update_nonempty_list { Condition $1 :: $3}
+	| condition_update semicolon_opt { [Condition $1] }
+;
+
 
 /************************************************************/
 

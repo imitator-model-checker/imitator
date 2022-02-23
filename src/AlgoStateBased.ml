@@ -1398,10 +1398,36 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
 		(* Access the transition and get the components *)
 		let transition = model.transitions_description transition_index in
-		let guard, updates, target_index = transition.guard, transition.updates, transition.target in
+		let guard, pre_updates, updates, post_updates, target_index = transition.guard, transition.pre_updates, transition.updates, transition.post_updates, transition.target in
 
 		(** Collecting the updates by evaluating the conditions, if there is any *)
 		let clock_updates, discrete_updates = get_updates source_location updates in
+        let _ (* no clock update for pre-updates *), pre_discrete_updates = get_updates source_location pre_updates in
+        let _ (* no clock update for pre-updates *), post_discrete_updates = get_updates source_location post_updates in
+
+        List.iter (fun (variable_update_type, expr) ->
+
+            let discrete_valuation = Location.get_discrete_value location in
+            let discrete_index_opt = discrete_index_of_variable_access variable_update_type in
+
+            match discrete_index_opt with
+            | None ->
+                let _ = eval_global_expression (Some discrete_valuation) expr in ()
+            | Some discrete_index ->
+
+                let old_value = discrete_valuation discrete_index in
+
+                (* TODO benjamin put a comment here to explain Some *)
+                let discrete_valuation_opt = Some discrete_valuation in
+
+                (* Compute its new value *)
+                let new_value = eval_global_expression discrete_valuation_opt expr in
+                let new_value = pack_value model.variable_names discrete_valuation_opt old_value new_value variable_update_type in
+
+                Location.update_discrete_with (discrete_index, new_value) location;
+
+
+        ) (List.rev pre_discrete_updates);
 
 		(* Update discrete *)
 		List.iter (fun (variable_update_type, global_expression) ->
@@ -1422,15 +1448,6 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
                 (* Compute its new value *)
                 let new_value = eval_global_expression discrete_valuation_opt global_expression in
                 let new_value = pack_value model.variable_names discrete_valuation_opt old_value new_value variable_update_type in
-
-                (*
-                print_message Verbose_standard (
-                    "old value: "
-                    ^ DiscreteValue.string_of_value old_value
-                    ^ " replace by: "
-                    ^ DiscreteValue.string_of_value new_value
-                );
-                *)
 
                 (*
                 (* Check if already updated *)
@@ -1483,6 +1500,48 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
 	(* Update the global location *)
 	Location.update_location_with [] !updated_discrete_pairs location;
+
+
+	let _ = List.map (fun transition_index ->
+		(* Get the automaton concerned *)
+		let automaton_index = model.automaton_of_transition transition_index in
+
+		(* Access the transition and get the components *)
+		let transition = model.transitions_description transition_index in
+
+        let _ (* no clock update for pre-updates *), post_discrete_updates = get_updates source_location transition.post_updates in
+
+        (* Post update of variables *)
+        List.iter (fun (variable_update_type, expr) ->
+
+            let discrete_valuation = Location.get_discrete_value location in
+            let discrete_index_opt = discrete_index_of_variable_access variable_update_type in
+
+            match discrete_index_opt with
+            | None ->
+                let _ = eval_global_expression (Some discrete_valuation) expr in ()
+            | Some discrete_index ->
+
+                let old_value = discrete_valuation discrete_index in
+
+                (* TODO benjamin put a comment here to explain Some *)
+                let discrete_valuation_opt = Some discrete_valuation in
+
+                (* Compute its new value *)
+                let new_value = eval_global_expression discrete_valuation_opt expr in
+                let new_value = pack_value model.variable_names discrete_valuation_opt old_value new_value variable_update_type in
+
+                Location.update_discrete_with (discrete_index, new_value) location;
+
+
+        ) (List.rev post_discrete_updates);
+
+
+    ) combined_transition
+    in
+
+
+
 
 	(* Split guards between discrete and continuous *)
 	let discrete_guards, continuous_guards = split_guards_into_discrete_and_continuous guards in

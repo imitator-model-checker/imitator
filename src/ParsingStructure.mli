@@ -173,29 +173,35 @@ type sync =
 type guard = convex_predicate
 type invariant = convex_predicate
 
-
-(** Updates on transitions *)
-type update =
-	| Normal of normal_update (** Updates withput conditions *)
-	| Condition of condition_update (** Updates with conditions *)
-
 (* Variable name or variable access (x or x[index]) *)
 (* TODO benjamin REFACTOR rename to variable_update_type (test already make but change 21 files) *)
-and variable_access =
+type variable_access =
     | Parsed_variable_update of variable_name
     | Parsed_indexed_update of variable_access * parsed_discrete_arithmetic_expression
     | Parsed_void_update
 
+
 (** basic updating *)
-and normal_update = variable_access * parsed_global_expression
+type normal_update = variable_access * parsed_global_expression
 (** conditional updating *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
+
+(** Updates on transitions *)
+type update =
+	| Normal of normal_update (** Updates without conditions *)
+	| Condition of condition_update (** Updates with conditions *)
+
+(* Three type of updates *)
+type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *) * update list (* post-updates sequential *)
+
+
+
 
 (* A list of pairs (clock, rational) *)
 type parsed_flow = (variable_name * NumConst.t) list
 
 (* Transition = Guard * update list * sync label * destination location *)
-type transition = guard * update list * sync * location_name
+type transition = guard * update_section * sync * location_name
 
 (* Location = Name * Urgent type * Accepting type * Cost * Invariant * list of stopped clocks * transitions *)
 type parsed_location = {

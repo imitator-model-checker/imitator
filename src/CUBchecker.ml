@@ -3173,15 +3173,17 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* type transition = guard * clock_updates * discrete_update list * location_index *)
 
 		(*** WARNING: other updates than clock updates not considered so far ***)
-		
+
 		let new_transition = {
 			guard		= Continuous_guard guard;
 			action		= action_index;
+			pre_updates = {clock = No_update; discrete=[]; conditional=[]};
 			updates		= {
 				clock      = Resets clock_updates; (** Clock updates *)
 				discrete   = discrete_update; (** List of discrete updates *)
 				conditional= []
 			};
+			post_updates = {clock = No_update; discrete=[]; conditional=[]};
 			target		= target_location_index;
 		} in
 		
