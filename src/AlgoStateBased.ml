@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2022/02/09
+ * Last modified     : 2022/02/23
  *
  ************************************************************)
 
@@ -1916,6 +1916,15 @@ let nth_state_index_of_symbolic_run (symbolic_run : StateSpace.symbolic_run) (n 
 	else raise (InternalError ("Trying to access the " ^ (string_of_int n) ^ "-th state of a symbolic run of length " ^ (string_of_int nb_states) ^ "."))
 
 
+(* Get the n-th combined_transition of a symbolic run; raises InternalError if not found *)
+let nth_transition_of_symbolic_run (symbolic_run : StateSpace.symbolic_run) (n : int) : combined_transition =
+	(* Case n belonging to the run *)
+	if n < (List.length symbolic_run.symbolic_steps) then (List.nth symbolic_run.symbolic_steps n).transition
+	
+	(* Otherwise: oops *)
+	else raise (InternalError ("Trying to access the " ^ (string_of_int n) ^ "-th transition of a symbolic run of length " ^ (string_of_int (List.length symbolic_run.symbolic_steps)) ^ "."))
+
+
 (*------------------------------------------------------------*)
 (** Compute the predecessors of a zone *)
 (*------------------------------------------------------------*)
@@ -3714,10 +3723,7 @@ class virtual algoStateBased =
 		
 		(* Start from the last but one state (as we compare i and i+1) *)
 		let i = ref ((List.length symbolic_run.symbolic_steps) - 1) in
-		
-		
-		let xconstraint_i_plus_one : LinearConstraint.x_linear_constraint ref = ref (LinearConstraint.px_valuate_parameters functional_pval_positive target_state.px_constraint) in
-		
+
 		(* Print some information *)
 		print_message Verbose_medium ("\nLooking for blocking clock valuations by exploring backwards from position " ^ (string_of_int !i) ^ "…");
 		
@@ -3730,24 +3736,75 @@ class virtual algoStateBased =
 			
 			(* Get the state index at position i *)
 			let state_index_i : state_index = nth_state_index_of_symbolic_run symbolic_run !i in
+
 			(* Get the x-constraint at position i *)
 			let state_i : State.state = StateSpace.get_state state_space state_index_i in
 			let xconstraint_i : LinearConstraint.x_linear_constraint = LinearConstraint.px_valuate_parameters functional_pval_positive state_i.px_constraint in
 			(* Get the location at position i *)
-			let global_location_i = state_i.global_location in
+			let global_location_i : Location.global_location = state_i.global_location in
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
 				print_message Verbose_high ("\nAbout to compare clock constraint at position " ^ (string_of_int !i) ^ ":");
 				print_message Verbose_high (LinearConstraint.string_of_x_linear_constraint model.variable_names xconstraint_i);
-				print_message Verbose_high ("\n…with clock constraint at position " ^ (string_of_int (!i+1)) ^ ":");
-				print_message Verbose_high (LinearConstraint.string_of_x_linear_constraint model.variable_names (!xconstraint_i_plus_one));
+				print_message Verbose_high ("\n…with its outgoing guard");
 			);
 			
+			(*** NOTE/BADPROG: LOTS of multiple computations using PPL around here; could certainly be highly simplified! ***)
+			
+			(* Get the i-th transition *)
+			let combined_transition_i : StateSpace.combined_transition = nth_transition_of_symbolic_run symbolic_run !i in
+			
+			(* Rebuild the guard along the combined transition from i to i+1 *)
+			(*** BADPROG: multiple computations! ***)
+			let _, _, (continuous_guards : LinearConstraint.pxd_linear_constraint list), _ = compute_new_location_guards_updates global_location_i combined_transition_i in
+			
+			(* Create a constraint D_i = d_i for the discrete variables *)
+			let pxd_discrete_constraint : LinearConstraint.pxd_linear_constraint = discrete_constraint_of_global_location global_location_i in
+			
+			(* Create a pxd_linear_constraint P_i = p_i for the parameter valuation *)
+			let concrete_pxd_valuation_constraint = LinearConstraint.pxd_of_p_constraint (LinearConstraint.p_constraint_of_point (List.map (fun parameter_index -> parameter_index , functional_pval_positive parameter_index) model.parameters )) in
+			
+			(* Create one constraint for the guard, including discrete valuation and parameter valuation *)
+			let pxd_guard_i : LinearConstraint.pxd_linear_constraint = LinearConstraint.pxd_intersection (pxd_discrete_constraint :: concrete_pxd_valuation_constraint :: continuous_guards) in
+
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("\n    Guard (valuated with discrete and parameters) outgoing from position " ^ (string_of_int !i) ^ " reconstructed:");
+				print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_guard_i);
+			);
+			
+			(* Apply time past on the guard, depending on the flows *)
+			apply_time_past global_location_i pxd_guard_i;
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("\n    Guard after time past:");
+				print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_guard_i);
+			);
+
+			(* Intersect with invariant (here: directly the original constraint at state i valuated with the parameter valuation) *)
+			LinearConstraint.pxd_intersection_assign pxd_guard_i [LinearConstraint.pxd_of_x_constraint xconstraint_i];
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("\n    Guard after time past and intersection with invariant at location i:");
+				print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_guard_i);
+			);
+
+			(* Convert to x_linear_constraint *)
+			let x_guard_i : LinearConstraint.x_linear_constraint = LinearConstraint.pxd_hide_discrete_and_parameters_and_collapse pxd_guard_i in
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("\n    Guard after time past and intersection with invariant at location i:");
+				print_message Verbose_high (LinearConstraint.string_of_x_linear_constraint model.variable_names x_guard_i);
+			);
+
 			(* Convert to a nnconvex_constraint *)
 			let difference = LinearConstraint.x_nnconvex_constraint_of_x_linear_constraint xconstraint_i in
-			(* Compute the difference K_i \ K_i+1 *)
-			LinearConstraint.x_nnconvex_difference_assign difference (LinearConstraint.x_nnconvex_constraint_of_x_linear_constraint !xconstraint_i_plus_one);
+			(* Compute the difference C_i \ (time_past(guard) ^ I_i) *)
+			LinearConstraint.x_nnconvex_difference_assign difference (LinearConstraint.x_nnconvex_constraint_of_x_linear_constraint x_guard_i);
 			
 			(* Check if difference is non-empty *)
 			if not (LinearConstraint.x_nnconvex_constraint_is_false difference) then(
@@ -3959,7 +4016,6 @@ class virtual algoStateBased =
 			); (* end if found restrained constraint *)
 			
 			(* Move to previous step *)
-			xconstraint_i_plus_one := xconstraint_i;
 			decr i;
 		done; (* end while backward *)
 		
