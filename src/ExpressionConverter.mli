@@ -96,7 +96,7 @@ val check_constant_expression : variable_infos -> variable_name * parsed_global_
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
 (* Check that an update is well typed *)
-val check_update : variable_infos -> variable_access -> ParsingStructure.parsed_global_expression -> typed_variable_access * typed_global_expression
+val check_update : variable_infos -> updates_type -> variable_access -> ParsingStructure.parsed_global_expression -> typed_variable_access * typed_global_expression
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)

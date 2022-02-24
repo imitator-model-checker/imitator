@@ -480,9 +480,9 @@ update_seq_list:
 ;
 
 update_seq_nonempty_list:
-	| update SEMICOLON update_nonempty_list { Normal $1 :: $3}
+	| update SEMICOLON update_seq_nonempty_list { Normal $1 :: $3}
 	| update semicolon_opt { [Normal $1] }
-	| condition_update SEMICOLON update_nonempty_list { Condition $1 :: $3}
+	| condition_update SEMICOLON update_seq_nonempty_list { Condition $1 :: $3}
 	| condition_update semicolon_opt { [Condition $1] }
 ;
 

@@ -1726,7 +1726,7 @@ let split_to_clock_discrete_updates variable_infos updates =
   List.partition is_clock_update updates
 
 (** Translate a normal parsed update into its abstract model *)
-let convert_normal_updates variable_infos updates_list =
+let convert_normal_updates variable_infos updates_type updates_list =
 
 	(* Flag to check if there are clock resets only to 0 *)
     let only_resets = is_only_resets updates_list in
@@ -1734,8 +1734,17 @@ let convert_normal_updates variable_infos updates_list =
 	(** Split clocks and discrete updates *)
 	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates variable_infos updates_list in
 
+    (* Check that pre and post updates not updating clocks ! It's only for discrete variables *)
+    (match updates_type with
+    | Parsed_pre_updates
+    | Parsed_post_updates when List.length parsed_clock_updates > 0 ->
+        print_error "Post and pre update sections are reserved for sequential updates on discrete variables. These sections cannot be used for updating clock(s).";
+        raise InvalidModel
+    | _ -> ()
+    );
+
     (* Convert discrete udpates *)
-    let converted_discrete_updates = List.map (fun (variable_access, expr) -> DiscreteExpressionConverter.convert_update variable_infos variable_access expr) parsed_discrete_updates in
+    let converted_discrete_updates = List.map (fun (variable_access, expr) -> DiscreteExpressionConverter.convert_update variable_infos updates_type variable_access expr) parsed_discrete_updates in
     (* Convert continuous udpates *)
     let converted_clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
 
@@ -1748,13 +1757,13 @@ let convert_normal_updates variable_infos updates_list =
 
 
 (** convert normal and conditional updates *)
-let convert_updates variable_infos updates : updates =
+let convert_updates variable_infos updates_type updates : updates =
 
     (** split normal and conditional updates *)
     let normal_updates, conditional_updates = List.partition is_normal_update updates in
 
     (** convert normal parsed updates *)
-    let converted_updates = convert_normal_updates variable_infos (List.map get_normal_update_value normal_updates) in
+    let converted_updates = convert_normal_updates variable_infos updates_type (List.map get_normal_update_value normal_updates) in
 
     (** convert normal parsed updates inside conditional updates *)
     let conditional_updates_values : conditional_update list = List.map (fun u ->
@@ -1762,8 +1771,8 @@ let convert_updates variable_infos updates : updates =
 
         let convert_boolean_expr = DiscreteExpressionConverter.convert_conditional variable_infos boolean_value in
 
-        let convert_if_updates = convert_normal_updates variable_infos if_updates in
-        let convert_else_updates = convert_normal_updates variable_infos else_updates in
+        let convert_if_updates = convert_normal_updates variable_infos updates_type if_updates in
+        let convert_else_updates = convert_normal_updates variable_infos updates_type  else_updates in
 
         (convert_boolean_expr, convert_if_updates, convert_else_updates)
     ) conditional_updates in
@@ -1865,9 +1874,9 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
                  				in *)
 
               (* translate parsed updates into their abstract model *)
-              let converted_pre_updates = convert_updates variable_infos filtered_pre_updates in
-              let converted_updates = convert_updates variable_infos filtered_updates in
-              let converted_post_updates = convert_updates variable_infos filtered_post_updates in
+              let converted_pre_updates = convert_updates variable_infos Parsed_pre_updates filtered_pre_updates in
+              let converted_updates = convert_updates variable_infos Parsed_updates filtered_updates in
+              let converted_post_updates = convert_updates variable_infos Parsed_post_updates filtered_post_updates in
 
               (* Convert the updates *)
               (* let converted_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->

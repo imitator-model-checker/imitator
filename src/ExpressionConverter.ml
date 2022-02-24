@@ -111,7 +111,7 @@ val check_constant_expression : variable_infos -> variable_name * parsed_global_
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
 (* Check that an update is well typed *)
-val check_update : variable_infos -> variable_access -> ParsingStructure.parsed_global_expression -> typed_variable_access * typed_global_expression
+val check_update : variable_infos -> updates_type -> variable_access -> ParsingStructure.parsed_global_expression -> typed_variable_access * typed_global_expression
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
@@ -1211,7 +1211,7 @@ let check_guard variable_infos =
 
 
 (* Type check an update *)
-let check_update variable_infos variable_access expr =
+let check_update variable_infos update_types variable_access expr =
 
     (* Get assigned variable name *)
     let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
@@ -1231,9 +1231,16 @@ let check_update variable_infos variable_access expr =
         | Var_type_discrete discrete_type -> Some (DiscreteType.extract_inner_type discrete_type)
     in
     (* Resolve typed expression *)
-    let typed_expr, expr_type, _ (* side effects *) = type_check_global_expression variable_infos variable_number_type_opt expr in
+    let typed_expr, expr_type, has_side_effects (* side effects *) = type_check_global_expression variable_infos variable_number_type_opt expr in
 
-    let typed_variable_access, l_value_type, _ (* side effects *) = type_check_variable_access variable_infos variable_access in
+    let typed_variable_access, l_value_type, is_variable_access_has_side_effects (* side effects *) = type_check_variable_access variable_infos variable_access in
+
+    if update_types = Parsed_updates && (has_side_effects || is_variable_access_has_side_effects) then
+        raise (TypeError (
+            "Continuous update section contain one or more expression with side effects `"
+            ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
+            ^ "`. Expression with side effects are only allowed in pre and post update sections."
+        ));
 
     (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
      if not (DiscreteType.is_discrete_type_compatibles l_value_type expr_type) then (

@@ -180,6 +180,10 @@ type variable_access =
     | Parsed_indexed_update of variable_access * parsed_discrete_arithmetic_expression
     | Parsed_void_update
 
+type updates_type =
+    | Parsed_pre_updates
+    | Parsed_updates
+    | Parsed_post_updates
 
 (** basic updating *)
 type normal_update = variable_access * parsed_global_expression
@@ -191,7 +195,7 @@ type update =
 	| Normal of normal_update (** Updates without conditions *)
 	| Condition of condition_update (** Updates with conditions *)
 
-(* Three type of updates *)
+(* Three type of updates (pre-updates, updates, post-updates) grouped in section *)
 type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *) * update list (* post-updates sequential *)
 
 

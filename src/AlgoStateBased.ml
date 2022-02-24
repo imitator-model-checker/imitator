@@ -1449,7 +1449,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
                 let new_value = eval_global_expression discrete_valuation_opt global_expression in
                 let new_value = pack_value model.variable_names discrete_valuation_opt old_value new_value variable_update_type in
 
-                (*
+
                 (* Check if already updated *)
                 if Hashtbl.mem updated_discrete discrete_index then (
                     (* Find its value *)
@@ -1464,12 +1464,13 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
                     (* Else keep it in memory for update *)
                     Hashtbl.add updated_discrete discrete_index new_value;
                 );
-                *)
 
-                Hashtbl.add updated_discrete discrete_index new_value;
+
+(*                Hashtbl.add updated_discrete discrete_index new_value;*)
 
 
         ) (List.rev discrete_updates);
+
         (* Update the global location *)
         Location.update_location_with [automaton_index, target_index] [] location;
 
