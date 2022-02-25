@@ -1504,8 +1504,6 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
 
 	let _ = List.map (fun transition_index ->
-		(* Get the automaton concerned *)
-		let automaton_index = model.automaton_of_transition transition_index in
 
 		(* Access the transition and get the components *)
 		let transition = model.transitions_description transition_index in

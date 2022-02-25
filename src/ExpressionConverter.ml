@@ -848,7 +848,9 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
         let call_signature = List.map (fun (_, discrete_type, _) -> discrete_type) type_checks in
         (* Convert to typed arguments expressions *)
         let typed_expressions = List.map (fun (typed_expr, _, _) -> typed_expr) type_checks in
-        (* TODO benjamin IMPORTANT check side effects in parameters *)
+
+        (* Check possible side-effects in parameters *)
+        let has_side_effects = List.exists (fun (_, _, has_side_effects) -> has_side_effects) type_checks in
 
         (* Get function signature *)
         let function_signature_constraint = Functions.signature_constraint_of_function function_name in
@@ -907,7 +909,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
         in
 
         (* Resolve constraint according to arguments types *)
-        let resolved_constraints, malformed_constraints = TypeConstraintResolver.resolve_constraints variable_infos function_parameter_signature_constraint call_signature argument_expressions in
+        let resolved_constraints, malformed_constraints = TypeConstraintResolver.resolve_constraints variable_infos function_parameter_signature_constraint call_signature in
 
         let resolved_constraints = resolved_constraints @ dependent_type_constraints in
 
@@ -950,7 +952,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
         let typed_expressions = List.map (fun (typed_expr, _, _) -> typed_expr) type_checks in
 
         let is_subject_to_side_effect = Functions.is_function_subject_to_side_effect function_name in
-        Typed_function_call (function_name, typed_expressions, return_type), return_type, is_subject_to_side_effect
+        Typed_function_call (function_name, typed_expressions, return_type), return_type, is_subject_to_side_effect || has_side_effects
 
 
 
@@ -1220,7 +1222,7 @@ let check_update variable_infos update_types variable_access expr =
     let variable_name, var_type =
         match variable_name_opt with
         | Some variable_name -> variable_name, get_type_of_variable_by_name variable_infos variable_name
-        | None -> "", Var_type_discrete Var_type_weak
+        | None -> "", Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number) (* By default, infer numbers to unknown numbers *)
     in
 
     (* Eventually get a number type to infer *)
@@ -1230,11 +1232,13 @@ let check_update variable_infos update_types variable_access expr =
         | Var_type_parameter -> None
         | Var_type_discrete discrete_type -> Some (DiscreteType.extract_inner_type discrete_type)
     in
+
     (* Resolve typed expression *)
     let typed_expr, expr_type, has_side_effects (* side effects *) = type_check_global_expression variable_infos variable_number_type_opt expr in
 
     let typed_variable_access, l_value_type, is_variable_access_has_side_effects (* side effects *) = type_check_variable_access variable_infos variable_access in
 
+    (* Check that continuous / discrete not sequential updates doesn't contain side effects *)
     if update_types = Parsed_updates && (has_side_effects || is_variable_access_has_side_effects) then
         raise (TypeError (
             "Continuous update section contain one or more expression with side effects `"
