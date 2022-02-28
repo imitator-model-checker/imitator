@@ -2433,6 +2433,15 @@ Array variables, array literals, arrays element access (read / write) and arrays
 
 Lists are not supported by our translation to \uppaal{}.
 
+\paragraph{Stacks}
+
+Stacks are not supported by our translation to \uppaal{}.
+
+\paragraph{Queues}
+
+Queues are not supported by our translation to \uppaal{}.
+
+
 \paragraph{Built-in functions}
 
 The only \imitator{} built-in function fully supported by our translation is the \styleIMI{pow} function.
@@ -2558,6 +2567,14 @@ But not the built-in functions.
 \paragraph{Lists}
 
 Lists are not supported by our translation to \jani{}.
+
+\paragraph{Stacks}
+
+Stacks are not supported by our translation to \jani{}.
+
+\paragraph{Queues}
+
+Queues are not supported by our translation to \jani{}.
 
 \paragraph{Built-in functions}
 
@@ -3488,13 +3505,32 @@ We define each of those two components below.
 \regleGrammaire{var\_type}
 %------------------------------------------------------------
 \begin{tabular}{l l}
+ 	\ & \nt{var\_type\_discrete} \\
+	$|$ & \styleIMI{clock}     \\
+	$|$ & \styleIMI{parameter} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{var\_type\_discrete}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+ 	\ & \nt{var\_type\_scalar} \\
+	$|$ & \nt{var\_type} \styleIMI{array(} \nt{arithmetic\_expression} \styleIMI{)} \\
+  $|$ & \nt{var\_type} \styleIMI{list} \\
+	$|$ & \nt{var\_type} \styleIMI{stack} \\
+	$|$ & \nt{var\_type} \styleIMI{queue} \\
+
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{var\_type\_scalar}
+%------------------------------------------------------------
+\begin{tabular}{l l}
   $|$ & \styleIMI{binary (} \nt{pos\_integer}  \styleIMI{)} \\
 	$|$ & \styleIMI{bool}  \\
-	$|$ & \styleIMI{clock}     \\
 	$|$ & \styleIMI{constant}  \\
 	$|$ & \styleIMI{discrete}  \\
 	$|$ & \styleIMI{int}  \\
-	$|$ & \styleIMI{parameter} \\
 	$|$ & \styleIMI{rational}  \\
 \end{tabular}
 
@@ -3740,6 +3776,8 @@ We define each of those two components below.
 	$|$ & \nt{boolean\_expression} \\
 	$|$ & \nt{array\_expression} \\
 	$|$ & \nt{list\_expression} \\
+	$|$ & \nt{stack\_expression} \\
+	$|$ & \nt{queue\_expression} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -3748,6 +3786,8 @@ We define each of those two components below.
 \begin{tabular}{l l}
 	\ & \styleIMI{(} \nt{array\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{array\_append (} \nt{array\_expression} \styleIMI{, } \nt{array\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{array\_length (} \nt{array\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{array\_mem (} \nt{global\_expression} \styleIMI{, } \nt{array\_expression} \styleIMI{)} \\
 	$|$ \ & \styleIMI{<name>} \\
 	$|$ & \nt{literal\_array} \\
 \end{tabular}
@@ -3759,12 +3799,43 @@ We define each of those two components below.
 	\ & \styleIMI{(} \nt{list\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{list\_cons (} \nt{global\_expression} \styleIMI{, } \nt{list\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{list\_hd (} \nt{list\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{list\_is\_empty (} \nt{list\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{list\_length (} \nt{list\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{list\_mem (} \nt{global\_expression} \styleIMI{, } \nt{list\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{list\_rev (} \nt{list\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{list\_tl (} \nt{list\_expression} \styleIMI{)} \\
 	$|$ \ & \styleIMI{<name>} \\
 	$|$ & \nt{literal\_list} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{stack\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\ & \styleIMI{(} \nt{stack\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{stack\_push (} \nt{global\_expression} \styleIMI{, } \nt{stack\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{stack\_pop (} \nt{stack\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{stack\_top (} \nt{stack\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{stack\_clear (} \nt{stack\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{stack\_is\_empty (} \nt{stack\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{stack\_length (} \nt{stack\_expression} \styleIMI{)} \\
+	$|$ \ & \styleIMI{<name>} \\
+	$|$ & \styleIMI{stack()} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{queue\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\ & \styleIMI{(} \nt{queue\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{queue\_push (} \nt{global\_expression} \styleIMI{, } \nt{queue\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{queue\_pop (} \nt{queue\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{queue\_top (} \nt{queue\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{queue\_clear (} \nt{queue\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{queue\_is\_empty (} \nt{queue\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{queue\_length (} \nt{queue\_expression} \styleIMI{)} \\
+	$|$ \ & \styleIMI{<name>} \\
+	$|$ & \styleIMI{queue()} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -4640,6 +4711,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{is} \\
 	\styleIMI{list\_cons} \\
 	\styleIMI{list\_hd} \\
+	\styleIMI{list\_is\_empty} \\
 	\styleIMI{list\_length} \\
 	\styleIMI{list\_mem} \\
 	\styleIMI{list\_rev} \\
@@ -4658,11 +4730,23 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{pow} \\
 	\styleIMI{projectresult} \\
 	\styleIMI{property} \\
+	\styleIMI{queue\_clear} \\
+	\styleIMI{queue\_is\_empty} \\
+	\styleIMI{queue\_length} \\
+	\styleIMI{queue\_pop} \\
+	\styleIMI{queue\_push} \\
+	\styleIMI{queue\_top} \\
 	\styleIMI{rational\_of\_int} \\
 	\styleIMI{sequence} \\
 	\styleIMI{shift\_left} \\
 	\styleIMI{shift\_right} \\
 	\styleIMI{special\_0\_clock} \\
+	\styleIMI{stack\_clear} \\
+	\styleIMI{stack\_is\_empty} \\
+	\styleIMI{stack\_length} \\
+	\styleIMI{stack\_pop} \\
+	\styleIMI{stack\_push} \\
+	\styleIMI{stack\_top} \\
 	\styleIMI{step} \\
 	\styleIMI{stop} \\
 	\styleIMI{sync} \\
