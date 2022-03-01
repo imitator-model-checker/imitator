@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2021/10/01
+ * Last modified: 2021/06/17
  *
  ************************************************************)
 
@@ -55,11 +55,13 @@ class imitator_options :
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination	: bool
 		method no_global_time_in_comparison	: bool
-		
+
 		method exploration_order			: AbstractAlgorithm.exploration_order
 		method is_set_exploration_order		: bool
 		method set_exploration_order		: AbstractAlgorithm.exploration_order -> unit
 		
+		method extrapolation				: extrapolation
+
 		method files_prefix					: string
 		method imitator_mode				: AbstractAlgorithm.imitator_mode
 

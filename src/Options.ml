@@ -146,6 +146,9 @@ class imitator_options =
 		(* Best worst-case clock value for EFsynthminpq *)
 (* 		val mutable best_worst_case = ref false *)
 
+		(* M-extrapolation *)
+		val mutable extrapolation : extrapolation = No_extrapolation
+
 
 		(* ANALYSIS OPTIONS *)
 
@@ -301,6 +304,8 @@ class imitator_options =
 		method exploration_order					= value_of_option "exploration_order" exploration_order
 		method is_set_exploration_order				= exploration_order <> None
 		method set_exploration_order new_exploration_order = exploration_order <- Some new_exploration_order
+
+		method extrapolation						= extrapolation
 
 		method files_prefix							= files_prefix
 		method imitator_mode						= imitator_mode
@@ -481,7 +486,7 @@ class imitator_options =
 				)
 
 			and set_exploration_order order =
-				(*  *)
+				(* Switch input string *)
 				if order = "layerBFS" then
 					exploration_order <- Some Exploration_layer_BFS
 				else if order = "queueBFS" then
@@ -492,6 +497,26 @@ class imitator_options =
 					exploration_order <- Some Exploration_queue_BFS_PRIOR
 				else(
 					print_error ("The exploration order `" ^ order ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
+
+			and set_extrapolation extrapolation_str =
+				(* Switch input string *)
+				if extrapolation_str = "none" then
+					extrapolation <- No_extrapolation
+				else if extrapolation_str = "M" then
+					extrapolation <- M
+				else if extrapolation_str = "Mglobal" then
+					extrapolation <- Mglobal
+				else if extrapolation_str = "LU" then
+					extrapolation <- LU
+				else if extrapolation_str = "LUglobal" then
+					extrapolation <- LUglobal
+				else(
+					print_error ("The exploration `" ^ extrapolation_str ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
@@ -739,8 +764,18 @@ class imitator_options =
         Use `queueBFSRS`    for a queue-based breadth-first search with ranking system. [ANP17]
         Use `queueBFSPRIOR` for a priority-based BFS with ranking system. [ANP17]
         Default: layerBFS.
+				");			
+				
+				
+				("-extrapolation", String set_extrapolation, " Extrapolation [work in progress].
+        Use `M`             for M-extrapolation.
+        Use `Mglobal`       for a single bound M-extrapolation.
+        Use `LU`            for LU-extrapolation.
+        Use `LUglobal`      for a single bound LU-extrapolation.
+        Default: none.
 				");
 
+				
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
 				");
 
@@ -1238,6 +1273,16 @@ class imitator_options =
 				| Some exploration_order -> print_message Verbose_experiments ("Exploration order: " ^ AbstractAlgorithm.string_of_exploration_order exploration_order)
 
 				| None -> print_message Verbose_low ("No exploration order set.")
+			end;
+
+			(* Extrapolation *)
+			begin
+			match extrapolation with
+				| No_extrapolation	-> print_message Verbose_experiments ("No extrapolation")
+				| M					-> print_message Verbose_standard ("Extrapolation: M-extrapolation")
+				| Mglobal			-> print_message Verbose_standard ("Extrapolation: global bound M-extrapolation")
+				| LU				-> print_message Verbose_standard ("Extrapolation: L/U-extrapolation")
+				| LUglobal			-> print_message Verbose_standard ("Extrapolation: global bound L/U-extrapolation")
 			end;
 
             (* Merge heuristic *)

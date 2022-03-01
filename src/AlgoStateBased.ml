@@ -1,3 +1,4 @@
+
 (************************************************************
  *
  *                       IMITATOR
@@ -9,7 +10,7 @@
  * defines post-related function, i.e., to compute the successor states of ONE
  * state. That (still) represents a large list of functions.
  *
- * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
+ * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia, Johan Arcile
  * Created           : 2015/12/02
  * Last modified     : 2022/02/23
  *
@@ -1819,7 +1820,7 @@ let compute_transitions location constr action_index automata involved_automata_
 (* discrete_constr      : the source state D_i=d_i            *)
 (* combined_transition  : the combined transition             *)
 (*------------------------------------------------------------*)
-(* returns Some state if satisfiable, None otherwise          *)
+(* returns Some state, or None if the constraint is unsatisfiable    *)
 (*------------------------------------------------------------*)
 
 let post_from_one_state_via_one_transition (source_location : Location.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
@@ -1871,7 +1872,7 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 				counter_nb_unsatisfiable#increment;
 
 				(* Print some information *)
-				print_message Verbose_high ("\nThis constraint is not satisfiable ('None').");
+				print_message Verbose_high ("\nThis constraint is not satisfiable (`None`).");
 				
 				(* Return *)
 				None
@@ -1882,7 +1883,7 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 					counter_nb_unsatisfiable#increment;
 
 					(* Print some information *)
-					print_message Verbose_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
+					print_message Verbose_high ("\nThis constraint is not satisfiable (`None`).");
 					
 					(* Return *)
 					None
@@ -3127,8 +3128,29 @@ class virtual algoStateBased =
 	method virtual add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
 
 	
-	
-	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Apply extrapolation to a state *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private apply_extrapolation (extrapolation : extrapolation) (state : State.state) : State.state list =
+		(* Get the location and the constraint from the state *)
+		let the_location = state.global_location in
+		let the_constraint = state.px_constraint in
+
+		(* Call the asked extrapolation of the constraint *)
+		let constraints = 
+		match extrapolation with
+		| M					-> Extrapolation.px_m_extrapolation the_constraint
+		| Mglobal			-> Extrapolation.px_mglobal_extrapolation the_constraint
+		| LU				-> Extrapolation.px_lu_extrapolation the_constraint
+		| LUglobal			-> Extrapolation.px_luglobal_extrapolation the_constraint
+		| No_extrapolation	-> raise (InternalError "Extrapolation type `No_extrapolation` impossible at that point")
+		in
+
+		(* Return the pair (location, constraint) for each constraint from the extrapolation *)
+		List.map (fun px_linear_constraint -> 
+			{ global_location = the_location ; px_constraint = px_linear_constraint }
+		) constraints
+			
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
@@ -3297,7 +3319,7 @@ class virtual algoStateBased =
 					transition_index
 				) involved_automata_indices) in
 
-				begin
+(*				begin
 				(* Compute the successor constraint from the current state via this combined_transition *)
 				match post_from_one_state_via_one_transition source_location (recompute_source_constraint ()) discrete_constr combined_transition with
 				(* No result: constraint unsatisfiable: do nothing *)
@@ -3318,8 +3340,45 @@ class virtual algoStateBased =
 
 					(* Update *)
 					has_successors := !has_successors || added;
-				end;
+				end;*)
+				
+				(* Compute the successor constraint from the current state via this combined_transition *)
+				let successor_option : State.state option = post_from_one_state_via_one_transition source_location (recompute_source_constraint ()) discrete_constr combined_transition in
+				
+				let successors = match successor_option with
+					| Some successor ->
+						let result =
+						(* Check if extrapolation is requested *)
+						match options#extrapolation with
+							(* No extrapolation: return a single state *)
+							| No_extrapolation -> [successor]
+							(* Extrapolation: call dedicated function *)
+							| _ -> self#apply_extrapolation options#extrapolation successor
+							
+						in result
 
+					| None -> []
+				in
+				
+				(* Iterate on the states *)
+				List.iter (fun successor -> 
+					(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
+					StateSpace.increment_nb_gen_states state_space;
+
+					(* Print some information *)
+					if verbose_mode_greater Verbose_total then(
+						self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model successor));
+					);
+
+					(* Try to add the state to the state space *)
+					let added : bool = self#add_a_new_state source_state_index combined_transition successor in
+
+					(* Update *)
+					has_successors := !has_successors || added;
+
+				) successors;
+				
+				
 				(* Update the next combination *)
 				more_combinations := next_combination current_indexes max_indexes;
 
@@ -3374,7 +3433,7 @@ class virtual algoStateBased =
 				| StateSpace.State_already_present _ -> "Old state"
 				| StateSpace.State_replacing _ -> "BIGGER STATE than a former state"
 			 in
-			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "': ");
+			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action `" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "`: ");
 			print_message Verbose_high (ModelPrinter.string_of_state model new_target_state);
 		);
 

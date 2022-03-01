@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2021/10/14
+ * Last modified     : 2021/04/28
  *
  ************************************************************)
 
@@ -481,7 +481,7 @@ let get_combined_transition_between_states (state_space : state_space) (source_s
 		(* Iterate *)
 
 		List.iter (fun (combined_transition, state_index) -> if state_index = target_state_index then raise (Found_transition combined_transition)) successors;
-		
+
 		(* If not found *)
 		raise Not_found
 	) with Found_transition combined_transition -> combined_transition
@@ -1123,7 +1123,7 @@ let backward_symbolic_run state_space (target_state_index : state_index) (lasso 
 
 	in
 	(*------------------------------------------------------------*)
-	
+
 	(* If a lasso is provided, first reconstruct the final symbolic steps for the lasso *)
 	let (final_symbolic_steps , target_state_index_for_backward_reconstruction) = match lasso with
 		(* No lasso *)
@@ -1131,42 +1131,42 @@ let backward_symbolic_run state_space (target_state_index : state_index) (lasso 
 			[] , target_state_index
 
 		(* A non-empty lasso *)
-		| first_state_of_the_lasso :: rest_of_the_lasso -> 
-			
+		| first_state_of_the_lasso :: rest_of_the_lasso ->
+
 			(*** BADPROG: mix imperative and functional programming… ***)
 			let current_state_index : state_index ref = ref first_state_of_the_lasso in
-			
+
 			(* Convert each state of the lasso (except the last one) into a pair (state, combined_transition) *)
 			let final_symbolic_steps : symbolic_step list =
 			(* Iterate on the successor of each state of the lasso except the first one *)
 			List.map (fun (current_successor : state_index) : symbolic_step ->
 				(* Retrieve the transition (state, successor) *)
 				let combined_transition : combined_transition = get_combined_transition_between_states state_space !current_state_index current_successor in
-				
+
 				(* Compute *)
 				let symbolic_step : symbolic_step=
 					{source = !current_state_index ; transition = combined_transition }
 				in
-				
+
 				(* Update current index for next step *)
 				current_state_index := current_successor;
-				
+
 				(* Replace with the previously computed symbolic_step *)
 				symbolic_step
 			) rest_of_the_lasso
 			in
-			
+
 			(*** NOTE: the last state of the lasso is actually the current value of !current_state_index ***)
 			final_symbolic_steps, !current_state_index
 	in
-	
+
 	(* Call the recursive procedure and reverse the result *)
 	match backward_symbolic_run_rec target_state_index_for_backward_reconstruction with
-	
+
 	(* Oops! *)
 	(*** NOTE: what if the lasso is non-empty in this situation?! ***)
 	| None -> raise Not_found
-	
+
 	| Some symbolic_steps ->
 		(* Construct the structure symbolic_run *)
 		{
@@ -1210,10 +1210,10 @@ let states_compare (constraint_comparison_function : LinearConstraint.px_linear_
 
 		(* Retrieve the model *)
 		let model = Input.get_model() in
-		
+
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
-		
+
 		let constr1, constr2 =
 		(* Specific option to remove the global time clock *)
 		if options#no_global_time_in_comparison then(
@@ -1231,7 +1231,7 @@ let states_compare (constraint_comparison_function : LinearConstraint.px_linear_
 			(* Check with standard constraints *)
 			constr1, constr2
 		) in
-		
+
 		(* Perform the actual comparison *)
 		constraint_comparison_function constr1 constr2
 	)
@@ -1498,17 +1498,36 @@ let add_transition state_space (source_state_index, combined_transition, target_
 	print_message Verbose_total ("Entering StateSpace.add_transition");
 
 	(* check if it already exists *)
+	(* Get the list of (transition,state) successors of source_state_index *)
+	let transitions_and_states = get_successors_with_combined_transitions state_space source_state_index in
+
+	if List.mem (combined_transition , target_state_index) transitions_and_states then(
+		print_message Verbose_total ("Transition belong to the list already");
+	)else(
+		(** Add to the data structure *)
+		Hashtbl.replace state_space.transitions_table source_state_index
+			(List.rev ((combined_transition , target_state_index) :: transitions_and_states))
+	);
+
+	(* Print some information *)
+	print_message Verbose_total ("Existence check done");
+
+
+
+	(*	(* check if it already exists *)
 	let transitions = get_transitions_of_state state_space source_state_index in
 
 	(* Print some information *)
 	print_message Verbose_total ("Existence check done");
 
-	(*** TODO: it seems that getting the list is doing twice here; optimization? ***)
-	if not (List.mem combined_transition transitions) then
+	(*** TODO: it seems that getting the list is done twice here; optimization? ***)
+	if not (List.mem combined_transition transitions) then(
 		(** Add to the data structure *)
 		Hashtbl.replace state_space.transitions_table source_state_index
 			(List.rev ((combined_transition , target_state_index) :: (get_successors_with_combined_transitions state_space source_state_index)))
-	;
+	)else(
+		print_message Verbose_total ("Transition belong to the list already");
+	);*)
 	(* Statistics *)
 	counter_add_transition#stop;
 
