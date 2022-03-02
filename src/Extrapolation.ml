@@ -605,7 +605,7 @@ let prepare_extrapolation () : unit =
 let m_extrapolation_of_x (big_m : numconst_or_infinity) (x : variable) (px_linear_constraint : LinearConstraint.px_linear_constraint) : LinearConstraint.px_linear_constraint list =
 
 	(* Retrieve the model *)
-	let model = Input.get_model() in
+(* 	let model = Input.get_model() in *)
 
 	(* Case m is Finite *)
 	let finite (m : NumConst.t) =
