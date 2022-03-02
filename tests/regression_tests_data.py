@@ -7114,7 +7114,441 @@ True
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/03/02
+		# Last modified            : 2022/03/02
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify without parameters: unique negative run',
+		'input_files': ['testEFExemplify1neg.imi', 'testEFExemplify1neg.imiprop'],
+		'options'    : '-no-merge -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplify1neg.res' , 'content' : """
+(************************************************************)
+ Run #2
 
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"specification": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "a1",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "specification",
+						"guard": " 2 >= x",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "1",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "3",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "4",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/03/02
+		# Last modified            : 2022/03/02
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify without parameters: unique negative run (in initial location)',
+		'input_files': ['testEFExemplify1neg-b.imi', 'testEFExemplify1neg.imiprop'],
+		'options'    : '-no-merge -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplify1neg-b.res' , 'content' : """
+(************************************************************)
+ Run #2
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"specification": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "4",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "4",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/03/02
+		# Last modified            : 2022/03/02
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify without parameters: unique negative run + flows',
+		'input_files': ['testEFExemplify1neg-c.imi', 'testEFExemplify1neg.imiprop'],
+		'options'    : '-no-merge -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplify1neg-c.res' , 'content' : """
+(************************************************************)
+ Run #2
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"specification": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"y": "1",
+					"z": "2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/8", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "4",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "4",
+					"y": "1/2",
+					"z": "2",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/03/02
+		# Last modified            : 2022/03/02
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify without parameters: unique negative run + flows + negative variable',
+		'input_files': ['testEFExemplify1neg-d.imi', 'testEFExemplify1neg.imiprop'],
+		'options'    : '-no-merge -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplify1neg-d.res' , 'content' : """
+(************************************************************)
+ Run #2
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"specification": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"y": "1",
+					"z": "2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "4",
+				"action": "a1"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "4",
+					"y": "0",
+					"z": "2",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "5",
+					"y": "-1/4",
+					"z": "2",
+					"global_time": "5"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a1"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "6",
+					"y": "-1/2",
+					"z": "2",
+					"global_time": "6"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
