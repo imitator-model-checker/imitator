@@ -84,7 +84,7 @@ val compute_valuated_invariant : Location.global_location -> LinearConstraint.px
 (* Compute the list of stopped and elapsing clocks in a location *)
 (* Returns a pair (stopped clocks, elapsing clocks)           *)
 (*------------------------------------------------------------*)
-val compute_stopwatches : Location.global_location -> (Automaton.clock_index list * Automaton.clock_index list)
+(* val compute_stopwatches : Location.global_location -> (Automaton.clock_index list * Automaton.clock_index list) *)
 
 
 (*------------------------------------------------------------------*)

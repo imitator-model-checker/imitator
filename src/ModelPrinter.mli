@@ -133,4 +133,5 @@ val string_of_abstract_property : AbstractModel.abstract_model -> AbstractProper
 
 (*** BADPROG: very, very bad programming: this function should be in AlgoStateBased BUT ModelPrinter doesn't have access to AlgoStateBased (but the other way is possible); and it is called from both modules, so defined here (ÉA, 2021/11/02) ***)
 
-val compute_flows : Location.global_location -> (Automaton.clock_index * NumConst.t) list
+val compute_flows_list : Location.global_location -> ((Automaton.clock_index * NumConst.t) list)
+val compute_flows_fun  : Location.global_location -> (Automaton.clock_index -> NumConst.t)

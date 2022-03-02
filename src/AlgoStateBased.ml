@@ -816,6 +816,8 @@ let apply_updates_assign_backward = apply_updates_assign_gen Backward
 (* Compute the list of stopped and elapsing clocks in a location *)
 (* Returns a pair (stopped clocks, elapsing clocks)           *)
 (*------------------------------------------------------------*)
+(*
+(*** NOTE: disabled by ÉA (2022/03/02) as we need flows, not just stopwatches ***)
 let compute_stopwatches (location : Location.global_location) : (Automaton.clock_index list * Automaton.clock_index list) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
@@ -850,7 +852,7 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 			) ([], []) model.clocks
 		) (* if no stopwatch for this location *)
 	) (* if no stopwatch in the model *)
-
+*)
 
 
 
@@ -919,7 +921,7 @@ let pxd_compute_time_polyhedron (direction : time_direction) (location : Locatio
 	(* Print some information *)
 	print_message Verbose_high ("Computing list of explicit flows…");
 	
-	let flows = ModelPrinter.compute_flows location in
+	let flows : (Automaton.clock_index * NumConst.t) list = ModelPrinter.compute_flows_list location in
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
@@ -963,7 +965,7 @@ let px_compute_time_polyhedron (direction : time_direction) (location : Location
 	(* Print some information *)
 	print_message Verbose_high ("Computing list of explicit flows…");
 	
-	let flows = ModelPrinter.compute_flows location in
+	let flows : (Automaton.clock_index * NumConst.t) list = ModelPrinter.compute_flows_list location in
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
@@ -1086,18 +1088,12 @@ let apply_time_elapsing_to_concrete_valuation (location : Location.global_locati
 			valuation_array.(variable_index) <- px_valuation variable_index;
 		done;
 
-		(* Compute the set of stopped and elapsing clocks in this location *)
-		let stopped_clocks, _ = compute_stopwatches location in
-		
+		(* Get the flows *)
+		let flows : (Automaton.clock_index -> NumConst.t) = ModelPrinter.compute_flows_fun location in
+					
 		(* Iterate on clocks *)
 		for variable_index = model.nb_parameters to model.nb_parameters + model.nb_clocks - 1 do
-			if List.mem variable_index stopped_clocks then(
-				(* Clock stopped: copy *)
-				valuation_array.(variable_index) <- px_valuation variable_index;
-			)else(
-				(* Elapsing clock: increment px_valuation by time_elapsing *)
-				valuation_array.(variable_index) <- NumConst.add (px_valuation variable_index) time_elapsing;
-			);
+			valuation_array.(variable_index) <- NumConst.add (px_valuation variable_index) (NumConst.mul time_elapsing (flows variable_index));
 		done;
 		
 		(* Return a functional view *)
@@ -2470,7 +2466,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 
 
 		(* Pick a valuation *)
-		let valuation_n =
+		let valuation_n : LinearConstraint.px_valuation =
 			try(
 				LinearConstraint.px_exhibit_point valuations_n_before_time_elapsing
 			) with LinearConstraint.EmptyConstraint ->(
@@ -2481,7 +2477,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(* Now compute the time spent between the previous and the new valuation *)
 
 		(* Compute the time elapsing *)
-		let time_elapsed_n = NumConst.sub (!valuation_n_plus_1 absolute_time_clock) (valuation_n absolute_time_clock) in
+		let time_elapsed_n : NumConst.t = NumConst.sub (!valuation_n_plus_1 absolute_time_clock) (valuation_n absolute_time_clock) in
 		
 		(*** DEBUG: test that it is indeed a good valuation, belonging to n! ***)
 		(*** TODO ***)
@@ -3700,7 +3696,7 @@ class virtual algoStateBased =
 				);
 				
 				(* First, retrieve the last point, i.e., the one in the last state of the prefix *)
-				(*** NOTE: 'concrete_px_valuation_i' is not suitable, as it may not be an "initial" point, i.e., it may be the subject of some time elapsing ***)
+				(*** NOTE: `concrete_px_valuation_i` is not suitable, as it may not be an "initial" point, i.e., it may be the subject of some time elapsing ***)
 				let last_concrete_valuation =
 					(* Empty list of steps: the last state is the initial state *)
 					if concrete_run_prefix.steps = [] then concrete_run_prefix.initial_state.px_valuation
@@ -3890,7 +3886,7 @@ class virtual algoStateBased =
 				
 				(* Construct the px-valuation *)
 				(*** NOTE: technically (internally), the concrete_x_valuation already contains the parameter valuations! but for type soundness, we pretend to take parameters from pval ***)
-				let concrete_px_valuation_i variable_index = match model.type_of_variables variable_index with
+				let concrete_px_valuation_i_after_time_elapsing variable_index = match model.type_of_variables variable_index with
 					| DiscreteType.Var_type_clock -> concrete_x_valuation variable_index
 					| DiscreteType.Var_type_parameter -> functional_pval_positive variable_index
 					| _ -> raise (InternalError ("Only clocks or parameters are expected at this point (in AlgoStateBased.exhibit_negative_counterexamples)"))
@@ -3898,14 +3894,14 @@ class virtual algoStateBased =
 (*							(*** NOTE: technically (internally), the concrete_x_valuation already contains the parameter valuations! but for type soundness, we pretend to re-intersect with the pval ***)
 				(* Convert the p-valuation to a constraint *)
 				let concrete_p_valuation_constraint = LinearConstraint.p_constraint_of_point (List.map (fun parameter_index -> parameter_index , functional_pval_positive parameter_index) model.parameters ) in
-				let concrete_px_valuation_i = LinearConstraint.px_of_p_constraint concrete_p_valuation_constraint in
-				LinearConstraint.px_intersection_assign_x concrete_px_valuation_i [LinearConstraint.x_constraint_of_point (List.map (fun clock_index -> clock_index , concrete_x_valuation clock_index) model.clocks)];*)
+				let concrete_px_valuation_i_after_time_elapsing = LinearConstraint.px_of_p_constraint concrete_p_valuation_constraint in
+				LinearConstraint.px_intersection_assign_x concrete_px_valuation_i_after_time_elapsing [LinearConstraint.x_constraint_of_point (List.map (fun clock_index -> clock_index , concrete_x_valuation clock_index) model.clocks)];*)
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					print_message Verbose_low ("Example of blocking point at position " ^ (string_of_int !i) ^ ":");
 					print_message Verbose_total ("(Location = " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display global_location_i) ^ ")");
-					print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation_i);
+					print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation_i_after_time_elapsing);
 				);
 				
 				(* Generate the concrete run up to this point *)
@@ -3925,7 +3921,7 @@ class virtual algoStateBased =
 				} in
 				
 				(* Generate a concrete run for this cut symbolic run *)
-				let concrete_run_prefix = concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i in
+				let concrete_run_prefix = concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i_after_time_elapsing in
 			
 				(* Print it *)
 				if verbose_mode_greater Verbose_medium then(
@@ -3938,11 +3934,11 @@ class virtual algoStateBased =
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
-					print_message Verbose_low ("Now generating the \"impossible\" concrete run for positive parameter valuation from position " ^ (string_of_int !i) ^ "…");
+					print_message Verbose_low ("\nNow generating the \"impossible\" concrete run for positive parameter valuation from position " ^ (string_of_int !i) ^ "…");
 				);
 				
 				(* First, retrieve the last point, i.e., the one in the last state of the prefix *)
-				(*** NOTE: 'concrete_px_valuation_i' is not suitable, as it may not be an "initial" point, i.e., it may be the subject of some time elapsing ***)
+				(*** NOTE: `concrete_px_valuation_i_after_time_elapsing` is not suitable, as it may not be an "initial" point, i.e., it may be the subject of some time elapsing ***)
 				let last_concrete_valuation =
 					(* Empty list of steps: the last state is the initial state *)
 					if concrete_run_prefix.steps = [] then concrete_run_prefix.initial_state.px_valuation
@@ -3956,62 +3952,39 @@ class virtual algoStateBased =
 					print_message Verbose_medium (ModelPrinter.string_of_px_valuation model last_concrete_valuation);
 				);
 				
+				(* Get the absolute time clock *)
+				let absolute_time_clock = match model.global_time_clock with
+					| Some clock_index -> clock_index
+					| None -> raise (InternalError ("No absolute time clock is defined in the model, which is (so far) necessary to build an impossible run for a positive parameter valuation."))
+				in
+				
+				(* Generate the first time elapsing, from last_concrete_valuation to concrete_px_valuation_i_after_time_elapsing *)
+				(*** NOTE: important to take the REAL one and not a RANDOM one, because we know that the X-deadlock happens for THIS PARTICULAR value of time elapsing ***)
+				let time_elapsed_i : NumConst.t = NumConst.sub (concrete_px_valuation_i_after_time_elapsing absolute_time_clock) (last_concrete_valuation absolute_time_clock) in
+				
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then(
+					print_message Verbose_medium ("The crux of this impossible run is the following impossible time elapsing between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ": " ^ (NumConst.string_of_numconst time_elapsed_i) ^ ".");
+				);
+				
+				
 				let impossible_step_i =
-				(* Special case: if the concrete run is empty (a single state), we need to be careful, as the chosen point may not be the initial point! (global_time_clock > 0) *)
-				if concrete_run_prefix.steps = [] then(
 					(* Print some information *)
-					print_message Verbose_medium ("Special case: the concrete run prefix is empty");
-					
-					(* Get the initial global_time_clock value *)
-					let initial_time = concrete_run_prefix.initial_state.px_valuation global_time_clock in
-					
-					(* Print some information *)
-					print_message Verbose_medium ("Absolute time in the initial concrete state: " ^ (NumConst.string_of_numconst initial_time));
-
-					(* Let initial_time elapse, and remove initial_time time units from the initial valuation to get it back to 0 *)
-					
-					let state_i_plus_one : state_index = nth_state_index_of_symbolic_run symbolic_run (!i+1)
-(*									(* Careful! If run is too short, choose final state *)
-						if !i = List.length symbolic_run.symbolic_steps - 1 then symbolic_run.final_state
-						else (List.nth symbolic_run.symbolic_steps (!i+1)).source*)
-					in
+					print_message Verbose_high ("Building the i-th impossible step…");
+				
+					let state_i_plus_one : state_index = nth_state_index_of_symbolic_run symbolic_run (!i+1) in
 					let transition_i_plus_one = (List.nth symbolic_run.symbolic_steps (!i)).transition in
 					{
-						(* Compensate time elapsing *)
-						time			= initial_time;
+						(* Time elapsing equal to the impossible valuation exhibited earlier *)
+						time			= time_elapsed_i;
 						(* Then take a discrete transition: keep the action *)
 						action			= StateSpace.get_action_from_combined_transition transition_i_plus_one;
 						(* Then reach the target state *)
 						target			= {
 							global_location= (StateSpace.get_state state_space state_i_plus_one).global_location;
-							px_valuation   = apply_time_elapsing_to_concrete_valuation concrete_run_prefix.initial_state.global_location initial_time last_concrete_valuation
+							px_valuation   = concrete_px_valuation_i_after_time_elapsing;
 						}
 					}
-				
-				)else(
-					(* Print some information *)
-					print_message Verbose_high ("Normal case: the concrete run prefix is not empty");
-				
-					(*** NOTE: now, the only way to choose the NEXT point at position i+1 is to consider a 0-time transition from position i, because we know that the point exhibited at position i does not belong to the i+1 zone ***)
-					
-					let state_i_plus_one : state_index = nth_state_index_of_symbolic_run symbolic_run (!i+1)
-(*									(* Careful! If run is too short, choose final state *)
-						if !i = List.length symbolic_run.symbolic_steps - 1 then symbolic_run.final_state
-						else (List.nth symbolic_run.symbolic_steps (!i+1)).source*)
-					in
-					let transition_i_plus_one = (List.nth symbolic_run.symbolic_steps (!i)).transition in
-					{
-						(* NO time elapsing *)
-						time			= NumConst.zero;
-						(* Then take a discrete transition: keep the action *)
-						action			= StateSpace.get_action_from_combined_transition transition_i_plus_one;
-						(* Then reach the target state *)
-						target			= {
-							global_location= (StateSpace.get_state state_space state_i_plus_one).global_location;
-							px_valuation   = last_concrete_valuation;
-						}
-					}
-				)
 				in
 				
 				(* Now build the rest of the impossible run *)
@@ -4033,7 +4006,7 @@ class virtual algoStateBased =
 					);
 					
 					(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
-					self#impossible_concrete_steps_of_symbolic_steps last_concrete_valuation (!i+1) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
+					self#impossible_concrete_steps_of_symbolic_steps concrete_px_valuation_i_after_time_elapsing (!i+1) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
 				)
 				in
 				

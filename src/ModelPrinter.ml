@@ -32,11 +32,11 @@ open StateSpace
 (*** BADPROG: very, very bad programming: this function should be in AlgoStateBased BUT ModelPrinter doesn't have access to AlgoStateBased (but the other way is possible); and it is called from both modules, so defined here (ÉA, 2021/11/02) ***)
 
 (*------------------------------------------------------------*)
-(* Compute the list of clocks with their flow in a location   *)
-(* Returns a list of pairs (clock_index, flow)                *)
+(* Compute a hashtable clock => flow in a Location.global_location *)
+(* Also returns a Boolean being true iff there is any non-1 flow *)
 (* Raises a warning whenever a clock is assigned to TWO different flows *)
 (*------------------------------------------------------------*)
-let compute_flows (location : Location.global_location) : ((Automaton.clock_index * NumConst.t) list) =
+let compute_flows_gen (location : Location.global_location) : (((Automaton.clock_index, NumConst.t) Hashtbl.t) * bool) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -89,8 +89,24 @@ let compute_flows (location : Location.global_location) : ((Automaton.clock_inde
 		
 	) model.automata;
 	
+	(* Return the hash table and the Boolean *)
+	flows_hashtable , !flow_mode
+
+
+(*------------------------------------------------------------*)
+(* Compute the list of clocks with their flow in a Location.global_location *)
+(* Returns a list of pairs (clock_index, flow)                *)
+(* Raises a warning whenever a clock is assigned to TWO different flows *)
+(*------------------------------------------------------------*)
+let compute_flows_list (location : Location.global_location) : ((Automaton.clock_index * NumConst.t) list) =
+	(* Call generic function *)
+	let flows_hashtable, non_1_flow = compute_flows_gen location in
+
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
 	(* If there are no explicit flows then just return the set of clocks with flow 1 *)
-	if (not !flow_mode) then (List.map (fun clock_id -> clock_id, NumConst.one) model.clocks) else (
+	if (not non_1_flow) then (List.map (fun clock_id -> clock_id, NumConst.one) model.clocks) else (
 		(* Computing the list of clocks with their flow *)
 		List.map (fun clock_id ->
 			(* Try to get the clock explicit flow *)
@@ -105,6 +121,30 @@ let compute_flows (location : Location.global_location) : ((Automaton.clock_inde
 		) model.clocks
 	) (* if no explicit flow for this location *)
 
+
+
+(*------------------------------------------------------------*)
+(* Compute the functional flow function in a Location.global_location *)
+(* Returns a function clock_index -> flow                     *)
+(* Raises a warning whenever a clock is assigned to TWO different flows *)
+(*------------------------------------------------------------*)
+let compute_flows_fun (location : Location.global_location) : (Automaton.clock_index -> NumConst.t) =
+	(* Call generic function *)
+	let flows_hashtable, non_1_flow = compute_flows_gen location in
+
+	(* If there are no explicit flows then just return the set of clocks with flow 1 *)
+	if (not non_1_flow) then (fun clock_id -> NumConst.one) else (
+		(* Return the functional view *)
+		(fun clock_id ->
+			(* Try to get the clock explicit flow *)
+			try(
+				(* Try to get value *)
+				Hashtbl.find flows_hashtable clock_id
+			) with Not_found ->
+				(* Absent: flow is 1 *)
+				NumConst.one
+		)
+	) (* if no explicit flow for this location *)
 
 
 (************************************************************)
@@ -1153,7 +1193,7 @@ let string_of_concrete_state model (state : State.concrete_state) =
 	^ " flows["
 	^ (
 		let global_location : Location.global_location = state.global_location in
-		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows global_location in
+		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows_list global_location in
 		(* Iterate *)
 		string_of_list_of_string_with_sep ", " (
 			List.map (fun (variable_index, flow) -> (model.variable_names variable_index ) ^ "' = "  ^ (NumConst.string_of_numconst flow) ) flows
@@ -1222,7 +1262,7 @@ let json_of_concrete_state model (state : State.concrete_state) =
 	^ "\n\t\t\t\t" ^ (json_of_string "flows") ^ ": {"
 	^ (
 		let global_location : Location.global_location = state.global_location in
-		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows global_location in
+		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows_list global_location in
 		(* Iterate *)
 		string_of_list_of_string_with_sep ", " (
 			List.map (fun (variable_index, flow) ->
