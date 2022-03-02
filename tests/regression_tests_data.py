@@ -3029,7 +3029,7 @@ Error                                   : invalid model
   /************************************************************/
   INITIAL
   STATE 0:
-  P: s0, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [0, 0, 0], my_bool_array = [False, False] ==> 
+  P: s0, i = 0, my_int_array_to_update = [1, 0], array_of_queue = [queue()], array_of_stack = [stack()], array_of_list = [list([1, 2])], super_nested = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [0, 0, 0], my_bool_array = [False, False] ==>
 &True
 
   Projection onto the parameters:
@@ -3037,7 +3037,7 @@ Error                                   : invalid model
 
   /************************************************************/
   STATE 1:
-  P: lend, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 0]], [[5, 6], [0, 0]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [1, 0, 0], my_bool_array = [False, True] ==> 
+  P: lend, i = 0, my_int_array_to_update = [1, 0], array_of_queue = [queue()], array_of_stack = [stack()], array_of_list = [list([0, 0])], super_nested = [[[1, 2], [3, 0]], [[5, 6], [0, 0]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [1, 0, 0], my_bool_array = [False, True] ==>
 &True
 
   Projection onto the parameters:
@@ -3094,7 +3094,7 @@ Error                                   : index out of range
   /************************************************************/
   INITIAL
   STATE 0:
-  pta: l1, list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([1]), rational_list = list([1]) ==>
+  pta: l1, list_of_queue = list([queue()]), list_of_stack = list([stack()]), list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([1]), rational_list = list([1]) ==>
 &True
 
   Projection onto the parameters:
@@ -3102,11 +3102,15 @@ Error                                   : index out of range
 
   /************************************************************/
   STATE 1:
-  pta: lend, list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([2, 1]), rational_list = list([1]) ==>
+  pta: lend, list_of_queue = list([queue()]), list_of_stack = list([stack()]), list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([2, 1]), rational_list = list([1]) ==>
 &True
 
   Projection onto the parameters:
   True
+
+  /************************************************************/
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1
 		"""
 			 } # end result file
 			,
