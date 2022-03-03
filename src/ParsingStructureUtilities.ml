@@ -291,20 +291,6 @@ let function_name_of_parsed_factor = function
 	| Parsed_DF_variable name -> name
     | factor -> raise (TypeError "Trying to make a call on a non-function.")
 
-(* Labels of a parsed factors *)
-(*
-let label_of_parsed_shift_function_type = function
-	| Parsed_shift_left -> "shift_left"
-	| Parsed_shift_right -> "shift_right"
-	| Parsed_fill_left -> "fill_left"
-	| Parsed_fill_right -> "fill_right"
-
-let label_of_parsed_bin_log_function_type = function
-    | Parsed_log_and -> "logand"
-    | Parsed_log_or -> "logor"
-    | Parsed_log_xor -> "logxor"
-*)
-
 let label_of_parsed_sequence_type = function
     | Parsed_array -> "array"
     | Parsed_list -> "list"

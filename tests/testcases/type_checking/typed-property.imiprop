@@ -5,9 +5,11 @@ property := #synth EF(
   & j = 0
   & b = True
   & w = 0b0001
-  & int_array = [1, 2, 3] 
+  & int_array = [1, 2, 3]
   & int_array[0] = 1
   & int_array[1] = 2
   & int_array[2] = 3
   & nested_array[1][1] = 4
+  & int_list[2] = 3
+  & not(list_is_empty(int_list))
 )

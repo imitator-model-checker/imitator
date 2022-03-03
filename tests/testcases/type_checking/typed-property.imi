@@ -5,6 +5,7 @@ b : bool;
 w : binary(4);
 int_array : int array(3);
 nested_array : int array(2) array(2);
+int_list : int list;
 
 automaton P
 
@@ -23,7 +24,8 @@ init := {
     b := True,
     i := 1,
     int_array := [1, 2, 3],
-    nested_array := [[1, 2], [3, 4]]
+    nested_array := [[1, 2], [3, 4]],
+    int_list := list([1, 2, 3])
   ;
 
   continuous =

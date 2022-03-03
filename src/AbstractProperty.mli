@@ -18,7 +18,7 @@
 (* Modules *)
 (************************************************************)
 open Automaton
-
+open DiscreteExpressions
 
 (****************************************************************)
 (** Predicates for properties *)
@@ -30,7 +30,7 @@ type loc_predicate =
 
 
 type simple_predicate =
-	| Discrete_boolean_expression of DiscreteExpressions.discrete_boolean_expression
+	| Discrete_boolean_expression of discrete_boolean_expression
 	| Loc_predicate of loc_predicate
 	| State_predicate_true
 	| State_predicate_false

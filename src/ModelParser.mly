@@ -622,24 +622,6 @@ literal_array_fol:
 	| boolean_expression { [$1] }
 ;
 
-/*
-function_call:
-	| CT_BUILTIN_FUNC_RATIONAL_OF_INT LPAREN arithmetic_expression RPAREN { Parsed_rational_of_int_function $3 }
-	| CT_POW LPAREN arithmetic_expression COMMA arithmetic_expression RPAREN { Parsed_pow_function ($3, $5) }
-  | CT_POW LPAREN boolean_expression COMMA boolean_expression RPAREN { Parsed_function_call ("pow", [$3; $5]) }
-	| CT_SHIFT_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_function (Parsed_shift_left, $3, $5) }
-	| CT_SHIFT_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_function (Parsed_shift_right, $3, $5) }
-	| CT_FILL_LEFT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_function (Parsed_fill_left, $3, $5) }
-	| CT_FILL_RIGHT LPAREN arithmetic_factor COMMA arithmetic_expression RPAREN { Parsed_shift_function (Parsed_fill_right, $3, $5) }
-	| CT_LOG_AND LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_bin_log_function (Parsed_log_and, $3, $5) }
-	| CT_LOG_OR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_bin_log_function (Parsed_log_or, $3, $5) }
-	| CT_LOG_XOR LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_bin_log_function (Parsed_log_xor, $3, $5) }
-	| CT_LOG_NOT LPAREN arithmetic_factor RPAREN { Parsed_log_not $3 }
-  | CT_ARRAY_CONCAT LPAREN arithmetic_factor COMMA arithmetic_factor RPAREN { Parsed_array_append ($3, $5) }
-  | CT_LIST_CONS LPAREN boolean_expression COMMA arithmetic_factor RPAREN { Parsed_list_cons ($3, $5) }
-;
-*/
-
 function_argument_fol:
   | boolean_expression COMMA function_argument_fol { $1 :: $3 }
   | boolean_expression { [$1] }
