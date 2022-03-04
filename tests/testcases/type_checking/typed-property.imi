@@ -6,11 +6,12 @@ w : binary(4);
 int_array : int array(3);
 nested_array : int array(2) array(2);
 int_list : int list;
+int_stack : int stack;
 
 automaton P
 
     loc s0: invariant True
-      when x<=1 & b = (True) & i = 1 & i = 1 do { w = 0b0001 } goto lend;
+      when x<=1 & b = (True) & i = 1 & i = 1 do { pre { stack_push(1, int_stack) } w := 0b0001 } goto lend;
 
    accepting loc lend: invariant True
 
@@ -25,7 +26,8 @@ init := {
     i := 1,
     int_array := [1, 2, 3],
     nested_array := [[1, 2], [3, 4]],
-    int_list := list([1, 2, 3])
+    int_list := list([1, 2, 3]),
+    int_stack := stack()
   ;
 
   continuous =

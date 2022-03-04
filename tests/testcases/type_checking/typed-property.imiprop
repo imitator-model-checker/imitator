@@ -12,4 +12,5 @@ property := #synth EF(
   & nested_array[1][1] = 4
   & int_list[2] = 3
   & not(list_is_empty(int_list))
+  & stack_top(int_stack) = 1
 )
