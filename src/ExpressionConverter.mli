@@ -11,12 +11,15 @@ type typed_sequence_type =
     | Typed_stack
     | Typed_queue
 
+type typed_conj_dis =
+    | Typed_and
+    | Typed_or
+
 type typed_global_expression =
     | Typed_global_expr of typed_boolean_expression * var_type_discrete
 
 and typed_boolean_expression =
-	| Typed_And of typed_boolean_expression * typed_boolean_expression (* implicitly bool type *)
-	| Typed_Or of typed_boolean_expression * typed_boolean_expression (* implicitly bool type *)
+	| Typed_conj_dis of typed_boolean_expression * typed_boolean_expression * typed_conj_dis (* implicitly bool type *)
 	| Typed_discrete_bool_expr of typed_discrete_boolean_expression * var_type_discrete
 
 and typed_discrete_boolean_expression =

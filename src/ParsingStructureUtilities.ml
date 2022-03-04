@@ -54,8 +54,7 @@ let rec fold_parsed_global_expression operator base leaf_fun = function
      | Parsed_global_expression expr -> fold_parsed_boolean_expression operator base leaf_fun expr
 
 and fold_parsed_boolean_expression operator base leaf_fun = function
-	| Parsed_And (l_expr, r_expr)
-	| Parsed_Or (l_expr, r_expr) ->
+    | Parsed_conj_dis (l_expr, r_expr, _) ->
 	    operator
 	        (fold_parsed_boolean_expression operator base leaf_fun l_expr)
 	        (fold_parsed_boolean_expression operator base leaf_fun r_expr)
@@ -329,6 +328,10 @@ let string_of_parsed_product_quotient = function
     | Parsed_mul -> Constants.default_arithmetic_string.mul_string
     | Parsed_div -> Constants.default_arithmetic_string.div_string
 
+let string_of_parsed_conj_dis = function
+    | Parsed_and -> Constants.default_string.and_operator
+    | Parsed_or -> Constants.default_string.or_operator
+
 let rec string_of_parsed_global_expression variable_infos = function
     | Parsed_global_expression expr -> string_of_parsed_boolean_expression variable_infos expr
 
@@ -375,61 +378,18 @@ and string_of_parsed_factor variable_infos = function
     | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
     | Parsed_DF_unary_min factor ->
         "-(" ^ (string_of_parsed_factor variable_infos factor) ^ ")"
-    (*
-    | Parsed_rational_of_int_function arithmetic_expr as factor ->
-        label_of_parsed_factor_constructor factor
-        ^ "(" ^ string_of_parsed_arithmetic_expression variable_infos arithmetic_expr ^ ")"
-    | Parsed_pow_function (expr, exp_expr) as factor ->
-        label_of_parsed_factor_constructor factor
-        ^ "("
-        ^ string_of_parsed_arithmetic_expression variable_infos expr
-        ^ ","
-        ^ string_of_parsed_arithmetic_expression variable_infos exp_expr
-        ^ ")"
-    | Parsed_shift_function (_, factor, expr) as shift ->
-        label_of_parsed_factor_constructor shift
-        ^ "("
-        ^ string_of_parsed_factor variable_infos factor
-        ^ ", "
-        ^ string_of_parsed_arithmetic_expression variable_infos expr
-        ^ ")"
-    | Parsed_bin_log_function (_, l_factor, r_factor)
-    | Parsed_array_append (l_factor, r_factor) as func ->
-        label_of_parsed_factor_constructor func
-        ^ "("
-        ^ string_of_parsed_factor variable_infos l_factor
-        ^ ", "
-        ^ string_of_parsed_factor variable_infos r_factor
-        ^ ")"
-    | Parsed_list_cons (expr, factor) as func ->
-        label_of_parsed_factor_constructor func
-        ^ "("
-        ^ string_of_parsed_boolean_expression variable_infos expr
-        ^ ", "
-        ^ string_of_parsed_factor variable_infos factor
-        ^ ")"
-    *)
     | Parsed_function_call (_, argument_expressions) as func ->
         let str_arguments_list = List.map (string_of_parsed_boolean_expression variable_infos) argument_expressions in
         let str_arguments = OCamlUtilities.string_of_list_of_string_with_sep ", " str_arguments_list in
         label_of_parsed_factor_constructor func ^ "(" ^ str_arguments ^ ")"
-    (*
-    | Parsed_log_not factor as func ->
-        label_of_parsed_factor_constructor func
-        ^ "("
-        ^ string_of_parsed_factor variable_infos factor
-        ^ ")"
-    *)
+
 
 and string_of_parsed_boolean_expression variable_infos = function
-    | Parsed_And (l_expr, r_expr) ->
-            (string_of_parsed_boolean_expression variable_infos l_expr) ^
-            " & " ^
-            (string_of_parsed_boolean_expression variable_infos r_expr)
-    | Parsed_Or (l_expr, r_expr) ->
-            (string_of_parsed_boolean_expression variable_infos l_expr) ^
-            " | " ^
-            (string_of_parsed_boolean_expression variable_infos r_expr)
+    | Parsed_conj_dis (l_expr, r_expr, parsed_conj_dis) ->
+            string_of_parsed_boolean_expression variable_infos l_expr
+            ^ string_of_parsed_conj_dis parsed_conj_dis
+            ^ string_of_parsed_boolean_expression variable_infos r_expr
+
     | Parsed_Discrete_boolean_expression expr ->
         string_of_parsed_discrete_boolean_expression variable_infos expr
 

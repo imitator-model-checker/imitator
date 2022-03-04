@@ -27,6 +27,10 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (****************************************************************)
 type discrete_valuation = Automaton.discrete_index -> DiscreteValue.discrete_value
 
+type conj_dis =
+    | And
+    | Or
+
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
@@ -115,8 +119,7 @@ and int_factor =
 and boolean_expression =
 	| True_bool (** True *)
 	| False_bool (** False *)
-	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
-	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
+	| Conj_dis of boolean_expression * boolean_expression * conj_dis (** Conjunction / Disjunction *)
 	| Discrete_boolean_expression of discrete_boolean_expression
 
 and discrete_boolean_expression =
@@ -254,8 +257,8 @@ let rec is_linear_global_expression = function
 and is_linear_boolean_expression = function
 	| True_bool
 	| False_bool
-	| And_bool _ -> true
-	| Or_bool _ -> false
+	| Conj_dis (_, _, And) -> true
+	| Conj_dis (_, _, Or) -> false
 	| Discrete_boolean_expression expr ->
 		is_linear_discrete_boolean_expression expr
 
@@ -506,6 +509,12 @@ let string_of_product_quotient = function
     | Mul -> Constants.default_arithmetic_string.mul_string
     | Div -> Constants.default_arithmetic_string.div_string
 
+let string_of_conj_dis = function
+    | And -> Constants.default_string.and_operator
+    | Or -> Constants.default_string.or_operator
+
+
+
 let rec customized_string_of_global_expression customized_string variable_names = function
     | Arithmetic_expression expr -> customized_string_of_arithmetic_expression customized_string variable_names expr
     | Bool_expression expr -> customized_string_of_boolean_expression customized_string variable_names expr
@@ -644,14 +653,10 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 and customized_string_of_boolean_expression customized_string variable_names = function
 	| True_bool -> customized_string.boolean_string.true_string
 	| False_bool -> customized_string.boolean_string.false_string
-	| And_bool (b1, b2) ->
-		(customized_string_of_boolean_expression customized_string variable_names b1)
-		^ customized_string.boolean_string.and_operator
-		^ (customized_string_of_boolean_expression customized_string variable_names b2)
-	| Or_bool (b1, b2) ->
-		(customized_string_of_boolean_expression customized_string variable_names b1)
-		^ customized_string.boolean_string.or_operator
-		^ (customized_string_of_boolean_expression customized_string variable_names b2)
+	| Conj_dis (b1, b2, conj_dis) ->
+		customized_string_of_boolean_expression customized_string variable_names b1
+		^ string_of_conj_dis conj_dis
+		^ customized_string_of_boolean_expression customized_string variable_names b2
 	| Discrete_boolean_expression discrete_boolean_expression ->
 		customized_string_of_discrete_boolean_expression customized_string variable_names discrete_boolean_expression
 

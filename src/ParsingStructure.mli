@@ -64,6 +64,11 @@ type parsed_sequence_type =
     | Parsed_stack
     | Parsed_queue
 
+(* Type of boolean operator *)
+type parsed_conj_dis =
+    | Parsed_and
+    | Parsed_or
+
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
@@ -75,9 +80,7 @@ type parsed_global_expression =
 (** Boolean expressions *)
 (****************************************************************)
 and parsed_boolean_expression =
-    (* TODO benjamin Group And and Or in another type for don't repeat yourself in pattern matching *)
-	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
-	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
+    | Parsed_conj_dis of parsed_boolean_expression * parsed_boolean_expression * parsed_conj_dis (* Conjunction / Disjunction *)
 	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
 
 and parsed_discrete_boolean_expression =

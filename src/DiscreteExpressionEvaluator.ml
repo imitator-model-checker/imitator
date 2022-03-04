@@ -240,8 +240,16 @@ and eval_int_expression discrete_valuation (* expr *) =
 and eval_boolean_expression discrete_valuation = function
     | True_bool -> true
     | False_bool -> false
-    | And_bool (b1, b2) -> (eval_boolean_expression discrete_valuation b1) && (eval_boolean_expression discrete_valuation b2) (* conjunction *)
-    | Or_bool (b1, b2) -> (eval_boolean_expression discrete_valuation b1) || (eval_boolean_expression discrete_valuation b2) (* disjunction *)
+    | Conj_dis (l_expr, r_expr, conj_dis) ->
+        let conj_dis_function =
+            match conj_dis with
+            | And -> (&&)
+            | Or -> (||)
+        in
+        conj_dis_function
+            (eval_boolean_expression discrete_valuation l_expr)
+            (eval_boolean_expression discrete_valuation r_expr)
+
     | Discrete_boolean_expression dbe -> eval_discrete_boolean_expression discrete_valuation dbe
 
 (** Check if a discrete boolean expression is satisfied *)

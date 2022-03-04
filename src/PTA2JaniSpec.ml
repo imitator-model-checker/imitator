@@ -239,6 +239,10 @@ let string_of_product_quotient = function
     | Mul -> jani_strings.arithmetic_string.mul_string
     | Div -> jani_strings.arithmetic_string.div_string
 
+let string_of_conj_dis = function
+    | And -> jani_strings.boolean_string.and_operator
+    | Or -> jani_strings.boolean_string.or_operator
+
 let string_of_comparison variable_names l_expr relop r_expr string_fun =
     jani_binary_operator
         (DiscreteExpressions.customized_string_of_boolean_operations jani_strings.boolean_string relop)
@@ -257,17 +261,11 @@ let rec string_of_global_expression variable_names = function
 and string_of_boolean_expression variable_names = function
 	| True_bool -> jani_strings.boolean_string.true_string
 	| False_bool -> jani_strings.boolean_string.false_string
-	| And_bool (b1, b2) ->
+	| Conj_dis (l_expr, r_expr, conj_dis) ->
 	    jani_binary_operator
-            jani_strings.boolean_string.and_operator
-            (string_of_boolean_expression variable_names b1)
-            (string_of_boolean_expression variable_names b2)
-
-	| Or_bool (b1, b2) ->
-	    jani_binary_operator
-		    jani_strings.boolean_string.or_operator
-            (string_of_boolean_expression variable_names b1)
-		    (string_of_boolean_expression variable_names b2)
+		    (string_of_conj_dis conj_dis)
+            (string_of_boolean_expression variable_names l_expr)
+		    (string_of_boolean_expression variable_names r_expr)
 
 	| Discrete_boolean_expression discrete_boolean_expression ->
 		string_of_discrete_boolean_expression variable_names discrete_boolean_expression

@@ -21,12 +21,15 @@ type typed_sequence_type =
     | Typed_stack
     | Typed_queue
 
+type typed_conj_dis =
+    | Typed_and
+    | Typed_or
+
 type typed_global_expression =
     | Typed_global_expr of typed_boolean_expression * var_type_discrete
 
 and typed_boolean_expression =
-	| Typed_And of typed_boolean_expression * typed_boolean_expression (* implicitly bool type *)
-	| Typed_Or of typed_boolean_expression * typed_boolean_expression (* implicitly bool type *)
+    | Typed_conj_dis of typed_boolean_expression * typed_boolean_expression * typed_conj_dis (* implicitly bool type *)
 	| Typed_discrete_bool_expr of typed_discrete_boolean_expression * var_type_discrete
 
 and typed_discrete_boolean_expression =
@@ -129,12 +132,15 @@ type typed_sequence_type =
     | Typed_stack
     | Typed_queue
 
+type typed_conj_dis =
+    | Typed_and
+    | Typed_or
+
 type typed_global_expression =
     | Typed_global_expr of typed_boolean_expression * var_type_discrete
 
 and typed_boolean_expression =
-	| Typed_And of typed_boolean_expression * typed_boolean_expression (* implicitly bool type *)
-	| Typed_Or of typed_boolean_expression * typed_boolean_expression (* implicitly bool type *)
+    | Typed_conj_dis of typed_boolean_expression * typed_boolean_expression * typed_conj_dis (* implicitly bool type *)
 	| Typed_discrete_bool_expr of typed_discrete_boolean_expression * var_type_discrete
 
 and typed_discrete_boolean_expression =
@@ -213,23 +219,22 @@ let string_of_typed_sum_diff = function
     | Typed_plus -> Constants.default_arithmetic_string.plus_string
     | Typed_minus -> Constants.default_arithmetic_string.minus_string
 
-let string_of_type_product_quotient = function
+let string_of_typed_product_quotient = function
     | Typed_mul -> Constants.default_arithmetic_string.mul_string
     | Typed_div -> Constants.default_arithmetic_string.div_string
+
+let string_of_typed_conj_dis = function
+    | Typed_and -> Constants.default_string.and_operator
+    | Typed_or -> Constants.default_string.or_operator
 
 let rec string_of_typed_global_expression variable_infos = function
     | Typed_global_expr (expr, _) ->
         string_of_typed_boolean_expression variable_infos expr
 
 and string_of_typed_boolean_expression variable_infos = function
-	| Typed_And (l_expr, r_expr) ->
+    | Typed_conj_dis (l_expr, r_expr, typed_conj_dis) ->
         string_of_typed_boolean_expression variable_infos l_expr
-        ^ Constants.default_string.and_operator
-        ^ string_of_typed_boolean_expression variable_infos r_expr
-
-	| Typed_Or (l_expr, r_expr) ->
-        string_of_typed_boolean_expression variable_infos l_expr
-        ^ Constants.default_string.or_operator
+        ^ string_of_typed_conj_dis typed_conj_dis
         ^ string_of_typed_boolean_expression variable_infos r_expr
 
 	| Typed_discrete_bool_expr (expr, _) ->
@@ -277,7 +282,7 @@ and string_of_typed_discrete_arithmetic_expression variable_infos discrete_type 
 and string_of_typed_discrete_term variable_infos discrete_type = function
 	| Typed_product_quotient (l_expr, r_expr, _, typed_product_quotient) ->
         string_of_typed_discrete_term variable_infos discrete_type l_expr
-        ^ string_of_type_product_quotient typed_product_quotient
+        ^ string_of_typed_product_quotient typed_product_quotient
         ^ string_of_typed_discrete_factor variable_infos discrete_type r_expr
 
 	| Typed_factor (factor, _) ->
@@ -482,34 +487,20 @@ let rec type_check_global_expression variable_infos infer_type_opt = function
         Typed_global_expr (typed_expr, discrete_type), discrete_type, has_side_effects
 
 and type_check_parsed_boolean_expression variable_infos infer_type_opt = function
-	| Parsed_And (l_expr, r_expr) ->
-        let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_boolean_expression variable_infos infer_type_opt l_expr in
-        let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_boolean_expression variable_infos infer_type_opt r_expr in
-
-        (* Check that left and right members are Boolean *)
-        (match l_type, r_type with
-        | Var_type_discrete_bool, Var_type_discrete_bool -> Typed_And (l_typed_expr, r_typed_expr), Var_type_discrete_bool, l_has_side_effects || r_has_side_effects
-        | _ -> raise (TypeError (
-            "Expression `"
-            ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos l_expr
-            ^ "` is not compatible with `"
-            ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos r_expr
-            ^ "`: "
-            ^ DiscreteType.string_of_var_type_discrete l_type
-            ^ ", "
-            ^ DiscreteType.string_of_var_type_discrete r_type
-            ^ "."
-        ))
-        )
-
-	| Parsed_Or (l_expr, r_expr) as outer_expr ->
+	| Parsed_conj_dis (l_expr, r_expr, parsed_conj_dis) as outer_expr ->
 
         let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_boolean_expression variable_infos infer_type_opt l_expr in
         let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_boolean_expression variable_infos infer_type_opt r_expr in
 
+        let typed_conj_dis =
+            match parsed_conj_dis with
+            | Parsed_and -> Typed_and
+            | Parsed_or -> Typed_or
+        in
+
         (* Check that left and right members are Boolean *)
         (match l_type, r_type with
-        | Var_type_discrete_bool, Var_type_discrete_bool -> Typed_Or (l_typed_expr, r_typed_expr), Var_type_discrete_bool, l_has_side_effects || r_has_side_effects
+        | Var_type_discrete_bool, Var_type_discrete_bool -> Typed_conj_dis (l_typed_expr, r_typed_expr, typed_conj_dis), Var_type_discrete_bool, l_has_side_effects || r_has_side_effects
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -1404,6 +1395,11 @@ let product_quotient_of_typed_product_quotient = function
     | Typed_mul -> Mul
     | Typed_div -> Div
 
+let conj_dis_of_typed_conj_dis = function
+    | Typed_and -> And
+    | Typed_or -> Or
+
+
 let rec global_expression_of_typed_global_expression variable_infos = function
     | Typed_global_expr (expr, discrete_type) ->
         global_expression_of_typed_boolean_expression variable_infos expr discrete_type
@@ -1411,8 +1407,7 @@ let rec global_expression_of_typed_global_expression variable_infos = function
 (* TODO benjamin shouldn't have this function, it's because of global expression that isn't useful *)
 (* I should remove global expression in parsing structure for avoid it *)
 and global_expression_of_typed_boolean_expression_without_type variable_infos = function
-	| Typed_And _
-	| Typed_Or _ as expr ->
+	| Typed_conj_dis _ as expr ->
 	    global_expression_of_typed_boolean_expression variable_infos expr Var_type_discrete_bool
 	| Typed_discrete_bool_expr (_, discrete_type) as expr ->
 	    global_expression_of_typed_boolean_expression variable_infos expr discrete_type
@@ -1513,17 +1508,12 @@ and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression varia
 (* --------------------*)
 
 and bool_expression_of_typed_boolean_expression variable_infos = function
-	| Typed_And (l_expr, r_expr) ->
-	    And_bool (
+    | Typed_conj_dis (l_expr, r_expr, typed_conj_dis) ->
+        Conj_dis (
 	        bool_expression_of_typed_boolean_expression variable_infos l_expr,
-	        bool_expression_of_typed_boolean_expression variable_infos r_expr
-	    )
-
-	| Typed_Or (l_expr, r_expr) ->
-	    Or_bool (
-	        bool_expression_of_typed_boolean_expression variable_infos l_expr,
-	        bool_expression_of_typed_boolean_expression variable_infos r_expr
-	    )
+	        bool_expression_of_typed_boolean_expression variable_infos r_expr,
+            conj_dis_of_typed_conj_dis typed_conj_dis
+        )
 
     | Typed_discrete_bool_expr (expr, _) ->
         Discrete_boolean_expression (

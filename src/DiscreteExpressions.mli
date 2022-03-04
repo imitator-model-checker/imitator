@@ -30,6 +30,10 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (************************************************************)
 type discrete_valuation = Automaton.discrete_index -> DiscreteValue.discrete_value
 
+type conj_dis =
+    | And
+    | Or
+
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
@@ -123,8 +127,7 @@ and int_factor =
 and boolean_expression =
 	| True_bool (** True *)
 	| False_bool (** False *)
-	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
-	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
+    | Conj_dis of boolean_expression * boolean_expression * conj_dis (** Conjunction / Disjunction *)
 	| Discrete_boolean_expression of discrete_boolean_expression
 
 and discrete_boolean_expression =

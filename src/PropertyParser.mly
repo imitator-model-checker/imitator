@@ -348,8 +348,8 @@ loc_predicate:
 
 boolean_expression:
 	| discrete_boolean_predicate { Parsed_Discrete_boolean_expression $1 }
-	| boolean_expression SYMBOL_AND boolean_expression { Parsed_And ($1, $3) }
-	| boolean_expression SYMBOL_OR boolean_expression { Parsed_Or ($1, $3) }
+	| boolean_expression SYMBOL_AND boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
+	| boolean_expression SYMBOL_OR boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
 ;
 
 /************************************************************/
@@ -375,9 +375,13 @@ discrete_boolean_expression:
 */
 
 arithmetic_expression:
-	| arithmetic_expression OP_PLUS discrete_term { Parsed_sum_diff ($1, $3, Parsed_plus) }
-	| arithmetic_expression OP_MINUS discrete_term { Parsed_sum_diff ($1, $3, Parsed_minus) }
+	| arithmetic_expression sum_diff discrete_term { Parsed_sum_diff ($1, $3, $2) }
 	| discrete_term { Parsed_DAE_term $1 }
+;
+
+sum_diff:
+  | OP_PLUS { Parsed_plus }
+  | OP_MINUS { Parsed_minus }
 ;
 
 discrete_term:

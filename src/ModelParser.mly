@@ -746,8 +746,12 @@ pos_float:
 
 boolean_expression:
 	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
+	/*
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
+	*/
+	| boolean_expression AMPERSAND boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
+  | boolean_expression PIPE boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
 ;
 
 discrete_boolean_expression:
