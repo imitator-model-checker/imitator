@@ -11,7 +11,13 @@ int_stack : int stack;
 automaton P
 
     loc s0: invariant True
-      when x<=1 & b = (True) & i = 1 & i = 1 do { pre { stack_push(1, int_stack) } w := 0b0001 } goto lend;
+      when x<=1 & b = (True) & i = 1 & i = 1 do {
+
+        let
+          stack_push(1, int_stack);
+          w := 0b0001
+
+      } goto lend;
 
    accepting loc lend: invariant True
 

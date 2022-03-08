@@ -1232,9 +1232,9 @@ let check_update variable_infos update_types variable_access expr =
     (* Check that continuous / discrete not sequential updates doesn't contain side effects *)
     if update_types = Parsed_updates && (has_side_effects || is_variable_access_has_side_effects) then
         raise (TypeError (
-            "Continuous update section contain one or more expression with side effects `"
+            "`in` update bloc contain one or more expression with side effects `"
             ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
-            ^ "`. Expression with side effects are only allowed in pre and post update sections."
+            ^ "`. Expression with side effects are only allowed in `let` bloc."
         ));
 
     (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)

@@ -1738,7 +1738,7 @@ let convert_normal_updates variable_infos updates_type updates_list =
     (match updates_type with
     | Parsed_pre_updates
     | Parsed_post_updates when List.length parsed_clock_updates > 0 ->
-        print_error "Post and pre update sections are reserved for sequential updates on discrete variables. These sections cannot be used for updating clock(s).";
+        print_error "`let` bloc is reserved for sequential updates on discrete variables. This bloc cannot be used for updating clock(s).";
         raise InvalidModel
     | _ -> ()
     );

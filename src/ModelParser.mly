@@ -69,7 +69,7 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY CT_DO CT_PRE CT_POST
+	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY CT_DO CT_LET CT_IN CT_POST
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -445,19 +445,24 @@ update_synchronization:
 /************************************************************/
 
 updates:
-	| CT_DO LBRACE pre_update_list_opt update_list post_update_list_opt RBRACE { $3, $4, $5 }
+  | CT_DO LBRACE let_in_updates RBRACE { $3 }
+;
+
+let_in_updates:
+  | CT_LET update_seq_nonempty_list in_updates { $2, $3, [] }
+  | update_list { [], $1, [] }
+;
+
+in_updates:
+  | CT_IN update_nonempty_list end_opt { $2 }
+  | { [] }
 ;
 
 /************************************************************/
 
-pre_update_list_opt:
-  | CT_PRE LBRACE update_seq_list RBRACE { $3 }
-  | { [] }
-;
-
-post_update_list_opt:
-  | CT_POST LBRACE update_seq_list RBRACE { $3 }
-  | { [] }
+end_opt:
+  | CT_END {}
+  | {}
 ;
 
 update_list:
@@ -472,11 +477,6 @@ update_nonempty_list:
 	| update comma_opt { [Normal $1] }
 	| condition_update COMMA update_nonempty_list { Condition $1 :: $3}
 	| condition_update comma_opt { [Condition $1] }
-;
-
-update_seq_list:
-	| update_seq_nonempty_list { $1 }
-	| { [] }
 ;
 
 update_seq_nonempty_list:

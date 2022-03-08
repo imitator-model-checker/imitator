@@ -151,7 +151,6 @@ and discrete_boolean_expression =
     | Queue_is_empty of queue_expression
 (*    | Bool_function_call of string * global_expression list*)
 
-
 (************************************************************)
 (************************************************************)
 (************************************************************)
@@ -894,9 +893,9 @@ and customized_string_of_stack_expression customized_string variable_names = fun
         customized_string_of_sequence_function customized_string variable_names func
 
 and customized_string_of_queue_expression customized_string variable_names = function
-    | Literal_queue as stack_expr ->
+    | Literal_queue as queue_expr ->
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        label_of_queue_expression stack_expr ^ "(" ^ l_delimiter ^ r_delimiter ^ ")"
+        label_of_queue_expression queue_expr ^ "(" ^ l_delimiter ^ r_delimiter ^ ")"
     | Queue_variable variable_index -> variable_names variable_index
     | Queue_push (expr, queue_expr) as func ->
         print_function

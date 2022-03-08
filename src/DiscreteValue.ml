@@ -141,13 +141,15 @@ let rec customized_string_of_value customized_string = function
         (* TODO benjamin remove hardcoded "list([a,b,c])" *)
         "list(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_delimiter ^ ")"
     | Stack_value s ->
-        let str_values = Stack.fold (fun acc x -> acc ^ customized_string_of_value customized_string x ^ ", ") "" s in
+        let str_values_with_extra_comma = Stack.fold (fun acc x -> acc ^ customized_string_of_value customized_string x ^ ", ") "" s in
+        let str_values = if Stack.length s > 0 then String.sub str_values_with_extra_comma 0 ((String.length str_values_with_extra_comma) - 2) else str_values_with_extra_comma in
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
         (* TODO benjamin CLEAN remove hardcoded "stack([a,b,c])" *)
         if str_values = "" then "stack()" else "stack(" ^ l_delimiter ^ str_values ^ r_delimiter ^ ")"
 
-    | Queue_value s ->
-        let str_values = Queue.fold (fun acc x -> acc ^ customized_string_of_value customized_string x ^ ", ") "" s in
+    | Queue_value q ->
+        let str_values_with_extra_comma = Queue.fold (fun acc x -> acc ^ customized_string_of_value customized_string x ^ ", ") "" q in
+        let str_values = if Queue.length q > 0 then String.sub str_values_with_extra_comma 0 ((String.length str_values_with_extra_comma) - 2) else str_values_with_extra_comma in
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
         (* TODO benjamin CLEAN remove hardcoded "queue([a,b,c])" *)
         if str_values = "" then "queue()" else "queue(" ^ l_delimiter ^ str_values ^ r_delimiter ^ ")"
