@@ -480,8 +480,8 @@ Examples of list definitions are given below:
 
 Stacks are LIFO collections (Last In First Out) of variable length - contrary to arrays, the type of a stack doesn't depend on it's length, thus it's possible to compare two stacks of different lengths.
 Stack elements can only be accessed - not updated - using pop or top functions.
-A stack variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stack and queue).
-For example, it is possible to declare a stack of integers, of Booleans, of stack of stack of Booleans---which can be seen as a multidimensional stack.
+A stack variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
+For example, it is possible to declare a stack of integers, of Booleans, of stacks of Booleans---which can be seen as a multidimensional stack.
 \begin{remark}
 A literal stack value can only be an empty stack.
 \end{remark}
@@ -505,8 +505,8 @@ Examples of stack definitions are given below:
 
 Queues are FIFO collections (First In First Out) of variable length - contrary to arrays, the type of a queue doesn't depend on it's length, thus it's possible to compare two queues of different lengths.
 Queue elements can only be accessed - not updated - using pop or top functions.
-A queue variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stack and queue).
-For example, it is possible to declare a queue of integers, of Booleans, of queue of queue of Booleans---which can be seen as a multidimensional queue.
+A queue variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
+For example, it is possible to declare a queue of integers, of Booleans, of queues of Booleans---which can be seen as a multidimensional queue.
 \begin{remark}
 A literal queue value can only be an empty queue.
 \end{remark}
@@ -625,8 +625,8 @@ Examples of queue definitions are given below:
 \end{table}
 
 \begin{remark}
-Some function, mistakenly called "Side-effects functions" allow modification of collections "in-place" and therefore are subject to side-effects.
-Side-effects functions can only be used in updates.
+Some functions, mistakenly called "Side-effects functions" allow the modification of collections "in-place" and therefore are subject to side-effects.
+Side-effects functions can only be used in updates, more precisely in the body of the \styleIMI{let} bloc of an update.
 \end{remark}
 
 \paragraph{Arithmetic functions}
@@ -1102,9 +1102,155 @@ Let us precisely define what it means:
 \section{Discrete variables updates}\label{section:discrete_boolean}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Standard updates}\label{section:standard_updates}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 Discrete variables are first tested, then updated.
 If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i := 2} while another one performs \styleIMI{i := 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
 If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
+For more information on how the standard updates works, read the section \styleIMI{let-in} form updates below.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Let-in form updates}\label{section:let_in_form_updates}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\styleIMI{let-in} form updates are more complex updates, allowing, at the one hand, sequential updates on discrete values, at the other hand
+the use of side-effects functions for in-place modification of data structure values.
+If you don't need these functionalities, we recommend the use the standard updates. \styleIMI{let-in} form updates are updates composed of two parts.
+
+\subsubsection{Let bloc}
+
+\paragraph{}
+
+\styleIMI{let} bloc can be used to make sequential updates on any discrete variables whatever their types.
+Contrary to \styleIMI{in} bloc (or standard update) it's possible to make in-place modifications on data structures (like stacks and queues) with side-effects functions.
+The \styleIMI{let} bloc can be seen as an imperative update part that is processed before the constraints updates (\styleIMI{in} bloc).
+It's not possible to update clock constraint in \styleIMI{let} bloc because of the sequential behavior.
+
+\paragraph{}
+Examples of a \styleIMI{let} update expression:
+
+\begin{IMITATORmodel}
+	do {
+
+		(* only let expression *)
+		let
+			i := 1; (* i = 1 *)
+			i := i + 1; (* now, i = 1 + 1 = 2 *)
+		end
+
+	}
+\end{IMITATORmodel}
+
+\begin{IMITATORmodel}
+	do {
+
+		(* only let expression *)
+		let
+			(* in-place modification of stack s *)
+			stack_push(1, s);
+			(* in-place modification of stack s *)
+			stack_push(2, s);
+		end
+
+	}
+\end{IMITATORmodel}
+
+\subsubsection{In bloc}
+
+\paragraph{}
+
+\styleIMI{in} bloc can be used to update clock(s) or discrete variable(s) constraints.
+Update of a discrete variable constraint is equivalent to an assignment. However, these updates are not sequentials,
+so as described before, in case of multiple update of one variable, a warning is issued, and the behavior of the \NIPTA{} becomes unspecified.
+\styleIMI{in} bloc is the same as a standard update, see \cref{section:standard_updates}.
+
+\paragraph{}
+An example of a \styleIMI{in} update expression:
+
+\begin{IMITATORmodel}
+	(* initial value of: *)
+	(* i = 0 *)
+	(* j = 0 *)
+
+	do {
+
+		(* only in expression *)
+		i := 1; (* i = 1 *)
+		(* multiple update of i below, it doesn't take into account *)
+		(* i will still be equal to 1 *)
+		i := i + 1;
+		(* below j = i, as initial value of i = 0 for this state, j = 0 *)
+		(* keep in mind that it's not a sequential update *)
+		(* but an update based on the initial variable values of the current state *)
+		j := i
+
+	}
+\end{IMITATORmodel}
+
+\subsubsection{Let-in bloc}
+
+\begin{remark}
+For a given transition, \styleIMI{let} bloc is executed before the \styleIMI{in} bloc.
+\end{remark}
+
+\begin{remark}
+In a model that contain multiple synchronized \IPTA{}, all \styleIMI{let} blocs (all sequential updates) in all PTAs are processed first, following the definition order of PTAs.
+Only once after all \styleIMI{let} blocs are computed, all \styleIMI{in} bloc are updated. Contrary to \styleIMI{let} blocs, keep in mind that updates contained in \styleIMI{in} blocs doesn't be computed sequentially.
+\end{remark}
+
+\begin{remark}
+Note the use of semicolon in the sequential part (\styleIMI{let} bloc) and comma in the declarative part (\styleIMI{in} bloc).
+\end{remark}
+
+\paragraph{}
+Examples of a \styleIMI{let-in} update expression:
+
+\begin{IMITATORmodel}
+	do {
+
+		(* only let expression *)
+		let
+			i := 0; (* i = 0 *)
+			i := i + 1; (* now, i = 1 *)
+		in
+			j := i (* as in bloc is executed after let bloc, j = 1 *)
+		end
+
+	}
+\end{IMITATORmodel}
+
+\begin{IMITATORmodel}
+	do {
+
+		let
+			(* in-place modification of stack s *)
+			stack_push(1, s);
+			(* in-place modification of stack s *)
+			stack_push(2, s);
+			(* set i to 0 *)
+			i := 0;
+			(* i = 1, below *)
+			i := i + 1;
+			(* below, updating clock constraint is forbidden *)
+			(* x := 0 *)
+		in
+			x := i,
+			y := stack_top(s),
+			(* below, r is update several time *)
+			(* as these constraints updates are not sequential *)
+			(* the value of r will be unspecified *)
+			r := 0,
+			r := 1
+			(* below, using side-effects function is forbidden *)
+			(* r := stack_pop(s) *)
+		end
+
+	}
+\end{IMITATORmodel}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Initial state and initialization of variables}\label{section:init}
@@ -3708,7 +3854,23 @@ We define each of those two components below.
 \regleGrammaire{updates}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{do} \styleIMI{ \{ } \nt{update\_list} \styleIMI{ \} } \\
+	\  & \styleIMI{do} \styleIMI{ \{ } \nt{let\_in\_updates} \styleIMI{ \} } \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{let\_in\_updates}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{let} \nt{update\_seq\_nonempty\_list} \nt{in\_updates} \\
+	$|$  & \nt{update\_list} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{in\_updates}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{in} \nt{update\_list} \styleIMI{[end]} \\
+	$|$ & \emptystring                \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -3725,6 +3887,16 @@ We define each of those two components below.
 \begin{tabular}{l l}
 	\   & \nt{update} \styleIMI{,} \nt{update\_list}            \\
 	$|$ & \nt{condition\_update} \styleIMI{,} \nt{update\_list} \\
+	$|$ & \nt{update}                                           \\
+	$|$ & \nt{condition\_update}                                \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{update\_seq\_nonempty\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{update} \styleIMI{;} \nt{update\_list}            \\
+	$|$ & \nt{condition\_update} \styleIMI{;} \nt{update\_list} \\
 	$|$ & \nt{update}                                           \\
 	$|$ & \nt{condition\_update}                                \\
 \end{tabular}
@@ -4709,6 +4881,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{initially} \\
 	\styleIMI{invariant} \\
 	\styleIMI{is} \\
+	\styleIMI{let} \\
 	\styleIMI{list\_cons} \\
 	\styleIMI{list\_hd} \\
 	\styleIMI{list\_is\_empty} \\
