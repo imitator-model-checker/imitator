@@ -3446,9 +3446,17 @@ class virtual algoStateBased =
 	(* The debug_offset variable is used for pretty-printing; it represents the offset between the actual position in the original list of symbolic steps, and the sublist provided here in symbolic_steps *)
 	(*** NOTE: the starting valuation is already known to be impossible, therefore any concrete run corresponding to the symbolic run will do ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private impossible_concrete_steps_of_symbolic_steps (start_valuation : LinearConstraint.px_valuation) (debug_offset : int) (symbolic_steps : symbolic_step list) : impossible_concrete_step list =
-		(* Starting point: the last known existing valuation *)
-		let current_valuation = ref start_valuation in
+	method private impossible_concrete_steps_of_symbolic_steps (start_global_location : Location.global_location) (start_valuation : LinearConstraint.px_valuation) (debug_offset : int) (symbolic_steps : symbolic_step list) : impossible_concrete_step list =
+		(* Arbitrarily choose 1 *)
+		let chosen_time_elapsing = NumConst.one in
+		
+
+		(* Apply time elapsing (let us not care about resets, because this transition does not exist; we could care about resets to be closer to the original automaton BUT the guards/invariants could not be satisfied, precisely because this parameter valuation does not allow to take this run!) *)
+		(*** NOTE: we still care about urgency and stopwatches though ***)
+		let initial_valuation_after_elapsing : LinearConstraint.px_valuation = apply_time_elapsing_to_concrete_valuation start_global_location chosen_time_elapsing start_valuation in
+		
+			(* Starting point: the last known existing valuation *)
+		let current_valuation = ref initial_valuation_after_elapsing in
 		
 		(* For debug purpose *)
 		let current_position = ref 0 in
@@ -3469,18 +3477,34 @@ class virtual algoStateBased =
 			
 			(* Idea: keep everything, including the actions and discrete values, but increment (arbitrarily!) the time by 1 at each step *)
 			
-			(* Arbitrarily choose 1 *)
-			let chosen_time_elapsing = NumConst.one in
-			
 			(* Get the location *)
-			let current_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
+			let current_location : Location.global_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
 			
+			(* Return the impossible_concrete_step *)
+			let impossible_concrete_step : impossible_concrete_step =
+			{
+				(* First let time elapse: arbitrarily take one *)
+				time			= chosen_time_elapsing;
+				(* Then take a discrete transition: keep the action *)
+				action			= StateSpace.get_action_from_combined_transition symbolic_step.transition;
+				(* Then reach the target state (before time elapsing in the target location) *)
+				target			= {
+					global_location= current_location;
+					px_valuation   = !current_valuation;
+				}
+			}
+			in
+
 			(* Apply time elapsing (let us not care about resets, because this transition does not exist; we could care about resets to be closer to the original automaton BUT the guards/invariants could not be satisfied, precisely because this parameter valuation does not allow to take this run!) *)
 			(*** NOTE: we still care about urgency and stopwatches though ***)
 			let valuation_after_elapsing : LinearConstraint.px_valuation = apply_time_elapsing_to_concrete_valuation current_location chosen_time_elapsing !current_valuation in
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
+				if verbose_mode_greater Verbose_total then(
+					print_message Verbose_total ("Current location: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display current_location) ^ "");
+					print_message Verbose_total ("Time elapsing: " ^ (NumConst.string_of_numconst chosen_time_elapsing) ^ "");
+				);
 				print_message Verbose_medium ("Valuation for position " ^ (string_of_int (!current_position + debug_offset)) ^ " after time elapsing:");
 				print_message Verbose_medium (ModelPrinter.string_of_px_valuation model valuation_after_elapsing);
 			);
@@ -3492,17 +3516,8 @@ class virtual algoStateBased =
 			incr current_position;
 			
 			(* Return the impossible_concrete_step *)
-			{
-				(* First let time elapse: arbitrarily take one *)
-				time			= chosen_time_elapsing;
-				(* Then take a discrete transition: keep the action *)
-				action			= StateSpace.get_action_from_combined_transition symbolic_step.transition;
-				(* Then reach the target state *)
-				target			= {
-					global_location= current_location;
-					px_valuation   = valuation_after_elapsing;
-				}
-			}
+			impossible_concrete_step
+
 
 		) symbolic_steps
 
@@ -3697,11 +3712,19 @@ class virtual algoStateBased =
 				
 				(* First, retrieve the last point, i.e., the one in the last state of the prefix *)
 				(*** NOTE: `concrete_px_valuation_i` is not suitable, as it may not be an "initial" point, i.e., it may be the subject of some time elapsing ***)
-				let last_concrete_valuation =
+				let last_global_location, last_concrete_valuation =
 					(* Empty list of steps: the last state is the initial state *)
-					if concrete_run_prefix.steps = [] then concrete_run_prefix.initial_state.px_valuation
+					if concrete_run_prefix.steps = [] then
+						concrete_run_prefix.initial_state.global_location
+						,
+						concrete_run_prefix.initial_state.px_valuation
 					(* Non-empty list of steps: the last state is the last state of the steps *)
-					else (OCamlUtilities.list_last (concrete_run_prefix.steps)).target.px_valuation
+					else (
+						let last_state = (OCamlUtilities.list_last (concrete_run_prefix.steps)).target in
+						last_state.global_location
+						,
+						last_state.px_valuation
+					)
 				in
 				
 				(* Print some information *)
@@ -3716,7 +3739,7 @@ class virtual algoStateBased =
 				);
 				
 				(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
-				let impossible_steps_suffix : StateSpace.impossible_concrete_step list = self#impossible_concrete_steps_of_symbolic_steps last_concrete_valuation (!i) (OCamlUtilities.sublist (!i) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps) in
+				let impossible_steps_suffix : StateSpace.impossible_concrete_step list = self#impossible_concrete_steps_of_symbolic_steps last_global_location last_concrete_valuation (!i) (OCamlUtilities.sublist (!i) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps) in
 				
 				(* Now create the "impossible" concrete run *)
 				let impossible_concrete_run : StateSpace.impossible_concrete_run = {
@@ -3884,6 +3907,9 @@ class virtual algoStateBased =
 				(* Exhibit a point *)
 				let concrete_x_valuation = LinearConstraint.x_nnconvex_exhibit_point difference in
 				
+				(* Get the last location *)
+				let last_global_location : Location.global_location = (StateSpace.get_state state_space state_index_i).global_location in
+				
 				(* Construct the px-valuation *)
 				(*** NOTE: technically (internally), the concrete_x_valuation already contains the parameter valuations! but for type soundness, we pretend to take parameters from pval ***)
 				let concrete_px_valuation_i_after_time_elapsing variable_index = match model.type_of_variables variable_index with
@@ -4006,7 +4032,7 @@ class virtual algoStateBased =
 					);
 					
 					(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
-					self#impossible_concrete_steps_of_symbolic_steps concrete_px_valuation_i_after_time_elapsing (!i+1) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
+					self#impossible_concrete_steps_of_symbolic_steps last_global_location concrete_px_valuation_i_after_time_elapsing (!i+1) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
 				)
 				in
 				
