@@ -21,4 +21,4 @@
  * IMITATOR version : 3
  ************************************************************)
 
-property := #exemplify EF(loc[spec1] = lT);
+property := #exemplify EF(loc[spec2] = lT);

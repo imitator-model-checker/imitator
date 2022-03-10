@@ -53,7 +53,10 @@ loc l1: invariant True flow{x' = 1, y' = -0.25}
 	when x >= 10 sync a2 goto l2;
 
 loc l2: invariant True flow{x' = -1, y' = 1}
-	when True sync a3 goto lT;
+	when True sync a3 goto l3;
+
+loc l3: invariant True flow{x' = -1, y' = 1}
+	when True sync a2 goto lT;
 
 loc lT: invariant True
 
