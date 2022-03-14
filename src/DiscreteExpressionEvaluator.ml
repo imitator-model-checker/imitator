@@ -127,7 +127,9 @@ and eval_rational_factor discrete_valuation = function
             may cause overflow if your platform doesn't manage `int` as an exact 32 bits integer.";
         NumConst.numconst_of_int (Int32.to_int (eval_int_expression discrete_valuation expr))
     | Rational_pow (expr, exp) ->
-        NumConst.pow (eval_rational_expression discrete_valuation expr) (eval_int_expression discrete_valuation exp)
+        let x = eval_rational_expression discrete_valuation expr in
+        let exponent = eval_int_expression discrete_valuation exp in
+        NumConst.pow x exponent
 
     | Rational_sequence_function func ->
         let value = eval_sequence_function discrete_valuation func in
@@ -216,7 +218,9 @@ and eval_int_expression discrete_valuation (* expr *) =
         | Int_unary_min factor ->
             Int32.neg (eval_int_factor factor)
         | Int_pow (expr, exp) ->
-            OCamlUtilities.pow (eval_int_expression_rec expr) (eval_int_expression_rec exp)
+            let x = eval_int_expression_rec expr in
+            let exponent = eval_int_expression_rec exp in
+            OCamlUtilities.pow x exponent
 
         | Int_sequence_function func ->
             let value = eval_sequence_function discrete_valuation func in
