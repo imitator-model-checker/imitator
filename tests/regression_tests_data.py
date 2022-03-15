@@ -8064,6 +8064,581 @@ True
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test since               : 2022/03/15
+		# Last modified            : 2022/03/15
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify with one parameter: non-determinism + flows + negative variable + 2 PTAs',
+		'input_files': ['testEFExemplifyPNonDet.imi', 'testEFExemplifyPNonDet.imiprop'],
+		'options'    : '-no-merge -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplifyPNonDet.res' , 'content' : """
+(************************************************************)
+ Run #1
+
+ Valuation:
+  p = 4
+
+ Other valuations with equivalent (discrete) run:
+ p = 4
+
+ Run nature: valid run
+
+ Run:
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": {
+			"p": "4"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"spec1": "l1", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "0",
+					"y": "1",
+					"z": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "4",
+				"action": "a1",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "spec1",
+						"guard": " p >= x AND x >= 4",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "4",
+					"y": "0",
+					"z": "3/2",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "6",
+				"action": "a2",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "spec2",
+						"guard": " x >= 10",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "10",
+					"y": "-3/2",
+					"z": "3/2",
+					"global_time": "10"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "9/2",
+				"action": "a3",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "spec1",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}, 
+					{
+					"transition": {
+						"PTA": "spec2",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "11/2",
+					"y": "3",
+					"z": "3/2",
+					"global_time": "29/2"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "9/2",
+				"action": "a2",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "spec2",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "1",
+					"y": "15/2",
+					"z": "6",
+					"global_time": "19"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ p >= 0
+& 4 > p
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "0"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"spec1": "l1", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "0",
+					"y": "1",
+					"z": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "1",
+				"action": "a1"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "1",
+					"y": "3/4",
+					"z": "3/2",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "2",
+					"y": "1/2",
+					"z": "3/2",
+					"global_time": "2"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a3"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "3",
+					"y": "1/4",
+					"z": "3/2",
+					"global_time": "3"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "2",
+					"y": "5/4",
+					"z": "3/2",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 4
+
+ Other valuations with equivalent (discrete) run:
+ p = 4
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "4"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"spec1": "l1", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "0",
+					"y": "1",
+					"z": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "6",
+				"action": "a1"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "6",
+					"y": "-1/2",
+					"z": "3/2",
+					"global_time": "6"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "7",
+					"y": "-3/4",
+					"z": "3/2",
+					"global_time": "7"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a3"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "8",
+					"y": "-1",
+					"z": "3/2",
+					"global_time": "8"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "7",
+					"y": "0",
+					"z": "3/2",
+					"global_time": "9"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2021/?
 		# Last modified            : 2022/02/09
 		# Test for IMITATOR version: 3.2
