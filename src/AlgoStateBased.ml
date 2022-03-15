@@ -3446,7 +3446,7 @@ class virtual algoStateBased =
 	(* The debug_offset variable is used for pretty-printing; it represents the offset between the actual position in the original list of symbolic steps, and the sublist provided here in symbolic_steps *)
 	(*** NOTE: the starting valuation is already known to be impossible, therefore any concrete run corresponding to the symbolic run will do ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private impossible_concrete_steps_of_symbolic_steps (start_global_location : Location.global_location) (start_valuation : LinearConstraint.px_valuation) (debug_offset : int) (symbolic_steps : symbolic_step list) : impossible_concrete_step list =
+	method private impossible_concrete_steps_of_symbolic_steps (start_global_location : Location.global_location) (start_valuation : LinearConstraint.px_valuation) (debug_offset : int) (symbolic_steps : symbolic_step list) (target_state_index : state_index) : impossible_concrete_step list =
 		(* Arbitrarily choose 1 *)
 		let chosen_time_elapsing = NumConst.one in
 		
@@ -3480,6 +3480,19 @@ class virtual algoStateBased =
 			(* Get the location *)
 			let current_location : Location.global_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
 			
+			(* Get the next location *)
+			(*** NOTE: super bad prog! we iterate on the list, and we use `nth` to get the next element :'( ***)
+			let next_state_index = if !current_position < List.length symbolic_steps - 1 then (List.nth symbolic_steps (!current_position + 1)).source else target_state_index in
+			let next_location : Location.global_location = (StateSpace.get_state state_space next_state_index).global_location in
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("Building concrete (but impossible) transition between source location " ^ (string_of_int (!current_position + debug_offset)) ^ ":");
+				print_message Verbose_high (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display current_location);
+				print_message Verbose_high ("  and target location " ^ (string_of_int (!current_position + debug_offset + 1)) ^ ":");
+				print_message Verbose_high (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display next_location);
+			);
+
 			(* Return the impossible_concrete_step *)
 			let impossible_concrete_step : impossible_concrete_step =
 			{
@@ -3489,7 +3502,7 @@ class virtual algoStateBased =
 				action			= StateSpace.get_action_from_combined_transition symbolic_step.transition;
 				(* Then reach the target state (before time elapsing in the target location) *)
 				target			= {
-					global_location= current_location;
+					global_location= next_location;
 					px_valuation   = !current_valuation;
 				}
 			}
@@ -3517,7 +3530,6 @@ class virtual algoStateBased =
 			
 			(* Return the impossible_concrete_step *)
 			impossible_concrete_step
-
 
 		) symbolic_steps
 
@@ -3739,7 +3751,7 @@ class virtual algoStateBased =
 				);
 				
 				(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
-				let impossible_steps_suffix : StateSpace.impossible_concrete_step list = self#impossible_concrete_steps_of_symbolic_steps last_global_location last_concrete_valuation (!i) (OCamlUtilities.sublist (!i) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps) in
+				let impossible_steps_suffix : StateSpace.impossible_concrete_step list = self#impossible_concrete_steps_of_symbolic_steps last_global_location last_concrete_valuation (!i) (OCamlUtilities.sublist (!i) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps) symbolic_run.final_state in
 				
 				(* Now create the "impossible" concrete run *)
 				let impossible_concrete_run : StateSpace.impossible_concrete_run = {
@@ -3996,7 +4008,7 @@ class virtual algoStateBased =
 				
 				let impossible_step_i =
 					(* Print some information *)
-					print_message Verbose_high ("Building the i-th impossible step…");
+					print_message Verbose_high ("Building the impossible step at position " ^ (string_of_int !i) ^ "…");
 				
 					let state_i_plus_one : state_index = nth_state_index_of_symbolic_run symbolic_run (!i+1) in
 					let transition_i_plus_one = (List.nth symbolic_run.symbolic_steps (!i)).transition in
@@ -4032,7 +4044,7 @@ class virtual algoStateBased =
 					);
 					
 					(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
-					self#impossible_concrete_steps_of_symbolic_steps last_global_location concrete_px_valuation_i_after_time_elapsing (!i+1) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
+					self#impossible_concrete_steps_of_symbolic_steps last_global_location concrete_px_valuation_i_after_time_elapsing (!i+1) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps) symbolic_run.final_state
 				)
 				in
 				
