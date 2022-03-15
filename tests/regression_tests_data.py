@@ -7943,6 +7943,127 @@ True
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test since               : 2022/03/15
+		# Last modified            : 2022/03/15
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify with one parameter: unique negative parameter valuation',
+		'input_files': ['testEFExemplify1Pneg.imi', 'testEFExemplify1Pneg.imiprop'],
+		'options'    : '-no-merge -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplify1Pneg.res' , 'content' : """
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 4
+
+ Other valuations with equivalent (discrete) run:
+ p = 4
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "4"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"specification": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "a1",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "specification",
+						"guard": " 2 >= x",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "1",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "2",
+					"global_time": "2"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2021/?
 		# Last modified            : 2022/02/09
 		# Test for IMITATOR version: 3.2
