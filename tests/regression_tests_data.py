@@ -7489,7 +7489,7 @@ True
 			{
 			"state": {
 				"location": {
-					"specification": "l2"
+					"specification": "l3"
 				},
 				"discrete_variables": {
 				},
@@ -7518,7 +7518,7 @@ True
 			{
 			"state": {
 				"location": {
-					"specification": "l3"
+					"specification": "lT"
 				},
 				"discrete_variables": {
 				},
@@ -7530,8 +7530,8 @@ True
 				},
 				"flows": {
 					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
+					"y": "1", 
+					"z": "1", 
 					"global_time": "1"
 				}
 			}
@@ -8033,7 +8033,7 @@ True
 			{
 			"state": {
 				"location": {
-					"specification": "l2"
+					"specification": "lT"
 				},
 				"discrete_variables": {
 				},
