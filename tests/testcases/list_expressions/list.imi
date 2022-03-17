@@ -1,8 +1,8 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Quick test for list general behavior
- * Description      : Quick test for list, list function, list access behaviors
+ * Title            : Test general behavior of list expressions
+ * Description      : Test general behavior of lists, list functions, list accesses
  * Correctness      : N/A
  * Scalable         : no
  * Generated        : no

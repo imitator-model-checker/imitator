@@ -1,8 +1,8 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Quick test for array general behavior
- * Description      : Quick test for array, array function, array access behaviors
+ * Title            : Test general behavior of array expressions
+ * Description      : Test general behavior of arrays, array functions, array accesses
  * Correctness      : N/A
  * Scalable         : no
  * Generated        : no
