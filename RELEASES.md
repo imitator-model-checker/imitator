@@ -1,5 +1,7 @@
+# Releases
+
 *******************************************************
-# release 3.3 (2022-xx-xx) Cheese Caramel au beurre salé
+## release 3.3 (2022-xx-xx) Cheese Caramel au beurre salé
 
 ### Syntax improvement
 * New complex types for discrete global variables: lists, arrays, stacks, queues, and associated functions
@@ -7,12 +9,12 @@
 ### Major features
 * New: extrapolation for parametric zones [AA22]
 * Refactoring of merging functions, with more efficient heuristics [AMPP2x]
-* Exemplification algorithm: given a parametric timed specification, exhibit concrete positive and negative runs [AWUH22]
+* Exemplification algorithm: given a parametric timed specification, exhibit concrete parameter valuations, and concrete positive and negative runs, with a graphical representation of the evolution over time of the clock and discrete variables [AWUH22] (slightly experimental)
 
 
 
 *******************************************************
-# release 3.2 (2021-11-03) Cheese Blueberries
+## release 3.2 (2021-11-03) Cheese Blueberries
 
 ### Syntax improvement
 * New type: "binary words", of the form `0b00111`, for bitwise binary operations. Can be used in guards, invariants, updates. Example: `when logor(bw1, 0b1011) <> bw1 do {shift_left(bw1, 2)}`
@@ -25,7 +27,7 @@
 
 
 *******************************************************
-# release 3.1 (2021-07-20) Cheese Artichoke
+## release 3.1 (2021-07-20) Cheese Artichoke
 
 ### Syntax improvement
 * New types for discrete global variables: Boolean variables (`bool`), integer (`int`, over 32 bits) variables
@@ -54,7 +56,7 @@
 
 
 *******************************************************
-# release 3 (2021-01-12) Cheese
+## release 3 (2021-01-12) Cheese
 MAJOR RELEASE
 
 ### Calling paradigm
@@ -93,7 +95,7 @@ The property syntax is entirely new.
 
 
 *******************************************************
-# release 2.12.1 (2019-10-01)
+## release 2.12.1 (2019-10-01)
 minor release
 
 ### Bug fixing:
@@ -102,7 +104,7 @@ minor release
 
 
 *******************************************************
-# release 2.12 (2019-08-22) Butter Lobster
+## release 2.12 (2019-08-22) Butter Lobster
 MAJOR RELEASE
 
 ### Bug fixing:
@@ -136,7 +138,7 @@ MAJOR RELEASE
 
 
 *******************************************************
-# release 2.11 (2019-03-01) Butter Kouign-aman
+## release 2.11 (2019-03-01) Butter Kouign-aman
 MAJOR RELEASE
 
 ### Major features
@@ -163,21 +165,21 @@ MAJOR RELEASE
 
 
 *******************************************************
-# release 2.10.4 (2018-07-02)
+## release 2.10.4 (2018-07-02)
 minor release
 
 ### Bug fixing:
 * Fix a bug (or an unclarity) in the options for trace set generation
 
 ### Major feature
-* Removed the Gc.major() instruction, that used to require a huge time for large models, while not bringing any benefit for smaller models
+* Removed the `Gc.major()` instruction, that used to require a huge time for large models, while not bringing any benefit for smaller models
 
 ### Export
 * The graphical state space now comes in .pdf instead of .jpg for better readability
 
 
 *******************************************************
-# release 2.10.3 (2018-05-22)
+## release 2.10.3 (2018-05-22)
 minor release
 
 ### Bug fixing:
@@ -185,7 +187,7 @@ minor release
 
 
 *******************************************************
-# release 2.10.2 (2018-04-06)
+## release 2.10.2 (2018-04-06)
 minor release
 
 ### Minor features:
@@ -193,7 +195,7 @@ minor release
 
 
 *******************************************************
-# release 2.10.1 (2018-02-23)
+## release 2.10.1 (2018-02-23)
 minor release
 
 ### Syntax improvement
@@ -202,7 +204,7 @@ minor release
 
 
 *******************************************************
-# release 2.10 (2018-02-21) Butter Jellyfish
+## release 2.10 (2018-02-21) Butter Jellyfish
 MAJOR RELEASE
 
 ### Major features:
@@ -229,7 +231,7 @@ MAJOR RELEASE
 
 
 *******************************************************
-# release 2.9.1 (2017-04-01)
+## release 2.9.1 (2017-04-01)
 MINOR RELEASE
 
 ### Major feature:
@@ -240,7 +242,7 @@ MINOR RELEASE
 
 
 *******************************************************
-# release 2.9 (2017-03-23) Butter Incaberry
+## release 2.9 (2017-03-23) Butter Incaberry
 MAJOR RELEASE
 
 ### Major
@@ -272,7 +274,7 @@ MAJOR RELEASE
 
 
 *******************************************************
-# release 2.8 (2016-08-13) Butter Ham
+## release 2.8 (2016-08-13) Butter Ham
 MAJOR RELEASE
 
 ### Major
@@ -323,7 +325,7 @@ MAJOR RELEASE
 
 
 *******************************************************
-# release 2.7.3 (2015-10-28)
+## release 2.7.3 (2015-10-28)
 INTERMEDIATE RELEASE
 
 ### Bug fixing
@@ -335,7 +337,7 @@ INTERMEDIATE RELEASE
 
 
 *******************************************************
-# release 2.7.2 (2015-09-30)
+## release 2.7.2 (2015-09-30)
 INTERMEDIATE RELEASE
 
 ### Major
@@ -347,7 +349,7 @@ INTERMEDIATE RELEASE
 * Remove three observer patterns that were allowed in the input syntax but not implemented
 
 ### Options
-* Added an option `-output-trace-set-verbose` to print trace set with all information contained in the v.states` file (i.e., the constraint and the constraint projected onto the parameters)
+* Added an option `-output-trace-set-verbose` to print trace set with all information contained in the `.states` file (i.e., the constraint and the constraint projected onto the parameters)
 
 ### Graphics
 * Added a visualization of the bad states on the trace set (using red color + a frowney)
@@ -355,7 +357,7 @@ INTERMEDIATE RELEASE
 
 
 *******************************************************
-# release 2.7 (2015-07-22) Butter Guéméné
+## release 2.7 (2015-07-22) Butter Guéméné
 
 ### Major algorithmic features since 2.6.1
 * Added EF-synthesis (option `-mode EF`): synthesize all parameter valuations such that a given state is reachable [[AHV93]](https://www.doi.org/10.1145/167088.167242) [[JLR15]](https://www.doi.org/10.1109/TSE.2014.2357445)
@@ -421,7 +423,7 @@ INTERMEDIATE RELEASE
 
 
 *******************************************************
-# release 2.6.2 (2014-05-06)
+## release 2.6.2 (2014-05-06)
 PRIVATE RELEASE
 
 ### Major features:
@@ -445,14 +447,14 @@ PRIVATE RELEASE
 
 
 *******************************************************
-# release 2.6.1.1 (2013-08-02)
+## release 2.6.1.1 (2013-08-02)
 PRIVATE RELEASE
 
 Nothing really new, just a backup before refactoring constraints
 
 
 *******************************************************
-# release 2.6.1 (2013-05-01)
+## release 2.6.1 (2013-05-01)
 
 ### Major features:
 * dynamic clock elimination now implemented (option `-dynamic`)
@@ -467,7 +469,7 @@ Nothing really new, just a backup before refactoring constraints
 
 
 *******************************************************
-# release 2.6.0 (2013-02-25)
+## release 2.6.0 (2013-02-25)
 
 ### Major features:
 * Added observer patterns
@@ -504,7 +506,7 @@ Nothing really new, just a backup before refactoring constraints
 
 
 *******************************************************
-# release 2.5.0 (2012-08-21)
+## release 2.5.0 (2012-08-21)
 
 * Added arbitrary clock updates (not only to 0).
 * Partial code refactoring.
@@ -512,24 +514,24 @@ Nothing really new, just a backup before refactoring constraints
 * Added experimental and ongoing features (import from and export to GML, depth first exploration).
 
 *******************************************************
-# release 2.4 (2012-02-20)
+## release 2.4 (2012-02-20)
 
-* Added stopwatches. Syntax, semantics and computation time are backward-compatible for models without stopwatches.
+* Added support for stopwatches [[CL00]](https://doi.org/10.1007/3-540-44618-4_12) with new keyword `stop`. Syntax, semantics and computation time are backward-compatible for models without stopwatches.
 
 *******************************************************
-# release 2.375 (2012-02-20)
+## release 2.375 (2012-02-20)
 PRIVATE RELEASE
 
-* Added merging of states (publication at NFM2012), several optimizations; added and changed input options
+* Added merging of states [[AFS12]](https://doi.org/10.1007/978-3-642-28891-3_10), several optimizations; added and changed input options
 
 *******************************************************
-# release 2.36 (2011-11-20)
+## release 2.36 (2011-11-20)
 PRIVATE RELEASE
 
 * Fully removed `X'` and `d` variables: large gain in both memory and time
 
 *******************************************************
-# release 2.35 (2011-11-17)
+## release 2.35 (2011-11-17)
 PRIVATE RELEASE
 
 * Starting removing `X` and `d` variables
@@ -537,14 +539,14 @@ PRIVATE RELEASE
 * Several optimizations to speed up post image computation, including a simple but efficient one for programs with discrete variables
 
 *******************************************************
-# release 2.3 (2011-06-06)
+## release 2.3 (2011-06-06)
 
 * Addition of variants of the inverse method algorithm
 * Addition of an optional optimization of the inverse method algorithm
 * Several optimizations to speed up post image computation
 
 *******************************************************
-# release 2.2 (2010-07-30)
+## release 2.2 (2010-07-30)
 
 * Several optimizations to speed up post image computation
 * More detailed presentation of reachability graph
@@ -552,18 +554,18 @@ PRIVATE RELEASE
 * Refactoring of source code to improve maintainability
 
 *******************************************************
-# release 2.1 (2010-05-31)
+## release 2.1 (2010-05-31)
 
 * Replaced APRON and POLKA libraries by PPL (Parma Polyhedra Library)
 
 *******************************************************
-# release 2.0 (2010-05-17)
+## release 2.0 (2010-05-17)
 
 * Tool completely rewritten in OCaml
 * Polyhedra handled thanks to APRON
 
 *******************************************************
-# release 1.0 (2008)
+## release 1.0 (2008)
 
 First version (in Python)
 *******************************************************
