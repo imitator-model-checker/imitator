@@ -13,4 +13,4 @@ val try_reduce_rational_factor : rational_factor -> NumConst.t
 
 val is_global_expression_constant : global_expression -> bool
 
-val pack_value : (Automaton.variable_index -> string) -> discrete_valuation option -> DiscreteValue.discrete_value -> DiscreteValue.discrete_value -> discrete_variable_access -> DiscreteValue.discrete_value
+val pack_value : (Automaton.variable_index -> string) -> discrete_valuation option -> DiscreteValue.discrete_value -> DiscreteValue.discrete_value -> variable_update_type -> DiscreteValue.discrete_value

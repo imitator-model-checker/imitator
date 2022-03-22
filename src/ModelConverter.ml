@@ -74,6 +74,8 @@ let rec convert_var_type_discrete = function
     | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteType.Var_type_discrete_binary_word length
     | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteType.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
     | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteType.Var_type_discrete_list (convert_var_type_discrete inner_type)
+    | ParsingStructure.Var_type_discrete_stack inner_type -> DiscreteType.Var_type_discrete_stack (convert_var_type_discrete inner_type)
+    | ParsingStructure.Var_type_discrete_queue inner_type -> DiscreteType.Var_type_discrete_queue (convert_var_type_discrete inner_type)
 
 (* Convert var type from parsing structure to abstract model *)
 let convert_var_type = function
@@ -442,13 +444,14 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 
 			(* Gather in transitions *)
 			print_message Verbose_total ("          Gathering variables in transitions");
-			List.iter (fun (convex_predicate, updates, (*sync*)_, (*target_location_name*)_) ->
+			List.iter (fun (convex_predicate, update_section, (*sync*)_, (*target_location_name*)_) ->
 				(* Gather in the convex predicate (guard) *)
 				print_message Verbose_total ("            Gathering variables in convex predicate");
 				all_variables_used := StringSet.union !all_variables_used (ParsingStructureUtilities.get_variables_in_nonlinear_convex_predicate convex_predicate);
 
 				(* Gather in the updates *)
 				print_message Verbose_total ("            Gathering variables in updates");
+				let updates = ParsingStructureUtilities.updates_of_update_section update_section in
 				(* List.iter (fun (variable_name, arithmetic_expression) -> *)
 				List.iter (fun update_expression ->
 					(*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
@@ -622,12 +625,27 @@ let check_update variable_infos automaton_name update =
                 print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); false
         in
 
+        (* Function that check if all variables are defined in update *)
+        let check_all_variables_defined_in_update variable_name =
+            let all_variables_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
+
+            if not all_variables_defined then (
+                (* TODO benjamin IMPROVE get variable names as before ! *)
+                print_error ("A variable used in update \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression ^ "\" in automaton `" ^ automaton_name ^ "` was not declared.");
+            );
+            all_variables_defined
+        in
+
         (* Function that check update on variable or variable access *)
         let rec check_variable_access = function
-            | Variable_access (variable_access, _) ->
+            | Parsed_void_update ->
+                check_all_variables_defined_in_update "_"
+
+            (* TODO benjamin IMPORTANT check if no error when variable not declared in index expression *)
+            | Parsed_indexed_update (variable_access, _) ->
                 check_variable_access variable_access
 
-            | Variable_name variable_name ->
+            | Parsed_variable_update variable_name ->
 
                 (* Check whether this variable is to be removed because unused elsewhere than in resets *)
                 let to_be_removed = List.mem variable_name variable_infos.removed_variable_names in
@@ -868,12 +886,13 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 
 			(* Check transitions *)
 			print_message Verbose_total ("          Checking transitions");
-			List.iter (fun (convex_predicate, updates, sync, target_location_name) ->
+			List.iter (fun (convex_predicate, update_section, sync, target_location_name) ->
 				(* Check the convex predicate *)
 				print_message Verbose_total ("            Checking convex predicate");
 				if not (ParsingStructureUtilities.all_variables_defined_in_nonlinear_convex_predicate variable_infos (Some undeclared_variable_in_boolean_expression_message) convex_predicate) then well_formed := false;
 				(* Check the updates *)
 				print_message Verbose_total ("            Checking updates");
+				let updates = ParsingStructureUtilities.updates_of_update_section update_section in
 				List.iter (fun update -> if not (check_update variable_infos automaton_name update) then well_formed := false) updates;
 				(* Check the sync *)
 				print_message Verbose_total ("            Checking sync name ");
@@ -1104,9 +1123,10 @@ let discrete_predicate_of_discrete_linear_predicate = function
                     Parsed_Discrete_boolean_expression (
                     Parsed_arithmetic_expression (
                     Parsed_DAE_term (
-                    Parsed_DT_mul (
+                    Parsed_product_quotient (
                     Parsed_DT_factor (Parsed_DF_constant coef_rational_value),
-                    Parsed_DF_variable variable_name)))))
+                    Parsed_DF_variable variable_name,
+                    Parsed_mul)))))
                 )
                 in
                 Some discrete_predicate
@@ -1324,20 +1344,6 @@ let make_constants constants =
           correct := false;
         );
       )else(
-        (*
-        (* Otherwise: add it *)
-        (* Make value of the same type as the type declaration of the constant *)
-        (* It was already type checked ! *)
-        let converted_value = DiscreteValue.convert_value_to_discrete_type value discrete_type in
-        ImitatorUtilities.print_message Verbose_standard (
-            "add constant "
-            ^ DiscreteType.string_of_var_type_discrete discrete_type
-            ^ " with value "
-            ^ DiscreteValue.string_of_value converted_value
-            ^ " of type "
-            ^ DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value converted_value)
-        );
-        *)
         Hashtbl.add constants_hashtable name value;
       );
     ) constants;
@@ -1636,14 +1642,17 @@ let get_conditional_update_value = function
 
 
 (* Filter the updates that should assign some variable name to be removed to any expression *)
-let filtered_updates removed_variable_names updates =
+let filter_updates removed_variable_names updates =
   let not_removed_variable (variable_access, _) =
-    let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
-    not (List.mem variable_name removed_variable_names)
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+    match variable_name_opt with
+    | Some variable_name ->
+        not (List.mem variable_name removed_variable_names)
+    | None -> true
   in
   List.fold_left (fun acc u ->
       match u with
-      | Normal (update) ->
+      | Normal update ->
         if (not_removed_variable update) then u::acc else acc
       | Condition (bool, updates_if, updates_else) ->
         let filtered_if = List.filter (not_removed_variable) updates_if in
@@ -1659,10 +1668,13 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
 
   (** Translate parsed clock update into the tuple clock_index, linear_term *)
   let to_intermediate_abstract_clock_update (variable_access, update_expr) =
-    let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
-    let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-    let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos variable_access update_expr in
-    (variable_index, converted_update)
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+    match variable_name_opt with
+    | Some variable_name ->
+        let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+        let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos variable_access update_expr in
+        (variable_index, converted_update)
+    | None -> raise (InternalError "Try to convert a unit expression to a clock.")
   in
 
   let converted_clock_updates = List.map to_intermediate_abstract_clock_update updates_list in
@@ -1701,17 +1713,20 @@ let split_to_clock_discrete_updates variable_infos updates =
   (** Check if a normal update is a clock update *)
   let is_clock_update (variable_access, parsed_update_expression) =
 
-    let variable_name = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
-    (* Retrieve variable type *)
-    if variable_infos.type_of_variables (Hashtbl.find variable_infos.index_of_variables variable_name) = DiscreteType.Var_type_clock then (
-        true
-    ) else
-      false
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+    match variable_name_opt with
+    | Some variable_name ->
+        (* Retrieve variable type *)
+        if variable_infos.type_of_variables (Hashtbl.find variable_infos.index_of_variables variable_name) = DiscreteType.Var_type_clock then (
+            true
+        ) else
+          false
+    | None -> false (* Unit update, so it's not a clock *)
   in
   List.partition is_clock_update updates
 
 (** Translate a normal parsed update into its abstract model *)
-let convert_normal_updates variable_infos updates_list =
+let convert_normal_updates variable_infos updates_type updates_list =
 
 	(* Flag to check if there are clock resets only to 0 *)
     let only_resets = is_only_resets updates_list in
@@ -1719,8 +1734,17 @@ let convert_normal_updates variable_infos updates_list =
 	(** Split clocks and discrete updates *)
 	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates variable_infos updates_list in
 
+    (* Check that pre and post updates not updating clocks ! It's only for discrete variables *)
+    (match updates_type with
+    | Parsed_pre_updates
+    | Parsed_post_updates when List.length parsed_clock_updates > 0 ->
+        print_error "`let` bloc is reserved for sequential updates on discrete variables. This bloc cannot be used for updating clock(s).";
+        raise InvalidModel
+    | _ -> ()
+    );
+
     (* Convert discrete udpates *)
-    let converted_discrete_updates = List.map (fun (variable_access, expr) -> DiscreteExpressionConverter.convert_update variable_infos variable_access expr) parsed_discrete_updates in
+    let converted_discrete_updates = List.map (fun (variable_access, expr) -> DiscreteExpressionConverter.convert_update variable_infos updates_type variable_access expr) parsed_discrete_updates in
     (* Convert continuous udpates *)
     let converted_clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
 
@@ -1733,13 +1757,13 @@ let convert_normal_updates variable_infos updates_list =
 
 
 (** convert normal and conditional updates *)
-let convert_updates variable_infos updates : updates =
+let convert_updates variable_infos updates_type updates : updates =
 
     (** split normal and conditional updates *)
     let normal_updates, conditional_updates = List.partition is_normal_update updates in
 
     (** convert normal parsed updates *)
-    let converted_updates = convert_normal_updates variable_infos (List.map get_normal_update_value normal_updates) in
+    let converted_updates = convert_normal_updates variable_infos updates_type (List.map get_normal_update_value normal_updates) in
 
     (** convert normal parsed updates inside conditional updates *)
     let conditional_updates_values : conditional_update list = List.map (fun u ->
@@ -1747,8 +1771,8 @@ let convert_updates variable_infos updates : updates =
 
         let convert_boolean_expr = DiscreteExpressionConverter.convert_conditional variable_infos boolean_value in
 
-        let convert_if_updates = convert_normal_updates variable_infos if_updates in
-        let convert_else_updates = convert_normal_updates variable_infos else_updates in
+        let convert_if_updates = convert_normal_updates variable_infos updates_type if_updates in
+        let convert_else_updates = convert_normal_updates variable_infos updates_type  else_updates in
 
         (convert_boolean_expr, convert_if_updates, convert_else_updates)
     ) conditional_updates in
@@ -1785,7 +1809,9 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
   let dummy_transition = {
 	guard		= True_guard;
 	action		= -1;
+	pre_updates	= { clock = No_update; discrete = [] ; conditional = []};
 	updates		= { clock = No_update; discrete = [] ; conditional = []};
+	post_updates= { clock = No_update; discrete = [] ; conditional = []};
 	target		= -1;
 	} in
   let transitions_description : AbstractModel.transition array = Array.make nb_transitions dummy_transition in
@@ -1811,7 +1837,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
           array_of_transitions.(automaton_index).(location_index) <- Array.make nb_actions [];
 
           (* Iterate on transitions *)
-          List.iter (fun (action_index, guard, updates, target_location_index) ->
+          List.iter (fun (action_index, guard, update_section, target_location_index) ->
 
               (* Convert the guard *)
               let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
@@ -1821,8 +1847,11 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
                  					not (List.mem variable_name removed_variable_names)
                  				) updates
                  				in *)
+              let pre_updates, updates, post_updates = update_section in
 
-              let filtered_updates = filtered_updates removed_variable_names updates in
+              let filtered_pre_updates = filter_updates removed_variable_names pre_updates in
+              let filtered_updates = filter_updates removed_variable_names updates in
+              let filtered_post_updates = filter_updates removed_variable_names post_updates in
 
               (* Flag to check if there are clock resets only to 0 *)
               (* let only_resets = ref true in *)
@@ -1845,7 +1874,9 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
                  				in *)
 
               (* translate parsed updates into their abstract model *)
-              let converted_updates = convert_updates variable_infos filtered_updates in
+              let converted_pre_updates = convert_updates variable_infos Parsed_pre_updates filtered_pre_updates in
+              let converted_updates = convert_updates variable_infos Parsed_updates filtered_updates in
+              let converted_post_updates = convert_updates variable_infos Parsed_post_updates filtered_post_updates in
 
               (* Convert the updates *)
               (* let converted_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
@@ -1877,7 +1908,9 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               transitions_description.(!transition_index) <- {
 					guard   = converted_guard;
 					action  = action_index;
+					pre_updates = converted_pre_updates;
 					updates = converted_updates;
+					post_updates = converted_post_updates;
 					target  = target_location_index;
 				};
               (* Add the automaton *)

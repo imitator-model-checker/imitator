@@ -79,6 +79,9 @@ rule token = parse
 	| "binary"         { CT_BINARY_WORD }
   | "array"          { CT_ARRAY }
 	| "do"             { CT_DO }
+  | "let"            { CT_LET }
+  | "in"             { CT_IN }
+  | "post"           { CT_POST }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
  	| "eventually"     { CT_EVENTUALLY }
@@ -129,6 +132,8 @@ rule token = parse
   | "list_cons"      { CT_LIST_CONS }
   *)
   | "list"           { CT_LIST }
+  | "stack"          { CT_STACK }
+  | "queue"          { CT_QUEUE }
 
 
 

@@ -53,6 +53,8 @@ and defined_type_constraint =
     | Binary_constraint of length_constraint
     | Array_constraint of type_constraint * length_constraint
     | List_constraint of type_constraint
+    | Stack_constraint of type_constraint
+    | Queue_constraint of type_constraint
 
 (* Signature constraint is a list of type constraint *)
 type signature_constraint = type_constraint list

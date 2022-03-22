@@ -48,12 +48,26 @@ type var_type_discrete =
     | Var_type_discrete_binary_word of int
     | Var_type_discrete_array of var_type_discrete * int
     | Var_type_discrete_list of var_type_discrete
+    | Var_type_discrete_stack of var_type_discrete
+    | Var_type_discrete_queue of var_type_discrete
 
 (* Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
 	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
+
+(* Type of the sequence *)
+type parsed_sequence_type =
+    | Parsed_array
+    | Parsed_list
+    | Parsed_stack
+    | Parsed_queue
+
+(* Type of boolean operator *)
+type parsed_conj_dis =
+    | Parsed_and
+    | Parsed_or
 
 (****************************************************************)
 (** Global expression *)
@@ -66,18 +80,15 @@ type parsed_global_expression =
 (** Boolean expressions *)
 (****************************************************************)
 and parsed_boolean_expression =
-    (* TODO benjamin Group And and Or in another type for don't repeat yourself in pattern matching *)
-	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
-	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
+    | Parsed_conj_dis of parsed_boolean_expression * parsed_boolean_expression * parsed_conj_dis (* Conjunction / Disjunction *)
 	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
 
 and parsed_discrete_boolean_expression =
     | Parsed_arithmetic_expression of parsed_discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	(* TODO benjamin rename to Parsed_comparison *)
-	| Parsed_expression of parsed_discrete_boolean_expression * parsed_relop * parsed_discrete_boolean_expression
+	| Parsed_comparison of parsed_discrete_boolean_expression * parsed_relop * parsed_discrete_boolean_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
+	| Parsed_comparison_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Parsed_boolean_expression of parsed_boolean_expression
     (** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
@@ -87,60 +98,29 @@ and parsed_discrete_boolean_expression =
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
 and parsed_discrete_arithmetic_expression =
-    (* TODO benjamin Group plus and minus in another type for don't repeat yourself in pattern matching *)
-	| Parsed_DAE_plus of parsed_discrete_arithmetic_expression * parsed_discrete_term
-	| Parsed_DAE_minus of parsed_discrete_arithmetic_expression * parsed_discrete_term
+    | Parsed_sum_diff of parsed_discrete_arithmetic_expression * parsed_discrete_term * parsed_sum_diff
 	| Parsed_DAE_term of parsed_discrete_term
 
+and parsed_sum_diff =
+    | Parsed_plus
+    | Parsed_minus
+
 and parsed_discrete_term =
-    (* TODO benjamin Group mul and div in another type for don't repeat yourself in pattern matching *)
-	| Parsed_DT_mul of parsed_discrete_term * parsed_discrete_factor
-	| Parsed_DT_div of parsed_discrete_term * parsed_discrete_factor
+	| Parsed_product_quotient of parsed_discrete_term * parsed_discrete_factor * parsed_product_quotient
 	| Parsed_DT_factor of parsed_discrete_factor
+
+and parsed_product_quotient =
+    | Parsed_mul
+    | Parsed_div
 
 and parsed_discrete_factor =
 	| Parsed_DF_variable of variable_name
 	| Parsed_DF_constant of DiscreteValue.discrete_value
-	| Parsed_DF_array of parsed_boolean_expression array
-	| Parsed_DF_list of parsed_boolean_expression list
+	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
     | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min of parsed_discrete_factor
 	| Parsed_function_call of parsed_discrete_factor (* name *) * parsed_boolean_expression list (* arguments *)
-
-	(*
-	(* Functions *)
-	| Parsed_rational_of_int_function of parsed_discrete_arithmetic_expression
-	| Parsed_pow_function of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
-
-    (* All shift functions of the form : factor * arithmetic_expression *)
-	| Parsed_shift_function of parsed_shift_function_type * parsed_discrete_factor * parsed_discrete_arithmetic_expression
-    (* All binary log functions of the form : factor * factor *)
-    | Parsed_bin_log_function of parsed_bin_log_function_type * parsed_discrete_factor * parsed_discrete_factor
-	| Parsed_log_not of parsed_discrete_factor
-
-	| Parsed_array_append of parsed_discrete_factor * parsed_discrete_factor
-	| Parsed_list_cons of parsed_boolean_expression * parsed_discrete_factor
-    *)
-(*    | Parsed_user_function of string (* name *) * list (parsed_global_expression * var_type_discrete) (* arguments and types *) * var_type_discrete (* return type *)*)
-
-(*
-and parsed_shift_function_type =
-    | Parsed_shift_left
-    | Parsed_shift_right
-    | Parsed_fill_left
-    | Parsed_fill_right
-
-and parsed_bin_log_function_type =
-    | Parsed_log_and
-    | Parsed_log_or
-    | Parsed_log_xor
-*)
-
-
-
-
-
 
 
 
@@ -196,24 +176,39 @@ type sync =
 type guard = convex_predicate
 type invariant = convex_predicate
 
+(* Variable name or variable access (x or x[index]) *)
+(* TODO benjamin REFACTOR rename to variable_update_type (test already make but change 21 files) *)
+type variable_access =
+    | Parsed_variable_update of variable_name
+    | Parsed_indexed_update of variable_access * parsed_discrete_arithmetic_expression
+    | Parsed_void_update
+
+type updates_type =
+    | Parsed_pre_updates
+    | Parsed_updates
+    | Parsed_post_updates
+
+(** basic updating *)
+type normal_update = variable_access * parsed_global_expression
+(** conditional updating *)
+and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 
 (** Updates on transitions *)
 type update =
-	| Normal of normal_update (** Updates withput conditions *)
+	| Normal of normal_update (** Updates without conditions *)
 	| Condition of condition_update (** Updates with conditions *)
-and variable_access =
-    | Variable_name of variable_name
-    | Variable_access of variable_access * parsed_discrete_arithmetic_expression
-(** basic updating *)
-and normal_update = variable_access * parsed_global_expression
-(** conditional updating *)
-and condition_update = parsed_boolean_expression * normal_update list * normal_update list
+
+(* Three type of updates (pre-updates, updates, post-updates) grouped in section *)
+type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *) * update list (* post-updates sequential *)
+
+
+
 
 (* A list of pairs (clock, rational) *)
 type parsed_flow = (variable_name * NumConst.t) list
 
 (* Transition = Guard * update list * sync label * destination location *)
-type transition = guard * update list * sync * location_name
+type transition = guard * update_section * sync * location_name
 
 (* Location = Name * Urgent type * Accepting type * Cost * Invariant * list of stopped clocks * transitions *)
 type parsed_location = {

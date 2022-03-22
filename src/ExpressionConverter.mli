@@ -5,12 +5,21 @@ open DiscreteType
 
 type inner_type = var_type_discrete
 
+type typed_sequence_type =
+    | Typed_array
+    | Typed_list
+    | Typed_stack
+    | Typed_queue
+
+type typed_conj_dis =
+    | Typed_and
+    | Typed_or
+
 type typed_global_expression =
     | Typed_global_expr of typed_boolean_expression * var_type_discrete
 
 and typed_boolean_expression =
-	| Typed_And of typed_boolean_expression * typed_boolean_expression (* implicitly bool type *)
-	| Typed_Or of typed_boolean_expression * typed_boolean_expression (* implicitly bool type *)
+	| Typed_conj_dis of typed_boolean_expression * typed_boolean_expression * typed_conj_dis (* implicitly bool type *)
 	| Typed_discrete_bool_expr of typed_discrete_boolean_expression * var_type_discrete
 
 and typed_discrete_boolean_expression =
@@ -21,20 +30,25 @@ and typed_discrete_boolean_expression =
 	| Typed_not_expr of typed_boolean_expression (* implicitly bool type *)
 
 and typed_discrete_arithmetic_expression =
-	| Typed_plus of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number
-	| Typed_minus of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number
+    | Typed_sum_diff of typed_discrete_arithmetic_expression * typed_discrete_term * var_type_discrete_number * typed_sum_diff
 	| Typed_term of typed_discrete_term * var_type_discrete
 
+and typed_sum_diff =
+    | Typed_plus
+    | Typed_minus
+
 and typed_discrete_term =
-	| Typed_mul of typed_discrete_term * typed_discrete_factor * var_type_discrete_number
-	| Typed_div of typed_discrete_term * typed_discrete_factor * var_type_discrete_number
+    | Typed_product_quotient of typed_discrete_term * typed_discrete_factor * var_type_discrete_number * typed_product_quotient
 	| Typed_factor of typed_discrete_factor * var_type_discrete
+
+and typed_product_quotient =
+    | Typed_mul
+    | Typed_div
 
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete
 	| Typed_constant of DiscreteValue.discrete_value * var_type_discrete
-	| Typed_array of typed_boolean_expression array * inner_type
-	| Typed_list of typed_boolean_expression list * inner_type
+	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
 	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_unary_min of typed_discrete_factor * var_type_discrete_number
     | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * inner_type
@@ -43,7 +57,7 @@ and typed_discrete_factor =
 type typed_variable_access =
     | Typed_variable_name of variable_name
     | Typed_variable_access of typed_variable_access * typed_discrete_arithmetic_expression * var_type_discrete
-
+    | Typed_void_update
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
@@ -85,7 +99,7 @@ val check_constant_expression : variable_infos -> variable_name * parsed_global_
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
 (* Check that an update is well typed *)
-val check_update : variable_infos -> variable_access -> ParsingStructure.parsed_global_expression -> typed_variable_access * typed_global_expression
+val check_update : variable_infos -> updates_type -> variable_access -> ParsingStructure.parsed_global_expression -> typed_variable_access * typed_global_expression
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
@@ -111,6 +125,6 @@ val bool_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 
-val variable_access_of_typed_variable_access : variable_infos -> TypeChecker.typed_variable_access -> DiscreteExpressions.discrete_variable_access
+val variable_access_of_typed_variable_access : variable_infos -> TypeChecker.typed_variable_access -> DiscreteExpressions.variable_update_type
 
 end

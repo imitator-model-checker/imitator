@@ -79,7 +79,7 @@ type clock_updates =
 
 (** update: variable_index := linear_term *)
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
-type discrete_update = DiscreteExpressions.discrete_variable_access * DiscreteExpressions.global_expression
+type discrete_update = DiscreteExpressions.variable_update_type * DiscreteExpressions.global_expression
 
 
 
@@ -116,10 +116,12 @@ and conditional_update = DiscreteExpressions.boolean_expression * updates * upda
 
 (** Transition: guard, action, list of updates, destination location *)
 type transition = {
-	guard		: guard;
-	action		: action_index;
-	updates		: updates;
-	target		: location_index;
+    guard : guard;
+    action : action_index;
+    pre_updates : updates;
+    updates : updates;
+    post_updates : updates;
+    target : location_index;
 }
 
 type transition_index = int

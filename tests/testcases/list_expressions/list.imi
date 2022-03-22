@@ -1,8 +1,8 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Quick test for list general behavior
- * Description      : Quick test for list, list function, list access behaviors
+ * Title            : Test general behavior of list expressions
+ * Description      : Test general behavior of lists, list functions, list accesses
  * Correctness      : N/A
  * Scalable         : no
  * Generated        : no
@@ -31,6 +31,8 @@ var
     array_list : rational array(2) list;
     list_list : rational list list;
     list_array : rational list array(2);
+    list_of_stack : int stack list;
+    list_of_queue : int queue list;
 
 (************************************************************)
  automaton pta
@@ -54,12 +56,14 @@ loc l1: invariant True
 
     (* Test simple function calls *)
     & list_cons(1, list([2, 3])) = list([1, 2, 3])
+    & not(list_is_empty(rational_list))
     & list_hd(list([3, 4])) = 3
     & list_length(list([1, 1, 1])) = 3
     & list_mem(2, list([8, 6, 2]))
     & list_rev(list([1, 2, 3])) = list([3, 2, 1])
     & list_tl(list([1, 2, 3])) = list([2, 3])
-
+    & list_hd(list_of_stack) = stack()
+    & list_hd(list_of_queue) = queue()
 
     (* Test complex function calls *)
     & list_hd(list([list_mem([0b0], list([[0b0], [0b0]]))]))  = True
@@ -67,7 +71,15 @@ loc l1: invariant True
     & list_tl(list([1, 2, 3])) = list([2, 3])
     & list_tl(list([[1], [2], [3]])) = list([[2], [3]])
 
+    (* ----------------------------------- *)
+    (* Check weak typed list *)
 
+    & list([]) = list([])
+    & list_length(list([])) = 0
+    & not(list_mem(1, list([])))
+
+    (* ----------------------------------- *)
+    (* ----------------------------------- *)
 
   do {
     int_list := list_cons(2, int_list)
@@ -94,7 +106,9 @@ init := {
         binary_word_list := list([0b1100]),
         array_list := list([[1,2]]),
         list_list := list([list([1])]),
-        list_array := [list([1]), list([2])]
+        list_array := [list([1]), list([2])],
+        list_of_stack := list([stack()]),
+        list_of_queue := list([queue()])
     ;
     continuous =
         & True

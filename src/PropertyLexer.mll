@@ -102,6 +102,9 @@ rule token = parse
  	| "then"           { CT_THEN }
 	| "True"           { CT_TRUE }
 	| "within"         { CT_WITHIN }
+  | "list"           { CT_LIST }
+  | "stack"          { CT_STACK }
+  | "queue"          { CT_QUEUE }
 
 
 

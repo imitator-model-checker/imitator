@@ -73,6 +73,7 @@ let resolve_property l =
 	CT_SEQUENCE CT_STEP CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
 	CT_WITHIN
+  CT_LIST CT_STACK CT_QUEUE
 
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
@@ -317,11 +318,11 @@ state_predicate_factor:
 simple_predicate:
 	| discrete_boolean_predicate { Parsed_discrete_boolean_expression($1) }
 	| loc_predicate { Parsed_loc_predicate ($1) }
-  /* TODO benjamin remove for avoid conflict with CT_TRUE and CT_FALSE in discrete_factor rule */
+  /* TODO benjamin remove for avoid conflict with CT_TRUE and CT_FALSE in arithmetic_factor rule */
   /* We pass from 20 reduce conflicts to 34 reduce conflicts by adding CT_TRUE and CT_FALSE in factor, but we have to do that in order to managing booleans */
   /* So the best solution is to remove theses literal representations from grammar here */
-	| CT_TRUE { Parsed_state_predicate_true }
-	| CT_FALSE { Parsed_state_predicate_false }
+	/*| CT_TRUE { Parsed_state_predicate_true }*/
+	/*| CT_FALSE { Parsed_state_predicate_false }*/
 	| CT_ACCEPTING { Parsed_state_predicate_accepting }
 ;
 
@@ -342,38 +343,81 @@ loc_predicate:
 
 
 /************************************************************/
+/** BOOLEAN EXPRESSIONS */
+/************************************************************/
+
+boolean_expression:
+	| discrete_boolean_predicate { Parsed_Discrete_boolean_expression $1 }
+	| boolean_expression SYMBOL_AND boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
+	| boolean_expression SYMBOL_OR boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
+;
+
+/************************************************************/
 discrete_boolean_predicate:
 /************************************************************/
 	/* expr ~ expr */
-  | discrete_expression { Parsed_arithmetic_expression $1 }
-	| discrete_expression op_bool discrete_expression { Parsed_expression (Parsed_arithmetic_expression $1, $2, Parsed_arithmetic_expression $3) }
+  | arithmetic_expression { Parsed_arithmetic_expression $1 }
+	| arithmetic_expression op_bool arithmetic_expression { Parsed_comparison (Parsed_arithmetic_expression $1, $2, Parsed_arithmetic_expression $3) }
 	/* expr in [expr .. expr] */
-	| discrete_expression CT_IN LSQBRA discrete_expression COMMA discrete_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
-	| discrete_expression CT_IN LSQBRA discrete_expression DOUBLEDOT discrete_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
+	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
+	| arithmetic_expression CT_IN LSQBRA arithmetic_expression DOUBLEDOT arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
 ;
 
-discrete_expression:
-	| discrete_expression OP_PLUS discrete_term { Parsed_DAE_plus ($1, $3) }
-	| discrete_expression OP_MINUS discrete_term { Parsed_DAE_minus ($1, $3) }
+/*
+discrete_boolean_expression:
+	| arithmetic_expression { Parsed_arithmetic_expression $1 }
+	| discrete_boolean_expression relop discrete_boolean_expression { Parsed_comparison ($1, $2, $3) }
+	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
+	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
+	| LPAREN boolean_expression RPAREN { Parsed_boolean_expression $2 }
+	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
+;
+*/
+
+arithmetic_expression:
+	| arithmetic_expression sum_diff discrete_term { Parsed_sum_diff ($1, $3, $2) }
 	| discrete_term { Parsed_DAE_term $1 }
 ;
 
-discrete_term:
-	| discrete_term OP_MUL discrete_factor { Parsed_DT_mul ($1, $3) }
-	| discrete_term OP_DIV discrete_factor { Parsed_DT_div ($1, $3) }
-	| discrete_factor { Parsed_DT_factor $1 }
+sum_diff:
+  | OP_PLUS { Parsed_plus }
+  | OP_MINUS { Parsed_minus }
 ;
 
-discrete_factor:
-	| NAME { Parsed_DF_variable $1 }
-	| positive_rational { Parsed_DF_constant (DiscreteValue.Number_value $1) }
-  | CT_TRUE { Parsed_DF_constant (DiscreteValue.Bool_value true) }
-  | CT_FALSE { Parsed_DF_constant (DiscreteValue.Bool_value false) }
-  | binary_word { Parsed_DF_constant $1 }
-  | literal_array { Parsed_DF_array (Array.of_list $1) }
-  | discrete_factor LSQBRA discrete_expression RSQBRA { Parsed_DF_access ($1, $3) }
-	| RPAREN discrete_expression LPAREN { Parsed_DF_expression $2 }
-	| OP_MINUS discrete_factor { Parsed_DF_unary_min $2 }
+discrete_term:
+	| discrete_term product_quotient arithmetic_factor { Parsed_product_quotient ($1, $3, $2) }
+	| arithmetic_factor { Parsed_DT_factor $1 }
+;
+
+product_quotient:
+    | OP_MUL { Parsed_mul }
+    | OP_DIV { Parsed_div }
+;
+
+arithmetic_factor:
+  | arithmetic_factor LSQBRA arithmetic_expression RSQBRA { Parsed_DF_access ($1, $3) }
+  | arithmetic_factor LPAREN function_argument_fol RPAREN { Parsed_function_call ($1, $3) }
+  | arithmetic_factor LPAREN RPAREN { Parsed_function_call ($1, []) }
+  | literal_scalar_constant { Parsed_DF_constant $1 }
+  | literal_non_scalar_constant { $1 }
+  | NAME { Parsed_DF_variable $1 }
+  | LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+;
+
+literal_scalar_constant:
+  | number { $1 }
+  | CT_TRUE { DiscreteValue.Bool_value true }
+  | CT_FALSE { DiscreteValue.Bool_value false }
+  | binary_word { $1 }
+;
+
+/* TODO benjamin see if possible to encapsulate array / list to Parsed_DF_constant */
+/* in this case, move these elements of that rule to `literal_scalar_constant` */
+literal_non_scalar_constant:
+  | literal_array { Parsed_sequence ($1, Parsed_array) }
+  | CT_LIST LPAREN literal_array RPAREN { Parsed_sequence ($3, Parsed_list) }
+  | CT_STACK LPAREN RPAREN { Parsed_sequence ([], Parsed_stack) }
+  | CT_QUEUE LPAREN RPAREN { Parsed_sequence ([], Parsed_queue) }
 ;
 
 literal_array:
@@ -384,9 +428,26 @@ literal_array:
 ;
 
 literal_array_fol:
-	| discrete_boolean_predicate COMMA literal_array_fol { Parsed_Discrete_boolean_expression $1 :: $3 }
-	| discrete_boolean_predicate { [Parsed_Discrete_boolean_expression $1] }
+	| boolean_expression COMMA literal_array_fol { $1 :: $3 }
+	| boolean_expression { [$1] }
 ;
+
+function_argument_fol:
+  | boolean_expression COMMA function_argument_fol { $1 :: $3 }
+  | boolean_expression { [$1] }
+
+
+number:
+	| integer { DiscreteValue.Number_value $1 }
+	| float { DiscreteValue.Rational_value $1 }
+	/*| integer OP_DIV pos_integer { ( DiscreteValue.Rational_value (NumConst.div $1 $3)) }*/
+;
+
+binary_word:
+        BINARYWORD { DiscreteValue.Binary_word_value (BinaryWord.binaryword_of_string $1) }
+;
+
+
 
 
 

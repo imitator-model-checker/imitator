@@ -166,9 +166,12 @@ val get_variables_in_nonlinear_constraint : nonlinear_constraint -> StringSet.t
 val get_variables_in_init_state_predicate : parsed_init_state_predicate -> StringSet.t
 val get_variables_in_nonlinear_convex_predicate : nonlinear_constraint list -> StringSet.t
 
-val variable_name_of_variable_access : variable_access -> variable_name
+val variable_name_of_variable_access : variable_access -> variable_name option
 val is_variable_access_is_a_variable_name : variable_access -> bool
 
 val linear_constraint_of_nonlinear_constraint : nonlinear_constraint -> linear_constraint
+
+(* Gather all updates of update section (pre-updates, updates and post-updates) *)
+val updates_of_update_section : update_section -> update list
 
 val variable_infos_of_parsed_model : useful_parsing_model_information -> variable_infos

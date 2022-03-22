@@ -48,7 +48,9 @@ let rec resolve_constraint defined_type_constraint discrete_type =
         resolve_length_constraint length length_constraint
     | Array_constraint (type_constraint, length_constraint), Var_type_discrete_array (inner_type, length) ->
         resolve_type_constraint inner_type type_constraint @ resolve_length_constraint length length_constraint
-    | List_constraint (type_constraint), Var_type_discrete_list (inner_type) ->
+    | List_constraint type_constraint, Var_type_discrete_list inner_type
+    | Stack_constraint type_constraint, Var_type_discrete_stack inner_type
+    | Queue_constraint type_constraint, Var_type_discrete_queue inner_type ->
         resolve_type_constraint inner_type type_constraint
     | _ -> []
 
@@ -112,8 +114,28 @@ let resolve_dependent_type_constraint variable_infos signature_constraint expres
     dependent_type_constraints
 *)
 
+(* Resolve signature constraints from passed argument discrete type *)
+let resolve_constraints variable_infos signature discrete_types =
 
-let resolve_constraints variable_infos signature discrete_types expressions =
+    (* Function that choose the best constraint resolution *)
+    (* between many compatibles and well-formed resolutions *)
+    let reduce_resolutions resolutions =
+
+        let type_constraint_resolutions, length_constraint_resolutions = List.partition (function | Resolved_type_constraint _ -> true | _ -> false) resolutions in
+
+        (* If constraint is a length constraint, return length contraint *)
+        if List.length length_constraint_resolutions > 0 then
+            List.hd length_constraint_resolutions
+        (* Else if it's a type constraint, return the stronger *)
+        else (
+            let resolved_discrete_types = List.map (function | Resolved_type_constraint discrete_type -> discrete_type | Resolved_length_constraint _ -> Var_type_weak) type_constraint_resolutions in
+            (* Reduce discrete types to get the stronger type !  *)
+            let stronger_type = List.fold_left (fun acc discrete_type -> DiscreteType.stronger_discrete_type_of acc discrete_type) Var_type_weak resolved_discrete_types in
+            Resolved_type_constraint stronger_type
+        )
+
+    in
+
     (* Zip lists: signature types / discrete types *)
     let type_constraint_discrete_type = List.combine signature discrete_types in
 
@@ -139,20 +161,7 @@ let resolve_constraints variable_infos signature discrete_types expressions =
 
     (* Reduce well formed constraints with multiple resolutions to one good resolution *)
     let well_formed_constraint_resolutions = List.map (fun (constraint_name, resolutions) ->
-
-        let first_known_constraint_opt = List.find_opt (function
-            | Resolved_type_constraint discrete_type ->
-                DiscreteType.is_discrete_type_holding_number_type discrete_type && DiscreteType.is_discrete_type_holding_known_number_type discrete_type
-                || not (DiscreteType.is_discrete_type_holding_number_type discrete_type)
-            | Resolved_length_constraint _ -> true
-        ) resolutions
-        in
-        (* If all type constraint on particular constraint are unknown numbers, transform current constraint to unknown *)
-        match first_known_constraint_opt with
-        (* If all the resolutions for a constraint are unknown number so, return arbitrary the first *)
-        | None -> constraint_name, List.nth resolutions 0
-        | Some first_known_constraint -> constraint_name, first_known_constraint
-
+        constraint_name, reduce_resolutions resolutions
     ) well_formed_constraint_resolutions
     in
 
@@ -199,8 +208,16 @@ let rec discrete_type_of_defined_type_constraint resolved_constraints_table = fu
             discrete_type_of_type_constraint_name resolved_constraints_table type_constraint,
             discrete_type_of_length_constraint resolved_constraints_table length_constraint
         )
-    | List_constraint (type_constraint) ->
+    | List_constraint type_constraint ->
         Var_type_discrete_list (
+            discrete_type_of_type_constraint_name resolved_constraints_table type_constraint
+        )
+    | Stack_constraint type_constraint ->
+        Var_type_discrete_stack (
+            discrete_type_of_type_constraint_name resolved_constraints_table type_constraint
+        )
+    | Queue_constraint type_constraint ->
+        Var_type_discrete_queue (
             discrete_type_of_type_constraint_name resolved_constraints_table type_constraint
         )
 

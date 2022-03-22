@@ -135,13 +135,13 @@ let convert_guard variable_infos guard_convex_predicate =
     (* If some false construct found: false guard *)
     ) with False_exception -> False_guard
 
-let convert_update variable_infos variable_access expr =
-    let typed_variable_access, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos variable_access expr in
+let convert_update variable_infos updates_type variable_access expr =
+    let typed_variable_access, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos updates_type variable_access expr in
     ExpressionConverter.Convert.variable_access_of_typed_variable_access variable_infos typed_variable_access,
     ExpressionConverter.Convert.global_expression_of_typed_global_expression variable_infos typed_expr
 
 let convert_continuous_update variable_infos variable_access expr =
-    let typed_variable_access, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos variable_access expr in
+    let typed_variable_access, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos Parsed_updates variable_access expr in
     ExpressionConverter.Convert.variable_access_of_typed_variable_access variable_infos typed_variable_access,
     ExpressionConverter.Convert.linear_term_of_typed_global_expression variable_infos typed_expr
 

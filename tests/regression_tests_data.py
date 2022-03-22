@@ -2863,7 +2863,7 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a Boolean variable is initialized with consistant type',
+		'purpose'    : 'Test that a Boolean variable is initialized with consistent type',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2910,7 +2910,7 @@ Error                                   : invalid model
         ## Last modified            : 2021/05/31
         ## Test for IMITATOR version: 3.1.0
         ## Author 					: lbinria
-        'purpose'    : 'Test that "not" Boolean operator is effective and correct (computing)',
+        'purpose'    : 'Test that "not" Boolean operator is effective and correct',
 		'tags':'boolean, computing, semantic',
         'input_files': ['boolean_expressions/not-operator.imi'],
         'options'    : '-mode statespace -states-description',
@@ -2942,7 +2942,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test a complex Boolean comparison (computing)',
+		'purpose'    : 'Test a complex Boolean comparison',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/complex-bool-comparison.imi'],
 		'options'    : '-mode statespace -states-description',
@@ -2982,7 +2982,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test logical operator priority (computing)',
+		'purpose'    : 'Test logical operator priority',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/logical-operator-priority.imi'],
 		'options'    : '-mode statespace -states-description',
@@ -3020,8 +3020,8 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 	{
 		'author': 'lbinria',
-		'purpose'    : 'Test general behavior of array expressions (computing)',
-		'tags':'array, computing, semantic',
+		'purpose'    : 'Test general behavior of array expressions',
+		'tags':'array, computing, function, semantic',
 		'input_files': ['array_expressions/array.imi', 'acceptingReachable.imiprop'],
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
@@ -3029,7 +3029,7 @@ Error                                   : invalid model
   /************************************************************/
   INITIAL
   STATE 0:
-  P: s0, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [0, 0, 0], my_bool_array = [False, False] ==> 
+  P: s0, i = 0, my_int_array_to_update = [1, 0], array_of_queue = [queue()], array_of_stack = [stack()], array_of_list = [list([1, 2])], super_nested = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [0, 0, 0], my_bool_array = [False, False] ==>
 &True
 
   Projection onto the parameters:
@@ -3037,7 +3037,7 @@ Error                                   : invalid model
 
   /************************************************************/
   STATE 1:
-  P: lend, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 0]], [[5, 6], [0, 0]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [1, 0, 0], my_bool_array = [False, True] ==> 
+  P: lend, i = 0, my_int_array_to_update = [1, 0], array_of_queue = [queue()], array_of_stack = [stack()], array_of_list = [list([0, 0])], super_nested = [[[1, 2], [3, 0]], [[5, 6], [0, 0]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [1, 0, 0], my_bool_array = [False, True] ==>
 &True
 
   Projection onto the parameters:
@@ -3085,8 +3085,8 @@ Error                                   : index out of range
 	#------------------------------------------------------------
 	{
 		'author': 'lbinria',
-		'purpose'    : 'Test general behavior of list expressions (computing)',
-		'tags':'list, computing, semantic',
+		'purpose'    : 'Test general behavior of list expressions',
+		'tags':'list, computing, function, semantic',
 		'input_files': ['list_expressions/list.imi'],
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
@@ -3094,7 +3094,7 @@ Error                                   : index out of range
   /************************************************************/
   INITIAL
   STATE 0:
-  pta: l1, list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([1]), rational_list = list([1]) ==>
+  pta: l1, list_of_queue = list([queue()]), list_of_stack = list([stack()]), list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([1]), rational_list = list([1]) ==>
 &True
 
   Projection onto the parameters:
@@ -3102,7 +3102,42 @@ Error                                   : index out of range
 
   /************************************************************/
   STATE 1:
-  pta: lend, list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([2, 1]), rational_list = list([1]) ==>
+  pta: lend, list_of_queue = list([queue()]), list_of_stack = list([stack()]), list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([2, 1]), rational_list = list([1]) ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test list expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test stack expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		'author': 'lbinria',
+		'purpose'    : 'Test general behavior of stack expressions',
+		'tags':'stack, computing, function, semantic',
+		'input_files': ['stack_queue_expressions/stack.imi'],
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'stack-statespace.states' , 'content' : """
+  pta: lend, i = 3, r = 1, s3 = stack([3, 2]), s2 = stack(), s1 = stack([2, 1]) ==>
 &True
 
   Projection onto the parameters:
@@ -3117,7 +3152,38 @@ Error                                   : index out of range
 	,
 
 	#------------------------------------------------------------
-	# END : Test list expressions
+	# END : Test stack expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test queue expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		'author': 'lbinria',
+		'purpose'    : 'Test general behavior of queue expressions',
+		'tags':'queue, computing, function, semantic',
+		'input_files': ['stack_queue_expressions/queue.imi'],
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'queue-statespace.states' , 'content' : """
+  pta: lend, i = 2, r = 1, s3 = queue([3, 2]), s2 = queue(), s1 = queue([2, 1]) ==>
+&True
+
+  Projection onto the parameters:
+  True
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test queue expressions
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
@@ -4155,6 +4221,35 @@ END CONSTRAINT
 
 	,
 
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/03/16
+      ## Last modified            : 2022/03/16
+      ## Test for IMITATOR version: 3.3
+      ## Author 					: lbinria
+      'author': 'lbinria',
+      'purpose'    : 'Test that evaluation order of function parameters is left to right',
+      'input_files': ['functions/function_argument_eval_order.imi'],
+      'tags': 'behavior, function',
+      'options'    : '-mode statespace -states-description -no-var-autoremove',
+      'expectations' : [
+        {'file': 'function_argument_eval_order-statespace.states' , 'content' : """
+    STATE 1:
+    pta: lend, result = 9, s = stack() ==>
+    &True
+
+    Projection onto the parameters:
+    True
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
 	#------------------------------------------------------------
 	# END : Test custom function
 	#------------------------------------------------------------
@@ -4207,6 +4302,35 @@ END CONSTRAINT
 
   Projection onto the parameters:
    p >= 0
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1
+        ## Test since               : 2022/03/17
+        ## Last modified            : 2022/03/17
+        ## Test for IMITATOR version: < 3.0
+        ## Author 					: lbinria
+        'author': 'lbinria',
+        'purpose'    : 'Test let-in updates evaluation order',
+        'input_files': ['let_in_update_order.imi'],
+		'tags': 'behavior, update',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'let_in_update_order-statespace.states' , 'content' : """
+  pta1: lend, pta2: lend, i = 2, j = 2, k = 4, l = 2, m = 2 ==>
+& x >= 2
+& x = 2 + z
+& x + 2 = y
+& x = w
+& x = v
 		"""
 			} # end result file
 			,
@@ -21279,6 +21403,199 @@ broadcast chan c;
 system pta1, pta2, pta3;
 </system></nta>
 	"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/02/04
+		# Last modified            : 2022/02/04
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test translation to Jani',
+		'author': 'lbinria',
+		'tags' : 'translation, jani',
+		'input_files': ['translations/jani.imi'],
+		'options'    : '-imi2Jani',
+		'expectations' : [
+			{'file': 'jani.jani' , 'content' : """
+	"functions":
+	[
+
+	]
+	,
+	"actions":
+	[
+
+	]
+	,
+	"variables":
+	[
+
+		{
+			"name":"i",
+			"type":"real",
+			"initial-value":6
+		}
+		,
+
+		{
+			"name":"r",
+			"type":"real",
+			"initial-value":2
+		}
+
+	]
+	,
+	"properties":
+	[
+
+	]
+	,
+	"automata":
+	[
+
+		{
+			"name": "pta",
+			"locations":
+			[
+
+				{
+					"name": "l1"
+				}
+				,
+
+				{
+					"name": "lend"
+				}
+
+			]
+			,
+			"initial-locations":
+			[
+				"l1"
+			]
+			,
+			"edges":
+			[
+
+				{
+					"location": "l1",
+					"guard":
+					{
+						"exp":
+						{
+							"op":"=",
+							"left":
+							{
+								"op":"/",
+								"left":
+								{
+									"op":"-",
+									"left":
+									{
+										"op":"+",
+										"left":"i",
+										"right":1
+									}
+									,
+									"right":2
+								}
+								,
+								"right":2
+							}
+							,
+							"right":
+							{
+								"op":"/",
+								"left":
+								{
+									"op":"+",
+									"left":
+									{
+										"op":"*",
+										"left":"r",
+										"right":2
+									}
+									,
+									"right":1
+								}
+								,
+								"right":2
+							}
+
+						}
+
+					}
+					,
+					"destinations":
+					[
+
+						{
+							"location": "lend",
+							"assignments":
+							[
+
+								{
+									"ref": "i",
+									 "value" :
+									{
+										"op":"+",
+										"left":
+										{
+											"op":"*",
+											"left":5,
+											"right":3
+										}
+										,
+										"right":
+										{
+											"op":"pow",
+											"left":"r",
+											"right":2
+										}
+
+									}
+
+								}
+
+							]
+
+						}
+
+					]
+
+				}
+
+			]
+
+		}
+
+	]
+	,
+	"system":
+	{
+		"elements":
+		[
+
+			{
+				"automaton": "pta"
+			}
+
+		]
+		,
+		"syncs":
+		[
+
+		]
+
+	}
+"""
 			} # end result file
 			,
 		] # end expectations

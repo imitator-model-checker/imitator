@@ -54,8 +54,7 @@ let rec fold_parsed_global_expression operator base leaf_fun = function
      | Parsed_global_expression expr -> fold_parsed_boolean_expression operator base leaf_fun expr
 
 and fold_parsed_boolean_expression operator base leaf_fun = function
-	| Parsed_And (l_expr, r_expr)
-	| Parsed_Or (l_expr, r_expr) ->
+    | Parsed_conj_dis (l_expr, r_expr, _) ->
 	    operator
 	        (fold_parsed_boolean_expression operator base leaf_fun l_expr)
 	        (fold_parsed_boolean_expression operator base leaf_fun r_expr)
@@ -65,11 +64,11 @@ and fold_parsed_boolean_expression operator base leaf_fun = function
 and fold_parsed_discrete_boolean_expression operator base leaf_fun = function
     | Parsed_arithmetic_expression expr ->
         fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
-	| Parsed_expression (l_expr, _, r_expr) ->
+	| Parsed_comparison (l_expr, _, r_expr) ->
 	    operator
 	        (fold_parsed_discrete_boolean_expression operator base leaf_fun l_expr)
 	        (fold_parsed_discrete_boolean_expression operator base leaf_fun r_expr)
-	| Parsed_expression_in (lower_expr, expr, upper_expr) ->
+	| Parsed_comparison_in (lower_expr, expr, upper_expr) ->
 	    operator
 	        (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
             (operator
@@ -80,8 +79,7 @@ and fold_parsed_discrete_boolean_expression operator base leaf_fun = function
         fold_parsed_boolean_expression operator base leaf_fun expr
 
 and fold_parsed_discrete_arithmetic_expression operator base leaf_fun = function
-	| Parsed_DAE_plus (expr, term)
-	| Parsed_DAE_minus (expr, term) ->
+	| Parsed_sum_diff (expr, term, _) ->
         operator
             (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
             (fold_parsed_discrete_term operator base leaf_fun term)
@@ -89,8 +87,7 @@ and fold_parsed_discrete_arithmetic_expression operator base leaf_fun = function
         fold_parsed_discrete_term operator base leaf_fun term
 
 and fold_parsed_discrete_term operator base leaf_fun = function
-	| Parsed_DT_mul (term, factor)
-	| Parsed_DT_div (term, factor) ->
+	| Parsed_product_quotient (term, factor, _) ->
 	    operator
 	        (fold_parsed_discrete_term operator base leaf_fun term)
 	        (fold_parsed_discrete_factor operator base leaf_fun factor)
@@ -100,31 +97,9 @@ and fold_parsed_discrete_term operator base leaf_fun = function
 and fold_parsed_discrete_factor operator base leaf_fun = function
 	| Parsed_DF_variable variable_name -> leaf_fun (Leaf_variable variable_name)
 	| Parsed_DF_constant value -> leaf_fun (Leaf_constant value)
-	| Parsed_DF_array expr_array -> Array.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_array
-	| Parsed_DF_list expr_list -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_list
+	| Parsed_sequence (expr_list, _) -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_list
 	| Parsed_DF_expression expr ->
         fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
-	(*
-	| Parsed_rational_of_int_function expr ->
-        fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
-	| Parsed_pow_function (expr_0, expr_1) ->
-        operator
-            (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr_0)
-            (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr_1)
-	| Parsed_shift_function (_, factor, expr) ->
-        operator
-            (fold_parsed_discrete_factor operator base leaf_fun factor)
-            (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
-	| Parsed_bin_log_function (_, factor_0, factor_1)
-	| Parsed_array_append (factor_0, factor_1) ->
-        operator
-            (fold_parsed_discrete_factor operator base leaf_fun factor_0)
-            (fold_parsed_discrete_factor operator base leaf_fun factor_1)
-    | Parsed_list_cons (expr, factor) ->
-        operator
-            (fold_parsed_boolean_expression operator base leaf_fun expr)
-            (fold_parsed_discrete_factor operator base leaf_fun factor)
-    *)
     | Parsed_function_call (_, argument_expressions) ->
         List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression operator base leaf_fun expr) acc) base argument_expressions
     | Parsed_DF_access (factor, _)
@@ -315,38 +290,19 @@ let function_name_of_parsed_factor = function
 	| Parsed_DF_variable name -> name
     | factor -> raise (TypeError "Trying to make a call on a non-function.")
 
-(* Labels of a parsed factors *)
-(*
-let label_of_parsed_shift_function_type = function
-	| Parsed_shift_left -> "shift_left"
-	| Parsed_shift_right -> "shift_right"
-	| Parsed_fill_left -> "fill_left"
-	| Parsed_fill_right -> "fill_right"
-
-let label_of_parsed_bin_log_function_type = function
-    | Parsed_log_and -> "logand"
-    | Parsed_log_or -> "logor"
-    | Parsed_log_xor -> "logxor"
-*)
+let label_of_parsed_sequence_type = function
+    | Parsed_array -> "array"
+    | Parsed_list -> "list"
+    | Parsed_stack -> "stack"
+    | Parsed_queue -> "queue"
 
 let label_of_parsed_factor_constructor = function
 	| Parsed_DF_variable _ -> "variable"
 	| Parsed_DF_constant _ -> "constant"
-	| Parsed_DF_array _ -> "array"
-	| Parsed_DF_list _ -> "list"
+	| Parsed_sequence (_, seq_type) -> label_of_parsed_sequence_type seq_type
 	| Parsed_DF_access _ -> "access"
 	| Parsed_DF_expression _ -> "expression"
 	| Parsed_DF_unary_min _ -> "minus"
-	(*
-	| Parsed_rational_of_int_function _ -> "rational_of_int"
-	| Parsed_pow_function _ -> "pow"
-	| Parsed_shift_function (fun_type, _, _) -> label_of_parsed_shift_function_type fun_type
-	| Parsed_bin_log_function (fun_type, _, _) -> label_of_parsed_bin_log_function_type fun_type
-
-    | Parsed_log_not _ -> "lognot"
-    | Parsed_array_append _ -> "array_append"
-    | Parsed_list_cons _ -> "list_cons"
-    *)
     | Parsed_function_call (variable, _) -> function_name_of_parsed_factor variable
 
 
@@ -364,30 +320,36 @@ let string_of_parsed_relop relop value_1 value_2 =
     | PARSED_OP_GEQ	    -> value_1 ^ " >= " ^ value_2
     | PARSED_OP_G		-> value_1 ^ " > " ^ value_2
 
+let string_of_parsed_sum_diff = function
+    | Parsed_plus -> Constants.default_arithmetic_string.plus_string
+    | Parsed_minus -> Constants.default_arithmetic_string.minus_string
+
+let string_of_parsed_product_quotient = function
+    | Parsed_mul -> Constants.default_arithmetic_string.mul_string
+    | Parsed_div -> Constants.default_arithmetic_string.div_string
+
+let string_of_parsed_conj_dis = function
+    | Parsed_and -> Constants.default_string.and_operator
+    | Parsed_or -> Constants.default_string.or_operator
+
 let rec string_of_parsed_global_expression variable_infos = function
     | Parsed_global_expression expr -> string_of_parsed_boolean_expression variable_infos expr
 
 and string_of_parsed_arithmetic_expression variable_infos = function
-    | Parsed_DAE_plus (arithmetic_expr, term) ->
-            (string_of_parsed_arithmetic_expression variable_infos arithmetic_expr) ^
-            " + " ^
-            (string_of_parsed_term variable_infos term)
-    | Parsed_DAE_minus (arithmetic_expr, term) ->
-            (string_of_parsed_arithmetic_expression variable_infos arithmetic_expr) ^
-            " - " ^
-            (string_of_parsed_term variable_infos term)
+    | Parsed_sum_diff (arithmetic_expr, term, sum_diff) ->
+            string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
+            ^ string_of_parsed_sum_diff sum_diff
+            ^ string_of_parsed_term variable_infos term
+
     | Parsed_DAE_term term ->
         string_of_parsed_term variable_infos term
 
 and string_of_parsed_term variable_infos = function
-    | Parsed_DT_mul (term, factor) ->
-            (string_of_parsed_term variable_infos term) ^
-            " * " ^
-            (string_of_parsed_factor variable_infos factor)
-    | Parsed_DT_div (term, factor) ->
-            (string_of_parsed_term variable_infos term) ^
-            " / " ^
-            (string_of_parsed_factor variable_infos factor)
+    | Parsed_product_quotient (term, factor, parsed_product_quotient) ->
+        string_of_parsed_term variable_infos term
+        ^ string_of_parsed_product_quotient parsed_product_quotient
+        ^ string_of_parsed_factor variable_infos factor
+
     | Parsed_DT_factor factor ->
         string_of_parsed_factor variable_infos factor
 
@@ -402,83 +364,44 @@ and string_of_parsed_factor variable_infos = function
         ) else
             variable_name
     | Parsed_DF_constant value -> DiscreteValue.string_of_value value
-    | Parsed_DF_array expr_array ->
-        "[" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (string_of_parsed_boolean_expression variable_infos) expr_array) ^ "]"
-    | Parsed_DF_list expr_list as list_expr ->
-        label_of_parsed_factor_constructor list_expr
-        ^ "([" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (string_of_parsed_boolean_expression variable_infos) expr_list) ^ "])"
+    | Parsed_sequence (expr_list, seq_type) as seq ->
+        let str_elements = List.map (string_of_parsed_boolean_expression variable_infos) expr_list in
+        let str_array = "[" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_elements ^ "]" in
+        (match seq_type with
+        | Parsed_array -> str_array
+        | Parsed_list
+        | Parsed_stack
+        | Parsed_queue -> label_of_parsed_factor_constructor seq ^ "(" ^ str_array ^ ")"
+        )
     | Parsed_DF_access (factor, expr) ->
         string_of_parsed_factor variable_infos factor ^ "[" ^ string_of_parsed_arithmetic_expression variable_infos expr ^ "]"
     | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
     | Parsed_DF_unary_min factor ->
         "-(" ^ (string_of_parsed_factor variable_infos factor) ^ ")"
-    (*
-    | Parsed_rational_of_int_function arithmetic_expr as factor ->
-        label_of_parsed_factor_constructor factor
-        ^ "(" ^ string_of_parsed_arithmetic_expression variable_infos arithmetic_expr ^ ")"
-    | Parsed_pow_function (expr, exp_expr) as factor ->
-        label_of_parsed_factor_constructor factor
-        ^ "("
-        ^ string_of_parsed_arithmetic_expression variable_infos expr
-        ^ ","
-        ^ string_of_parsed_arithmetic_expression variable_infos exp_expr
-        ^ ")"
-    | Parsed_shift_function (_, factor, expr) as shift ->
-        label_of_parsed_factor_constructor shift
-        ^ "("
-        ^ string_of_parsed_factor variable_infos factor
-        ^ ", "
-        ^ string_of_parsed_arithmetic_expression variable_infos expr
-        ^ ")"
-    | Parsed_bin_log_function (_, l_factor, r_factor)
-    | Parsed_array_append (l_factor, r_factor) as func ->
-        label_of_parsed_factor_constructor func
-        ^ "("
-        ^ string_of_parsed_factor variable_infos l_factor
-        ^ ", "
-        ^ string_of_parsed_factor variable_infos r_factor
-        ^ ")"
-    | Parsed_list_cons (expr, factor) as func ->
-        label_of_parsed_factor_constructor func
-        ^ "("
-        ^ string_of_parsed_boolean_expression variable_infos expr
-        ^ ", "
-        ^ string_of_parsed_factor variable_infos factor
-        ^ ")"
-    *)
     | Parsed_function_call (_, argument_expressions) as func ->
         let str_arguments_list = List.map (string_of_parsed_boolean_expression variable_infos) argument_expressions in
         let str_arguments = OCamlUtilities.string_of_list_of_string_with_sep ", " str_arguments_list in
         label_of_parsed_factor_constructor func ^ "(" ^ str_arguments ^ ")"
-    (*
-    | Parsed_log_not factor as func ->
-        label_of_parsed_factor_constructor func
-        ^ "("
-        ^ string_of_parsed_factor variable_infos factor
-        ^ ")"
-    *)
+
 
 and string_of_parsed_boolean_expression variable_infos = function
-    | Parsed_And (l_expr, r_expr) ->
-            (string_of_parsed_boolean_expression variable_infos l_expr) ^
-            " & " ^
-            (string_of_parsed_boolean_expression variable_infos r_expr)
-    | Parsed_Or (l_expr, r_expr) ->
-            (string_of_parsed_boolean_expression variable_infos l_expr) ^
-            " | " ^
-            (string_of_parsed_boolean_expression variable_infos r_expr)
+    | Parsed_conj_dis (l_expr, r_expr, parsed_conj_dis) ->
+            string_of_parsed_boolean_expression variable_infos l_expr
+            ^ string_of_parsed_conj_dis parsed_conj_dis
+            ^ string_of_parsed_boolean_expression variable_infos r_expr
+
     | Parsed_Discrete_boolean_expression expr ->
         string_of_parsed_discrete_boolean_expression variable_infos expr
 
 and string_of_parsed_discrete_boolean_expression variable_infos = function
     | Parsed_arithmetic_expression expr ->
         string_of_parsed_arithmetic_expression variable_infos expr
-    | Parsed_expression (l_expr, relop, r_expr) ->
+    | Parsed_comparison (l_expr, relop, r_expr) ->
         string_of_parsed_relop
             relop
             (string_of_parsed_discrete_boolean_expression variable_infos l_expr)
             (string_of_parsed_discrete_boolean_expression variable_infos r_expr)
-    | Parsed_expression_in (expr1, expr2, expr3) ->
+    | Parsed_comparison_in (expr1, expr2, expr3) ->
         (* Compute the first one to avoid redundancy *)
         let str_expr1 = string_of_parsed_arithmetic_expression variable_infos expr1 in
         let str_expr2 = string_of_parsed_arithmetic_expression variable_infos expr2 in
@@ -517,11 +440,12 @@ and string_of_linear_term variable_infos = function
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
 let rec string_of_variable_access variable_infos = function
-    | Variable_name variable_name -> variable_name
-    | Variable_access (variable_access, expr) ->
+    | Parsed_variable_update variable_name -> variable_name
+    | Parsed_indexed_update (variable_access, expr) ->
         let l_del, r_del = Constants.default_array_string.array_access_delimiter in
         string_of_variable_access variable_infos variable_access
         ^ l_del ^ string_of_parsed_arithmetic_expression variable_infos expr ^ r_del
+    | Parsed_void_update -> ""
 
 let string_of_parsed_init_state_predicate variable_infos = function
 	| Parsed_loc_assignment (automaton_name, location_name) -> "loc[" ^ automaton_name ^ "] = " ^ location_name
@@ -848,14 +772,17 @@ let get_variables_in_nonlinear_convex_predicate convex_predicate =
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
 let rec variable_name_of_variable_access = function
-    | Variable_name variable_name -> variable_name
-    | Variable_access (variable_access, _) -> variable_name_of_variable_access variable_access
+    | Parsed_variable_update variable_name -> Some variable_name
+    | Parsed_indexed_update (variable_access, _) -> variable_name_of_variable_access variable_access
+    | Parsed_void_update -> None
 
 (* Check if variable access is a variable name directly *)
 (* ex : my_var -> true, my_var[i] -> false *)
 let is_variable_access_is_a_variable_name = function
-    | Variable_name _ -> true
-    | Variable_access _ -> false
+    | Parsed_variable_update _ -> true
+    | Parsed_void_update
+    | Parsed_indexed_update _ -> false
+
 
 
 (* - --- - -- - *)
@@ -867,22 +794,20 @@ let is_variable_access_is_a_variable_name = function
 (* we raise an InvalidExpression exception *)
 (*------------------------------------------------------------*)
 
-
-
 (* Try to convert parsed discrete term to a linear term *)
 (* If it's not possible, we raise an InvalidExpression exception *)
 let rec try_convert_linear_term_of_parsed_discrete_term = function
     (* TODO benjamin reduction should be made before *)
-    | Parsed_DT_mul (term, factor) ->
+    | Parsed_product_quotient (term, factor, Parsed_mul) ->
         (* Check consistency of multiplication, if it keep constant we can convert to a linear term *)
         let linear_term, linear_factor =
-        try_convert_linear_term_of_parsed_discrete_term term,
-        try_convert_linear_term_of_parsed_discrete_factor factor
+            try_convert_linear_term_of_parsed_discrete_term term,
+            try_convert_linear_term_of_parsed_discrete_factor factor
         in
         (match linear_term, linear_factor with
             (* Constant multiplied by constant, it's ok*)
             | Constant l_const_value, Constant r_const_value ->
-                let value = (NumConst.mul l_const_value r_const_value) in
+                let value = NumConst.mul l_const_value r_const_value in
                 Constant value
             (* Constant multiplied by a variable (commutative), it's ok *)
             | Variable (var_value, variable_name), Constant const_value
@@ -893,7 +818,7 @@ let rec try_convert_linear_term_of_parsed_discrete_term = function
             | _ ->
                 raise (InvalidExpression ("A non-linear arithmetic expression involve clock(s) / parameter(s)"))
         )
-    | Parsed_DT_div (term, factor) ->
+    | Parsed_product_quotient (term, factor, Parsed_div) ->
         (* Check consistency of division, if it keep constants we can convert to a linear term *)
         let linear_term, linear_factor =
         try_convert_linear_term_of_parsed_discrete_term term,
@@ -914,9 +839,17 @@ let rec try_convert_linear_term_of_parsed_discrete_term = function
 (* Try to convert parsed discrete arithmetic expression (non-linear expression) to a linear expression *)
 (* If it's not possible, we raise an InvalidExpression exception *)
 and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = function
-    | Parsed_DAE_plus (expr, term) -> Linear_plus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
-    | Parsed_DAE_minus (expr, term) -> Linear_minus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
-    | Parsed_DAE_term term -> Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
+    | Parsed_sum_diff (expr, term, sum_diff) ->
+        let linear_expr, linear_term =
+            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr,
+            try_convert_linear_term_of_parsed_discrete_term term
+        in
+        (match sum_diff with
+        | Parsed_plus -> Linear_plus_expression (linear_expr, linear_term)
+        | Parsed_minus ->  Linear_minus_expression (linear_expr, linear_term)
+        )
+    | Parsed_DAE_term term ->
+        Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
 
 (* Try to convert parsed discrete factor to a linear term *)
 (* If it's not possible, we raise an InvalidExpression exception *)
@@ -943,22 +876,25 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
 let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
     | Parsed_arithmetic_expression _ ->
         raise (InvalidExpression "An expression that involve clock(s) / parameter(s) contains a boolean variable")
-    | Parsed_expression (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr) ->
+    | Parsed_comparison (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr) ->
         Parsed_linear_constraint (
             try_convert_linear_expression_of_parsed_discrete_arithmetic_expression l_expr,
             relop,
             try_convert_linear_expression_of_parsed_discrete_arithmetic_expression r_expr
         )
-    | Parsed_expression (l_expr, relop, r_expr) ->
+    | Parsed_comparison (l_expr, relop, r_expr) ->
         raise (InvalidExpression "Use of non arithmetic comparison is forbidden in an expression that involve clock(s) / parameter(s)")
     (* Expression in used ! So it's impossible to make the conversion, we raise an exception*)
-    | Parsed_expression_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
+    | Parsed_comparison_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
     | Parsed_boolean_expression _ -> raise (InvalidExpression "A non-convex predicate involve clock(s) / parameter(s)")
     | Parsed_Not _ -> raise (InvalidExpression "A not expression involve clock(s) / parameter(s)")
 
 let linear_constraint_of_nonlinear_constraint = try_convert_linear_expression_of_parsed_discrete_boolean_expression
 
-
+(* Gather all updates of update section (pre-updates, updates and post-updates) *)
+let updates_of_update_section update_section =
+    let pre_updates, updates, post_updates = update_section in
+    pre_updates @ updates @ post_updates
 
 
 (* Extract variable infos from useful_parsing_model_information *)

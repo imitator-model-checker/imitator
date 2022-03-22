@@ -19,6 +19,24 @@ open Exceptions
 open DiscreteType
 
 (* Discrete value of different specific types *)
+(*
+type discrete_number_value =
+    | Weak_number_value of NumConst.t
+    | Rational_value2 of NumConst.t
+    | Int_value2 of Int32.t
+
+type discrete_scalar_value =
+    | Number_value of discrete_number_value
+    | Bool_value2 of bool
+    | Binary_word_value2 of BinaryWord.t
+
+type xxx =
+    | Scalar_value of discrete_scalar_value
+    | Array_value2 of discrete_scalar_value array
+    | List_value2 of discrete_scalar_value list
+    | Stack_value2 of discrete_scalar_value Stack.t
+    | Queue_value2 of discrete_scalar_value Queue.t
+*)
 
 type discrete_value =
     | Number_value of NumConst.t
@@ -28,19 +46,38 @@ type discrete_value =
     | Binary_word_value of BinaryWord.t
     | Array_value of discrete_value array
     | List_value of discrete_value list
-
+    | Stack_value of discrete_value Stack.t
+    | Queue_value of discrete_value Queue.t
 
 (*
-type (_, _) discrete_value =
-    | Number_value : NumConst.t -> ('e, NumConst.t) discrete_value
-    | Rational_value : NumConst.t -> ('e, NumConst.t) discrete_value
-    | Int_value : Int32.t -> ('e, Int32.t) discrete_value
-    | Bool_value : bool -> ('e, bool) discrete_value
-    | Binary_word_value : BinaryWord.t -> ('e, BinaryWord.t) discrete_value
-    | Array_value : ('e, 'a) discrete_value array -> ('e, ('e, 'a) discrete_value array) discrete_value
-    | List_value : ('e, 'a) discrete_value list -> ('e, ('e, 'a) discrete_value list) discrete_value
-*)
+type rational_t
+type number_t
+type fake_array
+type fake_list
+type fake_stack
+type fake_queue
+type 'a array_t = 'a array
+type 'a list_t = 'a list
+type 'a stack_t = 'a * fake_stack
+type 'a queue_t = 'a * fake_queue
 
+type _ discrete_value2 =
+    | Number_value : NumConst.t -> number_t discrete_value2
+    | Rational_value : NumConst.t -> rational_t discrete_value2
+    | Int_value : Int32.t -> Int32.t discrete_value2
+    | Bool_value : Bool.t -> Bool.t discrete_value2
+    | Binary_word_value : BinaryWord.t -> BinaryWord.t discrete_value2
+    | Array_value : ('a discrete_value2) array -> ('a array_t) discrete_value2
+    | List_value : 'a discrete_value2 list -> 'a list_t discrete_value2
+    | Stack_value : 'a discrete_value2 Stack.t -> 'a stack_t discrete_value2
+    | Queue_value : 'a discrete_value2 Queue.t -> 'a queue_t discrete_value2
+
+let add (type t) (a : t discrete_value2) (b : t discrete_value2) : t discrete_value2 =
+  match a, b with
+  | Number_value a, Number_value b -> Number_value (NumConst.add a b)
+  | Rational_value a, Rational_value b -> Rational_value (NumConst.add a b)
+  | Int_value a, Int_value b -> Int_value (Int32.add a b)
+*)
 
 (* Get discrete var type of a discrete value *)
 let rec discrete_type_of_value = function
@@ -59,6 +96,16 @@ let rec discrete_type_of_value = function
             Var_type_discrete_list Var_type_weak
         else
             Var_type_discrete_list (discrete_type_of_value (List.nth l 0))
+    | Stack_value l ->
+        if Stack.length l = 0 then
+            Var_type_discrete_stack Var_type_weak
+        else
+            Var_type_discrete_stack (discrete_type_of_value (Stack.top l))
+    | Queue_value l ->
+        if Queue.length l = 0 then
+            Var_type_discrete_queue Var_type_weak
+        else
+            Var_type_discrete_queue (discrete_type_of_value (Queue.peek l))
 
 (* Get var type of a discrete value *)
 let var_type_of_value value =
@@ -93,6 +140,19 @@ let rec customized_string_of_value customized_string = function
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
         (* TODO benjamin remove hardcoded "list([a,b,c])" *)
         "list(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_delimiter ^ ")"
+    | Stack_value s ->
+        let str_values_with_extra_comma = Stack.fold (fun acc x -> acc ^ customized_string_of_value customized_string x ^ ", ") "" s in
+        let str_values = if Stack.length s > 0 then String.sub str_values_with_extra_comma 0 ((String.length str_values_with_extra_comma) - 2) else str_values_with_extra_comma in
+        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
+        (* TODO benjamin CLEAN remove hardcoded "stack([a,b,c])" *)
+        if str_values = "" then "stack()" else "stack(" ^ l_delimiter ^ str_values ^ r_delimiter ^ ")"
+
+    | Queue_value q ->
+        let str_values_with_extra_comma = Queue.fold (fun acc x -> acc ^ customized_string_of_value customized_string x ^ ", ") "" q in
+        let str_values = if Queue.length q > 0 then String.sub str_values_with_extra_comma 0 ((String.length str_values_with_extra_comma) - 2) else str_values_with_extra_comma in
+        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
+        (* TODO benjamin CLEAN remove hardcoded "queue([a,b,c])" *)
+        if str_values = "" then "queue()" else "queue(" ^ l_delimiter ^ str_values ^ r_delimiter ^ ")"
 
 let string_of_value = customized_string_of_value global_default_string
 
@@ -139,6 +199,11 @@ let default_bool = Bool_value false
 let default_binary_word_value l = Binary_word_value (BinaryWord.zero l)
 (* Default discrete list value *)
 let default_list_value = List_value []
+(* Default discrete stack value *)
+let default_stack_value = Stack_value (Stack.create ())
+(* Default discrete stack value *)
+let default_queue_value = Queue_value (Queue.create ())
+
 
 (* Get default discrete number value *)
 let default_discrete_number_value = function
@@ -154,6 +219,8 @@ let rec default_discrete_value = function
     | Var_type_discrete_binary_word l -> default_binary_word_value l
     | Var_type_discrete_array (inner_type, length) -> Array_value (Array.make length (default_discrete_value inner_type))
     | Var_type_discrete_list inner_type -> default_list_value
+    | Var_type_discrete_stack inner_type -> default_stack_value
+    | Var_type_discrete_queue inner_type -> default_queue_value
 
 (* Get default discrete value *)
 let default_value = function
@@ -201,6 +268,17 @@ let list_value = function
     | List_value x -> x
     | v -> raise (InternalError ("Unable to get list value of non-list discrete value: " ^ string_of_value v))
 
+(* Get stack value of discrete value *)
+let stack_value = function
+    | Stack_value x -> x
+    | v -> raise (InternalError ("Unable to get stack value of non-stack discrete value: " ^ string_of_value v))
+
+(* Get queue value of discrete value *)
+let queue_value = function
+    | Queue_value x -> x
+    | v -> raise (InternalError ("Unable to get stack value of non-queue discrete value: " ^ string_of_value v))
+
+
 (* Convert any discrete value to NumConst.t value, if possible *)
 let to_numconst_value = function
     | Number_value x
@@ -229,6 +307,8 @@ let to_int_value = function
     | Binary_word_value x -> Int32.of_int (BinaryWord.hash x)
     | Array_value _ -> raise (InternalError "Unable to convert array to Int32.t value")
     | List_value _ -> raise (InternalError "Unable to convert list to Int32.t value")
+    | Stack_value _ -> raise (InternalError "Unable to convert stack to Int32.t value")
+    | Queue_value _ -> raise (InternalError "Unable to convert queue to Int32.t value")
 
 (* Convert any discrete value to float value, if possible *)
 let to_float_value = function
@@ -239,6 +319,8 @@ let to_float_value = function
     | Binary_word_value x -> float_of_int (BinaryWord.hash x)
     | Array_value _ -> raise (InternalError "Unable to convert array to float value")
     | List_value _ -> raise (InternalError "Unable to convert list to float value")
+    | Stack_value _ -> raise (InternalError "Unable to convert stack to float value")
+    | Queue_value _ -> raise (InternalError "Unable to convert queue to float value")
 
 
 (* Get binary word value of discrete value *)
@@ -255,6 +337,7 @@ let convert_to_rational_value value =
 
 (* Convert discrete value to another discrete type *)
 (* Use for implicit conversion *)
+(*
 let rec convert_value_to_discrete_type value target_type =
     match value, target_type with
     (* Source and target type are identical *)
@@ -278,6 +361,8 @@ let rec convert_value_to_discrete_type value target_type =
         Array_value (Array.map (fun value -> convert_value_to_discrete_type value inner_type) inner_values)
     | List_value inner_values, Var_type_discrete_list inner_type ->
         List_value (List.map (fun value -> convert_value_to_discrete_type value inner_type) inner_values)
+    | Stack_value inner_values, Var_type_discrete_stack inner_type ->
+        Stack_value (List.map (fun value -> convert_value_to_discrete_type value inner_type) inner_values)
     (* Other are not supported *)
     | x, t -> failwith (
         "Implicit conversion of value "
@@ -286,6 +371,7 @@ let rec convert_value_to_discrete_type value target_type =
         ^ (string_of_var_type_discrete t)
         ^ " type is not supported"
     )
+*)
 
 (* Hash code of discrete value *)
 let rec hash = function
@@ -297,6 +383,8 @@ let rec hash = function
     (* Arbitrary *)
     | Array_value a -> Array.fold_left (fun acc x -> acc + (hash x)) 0 a
     | List_value l -> List.fold_left (fun acc x -> acc + (hash x)) 0 l
+    | Stack_value s -> Stack.fold (fun acc x -> acc + (hash x)) 0 s
+    | Queue_value s -> Queue.fold (fun acc x -> acc + (hash x)) 0 s
 
 (** Dynamic computing operations on values  **)
 
@@ -310,6 +398,8 @@ let equal a b =
     | Binary_word_value a, Binary_word_value b -> BinaryWord.equal a b
     | Array_value a, Array_value b -> a = b
     | List_value a, List_value b -> a = b
+    | Stack_value a, Stack_value b -> a = b
+    | Queue_value a, Queue_value b -> a = b
     | lt, rt -> raise (
         InternalError ("Computing exception on `"
             ^ string_of_var_type_discrete (discrete_type_of_value lt)

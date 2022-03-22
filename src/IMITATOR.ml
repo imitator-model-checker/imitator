@@ -1199,6 +1199,7 @@ end;
 
 		| Division_by_0 msg -> abort_with_good_exception (Result.Division_by_zero msg) msg
         | Out_of_bound msg -> abort_with_good_exception (Result.Out_of_bound) msg
+        | Empty_collection msg -> abort_with_good_exception (Result.Empty_collection) msg
 		| UnsatisfiableInitialState -> abort_with_good_exception (Result.Unsatisfiable_initial_state) "Unsatisfiable initial state"
 
 
