@@ -827,7 +827,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				);
 
 				(* Convert to the plotutils format *)
-				(draw_x_y NumConst.zero (DiscreteValue.to_numconst_value zero_value))
+				(draw_x_y NumConst.zero (DiscreteValue.convert_to_numconst zero_value))
 			)
 			
 			::
@@ -881,7 +881,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 							
 							(* Same value, current time *)
 							(* Convert to the plotutils format *)
-							(draw_x_y !absolute_time (DiscreteValue.to_numconst_value !previous_value))
+							(draw_x_y !absolute_time (DiscreteValue.convert_to_numconst !previous_value))
 							(* Separator for next point *)
 							^ "\n"
 							,value
@@ -913,7 +913,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 							
 							(* Update the value of the clock using the flow *)
 							(* Clock can only be updated by rationals so we use the numconst value of discrete variable *)
-							let previous_numconst_value = DiscreteValue.to_numconst_value !previous_value in
+							let previous_numconst_value = DiscreteValue.convert_to_numconst !previous_value in
 							let clock_value_after_elapsing = NumConst.add previous_numconst_value (NumConst.mul time_elapsed flow) in
 							
 							(* Same value, current time *)
@@ -944,7 +944,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				previous_point_str
 				
 				(* Then add the current point (easy) in the plotutils format *)
-				^ (draw_x_y !absolute_time (DiscreteValue.to_numconst_value value))
+				^ (draw_x_y !absolute_time (DiscreteValue.convert_to_numconst value))
 			) abstract_steps
 			)
 		) in

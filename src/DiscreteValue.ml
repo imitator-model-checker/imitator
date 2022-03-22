@@ -209,6 +209,15 @@ let to_numconst_value = function
     | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
     | value -> raise (InternalError ("Unable to convert " ^ string_of_value value ^ " to rational NumConst.t value"))
 
+let convert_to_numconst = function
+    | Number_value x
+    | Rational_value x -> x
+    | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
+    | Bool_value x -> if x then NumConst.one else NumConst.zero
+    | Binary_word_value x -> NumConst.numconst_of_int (BinaryWord.to_int x)
+    | _ -> NumConst.zero (* Cannot convert list, array to numconst ! *)
+
+
 (* Convert any discrete value to Int32 value, if possible *)
 let to_int_value = function
     (* Warning !!!! conversion to int should be dependant of the platform ! *)

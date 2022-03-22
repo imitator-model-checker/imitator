@@ -106,6 +106,7 @@ val to_int_value : discrete_value -> Int32.t
 (* Convert any discrete value to float value, if possible *)
 val to_float_value : discrete_value -> float
 
+val convert_to_numconst : discrete_value -> NumConst.t
 
 (* Get discrete value from NumConst.t *)
 val of_numconst : NumConst.t -> discrete_value
