@@ -1403,7 +1403,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		(** Collecting the updates by evaluating the conditions, if there is any *)
 		let clock_updates, discrete_updates = get_updates source_location updates in
         let _ (* no clock update for pre-updates *), pre_discrete_updates = get_updates source_location pre_updates in
-        let _ (* no clock update for pre-updates *), post_discrete_updates = get_updates source_location post_updates in
+(*         let _ (* no clock update for pre-updates *), post_discrete_updates = get_updates source_location post_updates in *)
 
         List.iter (fun (variable_update_type, expr) ->
 

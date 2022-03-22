@@ -2301,7 +2301,7 @@ let merge2021 state_space queue =
                     | [] -> false (* here, we are really done *)
                     | m :: tail -> begin
                         let sj,c' = m in
-                        let global_location : Location.global_location = state.global_location in
+(*                         let global_location : Location.global_location = state.global_location in *)
 
 
                         if are_mergeable c c'
