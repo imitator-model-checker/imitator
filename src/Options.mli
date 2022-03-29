@@ -95,8 +95,16 @@ class imitator_options :
 
         (* New merge options from IMITATOR 3.3 *)
         method merge33_algorithm			: AbstractAlgorithm.merge33_algorithm
+		method is_set_merge33_algorithm		: bool
+		method set_merge33_algorithm		: AbstractAlgorithm.merge33_algorithm -> unit
+		
         method merge33_candidates			: AbstractAlgorithm.merge33_candidates
+		method is_set_merge33_candidates	: bool
+		method set_merge33_candidates		: AbstractAlgorithm.merge33_candidates -> unit
+        
         method merge33_restart 				: bool
+		method is_set_merge33_restart		: bool
+		method set_merge33_restart			: bool -> unit
 
         method model_file_name				: string
 		method model_local_file_name		: string

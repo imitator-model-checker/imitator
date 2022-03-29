@@ -343,8 +343,16 @@ class imitator_options =
         
         (* New merge options from IMITATOR 3.3 *)
         method merge33_algorithm					= value_of_option "merge33_algorithm"  merge33_algorithm
+		method is_set_merge33_algorithm				= merge33_algorithm <> None
+		method set_merge33_algorithm new_merge33_algorithm = merge33_algorithm <- Some new_merge33_algorithm
+        
         method merge33_candidates					= value_of_option "merge33_candidates" merge33_candidates
-        method merge33_restart 						= value_of_option "merge33_restart"    merge33_restart
+		method is_set_merge33_candidates			= merge33_candidates <> None
+		method set_merge33_candidates new_merge33_candidates = merge33_candidates <- Some new_merge33_candidates
+
+		method merge33_restart 						= value_of_option "merge33_restart"    merge33_restart
+		method is_set_merge33_restart				= merge33_restart <> None
+		method set_merge33_restart new_merge33_restart = merge33_restart <- Some new_merge33_restart
 
 		method model_file_name						= model_file_name
 		method model_local_file_name				= model_local_file_name

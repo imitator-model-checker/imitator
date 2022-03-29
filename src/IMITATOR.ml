@@ -192,6 +192,27 @@ if not options#is_set_output_result then(
 (* Get value depending on the algorithm *)
 begin match property_option, options#imitator_mode with
 	| Some property, _ ->
+		
+		(* New merge options as of 3.3 *)
+		
+		(* Update if not yet set *)
+        if not options#is_set_merge33_algorithm then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-algorithm` not set");
+
+            options#set_merge33_algorithm(Merge33_none);
+        );
+		(* Update if not yet set *)
+        if not options#is_set_merge33_restart then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-restart` not set");
+
+            options#set_merge33_restart(false);
+        );
+		
+		
+		(* Old merge options *)
+		
 		(* Update if not yet set *)
 		if not options#is_set_mergeq then (
 			let merge_needed = AlgorithmOptions.merge_needed property in
