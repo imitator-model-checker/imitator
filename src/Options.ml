@@ -185,9 +185,6 @@ class imitator_options =
 		(* For distributed version: kill IM heuristics *)
 		val mutable distributedKillIM				= false
 
-		(* On-the-fly intersection (DEPRECATED) *)
-(* 		val mutable dynamic = ref false *)
-
 		(* Remove useless clocks (slightly experimental) *)
 		val mutable dynamic_clock_elimination		= false
 
@@ -201,8 +198,6 @@ class imitator_options =
 		val mutable merge : bool option				= None
 		val mutable mergeq : bool option			= None
 		val mutable merge212 : bool option			= None
-		(* Merging states on the fly (after pi0-compatibility check) *)
-(* 		val mutable merge_before = false *)
 
 		val mutable merge_n1 : int					= AbstractAlgorithm.undefined_merge_n
 		val mutable merge_n2 : int					= AbstractAlgorithm.undefined_merge_n
@@ -310,7 +305,6 @@ class imitator_options =
 		method distribution_mode					= distribution_mode
 		method distributedKillIM					= distributedKillIM
 		method draw_cart							= draw_cart
-		(* method dynamic = dynamic *)
 		method dynamic_clock_elimination			= dynamic_clock_elimination
 		method no_global_time_in_comparison			= no_global_time_in_comparison
 
@@ -344,7 +338,6 @@ class imitator_options =
 		method is_set_merge212						= merge212 <> None
 		method set_merge212 b						= merge212 <- Some b
 
-(* 		method merge_before = merge_before *)
 		(* Merging heuristic for EFsynthminpq *)
 		method merge_heuristic						= merge_heuristic
 
@@ -755,8 +748,6 @@ class imitator_options =
 				("-cart-time-limit", Int (fun i -> carto_time_limit <- Some i), " Set a global time limit (in seconds) for the cartography (in which case the -time-limit option only applies to each call to IM). Default: no limit.
 				");
 
-				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Default: disabled"); *)
-
 				("-check-ippta", Unit (fun () -> check_ippta <- true), " Check that every new symbolic state contains an integer point; raises an exception if not. Default: disabled.
 				");
 
@@ -893,8 +884,6 @@ class imitator_options =
 
 				("-merge-n1", Int (fun i -> merge_n1 <- i), " value for merge:n1 [WORK IN PROGRESS]"); (*** TODO: explain***)
 				("-merge-n2", Int (fun i -> merge_n2 <- i), " value for merge:n2 [WORK IN PROGRESS]"); (*** TODO: explain***)
-
-				(*				("-merge-before", Unit (fun () -> merge_before <- true) , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: disabled (disable)");*)
 
 				("-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some true; merge <- Some true), "Use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
 				("-no-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm.
@@ -1505,17 +1494,6 @@ class imitator_options =
 			| _ ->
 				print_message Verbose_medium ("Merging technique of [AFS13] (in version 2.12) disabled.")
 			end;
-
-(*			if !merge_before then
-				print_message Verbose_standard ("Variant of the merging technique of [AFS13] enabled. States will be merged before pi0-compatibility test (EXPERIMENTAL).")
-			else
-				print_message Verbose_medium ("Variant of the merging technique of [AFS13] disabled.")
-			;*)
-
-			(*if !dynamic then
-				print_message Verbose_standard ("Dynamic mode (optimization by RS).")
-			else
-				print_message Verbose_medium ("No dynamic mode (default).");*)
 
 			if sync_auto_detection then
 				print_message Verbose_standard ("Auto-detection mode for sync actions.")

@@ -52,7 +52,6 @@ class imitator_options :
 		method distribution_mode			: distribution_mode
 		method distributedKillIM			: bool
 		method draw_cart					: bool
-(* 		method dynamic : bool *)
 		method dynamic_clock_elimination	: bool
 		method no_global_time_in_comparison	: bool
 
@@ -91,7 +90,6 @@ class imitator_options :
 
 		method merge_algorithm				: AbstractAlgorithm.merge_algorithm
 
-		(* 		method merge_before : bool *)
 		(* Merging heuristic for EFsynthminpq *)
 		method merge_heuristic				: merge_heuristic
 

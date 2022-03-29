@@ -5035,7 +5035,7 @@ class virtual algoStateBased =
 			(*** Here, we merge only the queue ***)
 			(*** TODO: merge something else? ***)
 			let new_states_after_merging = ref (!queue) in
-			if options#merge (*|| options#merge_before*) then (
+			if options#merge then (
 				(* New version *)
 				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
@@ -5053,7 +5053,7 @@ class virtual algoStateBased =
 
 
 			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
-			if options#merge (*|| options#merge_before*) then (
+			if options#merge then (
                 queue := StateSpace.merge state_space !queue;
                 (* TODO: the following code belongs in StateSpace *)
                 (match options#exploration_order with
@@ -5271,11 +5271,10 @@ class virtual algoStateBased =
 
 			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
 
-			if options#merge (*|| options#merge_before*) then(
+			if options#merge then(
 				new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
 			)
 			else if options#merge212 then(
-				(*raise (NotImplemented "merge v.2.12");*)
 				let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
 			) else if options#mergedev then(
