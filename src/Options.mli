@@ -105,7 +105,6 @@ class imitator_options :
 		method no_green						: bool
 		method no_leq_test_in_ef			: bool
 		method no_lookahead					: bool
-		method no_pending_ordered			: bool
 		method no_random					: bool
 		method no_time_elapsing				: bool
 		method no_variable_autoremove		: bool

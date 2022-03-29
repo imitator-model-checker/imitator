@@ -232,9 +232,6 @@ class imitator_options =
 		(* do not use lookahead in NDFS *)
 		val mutable no_lookahead					= false
 
-		(* do not order the pending list with bigger zones first in NDFS synthesis *)
-		val mutable no_pending_ordered				= false
-
 		(* do not use random values *)
 		val mutable no_random						= false
 
@@ -356,7 +353,6 @@ class imitator_options =
 		method no_green								= no_green
 		method no_leq_test_in_ef					= no_leq_test_in_ef
 		method no_lookahead							= no_lookahead
-		method no_pending_ordered					= no_pending_ordered
 		method no_time_elapsing						= no_time_elapsing
 		method no_random							= no_random
 		method no_variable_autoremove				= no_variable_autoremove
@@ -916,8 +912,6 @@ class imitator_options =
 
 				("-no-lookahead", Unit (fun () -> no_lookahead <- true), " In NDFS, no lookahead for finding successors closing an accepting cycle. Default: enabled (i.e., lookahead).
 				");
-
-(* 				("-no-pending-ordered", Unit (fun () -> no_pending_ordered <- true), " In NDFS synthesis, do not order the pending queue with larger zones first. Default: enabled."); *)
 
 				("-no-random", Unit (fun () -> no_random <- true), " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: enabled (i.e., random).
 				");
@@ -1530,10 +1524,6 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("No reprocessing of green states in NDFS (default).");
 
-(* 			if !no_pending_ordered then
-				print_message Verbose_standard ("No ordering of pending list with larger zones first in NDFS synthesis.")
-			else
-				print_message Verbose_medium ("Ordering pending list with larger zones first in NDFS synthesis (default)."); *)
 			begin
 			match pending_order with
 			| Pending_accept ->
