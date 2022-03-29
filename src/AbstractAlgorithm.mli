@@ -144,6 +144,25 @@ type merge_dev =
     (** merge(queue,queue);merge(queue,visited) *)
 	| Merge_ordered
 
+(* Main merge algorithms from IMITATOR 3.3 *)
+type merge33_algorithm =
+	(* No merge *)
+	| Merge33_none
+	(* Reconstruct state space *)
+	| Merge33_reconstruct
+	(* On-the-fly modification *)
+	| Merge33_onthefly
+	(* (reimplemented) version of IMITATOR 2.12 merge *)
+	| Merge33_212
+
+
+(* Main merge algorithms from IMITATOR 3.3 *)
+type merge33_candidates =
+	| Merge_candidates_ordered
+	| Merge_candidates_queue
+	| Merge_candidates_visited
+
+
 (** Style of graphical state space to output *)
 type graphical_state_space =
 	(* No graphical state space *)

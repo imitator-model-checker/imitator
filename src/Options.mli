@@ -95,7 +95,12 @@ class imitator_options :
 		(* Merging heuristic for EFsynthminpq *)
 		method merge_heuristic				: merge_heuristic
 
-		method model_file_name				: string
+        (* New merge options from IMITATOR 3.3 *)
+        method merge33_algorithm			: AbstractAlgorithm.merge33_algorithm
+        method merge33_candidates			: AbstractAlgorithm.merge33_candidates
+        method merge33_restart 				: bool
+
+        method model_file_name				: string
 		method model_local_file_name		: string
 		method no_acceptfirst				: bool
 		method nb_args						: int

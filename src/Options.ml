@@ -220,6 +220,11 @@ class imitator_options =
         val mutable mergedev : bool option				    = None
         val mutable merge_dev : AbstractAlgorithm.merge_dev = Merge_visited
 
+        (* New merge options from IMITATOR 3.3 *)
+        val mutable merge33_algorithm  : AbstractAlgorithm.merge33_algorithm option = None
+        val mutable merge33_candidates : AbstractAlgorithm.merge33_candidates option = None
+        val mutable merge33_restart    : bool option = None
+
 		(* Method for NZ algorithms *)
 		val mutable nz_method : AbstractAlgorithm.nz_method option = None
 
@@ -351,6 +356,11 @@ class imitator_options =
         method is_set_mergedev						= mergedev <> None
         method set_mergedev b						= mergedev <- Some b
         method merge_dev    						= merge_dev
+        
+        (* New merge options from IMITATOR 3.3 *)
+        method merge33_algorithm					= value_of_option "merge33_algorithm"  merge33_algorithm
+        method merge33_candidates					= value_of_option "merge33_candidates" merge33_candidates
+        method merge33_restart 						= value_of_option "merge33_restart"    merge33_restart
 
 		method model_file_name						= model_file_name
 		method model_local_file_name				= model_local_file_name
