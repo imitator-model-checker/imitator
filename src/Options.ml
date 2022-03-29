@@ -83,9 +83,6 @@ class imitator_options =
 
 		(* OUTPUT OPTIONS *)
 
-		(* only plot cartography *)
-		val mutable cartonly						= false
-
 		(* Plot cartography; in cartography mode, this option means ANY tile will output a cartography (activated if both `-draw-cart` and `-tiles-files` are true) *)
 		val mutable draw_cart						= false
 
