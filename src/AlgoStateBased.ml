@@ -218,6 +218,9 @@ let counter_explore_using_strategy = create_hybrid_counter_and_register "StateBa
 let counter_post_from_one_state = create_hybrid_counter_and_register "StateBased.post_from_one_state" States_counter Verbose_experiments
 let counter_process_post_n = create_hybrid_counter_and_register "StateBased.process_post_n" States_counter Verbose_experiments
 
+(* Counter for updates of continuous variables (mostly PPL) *)
+let counter_updates_assign = create_hybrid_counter_and_register "StateBased.updates_assign" States_counter Verbose_experiments
+
 (* Misc counters *)
 let counter_nplus1 = create_hybrid_counter_and_register "StateBased.computation of post_n+1" States_counter Verbose_medium
 
@@ -477,6 +480,12 @@ let get_clocks_in_updates (updates : AbstractModel.clock_updates list) : Automat
 (*------------------------------------------------------------*)
 (*** TO OPTIMIZE: use cache (?) *)
 let apply_updates_assign_gen (time_direction: time_direction) (linear_constraint : LinearConstraint.pxd_linear_constraint) (clock_updates : AbstractModel.clock_updates list) =
+
+	(* Statistics *)
+	counter_updates_assign#increment;
+	counter_updates_assign#start;
+	
+
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -759,7 +768,14 @@ let apply_updates_assign_gen (time_direction: time_direction) (linear_constraint
 			(*** TODO: check what about discrete variables ?!! ***)
 		) (* end CASE 3 *)
 		)
-	) (* end if some clock updates *)
+	); (* end if some clock updates *)
+	
+	(* Statistics *)
+	counter_updates_assign#stop;
+	
+	(* Bye bye *)
+	()
+
 
 
 (*------------------------------------------------------------*)
