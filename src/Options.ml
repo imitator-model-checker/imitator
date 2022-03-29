@@ -584,7 +584,6 @@ class imitator_options =
 
 
 			and set_pending_order order =
-				(*  *)
 				if order = "none" then
 					pending_order <- Pending_none
 				else if order = "param" then
@@ -601,7 +600,6 @@ class imitator_options =
 				)
 
 			and set_merge_algorithm merge_algorithm_str =
-				(*  *)
 				if merge_algorithm_str = "none" then
 					merge_algorithm <- Merge_none
 				else if merge_algorithm_str = "static" then
@@ -618,7 +616,6 @@ class imitator_options =
 				)
 
 			and set_merge_dev merge_dev_str =
-				(*  *)
 				if merge_dev_str = "visited" then
 					merge_dev <- Merge_visited
 				else if merge_dev_str = "queue" then
@@ -633,7 +630,6 @@ class imitator_options =
 				)
 
 			and set_merge_heuristic heuristic =
-				(*  *)
 				if heuristic = "always" then
 					merge_heuristic <- Merge_always
 				else if heuristic = "targetseen" then
@@ -648,6 +644,58 @@ class imitator_options =
 					merge_heuristic <- Merge_iter100
 				else(
 					print_error ("The merge heuristic `" ^ heuristic ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
+			(* Merge heuristics as of 3.3 *)
+			and set_merge33_algorithm algorithm_str =
+				if algorithm_str = "none" then
+					merge33_algorithm <- Some Merge33_none
+					
+				else if algorithm_str = "reconstruct" then
+					merge33_algorithm <- Some Merge33_reconstruct
+					
+				else if algorithm_str = "onthefly" then
+					merge33_algorithm <- Some Merge33_onthefly
+					
+				else if algorithm_str = "2.12" then
+					merge33_algorithm <- Some 	Merge33_212
+					
+				else(
+					print_error ("The merge heuristic `" ^ algorithm_str ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
+			and set_merge33_candidates candidates_str =
+				if candidates_str = "ordered" then
+					merge33_candidates <- Some Merge_candidates_ordered
+					
+				else if candidates_str = "queue" then
+					merge33_candidates <- Some Merge_candidates_queue
+					
+				else if candidates_str = "visited" then
+					merge33_candidates <- Some Merge_candidates_visited
+					
+				else(
+					print_error ("The merge candidates option `" ^ candidates_str ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
+			and set_merge33_restart restart_str =
+				if restart_str = "on" then
+					merge33_restart <- Some true
+					
+				else if restart_str = "off" then
+					merge33_restart <- Some false
+					
+				else(
+					print_error ("The merge restart option `" ^ restart_str ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
@@ -890,10 +938,24 @@ class imitator_options =
                 ("-mergedev-option", String set_merge_dev, " Mergedev option. Possible values are `visited`, `queue`, `ordered`. Default: `visited`.
                 				");
 
+				(*** NOTE: "old" merge, dating from roughly 3.0 ***)
 				("-merge-algorithm", String set_merge_algorithm, " Merge algorithm. Possible values are `none`, `static`, `staticl`, `expback`. Default: `none`.
 				");
 
+				(*** NOTE: "old" merge, dating from roughly 3.0 ***)
 				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Possible values are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.
+				");
+
+				(*** NOTE: New merge as of 3.3 ***)
+				("-merge-algo", String set_merge33_algorithm, " Merge algorithm [AMPP22]. Possible values are `none`, `reconstruct`, `onthefly`, `2.12`. Default: depends on the property.
+				");
+
+				(*** NOTE: New merge as of 3.3 ***)
+				("-merge-candidates", String set_merge33_candidates, " Merge candidates [AMPP22]. Possible values are `queue`, `visited`, `ordered`. Default: depends on the property.
+				");
+
+				(*** NOTE: New merge as of 3.3 ***)
+				("-merge-restart", String set_merge33_restart, " Restart merging after successful merging until fixpoint? [AMPP22]. Possible values are `on`, `off`. Default: `off`.
 				");
 
 				("-mode", String set_mode, " Special mode for " ^ Constants.program_name ^ ".
