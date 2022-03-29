@@ -226,9 +226,6 @@ class imitator_options =
 		(* do not use green colour in NDFS *)
 		val mutable no_green						= false
 
-		(* do not use pruning of initial zone in NDFS *)
-(* 		val mutable no_initprune = false *)
-
 		(* No leq test of the new states wrt the computed constraint in EFsynth *)
 		val mutable no_leq_test_in_ef				= false
 
@@ -917,8 +914,6 @@ class imitator_options =
 				("-no-green", Unit (fun () -> no_green <- true), " In NDFS, Do not use green colour in NDFS. Default: enabled (i.e., green).
 				");
 
-(* 				("-no-initprune", Unit (fun () -> no_initprune <- true), " In collecting NDFS, no pruning if the initial constraint is included in the collected zone. Default: disabled."); *)
-
 				("-no-lookahead", Unit (fun () -> no_lookahead <- true), " In NDFS, no lookahead for finding successors closing an accepting cycle. Default: enabled (i.e., lookahead).
 				");
 
@@ -1505,11 +1500,6 @@ class imitator_options =
 				print_message Verbose_standard ("Not reordering successors (accepting states first) in NDFS search.")
 			else
 				print_message Verbose_medium ("Reordering successors (accepting states first) in NDFS (default).");
-
-(* 			if !no_initprune then
-				print_message Verbose_standard ("No initial zone prune in collecting NDFS.")
-			else
-				print_message Verbose_medium ("Pruning of initial constraint in NDFS (default)."); *)
 
 			begin
 			match layer with
