@@ -117,7 +117,10 @@ let convert_guard variable_infos guard_convex_predicate =
             let discrete_guard = nonlinear_constraint_of_convex_predicate variable_infos discrete_guard_convex_predicate in
             let continuous_guard = linear_constraint_of_convex_predicate variable_infos continuous_guard_convex_predicate in
 
-            (* TODO maybe it's possible to make this optimisation with non linear discrete guard ? *)
+            (* TODO benjamin, check if optimization is possible *)
+            (* NOTE : This optimization (below) was possible when discrete part use only rational-valued variables
+               I don't think that it's possible anymore *)
+
             (*** NOTE: try to simplify a bit if possible (costly, but would save a lot of time later if checks are successful) ***)
             (*      let intersection = LinearConstraint.pxd_intersection_with_d continuous_guard discrete_guard in*)
 

@@ -1164,12 +1164,15 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
             )
             (* Try to reduce expression to a value *)
             else if not (DiscreteExpressionEvaluator.is_global_expression_constant converted_expr) then (
-                (* TODO benjamin CLEAN REPLACE BY STRING OF DiscreteExpression *)
+
+                (* Variable name access from list to function *)
+                let variable_names_f i = List.nth variable_infos.variable_names i in
+
                 print_error (
                     "Init variable \""
                     ^ variable_name
                     ^ "\" with a non constant expression \""
-                    ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
+                    ^ DiscreteExpressions.string_of_global_expression variable_names_f converted_expr
                     ^ "\" is forbidden."
                 );
                 false

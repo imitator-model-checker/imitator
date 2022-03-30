@@ -449,7 +449,7 @@ let ill_typed_message_of_expressions str_expressions discrete_types str_outer_ex
     ^ str_expressions_with_type
     ^ " in `"
     ^ str_outer_expr
-    ^ "` are ill-typed or of incompatible types."
+    ^ "` are ill-typed or incompatibles."
 
 let ill_typed_message str_left_expr str_right_expr str_outer_expr l_type r_type =
     "Some of the expressions `"
@@ -462,7 +462,7 @@ let ill_typed_message str_left_expr str_right_expr str_outer_expr l_type r_type 
     ^ DiscreteType.string_of_var_type_discrete r_type
     ^ "` in `"
     ^ str_outer_expr
-    ^ "` are ill-typed or of incompatible types."
+    ^ "` are ill-typed or incompatibles."
 
 (* Get inner type of a collection analysing types of it's elements *)
 (* If the collection is empty, it's type will be inferred by the context *)

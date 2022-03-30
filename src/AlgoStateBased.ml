@@ -1432,7 +1432,8 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
                 let old_value = discrete_valuation discrete_index in
 
-                (* TODO benjamin put a comment here to explain Some *)
+                (* Adding some because discrete valuation is optional because
+                   it's not necessary when evaluating constant expressions *)
                 let discrete_valuation_opt = Some discrete_valuation in
 
                 (* Compute its new value *)
@@ -1457,7 +1458,8 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
                 let old_value = discrete_valuation discrete_index in
 
-                (* TODO benjamin put a comment here to explain Some *)
+                (* Adding some because discrete valuation is optional because
+                   it's not necessary when evaluating constant expressions *)
                 let discrete_valuation_opt = Some discrete_valuation in
 
                 (* Compute its new value *)
@@ -1538,7 +1540,8 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
                 let old_value = discrete_valuation discrete_index in
 
-                (* TODO benjamin put a comment here to explain Some *)
+                (* Adding some because discrete valuation is optional because
+                   it's not necessary when evaluating constant expressions *)
                 let discrete_valuation_opt = Some discrete_valuation in
 
                 (* Compute its new value *)
