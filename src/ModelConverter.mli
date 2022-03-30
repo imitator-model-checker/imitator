@@ -10,7 +10,6 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/09
- * Last modified     : 2020/01/17
  *
  ************************************************************)
 

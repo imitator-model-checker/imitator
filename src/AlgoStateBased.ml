@@ -12,7 +12,6 @@
  *
  * File contributors : Étienne André, Johan Arcile, Jaime Arias, Nguyễn Hoàng Gia, Dylan Marinho
  * Created           : 2015/12/02
- * Last modified     : 2022/02/23
  *
  ************************************************************)
 

@@ -8,7 +8,6 @@
  * 
  * File contributors : Laure Petrucci, Jaco van de Pol, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2019/09/10
  *
  ************************************************************)
 

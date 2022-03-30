@@ -10,7 +10,6 @@
  *
  * File contributors : Benjamin L., Étienne André
  * Created           : 2021/03/01
- * Last modified     : 2021/09/23
  *
  ************************************************************)
 

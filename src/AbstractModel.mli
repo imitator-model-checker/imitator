@@ -10,7 +10,6 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2021/06/08
  *
  ************************************************************)
 

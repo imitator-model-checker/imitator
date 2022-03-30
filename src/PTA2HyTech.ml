@@ -12,7 +12,6 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2021/06/17
  *
  ************************************************************)
 

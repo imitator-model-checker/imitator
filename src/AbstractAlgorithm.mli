@@ -8,7 +8,6 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/18
- * Last modified     : 2021/08/31
  *
  ************************************************************)
 

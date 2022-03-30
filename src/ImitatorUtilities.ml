@@ -10,7 +10,6 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2021/04/27
  *
  ************************************************************)
 

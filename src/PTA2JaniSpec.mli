@@ -10,7 +10,6 @@
  *
  * File contributors : Dylan Marinho
  * Created           : 2021/02/23
- * Last modified     : 2021/02/23
  *
  ************************************************************)
 
