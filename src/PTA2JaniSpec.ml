@@ -806,7 +806,7 @@ let string_of_clocks model =
 
 (* String of number var type *)
 let string_of_var_type_discrete_number_for_jani = function
-    | Var_type_discrete_rational -> json_quoted "real"
+    | Var_type_discrete_rat -> json_quoted "real"
     | Var_type_discrete_int -> json_quoted "int"
     | Var_type_discrete_unknown_number -> json_quoted "number"
 
@@ -1072,10 +1072,10 @@ let string_of_clock_updates model = function
 
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep jani_separator (List.map (fun (variable_access, global_expression) ->
+	string_of_list_of_string_with_sep jani_separator (List.map (fun (parsed_variable_update_type, global_expression) ->
 		"{\"ref\": \""
 		(* Convert variable access to string *)
-		^ ModelPrinter.string_of_variable_access model variable_access
+		^ ModelPrinter.string_of_parsed_variable_update_type model parsed_variable_update_type
 		^ "\"" ^ jani_separator ^ " \"value\" : "
 		^ (string_of_global_expression model.variable_names global_expression)
 		^ "}"
@@ -1113,10 +1113,10 @@ let string_of_conditional_clock_updates model boolean_expr order = function
 
 (* Convert a list of discrete updates into a string *)
 let string_of_conditional_discrete_updates model boolean_expr order updates =
-	string_of_list_of_string_with_sep (jani_separator) (List.rev_map (fun (variable_access, global_expression) ->
+	string_of_list_of_string_with_sep (jani_separator) (List.rev_map (fun (parsed_variable_update_type, global_expression) ->
 
 		let expression = (string_of_global_expression model.variable_names global_expression) in
-		let variable_name = "\"" ^ ModelPrinter.string_of_variable_access model variable_access ^ "\"" in
+		let variable_name = "\"" ^ ModelPrinter.string_of_parsed_variable_update_type model parsed_variable_update_type ^ "\"" in
 		"{\"ref\": " ^ variable_name ^ jani_separator
 		^ " \"value\" : "
 		^ " {\"op\": \"ite\"" ^ jani_separator

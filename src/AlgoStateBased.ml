@@ -1394,9 +1394,9 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 	let model = Input.get_model() in
 
 
-    let rec discrete_index_of_variable_access = function
+    let rec discrete_index_of_parsed_variable_update_type = function
         | Variable_update discrete_index -> Some discrete_index
-        | Indexed_update (variable_access, _) -> discrete_index_of_variable_access variable_access
+        | Indexed_update (parsed_variable_update_type, _) -> discrete_index_of_parsed_variable_update_type parsed_variable_update_type
         | Void_update -> None
     in
 
@@ -1423,7 +1423,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
         List.iter (fun (variable_update_type, expr) ->
 
             let discrete_valuation = Location.get_discrete_value location in
-            let discrete_index_opt = discrete_index_of_variable_access variable_update_type in
+            let discrete_index_opt = discrete_index_of_parsed_variable_update_type variable_update_type in
 
             match discrete_index_opt with
             | None ->
@@ -1449,7 +1449,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		List.iter (fun (variable_update_type, global_expression) ->
 
             let discrete_valuation = Location.get_discrete_value location in
-            let discrete_index_opt = discrete_index_of_variable_access variable_update_type in
+            let discrete_index_opt = discrete_index_of_parsed_variable_update_type variable_update_type in
 
             match discrete_index_opt with
             | None ->
@@ -1531,7 +1531,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
         List.iter (fun (variable_update_type, expr) ->
 
             let discrete_valuation = Location.get_discrete_value location in
-            let discrete_index_opt = discrete_index_of_variable_access variable_update_type in
+            let discrete_index_opt = discrete_index_of_parsed_variable_update_type variable_update_type in
 
             match discrete_index_opt with
             | None ->

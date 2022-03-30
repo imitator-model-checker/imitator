@@ -36,8 +36,7 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 
 (* Specific type of number *)
 type var_type_discrete_number =
-    (* TODO benjamin CLEAN rename to Var_type_discrete_rat *)
-    | Var_type_discrete_rational
+    | Var_type_discrete_rat
     | Var_type_discrete_int
 
 (* Specific type of discrete variables *)
@@ -71,7 +70,6 @@ type parsed_conj_dis =
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
-(* TODO benjamin CLEAN rename to parsed_global_expression *)
 type parsed_global_expression =
     | Parsed_global_expression of parsed_boolean_expression
 
@@ -176,10 +174,9 @@ type guard = convex_predicate
 type invariant = convex_predicate
 
 (* Variable name or variable access (x or x[index]) *)
-(* TODO benjamin REFACTOR rename to variable_update_type (test already make but change 21 files) *)
-type variable_access =
+type parsed_variable_update_type =
     | Parsed_variable_update of variable_name
-    | Parsed_indexed_update of variable_access * parsed_discrete_arithmetic_expression
+    | Parsed_indexed_update of parsed_variable_update_type * parsed_discrete_arithmetic_expression
     | Parsed_void_update
 
 type updates_type =
@@ -188,7 +185,7 @@ type updates_type =
     | Parsed_post_updates
 
 (** basic updating *)
-type normal_update = variable_access * parsed_global_expression
+type normal_update = parsed_variable_update_type * parsed_global_expression
 (** conditional updating *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 

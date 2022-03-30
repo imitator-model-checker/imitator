@@ -54,9 +54,9 @@ and typed_discrete_factor =
     | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * inner_type
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
 
-type typed_variable_access =
+type typed_variable_update_type =
     | Typed_variable_name of variable_name
-    | Typed_variable_access of typed_variable_access * typed_discrete_arithmetic_expression * var_type_discrete
+    | Typed_parsed_variable_update_type of typed_variable_update_type * typed_discrete_arithmetic_expression * var_type_discrete
     | Typed_void_update
 
 type typed_loc_predicate =
@@ -99,7 +99,7 @@ val check_constant_expression : variable_infos -> variable_name * parsed_global_
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
 (* Check that an update is well typed *)
-val check_update : variable_infos -> updates_type -> variable_access -> ParsingStructure.parsed_global_expression -> typed_variable_access * typed_global_expression
+val check_update : variable_infos -> updates_type -> parsed_variable_update_type -> ParsingStructure.parsed_global_expression -> typed_variable_update_type * typed_global_expression
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
@@ -125,6 +125,6 @@ val bool_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 
-val variable_access_of_typed_variable_access : variable_infos -> TypeChecker.typed_variable_access -> DiscreteExpressions.variable_update_type
+val parsed_variable_update_type_of_typed_variable_update_type : variable_infos -> TypeChecker.typed_variable_update_type -> DiscreteExpressions.variable_update_type
 
 end

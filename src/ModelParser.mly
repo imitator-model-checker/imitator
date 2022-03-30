@@ -184,7 +184,7 @@ decl_var_list:
 
 var_type:
 	| CT_CLOCK { Var_type_clock }
-	| CT_CONSTANT { Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational) }
+	| CT_CONSTANT { Var_type_discrete (Var_type_discrete_number Var_type_discrete_rat) }
 	| CT_PARAMETER { Var_type_parameter }
 	| var_type_discrete { Var_type_discrete $1 }
 ;
@@ -222,7 +222,7 @@ var_type_discrete_queue:
 
 
 var_type_discrete_number:
-    | CT_DISCRETE { Var_type_discrete_rational }
+    | CT_DISCRETE { Var_type_discrete_rat }
     | CT_INT { Var_type_discrete_int }
 ;
 
@@ -489,9 +489,9 @@ update_seq_nonempty_list:
 /************************************************************/
 
 /* Variable or variable access */
-variable_access:
+parsed_variable_update_type:
   | NAME { Parsed_variable_update $1 }
-  | variable_access LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
+  | parsed_variable_update_type LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
 ;
 
 /** Normal updates */
@@ -513,7 +513,7 @@ update:
 		(Parsed_variable_update $1, $3)
 	}
 
-	| variable_access OP_ASSIGN expression { ($1, $3) }
+	| parsed_variable_update_type OP_ASSIGN expression { ($1, $3) }
   | expression { (Parsed_void_update, $1) }
 ;
 

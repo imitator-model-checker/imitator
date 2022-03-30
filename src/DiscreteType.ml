@@ -19,7 +19,7 @@
 
 (* Specific type of number *)
 type var_type_discrete_number =
-    | Var_type_discrete_rational
+    | Var_type_discrete_rat
     | Var_type_discrete_int
     | Var_type_discrete_unknown_number
 
@@ -49,7 +49,7 @@ type var_type =
 
 (* String of number var type *)
 let string_of_var_type_discrete_number = function
-    | Var_type_discrete_rational -> "rational"
+    | Var_type_discrete_rat -> "rational"
     | Var_type_discrete_int -> "int"
     | Var_type_discrete_unknown_number -> "number"
 
@@ -134,16 +134,16 @@ let rec extract_inner_type = function
 (* For example : 1 is unknown number, it will be a rational, [1,2] is an array of unknown number, it will be *)
 (* an array of rational *)
 let rec default_type_of_type_holding_unknown_number_type = function
-    | Var_type_discrete_number Var_type_discrete_unknown_number -> Var_type_discrete_number Var_type_discrete_rational
+    | Var_type_discrete_number Var_type_discrete_unknown_number -> Var_type_discrete_number Var_type_discrete_rat
     | Var_type_discrete_array (inner_type, length) -> Var_type_discrete_array (default_type_of_type_holding_unknown_number_type inner_type, length)
     | Var_type_discrete_list inner_type -> Var_type_discrete_list (default_type_of_type_holding_unknown_number_type inner_type)
     | Var_type_discrete_stack inner_type -> Var_type_discrete_stack (default_type_of_type_holding_unknown_number_type inner_type)
     | Var_type_discrete_queue inner_type -> Var_type_discrete_queue (default_type_of_type_holding_unknown_number_type inner_type)
     | _ as discrete_type -> discrete_type
 
-(* Check if discrete type is a Var_type_discrete_rational *)
+(* Check if discrete type is a Var_type_discrete_rat *)
 let is_discrete_type_rational_type = function
-    | Var_type_discrete_number Var_type_discrete_rational -> true
+    | Var_type_discrete_number Var_type_discrete_rat -> true
     | _ -> false
 
 (* Check if discrete type is a Var_type_discrete_int *)
@@ -163,14 +163,14 @@ let is_discrete_type_binary_word_type = function
 
 let discrete_type_of_var_type = function
     | Var_type_clock
-    | Var_type_parameter -> Var_type_discrete_number Var_type_discrete_rational
+    | Var_type_parameter -> Var_type_discrete_number Var_type_discrete_rat
     | Var_type_discrete x -> x
 
 (* Check if two discrete number types are compatible *)
 let is_discrete_type_number_compatibles type_number_a type_number_b =
     match type_number_a, type_number_b with
-    | Var_type_discrete_rational, Var_type_discrete_int
-    | Var_type_discrete_int, Var_type_discrete_rational -> false
+    | Var_type_discrete_rat, Var_type_discrete_int
+    | Var_type_discrete_int, Var_type_discrete_rat -> false
     | _ -> true
 
 (* Check if two discrete types are compatible *)
@@ -199,7 +199,7 @@ let rec is_discrete_type_compatibles var_type expr_type =
 let stronger_discrete_number_type_of discrete_number_type_a discrete_number_type_b =
     match discrete_number_type_a, discrete_number_type_b with
     | Var_type_discrete_unknown_number, Var_type_discrete_int
-    | Var_type_discrete_unknown_number, Var_type_discrete_rational -> discrete_number_type_b
+    | Var_type_discrete_unknown_number, Var_type_discrete_rat -> discrete_number_type_b
     | _ -> discrete_number_type_a
 
 (* Get the stronger type between two given types, see stronger_discrete_number_type_of *)

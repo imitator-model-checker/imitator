@@ -438,11 +438,11 @@ and string_of_linear_term variable_infos = function
 
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
-let rec string_of_variable_access variable_infos = function
+let rec string_of_parsed_variable_update_type variable_infos = function
     | Parsed_variable_update variable_name -> variable_name
-    | Parsed_indexed_update (variable_access, expr) ->
+    | Parsed_indexed_update (parsed_variable_update_type, expr) ->
         let l_del, r_del = Constants.default_array_string.array_access_delimiter in
-        string_of_variable_access variable_infos variable_access
+        string_of_parsed_variable_update_type variable_infos parsed_variable_update_type
         ^ l_del ^ string_of_parsed_arithmetic_expression variable_infos expr ^ r_del
     | Parsed_void_update -> ""
 
@@ -770,14 +770,14 @@ let get_variables_in_nonlinear_convex_predicate convex_predicate =
 
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
-let rec variable_name_of_variable_access = function
+let rec variable_name_of_parsed_variable_update_type = function
     | Parsed_variable_update variable_name -> Some variable_name
-    | Parsed_indexed_update (variable_access, _) -> variable_name_of_variable_access variable_access
+    | Parsed_indexed_update (parsed_variable_update_type, _) -> variable_name_of_parsed_variable_update_type parsed_variable_update_type
     | Parsed_void_update -> None
 
 (* Check if variable access is a variable name directly *)
 (* ex : my_var -> true, my_var[i] -> false *)
-let is_variable_access_is_a_variable_name = function
+let is_parsed_variable_update_type_is_a_variable_name = function
     | Parsed_variable_update _ -> true
     | Parsed_void_update
     | Parsed_indexed_update _ -> false

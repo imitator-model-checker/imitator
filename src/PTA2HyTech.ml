@@ -103,7 +103,7 @@ let check_declaration_compatibility model =
 	List.iter (fun i ->
 	    let variable_name = model.variable_names i in
 	    match model.type_of_variables i with
-	    | DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational)
+	    | DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rat)
 	    | DiscreteType.Var_type_clock
 	    | DiscreteType.Var_type_parameter -> ()
 	    | var_type -> print_warning ("Variable `" ^ variable_name ^ " : " ^ DiscreteType.string_of_var_type var_type ^ "` is not a rational, HyTech only support rational-valued variable.")
@@ -238,9 +238,9 @@ let string_of_clock_updates model = function
 (*** TODO: fix or print warning ***)
 let string_of_discrete_updates model updates =
 
-	string_of_list_of_string_with_sep ", " (List.map (fun (variable_access, global_expression) ->
+	string_of_list_of_string_with_sep ", " (List.map (fun (parsed_variable_update_type, global_expression) ->
 	    (* Convert the variable access to string *)
-	    let variable_name = ModelPrinter.string_of_variable_access model variable_access in
+	    let variable_name = ModelPrinter.string_of_parsed_variable_update_type model parsed_variable_update_type in
 		variable_name
 		^ "' = "
 		(* Convert the global_expression *)

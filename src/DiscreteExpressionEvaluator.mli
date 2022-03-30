@@ -7,9 +7,9 @@ val eval_discrete_boolean_expression : discrete_valuation option -> discrete_boo
 val eval_global_expression : discrete_valuation option -> global_expression -> DiscreteValue.discrete_value
 
 
-val try_reduce_global_expression : global_expression -> DiscreteValue.discrete_value
-val try_reduce_rational_term : rational_term -> NumConst.t
-val try_reduce_rational_factor : rational_factor -> NumConst.t
+val try_eval_constant_global_expression : global_expression -> DiscreteValue.discrete_value
+val try_eval_constant_rational_term : rational_term -> NumConst.t
+val try_eval_constant_rational_factor : rational_factor -> NumConst.t
 
 val is_global_expression_constant : global_expression -> bool
 

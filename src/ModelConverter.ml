@@ -63,7 +63,7 @@ exception InvalidProperty
 
 (* Convert var type number from parsing structure to abstract model *)
 let convert_var_type_discrete_number = function
-    | ParsingStructure.Var_type_discrete_rational -> DiscreteType.Var_type_discrete_rational
+    | ParsingStructure.Var_type_discrete_rat -> DiscreteType.Var_type_discrete_rat
     | ParsingStructure.Var_type_discrete_int -> DiscreteType.Var_type_discrete_int
 
 (* Convert discrete var type from parsing structure to abstract model *)
@@ -569,7 +569,7 @@ let all_locations_different =
 (*------------------------------------------------------------*)
 let check_update variable_infos automaton_name update =
 
-    let check_update_normal (variable_access, global_expression) =
+    let check_update_normal (parsed_variable_update_type, global_expression) =
 
         (* Function that check that variable kind of an update is not a constant *)
         let check_variable_kind_of_update variable_name =
@@ -585,7 +585,7 @@ let check_update variable_infos automaton_name update =
             | ParsingStructureUtilities.Constant_kind _ ->
                     print_error (
                         "Trying to update a constant: `"
-                        ^ ParsingStructureUtilities.string_of_variable_access variable_infos variable_access
+                        ^ ParsingStructureUtilities.string_of_parsed_variable_update_type variable_infos parsed_variable_update_type
                         ^ " := "
                         ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression
                         ^ "`"
@@ -636,13 +636,13 @@ let check_update variable_infos automaton_name update =
         in
 
         (* Function that check update on variable or variable access *)
-        let rec check_variable_access = function
+        let rec check_parsed_variable_update_type = function
             | Parsed_void_update ->
                 check_all_variables_defined_in_update "_"
 
             (* TODO benjamin IMPORTANT check if no error when variable not declared in index expression *)
-            | Parsed_indexed_update (variable_access, _) ->
-                check_variable_access variable_access
+            | Parsed_indexed_update (parsed_variable_update_type, _) ->
+                check_parsed_variable_update_type parsed_variable_update_type
 
             | Parsed_variable_update variable_name ->
 
@@ -668,7 +668,7 @@ let check_update variable_infos automaton_name update =
                     )
                 )
         in
-        check_variable_access variable_access
+        check_parsed_variable_update_type parsed_variable_update_type
 
     in
 
@@ -1177,7 +1177,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
                 );
                 false
             ) else (
-                let value = DiscreteExpressionEvaluator.try_reduce_global_expression converted_expr in
+                let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression converted_expr in
                 Hashtbl.add init_values_for_discrete discrete_index value;
                 true
             )
@@ -1306,7 +1306,7 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
                 ^ "` used in init constraint \""
                 ^ ParsingStructureUtilities.string_of_parsed_init_state_predicate variable_infos lp
                 ^ "\" should be "
-                ^ DiscreteType.string_of_var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational)
+                ^ DiscreteType.string_of_var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rat)
             );
             continuous_init_error := true;
         ) non_rational_variable_names
@@ -1645,8 +1645,8 @@ let get_conditional_update_value = function
 
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filter_updates removed_variable_names updates =
-  let not_removed_variable (variable_access, _) =
-    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+  let not_removed_variable (parsed_variable_update_type, _) =
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type parsed_variable_update_type in
     match variable_name_opt with
     | Some variable_name ->
         not (List.mem variable_name removed_variable_names)
@@ -1669,12 +1669,12 @@ let filter_updates removed_variable_names updates =
 let to_abstract_clock_update variable_infos only_resets updates_list =
 
   (** Translate parsed clock update into the tuple clock_index, linear_term *)
-  let to_intermediate_abstract_clock_update (variable_access, update_expr) =
-    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+  let to_intermediate_abstract_clock_update (parsed_variable_update_type, update_expr) =
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type parsed_variable_update_type in
     match variable_name_opt with
     | Some variable_name ->
         let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-        let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos variable_access update_expr in
+        let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos parsed_variable_update_type update_expr in
         (variable_index, converted_update)
     | None -> raise (InternalError "Try to convert a unit expression to a clock.")
   in
@@ -1713,9 +1713,9 @@ let is_only_resets updates =
 (** Split normal updates into clock, discrete updates *)
 let split_to_clock_discrete_updates variable_infos updates =
   (** Check if a normal update is a clock update *)
-  let is_clock_update (variable_access, parsed_update_expression) =
+  let is_clock_update (parsed_variable_update_type, parsed_update_expression) =
 
-    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type parsed_variable_update_type in
     match variable_name_opt with
     | Some variable_name ->
         (* Retrieve variable type *)
@@ -1746,7 +1746,7 @@ let convert_normal_updates variable_infos updates_type updates_list =
     );
 
     (* Convert discrete udpates *)
-    let converted_discrete_updates = List.map (fun (variable_access, expr) -> DiscreteExpressionConverter.convert_update variable_infos updates_type variable_access expr) parsed_discrete_updates in
+    let converted_discrete_updates = List.map (fun (parsed_variable_update_type, expr) -> DiscreteExpressionConverter.convert_update variable_infos updates_type parsed_variable_update_type expr) parsed_discrete_updates in
     (* Convert continuous udpates *)
     let converted_clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
 
@@ -3353,7 +3353,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         variable_names = [];
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];
-        type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational);
+        type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rat);
     }
     in
 
@@ -3378,7 +3378,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         let constant = name, expr, var_type in
 
         let typed_expr(*, expr_type *) = DiscreteExpressionConverter.convert_discrete_constant initialized_constants constant in
-        let value = DiscreteExpressionEvaluator.try_reduce_global_expression typed_expr in
+        let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression typed_expr in
         ImitatorUtilities.print_message Verbose_standard "";
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;

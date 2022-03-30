@@ -475,16 +475,16 @@ let json_of_clock_updates model clock_updates =
 let rec string_of_variable_update_type model = function
 	| Variable_update (variable_index) ->
 		model.variable_names variable_index
-	| Indexed_update (variable_access, index_expr) ->
-		string_of_variable_update_type model variable_access
+	| Indexed_update (parsed_variable_update_type, index_expr) ->
+		string_of_variable_update_type model parsed_variable_update_type
 		^ "[" ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names index_expr  ^ "]"
     | Void_update -> ""
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_access, arithmetic_expression) ->
+	string_of_list_of_string_with_sep sep (List.rev_map (fun (parsed_variable_update_type, arithmetic_expression) ->
 		(* Convert the variable name *)
-		string_of_variable_update_type model variable_access
+		string_of_variable_update_type model parsed_variable_update_type
 		^ " := "
 		(* Convert the arithmetic_expression *)
 		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
@@ -492,9 +492,9 @@ let string_of_discrete_updates ?(sep=", ") model updates =
 
 (* Convert a list of discrete updates into a JSON-like string *)
 let json_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_access, arithmetic_expression) ->
+	string_of_list_of_string_with_sep sep (List.rev_map (fun (parsed_variable_update_type, arithmetic_expression) ->
 		(* Convert the variable name *)
-		"" ^ (json_of_string (string_of_variable_update_type model variable_access)) ^ ""
+		"" ^ (json_of_string (string_of_variable_update_type model parsed_variable_update_type)) ^ ""
 		^ ": "
 		(* Convert the arithmetic_expression *)
 		^ "" ^ (json_of_string (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)) ^ ""
@@ -751,13 +751,13 @@ let string_of_automata model =
 	) model.automata)
 
 
-let rec customized_string_of_variable_access customized_string model = function
+let rec customized_string_of_parsed_variable_update_type customized_string model = function
     | Variable_update variable_index -> model.variable_names variable_index
-    | Indexed_update (variable_access, index_expr) ->
-        customized_string_of_variable_access customized_string model variable_access ^ "[" ^ DiscreteExpressions.customized_string_of_int_arithmetic_expression customized_string model.variable_names index_expr ^ "]"
+    | Indexed_update (parsed_variable_update_type, index_expr) ->
+        customized_string_of_parsed_variable_update_type customized_string model parsed_variable_update_type ^ "[" ^ DiscreteExpressions.customized_string_of_int_arithmetic_expression customized_string model.variable_names index_expr ^ "]"
     | Void_update -> ""
 
-let string_of_variable_access = customized_string_of_variable_access Constants.global_default_string
+let string_of_parsed_variable_update_type = customized_string_of_parsed_variable_update_type Constants.global_default_string
 
 (* Convert initial state of locations to string *)
 let string_of_new_initial_locations ?indent_level:(i=1) model =

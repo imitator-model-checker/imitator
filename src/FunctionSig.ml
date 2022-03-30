@@ -115,39 +115,20 @@ let string_of_signature signature =
     let str_signature_types_list = List.map (DiscreteType.string_of_var_type_discrete) signature in
     OCamlUtilities.string_of_list_of_string_with_sep " -> " str_signature_types_list
 
-(*
-(* Convert discrete type to type constraint *)
-let rec defined_type_constraint_of_discrete_type i = function
-    | Var_type_discrete_number Var_type_discrete_unknown_number -> Defined_type_constraint (Number_constraint (Number_type_name_constraint ("a" ^ string_of_int i)))
-    | Var_type_discrete_number Var_type_discrete_rational -> Defined_type_constraint (Number_constraint (Defined_type_number_constraint Rat_constraint))
-    | Var_type_discrete_number Var_type_discrete_int -> Defined_type_constraint (Number_constraint (Defined_type_number_constraint Int_constraint))
-    | Var_type_discrete_bool -> Defined_type_constraint Bool_constraint
-    | Var_type_discrete_binary_word length -> Defined_type_constraint (Binary_constraint (Length_constraint length))
-    | Var_type_discrete_array (inner_type, length) -> Defined_type_constraint (Array_constraint (defined_type_constraint_of_discrete_type i inner_type, Length_constraint length))
-    | Var_type_discrete_list inner_type -> Defined_type_constraint (List_constraint (defined_type_constraint_of_discrete_type i inner_type))
-
-(* Convert signature to signature constraint *)
-let signature_constraint_of_signature signature =
-    List.mapi defined_type_constraint_of_discrete_type signature
-*)
-
 (** -------------------- **)
 (** Compatibility **)
 (** -------------------- **)
 
 let rec is_discrete_type_compatible_with_length_constraint length = function
     | Length_constraint length_value -> length = length_value
-    | Length_constraint_expression length_constraint_expression ->
-        is_discrete_type_compatible_with_length_constraint_expression length length_constraint_expression
-
-and is_discrete_type_compatible_with_length_constraint_expression length = function
-    | Length_scalar_constraint _ -> true
-    | Length_plus_constraint _ -> false (* TODO benjamin to see *)
+    (* In theory a length constraint expression can be incompatible with some length *)
+    (* but may be compatible too, so we consider as compatible anyway *)
+    | Length_constraint_expression _ -> true
 
 let is_discrete_type_compatible_with_defined_type_number_constraint discrete_number_type defined_type_number_constraint =
     match discrete_number_type, defined_type_number_constraint with
     | Var_type_discrete_int, Int_constraint _
-    | Var_type_discrete_rational, Rat_constraint
+    | Var_type_discrete_rat, Rat_constraint
     | Var_type_discrete_unknown_number, _ -> true
     | _ -> false
 

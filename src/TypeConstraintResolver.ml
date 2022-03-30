@@ -231,7 +231,7 @@ and discrete_type_of_type_number_constraint resolved_constraints_table = functio
     | Defined_type_number_constraint number_type -> Var_type_discrete_number (discrete_type_of_defined_type_number_constraint resolved_constraints_table number_type)
 
 and discrete_type_of_defined_type_number_constraint resolved_constraints_table = function
-    | Rat_constraint -> Var_type_discrete_rational
+    | Rat_constraint -> Var_type_discrete_rat
     | Int_constraint _ -> Var_type_discrete_int
 
 and discrete_type_of_length_constraint resolved_constraints_table = function

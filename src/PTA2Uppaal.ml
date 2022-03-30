@@ -62,7 +62,7 @@ let scaling_factor = 200
 (* Customized string of discrete number type *)
 let string_of_var_type_discrete_number = function
     | DiscreteType.Var_type_discrete_unknown_number
-    | DiscreteType.Var_type_discrete_rational -> "int"
+    | DiscreteType.Var_type_discrete_rat -> "int"
     | DiscreteType.Var_type_discrete_int -> "int"
 
 (* Customized string of discrete var type *)
@@ -540,9 +540,9 @@ let string_of_clock_updates model = function
 
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_access, global_expression) ->
+	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (parsed_variable_update_type, global_expression) ->
         (* Convert the variable access to string *)
-		ModelPrinter.string_of_variable_access model variable_access
+		ModelPrinter.string_of_parsed_variable_update_type model parsed_variable_update_type
 		^ uppaal_assignment
 		(* Convert the arithmetic_expression *)
 		^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names global_expression

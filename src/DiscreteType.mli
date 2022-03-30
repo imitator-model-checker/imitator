@@ -19,7 +19,7 @@
 
 (* Specific type of number *)
 type var_type_discrete_number =
-    | Var_type_discrete_rational
+    | Var_type_discrete_rat
     | Var_type_discrete_int
     | Var_type_discrete_unknown_number
 
@@ -72,7 +72,7 @@ val is_discrete_type_holding_known_number_type : var_type_discrete -> bool
 
 val extract_inner_type : var_type_discrete -> var_type_discrete
 
-(* Check if discrete type is a Var_type_discrete_rational *)
+(* Check if discrete type is a Var_type_discrete_rat *)
 val is_discrete_type_rational_type : var_type_discrete -> bool
 (* Check if discrete type is a Var_type_discrete_int *)
 val is_discrete_type_int_type : var_type_discrete -> bool

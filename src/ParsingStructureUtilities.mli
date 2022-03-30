@@ -104,7 +104,7 @@ val string_of_parsed_term : variable_infos -> parsed_discrete_term -> string
 val string_of_parsed_factor : variable_infos -> parsed_discrete_factor -> string
 val string_of_parsed_relop : parsed_relop -> string -> string -> string
 
-val string_of_variable_access : variable_infos -> variable_access -> string
+val string_of_parsed_variable_update_type : variable_infos -> parsed_variable_update_type -> string
 
 (* Parsed linear constraint to string *)
 val string_of_parsed_linear_constraint : variable_infos -> linear_constraint -> string
@@ -165,8 +165,8 @@ val get_variables_in_nonlinear_constraint : nonlinear_constraint -> StringSet.t
 val get_variables_in_init_state_predicate : parsed_init_state_predicate -> StringSet.t
 val get_variables_in_nonlinear_convex_predicate : nonlinear_constraint list -> StringSet.t
 
-val variable_name_of_variable_access : variable_access -> variable_name option
-val is_variable_access_is_a_variable_name : variable_access -> bool
+val variable_name_of_parsed_variable_update_type : parsed_variable_update_type -> variable_name option
+val is_parsed_variable_update_type_is_a_variable_name : parsed_variable_update_type -> bool
 
 val linear_constraint_of_nonlinear_constraint : nonlinear_constraint -> linear_constraint
 
