@@ -34,8 +34,6 @@ myocamlbuild.ml
 src/BuildInfo.ml*
 src/PaTATOR.ml
 
-iamadeveloper
-
 # generated files
 
 /*jpg
