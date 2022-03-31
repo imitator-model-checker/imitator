@@ -8935,6 +8935,92 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test since               : 2022/03/31
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify on a toy example (variant without invariant)',
+		'input_files': ['testCounterExSimple-3b.imi', 'testCounterExSimple-3.imiprop'],
+		'options'    : '-no-merge -comparison equality',
+		'expectations' : [
+			{'file': 'testCounterExSimple-3b.res' , 'content' : """
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 1/2
+
+ Other valuations with equivalent (discrete) run:
+ 2*p = 1
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "1/2"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1/2",
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "4",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1/2",
+					"x": "4",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2021/?
 		# Last modified            : 2022/02/09
 		# Test for IMITATOR version: 3.2
