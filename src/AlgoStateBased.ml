@@ -3531,8 +3531,6 @@ class virtual algoStateBased =
 
 			(* Idea: keep everything, including the actions and discrete values, but increment (arbitrarily!) the time by 1 at each step *)
 
-			(* Get the location *)
-			let current_location : Location.global_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
 
 			(* Get the next location *)
 			(*** NOTE: super bad prog! we iterate on the list, and we use `nth` to get the next element :'( ***)
@@ -3541,6 +3539,8 @@ class virtual algoStateBased =
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
+				(* Get the current location *)
+				let current_location : Location.global_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
 				print_message Verbose_high ("Building concrete (but impossible) transition between source location " ^ (string_of_int (!current_position + debug_offset)) ^ ":");
 				print_message Verbose_high (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display current_location);
 				print_message Verbose_high ("  and target location " ^ (string_of_int (!current_position + debug_offset + 1)) ^ ":");
@@ -3564,11 +3564,13 @@ class virtual algoStateBased =
 
 			(* Apply time elapsing (let us not care about resets, because this transition does not exist; we could care about resets to be closer to the original automaton BUT the guards/invariants could not be satisfied, precisely because this parameter valuation does not allow to take this run!) *)
 			(*** NOTE: we still care about urgency and stopwatches though ***)
-			let valuation_after_elapsing : LinearConstraint.px_valuation = apply_time_elapsing_to_concrete_valuation current_location chosen_time_elapsing !current_valuation in
+			let valuation_after_elapsing : LinearConstraint.px_valuation = apply_time_elapsing_to_concrete_valuation next_location chosen_time_elapsing !current_valuation in
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
 				if verbose_mode_greater Verbose_total then(
+					(* Get the current location *)
+					let current_location : Location.global_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
 					print_message Verbose_total ("Current location: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display current_location) ^ "");
 					print_message Verbose_total ("Time elapsing: " ^ (NumConst.string_of_numconst chosen_time_elapsing) ^ "");
 				);
