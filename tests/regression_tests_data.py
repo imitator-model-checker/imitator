@@ -7677,7 +7677,7 @@ True
 	{
 		# Test version             : 1
 		# Test since               : 2022/03/10
-		# Last modified            : 2022/03/10
+		# Last modified            : 2022/03/31
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify without parameters: non-determinism + flows + negative variable + 2 PTAs',
 		'input_files': ['testEFExemplifyNonDet.imi', 'testEFExemplifyNonDet.imiprop'],
@@ -7972,7 +7972,7 @@ True
 			"state": {
 				"location": {
 					"spec1": "l2", 
-					"spec2": "l1"
+					"spec2": "l2"
 				},
 				"discrete_variables": {
 				},
@@ -7983,8 +7983,8 @@ True
 					"global_time": "7"
 				},
 				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
+					"x": "-1", 
+					"y": "1", 
 					"z": "0", 
 					"global_time": "1"
 				}
@@ -8001,21 +8001,21 @@ True
 			{
 			"state": {
 				"location": {
-					"spec1": "l2", 
-					"spec2": "l2"
+					"spec1": "lT", 
+					"spec2": "l3"
 				},
 				"discrete_variables": {
 				},
 				"continuous_variables": {
-					"x": "8",
-					"y": "-1",
+					"x": "6",
+					"y": "1/4",
 					"z": "3/2",
 					"global_time": "8"
 				},
 				"flows": {
 					"x": "-1", 
 					"y": "1", 
-					"z": "0", 
+					"z": "1", 
 					"global_time": "1"
 				}
 			}
@@ -8032,18 +8032,18 @@ True
 			"state": {
 				"location": {
 					"spec1": "lT", 
-					"spec2": "l3"
+					"spec2": "lT"
 				},
 				"discrete_variables": {
 				},
 				"continuous_variables": {
-					"x": "7",
-					"y": "0",
-					"z": "3/2",
+					"x": "5",
+					"y": "5/4",
+					"z": "5/2",
 					"global_time": "9"
 				},
 				"flows": {
-					"x": "-1", 
+					"x": "1", 
 					"y": "1", 
 					"z": "1", 
 					"global_time": "1"
@@ -8189,7 +8189,7 @@ True
 	{
 		# Test version             : 1
 		# Test since               : 2022/03/15
-		# Last modified            : 2022/03/15
+		# Last modified            : 2022/03/31
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify with one parameter: non-determinism + flows + negative variable + 2 PTAs',
 		'input_files': ['testEFExemplifyPNonDet.imi', 'testEFExemplifyPNonDet.imiprop'],
@@ -8533,8 +8533,8 @@ True
 				},
 				"continuous_variables": {
 					"p": "0",
-					"x": "3",
-					"y": "1/4",
+					"x": "1",
+					"y": "3/2",
 					"z": "3/2",
 					"global_time": "3"
 				},
@@ -8564,9 +8564,9 @@ True
 				},
 				"continuous_variables": {
 					"p": "0",
-					"x": "2",
-					"y": "5/4",
-					"z": "3/2",
+					"x": "0",
+					"y": "5/2",
+					"z": "5/2",
 					"global_time": "4"
 				},
 				"flows": {
@@ -8703,8 +8703,8 @@ True
 				},
 				"continuous_variables": {
 					"p": "4",
-					"x": "8",
-					"y": "-1",
+					"x": "6",
+					"y": "1/4",
 					"z": "3/2",
 					"global_time": "8"
 				},
@@ -8734,9 +8734,9 @@ True
 				},
 				"continuous_variables": {
 					"p": "4",
-					"x": "7",
-					"y": "0",
-					"z": "3/2",
+					"x": "5",
+					"y": "5/4",
+					"z": "5/2",
 					"global_time": "9"
 				},
 				"flows": {
@@ -8902,7 +8902,7 @@ OR
 			{
 			"state": {
 				"location": {
-					"pta": "l1"
+					"pta": "ltarget"
 				},
 				"discrete_variables": {
 				},
@@ -8910,74 +8910,6 @@ OR
 					"p": "0",
 					"x": "1",
 					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #3
-
- Valuation:
-  p = 1/2
-
- Other valuations with equivalent (discrete) run:
- 2*p = 1
-
- Run nature: impossible run
-
- Run:
-{
-	"run": {
-		"nature": "negative",
-		"valuation": {
-			"p": "1/2"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1/2",
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "0",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1/2",
-					"x": "0",
-					"global_time": "0"
 				},
 				"flows": {
 					"x": "1", 
@@ -9245,7 +9177,7 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/?
-		# Last modified            : 2022/02/09
+		# Last modified            : 2022/03/31
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only in the initial state)',
 		'input_files': ['testCounterExSimple-5.imi', 'testCounterExSimple-5.imiprop'],
@@ -9448,7 +9380,7 @@ BEGIN RESULT
 			{
 			"state": {
 				"location": {
-					"pta": "l1"
+					"pta": "l2"
 				},
 				"discrete_variables": {
 				},
@@ -9473,7 +9405,7 @@ BEGIN RESULT
 			{
 			"state": {
 				"location": {
-					"pta": "l2"
+					"pta": "l3"
 				},
 				"discrete_variables": {
 				},
@@ -9499,7 +9431,7 @@ BEGIN RESULT
 			{
 			"state": {
 				"location": {
-					"pta": "l3"
+					"pta": "ltarget"
 				},
 				"discrete_variables": {
 				},
@@ -9507,125 +9439,6 @@ BEGIN RESULT
 					"p": "0",
 					"x": "4",
 					"global_time": "3"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #3
-
- Valuation:
-  p = 1
-
- Other valuations with equivalent (discrete) run:
- p > 0
-
- Run nature: impossible run
-
- Run:
-{
-	"run": {
-		"nature": "negative",
-		"valuation": {
-			"p": "1"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "0",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "2",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "3",
-					"global_time": "2"
 				},
 				"flows": {
 					"x": "1", 
