@@ -1205,7 +1205,7 @@ let check_guard variable_infos =
 let check_update variable_infos update_types parsed_variable_update_type expr =
 
     (* Get assigned variable name *)
-    let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type parsed_variable_update_type in
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type in
 
     (* Get assigned variable type *)
     let variable_name, var_type =
@@ -1230,9 +1230,9 @@ let check_update variable_infos update_types parsed_variable_update_type expr =
     (* Check that continuous / discrete not sequential updates doesn't contain side effects *)
     if update_types = Parsed_updates && (has_side_effects || is_parsed_variable_update_type_has_side_effects) then
         raise (TypeError (
-            "`in` update bloc contain one or more expression with side effects `"
+            "`then` update bloc contain one or more expression with side effects `"
             ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
-            ^ "`. Expression with side effects are only allowed in `let` bloc."
+            ^ "`. Expression with side effects are only allowed in `do` bloc."
         ));
 
     (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
@@ -2922,6 +2922,7 @@ let linear_term_of_linear_expression variable_infos linear_expression =
     linear_term_of_array array_of_coef constant
 
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+(* TODO benjamin REFACTOR rename to linear_term_of_typed_arithmetic_expression *)
 let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 
     let index_of_variables = variable_infos.index_of_variables in
@@ -2948,28 +2949,59 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 
 	and update_coef_array_in_parsed_update_term mult_factor = function
 		(* Multiplication is only allowed with a constant multiplier *)
-		| Typed_product_quotient (parsed_update_term, parsed_update_factor, _, Typed_mul) ->
+		| Typed_product_quotient (parsed_update_term, parsed_update_factor, _, Typed_mul) as top_term ->
 
-		(* Convert to abstract tree *)
-		let converted_term = rational_arithmetic_expression_of_typed_term variable_infos parsed_update_term in
-		(* Try to evaluate the term *)
-		let numconst_valued_term = DiscreteExpressionEvaluator.try_eval_constant_rational_term converted_term in
+            (* Convert to abstract tree *)
+            let converted_term = rational_arithmetic_expression_of_typed_term variable_infos parsed_update_term in
+            let converted_factor = rational_arithmetic_expression_of_typed_factor variable_infos parsed_update_factor in
 
-		(* Update coefficients *)
-		update_coef_array_in_parsed_update_factor (NumConst.mul numconst_valued_term mult_factor) parsed_update_factor
+            (* Try to evaluate the term and the factor *)
+            let numconst_valued_term_opt = DiscreteExpressionEvaluator.eval_constant_rational_term_opt converted_term in
+            let numconst_valued_factor_opt = DiscreteExpressionEvaluator.eval_constant_rational_factor_opt converted_factor in
 
-		| Typed_product_quotient (parsed_update_term, parsed_update_factor, _, Typed_div) ->
+            (* Update coefficients *)
+            (match numconst_valued_term_opt, numconst_valued_factor_opt with
+            (* k * x with x a variable and k a constant *)
+            | Some numconst_valued_term, None ->
+                update_coef_array_in_parsed_update_factor (NumConst.mul numconst_valued_term mult_factor) parsed_update_factor
+            (* x * k with x a variable and k a constant *)
+            | None, Some numconst_valued_factor ->
+                update_coef_array_in_parsed_update_term (NumConst.mul numconst_valued_factor mult_factor) parsed_update_term
+            (* k1 * k2 with k1 and k2 constants *)
+            | Some numconst_valued_term, Some _ ->
+                update_coef_array_in_parsed_update_factor (NumConst.mul numconst_valued_term mult_factor) parsed_update_factor
+            (* v1 * v2 with v1 and v2 variables *)
+            | None, None -> raise (
+                InternalError (
+                    "`update_coef_array_in_parsed_update_term` fail, because expression `"
+                    ^ string_of_typed_discrete_term variable_infos (Var_type_discrete_number Var_type_discrete_rat) top_term
+                    ^ "` isn't linear. Linearity should be checked before."
+                ))
+            )
 
-		(* Convert to abstract tree *)
-		let converted_factor = rational_arithmetic_expression_of_typed_factor variable_infos parsed_update_factor in
-		(* Try to evaluate the factor *)
-		let numconst_valued_factor = DiscreteExpressionEvaluator.try_eval_constant_rational_factor converted_factor in
 
-		(* Update coefficients *)
-		update_coef_array_in_parsed_update_term (NumConst.div mult_factor numconst_valued_factor) parsed_update_term
+
+		| Typed_product_quotient (parsed_update_term, parsed_update_factor, _, Typed_div) as top_term ->
+
+            (* Convert to abstract tree *)
+            let converted_factor = rational_arithmetic_expression_of_typed_factor variable_infos parsed_update_factor in
+            (* Try to evaluate the factor *)
+            let numconst_valued_factor_opt = DiscreteExpressionEvaluator.eval_constant_rational_factor_opt converted_factor in
+
+            (* Update coefficients *)
+            (match numconst_valued_factor_opt with
+            | Some numconst_valued_factor ->
+                update_coef_array_in_parsed_update_term (NumConst.div mult_factor numconst_valued_factor) parsed_update_term
+            | None -> raise (
+                InternalError (
+                    "`update_coef_array_in_parsed_update_term` fail, because expression `"
+                    ^ string_of_typed_discrete_term variable_infos (Var_type_discrete_number Var_type_discrete_rat) top_term
+                    ^ "` isn't linear. Linearity should be checked before."
+                ))
+            )
 
 		| Typed_factor (parsed_update_factor, _) ->
-		update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
+		    update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
 
 	and update_coef_array_in_parsed_update_factor mult_factor = function
 		| Typed_variable (variable_name, _) ->
@@ -2981,13 +3013,13 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 				(* Try to find a constant *)
 			) else (
 				if Hashtbl.mem constants variable_name then (
-				(* Retrieve the value of the global constant *)
-				let value = Hashtbl.find constants variable_name in
-				let numconst_value = DiscreteValue.to_numconst_value value in
-				(* Update the constant *)
-				constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
+                    (* Retrieve the value of the global constant *)
+                    let value = Hashtbl.find constants variable_name in
+                    let numconst_value = DiscreteValue.to_numconst_value value in
+                    (* Update the constant *)
+                    constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
 				) else (
-				raise (InvalidExpression ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'update_coef_array_in_parsed_update_factor' although this should have been checked before."))
+				    raise (InvalidExpression ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'update_coef_array_in_parsed_update_factor' although this should have been checked before."))
 				)
 			)
 		| Typed_constant (var_value, _) ->
@@ -2999,7 +3031,7 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 		| Typed_expr (parsed_update_arithmetic_expression, _) ->
             update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
 		| factor ->
-            raise (InvalidExpression ("Use of `" ^ label_of_typed_factor_constructor factor ^ "` is forbidden in linear term, something failed before."))
+            raise (InternalError ("`update_coef_array_in_parsed_update_factor` fail because expression using `" ^ label_of_typed_factor_constructor factor ^ "` isn't linear. Linearity should be checked before."))
 	in
 
 	(* Call the recursive function updating the coefficients *)

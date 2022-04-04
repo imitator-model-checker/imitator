@@ -524,12 +524,20 @@ let pack_value variable_names discrete_valuation old_value new_value parsed_vari
         old_value
     | None -> new_value
 
+
 (* Try to evaluate a constant global expression, if expression isn't constant, it raise an error *)
 let try_eval_constant_global_expression = eval_global_expression None
 (* Try to evaluate a constant rational term, if expression isn't constant, it raise an error *)
 let try_eval_constant_rational_term = eval_rational_term None
 (* Try to evaluate a constant rational factor, if expression isn't constant, it raise an error *)
 let try_eval_constant_rational_factor = eval_rational_factor None
+
+(* Try to evaluate a constant global expression, if expression isn't constant, it return None *)
+let eval_constant_global_expression_opt expr = try Some (try_eval_constant_global_expression expr) with _ -> None
+(* Try to evaluate a constant rational term, if expression isn't constant, it return None *)
+let eval_constant_rational_term_opt expr = try Some (try_eval_constant_rational_term expr) with _ -> None
+(* Try to evaluate a constant rational factor, if expression isn't constant, it return None *)
+let eval_constant_rational_factor_opt expr = try Some (try_eval_constant_rational_factor expr) with _ -> None
 
 (* TODO benjamin REPLACE BY A REAL EVALUATION OF CONSTANT and not this tricky function using try *)
 let is_global_expression_constant expr =

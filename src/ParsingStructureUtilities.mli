@@ -19,6 +19,10 @@ type parsing_structure_leaf =
     | Leaf_variable of string
     | Leaf_constant of DiscreteValue.discrete_value
 
+(* Leaf for parsed update *)
+type parsed_update_leaf =
+    | Leaf_update_updated_variable of variable_name
+
 (* Leaf of linear expression *)
 type linear_expression_leaf =
     | Leaf_linear_constant of NumConst.t
@@ -33,6 +37,9 @@ type linear_constraint_leaf =
 type nonlinear_constraint_leaf =
     | Leaf_true_nonlinear_constraint
     | Leaf_false_nonlinear_constraint
+
+val fold_map_parsed_normal_update : ('a -> 'a -> 'a) -> 'a -> (parsing_structure_leaf -> 'a) -> (parsed_update_leaf -> 'a) -> normal_update -> 'a list
+val fold_map_parsed_update : ('a -> 'a -> 'a) -> 'a -> (parsing_structure_leaf -> 'a) -> (parsed_update_leaf -> 'a) -> update -> 'a list
 
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
@@ -51,8 +58,10 @@ val for_all_in_parsed_linear_term : (linear_expression_leaf -> bool) -> linear_t
 val for_all_in_parsed_linear_constraint : (linear_expression_leaf -> bool) -> (linear_constraint_leaf -> bool) -> linear_constraint -> bool
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
 val for_all_in_parsed_nonlinear_constraint : (parsing_structure_leaf -> bool) -> nonlinear_constraint -> bool
+(** Check if all leaf of a parsed normal update satisfy the predicate **)
+val for_all_in_parsed_normal_update : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> normal_update -> bool
 (** Check if all leaf of a parsed update satisfy the predicate **)
-val for_all_in_parsed_update : (parsing_structure_leaf -> bool) -> update -> bool
+val for_all_in_parsed_update : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> update -> bool
 
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
@@ -104,6 +113,8 @@ val string_of_parsed_term : variable_infos -> parsed_discrete_term -> string
 val string_of_parsed_factor : variable_infos -> parsed_discrete_factor -> string
 val string_of_parsed_relop : parsed_relop -> string -> string -> string
 
+val string_of_parsed_update : variable_infos -> update -> string
+val string_of_parsed_normal_update : variable_infos -> normal_update -> string
 val string_of_parsed_variable_update_type : variable_infos -> parsed_variable_update_type -> string
 
 (* Parsed linear constraint to string *)
@@ -133,11 +144,22 @@ val is_parsed_global_expression_constant : variable_infos -> parsed_global_expre
 val is_parsed_boolean_expression_constant : variable_infos -> parsed_boolean_expression -> bool
 val is_parsed_arithmetic_expression_constant : variable_infos -> parsed_discrete_arithmetic_expression -> bool
 
+val is_linear_parsed_global_expression : variable_infos -> parsed_global_expression -> bool
+val is_linear_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
+val is_linear_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
+val is_linear_parsed_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> bool
+val is_linear_parsed_term : variable_infos -> parsed_discrete_term -> bool
+val is_linear_parsed_factor : variable_infos -> parsed_discrete_factor -> bool
+
 (* --- *)
 (* --- *)
-val all_variables_defined_in_parsed_global_expression : variable_infos -> parsed_global_expression -> bool
+val all_variables_defined_in_parsed_global_expression : variable_infos -> (variable_name -> unit) option -> parsed_global_expression -> bool
+val all_variables_defined_in_parsed_global_expression_without_callback : variable_infos -> parsed_global_expression -> bool
 val all_variables_defined_in_parsed_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_boolean_expression -> bool
 val all_variables_defined_in_parsed_discrete_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_discrete_boolean_expression -> bool
+val all_variables_defined_in_parsed_discrete_arithmetic_expression : variable_infos -> (variable_name -> unit) option -> parsed_discrete_arithmetic_expression -> bool
+val all_variables_defined_in_parsed_normal_update : variable_infos -> (variable_name -> unit) option -> (variable_name -> unit) option -> normal_update -> bool
+val all_variables_defined_in_parsed_update : variable_infos -> (variable_name -> unit) option -> (variable_name -> unit) option -> update -> bool
 val all_variables_defined_in_linear_expression : variable_infos -> (variable_name -> unit) -> linear_expression -> bool
 val all_variables_defined_in_linear_constraint : variable_infos -> (variable_name -> unit) -> linear_constraint -> bool
 val all_variables_defined_in_nonlinear_constraint : variable_infos -> (variable_name -> unit) option -> nonlinear_constraint -> bool
@@ -165,12 +187,16 @@ val get_variables_in_nonlinear_constraint : nonlinear_constraint -> StringSet.t
 val get_variables_in_init_state_predicate : parsed_init_state_predicate -> StringSet.t
 val get_variables_in_nonlinear_convex_predicate : nonlinear_constraint list -> StringSet.t
 
-val variable_name_of_parsed_variable_update_type : parsed_variable_update_type -> variable_name option
+val variable_name_of_parsed_variable_update_type_opt : parsed_variable_update_type -> variable_name option
+val variable_name_of_parsed_variable_update_type : parsed_variable_update_type -> variable_name
+
 val is_parsed_variable_update_type_is_a_variable_name : parsed_variable_update_type -> bool
 
 val linear_constraint_of_nonlinear_constraint : nonlinear_constraint -> linear_constraint
 
 (* Gather all updates of update section (pre-updates, updates and post-updates) *)
 val updates_of_update_section : update_section -> update list
+
+val convert_var_type : ParsingStructure.var_type -> DiscreteType.var_type
 
 val variable_infos_of_parsed_model : useful_parsing_model_information -> variable_infos
