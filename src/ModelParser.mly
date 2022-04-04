@@ -68,7 +68,7 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY CT_DO CT_LET CT_IN CT_POST
+	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY CT_DO CT_LET CT_IN
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -448,12 +448,12 @@ updates:
 ;
 
 let_in_updates:
-  | CT_LET update_seq_nonempty_list in_updates { $2, $3, [] }
+  | CT_DO update_seq_nonempty_list in_updates { $2, $3, [] }
   | update_list { [], $1, [] }
 ;
 
 in_updates:
-  | CT_IN update_nonempty_list end_opt { $2 }
+  | CT_THEN update_nonempty_list end_opt { $2 }
   | { [] }
 ;
 

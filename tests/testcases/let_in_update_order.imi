@@ -34,17 +34,17 @@ loc l1: invariant x <= 0
 	when
     & True
   do {
-    let
-    	  i := 1; (* i = 1 *)
+    do
+    	i := 1; (* i = 1 *)
         i := i + 1; (* i = 2 *)
         j := i; (* j = i = 2 *)
         l := 1; (* l = 1 *)
         m := 1;
-    in
-      v := m, (* m = 1 in pta1, then m = 2 in pta2, so v = 2 *)
-    	x := j, (* x = j = i = 2*)
-      w := l, (* l = 1 in pta1, then l = 2 in pta2, so w = 2 *)
-      (* m := 1 *)
+    then
+        v := m, (* m = 1 in pta1, then m = 2 in pta2, so v = 2 *)
+        x := j, (* x = j = i = 2*)
+        w := l, (* l = 1 in pta1, then l = 2 in pta2, so w = 2 *)
+        (* m := 1 *)
     end
   }
   sync a
@@ -63,14 +63,14 @@ loc l1: invariant True
 	when
     & True
   do {
-    let
-    	k := 2*i; (* k = 2 * i = 2 * 2 = 4 *)
-      l := 2;
-      m := 2;
-    in
-    	y := k, (* y = 4 *)
-      z := x, (* z = x = 0, because x is initialized to 0 *)
-      (* m := 2 *)
+    do
+        k := 2*i; (* k = 2 * i = 2 * 2 = 4 *)
+        l := 2;
+        m := 2;
+    then
+        y := k, (* y = 4 *)
+        z := x, (* z = x = 0, because x is initialized to 0 *)
+        (* m := 2 *)
     end
   }
   sync a

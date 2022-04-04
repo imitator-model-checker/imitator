@@ -80,7 +80,6 @@ rule token = parse
 	| "do"             { CT_DO }
   | "let"            { CT_LET }
   | "in"             { CT_IN }
-  | "post"           { CT_POST }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
  	| "eventually"     { CT_EVENTUALLY }

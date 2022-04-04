@@ -45,7 +45,7 @@ loc l1: invariant True
 
   do {
 
-    let
+    do
 
       (* Test stack functions *)
 
