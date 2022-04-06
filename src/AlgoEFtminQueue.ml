@@ -691,7 +691,7 @@ class algoEFtminQueue (state_predicate : AbstractProperty.state_predicate) =
                     (*print_message Verbose_standard("Iteration " ^ (string_of_int !iteration) ^ ":\t State "^ (string_of_int source_id) ^
                         " has " ^ (string_of_int (List.length successors)) ^ " successors"); *)
                     
-					if options#merge then can_merge := false;
+					if (options#merge33_algorithm <> Merge33_none) then can_merge := false;
 
                     let rec process_sucs suclist = match suclist with
                         |  [] ->  ();
@@ -710,7 +710,7 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
                                     let suc_state = StateSpace.get_state state_space suc_id in
                                     if self#is_target_state suc_state then (
 										
-										if options#merge && (options#merge_heuristic = Merge_targetseen) then can_merge := true;
+										if (options#merge33_algorithm <> Merge33_none) && (options#merge_EFsynthminpq_heuristic = Merge_EFsynthminpq_targetseen) then can_merge := true;
 
                                         if !t_found = max_float then (
 											t_found := time_from t_start;
@@ -743,17 +743,17 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
                     process_sucs successors;
 					(* Only call merging after processing all successors *)
 
-					if options#merge then (
-						can_merge := match options#merge_heuristic with
-						| Merge_always -> true;
-						| Merge_targetseen -> !can_merge; (* already set *)
-						| Merge_pq10 -> ((!pq_add mod 10) = 0);
-						| Merge_pq100 -> ((!pq_add mod 100) = 0);
-						| Merge_iter10 -> ((!iteration mod 10) = 0);
-						| Merge_iter100 -> ((!iteration mod 100) = 0);
+					if (options#merge33_algorithm <> Merge33_none) then (
+						can_merge := match options#merge_EFsynthminpq_heuristic with
+						| Merge_EFsynthminpq_always -> true;
+						| Merge_EFsynthminpq_targetseen -> !can_merge; (* already set *)
+						| Merge_EFsynthminpq_pq10 -> ((!pq_add mod 10) = 0);
+						| Merge_EFsynthminpq_pq100 -> ((!pq_add mod 100) = 0);
+						| Merge_EFsynthminpq_iter10 -> ((!iteration mod 10) = 0);
+						| Merge_EFsynthminpq_iter100 -> ((!iteration mod 100) = 0);
 					);
 
-					if options#merge && !can_merge then (
+					if (options#merge33_algorithm <> Merge33_none) && !can_merge then (
                         let old_pq_size = List.length !pq in
 						pq := pq_merge !pq;
                         print_message Verbose_standard("Merging, iteration: " ^ (string_of_int !iteration) ^ ", |PQ|: " ^ (string_of_int old_pq_size) ^ " -> " ^ (string_of_int (List.length !pq)));

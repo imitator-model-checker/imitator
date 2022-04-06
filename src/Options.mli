@@ -68,30 +68,35 @@ class imitator_options :
 		method is_set_layer					: bool
 		method set_layer					: bool -> unit
 
-		method merge						: bool
+				(*** DISCONTINUED as of 3.3 ***)
+(*		method merge						: bool
 		method is_set_merge					: bool
-		method set_merge					: bool -> unit
+		method set_merge					: bool -> unit*)
 
-		method mergeq						: bool
+				(*** DISCONTINUED as of 3.3 ***)
+(*		method mergeq						: bool
 		method is_set_mergeq				: bool
-		method set_mergeq					: bool -> unit
+		method set_mergeq					: bool -> unit*)
 
-		method merge212						: bool
+				(*** DISCONTINUED as of 3.3 ***)
+(*		method merge212						: bool
 		method is_set_merge212				: bool
-		method set_merge212					: bool -> unit
+		method set_merge212					: bool -> unit*)
 
-		method merge_n1						: int
-		method merge_n2						: int
+				(*** DISCONTINUED as of 3.3 ***)
+(*		method merge_n1						: int
+		method merge_n2						: int*)
 
-		method mergedev						: bool
+				(*** DISCONTINUED as of 3.3 ***)
+(*		method mergedev						: bool
         method is_set_mergedev				: bool
         method set_mergedev					: bool -> unit
-        method merge_dev				    : AbstractAlgorithm.merge_dev
+        method merge_dev				    : AbstractAlgorithm.merge_dev*)
 
-		method merge_algorithm				: AbstractAlgorithm.merge_algorithm
+		method merge_jump_algorithm			: AbstractAlgorithm.merge_jump_algorithm
 
 		(* Merging heuristic for EFsynthminpq *)
-		method merge_heuristic				: merge_heuristic
+		method merge_EFsynthminpq_heuristic	: AbstractAlgorithm.merge_EFsynthminpq_heuristic
 
         (* New merge options from IMITATOR 3.3 *)
         method merge33_algorithm			: AbstractAlgorithm.merge33_algorithm

@@ -108,41 +108,43 @@ type pending_order =
 
 
 (* Merging heuristic for EFsynthminpq *)
-type merge_heuristic =
+type merge_EFsynthminpq_heuristic =
 	(** Merge_always: merge after every processed state *)
-	| Merge_always
+	| Merge_EFsynthminpq_always
 	(** Merge_always: merge after every processed state for which the target state is a successor of the current state *)
-	| Merge_targetseen
+	| Merge_EFsynthminpq_targetseen
 	(** Merge_always: merge after every processed state, for every 10th added state to PQ *)
-	| Merge_pq10
+	| Merge_EFsynthminpq_pq10
 	(** Merge_always: merge after every processed state, for every 100th added state to PQ *)
-	| Merge_pq100
+	| Merge_EFsynthminpq_pq100
 	(** Merge_always: merge after every 10th processed state *)
-	| Merge_iter10
+	| Merge_EFsynthminpq_iter10
 	(** Merge_always: merge after every 100th processed state *)
-	| Merge_iter100
+	| Merge_EFsynthminpq_iter100
 
 (* Undefined value for n1/n2 merge heuristics *)
 val undefined_merge_n : int
 
-(* Merge heuristics for reachability analysis *)
-type merge_algorithm =
+(* Merge heuristics for reachability analysis: try to jump some merge attemps (approx 2021) *)
+type merge_jump_algorithm =
 	(** None *)
-	| Merge_none
+	| Merge_jump_none
 	(** TODO: description *)
-	| Merge_static
+	| Merge_jump_static of int * int
 	(** TODO: description *)
-	| Merge_static_per_location
+	| Merge_jump_static_per_location of int * int
     (** TODO: description *)
-	| Merge_exponentialbackoff
+	| Merge_jump_exponentialbackoff of int * int
 
-type merge_dev =
+				(*** DISCONTINUED as of 3.3 ***)
+(*type merge_dev =
 	(** merge(queue,visited) *)
 	| Merge_visited
 	(** merge(queue,queue) *)
 	| Merge_queue
     (** merge(queue,queue);merge(queue,visited) *)
-	| Merge_ordered
+	| Merge_ordered*)
+
 
 (* Main merge algorithms from IMITATOR 3.3 *)
 type merge33_algorithm =
@@ -239,11 +241,12 @@ val cartography_drawing_possible : imitator_mode -> bool
 (** Conversions of modes to string *)
 (************************************************************)
 
-val string_of_mode						: imitator_mode				-> string
-val string_of_translation				: translation				-> string
-val string_of_exploration_order			: exploration_order			-> string
-val string_of_cycle_algorithm			: cycle_algorithm			-> string
-val string_of_state_comparison_operator	: state_comparison_operator	-> string
-val string_of_merge_heuristic			: merge_heuristic			-> string
-val string_of_merge_algorithm			: merge_algorithm			-> string
-val string_of_merge_dev			        : merge_dev			-> string
+val string_of_mode						: imitator_mode						-> string
+val string_of_translation				: translation						-> string
+val string_of_exploration_order			: exploration_order					-> string
+val string_of_cycle_algorithm			: cycle_algorithm					-> string
+val string_of_state_comparison_operator	: state_comparison_operator			-> string
+
+val string_of_merge33_candidates		: merge33_candidates				-> string
+val string_of_merge_EFsynthminpq_heuristic	: merge_EFsynthminpq_heuristic	-> string
+val string_of_merge_jump_algorithm		: merge_jump_algorithm				-> string

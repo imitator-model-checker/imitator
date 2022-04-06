@@ -195,22 +195,26 @@ class imitator_options =
 		val mutable layer : bool option				= None
 
 		(* Merging states on the fly *)
-		val mutable merge : bool option				= None
+				(*** DISCONTINUED as of 3.3 ***)
+(*		val mutable merge : bool option				= None
 		val mutable mergeq : bool option			= None
-		val mutable merge212 : bool option			= None
+		val mutable merge212 : bool option			= None*)
 
-		val mutable merge_n1 : int					= AbstractAlgorithm.undefined_merge_n
-		val mutable merge_n2 : int					= AbstractAlgorithm.undefined_merge_n
+		(* Merge heuristics for reachability analysis: try to jump some merge attemps (approx 2021) *)
+				(*** DISCONTINUED as of 3.3 ***)
+(*		val mutable merge_n1 : int					= AbstractAlgorithm.undefined_merge_n
+		val mutable merge_n2 : int					= AbstractAlgorithm.undefined_merge_n*)
 
-		(* Merging algorithm for reachability synthesis *)
-		val mutable merge_algorithm : AbstractAlgorithm.merge_algorithm = Merge_none
+		(* Merge heuristics for reachability analysis: try to jump some merge attemps (approx 2021) *)
+		val mutable merge_jump_algorithm : AbstractAlgorithm.merge_jump_algorithm = Merge_jump_none
 
 		(* Merging heuristic for EFsynthminpq *)
-		val mutable merge_heuristic					= Merge_iter10
+		val mutable merge_EFsynthminpq_heuristic					= Merge_EFsynthminpq_iter10
 
         (* Merge dev. 2021/08 - DYLAN *)
-        val mutable mergedev : bool option				    = None
-        val mutable merge_dev : AbstractAlgorithm.merge_dev = Merge_visited
+				(*** DISCONTINUED as of 3.3 ***)
+(*        val mutable mergedev : bool option				    = None
+        val mutable merge_dev : AbstractAlgorithm.merge_dev = Merge_visited*)
 
         (* New merge options from IMITATOR 3.3 *)
         val mutable merge33_algorithm  : AbstractAlgorithm.merge33_algorithm option = None
@@ -315,31 +319,39 @@ class imitator_options =
 		method is_set_layer							= layer <> None
 		method set_layer b							= layer <- Some b
 
-		method merge_n1								= merge_n1
-		method merge_n2								= merge_n1
+				(*** DISCONTINUED as of 3.3 ***)
+(*		method merge_n1								= merge_n1
+		method merge_n2								= merge_n1*)
 
-		method merge_algorithm						= merge_algorithm
+		method merge_jump_algorithm					= merge_jump_algorithm
 
-		method merge								= value_of_option "merge" merge
+		
+		(*** TODO: remove merge, remove mergeq, remove merge212, rename 33, remove mergedev, remove n1 and n2 into merge_algorithm (and rename merge_algorithm) ***)
+		
+				(*** DISCONTINUED as of 3.3 ***)
+(*		method merge								= value_of_option "merge" merge
 		method is_set_merge							= merge <> None
-		method set_merge b							= merge <- Some b
+		method set_merge b							= merge <- Some b*)
 
-		method mergeq								= value_of_option "mergeq" mergeq
+				(*** DISCONTINUED as of 3.3 ***)
+(*		method mergeq								= value_of_option "mergeq" mergeq
 		method is_set_mergeq						= mergeq <> None
-		method set_mergeq b							= mergeq <- Some b
+		method set_mergeq b							= mergeq <- Some b*)
 
-		method merge212								= value_of_option "merge212" merge212
+				(*** DISCONTINUED as of 3.3 ***)
+(*		method merge212								= value_of_option "merge212" merge212
 		method is_set_merge212						= merge212 <> None
-		method set_merge212 b						= merge212 <- Some b
+		method set_merge212 b						= merge212 <- Some b*)
 
 		(* Merging heuristic for EFsynthminpq *)
-		method merge_heuristic						= merge_heuristic
+		method merge_EFsynthminpq_heuristic			= merge_EFsynthminpq_heuristic
 
         (* Merge dev 2021 *)
-        method mergedev								= value_of_option "mergedev" mergedev
+				(*** DISCONTINUED as of 3.3 ***)
+(*        method mergedev								= value_of_option "mergedev" mergedev
         method is_set_mergedev						= mergedev <> None
         method set_mergedev b						= mergedev <- Some b
-        method merge_dev    						= merge_dev
+        method merge_dev    						= merge_dev*)
         
         (* New merge options from IMITATOR 3.3 *)
         method merge33_algorithm					= value_of_option "merge33_algorithm"  merge33_algorithm
@@ -502,7 +514,7 @@ class imitator_options =
 					distribution_mode <- Distributed_ms_subpart
 				(* Case: distributed master-slave random generation with a bounded number of attempts *)
 				else try (
-					(* Find the 'random' string *)
+					(* Find the `random` string *)
 					if not (String.sub mode 0 6 = "random") then raise (Failure "this string is never used");
 					(* Find the number *)
 					let number = String.sub mode 6 (String.length mode - 6) in
@@ -607,23 +619,38 @@ class imitator_options =
 					exit(1);
 				)
 
-			and set_merge_algorithm merge_algorithm_str =
-				if merge_algorithm_str = "none" then
-					merge_algorithm <- Merge_none
-				else if merge_algorithm_str = "static" then
-					merge_algorithm <- Merge_static
-				else if merge_algorithm_str = "staticl" then
-                    merge_algorithm <- Merge_static_per_location
-				else if merge_algorithm_str = "expback" then
-					merge_algorithm <- Merge_exponentialbackoff
-				else(
-					print_error ("The merge algorithm `" ^ merge_algorithm_str ^ "` is not valid.");
+				(*** BEGIN TODO! unfinished ***)
+			and set_merge_jump_algorithm merge_jump_algorithm_str =
+				if merge_jump_algorithm_str = "none" then
+					merge_jump_algorithm <- Merge_jump_none
+				else try (
+					(* Find the `staticl` string *)
+					if (String.sub merge_jump_algorithm_str 0 7 = "staticl") then
+						let n1 = String.sub merge_jump_algorithm_str 7 (String.length merge_jump_algorithm_str - 7) in
+						merge_jump_algorithm <- Merge_jump_static ((int_of_string n1), 0)  (*** TODO: n2 is not present here! ***)
+				) with Failure _ | Invalid_argument _-> (
+					print_error ("The merge jump algorithm `" ^ merge_jump_algorithm_str ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
 				)
+(*				if merge_algorithm_str = "static" then
+					merge_jump_algorithm <- Merge_jump_static (n1, n2)
+				else if merge_algorithm_str = "staticl" then
+                    merge_jump_algorithm <- Merge_jump_static_per_location (n1, n2)
+				else if merge_algorithm_str = "expback" then
+					merge_jump_algorithm <- Merge_jump_exponentialbackoff (n1, n2)
+				else(
+					print_error ("The merge jump algorithm `" ^ merge_algorithm_str ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)*)
+				(*** END TODO! unfinished ***)
 
-			and set_merge_dev merge_dev_str =
+				
+				(*** DISCONTINUED as of 3.3 ***)
+(*			and set_merge_dev merge_dev_str =
 				if merge_dev_str = "visited" then
 					merge_dev <- Merge_visited
 				else if merge_dev_str = "queue" then
@@ -635,23 +662,23 @@ class imitator_options =
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
-				)
+				)*)
 
-			and set_merge_heuristic heuristic =
-				if heuristic = "always" then
-					merge_heuristic <- Merge_always
-				else if heuristic = "targetseen" then
-					merge_heuristic <- Merge_targetseen
-				else if heuristic = "pq10" then
-					merge_heuristic <- Merge_pq10
-				else if heuristic = "pq100" then
-					merge_heuristic <- Merge_pq100
-				else if heuristic = "iter10" then
-					merge_heuristic <- Merge_iter10
-				else if heuristic = "iter100" then
-					merge_heuristic <- Merge_iter100
+			and set_merge_EFsynthminpq_heuristic merge_EFsynthminpq_heuristic_src =
+				if merge_EFsynthminpq_heuristic_src = "always" then
+					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_always
+				else if merge_EFsynthminpq_heuristic_src = "targetseen" then
+					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_targetseen
+				else if merge_EFsynthminpq_heuristic_src = "pq10" then
+					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_pq10
+				else if merge_EFsynthminpq_heuristic_src = "pq100" then
+					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_pq100
+				else if merge_EFsynthminpq_heuristic_src = "iter10" then
+					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_iter10
+				else if merge_EFsynthminpq_heuristic_src = "iter100" then
+					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_iter100
 				else(
-					print_error ("The merge heuristic `" ^ heuristic ^ "` is not valid.");
+					print_error ("The merge heuristic `" ^ merge_EFsynthminpq_heuristic_src ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
@@ -927,32 +954,29 @@ class imitator_options =
 				("-no-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some false), " No layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled (i.e., no layer).
 				");
 
-				("-merge", Unit (fun () -> warn_if_set merge "merge"; merge <- Some true), " Use the merging technique of [AFS13]. Default: depending on the algorithm");
+				(*** DISCONTINUED as of 3.3 ***)
+(*				("-merge", Unit (fun () -> warn_if_set merge "merge"; merge <- Some true), " Use the merging technique of [AFS13]. Default: depending on the algorithm");
 				("-no-merge", Unit (fun () -> warn_if_set merge "merge"; merge <- Some false), " Do not use the merging technique of [AFS13]. Default: depending on the algorithm.
-				");
+				");*)
 
-				("-merge-n1", Int (fun i -> merge_n1 <- i), " value for merge:n1 [WORK IN PROGRESS]"); (*** TODO: explain***)
-				("-merge-n2", Int (fun i -> merge_n2 <- i), " value for merge:n2 [WORK IN PROGRESS]"); (*** TODO: explain***)
+				(*** DISCONTINUED as of 3.3 ***)
+(*				("-merge-n1", Int (fun i -> merge_n1 <- i), " value for merge:n1 [WORK IN PROGRESS]"); (*** TODO: explain***)
+				("-merge-n2", Int (fun i -> merge_n2 <- i), " value for merge:n2 [WORK IN PROGRESS]"); (*** TODO: explain***)*)
 
-				("-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some true; merge <- Some true), "Use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
+				(*** DISCONTINUED as of 3.3 ***)
+(*				("-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some true; merge <- Some true), "Use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
 				("-no-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm.
-				");
+				");*)
 
-				("-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some true; merge <- Some false), "Use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS");
+				(*** DISCONTINUED as of 3.3 ***)
+(*				("-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some true; merge <- Some false), "Use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS");
 				("-no-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some false), " Do not use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS.
-				");
+				");*)
 
-                ("-mergedev", Unit (fun () -> warn_if_set mergedev "mergedev"; mergedev <- Some true ; merge <- Some false), " Use merging dev. Default: False");
+				(*** DISCONTINUED as of 3.3 ***)
+(*                ("-mergedev", Unit (fun () -> warn_if_set mergedev "mergedev"; mergedev <- Some true ; merge <- Some false), " Use merging dev. Default: False");
                 ("-mergedev-option", String set_merge_dev, " Mergedev option. Possible values are `visited`, `queue`, `ordered`. Default: `visited`.
-                				");
-
-				(*** NOTE: "old" merge, dating from roughly 3.0 ***)
-				("-merge-algorithm", String set_merge_algorithm, " Merge algorithm. Possible values are `none`, `static`, `staticl`, `expback`. Default: `none`.
-				");
-
-				(*** NOTE: "old" merge, dating from roughly 3.0 ***)
-				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Possible values are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.
-				");
+                				");*)
 
 				(*** NOTE: New merge as of 3.3 ***)
 				("-merge-algo", String set_merge33_algorithm, " Merge algorithm [AMPP22]. Possible values are `none`, `reconstruct`, `onthefly`, `2.12`. Default: depends on the property.
@@ -961,6 +985,15 @@ class imitator_options =
 				(*** NOTE: New merge as of 3.3 ***)
 				("-merge-candidates", String set_merge33_candidates, " Merge candidates [AMPP22]. Possible values are `queue`, `visited`, `ordered`. Default: depends on the property.
 				");
+
+				(*** NOTE: merge for EFsynthminpq, presumably by Vincent Bloemen ***)
+				("-merge-EFsynthminpq-heuristic", String set_merge_EFsynthminpq_heuristic, " Merge heuristic for EFsynthminpq [ABPP19]. Possible values are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.
+				");
+
+				(*** NOTE: experimental heuristics to jump merge, dating from 2021 ***)
+				("-merge-jump-algorithm", String set_merge_jump_algorithm, "");
+				(*** NOTE: hidden! ***)
+(* 				" Experimental heuristics for jumping merges. Possible values are `none`, `static`, `staticl`, `expback`. Default: `none`." *)
 
 				(*** NOTE: New merge as of 3.3 ***)
 				("-merge-restart", String set_merge33_restart, " Restart merging after successful merging until fixpoint? [AMPP22]. Possible values are `on`, `off`. Default: `off`.
@@ -1219,7 +1252,8 @@ class imitator_options =
 			(* Merging *)
 			(*------------------------------------------------------------*)
 
-			if merge = Some true then(
+				(*** DISCONTINUED as of 3.3 ***)
+(*			if merge = Some true then(
 				match property_option with
 				| None ->
 					print_warning ("The `-merge` option may not preserve the correctness of this analysis. Result may be incorrect.");
@@ -1227,9 +1261,10 @@ class imitator_options =
 					if not (AlgorithmOptions.merge_needed property) then(
 						print_warning ("The `-merge` option may not preserve the correctness of this algorithm. Result may be incorrect.");
 					);
-			);
+			);*)
 
-            (* TODO DYLAN: nothing done for mergedev here *)
+				(*** DISCONTINUED as of 3.3 ***)
+(*            (* TODO DYLAN: nothing done for mergedev here *)
 			(* Warn if merge heuristics are used without merging *)
 			if merge = Some false then(
 				if merge_n1 <> AbstractAlgorithm.undefined_merge_n then(
@@ -1246,8 +1281,12 @@ class imitator_options =
 				if merge_heuristic <> None then(
 					print_warning "The value of option -merge-algorithm is ignored since merging is not used.";
 				);*)
-			);
+			);*)
 
+			
+			
+			
+			(** TODO: check compatibility between merge algorithms ***)
 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options: ignoring some options *)
@@ -1433,19 +1472,41 @@ class imitator_options =
 			end;
 
       (* Merge heuristic for EFsynthminpq *)
-      print_message Verbose_experiments ("Merge heuristic: " ^ (AbstractAlgorithm.string_of_merge_heuristic merge_heuristic) ^ ".");
+      print_message Verbose_experiments ("Merge heuristic: " ^ (AbstractAlgorithm.string_of_merge_EFsynthminpq_heuristic merge_EFsynthminpq_heuristic) ^ ".");
 
-            (* Merge algorithm *)
-            if merge_algorithm = Merge_none then(
-				print_message Verbose_low ("No merge algorithm.");
-            )else(
-				print_message Verbose_standard ("Merge algorithm: " ^ (AbstractAlgorithm.string_of_merge_algorithm merge_algorithm));
+            (* Main merge algorithm *)
+            begin
+            match self#merge33_algorithm with
+            | Merge33_none ->
+				print_message Verbose_low ("No merge algorithm");
+			| Merge33_reconstruct ->
+				print_message Verbose_standard ("Merge algorithm enabled (reconstruct [AMPP22])");
+			| Merge33_onthefly ->
+				print_message Verbose_standard ("Merge algorithm enabled (on-the-fly [AMPP22])");
+			| Merge33_212 ->
+				print_message Verbose_standard ("Merge algorithm enabled (v2.12)");
+			end;
+			
+			(* Additional details on merging heuristics *)
+			if merge33_algorithm <> None && merge33_algorithm <> Some Merge33_none then(
 
-				if merge_n1 = AbstractAlgorithm.undefined_merge_n && merge_n2 = AbstractAlgorithm.undefined_merge_n then(
-					print_message Verbose_low ("No n1, n2 for merge.");
+				(* Print restart *)
+				if self#merge33_restart then(
+					print_message Verbose_standard ("Merge restart enabled.");
 				)else(
-					print_message Verbose_standard ("Merge: n1 = " ^ (string_of_int merge_n1) ^ ", n2 = " ^ (string_of_int merge_n2) ^ ".");
+					print_message Verbose_low ("No merge restart.");
 				);
+				
+				(* Print merge candidates heuristics *)
+				print_message Verbose_standard ("Merge candidates heuristics: " ^ (AbstractAlgorithm.string_of_merge33_candidates self#merge33_candidates));
+
+				(* Print jump algorithm *)
+				if merge_jump_algorithm = Merge_jump_none then(
+					print_message Verbose_medium ("No merge jump.");
+				)else(
+					print_message Verbose_standard ("Merge jump algorithm: " ^ (AbstractAlgorithm.string_of_merge_jump_algorithm merge_jump_algorithm));
+				);
+				
             );
 
 
@@ -1530,7 +1591,8 @@ class imitator_options =
 
 
 			(* OPTIONS *)
-			begin match mergeq with
+				(*** DISCONTINUED as of 3.3 ***)
+(*			begin match mergeq with
 			| Some true ->
 				print_message Verbose_standard ("Merging technique of [AFS13] enabled on queue only.");
 			| Some false ->
@@ -1552,8 +1614,10 @@ class imitator_options =
 				print_message Verbose_standard ("Merging technique of [AFS13] enabled (in version 2.12).");
 			| _ ->
 				print_message Verbose_medium ("Merging technique of [AFS13] (in version 2.12) disabled.")
-			end;
+			end;*)
 
+			
+			(* Auto-detection of synclabs *)
 			if sync_auto_detection then
 				print_message Verbose_standard ("Auto-detection mode for sync actions.")
 			else

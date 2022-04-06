@@ -197,11 +197,38 @@ begin match property_option, options#imitator_mode with
 		
 		(* Update if not yet set *)
         if not options#is_set_merge33_algorithm then (
+			let merge_needed = AlgorithmOptions.merge_needed property in
+
             (* Print some information *)
             print_message Verbose_high ("Case option `-merge-algorithm` not set");
 
-            options#set_merge33_algorithm(Merge33_none);
+			(* Print some information *)
+			print_message Verbose_high ("Set option `-merge-algorithm` to its default value: `" ^ (string_of_bool merge_needed) ^ "`");
+
+			if(merge_needed) then(
+				(*** TODO! default merge heuristics: to move somewhere! ***)
+				options#set_merge33_algorithm Merge33_reconstruct;
+			)else(
+				options#set_merge33_algorithm Merge33_none;
+			);
         );
+        
+		(* Update if not yet set *)
+        if not options#is_set_merge33_candidates then (
+			let merge_needed = AlgorithmOptions.merge_needed property in
+
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-candidates` not set");
+
+			(* Print some information *)
+			print_message Verbose_high ("Set option `-merge-candidates` to its default value: `" ^ (string_of_bool merge_needed) ^ "`");
+
+			if(merge_needed) then(
+				(*** TODO! default merge heuristics: to move somewhere! ***)
+				options#set_merge33_candidates Merge_candidates_ordered;
+			);
+        );
+        
 		(* Update if not yet set *)
         if not options#is_set_merge33_restart then (
             (* Print some information *)
@@ -212,8 +239,9 @@ begin match property_option, options#imitator_mode with
 		
 		
 		(* Old merge options *)
+				(*** DISCONTINUED as of 3.3 ***)
 		
-		(* Update if not yet set *)
+(*		(* Update if not yet set *)
 		if not options#is_set_mergeq then (
 			let merge_needed = AlgorithmOptions.merge_needed property in
 
@@ -242,11 +270,31 @@ begin match property_option, options#imitator_mode with
             print_message Verbose_high ("Case option `-mergedev` not set");
 
             options#set_mergedev(false);
-        );
+        );*)
 
 	| _, State_space_computation
 		->
+		(* New merge options as of 3.3 *)
+		
 		(* Update if not yet set *)
+        if not options#is_set_merge33_algorithm then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-algorithm` not set");
+
+            options#set_merge33_algorithm(Merge33_none);
+        );
+		(* Update if not yet set *)
+        if not options#is_set_merge33_restart then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-restart` not set");
+
+            options#set_merge33_restart(false);
+        );
+        
+        (*** NOTE: do nothing for merge33_candidates ***)
+
+				(*** DISCONTINUED as of 3.3 ***)
+(*        (* Update if not yet set *)
 		if not options#is_set_mergeq then (
 			(* Print some information *)
 			print_message Verbose_high ("Case option `-mergeq` not set");
@@ -274,7 +322,8 @@ begin match property_option, options#imitator_mode with
             print_message Verbose_high ("Case option `-mergedev` not set");
 
             options#set_mergedev(false);
-        );
+        );*)
+
 	| None, _ -> ()
 end;
 

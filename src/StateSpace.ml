@@ -1673,20 +1673,20 @@ let merge state_space queue =
 
     (* Check if the are_mergeable test needs to be perform according to the merge options *)
     let perform_test (global_location : Location.global_location) =
-        match options#merge_algorithm with
-        | Merge_none -> true
-        | Merge_static -> (* n1 and n2 don't change *)
+        match options#merge_jump_algorithm with
+        | Merge_jump_none -> true
+        | Merge_jump_static (n1, n2) -> (* n1 and n2 don't change *)
             let fails = !length_fail_sequence and skips = !length_skip_sequence in
               (* While looking for the number of fails *)
               (* If it found n1 fails, go to the skip step *)
-              if fails = options#merge_n1 then
+              if fails = n1 then
                   begin
                   length_fail_sequence := 0;
                   step := Skip;
                   false
                   end
               (* If it found n2 skip, go to the fail step *)
-              else if skips = options#merge_n2 then
+              else if skips = n2 then
                   begin
                   length_skip_sequence := 0;
                   step := Fail;
@@ -1697,7 +1697,7 @@ let merge state_space queue =
               else if !step = Skip  then (* i.e. skip sequence is performing *)
                    false
               else raise (InternalError "perform_test for Merge_static");
-        | Merge_static_per_location -> (* n1 and n2 don't change, sequences per location *)
+        | Merge_jump_static_per_location (n1, n2) -> (* n1 and n2 don't change, sequences per location *)
             (* Check if global_location exists. If not, create it *)
             let binding = Hashtbl.find_opt sequences_table global_location in
             if binding = None
@@ -1707,27 +1707,27 @@ let merge state_space queue =
                 (*TODO: check why Options.get is unbound…*)
                 (*let step, sequence = Options.get binding*)
                 let step, sequence = Hashtbl.find sequences_table global_location in
-                if step = Fail && sequence = options#merge_n1
+                if step = Fail && sequence = n1
                     then begin Hashtbl.replace sequences_table global_location (Skip, 0); false end
-                else if step = Skip && sequence = options#merge_n2
+                else if step = Skip && sequence = n2
                     then begin Hashtbl.replace sequences_table global_location (Fail, 0); true end
                 else if step = Fail
                     then true
                 else if step = Skip
                     then false
                 else raise (InternalError "perform_test for Merge_static_per_location");
-        | Merge_exponentialbackoff -> (* n1 don't change, n2 exp. *)
+        | Merge_jump_exponentialbackoff (n1, n2) -> (* n1 don't change, n2 exp. *)
             let fails = !length_fail_sequence and skips = !length_skip_sequence in
               (* While looking for the number of fails *)
               (* If it found n1 fails, go to the skip step *)
-              if fails = options#merge_n1 then
+              if fails = n1 then
                   begin
                   length_fail_sequence := 0;
                   step := Skip;
                   false
                   end
               (* If it found n2 skip, go to the fail step *)
-              else if skips = !skip_factor*options#merge_n2 then
+              else if skips = !skip_factor*n2 then
                   begin
                   length_skip_sequence := 0;
                   skip_factor := !skip_factor * 2;
@@ -1742,22 +1742,22 @@ let merge state_space queue =
     in
 
     let add_merging_step (test_result : merging_result) (global_location : Location.global_location) =
-        match options#merge_algorithm with
-            | Merge_none -> ()
-            | Merge_static ->
+        match options#merge_jump_algorithm with
+            | Merge_jump_none -> ()
+            | Merge_jump_static (n1, n2) ->
                 (match test_result with
                 | Merging_Y -> length_fail_sequence:=0; ()
                 | Merging_N -> length_fail_sequence := !length_fail_sequence + 1; ()
                 | Merging_dot -> length_skip_sequence := !length_skip_sequence + 1; ()
 				)
-            | Merge_static_per_location ->
+            | Merge_jump_static_per_location (n1, n2) ->
                 (match test_result with
                 | Merging_Y -> Hashtbl.replace sequences_table global_location (Fail, 0); ()
                 | Merging_N | Merging_dot ->
                     let step, sequence = Hashtbl.find sequences_table global_location in
                     Hashtbl.replace sequences_table global_location (step, sequence+1); ()
                 )
-            | Merge_exponentialbackoff ->
+            | Merge_jump_exponentialbackoff (n1, n2) ->
                 (match test_result with
                 | Merging_Y -> length_fail_sequence:=0; skip_factor := 1; ()
                 | Merging_N -> length_fail_sequence := !length_fail_sequence + 1; ()
@@ -1802,7 +1802,7 @@ let merge state_space queue =
         let sibs = Hashtbl.find_all state_space.states_for_comparison li in
         (* lookup px_constraints and exclude si itself *)
             let result = List.fold_left (fun siblings sj ->
-            if sj = si || (options#mergeq && not(List.mem sj new_states)) then siblings else begin
+            if sj = si || ((*options#mergeq*) (options#merge33_candidates = Merge_candidates_queue) && not(List.mem sj new_states)) then siblings else begin
                 let state = get_state state_space sj in
                 let c' = state.px_constraint in
                 (sj,c') :: siblings
@@ -2343,10 +2343,10 @@ let merge2021 state_space queue =
                     main_merger tail;
                     if Hashtbl.mem state_space.all_states s then (* treat s only if it is still reachable *)
 
-                        match options#merge_dev with
-                        | Merge_visited -> merge_state s false
-                        | Merge_queue -> merge_state s true
-                        | Merge_ordered -> begin (merge_state s true) ; (merge_state s false) end
+                        match options#merge33_candidates with
+                        | Merge_candidates_visited -> merge_state s false
+                        | Merge_candidates_queue -> merge_state s true
+                        | Merge_candidates_ordered -> begin (merge_state s true) ; (merge_state s false) end
 
             end
     in

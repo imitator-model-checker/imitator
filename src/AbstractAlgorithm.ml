@@ -112,41 +112,42 @@ type pending_order =
 	| Pending_zone
 
 (* Merging heuristic for EFsynthminpq *)
-type merge_heuristic =
+type merge_EFsynthminpq_heuristic =
 	(** Merge_always: merge after every processed state *)
-	| Merge_always
+	| Merge_EFsynthminpq_always
 	(** Merge_always: merge after every processed state for which the target state is a successor of the current state *)
-	| Merge_targetseen
+	| Merge_EFsynthminpq_targetseen
 	(** Merge_always: merge after every processed state, for every 10th added state to PQ *)
-	| Merge_pq10
+	| Merge_EFsynthminpq_pq10
 	(** Merge_always: merge after every processed state, for every 100th added state to PQ *)
-	| Merge_pq100
+	| Merge_EFsynthminpq_pq100
 	(** Merge_always: merge after every 10th processed state *)
-	| Merge_iter10
+	| Merge_EFsynthminpq_iter10
 	(** Merge_always: merge after every 100th processed state *)
-	| Merge_iter100
+	| Merge_EFsynthminpq_iter100
 
 (* Undefined value for n1/n2 merge heuristics *)
 let undefined_merge_n = -1
 
-(* Merge heuristics for reachability analysis *)
-type merge_algorithm =
+(* Merge heuristics for reachability analysis: try to jump some merge attemps (approx 2021) *)
+type merge_jump_algorithm =
 	(** None *)
-	| Merge_none
+	| Merge_jump_none
 	(** TODO: description *)
-	| Merge_static
+	| Merge_jump_static of int * int
 	(** TODO: description *)
-	| Merge_static_per_location
+	| Merge_jump_static_per_location of int * int
     (** TODO: description *)
-	| Merge_exponentialbackoff
+	| Merge_jump_exponentialbackoff of int * int
 
-type merge_dev =
+				(*** DISCONTINUED as of 3.3 ***)
+(*type merge_dev =
 	(** merge(queue,visited) *)
 	| Merge_visited
 	(** merge(queue,queue) *)
 	| Merge_queue
     (** merge(queue,queue);merge(queue,visited) *)
-	| Merge_ordered
+	| Merge_ordered*)
 
 (* Main merge algorithms from IMITATOR 3.3 *)
 type merge33_algorithm =
@@ -324,22 +325,24 @@ let string_of_state_comparison_operator (state_comparison_operator : state_compa
 	| Double_inclusion_check -> "double inclusion check"
 
 
-let string_of_merge_heuristic (merge_heuristic : merge_heuristic) : string = match merge_heuristic with
-	| Merge_always		-> "always"
-	| Merge_targetseen	-> "targetseen"
-	| Merge_pq10		-> "pq10"
-	| Merge_pq100		-> "pq100"
-	| Merge_iter10		-> "iter10"
-	| Merge_iter100		-> "iter100"
+
+let string_of_merge33_candidates (merge33_candidates : merge33_candidates) : string = match merge33_candidates with
+	| Merge_candidates_ordered	-> "ordered"
+	| Merge_candidates_queue	-> "queue"
+	| Merge_candidates_visited	-> "visited"
 
 
-let string_of_merge_algorithm (merge_algorithm : merge_algorithm) : string = match merge_algorithm with
-	| Merge_none				-> "no merge"
-	| Merge_static				-> "static"
-	| Merge_static_per_location	-> "staticl"
-	| Merge_exponentialbackoff	-> "exponential backoff"
+let string_of_merge_EFsynthminpq_heuristic (merge_EFsynthminpq_heuristic : merge_EFsynthminpq_heuristic) : string = match merge_EFsynthminpq_heuristic with
+	| Merge_EFsynthminpq_always		-> "always"
+	| Merge_EFsynthminpq_targetseen	-> "targetseen"
+	| Merge_EFsynthminpq_pq10		-> "pq10"
+	| Merge_EFsynthminpq_pq100		-> "pq100"
+	| Merge_EFsynthminpq_iter10		-> "iter10"
+	| Merge_EFsynthminpq_iter100	-> "iter100"
 
-let string_of_merge_dev (merge_dev : merge_dev) : string = match merge_dev with
-	| Merge_visited				-> "visited"
-	| Merge_queue	            -> "queue"
-	| Merge_ordered         	-> "ordered"
+
+let string_of_merge_jump_algorithm (merge_jump_algorithm : merge_jump_algorithm) : string = match merge_jump_algorithm with
+	| Merge_jump_none							-> "no jump"
+	| Merge_jump_static (n1, n2)				-> "static (n1=" ^ (string_of_int n1) ^ ", n2=" ^ (string_of_int n2) ^ ")"
+	| Merge_jump_static_per_location (n1, n2)	-> "staticl (n1=" ^ (string_of_int n1) ^ ", n2=" ^ (string_of_int n2) ^ ")"
+	| Merge_jump_exponentialbackoff (n1, n2)	-> "exponential backoff (n1=" ^ (string_of_int n1) ^ ", n2=" ^ (string_of_int n2) ^ ")"

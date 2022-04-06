@@ -1362,11 +1362,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		if dangerous_inclusion then(
 			self#print_algo_message Verbose_high "A dangerous inclusion was used: result will be at least an overapproximation (or invalid)";
 		);
-		if options#merge then(
+		if options#merge33_algorithm <> Merge33_none then(
 			self#print_algo_message Verbose_high "Merging was used: result will be at least an overapproximation (or invalid)";
 		);
 
-		let abstracted = (dangerous_inclusion || options#merge) in
+		let abstracted = (dangerous_inclusion || (options#merge33_algorithm <> Merge33_none)) in
 
  		let soundness =
 			(* EXACT if termination is normal and no inclusion nor merge *)
