@@ -153,6 +153,7 @@ val is_linear_parsed_factor : variable_infos -> parsed_discrete_factor -> bool
 
 (* --- *)
 (* --- *)
+(* TODO benjamin REFACTOR rename to declared instead of defined *)
 val all_variables_defined_in_parsed_global_expression : variable_infos -> (variable_name -> unit) option -> parsed_global_expression -> bool
 val all_variables_defined_in_parsed_global_expression_without_callback : variable_infos -> parsed_global_expression -> bool
 val all_variables_defined_in_parsed_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_boolean_expression -> bool
@@ -178,6 +179,8 @@ val get_variables_in_parsed_global_expression_with_accumulator : StringSet.t ref
 val get_variables_in_parsed_boolean_expression_with_accumulator : StringSet.t ref -> parsed_boolean_expression -> unit
 val get_variables_in_parsed_discrete_boolean_expression_with_accumulator : StringSet.t ref -> parsed_discrete_boolean_expression -> unit
 val get_variables_in_parsed_update_with_accumulator : StringSet.t ref -> update -> unit
+val get_variables_in_parsed_simple_predicate_with_accumulator : StringSet.t ref -> parsed_simple_predicate -> unit
+val get_variables_in_parsed_state_predicate_with_accumulator : StringSet.t ref -> parsed_state_predicate -> unit
 
 val get_variables_in_parsed_global_expression : parsed_global_expression -> StringSet.t
 val get_variables_in_parsed_discrete_boolean_expression : parsed_discrete_boolean_expression -> StringSet.t
@@ -186,6 +189,8 @@ val get_variables_in_linear_constraint : linear_constraint -> StringSet.t
 val get_variables_in_nonlinear_constraint : nonlinear_constraint -> StringSet.t
 val get_variables_in_init_state_predicate : parsed_init_state_predicate -> StringSet.t
 val get_variables_in_nonlinear_convex_predicate : nonlinear_constraint list -> StringSet.t
+val get_variables_in_parsed_simple_predicate : parsed_simple_predicate -> StringSet.t
+val get_variables_in_parsed_state_predicate : parsed_state_predicate -> StringSet.t
 
 val variable_name_of_parsed_variable_update_type_opt : parsed_variable_update_type -> variable_name option
 val variable_name_of_parsed_variable_update_type : parsed_variable_update_type -> variable_name
@@ -200,3 +205,9 @@ val updates_of_update_section : update_section -> update list
 val convert_var_type : ParsingStructure.var_type -> DiscreteType.var_type
 
 val variable_infos_of_parsed_model : useful_parsing_model_information -> variable_infos
+
+val is_variable_is_defined : variable_infos -> variable_name -> bool
+val is_constant_is_defined : variable_infos -> variable_name -> bool
+val is_variable_or_constant_defined : variable_infos -> variable_name -> bool
+val is_variable_removed : variable_infos -> variable_name -> bool
+val is_variable_or_constant_declared : variable_infos -> variable_name -> bool

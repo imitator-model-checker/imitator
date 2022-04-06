@@ -397,12 +397,12 @@ let get_discrete_type_of_variable variable_infos variable_index =
     DiscreteType.discrete_type_of_var_type var_type
 
 let get_type_of_variable_by_name_opt variable_infos variable_name =
-    if Hashtbl.mem variable_infos.index_of_variables variable_name then (
+    if ParsingStructureUtilities.is_variable_is_defined variable_infos variable_name then (
         (* Get type of variable *)
         let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
         let variable_type = get_type_of_variable variable_infos variable_index in
         Some variable_type
-    ) else if Hashtbl.mem variable_infos.constants variable_name then (
+    ) else if ParsingStructureUtilities.is_constant_is_defined variable_infos variable_name then (
         (* Retrieve the value of the global constant *)
         let value = Hashtbl.find variable_infos.constants variable_name in
         (* Get type of constant *)

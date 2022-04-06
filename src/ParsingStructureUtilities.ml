@@ -51,6 +51,30 @@ type state_predicate_leaf =
     | Leaf_predicate_EQ of string (* automaton name *) * string (* location name *)
     | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
 
+(* Variable info utils functions *)
+
+(* Check if variable is defined => declared and not removed  *)
+let is_variable_is_defined variable_infos = Hashtbl.mem variable_infos.index_of_variables
+
+(* Check if variable was removed *)
+let is_variable_removed variable_infos variable_name = List.mem variable_name variable_infos.removed_variable_names
+
+(* Check if variable was declared, even if removed *)
+let is_variable_declared variable_infos variable_name =
+    is_variable_is_defined variable_infos variable_name
+    || is_variable_removed variable_infos variable_name
+
+(* Check if constant is defined => declared and removed or not *)
+let is_constant_is_defined variable_infos = Hashtbl.mem variable_infos.constants
+
+(* Check if variable / constant is defined => declared and removed or not *)
+let is_variable_or_constant_defined variable_infos variable_name =
+    is_variable_is_defined variable_infos variable_name || is_constant_is_defined variable_infos variable_name
+
+let is_variable_or_constant_declared variable_infos variable_name =
+    is_variable_declared variable_infos variable_name || is_constant_is_defined variable_infos variable_name
+
+
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
 let rec fold_parsed_global_expression operator base leaf_fun = function
@@ -381,7 +405,7 @@ and string_of_parsed_term variable_infos = function
 
 and string_of_parsed_factor variable_infos = function
     | Parsed_DF_variable variable_name ->
-        if (Hashtbl.mem variable_infos.constants variable_name) then (
+        if (is_constant_is_defined variable_infos variable_name) then (
             (* Retrieve the value of the global constant *)
             let value = Hashtbl.find variable_infos.constants variable_name in
             variable_name
@@ -550,12 +574,12 @@ and string_of_parsed_state_predicate variable_infos = function
 
 (* Check if leaf is a constant *)
 let is_constant variable_infos = function
-    | Leaf_variable variable_name -> Hashtbl.mem variable_infos.constants variable_name
+    | Leaf_variable variable_name -> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
 
 (* Check if linear leaf is a constant *)
 let is_linear_constant variable_infos = function
-    | Leaf_linear_variable (_, variable_name) -> Hashtbl.mem variable_infos.constants variable_name
+    | Leaf_linear_variable (_, variable_name) -> is_constant_is_defined variable_infos variable_name
     | Leaf_linear_constant _ -> true
 
 (* Check if leaf is a variable that is defined *)
@@ -563,11 +587,7 @@ let is_linear_constant variable_infos = function
 let is_variable_defined_with_callback variable_infos callback = function
     | Leaf_variable variable_name ->
 
-        let is_defined =
-            List.mem variable_name variable_infos.variable_names
-            || Hashtbl.mem variable_infos.constants variable_name
-            || List.mem variable_name variable_infos.removed_variable_names
-        in
+       let is_defined = is_variable_or_constant_declared variable_infos variable_name in
 
         if not is_defined then (
             match callback with
@@ -584,11 +604,7 @@ let is_variable_defined_with_callback variable_infos callback = function
 let is_variable_defined_in_update_with_callback variable_infos callback = function
     | Leaf_update_updated_variable variable_name ->
 
-        let is_defined =
-            List.mem variable_name variable_infos.variable_names
-            || Hashtbl.mem variable_infos.constants variable_name
-            || List.mem variable_name variable_infos.removed_variable_names
-        in
+        let is_defined = is_variable_or_constant_declared variable_infos variable_name in
 
         if not is_defined then (
             match callback with
@@ -604,7 +620,7 @@ let is_variable_defined variable_infos = is_variable_defined_with_callback varia
 let is_variable_defined_in_linear_expression variable_infos callback_fail = function
     | Leaf_linear_constant _ -> true
     | Leaf_linear_variable (_, variable_name) ->
-        if not (List.mem variable_name variable_infos.variable_names) && not (Hashtbl.mem variable_infos.constants variable_name) then(
+        if not (List.mem variable_name variable_infos.variable_names) && not (is_constant_is_defined variable_infos variable_name) then(
             callback_fail variable_name; false
         )
         else
@@ -644,7 +660,7 @@ let is_only_discrete variable_infos = function
     | Leaf_constant _ -> true
     | Leaf_variable variable_name ->
         (* Constants are allowed *)
-        (Hashtbl.mem variable_infos.constants variable_name)
+        (is_constant_is_defined variable_infos variable_name)
         (* Or discrete *)
         ||
         try(
@@ -662,7 +678,7 @@ let no_variables variable_infos = function
     | Leaf_linear_constant _ -> true
     | Leaf_linear_variable (_, variable_name) ->
         (* Constants are allowed *)
-        (Hashtbl.mem variable_infos.constants variable_name)
+        (is_constant_is_defined variable_infos variable_name)
         (* Or parameter *)
         ||
         let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
@@ -677,14 +693,13 @@ type variable_kind =
 let variable_kind_of_variable_name variable_infos variable_name =
 
     (* First check whether this is a constant *)
-    if Hashtbl.mem variable_infos.constants variable_name then (
+    if is_constant_is_defined variable_infos variable_name then (
         let value = Hashtbl.find variable_infos.constants variable_name in
         Constant_kind value
     )
     (* Otherwise: a variable *)
     else
         Variable_kind (Hashtbl.find variable_infos.index_of_variables variable_name)
-
 
 (* Check if a parsed global expression is constant *)
 let is_parsed_global_expression_constant variable_infos =
@@ -902,7 +917,19 @@ let get_variables_in_nonlinear_constraint_with_accumulator = get_variables_in_pa
 let get_variables_in_parsed_update_with_accumulator variables_used_ref =
     iterate_parsed_update
         (add_variable_of_discrete_boolean_expression variables_used_ref)
-        (function | _ -> ())
+        (function _ -> ())
+
+(* Gather all variable names used in a parsed simple predicate in a given accumulator *)
+let get_variables_in_parsed_simple_predicate_with_accumulator variables_used_ref =
+    iterate_in_parsed_simple_predicate
+        (function _ -> ())
+        (add_variable_of_discrete_boolean_expression variables_used_ref)
+
+(* Gather all variable names used in a parsed state predicate in a given accumulator *)
+let get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref =
+    iterate_in_parsed_state_predicate
+        (function _ -> ())
+        (add_variable_of_discrete_boolean_expression variables_used_ref)
 
 (* Create and wrap an accumulator then return result directly *)
 let wrap_accumulator f expr =
@@ -940,6 +967,12 @@ let get_variables_in_init_state_predicate = function
 let get_variables_in_nonlinear_convex_predicate convex_predicate =
     List.map (get_variables_in_nonlinear_constraint) convex_predicate |>
     List.fold_left (fun variables acc -> StringSet.union acc variables) StringSet.empty
+
+let get_variables_in_parsed_simple_predicate =
+    wrap_accumulator get_variables_in_parsed_simple_predicate_with_accumulator
+
+let get_variables_in_parsed_state_predicate =
+    wrap_accumulator get_variables_in_parsed_state_predicate_with_accumulator
 
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
@@ -1104,5 +1137,3 @@ let variable_infos_of_parsed_model (parsed_model : useful_parsing_model_informat
         type_of_variables = parsed_model.type_of_variables;
         removed_variable_names = parsed_model.removed_variable_names;
     }
-
-

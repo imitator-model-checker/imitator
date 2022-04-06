@@ -13,8 +13,6 @@
  *
  ************************************************************)
 
-
-
 (************************************************************)
 (************************************************************)
 (** Modules *)
@@ -39,93 +37,9 @@ open CustomModules
 (************************************************************)
 (************************************************************)
 
-
 (* For detecting strongly deterministic PTAs *)
 exception Not_strongly_deterministic
 exception InvalidProperty
-
-(* Get rational value or print error message (for linear expression that doesn't support other type than rational) *)
-let numconst_value_or_fail = function
-    | DiscreteValue.Number_value x
-    | DiscreteValue.Rational_value x -> x
-    | x ->
-        let str_value = DiscreteValue.string_of_value x in
-        let str_type = DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value x) in
-        let error_msg =
-            "Linear expressions only support rational literals and constants, value "
-            ^ str_value
-            ^ " of type "
-            ^ str_type
-            ^ " is not rational"
-        in
-        raise (InvalidExpression  error_msg)
-
-(************************************************************)
-(** Getting variables *)
-(************************************************************)
-
-let is_variable_or_constant_declared index_of_variables constants variable_name =
-    Hashtbl.mem index_of_variables variable_name || Hashtbl.mem constants variable_name
-
-
-(************************************************************)
-(** Getting variables *)
-(************************************************************)
-
-
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a Simple_predicate *)
-(*------------------------------------------------------------*)
-let get_variables_in_parsed_simple_predicate variables_used_ref = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression ->
-		ParsingStructureUtilities.get_variables_in_parsed_discrete_boolean_expression_with_accumulator variables_used_ref parsed_discrete_boolean_expression
-
-	| Parsed_loc_predicate parsed_loc_predicate ->
-		(* No variable in location predicate *)
-		()
-
-	| Parsed_state_predicate_true | Parsed_state_predicate_false | Parsed_state_predicate_accepting ->
-		()
-
-
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a parsed_state_predicate_factor *)
-(*------------------------------------------------------------*)
-let rec get_variables_in_parsed_state_predicate_factor variables_used_ref = function
-	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor ->
-		get_variables_in_parsed_state_predicate_factor variables_used_ref parsed_state_predicate_factor
-
-	| Parsed_simple_predicate parsed_simple_predicate ->
-		get_variables_in_parsed_simple_predicate variables_used_ref parsed_simple_predicate
-
-	| Parsed_state_predicate parsed_state_predicate ->
-		get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
-
-
-
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a parsed_state_predicate_term *)
-(*------------------------------------------------------------*)
-and get_variables_in_parsed_state_predicate_term variables_used_ref = function
-	| Parsed_state_predicate_term_AND ( parsed_state_predicate_term1, parsed_state_predicate_term2) ->
-		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term1;
-		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term2;
-
-	| Parsed_state_predicate_factor parsed_state_predicate_factor ->
-		get_variables_in_parsed_state_predicate_factor variables_used_ref parsed_state_predicate_factor
-
-
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a parsed_state_predicate *)
-(*------------------------------------------------------------*)
-and get_variables_in_parsed_state_predicate variables_used_ref = function
-	| Parsed_state_predicate_OR (parsed_state_predicate1 , parsed_state_predicate2) ->
-		get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate1;
-		get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate2;
-
-	| Parsed_state_predicate_term parsed_state_predicate_term ->
-		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term
-
 
 (*------------------------------------------------------------*)
 (* Find the clocks in a linear_constraint *)
@@ -550,17 +464,13 @@ let check_normal_update variable_infos automaton_name normal_update =
     in
 
     (* Check that all variables in update are declared, and call print function if it's not the case *)
-    let all_variables_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_normal_update variable_infos print_variable_in_update_not_declared_opt print_variable_in_update_not_declared_opt normal_update in
+    let all_variables_declared = ParsingStructureUtilities.all_variables_defined_in_parsed_normal_update variable_infos print_variable_in_update_not_declared_opt print_variable_in_update_not_declared_opt normal_update in
     (* Get all updated variables (can have many updated variables for one update, in conditional update for example) *)
     let updated_variable_name_opt = (ParsingStructureUtilities.fold_map_parsed_normal_update (^) "" (function _ -> "") (function Leaf_update_updated_variable variable_name -> variable_name) normal_update |> List.filter (fun x -> x <> "") |> List.nth_opt) 0 in
 
     let updated_variable_name = match updated_variable_name_opt with Some updated_variable_name -> updated_variable_name | None -> "_" in
 
-    let is_variable_declared variable_name =
-        List.mem variable_name variable_infos.variable_names || Hashtbl.mem variable_infos.constants variable_name
-    in
-
-    if updated_variable_name <> "_" && not (List.mem updated_variable_name variable_infos.removed_variable_names) && is_variable_declared updated_variable_name then
+    if updated_variable_name <> "_" && ParsingStructureUtilities.is_variable_is_defined variable_infos updated_variable_name then
         (* Get kind (variable or constant ?) of updated variable *)
         let variable_kind = ParsingStructureUtilities.variable_kind_of_variable_name variable_infos updated_variable_name in
         (* Get var type of updated variable *)
@@ -582,9 +492,9 @@ let check_normal_update variable_infos automaton_name normal_update =
             if not is_only_discrete then print_error ("Trying to update variable `` with clock(s) or parameter(s) in ``.");
         );
 
-        all_variables_defined && not (is_constant || is_parameter)
+        all_variables_declared && not (is_constant || is_parameter)
     else (
-        all_variables_defined
+        all_variables_declared
     )
 
 (*------------------------------------------------------------*)
@@ -628,7 +538,7 @@ let check_update variable_infos automaton_name = function
         in
 
 	    (* Check that all variables in update condition are declared *)
-        let all_defined_in_condition = ParsingStructureUtilities.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_variable_in_update_condition_not_declared) bool_expr in
+        let all_declared_in_condition = ParsingStructureUtilities.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_variable_in_update_condition_not_declared) bool_expr in
 
         (* Function that check if a parsing structure tree leaf is a discrete variable *)
         let is_variable_is_discrete = function
@@ -656,7 +566,7 @@ let check_update variable_infos automaton_name = function
         in
 
 	    (* If all normal updates and condition are valid, update is valid *)
-	    all_defined_in_condition && is_valid_normal_updates && is_condition_use_only_discrete
+	    all_declared_in_condition && is_valid_normal_updates && is_condition_use_only_discrete
 
 (* TODO benjamin CLEAN remove comments *)
 (*------------------------------------------------------------*)
@@ -789,7 +699,7 @@ let check_update variable_infos automaton_name update =
                 if List.mem variable_name variable_infos.variable_names then (
                     let index = Hashtbl.find variable_infos.index_of_variables variable_name in
                     Some (variable_infos.type_of_variables index)
-                ) else if Hashtbl.mem variable_infos.constants variable_name then (
+                ) else if is_constant_is_defined variable_infos variable_name then (
                     let value = Hashtbl.find variable_infos.constants variable_name in
                     Some (DiscreteValue.var_type_of_value value)
                 ) else
@@ -1099,7 +1009,7 @@ let check_init_definition parsed_model =
     let rec check_init_predicate = function
         | Parsed_discrete_predicate (variable_name, expr) ->
             (* Check that l-value variable exist *)
-            if not (is_variable_or_constant_declared variable_infos.index_of_variables variable_infos.constants variable_name || List.mem variable_name variable_infos.removed_variable_names) then (
+            if not (ParsingStructureUtilities.is_variable_or_constant_declared variable_infos variable_name) then (
                 print_error ("Variable `" ^ variable_name ^ "` in discrete init is not declared");
                 false
             )
@@ -1128,7 +1038,7 @@ let check_init_definition parsed_model =
 
     and check_init_constraint = function
         (*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
-        | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when List.mem variable_name variable_infos.removed_variable_names ->
+        | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when ParsingStructureUtilities.is_variable_removed variable_infos variable_name ->
             print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
             (* Still check the second term *)
             if not (ParsingStructureUtilities.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message linear_expression) then (
@@ -1177,11 +1087,11 @@ let partition_discrete_continuous variable_infos filtered_init_inequalities =
 		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
 			let is_discrete =
 			(* Try to get the variable index *)
-			if (Hashtbl.mem variable_infos.index_of_variables variable_name) then (
+			if (ParsingStructureUtilities.is_variable_is_defined variable_infos variable_name) then (
 				let variable_index =  Hashtbl.find variable_infos.index_of_variables variable_name in
 				(* Keep if this is a discrete *)
 				DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
-			) else if (Hashtbl.mem variable_infos.constants variable_name) then
+			) else if (ParsingStructureUtilities.is_constant_is_defined variable_infos variable_name) then
 			    false
             else (
                 (* Otherwise: problem! *)
@@ -1248,7 +1158,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
     | Parsed_discrete_predicate (variable_name, expr) ->
 
         (* Check that initialized variable of name 'variable_name' is not a constant *)
-        if Hashtbl.mem variable_infos.constants variable_name then (
+        if ParsingStructureUtilities.is_constant_is_defined variable_infos variable_name then (
             print_error ("Initialize '" ^ variable_name ^ "' constant is forbidden");
             false
         )
@@ -1301,13 +1211,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
 let check_init (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
 
     (* TODO benjamin remove here and use variable_info *)
-	let constants				= useful_parsing_model_information.constants in
 	let discrete				= useful_parsing_model_information.discrete in
-	let index_of_variables		= useful_parsing_model_information.index_of_variables in
-	let type_of_variables		= useful_parsing_model_information.type_of_variables in
-	let variable_names			= useful_parsing_model_information.variable_names in
-
-
     let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
 
 	let well_formed = ref true in
@@ -1355,9 +1259,9 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 	(* Check that every discrete variable is given at least one initial value (if not: warns) *)
 	List.iter (fun discrete_index ->
 		if not (Hashtbl.mem init_values_for_discrete discrete_index) then(
-		    let variable_name = List.nth variable_names discrete_index in
-		    let variable_index =  Hashtbl.find index_of_variables variable_name in
-		    let variable_type = type_of_variables variable_index in
+		    let variable_name = List.nth variable_infos.variable_names discrete_index in
+		    let variable_index =  Hashtbl.find variable_infos.index_of_variables variable_name in
+		    let variable_type = variable_infos.type_of_variables variable_index in
 		    let default_value = DiscreteValue.default_value variable_type in
 			print_warning ("The discrete variable '" ^ variable_name ^ "' was not given an initial value in the init definition: it will be assigned to " ^ DiscreteValue.string_of_value default_value ^ ".");
 			Hashtbl.add init_values_for_discrete discrete_index default_value
@@ -1388,13 +1292,13 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 
         (* Gathering all variables that are non rational *)
         let non_rational_variable_names = StringSet.filter (fun variable_name ->
-            if Hashtbl.mem index_of_variables variable_name then (
-                let variable_index = Hashtbl.find index_of_variables variable_name in
-                let variable_type = DiscreteType.discrete_type_of_var_type (type_of_variables variable_index) in
+            if ParsingStructureUtilities.is_variable_is_defined variable_infos variable_name then (
+                let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+                let variable_type = DiscreteType.discrete_type_of_var_type (variable_infos.type_of_variables variable_index) in
                 not (DiscreteType.is_discrete_type_rational_type variable_type)
             )
-            else if Hashtbl.mem constants variable_name then (
-                let value =  Hashtbl.find constants variable_name in
+            else if ParsingStructureUtilities.is_constant_is_defined variable_infos variable_name then (
+                let value =  Hashtbl.find variable_infos.constants variable_name in
                 let variable_type = DiscreteValue.discrete_type_of_value value in
                 not (DiscreteType.is_discrete_type_rational_type variable_type)
             )
@@ -2200,7 +2104,7 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_EF parsed_state_predicate
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate
-			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+			-> ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 			
 		
 		(*------------------------------------------------------------*)
@@ -2211,13 +2115,13 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
 		| Parsed_EFpmax (parsed_state_predicate , parameter_name)
 			(* First get the variables in the state predicate *)
-			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
+			-> ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
 			(* Then add the parameter name *)
 			variables_used_ref := StringSet.add parameter_name !variables_used_ref
 		
 		(* Reachability with minimal-time *)
 		| Parsed_EFtmin parsed_state_predicate
-			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+			-> ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 
 		
 		(*------------------------------------------------------------*)
@@ -2226,11 +2130,11 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate
-			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+			-> ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 
 		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 		| Parsed_Cycle_Through_generalized parsed_state_predicate_list
-			-> List.iter (get_variables_in_parsed_state_predicate variables_used_ref) parsed_state_predicate_list
+			-> List.iter (ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref) parsed_state_predicate_list
 
 		(** Infinite-run (cycle) with non-Zeno assumption *)
 		| Parsed_NZ_Cycle -> ()
@@ -2262,7 +2166,7 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		(* Non-complete, non-deterministic inverse method with convex result *)
 		| Parsed_PRP (parsed_state_predicate , parsed_pval) ->
 			(* First get the variables in the state predicate *)
-			get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
+			ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
 			(* Then add the pval *)
 			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_pval parsed_pval))
 		
@@ -2291,7 +2195,7 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, _)
 			->
 			(* First get the variables in the state predicate *)
-			get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
+			ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
 			(* Then add the HyperRectangle *)
 			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle));
 
@@ -2675,7 +2579,7 @@ let check_parsed_state_predicate parsing_infos expr =
 (*------------------------------------------------------------*)
 let check_parameter_name suffix_explanation_string variable_infos parameter_name =
 	(* First check it is a variable *)
-	if not(Hashtbl.mem variable_infos.index_of_variables parameter_name) then(
+	if not (ParsingStructureUtilities.is_variable_is_defined variable_infos parameter_name) then(
 		print_error ("Parameter " ^ parameter_name ^ " is not a defined variable" ^ suffix_explanation_string);
 		false
 	) else(
