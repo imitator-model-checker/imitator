@@ -4751,9 +4751,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test EF on toy example: synthesis (-no-merge)',
+		'purpose'    : 'Test EF on toy example: synthesis (-merge none)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-no-merge',
+		'options'    : '-merge none',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4782,9 +4782,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -comparison equality)',
+		'purpose'    : 'Test EF on toy example: synthesis (-merge none -comparison equality)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4814,9 +4814,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -comparison equality -no-cumulative-pruning)',
+		'purpose'    : 'Test EF on toy example: synthesis (-merge none -comparison equality -no-cumulative-pruning)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-no-merge -comparison equality -no-cumulative-pruning',
+		'options'    : '-merge none -comparison equality -no-cumulative-pruning',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5318,9 +5318,9 @@ Number of computed states               : 14
 		# Test since               : 2021/09/01
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3.1
-		'purpose'    : 'Test EF with depth-limit to check the quick reachability (-no-merge)',
+		'purpose'    : 'Test EF with depth-limit to check the quick reachability (-merge none)',
 		'input_files': ['quick-reach.imi', 'EFaccepting.imiprop'],
-		'options'    : '-no-merge -depth-limit 3',
+		'options'    : '-merge none -depth-limit 3',
 		'expectations' : [
 			{'file': 'quick-reach.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -6409,7 +6409,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only discrete',
 		'input_files': ['testEFexemplify-discrete.imi', 'testEFexemplify-discrete.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFexemplify-discrete.res' , 'content' : """
 BEGIN RESULT
@@ -6538,7 +6538,7 @@ END RESULT
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock',
 		'input_files': ['testEFexemplify-1clock.imi', 'testEFexemplify-1clock.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFexemplify-1clock.res' , 'content' : """
 BEGIN RESULT
@@ -6672,7 +6672,7 @@ END RESULT
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock (+ non-1 flows, non-0 resets)',
 		'input_files': ['testEFexemplify-1complexclock.imi', 'testEFexemplify-1complexclock.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFexemplify-1complexclock.res' , 'content' : """
 BEGIN RESULT
@@ -6841,7 +6841,7 @@ END RESULT
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with 2 clocks (+ non-1 flows, non-0 resets)',
 		'input_files': ['testEFexemplify-2complexclocks.imi', 'testEFexemplify-2complexclocks.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFexemplify-2complexclocks.res' , 'content' : """
 BEGIN RESULT
@@ -7019,7 +7019,7 @@ END RESULT
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example with 1 clock and 2 bounded signals',
 		'input_files': ['testEFexemplify-2signals.imi', 'testEFexemplify-2signals.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			# WARNING: there is a lot of non-determinism, so a failure on this test does not necessarily mean the algorithm is wrong! It should then be manually inspected
 			# NOTE: only quickly checked it (2022/03/31)
@@ -7246,7 +7246,7 @@ True
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify without parameters: unique negative run',
 		'input_files': ['testEFExemplify1neg.imi', 'testEFExemplify1neg.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplify1neg.res' , 'content' : """
 (************************************************************)
@@ -7362,7 +7362,7 @@ True
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify without parameters: unique negative run (in initial location)',
 		'input_files': ['testEFExemplify1neg-b.imi', 'testEFExemplify1neg.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplify1neg-b.res' , 'content' : """
 (************************************************************)
@@ -7444,7 +7444,7 @@ True
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify without parameters: unique negative run + flows',
 		'input_files': ['testEFExemplify1neg-c.imi', 'testEFExemplify1neg.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplify1neg-c.res' , 'content' : """
 (************************************************************)
@@ -7534,7 +7534,7 @@ True
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify without parameters: unique negative run + flows + negative variable',
 		'input_files': ['testEFExemplify1neg-d.imi', 'testEFExemplify1neg.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplify1neg-d.res' , 'content' : """
 (************************************************************)
@@ -7681,7 +7681,7 @@ True
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify without parameters: non-determinism + flows + negative variable + 2 PTAs',
 		'input_files': ['testEFExemplifyNonDet.imi', 'testEFExemplifyNonDet.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplifyNonDet.res' , 'content' : """
 (************************************************************)
@@ -8072,7 +8072,7 @@ True
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify with one parameter: unique negative parameter valuation',
 		'input_files': ['testEFExemplify1Pneg.imi', 'testEFExemplify1Pneg.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplify1Pneg.res' , 'content' : """
 (************************************************************)
@@ -8193,7 +8193,7 @@ True
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify with one parameter: non-determinism + flows + negative variable + 2 PTAs',
 		'input_files': ['testEFExemplifyPNonDet.imi', 'testEFExemplifyPNonDet.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplifyPNonDet.res' , 'content' : """
 (************************************************************)
@@ -8768,7 +8768,7 @@ True
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example',
 		'input_files': ['testCounterExSimple-3.imi', 'testCounterExSimple-3.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-3.res' , 'content' : """
 BEGIN RESULT
@@ -8940,7 +8940,7 @@ END RESULT
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example (variant without invariant)',
 		'input_files': ['testCounterExSimple-3b.imi', 'testCounterExSimple-3.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-3b.res' , 'content' : """
 (************************************************************)
@@ -9026,7 +9026,7 @@ END RESULT
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example (clock initially non-zero, strict constraints)',
 		'input_files': ['testCounterExSimple-4.imi', 'testCounterExSimple-4.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-4.res' , 'content' : """
 BEGIN RESULT
@@ -9267,7 +9267,7 @@ END RESULT
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only in the initial state)',
 		'input_files': ['testCounterExSimple-5.imi', 'testCounterExSimple-5.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5.res' , 'content' : """
 BEGIN RESULT
@@ -9555,7 +9555,7 @@ END RESULT
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at position 2)',
 		'input_files': ['testCounterExSimple-5b.imi', 'testCounterExSimple-5b.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5b.res' , 'content' : """
 BEGIN RESULT
@@ -9852,7 +9852,7 @@ END RESULT
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at last position)',
 		'input_files': ['testCounterExSimple-5c.imi', 'testCounterExSimple-5c.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5c.res' , 'content' : """
 BEGIN RESULT
@@ -10158,7 +10158,7 @@ END RESULT
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter valuation derived)',
 		'input_files': ['testCounterExSimple-6.imi', 'testCounterExSimple-6.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 				# NOTE / TODO: the NEGATIVE run is disabled so far! due to a BUG …
 			{'file': 'testCounterExSimple-6.res' , 'content' : """
@@ -10328,7 +10328,7 @@ BEGIN RESULT
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
 		'input_files': ['testCounterExSimple-7.imi', 'testCounterExSimple-7.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-7.res' , 'content' : """
 
@@ -10500,7 +10500,7 @@ END RESULT
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
 		'input_files': ['testCounterExSimple-8.imi', 'testCounterExSimple-8.imiprop'],
-		'options'    : '-no-merge -comparison equality -draw-cart',
+		'options'    : '-merge none -comparison equality -draw-cart',
 		'expectations' : [
 			{'file': 'testCounterExSimple-8.res' , 'content' : """
 
@@ -10829,7 +10829,7 @@ END RESULT
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy monitoring-style example',
 		'input_files': ['testCounterExSimple-9.imi', 'testCounterExSimple-9.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-9.res' , 'content' : """
 
@@ -11001,7 +11001,7 @@ END RESULT
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example without parameter',
 		'input_files': ['testCounterExSimple.imi', 'testCounterExSimple.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple.res' , 'content' : """
 
@@ -11212,7 +11212,7 @@ END RESULT
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example with parameters and discrete variables',
 		'input_files': ['testCounterExSimple-2.imi', 'testCounterExSimple-2.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-2.res' , 'content' : """
 
@@ -18419,9 +18419,9 @@ Constraint nature                       : good/bad
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Testing state space + merging on a trivial example: -no-merge',
+		'purpose'    : 'Testing state space + merging on a trivial example: -merge none',
 		'input_files': ['exActionsNonPreserved.imi'],
-		'options'    : '-mode statespace -states-description -no-merge',
+		'options'    : '-mode statespace -states-description -merge none',
 		'expectations' : [
 			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
 		*/
@@ -18518,7 +18518,7 @@ Constraint nature                       : good/bad
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Testing state space + merging on a trivial example: testing no option = -no-merge',
+		'purpose'    : 'Testing state space + merging on a trivial example: testing no option = -merge none',
 		'input_files': ['exActionsNonPreserved.imi'],
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
