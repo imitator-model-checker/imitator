@@ -214,18 +214,14 @@ begin match property_option, options#imitator_mode with
         
 		(* Update if not yet set *)
         if not options#is_set_merge_candidates then (
-			let merge_needed = AlgorithmOptions.merge_needed property in
-
             (* Print some information *)
             print_message Verbose_high ("Case option `-merge-candidates` not set");
 
 			(* Print some information *)
-			print_message Verbose_high ("Set option `-merge-candidates` to its default value: `" ^ (string_of_bool merge_needed) ^ "`");
+			print_message Verbose_high ("Set option `-merge-candidates` to its default value");
 
-			if(merge_needed) then(
-				(*** TODO! default merge heuristics: to move somewhere! ***)
-				options#set_merge_candidates Merge_candidates_ordered;
-			);
+			(*** TODO! default merge heuristics: to move somewhere! ***)
+			options#set_merge_candidates Merge_candidates_ordered;
         );
         
 		(* Update if not yet set *)
