@@ -977,7 +977,7 @@ class imitator_options =
                 				");*)
 
 				(*** NOTE: New merge as of 3.3 ***)
-				("-merge-algo", String set_merge_algorithm, " Merge algorithm [AMPP22]. Possible values are `none`, `reconstruct`, `onthefly`, `2.12`. Default: depends on the property.
+				("-merge", String set_merge_algorithm, " Merge algorithm [AMPP22]. Possible values are `none`, `yes`, `reconstruct`, `onthefly`, `2.12`. Default: depends on the property.
 				");
 
 				(*** NOTE: New merge as of 3.3 ***)
