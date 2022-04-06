@@ -1802,7 +1802,7 @@ let merge state_space queue =
         let sibs = Hashtbl.find_all state_space.states_for_comparison li in
         (* lookup px_constraints and exclude si itself *)
             let result = List.fold_left (fun siblings sj ->
-            if sj = si || ((*options#mergeq*) (options#merge33_candidates = Merge_candidates_queue) && not(List.mem sj new_states)) then siblings else begin
+            if sj = si || ((*options#mergeq*) (options#merge_candidates = Merge_candidates_queue) && not(List.mem sj new_states)) then siblings else begin
                 let state = get_state state_space sj in
                 let c' = state.px_constraint in
                 (sj,c') :: siblings
@@ -2343,7 +2343,7 @@ let merge2021 state_space queue =
                     main_merger tail;
                     if Hashtbl.mem state_space.all_states s then (* treat s only if it is still reachable *)
 
-                        match options#merge33_candidates with
+                        match options#merge_candidates with
                         | Merge_candidates_visited -> merge_state s false
                         | Merge_candidates_queue -> merge_state s true
                         | Merge_candidates_ordered -> begin (merge_state s true) ; (merge_state s false) end

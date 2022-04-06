@@ -150,19 +150,19 @@ type merge_jump_algorithm =
 	| Merge_ordered*)
 
 (* Main merge algorithms from IMITATOR 3.3 *)
-type merge33_algorithm =
+type merge_algorithm =
 	(* No merge *)
-	| Merge33_none
+	| Merge_none
 	(* Reconstruct state space *)
-	| Merge33_reconstruct
+	| Merge_reconstruct
 	(* On-the-fly modification *)
-	| Merge33_onthefly
+	| Merge_onthefly
 	(* (reimplemented) version of IMITATOR 2.12 merge *)
-	| Merge33_212
+	| Merge_212
 
 
 (* Main merge algorithms from IMITATOR 3.3 *)
-type merge33_candidates =
+type merge_candidates =
 	| Merge_candidates_ordered
 	| Merge_candidates_queue
 	| Merge_candidates_visited
@@ -326,7 +326,7 @@ let string_of_state_comparison_operator (state_comparison_operator : state_compa
 
 
 
-let string_of_merge33_candidates (merge33_candidates : merge33_candidates) : string = match merge33_candidates with
+let string_of_merge_candidates (merge_candidates : merge_candidates) : string = match merge_candidates with
 	| Merge_candidates_ordered	-> "ordered"
 	| Merge_candidates_queue	-> "queue"
 	| Merge_candidates_visited	-> "visited"

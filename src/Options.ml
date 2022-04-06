@@ -217,9 +217,9 @@ class imitator_options =
         val mutable merge_dev : AbstractAlgorithm.merge_dev = Merge_visited*)
 
         (* New merge options from IMITATOR 3.3 *)
-        val mutable merge33_algorithm  : AbstractAlgorithm.merge33_algorithm option = None
-        val mutable merge33_candidates : AbstractAlgorithm.merge33_candidates option = None
-        val mutable merge33_restart    : bool option = None
+        val mutable merge_algorithm  : AbstractAlgorithm.merge_algorithm option = None
+        val mutable merge_candidates : AbstractAlgorithm.merge_candidates option = None
+        val mutable merge_restart    : bool option = None
 
 		(* Method for NZ algorithms *)
 		val mutable nz_method : AbstractAlgorithm.nz_method option = None
@@ -326,8 +326,6 @@ class imitator_options =
 		method merge_jump_algorithm					= merge_jump_algorithm
 
 		
-		(*** TODO: remove merge, remove mergeq, remove merge212, rename 33, remove mergedev, remove n1 and n2 into merge_algorithm (and rename merge_algorithm) ***)
-		
 				(*** DISCONTINUED as of 3.3 ***)
 (*		method merge								= value_of_option "merge" merge
 		method is_set_merge							= merge <> None
@@ -354,17 +352,17 @@ class imitator_options =
         method merge_dev    						= merge_dev*)
         
         (* New merge options from IMITATOR 3.3 *)
-        method merge33_algorithm					= value_of_option "merge33_algorithm"  merge33_algorithm
-		method is_set_merge33_algorithm				= merge33_algorithm <> None
-		method set_merge33_algorithm new_merge33_algorithm = merge33_algorithm <- Some new_merge33_algorithm
+        method merge_algorithm						= value_of_option "merge_algorithm"  merge_algorithm
+		method is_set_merge_algorithm				= merge_algorithm <> None
+		method set_merge_algorithm new_merge_algorithm = merge_algorithm <- Some new_merge_algorithm
         
-        method merge33_candidates					= value_of_option "merge33_candidates" merge33_candidates
-		method is_set_merge33_candidates			= merge33_candidates <> None
-		method set_merge33_candidates new_merge33_candidates = merge33_candidates <- Some new_merge33_candidates
+        method merge_candidates						= value_of_option "merge_candidates" merge_candidates
+		method is_set_merge_candidates				= merge_candidates <> None
+		method set_merge_candidates new_merge_candidates = merge_candidates <- Some new_merge_candidates
 
-		method merge33_restart 						= value_of_option "merge33_restart"    merge33_restart
-		method is_set_merge33_restart				= merge33_restart <> None
-		method set_merge33_restart new_merge33_restart = merge33_restart <- Some new_merge33_restart
+		method merge_restart 						= value_of_option "merge_restart"    merge_restart
+		method is_set_merge_restart					= merge_restart <> None
+		method set_merge_restart new_merge_restart	= merge_restart <- Some new_merge_restart
 
 		method model_file_name						= model_file_name
 		method model_local_file_name				= model_local_file_name
@@ -685,18 +683,18 @@ class imitator_options =
 				)
 
 			(* Merge heuristics as of 3.3 *)
-			and set_merge33_algorithm algorithm_str =
+			and set_merge_algorithm algorithm_str =
 				if algorithm_str = "none" then
-					merge33_algorithm <- Some Merge33_none
+					merge_algorithm <- Some Merge_none
 					
 				else if algorithm_str = "reconstruct" then
-					merge33_algorithm <- Some Merge33_reconstruct
+					merge_algorithm <- Some Merge_reconstruct
 					
 				else if algorithm_str = "onthefly" then
-					merge33_algorithm <- Some Merge33_onthefly
+					merge_algorithm <- Some Merge_onthefly
 					
 				else if algorithm_str = "2.12" then
-					merge33_algorithm <- Some 	Merge33_212
+					merge_algorithm <- Some 	Merge_212
 					
 				else(
 					print_error ("The merge heuristic `" ^ algorithm_str ^ "` is not valid.");
@@ -705,15 +703,15 @@ class imitator_options =
 					exit(1);
 				)
 
-			and set_merge33_candidates candidates_str =
+			and set_merge_candidates candidates_str =
 				if candidates_str = "ordered" then
-					merge33_candidates <- Some Merge_candidates_ordered
+					merge_candidates <- Some Merge_candidates_ordered
 					
 				else if candidates_str = "queue" then
-					merge33_candidates <- Some Merge_candidates_queue
+					merge_candidates <- Some Merge_candidates_queue
 					
 				else if candidates_str = "visited" then
-					merge33_candidates <- Some Merge_candidates_visited
+					merge_candidates <- Some Merge_candidates_visited
 					
 				else(
 					print_error ("The merge candidates option `" ^ candidates_str ^ "` is not valid.");
@@ -722,12 +720,12 @@ class imitator_options =
 					exit(1);
 				)
 
-			and set_merge33_restart restart_str =
+			and set_merge_restart restart_str =
 				if restart_str = "on" then
-					merge33_restart <- Some true
+					merge_restart <- Some true
 					
 				else if restart_str = "off" then
-					merge33_restart <- Some false
+					merge_restart <- Some false
 					
 				else(
 					print_error ("The merge restart option `" ^ restart_str ^ "` is not valid.");
@@ -979,11 +977,11 @@ class imitator_options =
                 				");*)
 
 				(*** NOTE: New merge as of 3.3 ***)
-				("-merge-algo", String set_merge33_algorithm, " Merge algorithm [AMPP22]. Possible values are `none`, `reconstruct`, `onthefly`, `2.12`. Default: depends on the property.
+				("-merge-algo", String set_merge_algorithm, " Merge algorithm [AMPP22]. Possible values are `none`, `reconstruct`, `onthefly`, `2.12`. Default: depends on the property.
 				");
 
 				(*** NOTE: New merge as of 3.3 ***)
-				("-merge-candidates", String set_merge33_candidates, " Merge candidates [AMPP22]. Possible values are `queue`, `visited`, `ordered`. Default: depends on the property.
+				("-merge-candidates", String set_merge_candidates, " Merge candidates [AMPP22]. Possible values are `queue`, `visited`, `ordered`. Default: depends on the property.
 				");
 
 				(*** NOTE: merge for EFsynthminpq, presumably by Vincent Bloemen ***)
@@ -996,7 +994,7 @@ class imitator_options =
 (* 				" Experimental heuristics for jumping merges. Possible values are `none`, `static`, `staticl`, `expback`. Default: `none`." *)
 
 				(*** NOTE: New merge as of 3.3 ***)
-				("-merge-restart", String set_merge33_restart, " Restart merging after successful merging until fixpoint? [AMPP22]. Possible values are `on`, `off`. Default: `off`.
+				("-merge-restart", String set_merge_restart, " Restart merging after successful merging until fixpoint? [AMPP22]. Possible values are `on`, `off`. Default: `off`.
 				");
 
 				("-mode", String set_mode, " Special mode for " ^ Constants.program_name ^ ".
@@ -1476,29 +1474,29 @@ class imitator_options =
 
             (* Main merge algorithm *)
             begin
-            match self#merge33_algorithm with
-            | Merge33_none ->
+            match self#merge_algorithm with
+            | Merge_none ->
 				print_message Verbose_low ("No merge algorithm");
-			| Merge33_reconstruct ->
+			| Merge_reconstruct ->
 				print_message Verbose_standard ("Merge algorithm enabled (reconstruct [AMPP22])");
-			| Merge33_onthefly ->
+			| Merge_onthefly ->
 				print_message Verbose_standard ("Merge algorithm enabled (on-the-fly [AMPP22])");
-			| Merge33_212 ->
+			| Merge_212 ->
 				print_message Verbose_standard ("Merge algorithm enabled (v2.12)");
 			end;
 			
 			(* Additional details on merging heuristics *)
-			if merge33_algorithm <> None && merge33_algorithm <> Some Merge33_none then(
+			if merge_algorithm <> None && merge_algorithm <> Some Merge_none then(
 
 				(* Print restart *)
-				if self#merge33_restart then(
+				if self#merge_restart then(
 					print_message Verbose_standard ("Merge restart enabled.");
 				)else(
 					print_message Verbose_low ("No merge restart.");
 				);
 				
 				(* Print merge candidates heuristics *)
-				print_message Verbose_standard ("Merge candidates heuristics: " ^ (AbstractAlgorithm.string_of_merge33_candidates self#merge33_candidates));
+				print_message Verbose_standard ("Merge candidates heuristics: " ^ (AbstractAlgorithm.string_of_merge_candidates self#merge_candidates));
 
 				(* Print jump algorithm *)
 				if merge_jump_algorithm = Merge_jump_none then(

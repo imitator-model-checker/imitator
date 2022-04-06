@@ -196,7 +196,7 @@ begin match property_option, options#imitator_mode with
 		(* New merge options as of 3.3 *)
 		
 		(* Update if not yet set *)
-        if not options#is_set_merge33_algorithm then (
+        if not options#is_set_merge_algorithm then (
 			let merge_needed = AlgorithmOptions.merge_needed property in
 
             (* Print some information *)
@@ -207,14 +207,14 @@ begin match property_option, options#imitator_mode with
 
 			if(merge_needed) then(
 				(*** TODO! default merge heuristics: to move somewhere! ***)
-				options#set_merge33_algorithm Merge33_reconstruct;
+				options#set_merge_algorithm Merge_reconstruct;
 			)else(
-				options#set_merge33_algorithm Merge33_none;
+				options#set_merge_algorithm Merge_none;
 			);
         );
         
 		(* Update if not yet set *)
-        if not options#is_set_merge33_candidates then (
+        if not options#is_set_merge_candidates then (
 			let merge_needed = AlgorithmOptions.merge_needed property in
 
             (* Print some information *)
@@ -225,16 +225,16 @@ begin match property_option, options#imitator_mode with
 
 			if(merge_needed) then(
 				(*** TODO! default merge heuristics: to move somewhere! ***)
-				options#set_merge33_candidates Merge_candidates_ordered;
+				options#set_merge_candidates Merge_candidates_ordered;
 			);
         );
         
 		(* Update if not yet set *)
-        if not options#is_set_merge33_restart then (
+        if not options#is_set_merge_restart then (
             (* Print some information *)
             print_message Verbose_high ("Case option `-merge-restart` not set");
 
-            options#set_merge33_restart(false);
+            options#set_merge_restart(false);
         );
 		
 		
@@ -277,21 +277,21 @@ begin match property_option, options#imitator_mode with
 		(* New merge options as of 3.3 *)
 		
 		(* Update if not yet set *)
-        if not options#is_set_merge33_algorithm then (
+        if not options#is_set_merge_algorithm then (
             (* Print some information *)
             print_message Verbose_high ("Case option `-merge-algorithm` not set");
 
-            options#set_merge33_algorithm(Merge33_none);
+            options#set_merge_algorithm(Merge_none);
         );
 		(* Update if not yet set *)
-        if not options#is_set_merge33_restart then (
+        if not options#is_set_merge_restart then (
             (* Print some information *)
             print_message Verbose_high ("Case option `-merge-restart` not set");
 
-            options#set_merge33_restart(false);
+            options#set_merge_restart(false);
         );
         
-        (*** NOTE: do nothing for merge33_candidates ***)
+        (*** NOTE: do nothing for merge_candidates ***)
 
 				(*** DISCONTINUED as of 3.3 ***)
 (*        (* Update if not yet set *)

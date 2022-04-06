@@ -5057,10 +5057,10 @@ class virtual algoStateBased =
 			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
 			
 			begin
-			match options#merge33_algorithm with
+			match options#merge_algorithm with
 			
 (* 			if options#merge then ( *)
-			| Merge33_reconstruct -> 
+			| Merge_reconstruct -> 
 			
                 queue := StateSpace.merge state_space !queue;
                 (* TODO: the following code belongs in StateSpace *)
@@ -5070,7 +5070,7 @@ class virtual algoStateBased =
                 )
 (*            )
             else if options#merge212 then( *)
-			| Merge33_212 ->
+			| Merge_212 ->
                 (*raise (NotImplemented "merge v.2.12");*)
                 let new_states_after_merging = queue in
                 let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
@@ -5087,14 +5087,14 @@ class virtual algoStateBased =
 (*            )
 			else if options#mergedev then (
  *)
-			| Merge33_onthefly ->
+			| Merge_onthefly ->
 				queue := StateSpace.merge2021 state_space !queue;
                  (match options#exploration_order with
                      | Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
                      | _ -> ();
                  )
 (*              ) *)
-			| Merge33_none ->
+			| Merge_none ->
 				()
              end;
 			(*** END OLD MIXED VERSION (2020-09) ***)
@@ -5286,20 +5286,20 @@ class virtual algoStateBased =
 			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
 
 			begin
-			match options#merge33_algorithm with
-			| Merge33_reconstruct ->
+			match options#merge_algorithm with
+			| Merge_reconstruct ->
 (* 			if options#merge then( *)
 				new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
 (*			)
 			else if options#merge212 then( *)
-			| Merge33_212 ->
+			| Merge_212 ->
 				let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
 (* 			) else if options#mergedev then( *)
-			| Merge33_onthefly ->
+			| Merge_onthefly ->
                 new_states_after_merging := StateSpace.merge2021 state_space !new_states_after_merging;
 (*             ) *)
-			| Merge33_none ->
+			| Merge_none ->
 				()
 			end;
 			(*** END OLD MIXED VERSION (2020-09) ***)
