@@ -4720,9 +4720,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test EF on toy example: synthesis (explicit -merge -comparison inclusion)',
+		'purpose'    : 'Test EF on toy example: synthesis (explicit -merge yes -comparison inclusion)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-merge -comparison inclusion',
+		'options'    : '-merge yes -comparison inclusion',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4868,7 +4868,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EF with basic safety property for Fischer:3 (double-directional inclusion)',
 		'input_files': ['F3.imi', 'F3.imiprop'],
-		'options'    : '-merge -comparison doubleinclusion',
+		'options'    : '-merge yes -comparison doubleinclusion',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -12036,7 +12036,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -comparison inclusion -merge)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-cycle-algo BFS -comparison inclusion -merge',
+		'options'    : '-cycle-algo BFS -comparison inclusion -merge yes',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -12385,7 +12385,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -comparison inclusion -merge)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-cycle-algo BFS -comparison inclusion -merge',
+		'options'    : '-cycle-algo BFS -comparison inclusion -merge yes',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -14376,7 +14376,7 @@ END CONSTRAINT
 	{
 		'purpose'    : 'Test the convex inverse method (SIMOP)',
 		'input_files': ['simop.imi', 'simop.pi0'],
-		'options'    : '-merge -no-random -comparison inclusion',
+		'options'    : '-merge yes -no-random -comparison inclusion',
 		'expectations' : [
 			{'file': 'simop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -18476,7 +18476,7 @@ Constraint nature                       : good/bad
 	{
 		'purpose'    : 'Testing state space + merging on a trivial example: -merge',
 		'input_files': ['exActionsNonPreserved.imi'],
-		'options'    : '-mode statespace -states-description -merge',
+		'options'    : '-mode statespace -states-description -merge yes',
 		'expectations' : [
 			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
 		*/
