@@ -676,7 +676,7 @@ class imitator_options =
 				else if merge_EFsynthminpq_heuristic_src = "iter100" then
 					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_iter100
 				else(
-					print_error ("The merge heuristic `" ^ merge_EFsynthminpq_heuristic_src ^ "` is not valid.");
+					print_error ("The EFsynthminpq merge heuristic `" ^ merge_EFsynthminpq_heuristic_src ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
@@ -1470,7 +1470,7 @@ class imitator_options =
 			end;
 
       (* Merge heuristic for EFsynthminpq *)
-      print_message Verbose_experiments ("Merge heuristic: " ^ (AbstractAlgorithm.string_of_merge_EFsynthminpq_heuristic merge_EFsynthminpq_heuristic) ^ ".");
+      print_message Verbose_experiments ("EFsynthminpq merge heuristic: " ^ (AbstractAlgorithm.string_of_merge_EFsynthminpq_heuristic merge_EFsynthminpq_heuristic) ^ ".");
 
             (* Main merge algorithm *)
             begin

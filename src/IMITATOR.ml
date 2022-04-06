@@ -232,7 +232,7 @@ begin match property_option, options#imitator_mode with
 		(* Update if not yet set *)
         if not options#is_set_merge_restart then (
             (* Print some information *)
-            print_message Verbose_high ("Case option `-merge-restart` not set");
+            print_message Verbose_high ("Case option `-merge-restart` not set: set to false");
 
             options#set_merge_restart(false);
         );
@@ -273,20 +273,21 @@ begin match property_option, options#imitator_mode with
         );*)
 
 	| _, State_space_computation
+	| None, _
 		->
 		(* New merge options as of 3.3 *)
 		
 		(* Update if not yet set *)
         if not options#is_set_merge_algorithm then (
             (* Print some information *)
-            print_message Verbose_high ("Case option `-merge-algorithm` not set");
+            print_message Verbose_high ("Case option `-merge-algorithm` not set: set to none");
 
             options#set_merge_algorithm(Merge_none);
         );
 		(* Update if not yet set *)
         if not options#is_set_merge_restart then (
             (* Print some information *)
-            print_message Verbose_high ("Case option `-merge-restart` not set");
+            print_message Verbose_high ("Case option `-merge-restart` not set: set to false");
 
             options#set_merge_restart(false);
         );
@@ -324,7 +325,6 @@ begin match property_option, options#imitator_mode with
             options#set_mergedev(false);
         );*)
 
-	| None, _ -> ()
 end;
 
 
