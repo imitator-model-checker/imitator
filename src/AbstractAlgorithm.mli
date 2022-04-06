@@ -157,6 +157,8 @@ type merge_algorithm =
 	(* (reimplemented) version of IMITATOR 2.12 merge *)
 	| Merge_212
 
+val default_merge_algorithm : merge_algorithm
+
 
 (* Main merge algorithms from IMITATOR 3.3 *)
 type merge_candidates =

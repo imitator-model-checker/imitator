@@ -206,8 +206,7 @@ begin match property_option, options#imitator_mode with
 			print_message Verbose_high ("Set option `-merge-algorithm` to its default value: `" ^ (string_of_bool merge_needed) ^ "`");
 
 			if(merge_needed) then(
-				(*** TODO! default merge heuristics: to move somewhere! ***)
-				options#set_merge_algorithm Merge_reconstruct;
+				options#set_merge_algorithm AbstractAlgorithm.default_merge_algorithm;
 			)else(
 				options#set_merge_algorithm Merge_none;
 			);

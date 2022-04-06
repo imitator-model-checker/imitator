@@ -693,6 +693,9 @@ class imitator_options =
 				else if algorithm_str = "onthefly" then
 					merge_algorithm <- Some Merge_onthefly
 					
+				else if algorithm_str = "yes" then
+					merge_algorithm <- Some AbstractAlgorithm.default_merge_algorithm
+					
 				else if algorithm_str = "2.12" then
 					merge_algorithm <- Some 	Merge_212
 					
