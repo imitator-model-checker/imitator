@@ -562,7 +562,7 @@ let check_update variable_infos automaton_name = function
 	    (* Check all normal updates are valid (make a map for avoid short-circuit eval with for_all) *)
 	    let is_valid_normal_updates =
 	        List.map (check_normal_update variable_infos automaton_name) all_updates
-	        |> List.for_all (fun x -> x)
+	        |> List.for_all identity
         in
 
 	    (* If all normal updates and condition are valid, update is valid *)
@@ -778,30 +778,62 @@ let synclab_used_everywhere automata synclab_name =
 (*------------------------------------------------------------*)
 (* Check that all variables mentioned in a list of stopwatches exist and are clocks *)
 (*------------------------------------------------------------*)
-let check_stopwatches index_of_variables type_of_variables location_name stopwatches =
-	let ok = ref true in
-	List.iter (fun stopwatch ->
-		(* Get variable name *)
-		try (
-			let variable_index = Hashtbl.find index_of_variables stopwatch in
-			if type_of_variables variable_index <> DiscreteType.Var_type_clock then (
-			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined as a clock.");
-			ok := false;
-			);
-		) with Not_found -> (
-			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined.");
-			ok := false;
-			);
-		) stopwatches;
-	!ok
+let check_stopwatches variable_infos location_name stopwatches =
+
+    List.map (fun stopwatch_name ->
+            let var_type = ExpressionConverter.TypeChecker.get_type_of_variable_by_name_opt variable_infos stopwatch_name in
+            match var_type with
+            (* Ok *)
+            | Some Var_type_clock -> true
+            (* Not defined *)
+            | None -> print_error ("The variable `" ^ stopwatch_name ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined."); false
+            (* Not a clock *)
+            | _ -> print_error ("The variable `" ^ stopwatch_name ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined as a clock."); false
+        ) stopwatches
+    (* Map before make for_all in order to avoid short-circuit evaluation (quit loop when an element is false) *)
+    |> List.for_all identity
 
 
 (*------------------------------------------------------------*)
 (* Check that all variables mentioned in a list of flows exist and are clocks *)
 (*------------------------------------------------------------*)
+let check_flows_2 variable_infos location_name flows =
 
-(*** TODO: check for duplicates (and warn), check for discrepancies (and raise error) ***)
+    (* Check clocks are declared and well-typed *)
+    let clock_names = List.map first_of_tuple flows in
+    let is_clocks_declared = check_stopwatches variable_infos location_name clock_names in
 
+    (* Group flow values by clock name *)
+    let clock_names_by_flow_values = OCamlUtilities.group_by (fun (clock_name, flow_value) -> clock_name) flows in
+
+    (* For each clocks *)
+    let is_no_flow_value_discrepancies = List.map (fun (clock_name, flow_values) ->
+        (* Check whether a value was defined multiple times *)
+        if List.length flow_values > 1 then (
+
+            let flow_values_without_duplicates = OCamlUtilities.list_only_once flow_values in
+
+            (* Check whether the value is the same or not *)
+            if List.length flow_values_without_duplicates > 1 then (
+                (* If different value: error *)
+                print_error ("Multiple and different clock flow values for variable `" ^ clock_name ^ "` in location `" ^ location_name ^ "`.");
+                false
+            ) else (
+				(* If same value: warn *)
+                print_warning ("Duplicate clock flow value for variable `" ^ clock_name ^ "` in location `" ^ location_name ^ "`.");
+                false
+            )
+        )
+        else
+            true
+    ) clock_names_by_flow_values
+    (* Map before make for_all in order to avoid short-circuit evaluation (quit loop when an element is false) *)
+    |> List.for_all identity
+    in
+
+    is_clocks_declared && is_no_flow_value_discrepancies
+
+(* TODO benjamin CLEAN remove this imperative version *)
 let check_flows nb_clocks index_of_variables type_of_variables location_name flows =
 	(* Create a hash table variable_index => flow value *)
 	let temp_flow_hashtable : (variable_index, NumConst.t) Hashtbl.t = Hashtbl.create nb_clocks in
@@ -885,11 +917,12 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 
 			(* Check the stopwatches *)
 			print_message Verbose_total ("          Checking stopwatches");
-			if not (check_stopwatches index_of_variables type_of_variables location.name location.stopped) then well_formed := false;
+			if not (check_stopwatches variable_infos location.name location.stopped) then well_formed := false;
 
 			(* Check the flows *)
 			print_message Verbose_total ("          Checking flows");
-			if not (check_flows useful_parsing_model_information.nb_clocks index_of_variables type_of_variables location.name location.flow) then well_formed := false;
+(*			if not (check_flows useful_parsing_model_information.nb_clocks index_of_variables type_of_variables location.name location.flow) then well_formed := false;*)
+			if not (check_flows_2 variable_infos location.name location.flow) then well_formed := false;
 
 
 			(* Check the convex predicate *)

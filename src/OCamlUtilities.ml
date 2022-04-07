@@ -50,7 +50,16 @@ let a_of_a_option = function
 	| Some thing -> thing
 	| None -> raise Exceptions.NoneException
 
+(************************************************************)
+(** Useful lambda functions *)
+(************************************************************)
+let identity x = x
 
+(************************************************************)
+(** Useful functions on tuples *)
+(************************************************************)
+let first_of_tuple (x, _) = x
+let second_of_tuple (_, x) = x
 
 (************************************************************)
 (** Useful functions on lists *)
