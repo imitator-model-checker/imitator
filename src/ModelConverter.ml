@@ -687,7 +687,7 @@ let check_update variable_infos automaton_name update =
             (* Get variable type, if possible *)
             let variable_type =
                 if List.mem variable_name variable_infos.variable_names then (
-                    let index = Hashtbl.find variable_infos.index_of_variables variable_name in
+                    let index = index_of_variable_name variable_infos variable_name in
                     Some (variable_infos.type_of_variables index)
                 ) else if is_constant_is_defined variable_infos variable_name then (
                     let value = Hashtbl.find variable_infos.constants variable_name in
@@ -1109,7 +1109,7 @@ let partition_discrete_continuous variable_infos filtered_init_inequalities =
 			let is_discrete =
 			(* Try to get the variable index *)
 			if (ParsingStructureUtilities.is_variable_is_defined variable_infos variable_name) then (
-				let variable_index =  Hashtbl.find variable_infos.index_of_variables variable_name in
+				let variable_index =  index_of_variable_name variable_infos variable_name in
 				(* Keep if this is a discrete *)
 				DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
 			) else if (ParsingStructureUtilities.is_constant_is_defined variable_infos variable_name) then
@@ -1187,7 +1187,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
 
 
             (* Get the variable index *)
-            let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+            let discrete_index = index_of_variable_name variable_infos variable_name in
             (* TYPE CHECKING *)
             let converted_expr = DiscreteExpressionConverter.convert_discrete_init variable_infos variable_name expr in
 
@@ -1203,14 +1203,11 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
             (* Try to reduce expression to a value *)
             else if not (DiscreteExpressionEvaluator.is_global_expression_constant converted_expr) then (
 
-                (* Variable name access from list to function *)
-                let variable_names_f i = List.nth variable_infos.variable_names i in
-
                 print_error (
                     "Init variable \""
                     ^ variable_name
                     ^ "\" with a non constant expression \""
-                    ^ DiscreteExpressions.string_of_global_expression variable_names_f converted_expr
+                    ^ DiscreteExpressions.string_of_global_expression (variable_name_of_index variable_infos) converted_expr
                     ^ "\" is forbidden."
                 );
                 false
@@ -1260,10 +1257,10 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
     well_formed := definitions_well_formed && one_loc_per_automaton && discrete_predicate_well_formed;
 
     (* Here if not well formed we can raise an error *)
-    if not(!well_formed) then
+    if not (!well_formed) then
         raise InvalidModel;
 
-    let discrete_predicates = List.map (function | Some x -> x | None -> raise (InternalError "impossible")) some_discrete_predicates in
+    let discrete_predicates = List.map OCamlUtilities.a_of_a_option some_discrete_predicates in
 
     (* Check init discrete section : discrete *)
 	(* Check that every discrete variable is given only one (rational) initial value *)
@@ -1276,11 +1273,11 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 
 	(* Check that every discrete variable is given at least one initial value (if not: warns) *)
 	List.iter (fun discrete_index ->
-		if not (Hashtbl.mem init_values_for_discrete discrete_index) then(
-		    let variable_name = List.nth variable_infos.variable_names discrete_index in
-		    let variable_index =  Hashtbl.find variable_infos.index_of_variables variable_name in
-		    let variable_type = variable_infos.type_of_variables variable_index in
+		if not (Hashtbl.mem init_values_for_discrete discrete_index) then (
+		    let variable_name = variable_name_of_index variable_infos discrete_index in
+		    let variable_type = var_type_of_variable_name variable_infos variable_name in
 		    let default_value = DiscreteValue.default_value variable_type in
+
 			print_warning ("The discrete variable '" ^ variable_name ^ "' was not given an initial value in the init definition: it will be assigned to " ^ DiscreteValue.string_of_value default_value ^ ".");
 			Hashtbl.add init_values_for_discrete discrete_index default_value
 		);
@@ -1292,7 +1289,6 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 			discrete_index, Hashtbl.find init_values_for_discrete discrete_index
 		) variable_infos.discrete
 	in
-
 
 (*    let other_inequalities = List.map (replace_unused_discrete_variable_by_constant variable_infos init_values_for_discrete) other_inequalities in*)
 
@@ -1310,20 +1306,8 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 
         (* Gathering all variables that are non rational *)
         let non_rational_variable_names = StringSet.filter (fun variable_name ->
-            if ParsingStructureUtilities.is_variable_is_defined variable_infos variable_name then (
-                let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-                let variable_type = DiscreteType.discrete_type_of_var_type (variable_infos.type_of_variables variable_index) in
-                not (DiscreteType.is_discrete_type_rational_type variable_type)
-            )
-            else if ParsingStructureUtilities.is_constant_is_defined variable_infos variable_name then (
-                let value =  Hashtbl.find variable_infos.constants variable_name in
-                let variable_type = DiscreteValue.discrete_type_of_value value in
-                not (DiscreteType.is_discrete_type_rational_type variable_type)
-            )
-            else (
-                (* Otherwise problem ! *)
-				raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
-            )
+            let discrete_type = ParsingStructureUtilities.discrete_type_of_variable_or_constant variable_infos variable_name in
+            not (DiscreteType.is_discrete_type_rational_type discrete_type)
         ) variable_names
         in
 
@@ -1436,7 +1420,6 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 	let index_of_actions		= useful_parsing_model_information.index_of_actions in
 	let index_of_automata		= useful_parsing_model_information.index_of_automata in
 	let index_of_locations		= useful_parsing_model_information.index_of_locations in
-	let index_of_variables		= useful_parsing_model_information.index_of_variables in
 	let actions					= useful_parsing_model_information.actions in
 	let removed_action_names	= useful_parsing_model_information.removed_action_names in
 
@@ -1575,9 +1558,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				(* Convert the stopwatches names into variables *)
 				let list_of_stopwatch_names = list_only_once location.stopped in
 				(* Update the array of stopwatches *)
-				stopwatches_array.(automaton_index).(location_index) <- List.map (fun clock_index ->
-					Hashtbl.find index_of_variables clock_index
-				) list_of_stopwatch_names;
+				stopwatches_array.(automaton_index).(location_index) <- List.map (index_of_variable_name variable_infos) list_of_stopwatch_names;
 
 				(* Does the model has clocks with <> rate? *)
 				(*** NOTE: technically, we should update the flag only whenever the rate is <> 1… ***)
@@ -1588,8 +1569,8 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 					(* Sort the list and remove duplicates, just to potentially speed up a bit *)
 					List.sort_uniq compare
 					(
-						List.map (fun (clock_index, flow_value) ->
-							(Hashtbl.find index_of_variables clock_index), flow_value
+						List.map (fun (clock_name, flow_value) ->
+							(index_of_variable_name variable_infos clock_name), flow_value
 						) location.flow
 					);
 
@@ -1712,7 +1693,7 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
         let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type in
         match variable_name_opt with
         | Some variable_name ->
-            let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+            let variable_index = index_of_variable_name variable_infos variable_name in
             let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos parsed_variable_update_type update_expr in
             (variable_index, converted_update)
         (* TODO benjamin REFACTOR it never can happen, should pass variable_name, update_expr instead of parsed_update_variable_type, update_expr *)
@@ -1762,7 +1743,7 @@ let split_to_clock_discrete_updates variable_infos updates =
         match variable_name_opt with
         | Some variable_name ->
             (* Retrieve variable type *)
-            variable_infos.type_of_variables (Hashtbl.find variable_infos.index_of_variables variable_name) = DiscreteType.Var_type_clock
+            variable_infos.type_of_variables (index_of_variable_name variable_infos variable_name) = DiscreteType.Var_type_clock
         (* Unit update, so it's not a clock *)
         | None -> false
     in
@@ -2601,7 +2582,7 @@ let check_parameter_name suffix_explanation_string variable_infos parameter_name
 		print_error ("Parameter " ^ parameter_name ^ " is not a defined variable" ^ suffix_explanation_string);
 		false
 	) else(
-		let parameter_index = Hashtbl.find variable_infos.index_of_variables parameter_name in
+		let parameter_index = index_of_variable_name variable_infos parameter_name in
 		if not(variable_infos.type_of_variables parameter_index = DiscreteType.Var_type_parameter) then(
 			print_error ("Variable " ^ parameter_name ^ " is not a parameter" ^ suffix_explanation_string);
 			false
@@ -2972,7 +2953,7 @@ let convert_parsed_hyper_rectangle variable_infos (parsed_hyper_rectangle : Pars
 	List.iter (fun (variable_name, a, b) ->
 		try
 			(* Get the variable index *)
-			let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+			let variable_index = index_of_variable_name variable_infos variable_name in
 			(* Update the variable value *)
 			hyper_rectangle#set_min variable_index a;
 			hyper_rectangle#set_max variable_index b;

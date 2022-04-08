@@ -218,3 +218,8 @@ val is_variable_or_constant_defined : variable_infos -> variable_name -> bool
 val is_variable_removed : variable_infos -> variable_name -> bool
 val is_variable_or_constant_declared : variable_infos -> variable_name -> bool
 val variable_constant_defined_state_of : variable_infos -> variable_name -> variable_constant_defined_state
+val var_type_of_variable_name : variable_infos -> variable_name -> DiscreteType.var_type
+val discrete_type_of_variable_or_constant : variable_infos -> variable_name -> DiscreteType.var_type_discrete
+val variable_name_of_index : variable_infos -> variable_index -> variable_name
+val index_of_variable_name : variable_infos -> variable_name -> variable_index
+val value_of_constant_name : variable_infos -> variable_name -> DiscreteValue.discrete_value

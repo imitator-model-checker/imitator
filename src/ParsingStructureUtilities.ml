@@ -59,25 +59,34 @@ type variable_constant_defined_state =
     | Variable_removed
     | Not_declared
 
+(* Get variable name given a variable index  *)
+let [@inline] variable_name_of_index variable_infos = List.nth variable_infos.variable_names
+
+(* Get variable index given a variable name *)
+let [@inline] index_of_variable_name variable_infos = Hashtbl.find variable_infos.index_of_variables
+
+(* Get constant value given a constant name *)
+let [@inline] value_of_constant_name variable_infos = Hashtbl.find variable_infos.constants
+
 (* Check if variable is defined => declared and not removed  *)
-let is_variable_is_defined variable_infos = Hashtbl.mem variable_infos.index_of_variables
+let [@inline] is_variable_is_defined variable_infos = Hashtbl.mem variable_infos.index_of_variables
 
 (* Check if variable was removed *)
-let is_variable_removed variable_infos variable_name = List.mem variable_name variable_infos.removed_variable_names
+let [@inline] is_variable_removed variable_infos variable_name = List.mem variable_name variable_infos.removed_variable_names
 
 (* Check if variable was declared, even if removed *)
-let is_variable_declared variable_infos variable_name =
+let [@inline] is_variable_declared variable_infos variable_name =
     is_variable_is_defined variable_infos variable_name
     || is_variable_removed variable_infos variable_name
 
 (* Check if constant is defined => declared and removed or not *)
-let is_constant_is_defined variable_infos = Hashtbl.mem variable_infos.constants
+let [@inline] is_constant_is_defined variable_infos = Hashtbl.mem variable_infos.constants
 
 (* Check if variable / constant is defined => declared and removed or not *)
-let is_variable_or_constant_defined variable_infos variable_name =
+let [@inline] is_variable_or_constant_defined variable_infos variable_name =
     is_variable_is_defined variable_infos variable_name || is_constant_is_defined variable_infos variable_name
 
-let is_variable_or_constant_declared variable_infos variable_name =
+let [@inline] is_variable_or_constant_declared variable_infos variable_name =
     is_variable_declared variable_infos variable_name || is_constant_is_defined variable_infos variable_name
 
 let variable_constant_defined_state_of variable_infos variable_name =
@@ -89,6 +98,28 @@ let variable_constant_defined_state_of variable_infos variable_name =
         Variable_removed
     else
         Not_declared
+
+let [@inline] var_type_of_variable_index variable_infos = variable_infos.type_of_variables
+
+let var_type_of_variable_name variable_infos variable_name =
+    let variable_index = index_of_variable_name variable_infos variable_name in
+    var_type_of_variable_index variable_infos variable_index
+
+let discrete_type_of_variable_or_constant variable_infos variable_name =
+    let defined_state = variable_constant_defined_state_of variable_infos variable_name in
+    match defined_state with
+    | Variable_defined ->
+        let variable_index = index_of_variable_name variable_infos variable_name in
+        DiscreteType.discrete_type_of_var_type (variable_infos.type_of_variables variable_index)
+    | Constant_defined ->
+        let value =  value_of_constant_name variable_infos variable_name in
+        DiscreteValue.discrete_type_of_value value
+    | Variable_removed
+    | Not_declared ->
+        (* Otherwise problem ! *)
+        raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."))
+
+
 
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
@@ -422,7 +453,7 @@ and string_of_parsed_factor variable_infos = function
     | Parsed_DF_variable variable_name ->
         if (is_constant_is_defined variable_infos variable_name) then (
             (* Retrieve the value of the global constant *)
-            let value = Hashtbl.find variable_infos.constants variable_name in
+            let value = value_of_constant_name variable_infos variable_name in
             variable_name
             ^ "="
             ^ DiscreteValue.string_of_value value
@@ -679,7 +710,7 @@ let is_only_discrete variable_infos = function
         (* Or discrete *)
         ||
         try(
-            let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+            let variable_index = index_of_variable_name variable_infos variable_name in
             DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
         ) with Not_found -> (
             (* Variable not found! *)
@@ -696,7 +727,7 @@ let no_variables variable_infos = function
         (is_constant_is_defined variable_infos variable_name)
         (* Or parameter *)
         ||
-        let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+        let variable_index = index_of_variable_name variable_infos variable_name in
         variable_infos.type_of_variables variable_index = DiscreteType.Var_type_parameter
 
 (* Variable kind type represent a variable or a constant kind *)
@@ -709,12 +740,12 @@ let variable_kind_of_variable_name variable_infos variable_name =
 
     (* First check whether this is a constant *)
     if is_constant_is_defined variable_infos variable_name then (
-        let value = Hashtbl.find variable_infos.constants variable_name in
+        let value = value_of_constant_name variable_infos variable_name in
         Constant_kind value
     )
     (* Otherwise: a variable *)
     else
-        Variable_kind (Hashtbl.find variable_infos.index_of_variables variable_name)
+        Variable_kind (index_of_variable_name variable_infos variable_name)
 
 (* Check if a parsed global expression is constant *)
 let is_parsed_global_expression_constant variable_infos =
@@ -790,7 +821,7 @@ and is_linear_parsed_term variable_infos = function
 and is_linear_parsed_factor variable_infos = function
     (* only rational variable *)
     | Parsed_DF_variable variable_name ->
-        let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+        let variable_index = index_of_variable_name variable_infos variable_name in
         let discrete_type = variable_infos.type_of_variables variable_index in
         (match discrete_type with
         | Var_type_clock

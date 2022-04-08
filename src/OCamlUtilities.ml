@@ -61,6 +61,8 @@ let identity x = x
 let first_of_tuple (x, _) = x
 let second_of_tuple (_, x) = x
 
+let map_first_of_tuple f (x, y) = f x, y
+
 (************************************************************)
 (** Useful functions on lists *)
 (************************************************************)
