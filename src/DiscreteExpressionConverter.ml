@@ -29,13 +29,14 @@ let convert_discrete_init variable_infos variable_name expr =
     ExpressionConverter.Convert.global_expression_of_typed_global_expression variable_infos typed_expr
 
 let convert_discrete_constant initialized_constants (name, expr, var_type) =
-
+    (* Create fake variable_infos containing just initialized constants *)
     let variable_infos = {
         constants = initialized_constants;
         variable_names = [];
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];
         type_of_variables = (fun _ -> raise (TypeError "oops!"));
+        discrete = [];
     }
     in
 

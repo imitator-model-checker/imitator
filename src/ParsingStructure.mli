@@ -507,4 +507,5 @@ type variable_infos = {
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
 	type_of_variables					: Automaton.variable_index -> DiscreteType.var_type;
 	removed_variable_names				: variable_name list;
+	discrete							: Automaton.variable_index list;
 }

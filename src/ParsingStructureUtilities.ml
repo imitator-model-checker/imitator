@@ -53,6 +53,12 @@ type state_predicate_leaf =
 
 (* Variable info utils functions *)
 
+type variable_constant_defined_state =
+    | Variable_defined
+    | Constant_defined
+    | Variable_removed
+    | Not_declared
+
 (* Check if variable is defined => declared and not removed  *)
 let is_variable_is_defined variable_infos = Hashtbl.mem variable_infos.index_of_variables
 
@@ -74,6 +80,15 @@ let is_variable_or_constant_defined variable_infos variable_name =
 let is_variable_or_constant_declared variable_infos variable_name =
     is_variable_declared variable_infos variable_name || is_constant_is_defined variable_infos variable_name
 
+let variable_constant_defined_state_of variable_infos variable_name =
+    if is_variable_is_defined variable_infos variable_name then
+        Variable_defined
+    else if is_constant_is_defined variable_infos variable_name then
+        Constant_defined
+    else if is_variable_removed variable_infos variable_name then
+        Variable_removed
+    else
+        Not_declared
 
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
@@ -1136,4 +1151,5 @@ let variable_infos_of_parsed_model (parsed_model : useful_parsing_model_informat
         index_of_variables = parsed_model.index_of_variables;
         type_of_variables = parsed_model.type_of_variables;
         removed_variable_names = parsed_model.removed_variable_names;
+        discrete = parsed_model.discrete;
     }

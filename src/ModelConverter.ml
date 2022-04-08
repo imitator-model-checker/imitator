@@ -74,22 +74,27 @@ let rec get_clocks_in_updates updates : clock_index list =
   in
   (get_clocks updates.clock) @ clocks_in_conditons
 
+(************************************************************)
+(** Print error messages *)
+(************************************************************)
 
-
+(* Print variable not declared in linear constraint *)
 let undeclared_variable_in_linear_constraint_message variable_name =
     print_error ("The variable `" ^ variable_name ^ "` used in a linear constraint was not declared.")
 
+(* Print variable not declared in bool expression *)
 let undeclared_variable_in_boolean_expression_message variable_name =
     print_error ("The variable `" ^ variable_name ^ "` used in a boolean expression was not declared.")
-
 
 (************************************************************)
 (** Converting linear constraints *)
 (************************************************************)
 
+(* TODO benjamin CLEAN remove comments, it was moved to ExpressionConverter *)
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.linear_expression into an array of coef and constant *)
 (*------------------------------------------------------------*)
+(*
 let array_of_coef_of_linear_expression index_of_variables constants linear_expression =
   (* Create an array of coef *)
   let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
@@ -139,7 +144,7 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
   update_array_linear_expression linear_expression;
   (* Return the array of coef and the constant *)
   array_of_coef, !constant
-
+*)
 
 (************************************************************)
 (************************************************************)
@@ -336,31 +341,16 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 					(* get_variables_in_parsed_update_arithmetic_expression all_variables_used arithmetic_expression; *)
 					ParsingStructureUtilities.get_variables_in_parsed_update_with_accumulator all_variables_used update_expression
 
-					) updates;
-				) location.transitions;
-			) locations;
-		) parsed_model.automata;
-
-
-	(*** NOTE: disabled because we DO want to eliminate variables that appear ONLY in the init definition ***)
-(*	(* Gather the variables used in init *)
-	let init_definition = parsed_model.init_definition in
-	List.iter (function
-		(* `loc[automaton] = location`: no variable => nothing to do *)
-		| Parsed_loc_assignment _ -> ()
-		(* Linear constraint: get variables *)
-		| Parsed_linear_predicate linear_constraint ->
-			get_variables_in_linear_constraint all_variables_used linear_constraint
-	) init_definition;*)
+                ) updates;
+            ) location.transitions;
+        ) locations;
+    ) parsed_model.automata;
 
     let all_dependencies_used = get_all_variable_dependencies_used_in_init parsed_model all_variables_used in
     all_variables_used := StringSet.union !all_variables_used all_dependencies_used;
 
-
 	(* Return the set of variables actually used *)
 	!all_variables_used
-
-
 
 (************************************************************)
 (** Checking the model *)
@@ -369,7 +359,7 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 (*------------------------------------------------------------*)
 (* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
 (*------------------------------------------------------------*)
-(* TODO refactor because of new types ! *)
+(* TODO benjamin refactor because of new types ! *)
 let check_variable_names clock_names discrete_names parameters_names constants =
 	(* Warn if a variable is defined twice as the same type *)
 	let warn_for_multiply_defined_variables list_of_variables =
@@ -883,9 +873,7 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 let check_automata (useful_parsing_model_information : useful_parsing_model_information) automata =
 
 	let index_of_automata		= useful_parsing_model_information.index_of_automata in
-	let index_of_variables		= useful_parsing_model_information.index_of_variables in
 	let array_of_location_names	= useful_parsing_model_information.array_of_location_names in
-	let type_of_variables		= useful_parsing_model_information.type_of_variables in
 
     let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
 
@@ -979,7 +967,7 @@ let partition_loc_init_and_variable_inits init_definition =
     (* Return initial locations, initial inequalities *)
     initial_locations, init_inequalities
 
-(* Check wether an automaton has exactly one initial location *)
+(* Check whether an automaton has exactly one initial location *)
 let has_one_loc_per_automaton initial_locations parsed_model observer_automaton_index_option =
 
 	(* Check that every automaton is given at most one initial location *)
@@ -1240,11 +1228,8 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
 (*------------------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
 (*------------------------------------------------------------*)
-(* TODO benjamin REFACTOR with check_variables_init *)
 let check_init (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
 
-    (* TODO benjamin remove here and use variable_info *)
-	let discrete				= useful_parsing_model_information.discrete in
     let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
 
 	let well_formed = ref true in
@@ -1282,7 +1267,7 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 
     (* Check init discrete section : discrete *)
 	(* Check that every discrete variable is given only one (rational) initial value *)
-	let init_values_for_discrete = Hashtbl.create (List.length discrete) in
+	let init_values_for_discrete = Hashtbl.create (List.length variable_infos.discrete) in
 
     (* Compute discrete init values and add to init hash table *)
     let discrete_initialization_well_formed = List.for_all (check_discrete_predicate_and_init variable_infos init_values_for_discrete) discrete_predicates in
@@ -1299,13 +1284,13 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 			print_warning ("The discrete variable '" ^ variable_name ^ "' was not given an initial value in the init definition: it will be assigned to " ^ DiscreteValue.string_of_value default_value ^ ".");
 			Hashtbl.add init_values_for_discrete discrete_index default_value
 		);
-    ) discrete;
+    ) variable_infos.discrete;
 
 	(* Convert the Hashtbl to pairs (discrete_index, init_value) *)
 	let discrete_values_pairs =
 		List.map (fun discrete_index ->
 			discrete_index, Hashtbl.find init_values_for_discrete discrete_index
-		) discrete
+		) variable_infos.discrete
 	in
 
 
@@ -3411,6 +3396,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         variable_names = [];
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];
+        discrete = [];
         type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rat);
     }
     in

@@ -206,8 +206,15 @@ val convert_var_type : ParsingStructure.var_type -> DiscreteType.var_type
 
 val variable_infos_of_parsed_model : useful_parsing_model_information -> variable_infos
 
+type variable_constant_defined_state =
+    | Variable_defined
+    | Constant_defined
+    | Variable_removed
+    | Not_declared
+
 val is_variable_is_defined : variable_infos -> variable_name -> bool
 val is_constant_is_defined : variable_infos -> variable_name -> bool
 val is_variable_or_constant_defined : variable_infos -> variable_name -> bool
 val is_variable_removed : variable_infos -> variable_name -> bool
 val is_variable_or_constant_declared : variable_infos -> variable_name -> bool
+val variable_constant_defined_state_of : variable_infos -> variable_name -> variable_constant_defined_state
