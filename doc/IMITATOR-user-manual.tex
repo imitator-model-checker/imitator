@@ -1113,33 +1113,33 @@ Let us precisely define what it means:
 Discrete variables are first tested, then updated.
 If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i := 2} while another one performs \styleIMI{i := 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
 If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
-For more information on how the standard updates works, read the section \styleIMI{let-in} form updates below.
+For more information on how the standard updates works, read the section \styleIMI{do-then} form updates below.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Let-in form updates}\label{section:let_in_form_updates}
+\subsection{do-then form updates}\label{section:do_then_form_updates}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\styleIMI{let-in} form updates are more complex updates, allowing, at the one hand, sequential updates on discrete values, at the other hand
+\styleIMI{do-then} form updates are more complex updates, allowing, at the one hand, sequential updates on discrete values, at the other hand
 the use of side-effects functions for in-place modification of data structure values.
-If you don't need these functionalities, we recommend the use the standard updates. \styleIMI{let-in} form updates are updates composed of two parts.
+If you don't need these functionalities, we recommend the use the standard updates. \styleIMI{do-then} form updates are updates composed of two parts.
 
-\subsubsection{Let bloc}
-
-\paragraph{}
-
-\styleIMI{let} bloc can be used to make sequential updates on any discrete variables whatever their types.
-Contrary to \styleIMI{in} bloc (or standard update) it's possible to make in-place modifications on data structures (like stacks and queues) with side-effects functions.
-The \styleIMI{let} bloc can be seen as an imperative update part that is processed before the constraints updates (\styleIMI{in} bloc).
-It's not possible to update clock constraint in \styleIMI{let} bloc because of the sequential behavior.
+\subsubsection{do bloc}
 
 \paragraph{}
-Examples of a \styleIMI{let} update expression:
+
+\styleIMI{do} bloc can be used to make sequential updates on any discrete variables whatever their types.
+Contrary to \styleIMI{then} bloc (or standard update) it's possible to make in-place modifications on data structures (like stacks and queues) with side-effects functions.
+The \styleIMI{do} bloc can be seen as an imperative update part that is processed before the constraints updates (\styleIMI{then} bloc).
+It's not possible to update clock constraint in \styleIMI{do} bloc because of the sequential behavior.
+
+\paragraph{}
+Examples of a \styleIMI{do} update expression:
 
 \begin{IMITATORmodel}
 	do {
 
-		(* only let expression *)
-		let
+		(* only do expression *)
+		do
 			i := 1; (* i = 1 *)
 			i := i + 1; (* now, i = 1 + 1 = 2 *)
 		end
@@ -1150,8 +1150,8 @@ Examples of a \styleIMI{let} update expression:
 \begin{IMITATORmodel}
 	do {
 
-		(* only let expression *)
-		let
+		(* only do expression *)
+		do
 			(* in-place modification of stack s *)
 			stack_push(1, s);
 			(* in-place modification of stack s *)
@@ -1161,17 +1161,17 @@ Examples of a \styleIMI{let} update expression:
 	}
 \end{IMITATORmodel}
 
-\subsubsection{In bloc}
+\subsubsection{then bloc}
 
 \paragraph{}
 
-\styleIMI{in} bloc can be used to update clock(s) or discrete variable(s) constraints.
+\styleIMI{then} bloc can be used to update clock(s) or discrete variable(s) constraints.
 Update of a discrete variable constraint is equivalent to an assignment. However, these updates are not sequentials,
 so as described before, in case of multiple update of one variable, a warning is issued, and the behavior of the \NIPTA{} becomes unspecified.
-\styleIMI{in} bloc is the same as a standard update, see \cref{section:standard_updates}.
+\styleIMI{then} bloc is the same as a standard update, see \cref{section:standard_updates}.
 
 \paragraph{}
-An example of a \styleIMI{in} update expression:
+An example of a \styleIMI{then} update expression:
 
 \begin{IMITATORmodel}
 	(* initial value of: *)
@@ -1180,7 +1180,7 @@ An example of a \styleIMI{in} update expression:
 
 	do {
 
-		(* only in expression *)
+		(* only "then" expression *)
 		i := 1; (* i = 1 *)
 		(* multiple update of i below, it doesn't take into account *)
 		(* i will still be equal to 1 *)
@@ -1193,33 +1193,33 @@ An example of a \styleIMI{in} update expression:
 	}
 \end{IMITATORmodel}
 
-\subsubsection{Let-in bloc}
+\subsubsection{do-then bloc}
 
 \begin{remark}
-For a given transition, \styleIMI{let} bloc is executed before the \styleIMI{in} bloc.
+For a given transition, \styleIMI{do} bloc is executed before the \styleIMI{then} bloc.
 \end{remark}
 
 \begin{remark}
-In a model that contain multiple synchronized \IPTA{}, all \styleIMI{let} blocs (all sequential updates) in all PTAs are processed first, following the definition order of PTAs.
-Only once after all \styleIMI{let} blocs are computed, all \styleIMI{in} bloc are updated. Contrary to \styleIMI{let} blocs, keep in mind that updates contained in \styleIMI{in} blocs doesn't be computed sequentially.
+In a model that contain multiple synchronized \IPTA{}, all \styleIMI{do} blocs (all sequential updates) in all PTAs are processed first, following the definition order of PTAs.
+Only once after all \styleIMI{do} blocs are computed, all \styleIMI{then} bloc are updated. Contrary to \styleIMI{do} blocs, keep in mind that updates contained in \styleIMI{then} blocs doesn't be computed sequentially.
 \end{remark}
 
 \begin{remark}
-Note the use of semicolon in the sequential part (\styleIMI{let} bloc) and comma in the declarative part (\styleIMI{in} bloc).
+Note the use of semicolon in the sequential part (\styleIMI{do} bloc) and comma in the declarative part (\styleIMI{then} bloc).
 \end{remark}
 
 \paragraph{}
-Examples of a \styleIMI{let-in} update expression:
+Examples of a \styleIMI{do-then} update expression:
 
 \begin{IMITATORmodel}
 	do {
 
-		(* only let expression *)
-		let
+		(* only do expression *)
+		do
 			i := 0; (* i = 0 *)
 			i := i + 1; (* now, i = 1 *)
-		in
-			j := i (* as in bloc is executed after let bloc, j = 1 *)
+		then
+			j := i (* as then bloc is executed after do bloc, j = 1 *)
 		end
 
 	}
@@ -1228,7 +1228,7 @@ Examples of a \styleIMI{let-in} update expression:
 \begin{IMITATORmodel}
 	do {
 
-		let
+		do
 			(* in-place modification of stack s *)
 			stack_push(1, s);
 			(* in-place modification of stack s *)
@@ -1239,7 +1239,7 @@ Examples of a \styleIMI{let-in} update expression:
 			i := i + 1;
 			(* below, updating clock constraint is forbidden *)
 			(* x := 0 *)
-		in
+		then
 			x := i,
 			y := stack_top(s),
 			(* below, r is update several time *)
@@ -3858,22 +3858,22 @@ We define each of those two components below.
 \regleGrammaire{updates}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{do} \styleIMI{ \{ } \nt{let\_in\_updates} \styleIMI{ \} } \\
+	\  & \styleIMI{do} \styleIMI{ \{ } \nt{do\_then\_updates} \styleIMI{ \} } \\
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{let\_in\_updates}
+\regleGrammaire{do\_then\_updates}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{let} \nt{update\_seq\_nonempty\_list} \nt{in\_updates} \\
+	\  & \styleIMI{do} \nt{update\_seq\_nonempty\_list} \nt{then\_updates} \\
 	$|$  & \nt{update\_list} \\
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{in\_updates}
+\regleGrammaire{then\_updates}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{in} \nt{update\_list} \styleIMI{[end]} \\
+	\  & \styleIMI{then} \nt{update\_list} \styleIMI{[end]} \\
 	$|$ & \emptystring                \\
 \end{tabular}
 
