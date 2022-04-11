@@ -8,7 +8,6 @@
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/05
- * Last modified     : 2021/09/29
  *
  ************************************************************)
 
@@ -18,10 +17,14 @@ open CustomModules
 
 type variable_name = string
 
-(* Leaf of parsing structure *)
+(* Leaf for parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of variable_name
     | Leaf_constant of DiscreteValue.discrete_value
+
+(* Leaf for parsed update *)
+type parsed_update_leaf =
+    | Leaf_update_updated_variable of variable_name
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =
@@ -47,6 +50,76 @@ type state_predicate_leaf =
     | Leaf_predicate_accepting
     | Leaf_predicate_EQ of string (* automaton name *) * string (* location name *)
     | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
+
+(* Variable info utils functions *)
+
+type variable_constant_defined_state =
+    | Variable_defined
+    | Constant_defined
+    | Variable_removed
+    | Not_declared
+
+(* Get variable name given a variable index  *)
+let [@inline] variable_name_of_index variable_infos = List.nth variable_infos.variable_names
+
+(* Get variable index given a variable name *)
+let [@inline] index_of_variable_name variable_infos = Hashtbl.find variable_infos.index_of_variables
+
+(* Get constant value given a constant name *)
+let [@inline] value_of_constant_name variable_infos = Hashtbl.find variable_infos.constants
+
+(* Check if variable is defined => declared and not removed  *)
+let [@inline] is_variable_is_defined variable_infos = Hashtbl.mem variable_infos.index_of_variables
+
+(* Check if variable was removed *)
+let [@inline] is_variable_removed variable_infos variable_name = List.mem variable_name variable_infos.removed_variable_names
+
+(* Check if variable was declared, even if removed *)
+let [@inline] is_variable_declared variable_infos variable_name =
+    is_variable_is_defined variable_infos variable_name
+    || is_variable_removed variable_infos variable_name
+
+(* Check if constant is defined => declared and removed or not *)
+let [@inline] is_constant_is_defined variable_infos = Hashtbl.mem variable_infos.constants
+
+(* Check if variable / constant is defined => declared and removed or not *)
+let [@inline] is_variable_or_constant_defined variable_infos variable_name =
+    is_variable_is_defined variable_infos variable_name || is_constant_is_defined variable_infos variable_name
+
+let [@inline] is_variable_or_constant_declared variable_infos variable_name =
+    is_variable_declared variable_infos variable_name || is_constant_is_defined variable_infos variable_name
+
+let variable_constant_defined_state_of variable_infos variable_name =
+    if is_variable_is_defined variable_infos variable_name then
+        Variable_defined
+    else if is_constant_is_defined variable_infos variable_name then
+        Constant_defined
+    else if is_variable_removed variable_infos variable_name then
+        Variable_removed
+    else
+        Not_declared
+
+let [@inline] var_type_of_variable_index variable_infos = variable_infos.type_of_variables
+
+let var_type_of_variable_name variable_infos variable_name =
+    let variable_index = index_of_variable_name variable_infos variable_name in
+    var_type_of_variable_index variable_infos variable_index
+
+let discrete_type_of_variable_or_constant variable_infos variable_name =
+    let defined_state = variable_constant_defined_state_of variable_infos variable_name in
+    match defined_state with
+    | Variable_defined ->
+        let variable_index = index_of_variable_name variable_infos variable_name in
+        DiscreteType.discrete_type_of_var_type (variable_infos.type_of_variables variable_index)
+    | Constant_defined ->
+        let value =  value_of_constant_name variable_infos variable_name in
+        DiscreteValue.discrete_type_of_value value
+    | Variable_removed
+    | Not_declared ->
+        (* Otherwise problem ! *)
+        raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."))
+
+
 
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
@@ -107,6 +180,12 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
 	| Parsed_DF_unary_min factor ->
 	    fold_parsed_discrete_factor operator base leaf_fun factor
 
+and fold_map_parsed_variable_update_type operator base leaf_fun leaf_update_fun = function
+    | Parsed_variable_update variable_name -> [leaf_update_fun (Leaf_update_updated_variable variable_name)]
+    | Parsed_indexed_update (variable_update_type, index_expr) ->
+            (fold_map_parsed_variable_update_type operator base leaf_fun leaf_update_fun variable_update_type) @
+            [fold_parsed_discrete_arithmetic_expression operator base leaf_fun index_expr]
+    | Parsed_void_update -> []
 
 let rec fold_parsed_linear_constraint operator leaf_fun linear_constraint_leaf_fun = function
     | Parsed_true_constraint -> linear_constraint_leaf_fun Leaf_true_linear_constraint
@@ -134,19 +213,35 @@ and fold_parsed_linear_term operator leaf_fun = function
 (** Fold a parsed linear constraint using operator applying custom function on leafs **)
 let fold_parsed_nonlinear_constraint = fold_parsed_discrete_boolean_expression
 
+let fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun (variable_update_type, expr) =
+    (fold_map_parsed_variable_update_type operator base leaf_fun leaf_update_fun variable_update_type) @
+    [fold_parsed_global_expression operator base leaf_fun expr]
+
 (** Fold a parsed update expression using operator applying custom function on leafs **)
 (** As update expression contain list of leaf, it return list of result from function applications **)
-let fold_map_parsed_update operator base leaf_fun = function
-	| Normal (_, expr) ->
-	    [fold_parsed_global_expression operator base leaf_fun expr]
+(* TODO benjamin operator seems useless here because it's fold map and not a fold *)
+let fold_map_parsed_update operator base leaf_fun leaf_update_fun = function
+	| Normal normal_update ->
+	    fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update
 	| Condition (bool_expr, update_list_if, update_list_else) ->
-	        (fold_parsed_boolean_expression operator base leaf_fun bool_expr) ::
-	        (List.map (fun (_, expr) -> fold_parsed_global_expression operator base leaf_fun expr) (update_list_if@update_list_else))
+	        let all_updates = update_list_if@update_list_else in
+	        let maps = List.fold_left (fun acc normal_update ->
+	            acc @ (fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update)
+	        ) [] all_updates
+	        in
+	        (fold_parsed_boolean_expression operator base leaf_fun bool_expr) :: maps
+
+
+
+
+let fold_parsed_normal_update operator base leaf_fun leaf_update_fun expr =
+    let elements = fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun expr in
+    List.fold_left operator base elements
 
 (** Fold a parsed update expression using operator applying custom function on leafs **)
 (** And fold the list of leaf using base **)
-let fold_parsed_update operator base leaf_fun expr =
-    let elements = fold_map_parsed_update operator base leaf_fun expr in
+let fold_parsed_update operator base leaf_fun leaf_update_fun expr =
+    let elements = fold_map_parsed_update operator base leaf_fun leaf_update_fun expr in
     List.fold_left operator base elements
 
 let fold_init_state_predicate operator base loc_assignment_leaf_fun linear_expression_leaf_fun linear_constraint_leaf_fun leaf_fun = function
@@ -215,6 +310,7 @@ let for_all_in_parsed_linear_constraint = apply_evaluate_and fold_parsed_linear_
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
 let for_all_in_parsed_nonlinear_constraint = apply_evaluate_and_with_base fold_parsed_nonlinear_constraint
 (** Check if all leaf of a parsed update satisfy the predicate **)
+let for_all_in_parsed_normal_update = apply_evaluate_and_with_base fold_parsed_normal_update
 let for_all_in_parsed_update = apply_evaluate_and_with_base fold_parsed_update
 
 let for_all_in_parsed_loc_predicate = apply_evaluate_and_with_base fold_parsed_loc_predicate
@@ -355,9 +451,9 @@ and string_of_parsed_term variable_infos = function
 
 and string_of_parsed_factor variable_infos = function
     | Parsed_DF_variable variable_name ->
-        if (Hashtbl.mem variable_infos.constants variable_name) then (
+        if (is_constant_is_defined variable_infos variable_name) then (
             (* Retrieve the value of the global constant *)
-            let value = Hashtbl.find variable_infos.constants variable_name in
+            let value = value_of_constant_name variable_infos variable_name in
             variable_name
             ^ "="
             ^ DiscreteValue.string_of_value value
@@ -437,13 +533,33 @@ and string_of_linear_term variable_infos = function
 	| Variable (coef, variable_name) when NumConst.equal NumConst.one coef -> variable_name
 	| Variable (coef, variable_name) -> (NumConst.string_of_numconst coef)
 
+and string_of_parsed_normal_update variable_infos (variable_update_type, expr) =
+    let str_left_member = string_of_parsed_variable_update_type variable_infos variable_update_type in
+    str_left_member
+    ^ (if str_left_member <> "" then " := " else "") (* TODO benjamin CLEAN remove hard-coded := *)
+    ^ string_of_parsed_global_expression variable_infos expr
+
+and string_of_parsed_update variable_infos = function
+	| Normal normal_update ->
+        string_of_parsed_normal_update variable_infos normal_update
+	| Condition (bool_expr, update_list_if, update_list_else) ->
+	    let str_update_if_list = List.map (string_of_parsed_normal_update variable_infos) update_list_if in
+	    let str_update_else_list = List.map (string_of_parsed_normal_update variable_infos) update_list_else in
+	    let count_update_in_else = List.length str_update_else_list in
+	    "if "
+        ^ string_of_parsed_boolean_expression variable_infos bool_expr
+        ^ " then "
+        ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_update_if_list
+        ^ (if count_update_in_else > 0 then " else " ^ OCamlUtilities.string_of_list_of_string_with_sep "," str_update_else_list else "")
+        ^ " end"
+
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
-let rec string_of_variable_access variable_infos = function
+and string_of_parsed_variable_update_type variable_infos = function
     | Parsed_variable_update variable_name -> variable_name
-    | Parsed_indexed_update (variable_access, expr) ->
+    | Parsed_indexed_update (parsed_variable_update_type, expr) ->
         let l_del, r_del = Constants.default_array_string.array_access_delimiter in
-        string_of_variable_access variable_infos variable_access
+        string_of_parsed_variable_update_type variable_infos parsed_variable_update_type
         ^ l_del ^ string_of_parsed_arithmetic_expression variable_infos expr ^ r_del
     | Parsed_void_update -> ""
 
@@ -504,29 +620,45 @@ and string_of_parsed_state_predicate variable_infos = function
 
 (* Check if leaf is a constant *)
 let is_constant variable_infos = function
-    | Leaf_variable variable_name -> Hashtbl.mem variable_infos.constants variable_name
+    | Leaf_variable variable_name -> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
 
 (* Check if linear leaf is a constant *)
 let is_linear_constant variable_infos = function
-    | Leaf_linear_variable (_, variable_name) -> Hashtbl.mem variable_infos.constants variable_name
+    | Leaf_linear_variable (_, variable_name) -> is_constant_is_defined variable_infos variable_name
     | Leaf_linear_constant _ -> true
 
 (* Check if leaf is a variable that is defined *)
 (* A given callback is executed if it's not a defined variable *)
 let is_variable_defined_with_callback variable_infos callback = function
     | Leaf_variable variable_name ->
-        if not (List.mem variable_name variable_infos.variable_names) && not (Hashtbl.mem variable_infos.constants variable_name) then(
-            (
+
+       let is_defined = is_variable_or_constant_declared variable_infos variable_name in
+
+        if not is_defined then (
             match callback with
             | Some func -> func variable_name
             | None -> ()
-            );
-            false
-        )
-        else
-            true
+        );
+
+        is_defined
+
     | Leaf_constant _ -> true
+
+(* Check if leaf for update is a variable that is defined *)
+(* A given callback is executed if it's not a defined variable *)
+let is_variable_defined_in_update_with_callback variable_infos callback = function
+    | Leaf_update_updated_variable variable_name ->
+
+        let is_defined = is_variable_or_constant_declared variable_infos variable_name in
+
+        if not is_defined then (
+            match callback with
+            | Some func -> func variable_name
+            | None -> ()
+        );
+
+        is_defined
 
 let is_variable_defined variable_infos = is_variable_defined_with_callback variable_infos None
 
@@ -534,7 +666,7 @@ let is_variable_defined variable_infos = is_variable_defined_with_callback varia
 let is_variable_defined_in_linear_expression variable_infos callback_fail = function
     | Leaf_linear_constant _ -> true
     | Leaf_linear_variable (_, variable_name) ->
-        if not (List.mem variable_name variable_infos.variable_names) && not (Hashtbl.mem variable_infos.constants variable_name) then(
+        if not (List.mem variable_name variable_infos.variable_names) && not (is_constant_is_defined variable_infos variable_name) then(
             callback_fail variable_name; false
         )
         else
@@ -574,11 +706,11 @@ let is_only_discrete variable_infos = function
     | Leaf_constant _ -> true
     | Leaf_variable variable_name ->
         (* Constants are allowed *)
-        (Hashtbl.mem variable_infos.constants variable_name)
+        (is_constant_is_defined variable_infos variable_name)
         (* Or discrete *)
         ||
         try(
-            let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+            let variable_index = index_of_variable_name variable_infos variable_name in
             DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
         ) with Not_found -> (
             (* Variable not found! *)
@@ -592,10 +724,10 @@ let no_variables variable_infos = function
     | Leaf_linear_constant _ -> true
     | Leaf_linear_variable (_, variable_name) ->
         (* Constants are allowed *)
-        (Hashtbl.mem variable_infos.constants variable_name)
+        (is_constant_is_defined variable_infos variable_name)
         (* Or parameter *)
         ||
-        let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+        let variable_index = index_of_variable_name variable_infos variable_name in
         variable_infos.type_of_variables variable_index = DiscreteType.Var_type_parameter
 
 (* Variable kind type represent a variable or a constant kind *)
@@ -607,14 +739,13 @@ type variable_kind =
 let variable_kind_of_variable_name variable_infos variable_name =
 
     (* First check whether this is a constant *)
-    if Hashtbl.mem variable_infos.constants variable_name then (
-        let value = Hashtbl.find variable_infos.constants variable_name in
+    if is_constant_is_defined variable_infos variable_name then (
+        let value = value_of_constant_name variable_infos variable_name in
         Constant_kind value
     )
     (* Otherwise: a variable *)
     else
-        Variable_kind (Hashtbl.find variable_infos.index_of_variables variable_name)
-
+        Variable_kind (index_of_variable_name variable_infos variable_name)
 
 (* Check if a parsed global expression is constant *)
 let is_parsed_global_expression_constant variable_infos =
@@ -628,8 +759,97 @@ let is_parsed_boolean_expression_constant variable_infos =
 let is_parsed_arithmetic_expression_constant variable_infos =
     for_all_in_parsed_discrete_arithmetic_expression (is_constant variable_infos)
 
+(* Check if a parsed term is constant *)
+let is_parsed_term_constant variable_infos = for_all_in_parsed_discrete_term (is_constant variable_infos)
+(* Check if a parsed term is constant *)
+let is_parsed_factor_constant variable_infos = for_all_in_parsed_discrete_factor (is_constant variable_infos)
+
+(* Check if a parsed global expression is linear *)
+let rec is_linear_parsed_global_expression variable_infos = function
+    | Parsed_global_expression expr -> is_linear_parsed_boolean_expression variable_infos expr
+
+(* Check if a parsed boolean expression is linear *)
+and is_linear_parsed_boolean_expression variable_infos = function
+    | Parsed_conj_dis _ -> false
+    | Parsed_Discrete_boolean_expression expr ->
+        is_linear_parsed_discrete_boolean_expression variable_infos expr
+
+(* Check if a parsed discrete boolean expression is linear *)
+and is_linear_parsed_discrete_boolean_expression variable_infos = function
+    | Parsed_arithmetic_expression expr ->
+        is_linear_parsed_arithmetic_expression variable_infos expr
+    | Parsed_boolean_expression expr ->
+        is_linear_parsed_boolean_expression variable_infos expr
+    | Parsed_comparison _
+    | Parsed_comparison_in _
+    | Parsed_Not _ -> false
+
+(* Check if a parsed arithmetic expression is linear *)
+and is_linear_parsed_arithmetic_expression variable_infos = function
+    | Parsed_sum_diff (expr, term, _) ->
+        is_linear_parsed_arithmetic_expression variable_infos expr &&
+        is_linear_parsed_term variable_infos term
+    | Parsed_DAE_term term ->
+        is_linear_parsed_term variable_infos term
+
+(* Check if a parsed term is linear *)
+and is_linear_parsed_term variable_infos = function
+    | Parsed_product_quotient (term, factor, parsed_product_quotient) ->
+
+        (* Check both term and factor are linear *)
+        let is_linear_term = is_linear_parsed_term variable_infos term in
+        let is_linear_factor = is_linear_parsed_factor variable_infos factor in
+        let is_linear = is_linear_term && is_linear_factor in
+
+        (* Check if term, factor are constant *)
+        let is_term_constant = is_parsed_term_constant variable_infos term in
+        let is_factor_constant = is_parsed_factor_constant variable_infos factor in
+
+        let is_linear_product_quotient =
+            match parsed_product_quotient with
+            (* k*k, v*k or k*v are linear, but not v*v (with k a constant and v a variable) *)
+            | Parsed_mul -> is_term_constant || is_factor_constant
+            (* v/k, k/k is linear *)
+            | Parsed_div -> is_factor_constant
+        in
+        is_linear && is_linear_product_quotient
+
+    | Parsed_DT_factor factor ->
+        is_linear_parsed_factor variable_infos factor
+
+(* Check if a parsed factor is linear *)
+and is_linear_parsed_factor variable_infos = function
+    (* only rational variable *)
+    | Parsed_DF_variable variable_name ->
+        let variable_index = index_of_variable_name variable_infos variable_name in
+        let discrete_type = variable_infos.type_of_variables variable_index in
+        (match discrete_type with
+        | Var_type_clock
+        | Var_type_parameter
+        | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rat)
+        | Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number) -> true
+        | Var_type_discrete _ -> false
+        )
+    (* only rational constant *)
+    | Parsed_DF_constant value ->
+        (match value with
+        | Rational_value _
+        | Number_value _ -> true
+        | _ -> false
+        )
+    | Parsed_DF_expression expr ->
+        is_linear_parsed_arithmetic_expression variable_infos expr
+    | Parsed_DF_unary_min factor ->
+        is_linear_parsed_factor variable_infos factor
+    | Parsed_sequence _
+    | Parsed_DF_access _
+    | Parsed_function_call _ -> false
+
 (* Check that all variables in a parsed global expression are effectively be defined *)
-let all_variables_defined_in_parsed_global_expression variable_infos expr =
+let all_variables_defined_in_parsed_global_expression variable_infos callback expr =
+    for_all_in_parsed_global_expression (is_variable_defined_with_callback variable_infos callback) expr
+
+let all_variables_defined_in_parsed_global_expression_without_callback variable_infos expr =
     for_all_in_parsed_global_expression (is_variable_defined variable_infos) expr
 
 (* Check that all variables in a parsed boolean expression are effectively be defined *)
@@ -639,6 +859,18 @@ let all_variables_defined_in_parsed_boolean_expression variable_infos callback e
 (* Check that all variables in a parsed discrete boolean expression are effectively be defined *)
 let all_variables_defined_in_parsed_discrete_boolean_expression variable_infos callback expr =
     for_all_in_parsed_discrete_boolean_expression (is_variable_defined_with_callback variable_infos callback) expr
+
+(* Check that all variables in a parsed discrete arithmetic expression are effectively be defined *)
+let all_variables_defined_in_parsed_discrete_arithmetic_expression variable_infos callback expr =
+    for_all_in_parsed_discrete_arithmetic_expression (is_variable_defined_with_callback variable_infos callback) expr
+
+(* Check that all variables in a parsed normal update are effectively be defined *)
+let all_variables_defined_in_parsed_normal_update variable_infos undefined_variable_callback undefined_updated_variable_callback expr =
+    for_all_in_parsed_normal_update (is_variable_defined_with_callback variable_infos undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos undefined_updated_variable_callback) expr
+
+(* Check that all variables in a parsed update are effectively be defined *)
+let all_variables_defined_in_parsed_update variable_infos undefined_variable_callback undefined_updated_variable_callback expr =
+    for_all_in_parsed_update (is_variable_defined_with_callback variable_infos undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos undefined_updated_variable_callback) expr
 
 (* Check that all variables in a linear expression are effectively be defined *)
 let all_variables_defined_in_linear_expression variable_infos callback_fail expr =
@@ -731,6 +963,19 @@ let get_variables_in_nonlinear_constraint_with_accumulator = get_variables_in_pa
 let get_variables_in_parsed_update_with_accumulator variables_used_ref =
     iterate_parsed_update
         (add_variable_of_discrete_boolean_expression variables_used_ref)
+        (function _ -> ())
+
+(* Gather all variable names used in a parsed simple predicate in a given accumulator *)
+let get_variables_in_parsed_simple_predicate_with_accumulator variables_used_ref =
+    iterate_in_parsed_simple_predicate
+        (function _ -> ())
+        (add_variable_of_discrete_boolean_expression variables_used_ref)
+
+(* Gather all variable names used in a parsed state predicate in a given accumulator *)
+let get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref =
+    iterate_in_parsed_state_predicate
+        (function _ -> ())
+        (add_variable_of_discrete_boolean_expression variables_used_ref)
 
 (* Create and wrap an accumulator then return result directly *)
 let wrap_accumulator f expr =
@@ -769,16 +1014,28 @@ let get_variables_in_nonlinear_convex_predicate convex_predicate =
     List.map (get_variables_in_nonlinear_constraint) convex_predicate |>
     List.fold_left (fun variables acc -> StringSet.union acc variables) StringSet.empty
 
+let get_variables_in_parsed_simple_predicate =
+    wrap_accumulator get_variables_in_parsed_simple_predicate_with_accumulator
+
+let get_variables_in_parsed_state_predicate =
+    wrap_accumulator get_variables_in_parsed_state_predicate_with_accumulator
+
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
-let rec variable_name_of_variable_access = function
+let rec variable_name_of_parsed_variable_update_type_opt = function
     | Parsed_variable_update variable_name -> Some variable_name
-    | Parsed_indexed_update (variable_access, _) -> variable_name_of_variable_access variable_access
+    | Parsed_indexed_update (parsed_variable_update_type, _) -> variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type
     | Parsed_void_update -> None
+
+let variable_name_of_parsed_variable_update_type parsed_variable_update_type =
+    let variable_name_opt = variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type in
+    match variable_name_opt with
+    | Some variable_name -> variable_name
+    | None -> raise (InternalError "Unable to get variable name of an update.")
 
 (* Check if variable access is a variable name directly *)
 (* ex : my_var -> true, my_var[i] -> false *)
-let is_variable_access_is_a_variable_name = function
+let is_parsed_variable_update_type_is_a_variable_name = function
     | Parsed_variable_update _ -> true
     | Parsed_void_update
     | Parsed_indexed_update _ -> false
@@ -896,6 +1153,26 @@ let updates_of_update_section update_section =
     let pre_updates, updates, post_updates = update_section in
     pre_updates @ updates @ post_updates
 
+(* Convert var type number from parsing structure to abstract model *)
+let convert_var_type_discrete_number = function
+    | ParsingStructure.Var_type_discrete_rat -> DiscreteType.Var_type_discrete_rat
+    | ParsingStructure.Var_type_discrete_int -> DiscreteType.Var_type_discrete_int
+
+(* Convert discrete var type from parsing structure to abstract model *)
+let rec convert_var_type_discrete = function
+    | ParsingStructure.Var_type_discrete_number x -> DiscreteType.Var_type_discrete_number (convert_var_type_discrete_number x)
+    | ParsingStructure.Var_type_discrete_bool -> DiscreteType.Var_type_discrete_bool
+    | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteType.Var_type_discrete_binary_word length
+    | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteType.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
+    | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteType.Var_type_discrete_list (convert_var_type_discrete inner_type)
+    | ParsingStructure.Var_type_discrete_stack inner_type -> DiscreteType.Var_type_discrete_stack (convert_var_type_discrete inner_type)
+    | ParsingStructure.Var_type_discrete_queue inner_type -> DiscreteType.Var_type_discrete_queue (convert_var_type_discrete inner_type)
+
+(* Convert var type from parsing structure to abstract model *)
+let convert_var_type = function
+    | ParsingStructure.Var_type_clock -> DiscreteType.Var_type_clock
+    | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteType.Var_type_discrete (convert_var_type_discrete var_type_discrete)
+    | ParsingStructure.Var_type_parameter -> DiscreteType.Var_type_parameter
 
 (* Extract variable infos from useful_parsing_model_information *)
 let variable_infos_of_parsed_model (parsed_model : useful_parsing_model_information) =
@@ -905,6 +1182,5 @@ let variable_infos_of_parsed_model (parsed_model : useful_parsing_model_informat
         index_of_variables = parsed_model.index_of_variables;
         type_of_variables = parsed_model.type_of_variables;
         removed_variable_names = parsed_model.removed_variable_names;
+        discrete = parsed_model.discrete;
     }
-
-

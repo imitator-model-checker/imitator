@@ -10,11 +10,8 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci, Benjamin Loillier
  * Created           : 2009/09/09
- * Last modified     : 2021/09/16
  *
  ************************************************************)
-
-
 
 (************************************************************)
 (************************************************************)
@@ -40,131 +37,9 @@ open CustomModules
 (************************************************************)
 (************************************************************)
 
-
 (* For detecting strongly deterministic PTAs *)
 exception Not_strongly_deterministic
-
-
-
 exception InvalidProperty
-
-(************************************************************)
-(************************************************************)
-(** Type definition *)
-(************************************************************)
-(************************************************************)
-
-(************************************************************)
-(************************************************************)
-(** Type conversions *)
-(************************************************************)
-(************************************************************)
-
-
-
-(* Convert var type number from parsing structure to abstract model *)
-let convert_var_type_discrete_number = function
-    | ParsingStructure.Var_type_discrete_rational -> DiscreteType.Var_type_discrete_rational
-    | ParsingStructure.Var_type_discrete_int -> DiscreteType.Var_type_discrete_int
-
-(* Convert discrete var type from parsing structure to abstract model *)
-let rec convert_var_type_discrete = function
-    | ParsingStructure.Var_type_discrete_number x -> DiscreteType.Var_type_discrete_number (convert_var_type_discrete_number x)
-    | ParsingStructure.Var_type_discrete_bool -> DiscreteType.Var_type_discrete_bool
-    | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteType.Var_type_discrete_binary_word length
-    | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteType.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
-    | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteType.Var_type_discrete_list (convert_var_type_discrete inner_type)
-    | ParsingStructure.Var_type_discrete_stack inner_type -> DiscreteType.Var_type_discrete_stack (convert_var_type_discrete inner_type)
-    | ParsingStructure.Var_type_discrete_queue inner_type -> DiscreteType.Var_type_discrete_queue (convert_var_type_discrete inner_type)
-
-(* Convert var type from parsing structure to abstract model *)
-let convert_var_type = function
-    | ParsingStructure.Var_type_clock -> DiscreteType.Var_type_clock
-    | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteType.Var_type_discrete (convert_var_type_discrete var_type_discrete)
-    | ParsingStructure.Var_type_parameter -> DiscreteType.Var_type_parameter
-
-(* Get rational value or print error message (for linear expression that doesn't support other type than rational) *)
-let numconst_value_or_fail = function
-    | DiscreteValue.Number_value x
-    | DiscreteValue.Rational_value x -> x
-    | x ->
-        let str_value = DiscreteValue.string_of_value x in
-        let str_type = DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value x) in
-        let error_msg =
-            "Linear expressions only support rational literals and constants, value "
-            ^ str_value
-            ^ " of type "
-            ^ str_type
-            ^ " is not rational"
-        in
-        raise (InvalidExpression  error_msg)
-
-(************************************************************)
-(** Getting variables *)
-(************************************************************)
-
-let is_variable_or_constant_declared index_of_variables constants variable_name =
-    Hashtbl.mem index_of_variables variable_name || Hashtbl.mem constants variable_name
-
-
-(************************************************************)
-(** Getting variables *)
-(************************************************************)
-
-
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a Simple_predicate *)
-(*------------------------------------------------------------*)
-let get_variables_in_parsed_simple_predicate variables_used_ref = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression ->
-		ParsingStructureUtilities.get_variables_in_parsed_discrete_boolean_expression_with_accumulator variables_used_ref parsed_discrete_boolean_expression
-
-	| Parsed_loc_predicate parsed_loc_predicate ->
-		(* No variable in location predicate *)
-		()
-
-	| Parsed_state_predicate_true | Parsed_state_predicate_false | Parsed_state_predicate_accepting ->
-		()
-
-
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a parsed_state_predicate_factor *)
-(*------------------------------------------------------------*)
-let rec get_variables_in_parsed_state_predicate_factor variables_used_ref = function
-	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor ->
-		get_variables_in_parsed_state_predicate_factor variables_used_ref parsed_state_predicate_factor
-
-	| Parsed_simple_predicate parsed_simple_predicate ->
-		get_variables_in_parsed_simple_predicate variables_used_ref parsed_simple_predicate
-
-	| Parsed_state_predicate parsed_state_predicate ->
-		get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
-
-
-
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a parsed_state_predicate_term *)
-(*------------------------------------------------------------*)
-and get_variables_in_parsed_state_predicate_term variables_used_ref = function
-	| Parsed_state_predicate_term_AND ( parsed_state_predicate_term1, parsed_state_predicate_term2) ->
-		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term1;
-		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term2;
-
-	| Parsed_state_predicate_factor parsed_state_predicate_factor ->
-		get_variables_in_parsed_state_predicate_factor variables_used_ref parsed_state_predicate_factor
-
-
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a parsed_state_predicate *)
-(*------------------------------------------------------------*)
-and get_variables_in_parsed_state_predicate variables_used_ref = function
-	| Parsed_state_predicate_OR (parsed_state_predicate1 , parsed_state_predicate2) ->
-		get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate1;
-		get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate2;
-
-	| Parsed_state_predicate_term parsed_state_predicate_term ->
-		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term
-
 
 (*------------------------------------------------------------*)
 (* Find the clocks in a linear_constraint *)
@@ -199,22 +74,27 @@ let rec get_clocks_in_updates updates : clock_index list =
   in
   (get_clocks updates.clock) @ clocks_in_conditons
 
+(************************************************************)
+(** Print error messages *)
+(************************************************************)
 
-
+(* Print variable not declared in linear constraint *)
 let undeclared_variable_in_linear_constraint_message variable_name =
     print_error ("The variable `" ^ variable_name ^ "` used in a linear constraint was not declared.")
 
+(* Print variable not declared in bool expression *)
 let undeclared_variable_in_boolean_expression_message variable_name =
     print_error ("The variable `" ^ variable_name ^ "` used in a boolean expression was not declared.")
-
 
 (************************************************************)
 (** Converting linear constraints *)
 (************************************************************)
 
+(* TODO benjamin CLEAN remove comments, it was moved to ExpressionConverter *)
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.linear_expression into an array of coef and constant *)
 (*------------------------------------------------------------*)
+(*
 let array_of_coef_of_linear_expression index_of_variables constants linear_expression =
   (* Create an array of coef *)
   let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
@@ -264,7 +144,7 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
   update_array_linear_expression linear_expression;
   (* Return the array of coef and the constant *)
   array_of_coef, !constant
-
+*)
 
 (************************************************************)
 (************************************************************)
@@ -291,7 +171,7 @@ let get_variables_and_constants var_type =
 let get_declared_variable_names variable_declarations =
   (* Get all (possibly identical) names of variables in one variable declaration and add it to the computed n-uple *)
   let get_variables_in_variable_declaration (clocks, discrete_rational, parameters, constants, unassigned_constants) (var_type, list_of_names) =
-    let converted_var_type = convert_var_type var_type in
+    let converted_var_type = ParsingStructureUtilities.convert_var_type var_type in
     let new_list, new_constants = get_variables_and_constants converted_var_type list_of_names in
     match var_type with
     | ParsingStructure.Var_type_clock ->
@@ -313,7 +193,7 @@ let get_declared_discrete_variables_by_type variable_declarations =
         let new_list, new_constants = get_variables_and_constants var_type list_of_names in
         match var_type with
             | ParsingStructure.Var_type_discrete var_type_discrete ->
-                let new_list_discretes_by_type = List.map (fun variable_names -> (convert_var_type var_type, variable_names)) new_list in
+                let new_list_discretes_by_type = List.map (fun variable_names -> (ParsingStructureUtilities.convert_var_type var_type, variable_names)) new_list in
                 List.rev_append new_list_discretes_by_type discretes_by_type
             | _ ->
                 discretes_by_type
@@ -461,31 +341,16 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 					(* get_variables_in_parsed_update_arithmetic_expression all_variables_used arithmetic_expression; *)
 					ParsingStructureUtilities.get_variables_in_parsed_update_with_accumulator all_variables_used update_expression
 
-					) updates;
-				) location.transitions;
-			) locations;
-		) parsed_model.automata;
-
-
-	(*** NOTE: disabled because we DO want to eliminate variables that appear ONLY in the init definition ***)
-(*	(* Gather the variables used in init *)
-	let init_definition = parsed_model.init_definition in
-	List.iter (function
-		(* `loc[automaton] = location`: no variable => nothing to do *)
-		| Parsed_loc_assignment _ -> ()
-		(* Linear constraint: get variables *)
-		| Parsed_linear_predicate linear_constraint ->
-			get_variables_in_linear_constraint all_variables_used linear_constraint
-	) init_definition;*)
+                ) updates;
+            ) location.transitions;
+        ) locations;
+    ) parsed_model.automata;
 
     let all_dependencies_used = get_all_variable_dependencies_used_in_init parsed_model all_variables_used in
     all_variables_used := StringSet.union !all_variables_used all_dependencies_used;
 
-
 	(* Return the set of variables actually used *)
 	!all_variables_used
-
-
 
 (************************************************************)
 (** Checking the model *)
@@ -494,7 +359,7 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 (*------------------------------------------------------------*)
 (* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
 (*------------------------------------------------------------*)
-(* TODO refactor because of new types ! *)
+(* TODO benjamin refactor because of new types ! *)
 let check_variable_names clock_names discrete_names parameters_names constants =
 	(* Warn if a variable is defined twice as the same type *)
 	let warn_for_multiply_defined_variables list_of_variables =
@@ -565,12 +430,142 @@ let all_locations_different =
 
 
 
+
+(*------------------------------------------------------------*)
+(* Check that a normal update is well formed *)
+(*------------------------------------------------------------*)
+let check_normal_update variable_infos automaton_name normal_update =
+
+    (* Extract update expression *)
+    let _, update_expr = normal_update in
+
+    (* Prepare callback function that print error message when undeclared variable is found *)
+    let print_variable_in_update_not_declared variable_name =
+        print_error ("Variable `" ^ variable_name ^ "` used in update `" ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos normal_update ^ "` in automaton `" ^ automaton_name ^ "` was not declared.")
+    in
+    let print_variable_in_update_not_declared_opt = Some print_variable_in_update_not_declared in
+    (* Prepare print error function for trying to update a constant *)
+    let print_update_constant_error variable_name =
+        print_error ("Trying to update constant `" ^ variable_name ^ "` in `" ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos normal_update ^ "` in automaton `" ^ automaton_name ^ "`.")
+    in
+    (* Prepare print error function for trying to update a parameter *)
+    let print_update_parameter_error parameter_name =
+        print_error ("Trying to update parameter `" ^ parameter_name ^ "` in `" ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos normal_update ^ "` in automaton `" ^ automaton_name ^ "`.")
+    in
+
+    (* Check that all variables in update are declared, and call print function if it's not the case *)
+    let all_variables_declared = ParsingStructureUtilities.all_variables_defined_in_parsed_normal_update variable_infos print_variable_in_update_not_declared_opt print_variable_in_update_not_declared_opt normal_update in
+    (* Get all updated variables (can have many updated variables for one update, in conditional update for example) *)
+    let updated_variable_name_opt = (ParsingStructureUtilities.fold_map_parsed_normal_update (^) "" (function _ -> "") (function Leaf_update_updated_variable variable_name -> variable_name) normal_update |> List.filter (fun x -> x <> "") |> List.nth_opt) 0 in
+
+    let updated_variable_name = match updated_variable_name_opt with Some updated_variable_name -> updated_variable_name | None -> "_" in
+
+    if updated_variable_name <> "_" && ParsingStructureUtilities.is_variable_is_defined variable_infos updated_variable_name then
+        (* Get kind (variable or constant ?) of updated variable *)
+        let variable_kind = ParsingStructureUtilities.variable_kind_of_variable_name variable_infos updated_variable_name in
+        (* Get var type of updated variable *)
+        let var_type = ExpressionConverter.TypeChecker.get_type_of_variable_by_name variable_infos updated_variable_name in
+
+        (* Check if variable is a constant *)
+        let is_constant = match variable_kind with Constant_kind _ -> true | Variable_kind _ -> false in
+        (* Check if variable is a parameter *)
+        let is_parameter = match var_type with DiscreteType.Var_type_parameter -> true | _ -> false in
+        (* Check if variable is a discrete type *)
+        let is_discrete = match var_type with DiscreteType.Var_type_discrete _ -> true | _ -> false in
+
+        (* Eventually print error messages *)
+        if is_constant then print_update_constant_error updated_variable_name;
+        if is_parameter then print_update_parameter_error updated_variable_name;
+
+        if is_discrete then (
+            let is_only_discrete = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos update_expr in
+            if not is_only_discrete then print_error ("Trying to update variable `` with clock(s) or parameter(s) in ``.");
+        );
+
+        all_variables_declared && not (is_constant || is_parameter)
+    else (
+        all_variables_declared
+    )
+
 (*------------------------------------------------------------*)
 (* Check that an update is well formed *)
 (*------------------------------------------------------------*)
+let check_update variable_infos automaton_name = function
+	| Normal normal_update ->
+	    check_normal_update variable_infos automaton_name normal_update
+
+	| Condition (bool_expr, update_list_if, update_list_else) ->
+
+	    (* Concatenate updates*)
+	    let all_updates = update_list_if @ update_list_else in
+
+        (* Prepare print error function for conditional containing clock or parameter *)
+	    let print_conditional_update_contain_clock_or_param_error var_type variable_name =
+            print_error (
+                "Condition update `"
+                ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos bool_expr
+                ^ "` contains "
+                ^ DiscreteType.string_of_var_type var_type
+                ^ " `"
+                ^ variable_name
+                ^ "` in automaton `"
+                ^ automaton_name
+                ^ "`."
+            )
+	    in
+
+        (* Prepare callback function that print error message when undeclared variable is found *)
+        let print_variable_in_update_condition_not_declared variable_name =
+            print_error (
+                "Variable `"
+                ^ variable_name
+                ^ "` used in update condition `"
+                ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos bool_expr
+                ^ "` in automaton `"
+                ^ automaton_name
+                ^ "` was not declared."
+            )
+        in
+
+	    (* Check that all variables in update condition are declared *)
+        let all_declared_in_condition = ParsingStructureUtilities.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_variable_in_update_condition_not_declared) bool_expr in
+
+        (* Function that check if a parsing structure tree leaf is a discrete variable *)
+        let is_variable_is_discrete = function
+            | Leaf_variable variable_name ->
+                let var_type_opt = ExpressionConverter.TypeChecker.get_type_of_variable_by_name_opt variable_infos variable_name in
+                (match var_type_opt with
+                | Some (Var_type_clock as var_type)
+                | Some (Var_type_parameter as var_type) ->
+                    print_conditional_update_contain_clock_or_param_error var_type variable_name;
+                    false
+                | _ -> true
+                )
+            | Leaf_constant _ -> true
+        in
+
+	    (* Check that boolean condition expression doesn't contains any clock(s) or parameter(s) *)
+	    let is_condition_use_only_discrete =
+	        ParsingStructureUtilities.for_all_in_parsed_boolean_expression is_variable_is_discrete bool_expr
+        in
+
+	    (* Check all normal updates are valid (make a map for avoid short-circuit eval with for_all) *)
+	    let is_valid_normal_updates =
+	        List.map (check_normal_update variable_infos automaton_name) all_updates
+	        |> List.for_all identity
+        in
+
+	    (* If all normal updates and condition are valid, update is valid *)
+	    all_declared_in_condition && is_valid_normal_updates && is_condition_use_only_discrete
+
+(* TODO benjamin CLEAN remove comments *)
+(*------------------------------------------------------------*)
+(* Check that an update is well formed *)
+(*------------------------------------------------------------*)
+(*
 let check_update variable_infos automaton_name update =
 
-    let check_update_normal (variable_access, global_expression) =
+    let check_update_normal (parsed_variable_update_type, global_expression) =
 
         (* Function that check that variable kind of an update is not a constant *)
         let check_variable_kind_of_update variable_name =
@@ -586,7 +581,7 @@ let check_update variable_infos automaton_name update =
             | ParsingStructureUtilities.Constant_kind _ ->
                     print_error (
                         "Trying to update a constant: `"
-                        ^ ParsingStructureUtilities.string_of_variable_access variable_infos variable_access
+                        ^ ParsingStructureUtilities.string_of_parsed_variable_update_type variable_infos parsed_variable_update_type
                         ^ " := "
                         ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression
                         ^ "`"
@@ -625,25 +620,30 @@ let check_update variable_infos automaton_name update =
                 print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); false
         in
 
-        (* Function that check if all variables are defined in update *)
-        let check_all_variables_defined_in_update variable_name =
-            let all_variables_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
+        (* Prepare callback function that will be called if an undeclared variable is found in an update *)
+        let print_variable_in_update_not_declared str_left_member variable_name =
+            print_error ("Variable `" ^ variable_name ^ "` used in update `" ^ str_left_member ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression ^ "` in automaton `" ^ automaton_name ^ "` was not declared.")
+        in
 
-            if not all_variables_defined then (
-                (* TODO benjamin IMPROVE get variable names as before ! *)
-                print_error ("A variable used in update \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression ^ "\" in automaton `" ^ automaton_name ^ "` was not declared.");
-            );
-            all_variables_defined
+        (* Function that check if all variables are defined in update *)
+        let check_all_variables_defined_in_update updated_variable_name =
+            ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos (Some (print_variable_in_update_not_declared updated_variable_name)) global_expression
         in
 
         (* Function that check update on variable or variable access *)
-        let rec check_variable_access = function
+        let rec check_parsed_variable_update_type = function
             | Parsed_void_update ->
                 check_all_variables_defined_in_update "_"
 
-            (* TODO benjamin IMPORTANT check if no error when variable not declared in index expression *)
-            | Parsed_indexed_update (variable_access, _) ->
-                check_variable_access variable_access
+            | Parsed_indexed_update (inner_variable_update_type, index_expr) as variable_update_type ->
+
+                (* String representation of the current indexed update *)
+                let str_indexed_update = ParsingStructureUtilities.string_of_parsed_variable_update_type variable_infos variable_update_type in
+
+                (* Check that all variable in index expression was declared *)
+                let all_variable_declared_in_index_expr = ParsingStructureUtilities.all_variables_defined_in_parsed_discrete_arithmetic_expression variable_infos (Some (print_variable_in_update_not_declared str_indexed_update)) index_expr in
+                (* Update is valid only if all variables are declared and inner update type is valid *)
+                all_variable_declared_in_index_expr && check_parsed_variable_update_type inner_variable_update_type
 
             | Parsed_variable_update variable_name ->
 
@@ -654,22 +654,28 @@ let check_update variable_infos automaton_name update =
                     true
                 else (
 
+                    (* Check if updated variable is declared *)
                     let is_updated_variable_defined = List.mem variable_name variable_infos.variable_names in
-                    let all_variables_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos global_expression in
+                    (* If not declared, print error message *)
+                    if not is_updated_variable_defined then
+                        print_variable_in_update_not_declared variable_name variable_name;
 
-                    if not (all_variables_defined && is_updated_variable_defined) then (
-                        (* TODO benjamin IMPROVE get variable names as before ! *)
-                        print_error ("A variable used in update \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression ^ "\" in automaton `" ^ automaton_name ^ "` was not declared.");
-                        false
-                    ) else (
-                        (* Check variable kind of update is not a constant *)
+                    (* Check that variables contained in update expression are all declared *)
+                    let all_variables_defined = check_all_variables_defined_in_update variable_name in
+
+                    let is_variable_not_a_constant = lazy (
+                        (* Check that updated variable is not a constant *)
                         let variable_type_opt = check_variable_kind_of_update variable_name in
                         (* Check type of updated variable *)
                         check_variable_type_of_update variable_name variable_type_opt
                     )
+                    in
+
+                    (* Short-circuit eval *)
+                    all_variables_defined && is_updated_variable_defined && Lazy.force is_variable_not_a_constant
                 )
         in
-        check_variable_access variable_access
+        check_parsed_variable_update_type parsed_variable_update_type
 
     in
 
@@ -681,9 +687,9 @@ let check_update variable_infos automaton_name update =
             (* Get variable type, if possible *)
             let variable_type =
                 if List.mem variable_name variable_infos.variable_names then (
-                    let index = Hashtbl.find variable_infos.index_of_variables variable_name in
+                    let index = index_of_variable_name variable_infos variable_name in
                     Some (variable_infos.type_of_variables index)
-                ) else if Hashtbl.mem variable_infos.constants variable_name then (
+                ) else if is_constant_is_defined variable_infos variable_name then (
                     let value = Hashtbl.find variable_infos.constants variable_name in
                     Some (DiscreteValue.var_type_of_value value)
                 ) else
@@ -720,7 +726,7 @@ let check_update variable_infos automaton_name update =
         )
         else
             is_well_formed_condition && is_well_formed_updates
-
+*)
 
 (*------------------------------------------------------------*)
 (* Check that a sync is well formed *)
@@ -762,30 +768,62 @@ let synclab_used_everywhere automata synclab_name =
 (*------------------------------------------------------------*)
 (* Check that all variables mentioned in a list of stopwatches exist and are clocks *)
 (*------------------------------------------------------------*)
-let check_stopwatches index_of_variables type_of_variables location_name stopwatches =
-	let ok = ref true in
-	List.iter (fun stopwatch ->
-		(* Get variable name *)
-		try (
-			let variable_index = Hashtbl.find index_of_variables stopwatch in
-			if type_of_variables variable_index <> DiscreteType.Var_type_clock then (
-			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined as a clock.");
-			ok := false;
-			);
-		) with Not_found -> (
-			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined.");
-			ok := false;
-			);
-		) stopwatches;
-	!ok
+let check_stopwatches variable_infos location_name stopwatches =
+
+    List.map (fun stopwatch_name ->
+            let var_type = ExpressionConverter.TypeChecker.get_type_of_variable_by_name_opt variable_infos stopwatch_name in
+            match var_type with
+            (* Ok *)
+            | Some Var_type_clock -> true
+            (* Not defined *)
+            | None -> print_error ("The variable `" ^ stopwatch_name ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined."); false
+            (* Not a clock *)
+            | _ -> print_error ("The variable `" ^ stopwatch_name ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined as a clock."); false
+        ) stopwatches
+    (* Map before make for_all in order to avoid short-circuit evaluation (quit loop when an element is false) *)
+    |> List.for_all identity
 
 
 (*------------------------------------------------------------*)
 (* Check that all variables mentioned in a list of flows exist and are clocks *)
 (*------------------------------------------------------------*)
+let check_flows_2 variable_infos location_name flows =
 
-(*** TODO: check for duplicates (and warn), check for discrepancies (and raise error) ***)
+    (* Check clocks are declared and well-typed *)
+    let clock_names = List.map first_of_tuple flows in
+    let is_clocks_declared = check_stopwatches variable_infos location_name clock_names in
 
+    (* Group flow values by clock name *)
+    let clock_names_by_flow_values = OCamlUtilities.group_by (fun (clock_name, flow_value) -> clock_name) flows in
+
+    (* For each clocks *)
+    let is_no_flow_value_discrepancies = List.map (fun (clock_name, flow_values) ->
+        (* Check whether a value was defined multiple times *)
+        if List.length flow_values > 1 then (
+
+            let flow_values_without_duplicates = OCamlUtilities.list_only_once flow_values in
+
+            (* Check whether the value is the same or not *)
+            if List.length flow_values_without_duplicates > 1 then (
+                (* If different value: error *)
+                print_error ("Multiple and different clock flow values for variable `" ^ clock_name ^ "` in location `" ^ location_name ^ "`.");
+                false
+            ) else (
+				(* If same value: warn *)
+                print_warning ("Duplicate clock flow value for variable `" ^ clock_name ^ "` in location `" ^ location_name ^ "`.");
+                false
+            )
+        )
+        else
+            true
+    ) clock_names_by_flow_values
+    (* Map before make for_all in order to avoid short-circuit evaluation (quit loop when an element is false) *)
+    |> List.for_all identity
+    in
+
+    is_clocks_declared && is_no_flow_value_discrepancies
+
+(* TODO benjamin CLEAN remove this imperative version *)
 let check_flows nb_clocks index_of_variables type_of_variables location_name flows =
 	(* Create a hash table variable_index => flow value *)
 	let temp_flow_hashtable : (variable_index, NumConst.t) Hashtbl.t = Hashtbl.create nb_clocks in
@@ -835,9 +873,7 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 let check_automata (useful_parsing_model_information : useful_parsing_model_information) automata =
 
 	let index_of_automata		= useful_parsing_model_information.index_of_automata in
-	let index_of_variables		= useful_parsing_model_information.index_of_variables in
 	let array_of_location_names	= useful_parsing_model_information.array_of_location_names in
-	let type_of_variables		= useful_parsing_model_information.type_of_variables in
 
     let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
 
@@ -869,11 +905,12 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 
 			(* Check the stopwatches *)
 			print_message Verbose_total ("          Checking stopwatches");
-			if not (check_stopwatches index_of_variables type_of_variables location.name location.stopped) then well_formed := false;
+			if not (check_stopwatches variable_infos location.name location.stopped) then well_formed := false;
 
 			(* Check the flows *)
 			print_message Verbose_total ("          Checking flows");
-			if not (check_flows useful_parsing_model_information.nb_clocks index_of_variables type_of_variables location.name location.flow) then well_formed := false;
+(*			if not (check_flows useful_parsing_model_information.nb_clocks index_of_variables type_of_variables location.name location.flow) then well_formed := false;*)
+			if not (check_flows_2 variable_infos location.name location.flow) then well_formed := false;
 
 
 			(* Check the convex predicate *)
@@ -930,7 +967,7 @@ let partition_loc_init_and_variable_inits init_definition =
     (* Return initial locations, initial inequalities *)
     initial_locations, init_inequalities
 
-(* Check wether an automaton has exactly one initial location *)
+(* Check whether an automaton has exactly one initial location *)
 let has_one_loc_per_automaton initial_locations parsed_model observer_automaton_index_option =
 
 	(* Check that every automaton is given at most one initial location *)
@@ -993,12 +1030,12 @@ let check_init_definition parsed_model =
     let rec check_init_predicate = function
         | Parsed_discrete_predicate (variable_name, expr) ->
             (* Check that l-value variable exist *)
-            if not (is_variable_or_constant_declared variable_infos.index_of_variables variable_infos.constants variable_name || List.mem variable_name variable_infos.removed_variable_names) then (
+            if not (ParsingStructureUtilities.is_variable_or_constant_declared variable_infos variable_name) then (
                 print_error ("Variable `" ^ variable_name ^ "` in discrete init is not declared");
                 false
             )
             (* And that all variables in expr are defined *)
-            else if not (ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression variable_infos expr) then (
+            else if not (ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression_without_callback variable_infos expr) then (
                 print_error ("Expression \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr ^ "\" use undeclared variable(s)");
                 false
             )
@@ -1022,7 +1059,7 @@ let check_init_definition parsed_model =
 
     and check_init_constraint = function
         (*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
-        | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when List.mem variable_name variable_infos.removed_variable_names ->
+        | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when ParsingStructureUtilities.is_variable_removed variable_infos variable_name ->
             print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
             (* Still check the second term *)
             if not (ParsingStructureUtilities.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message linear_expression) then (
@@ -1071,11 +1108,11 @@ let partition_discrete_continuous variable_infos filtered_init_inequalities =
 		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
 			let is_discrete =
 			(* Try to get the variable index *)
-			if (Hashtbl.mem variable_infos.index_of_variables variable_name) then (
-				let variable_index =  Hashtbl.find variable_infos.index_of_variables variable_name in
+			if (ParsingStructureUtilities.is_variable_is_defined variable_infos variable_name) then (
+				let variable_index =  index_of_variable_name variable_infos variable_name in
 				(* Keep if this is a discrete *)
 				DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
-			) else if (Hashtbl.mem variable_infos.constants variable_name) then
+			) else if (ParsingStructureUtilities.is_constant_is_defined variable_infos variable_name) then
 			    false
             else (
                 (* Otherwise: problem! *)
@@ -1142,7 +1179,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
     | Parsed_discrete_predicate (variable_name, expr) ->
 
         (* Check that initialized variable of name 'variable_name' is not a constant *)
-        if Hashtbl.mem variable_infos.constants variable_name then (
+        if ParsingStructureUtilities.is_constant_is_defined variable_infos variable_name then (
             print_error ("Initialize '" ^ variable_name ^ "' constant is forbidden");
             false
         )
@@ -1150,7 +1187,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
 
 
             (* Get the variable index *)
-            let discrete_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+            let discrete_index = index_of_variable_name variable_infos variable_name in
             (* TYPE CHECKING *)
             let converted_expr = DiscreteExpressionConverter.convert_discrete_init variable_infos variable_name expr in
 
@@ -1165,17 +1202,17 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
             )
             (* Try to reduce expression to a value *)
             else if not (DiscreteExpressionEvaluator.is_global_expression_constant converted_expr) then (
-                (* TODO benjamin CLEAN REPLACE BY STRING OF DiscreteExpression *)
+
                 print_error (
                     "Init variable \""
                     ^ variable_name
                     ^ "\" with a non constant expression \""
-                    ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
+                    ^ DiscreteExpressions.string_of_global_expression (variable_name_of_index variable_infos) converted_expr
                     ^ "\" is forbidden."
                 );
                 false
             ) else (
-                let value = DiscreteExpressionEvaluator.try_reduce_global_expression converted_expr in
+                let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression converted_expr in
                 Hashtbl.add init_values_for_discrete discrete_index value;
                 true
             )
@@ -1188,16 +1225,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
 (*------------------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
 (*------------------------------------------------------------*)
-(* TODO benjamin REFACTOR with check_variables_init *)
 let check_init (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
-
-    (* TODO benjamin remove here and use variable_info *)
-	let constants				= useful_parsing_model_information.constants in
-	let discrete				= useful_parsing_model_information.discrete in
-	let index_of_variables		= useful_parsing_model_information.index_of_variables in
-	let type_of_variables		= useful_parsing_model_information.type_of_variables in
-	let variable_names			= useful_parsing_model_information.variable_names in
-
 
     let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
 
@@ -1229,14 +1257,14 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
     well_formed := definitions_well_formed && one_loc_per_automaton && discrete_predicate_well_formed;
 
     (* Here if not well formed we can raise an error *)
-    if not(!well_formed) then
+    if not (!well_formed) then
         raise InvalidModel;
 
-    let discrete_predicates = List.map (function | Some x -> x | None -> raise (InternalError "impossible")) some_discrete_predicates in
+    let discrete_predicates = List.map OCamlUtilities.a_of_a_option some_discrete_predicates in
 
     (* Check init discrete section : discrete *)
 	(* Check that every discrete variable is given only one (rational) initial value *)
-	let init_values_for_discrete = Hashtbl.create (List.length discrete) in
+	let init_values_for_discrete = Hashtbl.create (List.length variable_infos.discrete) in
 
     (* Compute discrete init values and add to init hash table *)
     let discrete_initialization_well_formed = List.for_all (check_discrete_predicate_and_init variable_infos init_values_for_discrete) discrete_predicates in
@@ -1245,23 +1273,22 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 
 	(* Check that every discrete variable is given at least one initial value (if not: warns) *)
 	List.iter (fun discrete_index ->
-		if not (Hashtbl.mem init_values_for_discrete discrete_index) then(
-		    let variable_name = List.nth variable_names discrete_index in
-		    let variable_index =  Hashtbl.find index_of_variables variable_name in
-		    let variable_type = type_of_variables variable_index in
+		if not (Hashtbl.mem init_values_for_discrete discrete_index) then (
+		    let variable_name = variable_name_of_index variable_infos discrete_index in
+		    let variable_type = var_type_of_variable_name variable_infos variable_name in
 		    let default_value = DiscreteValue.default_value variable_type in
+
 			print_warning ("The discrete variable '" ^ variable_name ^ "' was not given an initial value in the init definition: it will be assigned to " ^ DiscreteValue.string_of_value default_value ^ ".");
 			Hashtbl.add init_values_for_discrete discrete_index default_value
 		);
-    ) discrete;
+    ) variable_infos.discrete;
 
 	(* Convert the Hashtbl to pairs (discrete_index, init_value) *)
 	let discrete_values_pairs =
 		List.map (fun discrete_index ->
 			discrete_index, Hashtbl.find init_values_for_discrete discrete_index
-		) discrete
+		) variable_infos.discrete
 	in
-
 
 (*    let other_inequalities = List.map (replace_unused_discrete_variable_by_constant variable_infos init_values_for_discrete) other_inequalities in*)
 
@@ -1279,20 +1306,8 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 
         (* Gathering all variables that are non rational *)
         let non_rational_variable_names = StringSet.filter (fun variable_name ->
-            if Hashtbl.mem index_of_variables variable_name then (
-                let variable_index = Hashtbl.find index_of_variables variable_name in
-                let variable_type = DiscreteType.discrete_type_of_var_type (type_of_variables variable_index) in
-                not (DiscreteType.is_discrete_type_rational_type variable_type)
-            )
-            else if Hashtbl.mem constants variable_name then (
-                let value =  Hashtbl.find constants variable_name in
-                let variable_type = DiscreteValue.discrete_type_of_value value in
-                not (DiscreteType.is_discrete_type_rational_type variable_type)
-            )
-            else (
-                (* Otherwise problem ! *)
-				raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
-            )
+            let discrete_type = ParsingStructureUtilities.discrete_type_of_variable_or_constant variable_infos variable_name in
+            not (DiscreteType.is_discrete_type_rational_type discrete_type)
         ) variable_names
         in
 
@@ -1304,7 +1319,7 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
                 ^ "` used in init constraint \""
                 ^ ParsingStructureUtilities.string_of_parsed_init_state_predicate variable_infos lp
                 ^ "\" should be "
-                ^ DiscreteType.string_of_var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational)
+                ^ DiscreteType.string_of_var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rat)
             );
             continuous_init_error := true;
         ) non_rational_variable_names
@@ -1405,7 +1420,6 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 	let index_of_actions		= useful_parsing_model_information.index_of_actions in
 	let index_of_automata		= useful_parsing_model_information.index_of_automata in
 	let index_of_locations		= useful_parsing_model_information.index_of_locations in
-	let index_of_variables		= useful_parsing_model_information.index_of_variables in
 	let actions					= useful_parsing_model_information.actions in
 	let removed_action_names	= useful_parsing_model_information.removed_action_names in
 
@@ -1544,9 +1558,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				(* Convert the stopwatches names into variables *)
 				let list_of_stopwatch_names = list_only_once location.stopped in
 				(* Update the array of stopwatches *)
-				stopwatches_array.(automaton_index).(location_index) <- List.map (fun clock_index ->
-					Hashtbl.find index_of_variables clock_index
-				) list_of_stopwatch_names;
+				stopwatches_array.(automaton_index).(location_index) <- List.map (index_of_variable_name variable_infos) list_of_stopwatch_names;
 
 				(* Does the model has clocks with <> rate? *)
 				(*** NOTE: technically, we should update the flag only whenever the rate is <> 1… ***)
@@ -1557,8 +1569,8 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 					(* Sort the list and remove duplicates, just to potentially speed up a bit *)
 					List.sort_uniq compare
 					(
-						List.map (fun (clock_index, flow_value) ->
-							(Hashtbl.find index_of_variables clock_index), flow_value
+						List.map (fun (clock_name, flow_value) ->
+							(index_of_variable_name variable_infos clock_name), flow_value
 						) location.flow
 					);
 
@@ -1643,8 +1655,8 @@ let get_conditional_update_value = function
 
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filter_updates removed_variable_names updates =
-  let not_removed_variable (variable_access, _) =
-    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
+  let not_removed_variable (parsed_variable_update_type, _) =
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type in
     match variable_name_opt with
     | Some variable_name ->
         not (List.mem variable_name removed_variable_names)
@@ -1661,43 +1673,54 @@ let filter_updates removed_variable_names updates =
     ) [] updates
 
 
-
-
 (** Translate a parsed clock update into its abstract model *)
 let to_abstract_clock_update variable_infos only_resets updates_list =
 
-  (** Translate parsed clock update into the tuple clock_index, linear_term *)
-  let to_intermediate_abstract_clock_update (variable_access, update_expr) =
-    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
-    match variable_name_opt with
-    | Some variable_name ->
-        let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
-        let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos variable_access update_expr in
-        (variable_index, converted_update)
-    | None -> raise (InternalError "Try to convert a unit expression to a clock.")
-  in
+    (** Translate parsed clock update into the tuple clock_index, linear_term *)
+    let to_intermediate_abstract_clock_update clock_update =
 
-  let converted_clock_updates = List.map to_intermediate_abstract_clock_update updates_list in
+        let parsed_variable_update_type, update_expr = clock_update in
 
-  (* Differentiate between different kinds of clock updates *)
-  let clock_updates : clock_updates =
+        (* Check that clock update is a linear expression *)
+        let is_linear = ParsingStructureUtilities.is_linear_parsed_global_expression variable_infos update_expr in
+        if not is_linear then
+            raise (InvalidExpression (
+                "Clock update `"
+                ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos clock_update
+                ^ "` is not a linear expression. A linear expression is expected for clock update."
+            ));
+
+        let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type in
+        match variable_name_opt with
+        | Some variable_name ->
+            let variable_index = index_of_variable_name variable_infos variable_name in
+            let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos parsed_variable_update_type update_expr in
+            (variable_index, converted_update)
+        (* TODO benjamin REFACTOR it never can happen, should pass variable_name, update_expr instead of parsed_update_variable_type, update_expr *)
+        | None -> raise (InternalError "Try to convert a unit expression value to a rational-valued clock.")
+    in
+
+    let converted_clock_updates = List.map to_intermediate_abstract_clock_update updates_list in
+
+    (* Differentiate between different kinds of clock updates *)
+    let clock_updates : clock_updates =
     (* Case 1: no update *)
     if converted_clock_updates = [] then
         No_update
     else (
-      (* Case 2: resets only *)
-      if only_resets then (
-        (* Keep only the clock ids, not the linear terms *)
-        let clocks_to_reset, _ = List.split converted_clock_updates in
-        Resets (List.rev clocks_to_reset)
-      ) else
-        (* Case 3: complex with linear terms *)
-        Updates (List.rev converted_clock_updates)
+        (* Case 2: resets only *)
+        if only_resets then (
+            (* Keep only the clock ids, not the linear terms *)
+            let clocks_to_reset, _ = List.split converted_clock_updates in
+            Resets (List.rev clocks_to_reset)
+        ) else
+            (* Case 3: complex with linear terms *)
+            Updates (List.rev converted_clock_updates)
     )
-  in
+    in
 
-  (** abstract clock updates *)
-  clock_updates
+    (** abstract clock updates *)
+    clock_updates
 
 (* Check if there is only resets in an update list *)
 let is_only_resets updates =
@@ -1710,20 +1733,23 @@ let is_only_resets updates =
 
 (** Split normal updates into clock, discrete updates *)
 let split_to_clock_discrete_updates variable_infos updates =
-  (** Check if a normal update is a clock update *)
-  let is_clock_update (variable_access, parsed_update_expression) =
 
-    let variable_name_opt = ParsingStructureUtilities.variable_name_of_variable_access variable_access in
-    match variable_name_opt with
-    | Some variable_name ->
-        (* Retrieve variable type *)
-        if variable_infos.type_of_variables (Hashtbl.find variable_infos.index_of_variables variable_name) = DiscreteType.Var_type_clock then (
-            true
-        ) else
-          false
-    | None -> false (* Unit update, so it's not a clock *)
-  in
-  List.partition is_clock_update updates
+    (** Function that check if a normal update is a clock update *)
+    let is_clock_update (parsed_variable_update_type, _) =
+
+        (* Get updated variable name *)
+        let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type in
+
+        match variable_name_opt with
+        | Some variable_name ->
+            (* Retrieve variable type *)
+            variable_infos.type_of_variables (index_of_variable_name variable_infos variable_name) = DiscreteType.Var_type_clock
+        (* Unit update, so it's not a clock *)
+        | None -> false
+    in
+
+    List.partition is_clock_update updates
+
 
 (** Translate a normal parsed update into its abstract model *)
 let convert_normal_updates variable_infos updates_type updates_list =
@@ -1738,13 +1764,13 @@ let convert_normal_updates variable_infos updates_type updates_list =
     (match updates_type with
     | Parsed_pre_updates
     | Parsed_post_updates when List.length parsed_clock_updates > 0 ->
-        print_error "`let` bloc is reserved for sequential updates on discrete variables. This bloc cannot be used for updating clock(s).";
+        print_error "`do` bloc is reserved for sequential updates on discrete variables. This bloc cannot be used for updating clock(s).";
         raise InvalidModel
     | _ -> ()
     );
 
     (* Convert discrete udpates *)
-    let converted_discrete_updates = List.map (fun (variable_access, expr) -> DiscreteExpressionConverter.convert_update variable_infos updates_type variable_access expr) parsed_discrete_updates in
+    let converted_discrete_updates = List.map (fun (parsed_variable_update_type, expr) -> DiscreteExpressionConverter.convert_update variable_infos updates_type parsed_variable_update_type expr) parsed_discrete_updates in
     (* Convert continuous udpates *)
     let converted_clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
 
@@ -2077,7 +2103,7 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_EF parsed_state_predicate
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate
-			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+			-> ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 			
 		
 		(*------------------------------------------------------------*)
@@ -2088,13 +2114,13 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
 		| Parsed_EFpmax (parsed_state_predicate , parameter_name)
 			(* First get the variables in the state predicate *)
-			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
+			-> ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
 			(* Then add the parameter name *)
 			variables_used_ref := StringSet.add parameter_name !variables_used_ref
 		
 		(* Reachability with minimal-time *)
 		| Parsed_EFtmin parsed_state_predicate
-			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+			-> ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 
 		
 		(*------------------------------------------------------------*)
@@ -2103,11 +2129,11 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate
-			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+			-> ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 
 		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 		| Parsed_Cycle_Through_generalized parsed_state_predicate_list
-			-> List.iter (get_variables_in_parsed_state_predicate variables_used_ref) parsed_state_predicate_list
+			-> List.iter (ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref) parsed_state_predicate_list
 
 		(** Infinite-run (cycle) with non-Zeno assumption *)
 		| Parsed_NZ_Cycle -> ()
@@ -2139,7 +2165,7 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		(* Non-complete, non-deterministic inverse method with convex result *)
 		| Parsed_PRP (parsed_state_predicate , parsed_pval) ->
 			(* First get the variables in the state predicate *)
-			get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
+			ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
 			(* Then add the pval *)
 			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_pval parsed_pval))
 		
@@ -2168,7 +2194,7 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, _)
 			->
 			(* First get the variables in the state predicate *)
-			get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
+			ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
 			(* Then add the HyperRectangle *)
 			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle));
 
@@ -2552,11 +2578,11 @@ let check_parsed_state_predicate parsing_infos expr =
 (*------------------------------------------------------------*)
 let check_parameter_name suffix_explanation_string variable_infos parameter_name =
 	(* First check it is a variable *)
-	if not(Hashtbl.mem variable_infos.index_of_variables parameter_name) then(
+	if not (ParsingStructureUtilities.is_variable_is_defined variable_infos parameter_name) then(
 		print_error ("Parameter " ^ parameter_name ^ " is not a defined variable" ^ suffix_explanation_string);
 		false
 	) else(
-		let parameter_index = Hashtbl.find variable_infos.index_of_variables parameter_name in
+		let parameter_index = index_of_variable_name variable_infos parameter_name in
 		if not(variable_infos.type_of_variables parameter_index = DiscreteType.Var_type_parameter) then(
 			print_error ("Variable " ^ parameter_name ^ " is not a parameter" ^ suffix_explanation_string);
 			false
@@ -2927,7 +2953,7 @@ let convert_parsed_hyper_rectangle variable_infos (parsed_hyper_rectangle : Pars
 	List.iter (fun (variable_name, a, b) ->
 		try
 			(* Get the variable index *)
-			let variable_index = Hashtbl.find variable_infos.index_of_variables variable_name in
+			let variable_index = index_of_variable_name variable_infos variable_name in
 			(* Update the variable value *)
 			hyper_rectangle#set_min variable_index a;
 			hyper_rectangle#set_max variable_index b;
@@ -3351,7 +3377,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         variable_names = [];
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];
-        type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rational);
+        discrete = [];
+        type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rat);
     }
     in
 
@@ -3361,7 +3388,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* Create variable infos containing only initialized constants *)
         let current_variable_infos = { variable_infos with constants = initialized_constants } in
         (* Check all constants used are defined *)
-        let all_variable_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression current_variable_infos expr in
+        let all_variable_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression_without_callback current_variable_infos expr in
         if not all_variable_defined then (
             print_error (
                 "Expression \""
@@ -3376,8 +3403,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         let constant = name, expr, var_type in
 
         let typed_expr(*, expr_type *) = DiscreteExpressionConverter.convert_discrete_constant initialized_constants constant in
-        let value = DiscreteExpressionEvaluator.try_reduce_global_expression typed_expr in
-        ImitatorUtilities.print_message Verbose_standard "";
+        let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression typed_expr in
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;
         (* Return *)
@@ -3532,8 +3558,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	)
 	in
 
-    (*  *)
-(*    let convert_discrete_names_by_type = List.map (fun (var_type, var_name) -> convert_var_type var_type, var_name) discrete_names_by_type in*)
     (* Group variable names by types *)
 	let discrete_names_by_type_group = OCamlUtilities.group_by_and_map (fun (var_type, var_name) -> var_type) (fun (var_type, var_name) -> var_name) discrete_names_by_type in
 

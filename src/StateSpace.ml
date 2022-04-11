@@ -10,7 +10,6 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne, Dylan Marinho
  * Created           : 2009/12/08
- * Last modified     : 2021/11/15
  *
  ************************************************************)
 

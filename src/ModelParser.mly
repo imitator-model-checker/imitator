@@ -10,7 +10,6 @@
  *
  * File contributors : Étienne André, Jaime Arias, Benjamin Loillier, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2021/10/26
  *
  ************************************************************/
 
@@ -69,7 +68,7 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY CT_DO CT_LET CT_IN CT_POST
+	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY CT_DO CT_LET CT_IN
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -185,7 +184,7 @@ decl_var_list:
 
 var_type:
 	| CT_CLOCK { Var_type_clock }
-	| CT_CONSTANT { Var_type_discrete (Var_type_discrete_number Var_type_discrete_rational) }
+	| CT_CONSTANT { Var_type_discrete (Var_type_discrete_number Var_type_discrete_rat) }
 	| CT_PARAMETER { Var_type_parameter }
 	| var_type_discrete { Var_type_discrete $1 }
 ;
@@ -223,7 +222,7 @@ var_type_discrete_queue:
 
 
 var_type_discrete_number:
-    | CT_DISCRETE { Var_type_discrete_rational }
+    | CT_DISCRETE { Var_type_discrete_rat }
     | CT_INT { Var_type_discrete_int }
 ;
 
@@ -449,12 +448,12 @@ updates:
 ;
 
 let_in_updates:
-  | CT_LET update_seq_nonempty_list in_updates { $2, $3, [] }
+  | CT_DO update_seq_nonempty_list in_updates { $2, $3, [] }
   | update_list { [], $1, [] }
 ;
 
 in_updates:
-  | CT_IN update_nonempty_list end_opt { $2 }
+  | CT_THEN update_nonempty_list end_opt { $2 }
   | { [] }
 ;
 
@@ -490,9 +489,9 @@ update_seq_nonempty_list:
 /************************************************************/
 
 /* Variable or variable access */
-variable_access:
+parsed_variable_update_type:
   | NAME { Parsed_variable_update $1 }
-  | variable_access LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
+  | parsed_variable_update_type LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
 ;
 
 /** Normal updates */
@@ -514,7 +513,7 @@ update:
 		(Parsed_variable_update $1, $3)
 	}
 
-	| variable_access OP_ASSIGN expression { ($1, $3) }
+	| parsed_variable_update_type OP_ASSIGN expression { ($1, $3) }
   | expression { (Parsed_void_update, $1) }
 ;
 
@@ -746,10 +745,6 @@ pos_float:
 
 boolean_expression:
 	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
-	/*
-	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
-	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
-	*/
 	| boolean_expression AMPERSAND boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
   | boolean_expression PIPE boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
 ;

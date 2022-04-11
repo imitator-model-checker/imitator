@@ -8,7 +8,6 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/10
- * Last modified     : 2021/06/02
  *
  ************************************************************)
 
@@ -956,8 +955,8 @@ let string_of_queue_expression = customized_string_of_queue_expression Constants
 let rec string_of_variable_update_type variable_names = function
     | Variable_update discrete_index ->
         variable_names discrete_index
-    | Indexed_update (variable_access, index_expr) ->
-        string_of_variable_update_type variable_names variable_access
+    | Indexed_update (parsed_variable_update_type, index_expr) ->
+        string_of_variable_update_type variable_names parsed_variable_update_type
         ^ "["
         ^ string_of_int_arithmetic_expression variable_names index_expr
         ^ "]"

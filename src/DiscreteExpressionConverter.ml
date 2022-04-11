@@ -10,7 +10,6 @@
  *
  * File contributors : Benjamin L.
  * Created           : 2021/11/20
- * Last modified     : 2021/11/20
  *
  ************************************************************)
 open Constants
@@ -30,13 +29,14 @@ let convert_discrete_init variable_infos variable_name expr =
     ExpressionConverter.Convert.global_expression_of_typed_global_expression variable_infos typed_expr
 
 let convert_discrete_constant initialized_constants (name, expr, var_type) =
-
+    (* Create fake variable_infos containing just initialized constants *)
     let variable_infos = {
         constants = initialized_constants;
         variable_names = [];
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];
         type_of_variables = (fun _ -> raise (TypeError "oops!"));
+        discrete = [];
     }
     in
 
@@ -118,7 +118,10 @@ let convert_guard variable_infos guard_convex_predicate =
             let discrete_guard = nonlinear_constraint_of_convex_predicate variable_infos discrete_guard_convex_predicate in
             let continuous_guard = linear_constraint_of_convex_predicate variable_infos continuous_guard_convex_predicate in
 
-            (* TODO maybe it's possible to make this optimisation with non linear discrete guard ? *)
+            (* TODO benjamin, check if optimization is possible *)
+            (* NOTE : This optimization (below) was possible when discrete part use only rational-valued variables
+               I don't think that it's possible anymore *)
+
             (*** NOTE: try to simplify a bit if possible (costly, but would save a lot of time later if checks are successful) ***)
             (*      let intersection = LinearConstraint.pxd_intersection_with_d continuous_guard discrete_guard in*)
 
@@ -135,14 +138,14 @@ let convert_guard variable_infos guard_convex_predicate =
     (* If some false construct found: false guard *)
     ) with False_exception -> False_guard
 
-let convert_update variable_infos updates_type variable_access expr =
-    let typed_variable_access, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos updates_type variable_access expr in
-    ExpressionConverter.Convert.variable_access_of_typed_variable_access variable_infos typed_variable_access,
+let convert_update variable_infos updates_type parsed_variable_update_type expr =
+    let typed_variable_update_type, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos updates_type parsed_variable_update_type expr in
+    ExpressionConverter.Convert.parsed_variable_update_type_of_typed_variable_update_type variable_infos typed_variable_update_type,
     ExpressionConverter.Convert.global_expression_of_typed_global_expression variable_infos typed_expr
 
-let convert_continuous_update variable_infos variable_access expr =
-    let typed_variable_access, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos Parsed_updates variable_access expr in
-    ExpressionConverter.Convert.variable_access_of_typed_variable_access variable_infos typed_variable_access,
+let convert_continuous_update variable_infos parsed_variable_update_type expr =
+    let typed_variable_update_type, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos Parsed_updates parsed_variable_update_type expr in
+    ExpressionConverter.Convert.parsed_variable_update_type_of_typed_variable_update_type variable_infos typed_variable_update_type,
     ExpressionConverter.Convert.linear_term_of_typed_global_expression variable_infos typed_expr
 
 

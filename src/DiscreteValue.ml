@@ -10,7 +10,6 @@
  *
  * File contributors : Benjamin L., Étienne André
  * Created           : 2021/03/01
- * Last modified     : 2021/09/23
  *
  ************************************************************)
 
@@ -82,7 +81,7 @@ let add (type t) (a : t discrete_value2) (b : t discrete_value2) : t discrete_va
 (* Get discrete var type of a discrete value *)
 let rec discrete_type_of_value = function
     | Number_value _ -> Var_type_discrete_number Var_type_discrete_unknown_number
-    | Rational_value _ -> Var_type_discrete_number Var_type_discrete_rational
+    | Rational_value _ -> Var_type_discrete_number Var_type_discrete_rat
     | Int_value _ -> Var_type_discrete_number Var_type_discrete_int
     | Bool_value _ -> Var_type_discrete_bool
     | Binary_word_value value -> Var_type_discrete_binary_word (BinaryWord.length value)
@@ -208,7 +207,7 @@ let default_queue_value = Queue_value (Queue.create ())
 (* Get default discrete number value *)
 let default_discrete_number_value = function
     | Var_type_discrete_unknown_number
-    | Var_type_discrete_rational -> default_rational
+    | Var_type_discrete_rat -> default_rational
     | Var_type_discrete_int -> default_int
 
 (* Get default discrete value *)
@@ -341,13 +340,13 @@ let convert_to_rational_value value =
 let rec convert_value_to_discrete_type value target_type =
     match value, target_type with
     (* Source and target type are identical *)
-    | Rational_value _, Var_type_discrete_number Var_type_discrete_rational
+    | Rational_value _, Var_type_discrete_number Var_type_discrete_rat
     | Int_value _, Var_type_discrete_number Var_type_discrete_int
     | Number_value _, Var_type_discrete_number Var_type_discrete_unknown_number -> value
     (* Number_value to Rational_value *)
-    | Number_value _, Var_type_discrete_number Var_type_discrete_rational
+    | Number_value _, Var_type_discrete_number Var_type_discrete_rat
     (* Int_value to Rational_value *)
-    | Int_value _, Var_type_discrete_number Var_type_discrete_rational ->
+    | Int_value _, Var_type_discrete_number Var_type_discrete_rat ->
         Rational_value (to_numconst_value value)
     (* Number_value to Int_value *)
     | Number_value _, Var_type_discrete_number Var_type_discrete_int

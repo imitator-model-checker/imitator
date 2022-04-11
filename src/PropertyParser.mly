@@ -8,7 +8,6 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2021/09/16
  *
  ************************************************************/
 
@@ -318,11 +317,6 @@ state_predicate_factor:
 simple_predicate:
 	| discrete_boolean_predicate { Parsed_discrete_boolean_expression($1) }
 	| loc_predicate { Parsed_loc_predicate ($1) }
-  /* TODO benjamin remove for avoid conflict with CT_TRUE and CT_FALSE in arithmetic_factor rule */
-  /* We pass from 20 reduce conflicts to 34 reduce conflicts by adding CT_TRUE and CT_FALSE in factor, but we have to do that in order to managing booleans */
-  /* So the best solution is to remove theses literal representations from grammar here */
-	/*| CT_TRUE { Parsed_state_predicate_true }*/
-	/*| CT_FALSE { Parsed_state_predicate_false }*/
 	| CT_ACCEPTING { Parsed_state_predicate_accepting }
 ;
 

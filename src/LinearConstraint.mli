@@ -10,7 +10,6 @@
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/07/09
  *
  ************************************************************)
 

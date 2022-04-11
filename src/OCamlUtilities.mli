@@ -9,7 +9,6 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -38,6 +37,16 @@ val round3_float : float -> string
 (** Get the value of an 'a option that is assumed to be different from None, or raise NoneException otherwise *)
 val a_of_a_option : 'a option -> 'a
 
+(************************************************************)
+(** Useful lambda functions *)
+(************************************************************)
+val identity : 'a -> 'a
+
+(************************************************************)
+(** Useful functions on tuples *)
+(************************************************************)
+val first_of_tuple : 'a * 'b -> 'a
+val second_of_tuple : 'a * 'b -> 'b
 
 (************************************************************)
 (** Useful functions on lists *)

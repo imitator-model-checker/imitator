@@ -61,8 +61,10 @@ let try_eval_queue_top seq (* fail_message *) = eval_if_not_empty Queue.length Q
 (* For example in constant declaration, in this case trying to evaluate a variable raise an error *)
 let try_eval_variable variable_index = function
     | Some discrete_valuation -> discrete_valuation variable_index
-    | None -> raise (InternalError ("Unable to reduce a non-constant expression."))
+    (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
+    | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
 
+(* Evaluate an expression *)
 let rec eval_global_expression discrete_valuation = function
     | Arithmetic_expression expr -> eval_discrete_arithmetic_expression discrete_valuation expr
     | Bool_expression expr -> Bool_value (eval_boolean_expression discrete_valuation expr)
@@ -479,8 +481,8 @@ and get_expression_access_value discrete_valuation index_expr = function
         get_list_value_at discrete_valuation list_expr index_expr
 
 
-(* Wrap a scalar value to an array value in function of the modified index of an old value *)
-(* For example old_value[0] = 1 with old value = [0, 1] would wrap new_value into an array as new_value = [1, 1] *)
+(* Wrap a scalar value to an array value according to the modified index of an old value *)
+(* For example: `old_value[0] = 1` with old value = [0, 1], would wrap new_value into an array `new_value = [1, 1]` *)
 (* This function is used to assign an element of an array at a given index *)
 (* a = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]] *)
 (* a[1][1][0] = 0 *)
@@ -488,14 +490,14 @@ and get_expression_access_value discrete_valuation index_expr = function
 (* a[1] = [[5, 6], [7, 8]] *)
 (* a[1][1] = [7, 8] *)
 (* a[1][1][0] = 7 *)
-let pack_value variable_names discrete_valuation old_value new_value variable_access =
+let pack_value variable_names discrete_valuation old_value new_value parsed_variable_update_type =
 
     let rec pack_value_rec = function
         | Void_update -> old_value, [||], None
         | Variable_update discrete_index -> old_value, [||], None
-        | Indexed_update (inner_variable_access, index_expr) ->
+        | Indexed_update (inner_parsed_variable_update_type, index_expr) ->
 
-            let old_value, _, _ = pack_value_rec inner_variable_access in
+            let old_value, _, _ = pack_value_rec inner_parsed_variable_update_type in
 
             (* Compute index *)
             let index = Int32.to_int (eval_int_expression discrete_valuation index_expr) in
@@ -505,8 +507,8 @@ let pack_value variable_names discrete_valuation old_value new_value variable_ac
 
             (* Check bounds *)
             if index >= Array.length old_array || index < 0 then (
-                let str_variable_access = DiscreteExpressions.string_of_variable_update_type variable_names variable_access in
-                raise (Out_of_bound ("Array index out of range: `" ^ str_variable_access ^ "`"))
+                let str_parsed_variable_update_type = DiscreteExpressions.string_of_variable_update_type variable_names parsed_variable_update_type in
+                raise (Out_of_bound ("Array index out of range: `" ^ str_parsed_variable_update_type ^ "`"))
             );
 
             (* Get element at given index *)
@@ -514,7 +516,7 @@ let pack_value variable_names discrete_valuation old_value new_value variable_ac
 (*            ImitatorUtilities.print_message Verbose_standard ("unpacked old array: " ^ DiscreteValue.string_of_value unpacked_old_array);*)
             unpacked_old_array, old_array, Some index
     in
-    let unpacked_old_array, old_array, some_index = pack_value_rec variable_access in
+    let unpacked_old_array, old_array, some_index = pack_value_rec parsed_variable_update_type in
     match some_index with
     | Some index ->
         old_array.(index) <- new_value;
@@ -522,14 +524,25 @@ let pack_value variable_names discrete_valuation old_value new_value variable_ac
         old_value
     | None -> new_value
 
-let try_reduce_global_expression = eval_global_expression None
-let try_reduce_rational_term = eval_rational_term None
-let try_reduce_rational_factor = eval_rational_factor None
+
+(* Try to evaluate a constant global expression, if expression isn't constant, it raise an error *)
+let try_eval_constant_global_expression = eval_global_expression None
+(* Try to evaluate a constant rational term, if expression isn't constant, it raise an error *)
+let try_eval_constant_rational_term = eval_rational_term None
+(* Try to evaluate a constant rational factor, if expression isn't constant, it raise an error *)
+let try_eval_constant_rational_factor = eval_rational_factor None
+
+(* Try to evaluate a constant global expression, if expression isn't constant, it return None *)
+let eval_constant_global_expression_opt expr = try Some (try_eval_constant_global_expression expr) with _ -> None
+(* Try to evaluate a constant rational term, if expression isn't constant, it return None *)
+let eval_constant_rational_term_opt expr = try Some (try_eval_constant_rational_term expr) with _ -> None
+(* Try to evaluate a constant rational factor, if expression isn't constant, it return None *)
+let eval_constant_rational_factor_opt expr = try Some (try_eval_constant_rational_factor expr) with _ -> None
 
 (* TODO benjamin REPLACE BY A REAL EVALUATION OF CONSTANT and not this tricky function using try *)
 let is_global_expression_constant expr =
     try (
-        let _ = try_reduce_global_expression expr in
+        let _ = try_eval_constant_global_expression expr in
         true
     )
     with _ -> false

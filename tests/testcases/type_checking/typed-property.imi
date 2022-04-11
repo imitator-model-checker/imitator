@@ -13,7 +13,7 @@ automaton P
     loc s0: invariant True
       when x<=1 & b = (True) & i = 1 & i = 1 do {
 
-        let
+        do
           stack_push(1, int_stack);
           w := 0b0001
 

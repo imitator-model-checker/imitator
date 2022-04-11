@@ -8,7 +8,6 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2015/11/27
- * Last modified     : 2021/03/19
  *
  ************************************************************)
 

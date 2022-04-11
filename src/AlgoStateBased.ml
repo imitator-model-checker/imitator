@@ -12,7 +12,6 @@
  *
  * File contributors : Étienne André, Johan Arcile, Jaime Arias, Nguyễn Hoàng Gia, Dylan Marinho
  * Created           : 2015/12/02
- * Last modified     : 2022/02/23
  *
  ************************************************************)
 
@@ -1395,9 +1394,9 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 	let model = Input.get_model() in
 
 
-    let rec discrete_index_of_variable_access = function
+    let rec discrete_index_of_parsed_variable_update_type = function
         | Variable_update discrete_index -> Some discrete_index
-        | Indexed_update (variable_access, _) -> discrete_index_of_variable_access variable_access
+        | Indexed_update (parsed_variable_update_type, _) -> discrete_index_of_parsed_variable_update_type parsed_variable_update_type
         | Void_update -> None
     in
 
@@ -1424,7 +1423,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
         List.iter (fun (variable_update_type, expr) ->
 
             let discrete_valuation = Location.get_discrete_value location in
-            let discrete_index_opt = discrete_index_of_variable_access variable_update_type in
+            let discrete_index_opt = discrete_index_of_parsed_variable_update_type variable_update_type in
 
             match discrete_index_opt with
             | None ->
@@ -1433,7 +1432,8 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
                 let old_value = discrete_valuation discrete_index in
 
-                (* TODO benjamin put a comment here to explain Some *)
+                (* Adding some because discrete valuation is optional because
+                   it's not necessary when evaluating constant expressions *)
                 let discrete_valuation_opt = Some discrete_valuation in
 
                 (* Compute its new value *)
@@ -1449,7 +1449,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		List.iter (fun (variable_update_type, global_expression) ->
 
             let discrete_valuation = Location.get_discrete_value location in
-            let discrete_index_opt = discrete_index_of_variable_access variable_update_type in
+            let discrete_index_opt = discrete_index_of_parsed_variable_update_type variable_update_type in
 
             match discrete_index_opt with
             | None ->
@@ -1458,7 +1458,8 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
                 let old_value = discrete_valuation discrete_index in
 
-                (* TODO benjamin put a comment here to explain Some *)
+                (* Adding some because discrete valuation is optional because
+                   it's not necessary when evaluating constant expressions *)
                 let discrete_valuation_opt = Some discrete_valuation in
 
                 (* Compute its new value *)
@@ -1530,7 +1531,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
         List.iter (fun (variable_update_type, expr) ->
 
             let discrete_valuation = Location.get_discrete_value location in
-            let discrete_index_opt = discrete_index_of_variable_access variable_update_type in
+            let discrete_index_opt = discrete_index_of_parsed_variable_update_type variable_update_type in
 
             match discrete_index_opt with
             | None ->
@@ -1539,7 +1540,8 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
                 let old_value = discrete_valuation discrete_index in
 
-                (* TODO benjamin put a comment here to explain Some *)
+                (* Adding some because discrete valuation is optional because
+                   it's not necessary when evaluating constant expressions *)
                 let discrete_valuation_opt = Some discrete_valuation in
 
                 (* Compute its new value *)

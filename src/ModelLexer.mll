@@ -10,7 +10,6 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2021/07/19
 *****************************************************************)
 
 {
@@ -81,7 +80,6 @@ rule token = parse
 	| "do"             { CT_DO }
   | "let"            { CT_LET }
   | "in"             { CT_IN }
-  | "post"           { CT_POST }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
  	| "eventually"     { CT_EVENTUALLY }
