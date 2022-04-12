@@ -239,6 +239,9 @@ and eval_int_expression discrete_valuation (* expr *) =
         | Queue_length queue_expr ->
             let queue = eval_queue_expression discrete_valuation queue_expr in
             Int32.of_int (Queue.length queue)
+        | Int_function_call (function_name, expr) ->
+            let result = eval_user_function_call function_name expr in
+            int_value result
     in
     eval_int_expression_rec
 
@@ -480,6 +483,29 @@ and get_expression_access_value discrete_valuation index_expr = function
     | Expression_list_access list_expr ->
         get_list_value_at discrete_valuation list_expr index_expr
 
+(* TODO benjamin IMPLEMENT implement eval of user functions *)
+(*
+and eval_fun_decl_or_expr discrete_valuation local_variables = function
+    | Fun_local_decl (variable_name, var_type, expr, decl_or_expr) ->
+        (* TODO benjamin IMPLEMENT missing local variable in global expr eval *)
+        let value = eval_global_expression discrete_valuation expr in
+        Hashtbl.add local_variables variable_name value;
+        eval_fun_decl_or_expr discrete_valuation local_variables decl_or_expr
+    | Fun_expr expr ->
+        (* TODO benjamin IMPLEMENT missing local variable in global expr eval *)
+        eval_global_expression discrete_valuation expr
+*)
+and eval_user_function_call function_name arguments =
+(*
+    let fun_def_opt = Hashtbl.find_opt model.fun_definitions function_name in
+    let fun_def =
+        match fun_def_opt with
+        | Some fun_def -> fun_def
+        | None -> raise (UndefinedFunction function_name)
+    in
+    eval_fun_decl_or_expr (Hashtbl.create ()) fun_def.body
+*)
+    Int_value Int32.zero
 
 (* Wrap a scalar value to an array value according to the modified index of an old value *)
 (* For example: `old_value[0] = 1` with old value = [0, 1], would wrap new_value into an array `new_value = [1, 1]` *)

@@ -95,6 +95,18 @@ and typed_state_predicate =
 
 type typed_guard = typed_discrete_boolean_expression list
 
+type typed_fun_decl_or_expr =
+    | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_decl_or_expr
+    | Typed_fun_expr of typed_global_expression
+
+
+type typed_fun_definition = {
+    name : variable_name; (* function name *)
+    parameters : variable_name list; (* parameter names *)
+    signature : var_type_discrete list; (* signature *)
+    body : typed_fun_decl_or_expr; (* body *)
+}
+
 val get_type_of_variable_by_name : variable_infos -> variable_name -> var_type
 val get_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type option
 val get_discrete_type_of_variable_by_name : variable_infos -> variable_name -> var_type_discrete
@@ -205,6 +217,16 @@ and typed_state_predicate =
 
 type typed_guard = typed_discrete_boolean_expression list
 
+type typed_fun_decl_or_expr =
+    | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_decl_or_expr
+    | Typed_fun_expr of typed_global_expression
+
+type typed_fun_definition = {
+    name : variable_name; (* function name *)
+    parameters : variable_name list; (* parameter names *)
+    signature : var_type_discrete list; (* signature *)
+    body : typed_fun_decl_or_expr; (* body *)
+}
 
 (** Strings **)
 
@@ -971,6 +993,62 @@ let rec type_check_parsed_variable_update_type variable_infos = function
         Typed_parsed_variable_update_type (typed_variable_update_type, typed_index_expr_type, discrete_type), discrete_type, is_parsed_variable_update_type_has_side_effects || is_index_expr_has_side_effects
 
     | Parsed_void_update -> Typed_void_update, Var_type_weak, false
+
+
+let rec type_check_fun_decl_or_expr variable_infos infer_type_opt = function
+    | Parsed_fun_local_decl (variable_name, discrete_type, expr, decl_or_expr) ->
+
+        let converted_discrete_type = ParsingStructureUtilities.convert_var_type_discrete discrete_type in
+        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression variable_infos infer_type_opt expr in
+        let typed_decl_or_expr, decl_or_expr_discrete_type, is_decl_or_expr_has_side_effects = type_check_fun_decl_or_expr variable_infos infer_type_opt decl_or_expr in
+
+        (* Check compatibility between local var type and it's init expression *)
+        if not (is_discrete_type_compatibles converted_discrete_type init_discrete_type) then (
+            (* TODO benjamin IMPLEMENT fill message *)
+            raise (TypeError (
+                ""
+            ))
+        );
+
+        Typed_fun_local_decl (
+            variable_name,
+            converted_discrete_type,
+            typed_init_expr,
+            typed_decl_or_expr
+        ), decl_or_expr_discrete_type, is_init_expr_has_side_effects || is_decl_or_expr_has_side_effects
+
+    | Parsed_fun_expr expr ->
+        let typed_expr, discrete_type, has_side_effects = type_check_global_expression variable_infos infer_type_opt expr in
+        Typed_fun_expr typed_expr, discrete_type, has_side_effects
+
+let type_check_parsed_fun_definition variable_infos infer_type_opt (fun_definition : ParsingStructure.parsed_fun_definition) =
+    (*  *)
+    let converted_signature = List.map ParsingStructureUtilities.convert_var_type_discrete fun_definition.signature in
+    let parameter_discrete_types, return_type = FunctionSig.split_signature converted_signature in
+    let nb_parameter = List.length parameter_discrete_types in
+    let local_variables_types = Hashtbl.create nb_parameter in
+
+    (* Add parameters as local variables of the function *)
+    for i = 0 to nb_parameter - 1 do
+        let parameter_name = List.nth fun_definition.parameters i in
+        let parameter_type = List.nth parameter_discrete_types i in
+        Hashtbl.add local_variables_types parameter_name parameter_type
+    done;
+
+    let typed_body, body_discrete_type, is_body_has_side_effects = type_check_fun_decl_or_expr variable_infos infer_type_opt fun_definition.body in
+    (* Check type compatibility between function body and return type *)
+    let is_body_type_compatible = is_discrete_type_compatibles body_discrete_type return_type in
+
+    let typed_fun_definition = {
+        name = fun_definition.name;
+        parameters = fun_definition.parameters;
+        signature = converted_signature;
+        body = typed_body;
+    }
+    in
+
+    typed_fun_definition, return_type, is_body_has_side_effects
+
 
 let type_check_parsed_loc_predicate variable_infos infer_type_opt = function
 	| Parsed_loc_predicate_EQ (automaton_name, loc_name) -> Typed_loc_predicate_EQ (automaton_name, loc_name), Var_type_discrete_bool, false

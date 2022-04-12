@@ -3678,6 +3678,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* An array transition_index -> automaton_index *)
 		automaton_of_transition = new_automaton_of_transition;
 
+        (* The list of declared functions *)
+        fun_definitions = Hashtbl.create 0;
+
 		(* The cost for each automaton and each location *)
 		(*** TODO ***)
 		(*** NOTE: dummy function ***)

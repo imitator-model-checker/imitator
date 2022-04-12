@@ -125,7 +125,16 @@ type transition = {
 
 type transition_index = int
 
+(************************************************************)
+(** Declared functions *)
+(************************************************************)
 
+type fun_definition = {
+    name : variable_name;
+    parameters : variable_name list;
+    signature : DiscreteType.var_type_discrete list; (* TODO benjamin REFACTOR replace by FunctionSig.signature if possible *)
+    body : DiscreteExpressions.fun_decl_or_expr;
+}
 
 (************************************************************)
 (** Bounds for the parameters *)
@@ -266,6 +275,9 @@ type abstract_model = {
 	transitions_description : transition_index -> transition;
 	(* An array transition_index -> automaton_index *)
 	automaton_of_transition : transition_index -> automaton_index;
+
+    (* The list of declared functions *)
+    fun_definitions : (variable_name, fun_definition) Hashtbl.t;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative: LinearConstraint.px_linear_constraint;

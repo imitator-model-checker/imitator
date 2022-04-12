@@ -153,6 +153,22 @@ type nonlinear_constraint = parsed_discrete_boolean_expression
 
 type convex_predicate = nonlinear_constraint list
 
+(****************************************************************)
+(** User functions *)
+(****************************************************************)
+type parsed_fun_decl_or_expr =
+    | Parsed_fun_local_decl of variable_name * var_type_discrete * parsed_global_expression (* init expr *) * parsed_fun_decl_or_expr
+    | Parsed_fun_expr of parsed_global_expression
+
+type parsed_fun_definition = {
+    name : variable_name; (* function name *)
+    parameters : variable_name list; (* parameter names *)
+    signature : var_type_discrete list; (* signature *)
+    body : parsed_fun_decl_or_expr; (* body *)
+}
+
+type parsed_fun_definition_list = parsed_fun_definition list
+
 
 (****************************************************************)
 (** Automata *)
@@ -266,6 +282,7 @@ type parsed_projection = (variable_name list) option
 
 type parsed_model = {
 	variable_declarations	: variable_declarations;
+	fun_definitions         : parsed_fun_definition_list;
 	automata				: parsed_automaton list;
 	init_definition			: init_definition;
 }

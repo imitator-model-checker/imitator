@@ -34,6 +34,7 @@ let include_list = ref [];;
 let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
 	{
 		variable_declarations	= List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
+    fun_definitions = List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
 		automata				= List.append parsed_model.automata parsed_model_list.automata;
 		init_definition			= List.append parsed_model.init_definition parsed_model_list.init_definition;
 	}
@@ -43,6 +44,7 @@ let unzip l = List.fold_left
 	add_parsed_model_to_parsed_model_list
 	{
 		variable_declarations	= [];
+    fun_definitions = [];
 		automata				= [];
 		init_definition			= [];
 	}
@@ -87,6 +89,7 @@ let unzip l = List.fold_left
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
+    CT_FUN CT_ARROW
 
 
 %token EOF
@@ -109,16 +112,18 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	declarations automata init_definition_option
+	declarations decl_fun_lists automata init_definition_option
 	end_opt EOF
 	{
 		let declarations	= $1 in
-		let automata		= $2 in
-		let init_definition	= $3 in
+    let fun_definitions = $2 in
+		let automata		= $3 in
+		let init_definition	= $4 in
 
 		let main_model =
 		{
 			variable_declarations	= declarations;
+      fun_definitions = fun_definitions;
 			automata				= automata;
 			init_definition			= init_definition;
 		}
@@ -156,7 +161,7 @@ include_file_list:
 /************************************************************/
 
 declarations:
-	| include_file_list CT_VAR decl_var_lists { $3 }
+	| include_file_list CT_VAR decl_var_lists decl_fun_lists { $3 }
 	| { []}
 ;
 
@@ -220,11 +225,64 @@ var_type_discrete_queue:
   | var_type_discrete_queue CT_QUEUE { Var_type_discrete_queue $1 }
 ;
 
-
 var_type_discrete_number:
     | CT_DISCRETE { Var_type_discrete_rat }
     | CT_INT { Var_type_discrete_int }
 ;
+
+/************************************************************/
+
+decl_fun_lists:
+	| decl_fun_nonempty_list { $1 }
+	| { [] }
+;
+
+/* Declaration function list */
+decl_fun_nonempty_list:
+  | decl_fun_def { [$1] }
+  | decl_fun_nonempty_list decl_fun_def { $2 :: $1 }
+;
+
+/* Function definition */
+decl_fun_def:
+  | CT_FUN NAME fun_parameter_list COLON fun_signature OP_EQ fun_body CT_END {
+    {
+      name = $2;
+      parameters = $3;
+      signature = $5;
+      body = $7;
+    }
+  }
+;
+
+/* Function parameters list (separated by whitespace) */
+fun_parameter_list:
+  | NAME { [$1] }
+  | fun_parameter_list NAME { $2 :: $1 }
+;
+
+/* Function signature (OCaml form) */
+fun_signature:
+  | var_type_discrete { [$1] }
+  | fun_signature CT_ARROW var_type_discrete { $3 :: $1 }
+;
+
+/* Body of function */
+fun_body:
+  | fun_decl_or_expression { $1 }
+;
+
+/* Declaration or expression in function body */
+fun_decl_or_expression:
+  | fun_local_decl { $1 }
+  | expression { Parsed_fun_expr $1 }
+;
+
+fun_local_decl:
+  | CT_LET NAME COLON var_type_discrete OP_EQ expression COMMA fun_decl_or_expression { Parsed_fun_local_decl ($2, $4, $6, $8) }
+;
+
+/************************************************************/
 
 /************************************************************
   AUTOMATA

@@ -3308,9 +3308,6 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		converted_observer_structure_option
 
 
-
-
-
 (************************************************************)
 (************************************************************)
 (** MODEL AND PROPERTY CONVERSION *)
@@ -4732,6 +4729,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	transitions_description = transitions_description;
 	(* An array transition_index -> automaton_index *)
 	automaton_of_transition = automaton_of_transition;
+
+    (* The list of declared functions *)
+    (* TODO benjamin IMPLEMENT fill hashtbl *)
+    fun_definitions = Hashtbl.create 0;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;

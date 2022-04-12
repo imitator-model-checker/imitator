@@ -203,6 +203,7 @@ val linear_constraint_of_nonlinear_constraint : nonlinear_constraint -> linear_c
 val updates_of_update_section : update_section -> update list
 
 val convert_var_type : ParsingStructure.var_type -> DiscreteType.var_type
+val convert_var_type_discrete : ParsingStructure.var_type_discrete -> DiscreteType.var_type_discrete
 
 val variable_infos_of_parsed_model : useful_parsing_model_information -> variable_infos
 

@@ -1153,6 +1153,7 @@ let updates_of_update_section update_section =
     let pre_updates, updates, post_updates = update_section in
     pre_updates @ updates @ post_updates
 
+(* TODO benjamin REFACTOR move to Converter *)
 (* Convert var type number from parsing structure to abstract model *)
 let convert_var_type_discrete_number = function
     | ParsingStructure.Var_type_discrete_rat -> DiscreteType.Var_type_discrete_rat

@@ -85,6 +85,17 @@ and typed_state_predicate =
 
 type typed_guard = typed_discrete_boolean_expression list
 
+type typed_fun_decl_or_expr =
+    | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_decl_or_expr
+    | Typed_fun_expr of typed_global_expression
+
+type typed_fun_definition = {
+    name : variable_name; (* function name *)
+    parameters : variable_name list; (* parameter names *)
+    signature : var_type_discrete list; (* signature *)
+    body : typed_fun_decl_or_expr; (* body *)
+}
+
 val get_type_of_variable_by_name : variable_infos -> variable_name -> var_type
 val get_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type option
 val get_discrete_type_of_variable_by_name : variable_infos -> variable_name -> var_type_discrete

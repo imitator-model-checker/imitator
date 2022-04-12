@@ -11,6 +11,8 @@
  *
  ************************************************************)
 
+type variable_name = string
+
 (************************************************************)
 (************************************************************)
 (** Operators *)
@@ -111,8 +113,7 @@ and int_factor =
     | List_length of list_expression
     | Stack_length of stack_expression
     | Queue_length of queue_expression
-
-(*    | Int_function_call of string * global_expression list*)
+    | Int_function_call of string * global_expression list
 
 
 (************************************************************)
@@ -217,11 +218,14 @@ and queue_expression =
     | Queue_clear of queue_expression
     | Queue_sequence_function of sequence_function
 
-
-
 and expression_access_type =
     | Expression_array_access of array_expression
     | Expression_list_access of list_expression
+
+(* Function local declaration or expression *)
+type fun_decl_or_expr =
+    | Fun_local_decl of variable_name * DiscreteType.var_type * global_expression (* init expr *) * fun_decl_or_expr
+    | Fun_expr of global_expression
 
 (* Update type *)
 type variable_update_type =
