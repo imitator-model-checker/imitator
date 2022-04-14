@@ -224,7 +224,7 @@ and expression_access_type =
 
 (* Function local declaration or expression *)
 type fun_decl_or_expr =
-    | Fun_local_decl of variable_name * DiscreteType.var_type * global_expression (* init expr *) * fun_decl_or_expr
+    | Fun_local_decl of variable_name * global_expression (* init expr *) * fun_decl_or_expr
     | Fun_expr of global_expression
 
 (* Update type *)

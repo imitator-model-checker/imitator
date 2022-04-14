@@ -3840,6 +3840,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
 
+	print_message Verbose_high ("*** Checking user functions definitions…");
+    (* Convert function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
+    let converted_fun_definitions_seq = List.map (fun (x : parsed_fun_definition) -> x.name, DiscreteExpressionConverter.convert_fun_definition variable_infos x) parsed_model.fun_definitions |> List.to_seq in
+    (* Create table from sequence *)
+    let fun_definitions_table = Hashtbl.of_seq converted_fun_definitions_seq in
+
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4732,7 +4738,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     (* The list of declared functions *)
     (* TODO benjamin IMPLEMENT fill hashtbl *)
-    fun_definitions = Hashtbl.create 0;
+    fun_definitions = fun_definitions_table;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;

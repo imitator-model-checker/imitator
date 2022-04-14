@@ -22,3 +22,4 @@ val convert_guard : variable_infos -> ParsingStructure.guard -> AbstractModel.gu
 val convert_update : variable_infos -> updates_type -> parsed_variable_update_type -> ParsingStructure.parsed_global_expression -> DiscreteExpressions.variable_update_type * DiscreteExpressions.global_expression
 val convert_continuous_update : variable_infos -> parsed_variable_update_type -> ParsingStructure.parsed_global_expression -> DiscreteExpressions.variable_update_type * LinearConstraint.pxd_linear_term
 val convert_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> DiscreteExpressions.boolean_expression
+val convert_fun_definition : variable_infos -> ParsingStructure.parsed_fun_definition -> AbstractModel.fun_definition

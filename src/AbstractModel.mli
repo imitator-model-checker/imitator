@@ -131,8 +131,6 @@ type transition_index = int
 
 type fun_definition = {
     name : variable_name;
-    parameters : variable_name list;
-    signature : DiscreteType.var_type_discrete list; (* TODO benjamin REFACTOR replace by FunctionSig.signature if possible *)
     body : DiscreteExpressions.fun_decl_or_expr;
 }
 

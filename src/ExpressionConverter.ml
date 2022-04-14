@@ -130,6 +130,8 @@ val check_update : variable_infos -> updates_type -> parsed_variable_update_type
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
 val check_state_predicate : variable_infos -> parsed_state_predicate -> typed_state_predicate
+(* Check that a function definition is well typed *)
+val check_fun_definition : variable_infos -> parsed_fun_definition -> typed_fun_definition
 
 end = struct
 
@@ -358,6 +360,20 @@ and string_of_typed_discrete_factor variable_infos discrete_type = function
 	| Typed_unary_min (factor, _) ->
 	    Constants.default_arithmetic_string.unary_min_string
         ^ string_of_typed_discrete_factor variable_infos discrete_type factor
+
+let rec string_of_fun_decl_or_expr variable_infos = function
+    | Typed_fun_local_decl (variable_name, discrete_type, expr, decl_or_expr) ->
+        "let "
+        ^ variable_name
+        ^ " : "
+        ^ DiscreteType.string_of_var_type_discrete discrete_type
+        ^ " = "
+        ^ string_of_typed_global_expression variable_infos expr
+        ^ ", "
+        ^ string_of_fun_decl_or_expr variable_infos decl_or_expr
+
+    | Typed_fun_expr expr ->
+        string_of_typed_global_expression variable_infos expr
 
 
 
@@ -997,7 +1013,7 @@ let rec type_check_parsed_variable_update_type variable_infos = function
 
 let rec type_check_fun_decl_or_expr variable_infos infer_type_opt = function
     | Parsed_fun_local_decl (variable_name, discrete_type, expr, decl_or_expr) ->
-
+        ImitatorUtilities.print_message Verbose_standard "type check decl or expr";
         let converted_discrete_type = ParsingStructureUtilities.convert_var_type_discrete discrete_type in
         let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression variable_infos infer_type_opt expr in
         let typed_decl_or_expr, decl_or_expr_discrete_type, is_decl_or_expr_has_side_effects = type_check_fun_decl_or_expr variable_infos infer_type_opt decl_or_expr in
@@ -1038,6 +1054,19 @@ let type_check_parsed_fun_definition variable_infos infer_type_opt (fun_definiti
     let typed_body, body_discrete_type, is_body_has_side_effects = type_check_fun_decl_or_expr variable_infos infer_type_opt fun_definition.body in
     (* Check type compatibility between function body and return type *)
     let is_body_type_compatible = is_discrete_type_compatibles body_discrete_type return_type in
+
+    if not is_body_type_compatible then
+        raise (TypeError (
+            "Function signature `"
+            ^ fun_definition.name
+            ^ " : "
+            ^ FunctionSig.string_of_signature converted_signature
+            ^ "` doesn't match with implementation `"
+            ^ string_of_fun_decl_or_expr variable_infos typed_body
+            ^ "` of type "
+            ^ DiscreteType.string_of_var_type_discrete body_discrete_type
+            ^ "."
+        ));
 
     let typed_fun_definition = {
         name = fun_definition.name;
@@ -1387,6 +1416,10 @@ let check_state_predicate variable_infos predicate =
             ^ "` is not a Boolean expression."
         ))
 
+let check_fun_definition variable_infos (parsed_fun_definition : parsed_fun_definition) =
+    let typed_fun_definition, _, _ = type_check_parsed_fun_definition variable_infos None parsed_fun_definition in
+    typed_fun_definition
+
 end
 
 (* ----------------------------------------------------------- *)
@@ -1414,6 +1447,7 @@ val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeC
 
 val parsed_variable_update_type_of_typed_variable_update_type : variable_infos -> TypeChecker.typed_variable_update_type -> DiscreteExpressions.variable_update_type
 
+val fun_definition_of_typed_fun_definition : variable_infos -> TypeChecker.typed_fun_definition -> AbstractModel.fun_definition
 
 end = struct
 
@@ -3144,5 +3178,24 @@ let linear_term_of_typed_boolean_expression variable_infos = function
 let linear_term_of_typed_global_expression variable_infos = function
     | Typed_global_expr (expr, _) ->
         linear_term_of_typed_boolean_expression variable_infos expr
+
+let rec fun_decl_or_expr_of_typed_fun_decl_or_expr variable_infos = function
+    | Typed_fun_local_decl (variable_name, discrete_type, typed_init_expr, typed_fun_decl_or_expr) ->
+        Fun_local_decl (
+            variable_name,
+            global_expression_of_typed_global_expression variable_infos typed_init_expr,
+            fun_decl_or_expr_of_typed_fun_decl_or_expr variable_infos typed_fun_decl_or_expr
+        )
+
+    | Typed_fun_expr typed_expr ->
+        Fun_expr (
+            global_expression_of_typed_global_expression variable_infos typed_expr
+        )
+
+let fun_definition_of_typed_fun_definition variable_infos (typed_fun_definition : typed_fun_definition) =
+    {
+        name = typed_fun_definition.name;
+        body = fun_decl_or_expr_of_typed_fun_decl_or_expr variable_infos typed_fun_definition.body
+    }
 
 end

@@ -117,6 +117,8 @@ val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expres
 val check_state_predicate : variable_infos -> parsed_state_predicate -> typed_state_predicate
 (* Check that a discrete boolean expression is well typed *)
 (*val check_discrete_boolean_expr : variable_infos -> parsed_discrete_boolean_expression -> typed_discrete_boolean_expression*)
+(* Check that a function definition is well typed *)
+val check_fun_definition : variable_infos -> parsed_fun_definition -> typed_fun_definition
 
 end
 
@@ -137,5 +139,6 @@ val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> Typ
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 
 val parsed_variable_update_type_of_typed_variable_update_type : variable_infos -> TypeChecker.typed_variable_update_type -> DiscreteExpressions.variable_update_type
+val fun_definition_of_typed_fun_definition : variable_infos -> TypeChecker.typed_fun_definition -> AbstractModel.fun_definition
 
 end

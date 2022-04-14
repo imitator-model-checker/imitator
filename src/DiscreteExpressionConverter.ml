@@ -148,9 +148,14 @@ let convert_continuous_update variable_infos parsed_variable_update_type expr =
     ExpressionConverter.Convert.parsed_variable_update_type_of_typed_variable_update_type variable_infos typed_variable_update_type,
     ExpressionConverter.Convert.linear_term_of_typed_global_expression variable_infos typed_expr
 
-
 let convert_conditional variable_infos expr =
     (* Check *)
     let typed_expr = ExpressionConverter.TypeChecker.check_conditional variable_infos expr in
     (* Convert *)
     ExpressionConverter.Convert.bool_expression_of_typed_boolean_expression variable_infos typed_expr
+
+let convert_fun_definition variable_infos (fun_definition : parsed_fun_definition) =
+    (* Check *)
+    let typed_fun_definition = ExpressionConverter.TypeChecker.check_fun_definition variable_infos fun_definition in
+    (* Convert *)
+    ExpressionConverter.Convert.fun_definition_of_typed_fun_definition variable_infos typed_fun_definition

@@ -161,7 +161,7 @@ include_file_list:
 /************************************************************/
 
 declarations:
-	| include_file_list CT_VAR decl_var_lists decl_fun_lists { $3 }
+	| include_file_list CT_VAR decl_var_lists { $3 }
 	| { []}
 ;
 
@@ -245,7 +245,7 @@ decl_fun_nonempty_list:
 
 /* Function definition */
 decl_fun_def:
-  | CT_FUN NAME fun_parameter_list COLON fun_signature OP_EQ fun_body CT_END {
+  | CT_FUN NAME fun_parameter_list COLON fun_signature OP_EQ fun_decl_or_expression CT_END {
     {
       name = $2;
       parameters = $3;
@@ -267,12 +267,7 @@ fun_signature:
   | fun_signature CT_ARROW var_type_discrete { $3 :: $1 }
 ;
 
-/* Body of function */
-fun_body:
-  | fun_decl_or_expression { $1 }
-;
-
-/* Declaration or expression in function body */
+/* Body of function, declarations or expression */
 fun_decl_or_expression:
   | fun_local_decl { $1 }
   | expression { Parsed_fun_expr $1 }
