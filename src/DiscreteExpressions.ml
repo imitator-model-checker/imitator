@@ -70,6 +70,7 @@ and product_quotient =
 
 and rational_factor =
 	| Rational_variable of Automaton.variable_index
+	| Rational_local_variable of variable_name
 	| Rational_constant of NumConst.t
 	| Rational_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
@@ -100,6 +101,7 @@ and int_term =
 
 and int_factor =
 	| Int_variable of Automaton.variable_index
+	| Int_local_variable of variable_name
 	| Int_constant of Int32.t
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
@@ -140,6 +142,7 @@ and discrete_boolean_expression =
 	| Not_bool of boolean_expression (** Negation *)
 	(** Discrete boolean variable *)
 	| Bool_variable of Automaton.variable_index
+    | Bool_local_variable of variable_name
 	(** Discrete boolean constant *)
 	| Bool_constant of bool
     | Bool_sequence_function of sequence_function
@@ -171,6 +174,7 @@ and binary_word_expression =
     | Logical_not of binary_word_expression * int
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
+    | Binary_word_local_variable of variable_name
     (* Add here some functions *)
     | Binary_word_sequence_function of sequence_function
 
@@ -188,6 +192,7 @@ and array_expression =
     | Literal_array of global_expression array
     | Array_constant of DiscreteValue.discrete_value array
     | Array_variable of Automaton.variable_index
+    | Array_local_variable of variable_name
     (* Add here some function on array *)
     | Array_concat of array_expression * array_expression
     | Array_sequence_function of sequence_function
@@ -199,6 +204,7 @@ and list_expression =
     | Literal_list of global_expression list
     | List_constant of DiscreteValue.discrete_value list
     | List_variable of Automaton.variable_index
+    | List_local_variable of variable_name
     | List_cons of global_expression * list_expression
     | List_sequence_function of sequence_function
 	| List_list_tl of list_expression
@@ -208,6 +214,7 @@ and list_expression =
 and stack_expression =
     | Literal_stack
     | Stack_variable of Automaton.variable_index
+    | Stack_local_variable of variable_name
     | Stack_push of global_expression * stack_expression
     | Stack_clear of stack_expression
     | Stack_sequence_function of sequence_function
@@ -215,6 +222,7 @@ and stack_expression =
 and queue_expression =
     | Literal_queue
     | Queue_variable of Automaton.variable_index
+    | Queue_local_variable of variable_name
     | Queue_push of global_expression * queue_expression
     | Queue_clear of queue_expression
     | Queue_sequence_function of sequence_function

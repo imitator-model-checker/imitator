@@ -5,6 +5,10 @@ open DiscreteType
 
 type inner_type = var_type_discrete
 
+type typed_variable_scope =
+    | Global
+    | Local
+
 type typed_sequence_type =
     | Typed_array
     | Typed_list
@@ -46,7 +50,7 @@ and typed_product_quotient =
     | Typed_div
 
 and typed_discrete_factor =
-	| Typed_variable of variable_name * var_type_discrete
+	| Typed_variable of variable_name * var_type_discrete * typed_variable_scope
 	| Typed_constant of DiscreteValue.discrete_value * var_type_discrete
 	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
 	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete

@@ -4737,7 +4737,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	automaton_of_transition = automaton_of_transition;
 
     (* The list of declared functions *)
-    (* TODO benjamin IMPLEMENT fill hashtbl *)
     fun_definitions = fun_definitions_table;
 
 	(* All clocks non-negative *)
