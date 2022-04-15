@@ -115,7 +115,7 @@ and int_factor =
     | List_length of list_expression
     | Stack_length of stack_expression
     | Queue_length of queue_expression
-    | Int_function_call of string * global_expression list
+    | Int_function_call of variable_name * global_expression list
 
 
 (************************************************************)

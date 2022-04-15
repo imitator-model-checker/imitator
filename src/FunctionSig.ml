@@ -164,6 +164,39 @@ let is_signature_compatible_with_signature_constraint signature signature_constr
     List.for_all (fun (s_type, sc_type) -> is_discrete_type_compatible_with_type_constraint s_type sc_type) signature_with_signature_constraint
 
 (** -------------------- **)
+(** Conversion **)
+(** -------------------- **)
+
+let type_number_constraint_of_discrete_number_type = function
+    | Var_type_discrete_rat -> Rat_constraint
+    | Var_type_discrete_int -> Int_constraint Int_type_constraint
+
+let type_constraint_of_discrete_type discrete_type =
+    let rec type_constraint_of_discrete_type_rec = function
+        | Var_type_discrete_number discrete_number_type ->
+            let type_number_constraint = type_number_constraint_of_discrete_number_type discrete_number_type in
+            Number_constraint (Defined_type_number_constraint type_number_constraint)
+        | Var_type_discrete_bool -> Bool_constraint
+        | Var_type_discrete_binary_word length -> Binary_constraint (Length_constraint length)
+        | Var_type_discrete_array (inner_type, length) ->
+            let inner_type_constraint = Defined_type_constraint (type_constraint_of_discrete_type_rec inner_type) in
+            Array_constraint (inner_type_constraint, Length_constraint length)
+        | Var_type_discrete_list inner_type ->
+            let inner_type_constraint = Defined_type_constraint (type_constraint_of_discrete_type_rec inner_type) in
+            List_constraint inner_type_constraint
+        | Var_type_discrete_stack inner_type ->
+            let inner_type_constraint = Defined_type_constraint (type_constraint_of_discrete_type_rec inner_type) in
+            Stack_constraint inner_type_constraint
+        | Var_type_discrete_queue inner_type ->
+            let inner_type_constraint = Defined_type_constraint (type_constraint_of_discrete_type_rec inner_type) in
+            Queue_constraint inner_type_constraint
+    in
+    Defined_type_constraint (type_constraint_of_discrete_type_rec discrete_type)
+
+(* Get signature constraint of signature *)
+let signature_constraint_of_signature = List.map type_constraint_of_discrete_type
+
+(** -------------------- **)
 (** Utils **)
 (** -------------------- **)
 

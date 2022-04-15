@@ -16,7 +16,6 @@
  *
  ************************************************************)
 
-open ParsingStructure
 open DiscreteType
 open DiscreteValue
 
@@ -68,9 +67,8 @@ val string_of_signature_constraint : signature_constraint -> string
 
 (*val constraint_signature : var_type_discrete -> var_type_discrete list -> var_type_discrete list*)
 
-(*val signature_constraint_of_signature : signature -> signature_constraint*)
-
-
+(**)
+val signature_constraint_of_signature : signature -> signature_constraint
 
 
 val split_signature : 'a list -> 'a list * 'a

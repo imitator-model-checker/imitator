@@ -14,10 +14,11 @@
  *
  ************************************************************)
 
-open ParsingStructure
 open DiscreteType
 open DiscreteValue
 open FunctionSig
+
+val fun_definitions_table : (string, AbstractModel.fun_definition) Hashtbl.t ref
 
 (* Get signature constraint of a function given it's name *)
 val signature_constraint_of_function : string -> signature_constraint

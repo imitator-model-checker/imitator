@@ -55,6 +55,8 @@ let binary_log_signature =
         Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a")))
     ]
 
+let fun_definitions_table : (string, AbstractModel.fun_definition) Hashtbl.t ref = ref (Hashtbl.create 0)
+
 let function_by_name = function
     | "pow" ->
         [
@@ -194,7 +196,13 @@ let function_by_name = function
             Defined_type_constraint (List_constraint (Defined_type_constraint (List_constraint (Type_name_constraint "a"))));
             Defined_type_constraint (List_constraint (Defined_type_constraint (List_constraint (Type_name_constraint "a"))));
         ], No_side_effect
-    | function_name -> raise (UndefinedFunction function_name)
+    | function_name ->
+        let table = !fun_definitions_table in
+        let fun_definition_opt = Hashtbl.find_opt table function_name in
+        match fun_definition_opt with
+        | Some fun_definition -> fun_definition.signature, No_side_effect (* TODO benjamin IMPLEMENT change no side effect by var *)
+        | None ->
+            raise (UndefinedFunction function_name)
 
 (* Get signature constraint of a function given it's name *)
 let signature_constraint_of_function function_name =

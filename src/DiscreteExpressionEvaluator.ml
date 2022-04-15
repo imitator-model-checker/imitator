@@ -496,15 +496,15 @@ and eval_fun_decl_or_expr discrete_valuation local_variables = function
         eval_global_expression discrete_valuation expr
 *)
 and eval_user_function_call function_name arguments =
-(*
-    let fun_def_opt = Hashtbl.find_opt model.fun_definitions function_name in
-    let fun_def =
-        match fun_def_opt with
+    (*
+    let fun_definition_opt = Hashtbl.find_opt Functions.fun_definitions function_name in
+    let fun_definition =
+        match fun_definition_opt with
         | Some fun_def -> fun_def
         | None -> raise (UndefinedFunction function_name)
     in
-    eval_fun_decl_or_expr (Hashtbl.create ()) fun_def.body
-*)
+    eval_fun_decl_or_expr (Hashtbl.create ()) fun_definition.body
+    *)
     Int_value Int32.zero
 
 (* Wrap a scalar value to an array value according to the modified index of an old value *)

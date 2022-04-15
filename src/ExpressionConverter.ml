@@ -871,6 +871,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         (* Get function arity *)
         let arity = Functions.arity_of_function function_name in
         let arguments_number = List.length argument_expressions in
+        ImitatorUtilities.print_message Verbose_standard ("arity: " ^ string_of_int arity);
 
         (* Check call number of arguments is consistent with function arity *)
         if arguments_number <> arity then
@@ -2152,8 +2153,12 @@ and int_expression_of_typed_function_call variable_infos argument_expressions = 
         Queue_length (
             queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
-    (* TODO benjamin, in the future replace raise by custom function call as comment below *)
-    | function_name -> raise (UndefinedFunction function_name)
+    | function_name ->
+        Int_function_call (
+            function_name,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        )
+
 
 (* --------------------*)
 (* Binary word conversion *)
@@ -3263,7 +3268,7 @@ let rec fun_decl_or_expr_of_typed_fun_decl_or_expr variable_infos = function
 let fun_definition_of_typed_fun_definition variable_infos (typed_fun_definition : typed_fun_definition) =
     {
         name = typed_fun_definition.name;
-        signature = [Type_name_constraint "replace"] (* TODO benjamin IMPLEMENT convert signature *);
+        signature = FunctionSig.signature_constraint_of_signature typed_fun_definition.signature;
         body = fun_decl_or_expr_of_typed_fun_decl_or_expr variable_infos typed_fun_definition.body
     }
 

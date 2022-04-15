@@ -3845,6 +3845,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     let converted_fun_definitions_seq = List.map (fun (x : parsed_fun_definition) -> x.name, DiscreteExpressionConverter.convert_fun_definition variable_infos x) parsed_model.fun_definitions |> List.to_seq in
     (* Create table from sequence *)
     let fun_definitions_table = Hashtbl.of_seq converted_fun_definitions_seq in
+    Functions.fun_definitions_table := fun_definitions_table;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)
