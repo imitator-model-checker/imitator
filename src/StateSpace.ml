@@ -2375,6 +2375,7 @@ let merge2021 state_space queue =
 (*** BEGIN REFACTOR (2022-04 - DYLAN) ***)
 
 let update_statespace state_space merger_index merged_index_list =
+    tcounter_merge_statespace#start;
 
     let options = Input.get_options () in
 
@@ -2476,10 +2477,15 @@ let update_statespace state_space merger_index merged_index_list =
         state_space.states_for_comparison <- new_compare
     in
 
+    begin
     match options#merge_algorithm with
     | Merge_reconstruct -> copy_and_reduce state_space merger_index merged_index_list
     | Merge_onthefly -> merge_transitions state_space merger_index merged_index_list
     | _ -> raise(InternalError("Invalid match: value is not sound"))
+    end;
+
+    tcounter_merge_statespace#stop;
+    ()
 
 let merge_refactor  state_space queue =
 
@@ -2530,22 +2536,23 @@ let merge_refactor  state_space queue =
 
         let merging_states (s_merger : state_index) (s_merged : state_index) =
         (* Merge si and sj. Note that C(si) = siUsj from the test *)
-            tcounter_merge_statespace#start;
             update_statespace state_space s_merger [s_merged];
-            tcounter_merge_statespace#stop;
         in
 
         let state = get_state state_space si in
         let (c : LinearConstraint.px_linear_constraint) = state.px_constraint in
 
+        let did_something = ref true in
         let main_merging si look_in_queue =
+            did_something := false;
             (* get merge candidates as pairs (index, state) *)
             let candidates = get_siblings state_space si queue look_in_queue in
 
             (* try to merge with siblings, restart if merge found, return merged states *)
             let rec merging merged_states candidates = begin
+                begin
                 match candidates with
-                    | [] -> false (* here, we are really done *)
+                    | [] -> () (* here, we are really done *)
                     | m :: tail -> begin
                         let sj,c' = m in
 
@@ -2553,31 +2560,45 @@ let merge_refactor  state_space queue =
                         then begin
                             (*Statistics*)
                             nb_merged#increment;
+                            did_something := true;
 
                             (*Here, si = siUsj from the test / IRL c = cUc', transitions not performed etc.'*)
 
-                            merging_states si sj;
+                            begin
+                            match options#merge_update with
+                            | Merge_update_merge -> merging_states si sj; ();
+                            | Merge_update_candidates -> ();
+                            | Merge_update_level -> ();
+                            end;
 
                             (* Print some information *)
                             print_message Verbose_high ("[Merge] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
 
                             let merged' = sj :: merged_states in
-                            true || (merging merged' tail)
+                            (merging merged' tail)
                         end
                         else
                         begin
                             (* try to eat the rest of them *)
                             merging merged_states tail
                         end
-                    end
-            end
+                    end;
+                end;
+                begin
+                match options#merge_update with
+                | Merge_update_merge -> ();
+                | Merge_update_candidates -> update_statespace state_space si merged_states;
+                | Merge_update_level -> ();
+                end;
+            end;
+            (**)
             in
             merging [] candidates;
         in
 
-        let did_something = ref true in
+        main_merging si look_in_queue;
         while options#merge_restart && !did_something do (** Restart only if option restart is set **)
-            did_something := main_merging si look_in_queue
+            main_merging si look_in_queue
         done;
     in
 
