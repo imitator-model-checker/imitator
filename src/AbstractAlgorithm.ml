@@ -168,6 +168,11 @@ type merge_candidates =
 	| Merge_candidates_queue
 	| Merge_candidates_visited
 
+(* Main merge algorithms from IMITATOR 3.3 *)
+type merge_update =
+	| Merge_update_merge
+    | Merge_update_candidates
+    | Merge_update_level
 
 (** Style of graphical state space to output *)
 type graphical_state_space =
@@ -332,6 +337,10 @@ let string_of_merge_candidates (merge_candidates : merge_candidates) : string = 
 	| Merge_candidates_queue	-> "queue"
 	| Merge_candidates_visited	-> "visited"
 
+let string_of_merge_update (merge_update : merge_update) : string = match merge_update with
+		| Merge_update_merge        -> "merge"
+        | Merge_update_candidates   -> "candidates"
+        | Merge_update_level        -> "level"
 
 let string_of_merge_EFsynthminpq_heuristic (merge_EFsynthminpq_heuristic : merge_EFsynthminpq_heuristic) : string = match merge_EFsynthminpq_heuristic with
 	| Merge_EFsynthminpq_always		-> "always"

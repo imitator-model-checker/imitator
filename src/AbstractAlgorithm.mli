@@ -165,6 +165,11 @@ type merge_candidates =
 	| Merge_candidates_queue
 	| Merge_candidates_visited
 
+(* Main merge algorithms from IMITATOR 3.3 *)
+type merge_update =
+	| Merge_update_merge
+    | Merge_update_candidates
+    | Merge_update_level
 
 (** Style of graphical state space to output *)
 type graphical_state_space =
@@ -249,5 +254,6 @@ val string_of_cycle_algorithm			: cycle_algorithm					-> string
 val string_of_state_comparison_operator	: state_comparison_operator			-> string
 
 val string_of_merge_candidates			: merge_candidates					-> string
+val string_of_merge_update			    : merge_update					-> string
 val string_of_merge_EFsynthminpq_heuristic	: merge_EFsynthminpq_heuristic	-> string
 val string_of_merge_jump_algorithm		: merge_jump_algorithm				-> string

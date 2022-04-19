@@ -105,7 +105,11 @@ class imitator_options :
         method merge_candidates				: AbstractAlgorithm.merge_candidates
 		method is_set_merge_candidates		: bool
 		method set_merge_candidates			: AbstractAlgorithm.merge_candidates -> unit
-        
+
+        method merge_update     			: AbstractAlgorithm.merge_update
+		method is_set_merge_update  		: bool
+		method set_merge_update 			: AbstractAlgorithm.merge_update -> unit
+
         method merge_restart 				: bool
 		method is_set_merge_restart			: bool
 		method set_merge_restart			: bool -> unit

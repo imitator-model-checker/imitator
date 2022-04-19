@@ -220,9 +220,22 @@ begin match property_option, options#imitator_mode with
 			print_message Verbose_high ("Set option `-merge-candidates` to its default value");
 
 			(*** TODO! default merge heuristics: to move somewhere! ***)
-			options#set_merge_candidates Merge_candidates_ordered;
+			options#set_merge_candidates Merge_candidates_queue;
         );
-        
+
+        (* Update if not yet set *)
+        if not options#is_set_merge_update then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-update` not set");
+
+            (* Print some information *)
+            print_message Verbose_high ("Set option `-merge-update` to its default value");
+
+            (*** TODO! default merge heuristics: to move somewhere! ***)
+            (*** TODO DYLAN: match with merge-algo! ***)
+            options#set_merge_update Merge_update_merge;
+        );
+
 		(* Update if not yet set *)
         if not options#is_set_merge_restart then (
             (* Print some information *)

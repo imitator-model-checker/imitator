@@ -218,6 +218,7 @@ class imitator_options =
         (* New merge options from IMITATOR 3.3 *)
         val mutable merge_algorithm  : AbstractAlgorithm.merge_algorithm option = None
         val mutable merge_candidates : AbstractAlgorithm.merge_candidates option = None
+        val mutable merge_update     : AbstractAlgorithm.merge_update option = None
         val mutable merge_restart    : bool option = None
 
 		(* Method for NZ algorithms *)
@@ -358,6 +359,10 @@ class imitator_options =
         method merge_candidates						= value_of_option "merge_candidates" merge_candidates
 		method is_set_merge_candidates				= merge_candidates <> None
 		method set_merge_candidates new_merge_candidates = merge_candidates <- Some new_merge_candidates
+
+		method merge_update     					= value_of_option "merge_update" merge_update
+        method is_set_merge_update  				= merge_update <> None
+        method set_merge_update new_merge_update    = merge_update <- Some new_merge_update
 
 		method merge_restart 						= value_of_option "merge_restart"    merge_restart
 		method is_set_merge_restart					= merge_restart <> None
@@ -722,6 +727,23 @@ class imitator_options =
 					exit(1);
 				)
 
+		    and set_merge_update update_str =
+                if update_str = "merge" then
+                    merge_update <- Some Merge_update_merge
+
+                else if update_str = "candidates" then
+                    merge_update <- Some Merge_update_candidates
+
+                else if update_str = "level" then
+                    merge_update <- Some Merge_update_level
+
+                else(
+                    print_error ("The merge update option `" ^ update_str ^ "` is not valid.");
+                    Arg.usage speclist usage_msg;
+                    abort_program ();
+                    exit(1);
+                )
+
 			and set_merge_restart restart_str =
 				if restart_str = "on" then
 					merge_restart <- Some true
@@ -985,6 +1007,10 @@ class imitator_options =
 				(*** NOTE: New merge as of 3.3 ***)
 				("-merge-candidates", String set_merge_candidates, " Merge candidates [AMPP22]. Possible values are `queue`, `visited`, `ordered`. Default: depends on the property.
 				");
+
+                (*** NOTE: New merge as of 3.3 ***)
+                ("-merge-update", String set_merge_candidates, " Merge update [AMPP22]. Possible values are `merge`, `candidates`, `level`. Default: depends on the property.
+                ");
 
 				(*** NOTE: merge for EFsynthminpq, presumably by Vincent Bloemen ***)
 				("-merge-EFsynthminpq-heuristic", String set_merge_EFsynthminpq_heuristic, " Merge heuristic for EFsynthminpq [ABPP19]. Possible values are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.
