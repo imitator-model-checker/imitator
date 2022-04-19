@@ -1009,7 +1009,7 @@ class imitator_options =
 				");
 
                 (*** NOTE: New merge as of 3.3 ***)
-                ("-merge-update", String set_merge_candidates, " Merge update [AMPP22]. Possible values are `merge`, `candidates`, `level`. Default: depends on the property.
+                ("-merge-update", String set_merge_update, " Merge update [AMPP22]. Possible values are `merge`, `candidates`, `level`. Default: depends on the property.
                 ");
 
 				(*** NOTE: merge for EFsynthminpq, presumably by Vincent Bloemen ***)
