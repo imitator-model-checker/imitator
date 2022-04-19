@@ -5055,9 +5055,35 @@ class virtual algoStateBased =
 			queue := !new_states_after_merging;
 			);*)
 
+            (*** BEGIN REFACTOR MERGING (2022-04) ***)
+            begin
+            	match options#merge_algorithm with
+            	| Merge_none ->
+                				()
+            	| Merge_212 ->
+            	    let new_states_after_merging = queue in
+                    let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
+                    new_states_after_merging := list_diff !new_states_after_merging eaten_states;
 
+                    (match options#exploration_order with
+                        | Exploration_queue_BFS_RS ->
+                            List.iter ( fun state_index ->
+                                Hashtbl.remove rank_hashtable state_index;
+                            ) eaten_states;
+                        | _ -> ();
+                    )
+                | Merge_reconstruct
+                | Merge_onthefly ->
+                    queue := StateSpace.merge_refactor state_space !queue;
+                    (match options#exploration_order with
+                        | Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
+                        | _ -> ();
+                    )
+            end;
+            (*** END REFACTOR MERGING (2022-04) ***)
+
+            (*
 			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
-			
 			begin
 			match options#merge_algorithm with
 			
@@ -5100,6 +5126,7 @@ class virtual algoStateBased =
 				()
              end;
 			(*** END OLD MIXED VERSION (2020-09) ***)
+            *)
 
 			(* Check if the limit has been reached *)
 			self#check_and_update_queue_bfs_limit;
