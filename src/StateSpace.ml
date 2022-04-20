@@ -2563,6 +2563,7 @@ let merge_refactor  state_space queue =
                             did_something := true;
 
                             (*Here, si = siUsj from the test / IRL c = cUc', transitions not performed etc.'*)
+                            print_message Verbose_experiments ("[Merge] State " ^ (string_of_int si) ^ " is mergeable with " ^ (string_of_int sj));
 
                             begin
                             match options#merge_update with
@@ -2598,6 +2599,7 @@ let merge_refactor  state_space queue =
 
         main_merging si look_in_queue;
         while options#merge_restart && !did_something do (** Restart only if option restart is set **)
+            print_message Verbose_experiments ("Restart for state " ^ (string_of_int si));
             main_merging si look_in_queue
         done;
     in
