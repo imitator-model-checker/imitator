@@ -5312,8 +5312,23 @@ class virtual algoStateBased =
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
 			);*)
 
-			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
+            (*** BEGIN REFACTOR MERGING (2022-04) ***)
+			begin
+            match options#merge_algorithm with
+            | Merge_reconstruct
+            | Merge_onthefly    ->
+                new_states_after_merging := StateSpace.merge_refactor state_space !new_states_after_merging;
+            | Merge_212 ->
+                let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
+                new_states_after_merging := list_diff !new_states_after_merging eaten_states;
+            | Merge_none ->
+                ()
+            end;
+			(*** END REFACTOR MERGING (2022-04) ***)
 
+
+			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
+            (*
 			begin
 			match options#merge_algorithm with
 			| Merge_reconstruct ->
@@ -5332,6 +5347,7 @@ class virtual algoStateBased =
 				()
 			end;
 			(*** END OLD MIXED VERSION (2020-09) ***)
+            *)
 
 			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)
 			post_n := !new_states_after_merging;
