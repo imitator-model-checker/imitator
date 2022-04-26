@@ -3224,6 +3224,27 @@ This framework remains relatively experimental.
 % \end{itemize}
 
 
+%------------------------------------------------------------
+\paragraph{\styleOption{-extrapolation} (default: disabled)}
+%------------------------------------------------------------
+Clock extrapolation was defined in a number of papers for timed automata (\eg{} \cite{BBFL03,BBLP06,Li09,Tripakis09}), and then extended to parametric timed automata in~\cite{AA22}.
+
+Values for this option are:
+
+\begin{longtable}{@{} l @{\ \ } p{12.5cm}}
+	\styleOption{none}      & no extrapolation \\
+	\styleOption{M}         & simple $M$-extrapolation (maximum constant computed for each clock) \\
+	\styleOption{Mglobal}   & simple $M$-extrapolation with single maximum constant for all clocks \\
+	\styleOption{LU}        & LU-extrapolation (constants computed for each clock) \\
+	\styleOption{LUglobal}  & LU-extrapolation with single maximum constants for all clocks \\
+\end{longtable}
+
+\begin{becareful}[syntax restriction]
+	Extrapolation can be used only when all guards and invariants are ``simple clock guards'', \ie{} of the form $\clock \bowtie \lterm$, where $\lterm$ is a linear term over~$\Param$.
+	In other words, no discrete variables nor linear constraints over the clocks (which notably excludes ``diagonal'' constraints) are allowed.
+\end{becareful}
+
+
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-graphics-source} (default: disabled)}
