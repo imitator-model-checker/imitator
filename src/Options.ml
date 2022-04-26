@@ -901,7 +901,7 @@ class imitator_options =
 				");
 
 
-				("-extrapolation", String set_extrapolation, " Extrapolation [work in progress].
+				("-extrapolation", String set_extrapolation, " Extrapolation [AA22].
         Use `M`             for M-extrapolation.
         Use `Mglobal`       for a single bound M-extrapolation.
         Use `LU`            for LU-extrapolation.
