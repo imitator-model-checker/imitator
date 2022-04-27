@@ -5055,7 +5055,7 @@ class virtual algoStateBased =
 			queue := !new_states_after_merging;
 			);*)
 
-            (*** BEGIN REFACTOR MERGING (2022-04) ***)
+            (*** BEGIN CALL OF MERGING ***)
             begin
             	match options#merge_algorithm with
             	| Merge_none ->
@@ -5080,53 +5080,7 @@ class virtual algoStateBased =
                         | _ -> ();
                     )
             end;
-            (*** END REFACTOR MERGING (2022-04) ***)
-
-            (*
-			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
-			begin
-			match options#merge_algorithm with
-			
-(* 			if options#merge then ( *)
-			| Merge_reconstruct -> 
-			
-                queue := StateSpace.merge state_space !queue;
-                (* TODO: the following code belongs in StateSpace *)
-                (match options#exploration_order with
-                    | Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
-                    | _ -> ();
-                )
-(*            )
-            else if options#merge212 then( *)
-			| Merge_212 ->
-                (*raise (NotImplemented "merge v.2.12");*)
-                let new_states_after_merging = queue in
-                let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
-                new_states_after_merging := list_diff !new_states_after_merging eaten_states;
-
-                (match options#exploration_order with
-                    | Exploration_queue_BFS_RS ->
-                                                    List.iter ( fun state_index ->
-                                                        Hashtbl.remove rank_hashtable state_index;
-
-                                                    ) eaten_states;
-                    | _ -> ();
-                )
-(*            )
-			else if options#mergedev then (
- *)
-			| Merge_onthefly ->
-				queue := StateSpace.merge2021 state_space !queue;
-                 (match options#exploration_order with
-                     | Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
-                     | _ -> ();
-                 )
-(*              ) *)
-			| Merge_none ->
-				()
-             end;
-			(*** END OLD MIXED VERSION (2020-09) ***)
-            *)
+            (*** END CALL OF MERGING ***)
 
 			(* Check if the limit has been reached *)
 			self#check_and_update_queue_bfs_limit;
@@ -5312,7 +5266,7 @@ class virtual algoStateBased =
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
 			);*)
 
-            (*** BEGIN REFACTOR MERGING (2022-04) ***)
+            (*** BEGIN CALL OF MERGING ***)
 			begin
             match options#merge_algorithm with
             | Merge_reconstruct
@@ -5324,30 +5278,7 @@ class virtual algoStateBased =
             | Merge_none ->
                 ()
             end;
-			(*** END REFACTOR MERGING (2022-04) ***)
-
-
-			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
-            (*
-			begin
-			match options#merge_algorithm with
-			| Merge_reconstruct ->
-(* 			if options#merge then( *)
-				new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
-(*			)
-			else if options#merge212 then( *)
-			| Merge_212 ->
-				let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
-				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
-(* 			) else if options#mergedev then( *)
-			| Merge_onthefly ->
-                new_states_after_merging := StateSpace.merge2021 state_space !new_states_after_merging;
-(*             ) *)
-			| Merge_none ->
-				()
-			end;
-			(*** END OLD MIXED VERSION (2020-09) ***)
-            *)
+			(*** END CALL OF MERGING ***)
 
 			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)
 			post_n := !new_states_after_merging;
