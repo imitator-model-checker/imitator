@@ -1536,102 +1536,6 @@ let add_transition state_space (source_state_index, combined_transition, target_
 
 	()
 
-(*
-(** Update a combined transition to the state space (according to combined_transition *)
-let update_transition_target state_space (source_state_index, combined_transition, new_target_state_index) =
-	(* Statistics *)
-	counter_add_transition#increment;
-	counter_add_transition#start;
-
-	(* Print some information *)
-	print_message Verbose_total ("Entering StateSpace.update_transition");
-
-	(* check if it already exists *)
-	let transitions = get_transitions_of_state state_space source_state_index in
-
-	(* Print some information *)
-	print_message Verbose_total ("Existence check done");
-
-	if (List.mem combined_transition transitions) then
-		(** Add to the data structure *)
-		Hashtbl.replace state_space.transitions_table source_state_index
-		    (List.rev
-		        (
-		            List.map
-		            (fun (combined_t,target) ->
-		                if (combined_transition = combined_t)
-		                    then (combined_t, new_target_state_index)
-		                    else (combined_t, target)
-		            )
-		            (get_successors_with_combined_transitions state_space source_state_index)
-		        )
-		    );
-
-	;
-	(* Statistics *)
-	counter_add_transition#stop;
-
-	(* Print some information *)
-	print_message Verbose_total ("Exiting StateSpace.update_transition");
-
-	()
-*)
-
-(** Merge 2021 transitions *)
-let merge_transitions state_space merger_index merged_index =
-	(* Remove merged_index from transitions, replaced with merger_index*)
-	let rec update_target src successors merger_index merged_index =
-		match successors with
-		| []->[]
-		| (combined_transition, target_index)::tail ->
- 			if target_index = merged_index
-			then
-			    begin
-                    print_message Verbose_high ("Merge transitions: update target in transition " ^ (string_of_list_of_int combined_transition)
-                            ^ " (previous: " ^ string_of_int target_index ^ ", new: " ^ string_of_int merger_index ^ ")");
-                    (combined_transition, merger_index) :: (update_target src tail merger_index merged_index)
-                end
-			(*
-				begin
-					update_transition_target state_space (src, combined_transition, merger_index);
-					print_message Verbose_standard ("Merge transitions: update target in transition " ^ (string_of_list_of_int combined_transition)
-					        ^ " (previous: " ^ string_of_int target_index ^ ", new: " ^ string_of_int merger_index ^ ")");
-					update_target src tail merger_index merged_index
-				end
-			*)
-			else (combined_transition, target_index) :: (update_target src tail merger_index merged_index)
- 	in
-
-	(** Transitions with merged as target **)
-	Hashtbl.iter (fun src successors -> (Hashtbl.replace state_space.transitions_table src (update_target src successors merger_index merged_index))) state_space.transitions_table;
-
-	let transitions_merged = get_successors_with_combined_transitions state_space merged_index in
-    (** Transitions with merged as source **)
-    Hashtbl.remove state_space.transitions_table merged_index;
-    List.iter (
-        fun (combined_transition , target_state_index) ->
-            print_message Verbose_high ("Merge transitions: update source in transition " ^ (string_of_list_of_int combined_transition)
-                                        ^ " (previous: " ^ string_of_int merged_index ^ ", new: " ^ string_of_int merger_index ^ ")");
-             add_transition state_space (merger_index, combined_transition, target_state_index)
-    ) transitions_merged;
-
-    (* If the state was the initial state: replace with the merger state_index *)
-	let init = get_initial_state_index state_space in
-    if merged_index = init then(
-        print_message Verbose_low ("The initial state in the reachability state_space has been merged with another one.");
-        state_space.initial <- Some merger_index;
-    );
-
-    print_message Verbose_high ("Merging: remove state " ^ (string_of_int merged_index));
-    (*Remove state from all_states and states_for_comparison*)
-    Hashtbl.remove state_space.all_states merged_index;
-    Hashtbl.filter_map_inplace (
-            fun location_index state_index -> if state_index = merged_index then None else Some state_index
-            (*filter_map_inplace discard binding associated to None, update if Some*)
-        ) state_space.states_for_comparison;
-
-    ()
-
 
 (** Add an inequality to all the states of the state space *)
 (*** NOTE: it is assumed that the p_constraint does not render some states inconsistent! ***)
@@ -1646,6 +1550,13 @@ let add_p_constraint_to_states state_space p_constraint =
 (* ---------------------------- *)
 (* Code for Merging starts here *)
 (* ---------------------------- *)
+
+(*
+MERGE FUNCTION - v3.0 - DONE BY JACO VAN DE POL
+REFACTORED IN MERGE_REFACTOR
+IMPLEMENTATION IS RECONSTRUCT-VISITED/QUEUE-UPDATE LIST OF CANDIDATES-NO RESTART = R V/Q M
+KEEP HERE FOR THE IMPLEMENTATION OF SKIP IN LIST OF MERGES
+
 
 (* Type to distinguish sequence types *)
 type sequence_type =
@@ -1928,6 +1839,8 @@ let merge state_space queue =
 
         (* return *)
         new_queue
+*)
+
 
 
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
@@ -1942,11 +1855,6 @@ let empty_states_for_comparison state_space =
 	counter_empty_states_for_comparison#stop;
 
 	()
-
-
-
-
-
 
 (************************************************************)
 (** Misc: tile natures *)
@@ -2023,18 +1931,9 @@ let get_statistics_states state_space =
 	!result_string
 
 
-
-(*(** Get the number of comparisons between states (performance checking purpose) *)
-let get_nb_state_comparisons () =
-(*	print_message Verbose_standard ("About to return the number of comparisons (" ^ (string_of_int !nb_state_comparisons) ^ ").");*)
-	!nb_state_comparisons
-
-(** Get the number of comparisons between constraints (performance checking purpose) *)
-let get_nb_constraint_comparisons () =
-	!nb_constraint_comparisons*)
-
-
-(*THE FOLLOWING WAS ADDED FROM V2.12*)
+(************************************************************)
+(** THE FOLLOWING WAS ADDED FROM V2.12 *)
+(************************************************************)
 (** compute a hash code for a state, depending only on the location *)
 let location_hash_code (state : state) =
 	Location.hash_code state.global_location
@@ -2189,190 +2088,9 @@ let merge212 state_space new_states =
 		(* return eaten states *)
 		(*list_diff new_states*) eaten
 
-
-
-(* Merge 2021 - DYLAN *)
-(*TODO DYLAN: check statistics*)
-let merge2021 state_space queue =
-
-    (*
-    (*TEMP: print transitions*)
-        let transitions = state_space.transitions_table in
-        let print_transition_table transitions =
-            let print_successors successors =
-                string_of_list_of_string (
-                    List.map (
-                        fun (combined_transition, target) -> string_of_int target ^ " (" ^ (string_of_list_of_int combined_transition) ^ "), "
-                    )
-                    successors
-                )
-            in
-                print_message Verbose_standard "Transition table:";
-                Hashtbl.iter (
-                    fun src successors -> (print_message Verbose_standard ("\t [src: " ^ (string_of_int src) ^ " | successors: " ^ (print_successors successors) ^ "]"))
-                )
-                transitions
-        in
-        let print_all_states state_space =
-            print_message Verbose_standard "States:";
-            Hashtbl.iter (
-                fun index _ -> (print_message Verbose_standard ("\t - " ^ (string_of_int index) ^ ""))
-            )
-            state_space.all_states
-        in
-        let print_states_for_comparison state_space =
-            print_message Verbose_standard "States for comparison:";
-            Hashtbl.iter (
-                fun index location -> (print_message Verbose_standard ("\t - " ^ (string_of_int index) ^ " ("^ (string_of_int location) ^")"))
-            )
-            state_space.states_for_comparison
-        in
-        (print_all_states state_space);
-        (print_states_for_comparison state_space);
-        (print_transition_table transitions);
-        (* END TEMP print transitions*)
-        *)
-
-    (* Statistics *)
-    tcounter_merge#start;
-
-    let options = Input.get_options () in
-
-    (* Check if two states can be merged *)
-    (*** NOTE: with side-effects! ***)
-    let are_mergeable (c : LinearConstraint.px_linear_constraint) (c' : LinearConstraint.px_linear_constraint) : bool =
-        (* Statistics *)
-        nb_merging_attempts#increment;
-        (* Call dedicated function *)
-        let merged = LinearConstraint.px_hull_assign_if_exact c c' in
-        (* Return result *)
-        merged
-    in
-
-    (* Get states sharing the same location and discrete values from hash_table, excluding s *)
-    let get_siblings state_space (si : state_index) queue (look_in_queue : bool) =
-        print_message Verbose_standard("Get siblings of state " ^ string_of_int si);
-        let s = get_state state_space si in
-        let location = s.global_location in
-        let location_index = new_location_index state_space location in
-
-        let sibs = Hashtbl.find_all state_space.states_for_comparison location_index in
-
-        (* lookup px_constraints and exclude si itself *)
-        let result = (List.fold_left (fun siblings sj ->
-            (* Remove sj if sj=si or if look  *)
-            if sj = si || (look_in_queue && not(List.mem sj queue))
-                then siblings
-                else begin
-                    let state = get_state state_space sj in
-                    let c' = state.px_constraint in
-                    (sj,c') :: siblings
-                end
-        ) [] sibs) in
-
-        print_message Verbose_high ("Siblings (" ^ string_of_int si ^ ") : " ^ string_of_list_of_int (List.map fst result));
-        result
-    in
-
-    (* function for merging one state with its siblings *)
-    let merge_state (si : state_index) (look_in_queue : bool) =
-        print_message Verbose_standard ("[Merge] Try to merge state " ^ (string_of_int si));
-
-        let merging_states (s_merger : state_index) (s_merged : state_index) =
-        (* Merge si and sj. Note that C(si) = siUsj from the test *)
-
-            (* Transitions: Replace  s-->s_merged with s-->s_merger and s_merged-->s with s_merger-->s  *)
-            tcounter_merge_statespace#start;
-            merge_transitions state_space s_merger s_merged;
-            tcounter_merge_statespace#stop;
-        in
-
-        let state = get_state state_space si in
-        let (c : LinearConstraint.px_linear_constraint) = state.px_constraint in
-
-        let main_merging si look_in_queue =
-            (* get merge candidates as pairs (index, state) *)
-            let candidates = get_siblings state_space si queue look_in_queue in
-
-            (* try to merge with siblings, restart if merge found, return merged states *)
-            let rec merging merged_states candidates = begin
-                match candidates with
-                    | [] -> false (* here, we are really done *)
-                    | m :: tail -> begin
-                        let sj,c' = m in
-(*                         let global_location : Location.global_location = state.global_location in *)
-
-
-                        if are_mergeable c c'
-                        then begin
-                            (*Statistics*)
-                            nb_merged#increment;
-
-                            (*Here, si = siUsj from the test / IRL c = cUc', transitions not performed etc.'*)
-
-                            merging_states si sj;
-
-                            (* Print some information *)
-                            print_message Verbose_high ("[Merge] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
-
-                            let merged' = sj :: merged_states in
-                            true || (merging merged' tail)
-                        end
-                        else begin
-                                (* try to eat the rest of them *)
-                                merging merged_states tail
-                            end
-                    end
-            end
-            in
-            merging [] candidates;
-        in
-
-        let did_something = ref true in
-        while !did_something do
-            did_something := main_merging si look_in_queue
-        done;
-    in
-
-    (* Iterate list of states and try to merge them in the state space *)
-    let rec main_merger states =
-        match states with
-            | [] -> ()
-            | s :: tail -> begin
-                    main_merger tail;
-                    if Hashtbl.mem state_space.all_states s then (* treat s only if it is still reachable *)
-
-                        match options#merge_candidates with
-                        | Merge_candidates_visited -> merge_state s false
-                        | Merge_candidates_queue -> merge_state s true
-                        | Merge_candidates_ordered -> begin (merge_state s true) ; (merge_state s false) end
-
-            end
-    in
-
-    (*Main*)
-    main_merger queue;
-
-    (*(*TEMP: print transitions*)
-    (print_all_states state_space);
-    (print_states_for_comparison state_space);
-    let transitions = state_space.transitions_table in
-    (print_transition_table transitions);
-    (* END TEMP print transitions*)*)
-
-    let new_queue = List.filter (test_state_index state_space) queue in
-
-    (* Statistics *)
-    tcounter_merge#stop;
-    (*state_space.states_for_comparison <- Hashtbl.create 1024;*)
-
-    print_message Verbose_standard "\n---\n";
-    (* return *)
-    new_queue
-
-
-(*** TODO ***)
-(*** BEGIN REFACTOR (2022-04 - DYLAN) ***)
+(************************************************************)
+(** BEGIN MERGE 3.2 - DYLAN *)
+(************************************************************)
 
 let update_statespace state_space merger_index merged_index_list =
     tcounter_merge_statespace#start;
@@ -2487,7 +2205,45 @@ let update_statespace state_space merger_index merged_index_list =
     tcounter_merge_statespace#stop;
     ()
 
-let merge_refactor  state_space queue =
+let merge state_space queue =
+
+(*
+        (*TEMP: print transitions*)
+            let transitions = state_space.transitions_table in
+            let print_transition_table transitions =
+                let print_successors successors =
+                    string_of_list_of_string (
+                        List.map (
+                            fun (combined_transition, target) -> string_of_int target ^ " (" ^ (string_of_list_of_int combined_transition) ^ "), "
+                        )
+                        successors
+                    )
+                in
+                    print_message Verbose_standard "Transition table:";
+                    Hashtbl.iter (
+                        fun src successors -> (print_message Verbose_standard ("\t [src: " ^ (string_of_int src) ^ " | successors: " ^ (print_successors successors) ^ "]"))
+                    )
+                    transitions
+            in
+            let print_all_states state_space =
+                print_message Verbose_standard "States:";
+                Hashtbl.iter (
+                    fun index _ -> (print_message Verbose_standard ("\t - " ^ (string_of_int index) ^ ""))
+                )
+                state_space.all_states
+            in
+            let print_states_for_comparison state_space =
+                print_message Verbose_standard "States for comparison:";
+                Hashtbl.iter (
+                    fun index location -> (print_message Verbose_standard ("\t - " ^ (string_of_int index) ^ " ("^ (string_of_int location) ^")"))
+                )
+                state_space.states_for_comparison
+            in
+            (print_all_states state_space);
+            (print_states_for_comparison state_space);
+            (print_transition_table transitions);
+            (* END TEMP print transitions*)
+*)
 
     (* Statistics *)
     tcounter_merge#start;
@@ -2555,6 +2311,9 @@ let merge_refactor  state_space queue =
                     | [] -> () (* here, we are really done *)
                     | m :: tail -> begin
                         let sj,c' = m in
+
+		
+		        print_message Verbose_high ("[Merge] Check if states " ^ (string_of_int si) ^ " and " ^ (string_of_int sj) ^ "are mergeable");
 
                         if are_mergeable c c'
                         then begin

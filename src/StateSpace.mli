@@ -316,16 +316,11 @@ val add_p_constraint_to_states : state_space -> LinearConstraint.p_linear_constr
 (** Replace the constraint of a state in a state space by another one (the constraint is copied to avoid side-effects later) *)
 (* val replace_constraint : state_space -> LinearConstraint.linear_constraint -> state_index -> unit *)
 
-(* Merges states in queue with states in state space. Removes unreachable states. Returns unmerged part of queue *)
-val merge : state_space -> state_index list -> state_index list
 (* Merge of v2.12 (ULRICH) *)
 val merge212 : state_space -> state_index list -> state_index list
 
-(* Merge dev. 2021 - DYLAN *)
-val merge2021 : state_space -> state_index list -> state_index list
-
 (* Merge refactor 2022 - DYLAN *)
-val merge_refactor : state_space -> state_index list -> state_index list
+val merge : state_space -> state_index list -> state_index list
 
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
 val empty_states_for_comparison : state_space -> unit

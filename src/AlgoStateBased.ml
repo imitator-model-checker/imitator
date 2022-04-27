@@ -5074,7 +5074,7 @@ class virtual algoStateBased =
                     )
                 | Merge_reconstruct
                 | Merge_onthefly ->
-                    queue := StateSpace.merge_refactor state_space !queue;
+                    queue := StateSpace.merge state_space !queue;
                     (match options#exploration_order with
                         | Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
                         | _ -> ();
@@ -5317,7 +5317,7 @@ class virtual algoStateBased =
             match options#merge_algorithm with
             | Merge_reconstruct
             | Merge_onthefly    ->
-                new_states_after_merging := StateSpace.merge_refactor state_space !new_states_after_merging;
+                new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
             | Merge_212 ->
                 let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
                 new_states_after_merging := list_diff !new_states_after_merging eaten_states;
