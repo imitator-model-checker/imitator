@@ -734,8 +734,10 @@ class imitator_options =
                 else if update_str = "candidates" then
                     merge_update <- Some Merge_update_candidates
 
+                (*
                 else if update_str = "level" then
                     merge_update <- Some Merge_update_level
+                *)
 
                 else(
                     print_error ("The merge update option `" ^ update_str ^ "` is not valid.");
@@ -1009,8 +1011,8 @@ class imitator_options =
 				");
 
                 (*** NOTE: New merge as of 3.3 ***)
-                ("-merge-update", String set_merge_update, " Merge update [AMPP22]. Possible values are `merge`, `candidates`, `level`. Default: depends on the property.
-                ");
+                ("-merge-update", String set_merge_update, " Merge update [AMPP22]. Possible values are `merge`, `candidates`. Default: depends on the property.
+                ");(*remove 'level' possible value as not implemented*)
 
 				(*** NOTE: merge for EFsynthminpq, presumably by Vincent Bloemen ***)
 				("-merge-EFsynthminpq-heuristic", String set_merge_EFsynthminpq_heuristic, " Merge heuristic for EFsynthminpq [ABPP19]. Possible values are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.

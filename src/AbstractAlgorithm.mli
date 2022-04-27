@@ -169,7 +169,7 @@ type merge_candidates =
 type merge_update =
 	| Merge_update_merge
     | Merge_update_candidates
-    | Merge_update_level
+    (*)| Merge_update_level*)
 
 (** Style of graphical state space to output *)
 type graphical_state_space =

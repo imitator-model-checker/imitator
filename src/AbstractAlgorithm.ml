@@ -172,7 +172,7 @@ type merge_candidates =
 type merge_update =
 	| Merge_update_merge
     | Merge_update_candidates
-    | Merge_update_level
+    (*)| Merge_update_level*)
 
 (** Style of graphical state space to output *)
 type graphical_state_space =
@@ -340,7 +340,7 @@ let string_of_merge_candidates (merge_candidates : merge_candidates) : string = 
 let string_of_merge_update (merge_update : merge_update) : string = match merge_update with
 		| Merge_update_merge        -> "merge"
         | Merge_update_candidates   -> "candidates"
-        | Merge_update_level        -> "level"
+        (*)| Merge_update_level        -> "level"*)
 
 let string_of_merge_EFsynthminpq_heuristic (merge_EFsynthminpq_heuristic : merge_EFsynthminpq_heuristic) : string = match merge_EFsynthminpq_heuristic with
 	| Merge_EFsynthminpq_always		-> "always"

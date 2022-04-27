@@ -2328,7 +2328,7 @@ let merge state_space queue =
                             match options#merge_update with
                             | Merge_update_merge -> merging_states si sj; ();
                             | Merge_update_candidates -> ();
-                            | Merge_update_level -> ();
+                            (*| Merge_update_level -> ();*)
                             end;
 
                             (* Print some information *)
@@ -2348,7 +2348,7 @@ let merge state_space queue =
                 match options#merge_update with
                 | Merge_update_merge -> ();
                 | Merge_update_candidates -> update_statespace state_space si merged_states;
-                | Merge_update_level -> ();
+                (*| Merge_update_level -> ();*)
                 end;
             end;
             (**)
