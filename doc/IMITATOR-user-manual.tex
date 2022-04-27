@@ -1422,7 +1422,7 @@ Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis
 One obtains a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
 
 The options \styleOption{-merge} and \styleOption{-comparison inclusion} are implicitly activated for this algorithm, as they usually greatly increase the analysis efficiency and the termination.
-You may want to use \styleOption{-no-merge} and \styleOption{-comparison none} to disable them.
+You may want to use \styleOption{-merge none} and \styleOption{-comparison none} to disable them.
 The options \styleOption{-dynamic-elimination} (not activated by default) and \styleOption{-comparison doubleinclusion} can also be used to (try to) reduce the state space.
 
 \imitator{} can also
@@ -3318,12 +3318,49 @@ However, not all the properties of the inverse method are preserved when using m
 
 See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
 
+\begin{longtable}{@{} l @{\ \ } p{12cm}}
+	\styleOption{reconstruct} & Update the statespace with a copy of the reachable part \\
+	\styleOption{on-the-fly} & Update the statespace by deleting the merged state and updating its transitions \emph{in situ}
+\end{longtable}
+
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-no-merge} (default: depending on the algorithm)}
+\paragraph{\styleOption{-merge none} (default: depending on the algorithm)}
 %------------------------------------------------------------
 Force disabling merging, even if the selected algorithm normally requires it.
 
+%------------------------------------------------------------
+\paragraph{\styleOption{-merge-candidates} (default: depending on the algorithm)}
+%------------------------------------------------------------
+Use the merging technique of \cite{AFS13atva} and specify the candidates to merge with a state.
+
+\begin{longtable}{@{} l @{\ \ } p{12cm}}
+	\styleOption{visited} & All the visited states \\
+	\styleOption{queue} & Only the states in the queue \\
+	\styleOption{ordered} & First within the queue, and then the visited states
+\end{longtable}
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-merge-update} (default: depending on the algorithm)}
+%------------------------------------------------------------
+Use the merging technique of \cite{AFS13atva} and specify when to update the statespace.
+
+\begin{longtable}{@{} l @{\ \ } p{12cm}}
+	\styleOption{merge} & After each successful merge with each sibling \\
+	\styleOption{candidates} & After having processed the whole candidate list of a state \\
+	%\styleOption{level} & After dealing all the complete level %Not implemented for now
+\end{longtable}
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-merge-restart} (default: depending on the algorithm)}
+%------------------------------------------------------------
+Use the merging technique of \cite{AFS13atva} and set if a state can be merged to one of its siblings, 
+if the search through all candidate siblings is restarted.
+
+\begin{longtable}{@{} l @{\ \ } p{12cm}}
+	\styleOption{on} & \\
+	\styleOption{off} & \\
+\end{longtable}
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-mode} (default: none)}
