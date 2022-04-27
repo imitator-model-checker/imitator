@@ -193,27 +193,11 @@ class imitator_options =
 		(* Layered NDFS *)
 		val mutable layer : bool option				= None
 
-		(* Merging states on the fly *)
-				(*** DISCONTINUED as of 3.3 ***)
-(*		val mutable merge : bool option				= None
-		val mutable mergeq : bool option			= None
-		val mutable merge212 : bool option			= None*)
-
-		(* Merge heuristics for reachability analysis: try to jump some merge attemps (approx 2021) *)
-				(*** DISCONTINUED as of 3.3 ***)
-(*		val mutable merge_n1 : int					= AbstractAlgorithm.undefined_merge_n
-		val mutable merge_n2 : int					= AbstractAlgorithm.undefined_merge_n*)
-
 		(* Merge heuristics for reachability analysis: try to jump some merge attemps (approx 2021) *)
 		val mutable merge_jump_algorithm : AbstractAlgorithm.merge_jump_algorithm = Merge_jump_none
 
 		(* Merging heuristic for EFsynthminpq *)
 		val mutable merge_EFsynthminpq_heuristic					= Merge_EFsynthminpq_iter10
-
-        (* Merge dev. 2021/08 - DYLAN *)
-				(*** DISCONTINUED as of 3.3 ***)
-(*        val mutable mergedev : bool option				    = None
-        val mutable merge_dev : AbstractAlgorithm.merge_dev = Merge_visited*)
 
         (* New merge options from IMITATOR 3.3 *)
         val mutable merge_algorithm  : AbstractAlgorithm.merge_algorithm option = None
@@ -282,8 +266,6 @@ class imitator_options =
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 		method acyclic								= acyclic
-(* 		method best_worst_case = best_worst_case *)
-(* 		method branch_and_bound = branch_and_bound *)
 		method carto_tiles_limit					= carto_tiles_limit
 		method carto_time_limit						= carto_time_limit
 		method check_ippta							= check_ippta
@@ -319,38 +301,12 @@ class imitator_options =
 		method is_set_layer							= layer <> None
 		method set_layer b							= layer <- Some b
 
-				(*** DISCONTINUED as of 3.3 ***)
-(*		method merge_n1								= merge_n1
-		method merge_n2								= merge_n1*)
-
 		method merge_jump_algorithm					= merge_jump_algorithm
 
 		
-				(*** DISCONTINUED as of 3.3 ***)
-(*		method merge								= value_of_option "merge" merge
-		method is_set_merge							= merge <> None
-		method set_merge b							= merge <- Some b*)
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*		method mergeq								= value_of_option "mergeq" mergeq
-		method is_set_mergeq						= mergeq <> None
-		method set_mergeq b							= mergeq <- Some b*)
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*		method merge212								= value_of_option "merge212" merge212
-		method is_set_merge212						= merge212 <> None
-		method set_merge212 b						= merge212 <- Some b*)
-
 		(* Merging heuristic for EFsynthminpq *)
 		method merge_EFsynthminpq_heuristic			= merge_EFsynthminpq_heuristic
 
-        (* Merge dev 2021 *)
-				(*** DISCONTINUED as of 3.3 ***)
-(*        method mergedev								= value_of_option "mergedev" mergedev
-        method is_set_mergedev						= mergedev <> None
-        method set_mergedev b						= mergedev <- Some b
-        method merge_dev    						= merge_dev*)
-        
         (* New merge options from IMITATOR 3.3 *)
         method merge_algorithm						= value_of_option "merge_algorithm"  merge_algorithm
 		method is_set_merge_algorithm				= merge_algorithm <> None
@@ -651,21 +607,6 @@ class imitator_options =
 				(*** END TODO! unfinished ***)
 
 				
-				(*** DISCONTINUED as of 3.3 ***)
-(*			and set_merge_dev merge_dev_str =
-				if merge_dev_str = "visited" then
-					merge_dev <- Merge_visited
-				else if merge_dev_str = "queue" then
-					merge_dev <- Merge_queue
-				else if merge_dev_str = "ordered" then
-					merge_dev <- Merge_ordered
-				else(
-					print_error ("The merge_dev option `" ^ merge_dev_str ^ "` is not valid.");
-					Arg.usage speclist usage_msg;
-					abort_program ();
-					exit(1);
-				)*)
-
 			and set_merge_EFsynthminpq_heuristic merge_EFsynthminpq_heuristic_src =
 				if merge_EFsynthminpq_heuristic_src = "always" then
 					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_always
@@ -837,11 +778,6 @@ class imitator_options =
 				("-acyclic", Unit (fun () -> acyclic <- true), " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: disabled.
 				");
 
-(* 				("-best-worst-case", (fun () -> best_worst_case <- true), " Instead of the minimum global time, compute the best worst-case time bound in the EFsynthminpq mode. Default: false."); *)
-
-(* 				Temporarily disabled (March 2014) *)
-(* 				("-bab", (fun () -> branch_and_bound <- true), " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: disabled"); *)
-
 				("-cart-tiles-limit", Int (fun i -> carto_tiles_limit <- Some i), " Set a maximum number of tiles computed for the cartography. Default: no limit.
 				");
 
@@ -977,30 +913,6 @@ class imitator_options =
 				("-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some true), " Layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled (i.e., no layer).");
 				("-no-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some false), " No layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled (i.e., no layer).
 				");
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*				("-merge", Unit (fun () -> warn_if_set merge "merge"; merge <- Some true), " Use the merging technique of [AFS13]. Default: depending on the algorithm");
-				("-no-merge", Unit (fun () -> warn_if_set merge "merge"; merge <- Some false), " Do not use the merging technique of [AFS13]. Default: depending on the algorithm.
-				");*)
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*				("-merge-n1", Int (fun i -> merge_n1 <- i), " value for merge:n1 [WORK IN PROGRESS]"); (*** TODO: explain***)
-				("-merge-n2", Int (fun i -> merge_n2 <- i), " value for merge:n2 [WORK IN PROGRESS]"); (*** TODO: explain***)*)
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*				("-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some true; merge <- Some true), "Use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
-				("-no-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm.
-				");*)
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*				("-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some true; merge <- Some false), "Use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS");
-				("-no-merge212", Unit (fun () -> warn_if_set merge212 "merge212"; merge212 <- Some false), " Do not use the merging technique of [AFS13], version from IMITATOR 2.12. Default: WORK IN PROGRESS.
-				");*)
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*                ("-mergedev", Unit (fun () -> warn_if_set mergedev "mergedev"; mergedev <- Some true ; merge <- Some false), " Use merging dev. Default: False");
-                ("-mergedev-option", String set_merge_dev, " Mergedev option. Possible values are `visited`, `queue`, `ordered`. Default: `visited`.
-                				");*)
 
 				(*** NOTE: New merge as of 3.3 ***)
 				("-merge", String set_merge_algorithm, " Merge algorithm [AMPP22]. Possible values are `none`, `yes`, `reconstruct`, `onthefly`, `2.12`. Default: depends on the property.
@@ -1276,40 +1188,6 @@ class imitator_options =
 			end;
 
 
-			(*------------------------------------------------------------*)
-			(* Merging *)
-			(*------------------------------------------------------------*)
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*			if merge = Some true then(
-				match property_option with
-				| None ->
-					print_warning ("The `-merge` option may not preserve the correctness of this analysis. Result may be incorrect.");
-				| Some property ->
-					if not (AlgorithmOptions.merge_needed property) then(
-						print_warning ("The `-merge` option may not preserve the correctness of this algorithm. Result may be incorrect.");
-					);
-			);*)
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*            (* TODO DYLAN: nothing done for mergedev here *)
-			(* Warn if merge heuristics are used without merging *)
-			if merge = Some false then(
-				if merge_n1 <> AbstractAlgorithm.undefined_merge_n then(
-					print_warning "The value of option -merge-n1 is ignored since merging is not used.";
-				);
-				if merge_n2 <> AbstractAlgorithm.undefined_merge_n then(
-					print_warning "The value of option -merge-n2 is ignored since merging is not used.";
-				);
-				if merge_algorithm <> Merge_none then(
-					print_warning "The value of option -merge-algorithm is ignored since merging is not used.";
-				);
-				(*** NOTE: no default value, so no check ***)
-				(*
-				if merge_heuristic <> None then(
-					print_warning "The value of option -merge-algorithm is ignored since merging is not used.";
-				);*)
-			);*)
 
 			
 			
@@ -1610,39 +1488,6 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("Compute the next pi0 on-demand, in distributed mode (default).")
 			;
-
-
-(*			if branch_and_bound then
-				print_message Verbose_standard ("Considering branch and bound (work in progress!!).")
-			else
-				print_message Verbose_medium ("No branch and bound mode (default).");*)
-
-
-			(* OPTIONS *)
-				(*** DISCONTINUED as of 3.3 ***)
-(*			begin match mergeq with
-			| Some true ->
-				print_message Verbose_standard ("Merging technique of [AFS13] enabled on queue only.");
-			| Some false ->
-				begin match merge with
-				| Some true ->
-					print_message Verbose_standard ("Merging technique of [AFS13] enabled.");
-				| Some false ->
-					print_message Verbose_standard ("Merging technique of [AFS13] disabled.")
-				| None ->
-					print_message Verbose_medium ("Merging technique of [AFS13] enabled if requested by the algorithm.")
-				end;
-			| None ->
-				print_message Verbose_medium ("Merging technique of [AFS13] enabled if requested by the algorithm.")
-			end;
-
-			(* OPTIONS *)
-			begin match merge212 with
-			| Some true ->
-				print_message Verbose_standard ("Merging technique of [AFS13] enabled (in version 2.12).");
-			| _ ->
-				print_message Verbose_medium ("Merging technique of [AFS13] (in version 2.12) disabled.")
-			end;*)
 
 			
 			(* Auto-detection of synclabs *)

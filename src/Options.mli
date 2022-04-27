@@ -30,8 +30,6 @@ class imitator_options :
 
 		method acyclic						: bool
 (* 		method best_worst_case : bool *)
-(* 		method branch_and_bound : bool *)
-(* 		method branch_and_bound_unset : unit *)
 		method carto_tiles_limit			: int option
 		method carto_time_limit				: int option
 		method check_ippta					: bool
@@ -66,31 +64,6 @@ class imitator_options :
 		method layer						: bool
 		method is_set_layer					: bool
 		method set_layer					: bool -> unit
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*		method merge						: bool
-		method is_set_merge					: bool
-		method set_merge					: bool -> unit*)
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*		method mergeq						: bool
-		method is_set_mergeq				: bool
-		method set_mergeq					: bool -> unit*)
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*		method merge212						: bool
-		method is_set_merge212				: bool
-		method set_merge212					: bool -> unit*)
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*		method merge_n1						: int
-		method merge_n2						: int*)
-
-				(*** DISCONTINUED as of 3.3 ***)
-(*		method mergedev						: bool
-        method is_set_mergedev				: bool
-        method set_mergedev					: bool -> unit
-        method merge_dev				    : AbstractAlgorithm.merge_dev*)
 
 		method merge_jump_algorithm			: AbstractAlgorithm.merge_jump_algorithm
 
