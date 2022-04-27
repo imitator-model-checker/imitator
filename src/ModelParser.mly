@@ -248,15 +248,20 @@ decl_fun_def:
   | CT_FUN NAME fun_parameter_list COLON fun_signature OP_EQ fun_decl_or_expression CT_END {
     {
       name = $2;
-      parameters = $3;
-      signature = $5;
+      parameters = List.rev $3;
+      signature = List.rev $5;
       body = $7;
     }
   }
 ;
 
-/* Function parameters list (separated by whitespace) */
 fun_parameter_list:
+  | { [] }
+  | fun_parameter_nonempty_list { $1 }
+;
+
+/* Function parameters list (separated by whitespace) */
+fun_parameter_nonempty_list:
   | NAME { [$1] }
   | fun_parameter_list NAME { $2 :: $1 }
 ;

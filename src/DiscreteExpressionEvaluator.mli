@@ -1,9 +1,13 @@
 open DiscreteExpressions
 open Automaton
 
-val eval_boolean_expression : discrete_valuation option -> boolean_expression -> bool
-val eval_discrete_boolean_expression : discrete_valuation option -> discrete_boolean_expression -> bool
-val eval_global_expression : discrete_valuation option -> global_expression -> DiscreteValue.discrete_value
+val eval_global_expression : variable_table option -> discrete_valuation option -> global_expression -> DiscreteValue.discrete_value
+val eval_boolean_expression : variable_table option -> discrete_valuation option -> boolean_expression -> bool
+val eval_discrete_boolean_expression : variable_table option -> discrete_valuation option -> discrete_boolean_expression -> bool
+
+val eval_global_expression_without_local_variables : discrete_valuation option -> global_expression -> DiscreteValue.discrete_value
+val eval_boolean_expression_without_local_variables : discrete_valuation option -> boolean_expression -> bool
+val eval_discrete_boolean_expression_without_local_variables : discrete_valuation option -> discrete_boolean_expression -> bool
 
 val try_eval_constant_global_expression : global_expression -> DiscreteValue.discrete_value
 val try_eval_constant_rational_term : rational_term -> NumConst.t

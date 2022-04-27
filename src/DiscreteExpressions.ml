@@ -27,6 +27,7 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (** Valuation *)
 (****************************************************************)
 type discrete_valuation = Automaton.discrete_index -> DiscreteValue.discrete_value
+type variable_table = (variable_name, DiscreteValue.discrete_value) Hashtbl.t
 
 type conj_dis =
     | And
@@ -77,6 +78,7 @@ and rational_factor =
     | Rational_of_int of int_arithmetic_expression
     | Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
     | Rational_sequence_function of sequence_function
+    | Rational_inline_function of variable_name list * global_expression list * fun_decl_or_expr
 (*    | Rational_function_call of string * global_expression list*)
 
 and sequence_function =
@@ -112,6 +114,7 @@ and int_factor =
     | Stack_length of stack_expression
     | Queue_length of queue_expression
     | Int_function_call of variable_name * global_expression list
+    | Int_inline_function of variable_name list * global_expression list * fun_decl_or_expr
 
 
 (****************************************************************)
@@ -153,6 +156,7 @@ and discrete_boolean_expression =
     | List_is_empty of list_expression
     | Stack_is_empty of stack_expression
     | Queue_is_empty of queue_expression
+    | Bool_inline_function of variable_name list * global_expression list * fun_decl_or_expr
 (*    | Bool_function_call of string * global_expression list*)
 
 (************************************************************)
@@ -177,7 +181,7 @@ and binary_word_expression =
     | Binary_word_local_variable of variable_name
     (* Add here some functions *)
     | Binary_word_sequence_function of sequence_function
-
+    | Binary_word_inline_function of variable_name list * global_expression list * fun_decl_or_expr
 (*    | Binary_word_function_call of string * global_expression list*)
 
 (************************************************************)
@@ -196,7 +200,7 @@ and array_expression =
     (* Add here some function on array *)
     | Array_concat of array_expression * array_expression
     | Array_sequence_function of sequence_function
-
+    | Array_inline_function of variable_name list * global_expression list * fun_decl_or_expr
 (*    | Array_function_call of string * global_expression list*)
 
 (** List expression **)
@@ -209,6 +213,7 @@ and list_expression =
     | List_sequence_function of sequence_function
 	| List_list_tl of list_expression
 	| List_rev of list_expression
+    | List_inline_function of variable_name list * global_expression list * fun_decl_or_expr
 (*    | List_function_call of string * global_expression list*)
 
 and stack_expression =
@@ -218,6 +223,7 @@ and stack_expression =
     | Stack_push of global_expression * stack_expression
     | Stack_clear of stack_expression
     | Stack_sequence_function of sequence_function
+    | Stack_inline_function of variable_name list * global_expression list * fun_decl_or_expr
 
 and queue_expression =
     | Literal_queue
@@ -226,13 +232,14 @@ and queue_expression =
     | Queue_push of global_expression * queue_expression
     | Queue_clear of queue_expression
     | Queue_sequence_function of sequence_function
+    | Queue_inline_function of variable_name list * global_expression list * fun_decl_or_expr
 
 and expression_access_type =
     | Expression_array_access of array_expression
     | Expression_list_access of list_expression
 
 (* Function local declaration or expression *)
-type fun_decl_or_expr =
+and fun_decl_or_expr =
     | Fun_local_decl of variable_name * global_expression (* init expr *) * fun_decl_or_expr
     | Fun_expr of global_expression
 
@@ -659,6 +666,7 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
             print_function
                 (label_of_int_factor func)
                 [customized_string_of_queue_expression customized_string variable_names queue_expr]
+        | Int_inline_function _ -> "" (* TODO benjamin IMPLEMENT *)
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 

@@ -766,7 +766,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
             match local_variables_opt with
             | Some local_variables when Hashtbl.mem local_variables variable_name  ->
                 Hashtbl.find local_variables variable_name, Local
-            | None ->
+            | _ ->
                 get_discrete_type_of_variable_by_name variable_infos variable_name, Global
         in
 
@@ -1035,7 +1035,8 @@ let rec type_check_fun_decl_or_expr local_variables variable_infos infer_type_op
         let converted_discrete_type = ParsingStructureUtilities.convert_var_type_discrete discrete_type in
         (* Add local variable to hashtable *)
         Hashtbl.add local_variables variable_name converted_discrete_type;
-        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression (Some local_variables) variable_infos infer_type_opt expr in
+(*        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression (Some local_variables) variable_infos infer_type_opt expr in*)
+        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression (Some local_variables) variable_infos (Some converted_discrete_type) expr in
         let typed_decl_or_expr, decl_or_expr_discrete_type, is_decl_or_expr_has_side_effects = type_check_fun_decl_or_expr local_variables variable_infos infer_type_opt decl_or_expr in
 
         (* Check compatibility between local var type and it's init expression *)
@@ -1068,8 +1069,14 @@ let type_check_parsed_fun_definition variable_infos infer_type_opt (fun_definiti
     (*  *)
     let converted_signature = List.map ParsingStructureUtilities.convert_var_type_discrete fun_definition.signature in
     let parameter_discrete_types, return_type = FunctionSig.split_signature converted_signature in
-    let nb_parameter = List.length parameter_discrete_types in
+    let nb_parameter_type = List.length parameter_discrete_types in
+    let nb_parameter = List.length fun_definition.parameters in
     let local_variables = Hashtbl.create nb_parameter in
+
+    (* Check that the number of parameters is consistant with number of types *)
+    if nb_parameter <> nb_parameter_type then (
+        raise (TypeError "Inconsistent ")
+    );
 
     (* Add parameters as local variables of the function *)
     for i = 0 to nb_parameter - 1 do
@@ -1508,6 +1515,12 @@ let label_of_typed_factor_constructor = function
     | Typed_function_call (function_name, _, _) -> function_name
 
 
+let user_function_definition function_name =
+    let fun_def_opt = Hashtbl.find_opt !Functions.fun_definitions_table function_name in
+    match fun_def_opt with
+    | Some fun_def -> fun_def
+    | None -> raise (UndefinedFunction function_name)
+
 (* Messages *)
 let expression_must_have_type_message = "An expression should have a determined type. Maybe something has failed before."
 let expr_type_doesnt_match_to_structure_message str_expr_type str_expr = "The deduced expression type indicate that it should be converted to a " ^ str_expr_type ^ " expression, but it's incompatible with this expression structure: `" ^ str_expr ^ "`. Maybe something failed in type checking or conversion."
@@ -1848,7 +1861,14 @@ and bool_expression_of_typed_function_call variable_infos argument_expressions =
             queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
 
-    | function_name -> raise (UndefinedFunction function_name)
+    | function_name ->
+        let fun_def = user_function_definition function_name in
+
+        Bool_inline_function (
+            fun_def.parameters,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
+            fun_def.body
+        )
 
 (* --------------------*)
 (* Rational conversion *)
@@ -1993,7 +2013,14 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
                 queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
             )
         )
-    | function_name -> raise (UndefinedFunction function_name)
+    | function_name ->
+        let fun_def = user_function_definition function_name in
+
+        Rational_inline_function (
+            fun_def.parameters,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
+            fun_def.body
+        )
 
 (* --------------------*)
 (* Int conversion *)
@@ -2154,9 +2181,12 @@ and int_expression_of_typed_function_call variable_infos argument_expressions = 
             queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
     | function_name ->
-        Int_function_call (
-            function_name,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        let fun_def = user_function_definition function_name in
+
+        Int_inline_function (
+            fun_def.parameters,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
+            fun_def.body
         )
 
 
@@ -2338,7 +2368,14 @@ and binary_expression_of_typed_function_call variable_infos length argument_expr
                 queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
             )
         )
-    | function_name -> raise (UndefinedFunction function_name)
+    | function_name ->
+        let fun_def = user_function_definition function_name in
+
+        Binary_word_inline_function (
+            fun_def.parameters,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
+            fun_def.body
+        )
 
 (* --------------------*)
 (* Array conversion *)
@@ -2475,13 +2512,14 @@ and array_expression_of_typed_function_call variable_infos discrete_type argumen
                 queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
             )
         )
-    | function_name -> raise (UndefinedFunction function_name)
-    (*
-    Array_function_call (
-        name,
-        List.map (global_expression_of_parsed_boolean_expression variable_infos) argument_expressions
-    )
-    *)
+    | function_name ->
+        let fun_def = user_function_definition function_name in
+
+        Array_inline_function (
+            fun_def.parameters,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
+            fun_def.body
+        )
 
 (* --------------------*)
 (* List conversion *)
@@ -2625,7 +2663,14 @@ and list_expression_of_typed_function_call variable_infos discrete_type argument
         List_rev (
             list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
-    | function_name -> raise (UndefinedFunction function_name)
+    | function_name ->
+        let fun_def = user_function_definition function_name in
+
+        List_inline_function (
+            fun_def.parameters,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
+            fun_def.body
+        )
 
 and stack_expression_of_typed_boolean_expression_with_type variable_infos = function
     | Typed_discrete_bool_expr (expr, discrete_type) ->
@@ -2758,7 +2803,14 @@ and stack_expression_of_typed_function_call variable_infos discrete_type argumen
             )
         )
 
-    | function_name -> raise (UndefinedFunction function_name)
+    | function_name ->
+        let fun_def = user_function_definition function_name in
+
+        Stack_inline_function (
+            fun_def.parameters,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
+            fun_def.body
+        )
 
 
 and queue_expression_of_typed_boolean_expression_with_type variable_infos = function
@@ -2894,7 +2946,14 @@ and queue_expression_of_typed_function_call variable_infos discrete_type argumen
             )
         )
 
-    | function_name -> raise (UndefinedFunction function_name)
+    | function_name ->
+        let fun_def = user_function_definition function_name in
+
+        Queue_inline_function (
+            fun_def.parameters,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
+            fun_def.body
+        )
 
 
 (* --------------------*)
@@ -3265,9 +3324,10 @@ let rec fun_decl_or_expr_of_typed_fun_decl_or_expr variable_infos = function
             global_expression_of_typed_global_expression variable_infos typed_expr
         )
 
-let fun_definition_of_typed_fun_definition variable_infos (typed_fun_definition : typed_fun_definition) =
+let fun_definition_of_typed_fun_definition variable_infos (typed_fun_definition : typed_fun_definition) : fun_definition =
     {
         name = typed_fun_definition.name;
+        parameters = typed_fun_definition.parameters;
         signature = FunctionSig.signature_constraint_of_signature typed_fun_definition.signature;
         body = fun_decl_or_expr_of_typed_fun_decl_or_expr variable_infos typed_fun_definition.body
     }
