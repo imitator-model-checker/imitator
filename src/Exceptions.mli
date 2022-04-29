@@ -42,6 +42,9 @@ exception InvalidModel
 
 exception InternalError of string
 
+(** When the model syntax is too large to apply extrapolation *)
+exception Model_not_compatible_for_extrapolation
+
 (** When a constraint contains no integer point *)
 exception NoIPPTA
 

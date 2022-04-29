@@ -605,7 +605,12 @@ if options#dynamic_clock_elimination then (
 (************************************************************)
 if options#extrapolation <> No_extrapolation then (
 	print_message Verbose_low "Preparing clock extrapolation…";
-	Extrapolation.prepare_extrapolation ()
+	try(
+		Extrapolation.prepare_extrapolation ();
+	) with
+	| Model_not_compatible_for_extrapolation ->
+		print_error ("The input model is too expressive for applying extrapolation.");
+		abort_program();
 );
 
 

@@ -490,10 +490,10 @@ let revert_coef_array coef_array =
 (* Return each guard in the model in the form of a triplet (clock,operator,coefficients) *)
 let get_guards model =
 	let guards = ref [] in
-	let f i =
+	let f (pxd_linear_inequality : LinearConstraint.pxd_linear_inequality) =
 		(* Exception management, as we can have Not_a_clock_guard_* when calling `clock_guard_of_linear_inequality` *)
 		try(
-			let (clock,op,linear_term) =  clock_guard_of_linear_inequality i in
+			let (clock,op,linear_term) =  clock_guard_of_linear_inequality pxd_linear_inequality in
 			let coef_array = linear_term_to_coef_array linear_term model.nb_parameters in
 			(*
 			if op = Op_l || op = Op_le 
@@ -507,16 +507,16 @@ let get_guards model =
 			| Not_a_clock_guard_no_clock_found -> ()
 			
 			| Not_a_clock_guard_multiple_clocks_found ->
-				print_error "Multiple clocks found in the same inequality when preparing extrapolation; this is not allowed";
-				raise (InternalError "Extrapolation cannot be applied to this model")
+				print_error ("Multiple clocks found in the same inequality `" ^ (LinearConstraint.string_of_pxd_linear_inequality model.variable_names pxd_linear_inequality) ^ "` when preparing extrapolation; this is not allowed.");
+				raise Model_not_compatible_for_extrapolation
 			
 			| Not_a_clock_guard_discrete_found ->
-				print_error "Discrete variable found in an inequality with some clocks when preparing extrapolation; this is not allowed";
-				raise (InternalError "Extrapolation cannot be applied to this model")
+				print_error ("Discrete variable found in the inequality `" ^ (LinearConstraint.string_of_pxd_linear_inequality model.variable_names pxd_linear_inequality) ^ "` with some clocks when preparing extrapolation; this is not allowed.");
+				raise Model_not_compatible_for_extrapolation
 			
 			| Not_a_clock_guard_non_1_coefficient ->
-				print_error "Inequality found with a clock featuring a non-1 or -1 coefficient when preparing extrapolation; this is not allowed";
-				raise (InternalError "Extrapolation cannot be applied to this model")
+				print_error ("Found a clock featuring a non-1 or -1 coefficient in inequality `" ^ (LinearConstraint.string_of_pxd_linear_inequality model.variable_names pxd_linear_inequality) ^ "` when preparing extrapolation; this is not allowed.");
+				raise Model_not_compatible_for_extrapolation
 	in 
 	List.iter f (get_inequalities model);
 	!guards
