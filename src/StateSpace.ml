@@ -2263,7 +2263,7 @@ let merge state_space queue =
 
     (* Get states sharing the same location and discrete values from hash_table, excluding s *)
     let get_siblings state_space (si : state_index) queue (look_in_queue : bool) =
-        print_message Verbose_standard("Get siblings of state " ^ string_of_int si);
+        print_message Verbose_medium("Get siblings of state " ^ string_of_int si);
         let s = get_state state_space si in
         let location = s.global_location in
         let location_index = new_location_index state_space location in
@@ -2288,7 +2288,7 @@ let merge state_space queue =
 
     (* function for merging one state with its siblings *)
     let merge_state (si : state_index) (look_in_queue : bool) =
-        print_message Verbose_standard ("[Merge] Try to merge state " ^ (string_of_int si));
+        print_message Verbose_medium("[Merge] Try to merge state " ^ (string_of_int si));
 
         let merging_states (s_merger : state_index) (s_merged : state_index) =
         (* Merge si and sj. Note that C(si) = siUsj from the test *)
@@ -2388,6 +2388,6 @@ let merge state_space queue =
     tcounter_merge#stop;
     (*state_space.states_for_comparison <- Hashtbl.create 1024;*)
 
-    print_message Verbose_standard "\n---\n";
+    print_message Verbose_high "\n---\n";
     (* return *)
     new_queue
