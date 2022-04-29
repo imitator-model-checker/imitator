@@ -269,8 +269,6 @@ imitator fischer.imi fischer.imiprop
 \end{terminal}
 %------------------------------------------------------------
 
-% In this command, \styleOption{-mode EF} calls the algorithm \EFsynth{} that synthesizes valuations reaching a given location (see \cref{ss:mode:EFsynth}); and \styleOption{-merge} is a merging technique reducing the state space that, for this model, ensures termination (see \cite{AFS13atva} for more details on merging).
-
 The result of the call to \imitator{} is
 
 %------------------------------------------------------------
@@ -1410,18 +1408,9 @@ State predicates allow conjunction, disjunction and the use of global discrete v
 The algorithm \EFsynth{} implemented in \imitator{} is a basic breadth-first procedure, close to the one described in \cite{JLR15}.
 Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis is not guaranteed to terminate.
 
-% The standard command is:
-%
-% %------------------------------------------------------------
-% \begin{terminal}
-% imitator model.imi -mode EFunsafe -merge -incl -output-result
-% \end{terminal}
-%------------------------------------------------------------
-
-% The option \styleOption{-output-result} is not compulsory, but allows one to
 One obtains a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
 
-The options \styleOption{-merge} and \styleOption{-comparison inclusion} are implicitly activated for this algorithm, as they usually greatly increase the analysis efficiency and the termination.
+The options \styleOption{-merge} \cite{AFS13atva} and \styleOption{-comparison inclusion} are implicitly activated for this algorithm, as they usually greatly increase the analysis efficiency and the termination.
 You may want to use \styleOption{-merge none} and \styleOption{-comparison none} to disable them.
 The options \styleOption{-dynamic-elimination} (not activated by default) and \styleOption{-comparison doubleinclusion} can also be used to (try to) reduce the state space.
 
@@ -1483,14 +1472,6 @@ property := #synth EF(loc[pta] = l1 | (accepting & loc[pta] <> l2));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Often, we are rather interested in \emph{safety} synthesis, \ie{} the set of valuations for which the target location is unreachable.
-
-% The standard command is:
-%
-% %------------------------------------------------------------
-% \begin{terminal}
-%imitator model.imi -mode EF -merge -incl -output-result
-% \end{terminal}
-%------------------------------------------------------------
 
 The property syntax is as follows:
 
@@ -1644,16 +1625,6 @@ always sequence a1, ..., an
 
 The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
 
-% Then, the command to synthesize parameters is the same as for the EF-synthesis:
-%
-% %------------------------------------------------------------
-% \begin{terminal}
-% imitator model.imi -mode EF -merge -incl -output-result}
-% \end{terminal}
-%------------------------------------------------------------
-%
-% Once more, options \styleOption{-merge} and \styleOption{-incl} are optional, but often improve efficiency and termination.
-
 \imitator{} then translates the selected pattern into an additional observer automaton, and performs some safety or reachability synthesis.
 
 
@@ -1673,8 +1644,6 @@ As usual, \imitator{} can also
 output the state space in a graphical form (option \styleOption{-draw-statespace})
 or
 output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
-% 	or
-% 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1731,44 +1700,6 @@ This (non-default) algorithm can be called using the following option syntax:
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsubsection{Accepting cycle (NDFS)}\label{sss:accepting-loop-NDFS}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-% BEGIN OLD VERSION
-% Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one accepting cycle.
-% This algorithm differs from the one in \cref{sss:accepting-loop-BFS} in the sense that this algorithm performs a nested depth-first search (NDFS) exploration until a cycle is found~\cite{NPP18}.
-% In addition, this algorithm is (by default) not complete.
-%
-% The property syntax is as follows:
-%
-% \begin{IMITATORproperty}
-% property := #synth inf_acc_cycle;
-% \end{IMITATORproperty}
-%
-% However, there are two main differences with \cref{ss:loop,sss:accepting-loop-BFS}:
-% \begin{enumerate}
-% 	\item accepting locations must be specified using the keyword \styleIMI{accepting} (this keyword is not used by other algorithms\footnote{This comes from the fact that the developers of this algorithm are mainly Jaco Van~de~Pol and Laure~Petrucci, who used a different accepting location system.});
-% 	\item an exploration order may be specified as command line (see below).
-% \end{enumerate}
-%
-% The command is therefore:
-%
-% %------------------------------------------------------------
-% \begin{terminal}
-% imitator model.imi property.imiprop -expl-order NDFS
-% \end{terminal}
-%------------------------------------------------------------
-%
-% Several heuristics can be used, some of them synthesizing all parameter values for which a cycle can be found.
-% These are accessible via the \styleOption{-expl-order} option:
-%
-% \begin{description}
-% 	\item[\styleOption{-expl-order NDFS}]: use standard NDFS to find an accepting cycle;
-% 	\item[\styleOption{-expl-order NDFSsub}]: standard NDFS with subsumption;
-% 	\item[\styleOption{-expl-order layerNDFS}]: NDFS with layers;
-% 	\item[\styleOption{-expl-order layerNDFSsub}]: NDFS with subsumption and layers (default)	;
-% 	      % 	\item[\styleOption{-expl-order synNDFSsub}]: NDFS synthesis with subsumption;
-% 	      % 	\item[\styleOption{-expl-order synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
-% \end{description}
-% END OLD VERSION
 
 This (default) algorithm can be called using the following option syntax:
 
@@ -2055,9 +1986,6 @@ Any strictly positive rational (or integer) is allowed.
 \end{becareful}
 
 In addition, state spaces and separate graphical cartographies for each tile can also be generated by adding option \styleOption{-tiles-files}.
-
-% Recall that the option \styleOption{-output-result} is not compulsory, but allows one to obtain a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2364,15 +2292,6 @@ The resulting constraint comes with two other information:
 Note that in almost all analyses, \imitator{} returns an exact or an under-approximated constraint.
 A possibly invalid constraint can be synthesized when some options are used: for example, computing the result of \IM{} with the merging enabled (\styleOption{-merge}) yields a possibly invalid constraint, as it was shown that the merging optimization does not preserve the validity of the result of~\IM{}~\cite{AFS13atva}.
 
-% \begin{remark}
-% 	\IM{} is independent of the property, and therefore the constraint nature is not really interesting.
-% 	\imitator{} performs the following:
-% 	if a safety property is defined and if the state space reaches some unsafe states, then the constraint is considered as bad.
-% 	In any other case (safe state space, or no safety property defined), the constraint nature is considered as good.
-% 	The same applies for \BC{}.
-% \end{remark}
-
-
 Finally, the result also comes with an evaluation of the termination: the termination can be regular (the analysis went to its end without interruption) or an early termination, with some states unexplored (\eg{} if a maximum analysis time (\styleOption{-time-limit}), a maximum exploration depth (\styleOption{-depth-limit}), etc., was set).
 
 
@@ -2508,10 +2427,6 @@ imitator model.imi property.imiprop [options] -draw-cart
 %------------------------------------------------------------
 
 This will generate file \stylePath{model\_cart.png}.
-% \stylePath{model\_cart\_ef.png} if the algorithm is \EFsynth{},
-% \stylePath{model\_cart\_im.png} if the algorithm is \IM{},
-% \stylePath{model\_cart\_bc.png} if the algorithm is \BC{} and its variant,
-% or \stylePath{model\_cart\_patator.png} if the algorithm is the distributed \BC{} and its variants.
 
 The two dimensions chosen for the plot are the first two (non-constant) parameter dimension in the model.
 
