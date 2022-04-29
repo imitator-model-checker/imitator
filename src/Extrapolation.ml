@@ -338,6 +338,9 @@ let compute_maximal_constants (bounds : (numconst_or_infinity * numconst_or_infi
 	(* Hide bounded parameters *)
 	let transformed_guards = (hide_bounded guards bounds) in
 	(* Determine type of the transformed PTA*)
+	
+	(*** WARNING (ÉA, 2022/04/29): why not use model.lu_status? ***)
+	
 	let transformed_type = get_pta_type transformed_guards in
 	(* If L-PTA or U-PTA, compute N and use it to determine the bounds of unbounded parameters *)
 	let transformed_bounds =
@@ -515,7 +518,7 @@ let get_guards model =
 				raise Model_not_compatible_for_extrapolation
 			
 			| Not_a_clock_guard_non_1_coefficient ->
-				print_error ("Found a clock featuring a non-1 or -1 coefficient in inequality `" ^ (LinearConstraint.string_of_pxd_linear_inequality model.variable_names pxd_linear_inequality) ^ "` when preparing extrapolation; this is not allowed.");
+				print_error ("Found a clock featuring a coefficient different from 1 and from -1 in inequality `" ^ (LinearConstraint.string_of_pxd_linear_inequality model.variable_names pxd_linear_inequality) ^ "` when preparing extrapolation; this is not allowed.");
 				raise Model_not_compatible_for_extrapolation
 	in 
 	List.iter f (get_inequalities model);
