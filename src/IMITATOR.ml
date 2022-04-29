@@ -244,40 +244,7 @@ begin match property_option, options#imitator_mode with
             options#set_merge_restart(false);
         );
 		
-		
-		(* Old merge options *)
-				(*** DISCONTINUED as of 3.3 ***)
-		
-(*		(* Update if not yet set *)
-		if not options#is_set_mergeq then (
-			let merge_needed = AlgorithmOptions.merge_needed property in
 
-			(* Print some information *)
-			print_message Verbose_high ("Case option `-mergeq` not set");
-
-			options#set_mergeq(false);
-
-			if not options#is_set_merge then(
-				(* Print some information *)
-				print_message Verbose_high ("Set option `-merge` to its default value: `" ^ (string_of_bool merge_needed) ^ "`");
-
-				options#set_merge (merge_needed);
-			);
-		);
-		(* Update if not yet set *)
-		if not options#is_set_merge212 then (
-			(* Print some information *)
-			print_message Verbose_high ("Case option `-merge212` not set");
-
-			options#set_merge212(false);
-		);
-		(* Update if not yet set *)
-        if not options#is_set_mergedev then (
-            (* Print some information *)
-            print_message Verbose_high ("Case option `-mergedev` not set");
-
-            options#set_mergedev(false);
-        );*)
 
 	| _, State_space_computation
 	| None, _
