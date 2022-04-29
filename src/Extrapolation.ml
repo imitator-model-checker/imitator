@@ -221,10 +221,10 @@ let get_pta_type (guards : (int * op * numconst_or_infinity array) list) =
 		done;
 	) guards;
 	match (!is_lpta,!is_upta) with
-	| true,true -> print_message Verbose_standard ("Type of reduced model: TA"); TA
-	| true,false -> print_message Verbose_standard ("Type of reduced model : L_PTA"); L_PTA
-	| false,true -> print_message Verbose_standard ("Type of reduced model : U_PTA"); U_PTA
-	| false,false -> print_message Verbose_standard ("Type of reduced model : PTA"); PTA
+	| true,true -> print_message Verbose_low ("Type of reduced model: TA"); TA
+	| true,false -> print_message Verbose_low ("Type of reduced model : L_PTA"); L_PTA
+	| false,true -> print_message Verbose_low ("Type of reduced model : U_PTA"); U_PTA
+	| false,false -> print_message Verbose_low ("Type of reduced model : PTA"); PTA
 	
 
 (* Returns a boolean array indicating for each clock if it is a parametric one *)
@@ -574,19 +574,19 @@ let prepare_extrapolation () : unit =
 	clocks := model.clocks;
 	
 	(* Print preprocessing resut*)
-	print_message Verbose_standard ("\nL : ");
+	print_message Verbose_low ("\nL : ");
 	Array.iter (fun (e) -> 
 		match e with
-		|Finite n -> print_message Verbose_standard ((NumConst.string_of_numconst n))
-		|Minus_infinity -> print_message Verbose_standard ("- infinity")
-		|Infinity -> print_message Verbose_standard ("infinity")
+		|Finite n -> print_message Verbose_low ((NumConst.string_of_numconst n))
+		|Minus_infinity -> print_message Verbose_low ("- infinity")
+		|Infinity -> print_message Verbose_low ("infinity")
 	) l; 
-	print_message Verbose_standard ("\nU : ");
+	print_message Verbose_low ("\nU : ");
 	Array.iter (fun (e) -> 
 		match e with
-		|Finite n -> print_message Verbose_standard ((NumConst.string_of_numconst n))
-		|Minus_infinity -> print_message Verbose_standard ("- infinity")
-		|Infinity -> print_message Verbose_standard ("infinity")
+		|Finite n -> print_message Verbose_low ((NumConst.string_of_numconst n))
+		|Minus_infinity -> print_message Verbose_low ("- infinity")
+		|Infinity -> print_message Verbose_low ("infinity")
 	) u; 
 		
 	(* The end *)
