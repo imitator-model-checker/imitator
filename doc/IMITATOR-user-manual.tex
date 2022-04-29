@@ -2149,6 +2149,7 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 
 			% Non-nested CTL
 			\hline
+			% TODO: update default merge options!
 			\rowHeader{} Algorithm & Syntax                                           & \styleOption{-merge}      & \styleOption{-comparison}    \\
 			\hline
 			State space computation           & \cellNA{}                  & \cellNo{} & \styleOption{equality} \\
@@ -2290,7 +2291,8 @@ The resulting constraint comes with two other information:
 	\item its soundness, \ie{} whether the constraint is exact (\imitator{} returned exactly the set of parameter valuations solution to the analysis requested), a possible under-approximation of that result, a possible over-approximation of that result (in some rare cases), or a possibly invalid constraint (in which case the result output by \imitator{} shall not be used).
 \end{itemize}
 Note that in almost all analyses, \imitator{} returns an exact or an under-approximated constraint.
-A possibly invalid constraint can be synthesized when some options are used: for example, computing the result of \IM{} with the merging enabled (\styleOption{-merge}) yields a possibly invalid constraint, as it was shown that the merging optimization does not preserve the validity of the result of~\IM{}~\cite{AFS13atva}.
+A possibly invalid constraint can be synthesized when some options are used: for example, computing the result of \IM{} with the merging enabled (\styleOption{-merge}) % TODO: update
+yields a possibly invalid constraint, as it was shown that the merging optimization does not preserve the validity of the result of~\IM{}~\cite{AFS13atva}.
 
 Finally, the result also comes with an evaluation of the termination: the termination can be regular (the analysis went to its end without interruption) or an early termination, with some states unexplored (\eg{} if a maximum analysis time (\styleOption{-time-limit}), a maximum exploration depth (\styleOption{-depth-limit}), etc., was set).
 
@@ -3223,6 +3225,7 @@ For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}), consider la
 For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}), do not consider layered NDFS~\cite{NPP18}.
 
 
+% TODO: update
 %------------------------------------------------------------
 \paragraph{\styleOption{-merge} (default: depending on the algorithm)}
 %------------------------------------------------------------
@@ -3247,7 +3250,8 @@ Force disabling merging, even if the selected algorithm normally requires it.
 %------------------------------------------------------------
 \paragraph{\styleOption{-merge-candidates} (default: depending on the algorithm)}
 %------------------------------------------------------------
-Use the merging technique of \cite{AFS13atva} and specify the candidates to merge with a state.
+Use the merging technique of [AMPP2x] % TODO: update ref
+and specify the candidates to merge with a state.
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
 	\styleOption{visited} & All the visited states \\
@@ -3258,7 +3262,8 @@ Use the merging technique of \cite{AFS13atva} and specify the candidates to merg
 %------------------------------------------------------------
 \paragraph{\styleOption{-merge-update} (default: depending on the algorithm)}
 %------------------------------------------------------------
-Use the merging technique of \cite{AFS13atva} and specify when to update the statespace.
+Use the merging technique of [AMPP2x] % TODO: update ref
+and specify when to update the statespace.
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
 	\styleOption{merge} & After each successful merge with each sibling \\
@@ -3269,7 +3274,8 @@ Use the merging technique of \cite{AFS13atva} and specify when to update the sta
 %------------------------------------------------------------
 \paragraph{\styleOption{-merge-restart} (default: depending on the algorithm)}
 %------------------------------------------------------------
-Use the merging technique of \cite{AFS13atva} and set if a state can be merged to one of its siblings, 
+Use the merging technique of [AMPP2x] % TODO: update ref
+and set if a state can be merged to one of its siblings, 
 if the search through all candidate siblings is restarted.
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
