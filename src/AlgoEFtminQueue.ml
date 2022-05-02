@@ -481,7 +481,18 @@ class algoEFtminQueue (state_predicate : AbstractProperty.state_predicate) =
 			(* Turn pq into a list of state IDs *)
 			let list_pq = pq_list_of_states pq in
 			(* Merge the list_pq states *)
-			let new_states_after_merging = StateSpace.merge state_space list_pq in
+
+			let new_states_after_merging =
+			    match options#merge_algorithm with
+                    | Merge_reconstruct
+                    | Merge_onthefly    ->
+                        StateSpace.merge state_space list_pq;
+                    | Merge_212 ->
+                        let eaten_states = StateSpace.merge212 state_space list_pq in
+                        list_diff list_pq eaten_states;
+                    | Merge_none ->
+                        list_pq
+			in
 
 			let rec list_to_pq pq list_pq = match pq with
 				| [] -> [];
