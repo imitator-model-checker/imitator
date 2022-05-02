@@ -482,6 +482,7 @@ class algoEFtminQueue (state_predicate : AbstractProperty.state_predicate) =
 			let list_pq = pq_list_of_states pq in
 			(* Merge the list_pq states *)
 
+			(*** WARNING (2022/05/02): this code should NOT be "duplicated" / "rewritten"; it should be in AlgoStateBased ***)
 			let new_states_after_merging =
 			    match options#merge_algorithm with
                     | Merge_reconstruct
