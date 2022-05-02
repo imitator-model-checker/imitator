@@ -823,7 +823,6 @@ let check_flows_2 variable_infos location_name flows =
 
     is_clocks_declared && is_no_flow_value_discrepancies
 
-(* TODO benjamin CLEAN remove this imperative version *)
 let check_flows nb_clocks index_of_variables type_of_variables location_name flows =
 	(* Create a hash table variable_index => flow value *)
 	let temp_flow_hashtable : (variable_index, NumConst.t) Hashtbl.t = Hashtbl.create nb_clocks in
@@ -866,6 +865,19 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 		) flows;
 	!ok
 
+(* TODO benjamin IMPLEMENT *)
+(*
+let check_fun_decl_or_expr fun_decl_or_expr =
+    (* Check all variables declared in function body *)
+     let all_variables_declared_in_fun_decl_or_expr local_variables = function
+            | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr) ->
+                let local_variables = StringSet.add local_variables variable_name in
+                all_variables_declared_in_fun_decl_or_expr local_variables parsed_fun_decl_or_expr
+
+            | Parsed_fun_expr of parsed_global_expression
+*)
+
+(*let check_fun_definition fun_def = check_fun_decl_or_expr fun_def.body*)
 
 (*------------------------------------------------------------*)
 (* Check that the automata are well-formed *)

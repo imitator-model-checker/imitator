@@ -159,6 +159,7 @@ val all_variables_defined_in_parsed_global_expression_without_callback : variabl
 val all_variables_defined_in_parsed_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_boolean_expression -> bool
 val all_variables_defined_in_parsed_discrete_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_discrete_boolean_expression -> bool
 val all_variables_defined_in_parsed_discrete_arithmetic_expression : variable_infos -> (variable_name -> unit) option -> parsed_discrete_arithmetic_expression -> bool
+val all_variables_defined_in_parsed_fun_decl_or_expr : variable_infos -> (variable_name -> unit) option -> (variable_name -> unit) option -> parsed_fun_decl_or_expr -> bool
 val all_variables_defined_in_parsed_normal_update : variable_infos -> (variable_name -> unit) option -> (variable_name -> unit) option -> normal_update -> bool
 val all_variables_defined_in_parsed_update : variable_infos -> (variable_name -> unit) option -> (variable_name -> unit) option -> update -> bool
 val all_variables_defined_in_linear_expression : variable_infos -> (variable_name -> unit) -> linear_expression -> bool

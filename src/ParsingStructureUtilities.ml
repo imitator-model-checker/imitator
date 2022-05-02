@@ -187,6 +187,14 @@ and fold_map_parsed_variable_update_type operator base leaf_fun leaf_update_fun 
             [fold_parsed_discrete_arithmetic_expression operator base leaf_fun index_expr]
     | Parsed_void_update -> []
 
+and fold_parsed_fun_decl_or_expr operator base leaf_fun leaf_update_fun = function
+    | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr) ->
+        operator
+            (leaf_update_fun (Leaf_update_updated_variable variable_name))
+            (fold_parsed_global_expression operator base leaf_fun init_expr)
+    | Parsed_fun_expr expr ->
+        fold_parsed_global_expression operator base leaf_fun expr
+
 let rec fold_parsed_linear_constraint operator leaf_fun linear_constraint_leaf_fun = function
     | Parsed_true_constraint -> linear_constraint_leaf_fun Leaf_true_linear_constraint
     | Parsed_false_constraint -> linear_constraint_leaf_fun Leaf_false_linear_constraint
@@ -300,6 +308,7 @@ let for_all_in_parsed_discrete_boolean_expression = apply_evaluate_and_with_base
 let for_all_in_parsed_discrete_arithmetic_expression = apply_evaluate_and_with_base fold_parsed_discrete_arithmetic_expression
 let for_all_in_parsed_discrete_term = apply_evaluate_and_with_base fold_parsed_discrete_term
 let for_all_in_parsed_discrete_factor = apply_evaluate_and_with_base fold_parsed_discrete_factor
+let for_all_in_parsed_fun_decl_or_expr = apply_evaluate_and_with_base fold_parsed_fun_decl_or_expr
 
 (** Check if all leaf of a linear expression satisfy the predicate **)
 let for_all_in_parsed_linear_expression = apply_evaluate_and fold_parsed_linear_expression
@@ -318,6 +327,7 @@ let for_all_in_parsed_simple_predicate = apply_evaluate_and_with_base fold_parse
 let for_all_in_parsed_state_predicate_factor = apply_evaluate_and_with_base fold_parsed_state_predicate_factor
 let for_all_in_parsed_state_predicate_term = apply_evaluate_and_with_base fold_parsed_state_predicate_term
 let for_all_in_parsed_state_predicate = apply_evaluate_and_with_base fold_parsed_state_predicate
+
 
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
@@ -633,8 +643,18 @@ let is_linear_constant variable_infos = function
 let is_variable_defined_with_callback variable_infos callback = function
     | Leaf_variable variable_name ->
 
-       let is_defined = is_variable_or_constant_declared variable_infos variable_name in
+        let is_defined = is_variable_or_constant_declared variable_infos variable_name in
+        (*
+        let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
 
+        let is_defined_local =
+            match local_variables_opt with
+            | None -> false
+            | Some local_variables -> StringSet.mem local_variables variable_name
+        in
+
+        let is_defined = is_defined_global || is_defined_local in
+        *)
         if not is_defined then (
             match callback with
             | Some func -> func variable_name
@@ -863,6 +883,10 @@ let all_variables_defined_in_parsed_discrete_boolean_expression variable_infos c
 (* Check that all variables in a parsed discrete arithmetic expression are effectively be defined *)
 let all_variables_defined_in_parsed_discrete_arithmetic_expression variable_infos callback expr =
     for_all_in_parsed_discrete_arithmetic_expression (is_variable_defined_with_callback variable_infos callback) expr
+
+(* Check that all variables in a parsed fun declaration are effectively be defined *)
+let all_variables_defined_in_parsed_fun_decl_or_expr variable_infos undefined_variable_callback undefined_updated_variable_callback expr =
+    for_all_in_parsed_fun_decl_or_expr (is_variable_defined_with_callback variable_infos undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos undefined_updated_variable_callback) expr
 
 (* Check that all variables in a parsed normal update are effectively be defined *)
 let all_variables_defined_in_parsed_normal_update variable_infos undefined_variable_callback undefined_updated_variable_callback expr =
