@@ -4376,6 +4376,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/17
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test flows',
+        'tags':'flow, behavior',
 		'input_files': ['testFlows.imi', 'testFlows.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -4392,6 +4393,50 @@ Constraint nature                       : good
 		"""
 			} # end result file
 			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/05/02
+		# Last modified            : 2022/05/02
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test that undefined stopwatchs raise errors in flow update',
+		'author': 'lbinria',
+		'tags':'clock, stopwatch, flow, error, semantic',
+		'input_files': ['flow_error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'flow_error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/05/02
+		# Last modified            : 2022/05/02
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test that undefined stopwatchs raise errors in stop',
+		'author': 'lbinria',
+		'tags':'clock, stopwatch, stop, error, semantic',
+		'input_files': ['stopwatch_error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'stopwatch_error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------

@@ -1,0 +1,42 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that undefined stopwatchs raise errors in flow update
+ * Description      : Test that IMITATOR raise controlled error when stopwatchs in `flow` are not defined or not clocks
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/04/07
+ * Last modified    : 2022/04/07
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.0
+ ************************************************************)
+
+var
+
+  x : discrete;
+  z : clock;
+
+automaton P
+
+  (* Error should be raised because x is not a clock and y is not defined *)
+  loc s0: invariant True flow { x' = 0, x' = 0, y' = 0, y' = 1, z' = 0, z' = 1 }
+  when True goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+
+init :=
+    loc[P]=s0
+;
