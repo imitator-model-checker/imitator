@@ -2199,7 +2199,8 @@ let update_statespace state_space merger_index merged_index_list =
     match options#merge_algorithm with
     | Merge_reconstruct -> copy_and_reduce state_space merger_index merged_index_list
     | Merge_onthefly -> merge_transitions state_space merger_index merged_index_list
-    | _ -> raise(InternalError("Invalid match: value is not sound"))
+    | Merge_none -> raise(InternalError("Impossible case: merge_algorithm cannot be `Merge_none`"))
+    | Merge_212 -> raise(InternalError("Impossible case: merge_algorithm cannot be `Merge_212`"))
     end;
 
     tcounter_merge_statespace#stop;
