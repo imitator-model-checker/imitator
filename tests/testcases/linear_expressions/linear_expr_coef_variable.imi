@@ -1,0 +1,52 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that a linear expression multiplying variable and coef (k*v or v*k) work correctly
+ * Description      : Test that a linear expression multiplying variable and coef (k*v or v*k) work correctly
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/05/02
+ * Last modified    : 2022/05/02
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3
+ ************************************************************)
+
+var
+
+  i1, i2, i3, i4, r : discrete;
+
+
+automaton P
+
+  loc s0: invariant True
+  when True
+  do {
+    i1 := 1 + 2 * r * r, (* i1 = 19 *)
+    i2 := 1 + 2 * r, (* i2 = 7 *)
+    i3 := 1 + r * 2, (* i3 = 7 *)
+    i4 := 1 + 2r (* i4 = 7 *)
+  }
+  goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+
+init := {
+  discrete =
+    loc[P]:=s0,
+    r := 3
+  ;
+
+}

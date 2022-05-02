@@ -2137,6 +2137,33 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2022/05/02
+		# Last modified            : 2022/05/02
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test that a linear expression multiplying variable and coef (k*v or v*k) work correctly',
+		'author': 'lbinria',
+		'tags':'linear, expression, behavior',
+		'input_files': ['linear_expressions/linear_expr_coef_variable.imi'],
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'linear_expr_coef_variable-statespace.states' , 'content' : """
+  STATE 1:
+  P: lend, i1 = 19, i2 = 7, i3 = 7, i4 = 7, r = 3 ==>
+&True
+
+  Projection onto the parameters:
+  True
+		"""
+			} # end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		## Test version             : 1
 		## Test since               : 2021/02/10
 		## Last modified            : 2021/02/10
