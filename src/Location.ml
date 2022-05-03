@@ -293,7 +293,7 @@ let match_simple_predicate (locations_acceptance_condition : automaton_index -> 
 	match simple_predicate with
 
 	(* Here convert the global_location to a variable valuation *)
-	| Discrete_boolean_expression discrete_boolean_expression -> DiscreteExpressionEvaluator.eval_discrete_boolean_expression_without_local_variables (Some (get_discrete_value global_location)) discrete_boolean_expression
+	| Discrete_boolean_expression discrete_boolean_expression -> DiscreteExpressionEvaluator.eval_discrete_boolean_expression (Some (get_discrete_value global_location)) discrete_boolean_expression
 	
 	| Loc_predicate loc_predicate -> match_loc_predicate loc_predicate global_location
 

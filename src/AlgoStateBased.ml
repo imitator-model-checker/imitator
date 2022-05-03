@@ -1352,7 +1352,7 @@ let get_updates (source_location : Location.global_location) (updates : Abstract
 	List.fold_left (
 	fun (acc_clock, acc_discrete) (conditional_update : AbstractModel.conditional_update) ->
 		let boolean_expr, if_updates, else_updates = conditional_update in
-		let filter_updates = if (eval_boolean_expression_without_local_variables (Some (Location.get_discrete_value source_location)) boolean_expr) then if_updates else else_updates in
+		let filter_updates = if (eval_boolean_expression (Some (Location.get_discrete_value source_location)) boolean_expr) then if_updates else else_updates in
 		(merge_clock_updates acc_clock filter_updates.clock, list_append acc_discrete filter_updates.discrete)
 	) (updates.clock, updates.discrete) updates.conditional
 
@@ -1427,7 +1427,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
             match discrete_index_opt with
             | None ->
-                let _ = eval_global_expression_without_local_variables (Some discrete_valuation) expr in ()
+                let _ = eval_global_expression (Some discrete_valuation) expr in ()
             | Some discrete_index ->
 
                 let old_value = discrete_valuation discrete_index in
@@ -1437,8 +1437,8 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
                 let discrete_valuation_opt = Some discrete_valuation in
 
                 (* Compute its new value *)
-                let new_value = eval_global_expression_without_local_variables discrete_valuation_opt expr in
-                let new_value = pack_value model.variable_names discrete_valuation_opt old_value new_value variable_update_type in
+                let new_value = eval_global_expression discrete_valuation_opt expr in
+                let new_value = pack_value model.variable_names discrete_valuation old_value new_value variable_update_type in
 
                 Location.update_discrete_with (discrete_index, new_value) location;
 
@@ -1453,7 +1453,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
             match discrete_index_opt with
             | None ->
-                let _ = eval_global_expression_without_local_variables (Some discrete_valuation) global_expression in ()
+                let _ = eval_global_expression (Some discrete_valuation) global_expression in ()
             | Some discrete_index ->
 
                 let old_value = discrete_valuation discrete_index in
@@ -1463,8 +1463,8 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
                 let discrete_valuation_opt = Some discrete_valuation in
 
                 (* Compute its new value *)
-                let new_value = eval_global_expression_without_local_variables discrete_valuation_opt global_expression in
-                let new_value = pack_value model.variable_names discrete_valuation_opt old_value new_value variable_update_type in
+                let new_value = eval_global_expression discrete_valuation_opt global_expression in
+                let new_value = pack_value model.variable_names discrete_valuation old_value new_value variable_update_type in
 
 
                 (* Check if already updated *)
@@ -1535,7 +1535,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
             match discrete_index_opt with
             | None ->
-                let _ = eval_global_expression_without_local_variables (Some discrete_valuation) expr in ()
+                let _ = eval_global_expression (Some discrete_valuation) expr in ()
             | Some discrete_index ->
 
                 let old_value = discrete_valuation discrete_index in
@@ -1545,8 +1545,8 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
                 let discrete_valuation_opt = Some discrete_valuation in
 
                 (* Compute its new value *)
-                let new_value = eval_global_expression_without_local_variables discrete_valuation_opt expr in
-                let new_value = pack_value model.variable_names discrete_valuation_opt old_value new_value variable_update_type in
+                let new_value = eval_global_expression discrete_valuation_opt expr in
+                let new_value = pack_value model.variable_names discrete_valuation old_value new_value variable_update_type in
 
                 Location.update_discrete_with (discrete_index, new_value) location;
 

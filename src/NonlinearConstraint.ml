@@ -11,7 +11,7 @@ type nonlinear_constraint = DiscreteExpressions.discrete_boolean_expression list
 
 (* if all true, it's satisfied *)
 let check_nonlinear_inequalities discrete_valuation =
-  List.for_all (DiscreteExpressionEvaluator.eval_discrete_boolean_expression_without_local_variables (Some discrete_valuation))
+  List.for_all (DiscreteExpressionEvaluator.eval_discrete_boolean_expression (Some discrete_valuation))
 
 (* Check if a nonlinear constraint is satisfied *)
 let check_nonlinear_constraint discrete_valuation (* nonlinear_inequalities *) = check_nonlinear_inequalities discrete_valuation (* nonlinear_inequalities *)
