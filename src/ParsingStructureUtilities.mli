@@ -112,6 +112,7 @@ val string_of_parsed_arithmetic_expression : variable_infos -> parsed_discrete_a
 val string_of_parsed_term : variable_infos -> parsed_discrete_term -> string
 val string_of_parsed_factor : variable_infos -> parsed_discrete_factor -> string
 val string_of_parsed_relop : parsed_relop -> string -> string -> string
+val string_of_parsed_fun_def : variable_infos -> parsed_fun_definition -> string
 
 val string_of_parsed_update : variable_infos -> update -> string
 val string_of_parsed_normal_update : variable_infos -> normal_update -> string
@@ -159,7 +160,7 @@ val all_variables_defined_in_parsed_global_expression_without_callback : variabl
 val all_variables_defined_in_parsed_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_boolean_expression -> bool
 val all_variables_defined_in_parsed_discrete_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_discrete_boolean_expression -> bool
 val all_variables_defined_in_parsed_discrete_arithmetic_expression : variable_infos -> (variable_name -> unit) option -> parsed_discrete_arithmetic_expression -> bool
-val all_variables_defined_in_parsed_fun_decl_or_expr : variable_infos -> (variable_name -> unit) option -> (variable_name -> unit) option -> parsed_fun_decl_or_expr -> bool
+val all_variables_defined_in_parsed_fun_def : variable_infos -> (variable_name -> unit) option -> (variable_name -> unit) option -> parsed_fun_definition -> bool
 val all_variables_defined_in_parsed_normal_update : variable_infos -> (variable_name -> unit) option -> (variable_name -> unit) option -> normal_update -> bool
 val all_variables_defined_in_parsed_update : variable_infos -> (variable_name -> unit) option -> (variable_name -> unit) option -> update -> bool
 val all_variables_defined_in_linear_expression : variable_infos -> (variable_name -> unit) -> linear_expression -> bool

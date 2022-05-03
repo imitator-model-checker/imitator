@@ -345,6 +345,10 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
             ) location.transitions;
         ) locations;
     ) parsed_model.automata;
+    (* TODO benjamin IMPLEMENT gather variables used in user function *)
+	(* Gather in each user functions *)
+    List.iter (fun parsed_fun_definition -> ()
+    ) parsed_model.fun_definitions;
 
     let all_dependencies_used = get_all_variable_dependencies_used_in_init parsed_model all_variables_used in
     all_variables_used := StringSet.union !all_variables_used all_dependencies_used;
@@ -865,19 +869,22 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 		) flows;
 	!ok
 
-(* TODO benjamin IMPLEMENT *)
-(*
-let check_fun_decl_or_expr fun_decl_or_expr =
-    (* Check all variables declared in function body *)
-     let all_variables_declared_in_fun_decl_or_expr local_variables = function
-            | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr) ->
-                let local_variables = StringSet.add local_variables variable_name in
-                all_variables_declared_in_fun_decl_or_expr local_variables parsed_fun_decl_or_expr
+(* Check if user function definition is well formed *)
+(* - check that all variables used in user function are declared *)
+let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
 
-            | Parsed_fun_expr of parsed_global_expression
-*)
-
-(*let check_fun_definition fun_def = check_fun_decl_or_expr fun_def.body*)
+    (* Prepare callback function that print error message when undeclared variable is found *)
+    let print_variable_in_fun_not_declared variable_name =
+        print_error (
+            "Variable `"
+            ^ variable_name
+            ^ "` used in function `"
+            ^ fun_def.name
+            ^ "` was not declared."
+        )
+    in
+    let print_variable_in_fun_not_declared_opt = Some print_variable_in_fun_not_declared in
+    ParsingStructureUtilities.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt print_variable_in_fun_not_declared_opt fun_def
 
 (*------------------------------------------------------------*)
 (* Check that the automata are well-formed *)
@@ -3855,12 +3862,26 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     let variable_infos = useful_parsing_model_information.variable_infos in
 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check the user function definitions *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
 	print_message Verbose_high ("*** Checking user functions definitions…");
+
+    (* Check user functions are well formed *)
+	let well_formed_user_functions_list = List.map (check_fun_definition variable_infos) parsed_model.fun_definitions in
+	let well_formed_user_functions = List.for_all identity well_formed_user_functions_list in
+
+    if not well_formed_user_functions then
+        raise InvalidModel;
+
     (* Convert function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
     let converted_fun_definitions_seq = List.map (fun (x : parsed_fun_definition) -> x.name, DiscreteExpressionConverter.convert_fun_definition variable_infos x) parsed_model.fun_definitions |> List.to_seq in
     (* Create table from sequence *)
     let fun_definitions_table = Hashtbl.of_seq converted_fun_definitions_seq in
     Functions.fun_definitions_table := fun_definitions_table;
+
+
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)

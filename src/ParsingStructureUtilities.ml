@@ -59,6 +59,29 @@ type variable_constant_defined_state =
     | Variable_removed
     | Not_declared
 
+(* TODO benjamin REFACTOR move to Converter not sure because I use it in string_of_fun_decl *)
+(* Convert var type number from parsing structure to abstract model *)
+let convert_var_type_discrete_number = function
+    | ParsingStructure.Var_type_discrete_rat -> DiscreteType.Var_type_discrete_rat
+    | ParsingStructure.Var_type_discrete_int -> DiscreteType.Var_type_discrete_int
+
+(* Convert discrete var type from parsing structure to abstract model *)
+let rec convert_var_type_discrete = function
+    | ParsingStructure.Var_type_discrete_number x -> DiscreteType.Var_type_discrete_number (convert_var_type_discrete_number x)
+    | ParsingStructure.Var_type_discrete_bool -> DiscreteType.Var_type_discrete_bool
+    | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteType.Var_type_discrete_binary_word length
+    | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteType.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
+    | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteType.Var_type_discrete_list (convert_var_type_discrete inner_type)
+    | ParsingStructure.Var_type_discrete_stack inner_type -> DiscreteType.Var_type_discrete_stack (convert_var_type_discrete inner_type)
+    | ParsingStructure.Var_type_discrete_queue inner_type -> DiscreteType.Var_type_discrete_queue (convert_var_type_discrete inner_type)
+
+(* Convert var type from parsing structure to abstract model *)
+let convert_var_type = function
+    | ParsingStructure.Var_type_clock -> DiscreteType.Var_type_clock
+    | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteType.Var_type_discrete (convert_var_type_discrete var_type_discrete)
+    | ParsingStructure.Var_type_parameter -> DiscreteType.Var_type_parameter
+
+
 (* Get variable name given a variable index  *)
 let [@inline] variable_name_of_index variable_infos = List.nth variable_infos.variable_names
 
@@ -518,6 +541,24 @@ and string_of_parsed_discrete_boolean_expression variable_infos = function
     | Parsed_Not expr ->
             "not (" ^ (string_of_parsed_boolean_expression variable_infos expr) ^ ")"
 
+and string_of_parsed_fun_decl_or_expr variable_infos = function
+        | Parsed_fun_local_decl (variable_name, discrete_type, init_expr, parsed_fun_decl_or_expr) ->
+            "let "
+            ^ variable_name
+            ^ " : "
+            ^ DiscreteType.string_of_var_type_discrete (convert_var_type_discrete discrete_type)
+            ^ " = "
+            ^ string_of_parsed_global_expression variable_infos init_expr
+            ^ ", \n"
+            ^ string_of_parsed_fun_decl_or_expr variable_infos parsed_fun_decl_or_expr
+
+        | Parsed_fun_expr expr ->
+            string_of_parsed_global_expression variable_infos expr
+
+let string_of_parsed_fun_def variable_infos fun_def =
+    let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep " " fun_def.parameters in
+    "fun " ^ fun_def.name ^ " " ^ str_parameters ^ " = \n" ^ string_of_parsed_fun_decl_or_expr variable_infos fun_def.body
+
 let rec string_of_parsed_linear_constraint variable_infos = function
 	| Parsed_true_constraint -> "True"
 	| Parsed_false_constraint -> "False"
@@ -640,21 +681,19 @@ let is_linear_constant variable_infos = function
 
 (* Check if leaf is a variable that is defined *)
 (* A given callback is executed if it's not a defined variable *)
-let is_variable_defined_with_callback variable_infos callback = function
+let is_variable_defined_with_callback variable_infos local_variables_opt callback = function
     | Leaf_variable variable_name ->
 
-        let is_defined = is_variable_or_constant_declared variable_infos variable_name in
-        (*
         let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
 
         let is_defined_local =
             match local_variables_opt with
+            | Some local_variables -> StringSet.mem variable_name local_variables
             | None -> false
-            | Some local_variables -> StringSet.mem local_variables variable_name
         in
 
         let is_defined = is_defined_global || is_defined_local in
-        *)
+
         if not is_defined then (
             match callback with
             | Some func -> func variable_name
@@ -680,7 +719,7 @@ let is_variable_defined_in_update_with_callback variable_infos callback = functi
 
         is_defined
 
-let is_variable_defined variable_infos = is_variable_defined_with_callback variable_infos None
+let is_variable_defined variable_infos local_variables_opt = is_variable_defined_with_callback variable_infos local_variables_opt None
 
 (* Check if linear expression leaf is a variable that is defined *)
 let is_variable_defined_in_linear_expression variable_infos callback_fail = function
@@ -867,34 +906,56 @@ and is_linear_parsed_factor variable_infos = function
 
 (* Check that all variables in a parsed global expression are effectively be defined *)
 let all_variables_defined_in_parsed_global_expression variable_infos callback expr =
-    for_all_in_parsed_global_expression (is_variable_defined_with_callback variable_infos callback) expr
+    for_all_in_parsed_global_expression (is_variable_defined_with_callback variable_infos None callback) expr
 
 let all_variables_defined_in_parsed_global_expression_without_callback variable_infos expr =
-    for_all_in_parsed_global_expression (is_variable_defined variable_infos) expr
+    for_all_in_parsed_global_expression (is_variable_defined variable_infos None) expr
 
 (* Check that all variables in a parsed boolean expression are effectively be defined *)
 let all_variables_defined_in_parsed_boolean_expression variable_infos callback expr =
-    for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos callback) expr
+    for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos None callback) expr
 
 (* Check that all variables in a parsed discrete boolean expression are effectively be defined *)
 let all_variables_defined_in_parsed_discrete_boolean_expression variable_infos callback expr =
-    for_all_in_parsed_discrete_boolean_expression (is_variable_defined_with_callback variable_infos callback) expr
+    for_all_in_parsed_discrete_boolean_expression (is_variable_defined_with_callback variable_infos None callback) expr
 
 (* Check that all variables in a parsed discrete arithmetic expression are effectively be defined *)
 let all_variables_defined_in_parsed_discrete_arithmetic_expression variable_infos callback expr =
-    for_all_in_parsed_discrete_arithmetic_expression (is_variable_defined_with_callback variable_infos callback) expr
+    for_all_in_parsed_discrete_arithmetic_expression (is_variable_defined_with_callback variable_infos None callback) expr
 
 (* Check that all variables in a parsed fun declaration are effectively be defined *)
-let all_variables_defined_in_parsed_fun_decl_or_expr variable_infos undefined_variable_callback undefined_updated_variable_callback expr =
-    for_all_in_parsed_fun_decl_or_expr (is_variable_defined_with_callback variable_infos undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos undefined_updated_variable_callback) expr
+let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_callback undefined_updated_variable_callback (fun_def : parsed_fun_definition) =
+
+    (* Add parameters as local variables *)
+    let local_variables = List.fold_right StringSet.add fun_def.parameters StringSet.empty in
+
+    (* Overwrite function adding a parameter for taking into account local variables set *)
+    let all_variables_defined_in_parsed_global_expression local_variables (* expr *) =
+        for_all_in_parsed_global_expression (is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback) (* expr *)
+    in
+    (* Check if all variables defined in user function body using local variables set *)
+    let rec all_variables_defined_in_parsed_fun_decl_or_expr_rec local_variables = function
+        | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr) ->
+            (* Add the new declared local variable to set *)
+            let all_variables_defined_in_init_expr = all_variables_defined_in_parsed_global_expression local_variables init_expr in
+            let local_variables = StringSet.add variable_name local_variables in
+            all_variables_defined_in_parsed_fun_decl_or_expr_rec local_variables parsed_fun_decl_or_expr && all_variables_defined_in_init_expr
+
+        | Parsed_fun_expr expr ->
+            all_variables_defined_in_parsed_global_expression local_variables expr
+
+    in
+    all_variables_defined_in_parsed_fun_decl_or_expr_rec local_variables fun_def.body
+
+
 
 (* Check that all variables in a parsed normal update are effectively be defined *)
 let all_variables_defined_in_parsed_normal_update variable_infos undefined_variable_callback undefined_updated_variable_callback expr =
-    for_all_in_parsed_normal_update (is_variable_defined_with_callback variable_infos undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos undefined_updated_variable_callback) expr
+    for_all_in_parsed_normal_update (is_variable_defined_with_callback variable_infos None undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos undefined_updated_variable_callback) expr
 
 (* Check that all variables in a parsed update are effectively be defined *)
 let all_variables_defined_in_parsed_update variable_infos undefined_variable_callback undefined_updated_variable_callback expr =
-    for_all_in_parsed_update (is_variable_defined_with_callback variable_infos undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos undefined_updated_variable_callback) expr
+    for_all_in_parsed_update (is_variable_defined_with_callback variable_infos None undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos undefined_updated_variable_callback) expr
 
 (* Check that all variables in a linear expression are effectively be defined *)
 let all_variables_defined_in_linear_expression variable_infos callback_fail expr =
@@ -909,7 +970,7 @@ let all_variables_defined_in_linear_constraint variable_infos callback_fail expr
 (* Check that all variables in a non-linear constraint are effectively be defined *)
 let all_variables_defined_in_nonlinear_constraint variable_infos callback expr =
     for_all_in_parsed_nonlinear_constraint
-        (is_variable_defined_with_callback variable_infos callback)
+        (is_variable_defined_with_callback variable_infos None callback)
         expr
 
 (* Check that all variables in a non-linear convex predicate (non-linear constraint list) are effectively be defined *)
@@ -925,7 +986,7 @@ let all_variables_defined_in_nonlinear_convex_predicate variable_infos callback 
 let all_variable_in_parsed_state_predicate parsing_infos variable_infos undefined_variable_callback_opt undefined_automaton_callback_opt undefined_loc_callback_opt expr =
     for_all_in_parsed_state_predicate
         (is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_infos undefined_automaton_callback_opt undefined_loc_callback_opt)
-        (is_variable_defined_with_callback variable_infos undefined_variable_callback_opt)
+        (is_variable_defined_with_callback variable_infos None undefined_variable_callback_opt)
         expr
 
 (* Check that there is only discrete variables in a parsed global expression *)
@@ -1176,25 +1237,3 @@ let linear_constraint_of_nonlinear_constraint = try_convert_linear_expression_of
 let updates_of_update_section update_section =
     let pre_updates, updates, post_updates = update_section in
     pre_updates @ updates @ post_updates
-
-(* TODO benjamin REFACTOR move to Converter *)
-(* Convert var type number from parsing structure to abstract model *)
-let convert_var_type_discrete_number = function
-    | ParsingStructure.Var_type_discrete_rat -> DiscreteType.Var_type_discrete_rat
-    | ParsingStructure.Var_type_discrete_int -> DiscreteType.Var_type_discrete_int
-
-(* Convert discrete var type from parsing structure to abstract model *)
-let rec convert_var_type_discrete = function
-    | ParsingStructure.Var_type_discrete_number x -> DiscreteType.Var_type_discrete_number (convert_var_type_discrete_number x)
-    | ParsingStructure.Var_type_discrete_bool -> DiscreteType.Var_type_discrete_bool
-    | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteType.Var_type_discrete_binary_word length
-    | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteType.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
-    | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteType.Var_type_discrete_list (convert_var_type_discrete inner_type)
-    | ParsingStructure.Var_type_discrete_stack inner_type -> DiscreteType.Var_type_discrete_stack (convert_var_type_discrete inner_type)
-    | ParsingStructure.Var_type_discrete_queue inner_type -> DiscreteType.Var_type_discrete_queue (convert_var_type_discrete inner_type)
-
-(* Convert var type from parsing structure to abstract model *)
-let convert_var_type = function
-    | ParsingStructure.Var_type_clock -> DiscreteType.Var_type_clock
-    | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteType.Var_type_discrete (convert_var_type_discrete var_type_discrete)
-    | ParsingStructure.Var_type_parameter -> DiscreteType.Var_type_parameter

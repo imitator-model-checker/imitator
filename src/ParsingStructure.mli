@@ -35,6 +35,7 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 (** Declarations *)
 (****************************************************************)
 
+(* TODO benjamin CLEAN use of DiscreteType instead of ParsingStructure.var_type ? *)
 (* Specific type of number *)
 type var_type_discrete_number =
     | Var_type_discrete_rat
