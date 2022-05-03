@@ -887,7 +887,7 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 	let index_of_automata		= useful_parsing_model_information.index_of_automata in
 	let array_of_location_names	= useful_parsing_model_information.array_of_location_names in
 
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
+    let variable_infos = useful_parsing_model_information.variable_infos in
 
 	let well_formed = ref true in
 
@@ -1037,7 +1037,7 @@ let has_one_loc_per_automaton initial_locations parsed_model observer_automaton_
 
 let check_init_definition parsed_model =
 
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model parsed_model in
+    let variable_infos = parsed_model.variable_infos in
 
     let rec check_init_predicate = function
         | Parsed_discrete_predicate (variable_name, expr) ->
@@ -1239,7 +1239,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
 (*------------------------------------------------------------*)
 let check_init (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
 
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
+    let variable_infos = useful_parsing_model_information.variable_infos in
 
 	let well_formed = ref true in
 
@@ -1435,7 +1435,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 	let actions					= useful_parsing_model_information.actions in
 	let removed_action_names	= useful_parsing_model_information.removed_action_names in
 
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
+    let variable_infos = useful_parsing_model_information.variable_infos in
 
 	(* Number of automata *)
 	let nb_automata = Hashtbl.length index_of_automata in
@@ -1833,10 +1833,10 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 	=
   (* Extract values from model parsing info *)
   let index_of_variables, constants, removed_variable_names, type_of_variables =
-    useful_parsing_model_information.index_of_variables, useful_parsing_model_information.constants,
-    useful_parsing_model_information.removed_variable_names, useful_parsing_model_information.type_of_variables in
+    useful_parsing_model_information.variable_infos.index_of_variables, useful_parsing_model_information.variable_infos.constants,
+    useful_parsing_model_information.variable_infos.removed_variable_names, useful_parsing_model_information.variable_infos.type_of_variables in
 
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
+    let variable_infos = useful_parsing_model_information.variable_infos in
 
   (* Create the empty array of transitions automaton_index -> location_index -> action_index -> list of (transition_index) *)
   
@@ -2573,7 +2573,7 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 (*------------------------------------------------------------*)
 
 let check_parsed_state_predicate parsing_infos expr =
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model parsing_infos in
+    let variable_infos = parsing_infos.variable_infos in
     ParsingStructureUtilities.all_variable_in_parsed_state_predicate
         parsing_infos
         variable_infos
@@ -2730,7 +2730,7 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 
 	let index_of_actions	= useful_parsing_model_information.index_of_actions in
 
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
+    let variable_infos = useful_parsing_model_information.variable_infos in
 	(* Check *)
 	match parsed_property_option with
 	| None -> true
@@ -2943,7 +2943,7 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 let convert_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStructure.parsed_pval) : PVal.pval =
 	let pval = new PVal.pval in
 	for i = 0 to useful_parsing_model_information.nb_parameters - 1 do
-		let parameter_name = useful_parsing_model_information.variables.(i) in
+		let parameter_name = useful_parsing_model_information.variable_infos.variables.(i) in
 		let valuation = try(
 			List.assoc parameter_name parsed_pval
 		) with Not_found ->
@@ -3017,9 +3017,9 @@ type converted_observer_structure = {
 let convert_property_option (useful_parsing_model_information : useful_parsing_model_information) (nb_actions : int) (observer_automaton_index_option : automaton_index option) (observer_nosync_index_option : action_index option) (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
 
 	let index_of_actions	= useful_parsing_model_information.index_of_actions in
-	let index_of_variables	= useful_parsing_model_information.index_of_variables in
+	let index_of_variables	= useful_parsing_model_information.variable_infos.index_of_variables in
 
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
+    let variable_infos = useful_parsing_model_information.variable_infos in
 
 	(* Convert *)
 	match parsed_property_option with
@@ -3058,7 +3058,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			EFpmin (
 				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate
 				,
-				Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name
+				Hashtbl.find useful_parsing_model_information.variable_infos.index_of_variables parameter_name
 			)
 			,
 			None
@@ -3068,7 +3068,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			EFpmax (
 				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate
 				,
-				Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name
+				Hashtbl.find useful_parsing_model_information.variable_infos.index_of_variables parameter_name
 			)
 			,
 			None
@@ -3383,6 +3383,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Create variable infos template *)
     let variable_infos = {
         constants = initialized_constants;
+        variables = [||];
         variable_names = [];
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];
@@ -3834,23 +3835,25 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		array_of_location_names		= array_of_location_names;
 		automata_names				= automata_names;
 		automata					= automata;
-		constants					= constants;
-		discrete					= discrete;
 		index_of_actions			= index_of_actions;
 		index_of_automata			= index_of_automata;
 		index_of_locations			= index_of_locations;
-		index_of_variables			= index_of_variables;
 		nb_clocks					= nb_clocks;
 		nb_parameters				= nb_parameters;
 		parameter_names				= parameter_names;
 		removed_action_names		= removed_action_names;
-		type_of_variables			= type_of_variables;
-		variable_names				= variable_names;
-		variables					= variables;
-		removed_variable_names		= removed_variable_names;
+		variable_infos              = {
+            constants					= constants;
+            discrete					= discrete;
+    		index_of_variables			= index_of_variables;
+    		type_of_variables			= type_of_variables;
+    		variables					= variables;
+            variable_names				= variable_names;
+		    removed_variable_names		= removed_variable_names;
+		}
 	} in
 
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model useful_parsing_model_information in
+    let variable_infos = useful_parsing_model_information.variable_infos in
 
 	print_message Verbose_high ("*** Checking user functions definitions…");
     (* Convert function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)

@@ -1198,14 +1198,3 @@ let convert_var_type = function
     | ParsingStructure.Var_type_clock -> DiscreteType.Var_type_clock
     | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteType.Var_type_discrete (convert_var_type_discrete var_type_discrete)
     | ParsingStructure.Var_type_parameter -> DiscreteType.Var_type_parameter
-
-(* Extract variable infos from useful_parsing_model_information *)
-let variable_infos_of_parsed_model (parsed_model : useful_parsing_model_information) =
-    {
-        constants = parsed_model.constants;
-        variable_names = parsed_model.variable_names;
-        index_of_variables = parsed_model.index_of_variables;
-        type_of_variables = parsed_model.type_of_variables;
-        removed_variable_names = parsed_model.removed_variable_names;
-        discrete = parsed_model.discrete;
-    }

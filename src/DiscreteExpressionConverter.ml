@@ -32,6 +32,7 @@ let convert_discrete_constant initialized_constants (name, expr, var_type) =
     (* Create fake variable_infos containing just initialized constants *)
     let variable_infos = {
         constants = initialized_constants;
+        variables = [||];
         variable_names = [];
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];

@@ -497,33 +497,29 @@ type parsed_property = {
 (************************************************************)
 type constants_table = (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t
 
-type useful_parsing_model_information = {
-	(* The locations for each automaton: automaton_index -> location_index -> location_name *)
-	actions								: Automaton.action_name array;
-	array_of_location_names				: location_name array array;
-	automata							: Automaton.automaton_index list;
-	automata_names						: (Automaton.automaton_index -> automaton_name);
-	constants							: constants_table;
-	discrete							: Automaton.variable_index list;
-	index_of_actions					: (Automaton.action_name , Automaton.action_index) Hashtbl.t;
-	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
-	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
-	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
-	nb_clocks							: int;
-	nb_parameters						: int;
-	parameter_names						: variable_name list;
-	removed_action_names				: Automaton.action_name list;
-	type_of_variables					: Automaton.variable_index -> DiscreteType.var_type;
-	variable_names						: variable_name list;
-	variables							: variable_name array;
-	removed_variable_names				: variable_name list;
-}
-
 type variable_infos = {
 	constants							: constants_table;
+	variables							: variable_name array;
     variable_names						: variable_name list;
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
 	type_of_variables					: Automaton.variable_index -> DiscreteType.var_type;
 	removed_variable_names				: variable_name list;
 	discrete							: Automaton.variable_index list;
 }
+
+type useful_parsing_model_information = {
+	(* The locations for each automaton: automaton_index -> location_index -> location_name *)
+	actions								: Automaton.action_name array;
+	array_of_location_names				: location_name array array;
+	automata							: Automaton.automaton_index list;
+	automata_names						: (Automaton.automaton_index -> automaton_name);
+	index_of_actions					: (Automaton.action_name , Automaton.action_index) Hashtbl.t;
+	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
+	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
+	nb_clocks							: int;
+	nb_parameters						: int;
+	parameter_names						: variable_name list;
+	removed_action_names				: Automaton.action_name list;
+	variable_infos                      : variable_infos;
+}
+
