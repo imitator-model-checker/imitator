@@ -246,12 +246,12 @@ decl_fun_nonempty_list:
 
 /* Function definition */
 decl_fun_def:
-  | CT_FUN NAME fun_parameter_list COLON fun_signature OP_EQ fun_decl_or_expression CT_END {
+  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete fun_decl_or_expression CT_END {
     {
       name = $2;
-      parameters = List.rev $3;
-      signature = List.rev $5;
-      body = $7;
+      parameters = List.rev $4;
+      return_type = $7;
+      body = $8;
     }
   }
 ;
@@ -263,8 +263,8 @@ fun_parameter_list:
 
 /* Function parameters list (separated by whitespace) */
 fun_parameter_nonempty_list:
-  | NAME { [$1] }
-  | fun_parameter_list NAME { $2 :: $1 }
+  | NAME COLON var_type_discrete { [($1, $3)] }
+  | fun_parameter_list COMMA NAME COLON var_type_discrete { ($3, $5) :: $1 }
 ;
 
 /* Function signature (OCaml form) */

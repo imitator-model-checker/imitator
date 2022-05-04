@@ -141,8 +141,8 @@ type parsed_fun_decl_or_expr =
 
 type parsed_fun_definition = {
     name : variable_name; (* function name *)
-    parameters : variable_name list; (* parameter names *)
-    signature : DiscreteType.var_type_discrete list; (* signature *)
+    parameters : (variable_name * DiscreteType.var_type_discrete) list; (* parameter names and types *)
+    return_type : DiscreteType.var_type_discrete; (* return type *)
     body : parsed_fun_decl_or_expr; (* body *)
 }
 

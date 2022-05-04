@@ -1064,24 +1064,20 @@ let rec type_check_fun_decl_or_expr local_variables variable_infos infer_type_op
         Typed_fun_expr typed_expr, discrete_type, has_side_effects
 
 let type_check_parsed_fun_definition variable_infos infer_type_opt (fun_definition : ParsingStructure.parsed_fun_definition) =
-    (*  *)
-    let signature = fun_definition.signature in
-    let parameter_discrete_types, return_type = FunctionSig.split_signature signature in
-    let nb_parameter_type = List.length parameter_discrete_types in
+    (* Get parameter types and return type of the function *)
+    let parameter_names, parameter_discrete_types = List.split fun_definition.parameters in
+    let return_type = fun_definition.return_type in
+    (* Construct signature *)
+    let signature = parameter_discrete_types @ [return_type] in
+
+    (* Add parameters as local variables of the function *)
     let nb_parameter = List.length fun_definition.parameters in
     let local_variables = Hashtbl.create nb_parameter in
 
-    (* Check that the number of parameters is consistant with number of types *)
-    if nb_parameter <> nb_parameter_type then (
-        raise (TypeError "Inconsistent ")
-    );
-
-    (* Add parameters as local variables of the function *)
-    for i = 0 to nb_parameter - 1 do
-        let parameter_name = List.nth fun_definition.parameters i in
-        let parameter_type = List.nth parameter_discrete_types i in
+    List.iter (fun (parameter_name, parameter_type) ->
         Hashtbl.add local_variables parameter_name parameter_type
-    done;
+    ) fun_definition.parameters;
+
 
     let typed_body, body_discrete_type, is_body_has_side_effects = type_check_fun_decl_or_expr local_variables variable_infos infer_type_opt fun_definition.body in
     (* Check type compatibility between function body and return type *)
@@ -1102,7 +1098,7 @@ let type_check_parsed_fun_definition variable_infos infer_type_opt (fun_definiti
 
     let typed_fun_definition = {
         name = fun_definition.name;
-        parameters = fun_definition.parameters;
+        parameters = parameter_names;
         signature = signature;
         body = typed_body;
     }

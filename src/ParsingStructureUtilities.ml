@@ -13,6 +13,7 @@
 
 open Exceptions
 open ParsingStructure
+open OCamlUtilities
 open CustomModules
 
 type variable_name = string
@@ -533,8 +534,14 @@ and string_of_parsed_fun_decl_or_expr variable_infos = function
             string_of_parsed_global_expression variable_infos expr
 
 let string_of_parsed_fun_def variable_infos fun_def =
-    let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep " " fun_def.parameters in
-    "fun " ^ fun_def.name ^ " " ^ str_parameters ^ " = \n" ^ string_of_parsed_fun_decl_or_expr variable_infos fun_def.body
+    (* Format each parameters to string *)
+    let str_parameters_list = List.map (fun (parameter_name, parameter_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete parameter_type) fun_def.parameters in
+    (* Format all parameters to string *)
+    let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
+    (* Format function definition to string *)
+    "fn " ^ fun_def.name ^ " (" ^ str_parameters ^ ") : " ^ DiscreteType.string_of_var_type_discrete fun_def.return_type ^ "\n"
+    ^ string_of_parsed_fun_decl_or_expr variable_infos fun_def.body ^ "\n"
+    ^ "end\n"
 
 let rec string_of_parsed_linear_constraint variable_infos = function
 	| Parsed_true_constraint -> "True"
@@ -904,7 +911,8 @@ let all_variables_defined_in_parsed_discrete_arithmetic_expression variable_info
 let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_callback undefined_updated_variable_callback (fun_def : parsed_fun_definition) =
 
     (* Add parameters as local variables *)
-    let local_variables = List.fold_right StringSet.add fun_def.parameters StringSet.empty in
+    let parameter_names = List.map first_of_tuple fun_def.parameters in
+    let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
 
     (* Overwrite function adding a parameter for taking into account local variables set *)
     let all_variables_defined_in_parsed_global_expression local_variables (* expr *) =

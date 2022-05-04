@@ -132,7 +132,7 @@ rule token = parse
   | "list"           { CT_LIST }
   | "stack"          { CT_STACK }
   | "queue"          { CT_QUEUE }
-  | "fun"            { CT_FUN   }
+  | "fn"             { CT_FUN   }
   | "->"             { CT_ARROW }
 
 
