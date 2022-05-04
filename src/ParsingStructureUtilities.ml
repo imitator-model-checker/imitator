@@ -59,29 +59,6 @@ type variable_constant_defined_state =
     | Variable_removed
     | Not_declared
 
-(* TODO benjamin REFACTOR move to Converter not sure because I use it in string_of_fun_decl *)
-(* Convert var type number from parsing structure to abstract model *)
-let convert_var_type_discrete_number = function
-    | ParsingStructure.Var_type_discrete_rat -> DiscreteType.Var_type_discrete_rat
-    | ParsingStructure.Var_type_discrete_int -> DiscreteType.Var_type_discrete_int
-
-(* Convert discrete var type from parsing structure to abstract model *)
-let rec convert_var_type_discrete = function
-    | ParsingStructure.Var_type_discrete_number x -> DiscreteType.Var_type_discrete_number (convert_var_type_discrete_number x)
-    | ParsingStructure.Var_type_discrete_bool -> DiscreteType.Var_type_discrete_bool
-    | ParsingStructure.Var_type_discrete_binary_word length -> DiscreteType.Var_type_discrete_binary_word length
-    | ParsingStructure.Var_type_discrete_array (inner_type, length) -> DiscreteType.Var_type_discrete_array (convert_var_type_discrete inner_type, length)
-    | ParsingStructure.Var_type_discrete_list inner_type -> DiscreteType.Var_type_discrete_list (convert_var_type_discrete inner_type)
-    | ParsingStructure.Var_type_discrete_stack inner_type -> DiscreteType.Var_type_discrete_stack (convert_var_type_discrete inner_type)
-    | ParsingStructure.Var_type_discrete_queue inner_type -> DiscreteType.Var_type_discrete_queue (convert_var_type_discrete inner_type)
-
-(* Convert var type from parsing structure to abstract model *)
-let convert_var_type = function
-    | ParsingStructure.Var_type_clock -> DiscreteType.Var_type_clock
-    | ParsingStructure.Var_type_discrete var_type_discrete -> DiscreteType.Var_type_discrete (convert_var_type_discrete var_type_discrete)
-    | ParsingStructure.Var_type_parameter -> DiscreteType.Var_type_parameter
-
-
 (* Get variable name given a variable index  *)
 let [@inline] variable_name_of_index variable_infos = List.nth variable_infos.variable_names
 
@@ -546,7 +523,7 @@ and string_of_parsed_fun_decl_or_expr variable_infos = function
             "let "
             ^ variable_name
             ^ " : "
-            ^ DiscreteType.string_of_var_type_discrete (convert_var_type_discrete discrete_type)
+            ^ DiscreteType.string_of_var_type_discrete discrete_type
             ^ " = "
             ^ string_of_parsed_global_expression variable_infos init_expr
             ^ ", \n"

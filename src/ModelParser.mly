@@ -19,6 +19,7 @@ open ParsingStructure;;
 open Exceptions;;
 open NumConst;;
 open ImitatorUtilities;;
+open DiscreteType;;
 
 
 let parse_error s =

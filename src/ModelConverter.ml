@@ -29,6 +29,7 @@ open AbstractModel
 open ParsingStructure
 open AbstractProperty
 open ParsingStructureUtilities
+open DiscreteType
 open CustomModules
 
 (************************************************************)
@@ -171,16 +172,15 @@ let get_variables_and_constants var_type =
 let get_declared_variable_names variable_declarations =
   (* Get all (possibly identical) names of variables in one variable declaration and add it to the computed n-uple *)
   let get_variables_in_variable_declaration (clocks, discrete_rational, parameters, constants, unassigned_constants) (var_type, list_of_names) =
-    let converted_var_type = ParsingStructureUtilities.convert_var_type var_type in
-    let new_list, new_constants = get_variables_and_constants converted_var_type list_of_names in
+    let new_list, new_constants = get_variables_and_constants var_type list_of_names in
     match var_type with
-    | ParsingStructure.Var_type_clock ->
+    | Var_type_clock ->
       (List.rev_append new_list clocks, discrete_rational, parameters, List.rev_append new_constants constants, unassigned_constants)
 (*    | ParsingStructure.Var_type_constant ->*)
 (*      (clocks, discrete_rational, parameters, List.rev_append new_constants constants, List.rev_append new_list unassigned_constants)*)
-    | ParsingStructure.Var_type_discrete _ ->
+    | Var_type_discrete _ ->
       (clocks, List.rev_append new_list discrete_rational, parameters, List.rev_append new_constants constants, unassigned_constants)
-    | ParsingStructure.Var_type_parameter ->
+    | Var_type_parameter ->
       (clocks, discrete_rational, List.rev_append new_list parameters, List.rev_append new_constants constants, unassigned_constants)
   in
   let (clocks, discrete_rational, parameters, constants, unassigned_constants) = List.fold_left get_variables_in_variable_declaration ([], [], [], [], []) variable_declarations in
@@ -192,8 +192,8 @@ let get_declared_discrete_variables_by_type variable_declarations =
     let get_discrete_variables_in_variable_declaration discretes_by_type (var_type, list_of_names) =
         let new_list, new_constants = get_variables_and_constants var_type list_of_names in
         match var_type with
-            | ParsingStructure.Var_type_discrete var_type_discrete ->
-                let new_list_discretes_by_type = List.map (fun variable_names -> (ParsingStructureUtilities.convert_var_type var_type, variable_names)) new_list in
+            | Var_type_discrete var_type_discrete ->
+                let new_list_discretes_by_type = List.map (fun variable_names -> var_type, variable_names) new_list in
                 List.rev_append new_list_discretes_by_type discretes_by_type
             | _ ->
                 discretes_by_type

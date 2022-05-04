@@ -1031,22 +1031,20 @@ let rec type_check_parsed_variable_update_type local_variables variable_infos = 
 
 let rec type_check_fun_decl_or_expr local_variables variable_infos infer_type_opt = function
     | Parsed_fun_local_decl (variable_name, discrete_type, expr, decl_or_expr) ->
-        (* Convert parsed discrete type to abstract discrete type *)
-        let converted_discrete_type = ParsingStructureUtilities.convert_var_type_discrete discrete_type in
         (* Add local variable to hashtable *)
-        Hashtbl.add local_variables variable_name converted_discrete_type;
+        Hashtbl.add local_variables variable_name discrete_type;
 (*        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression (Some local_variables) variable_infos infer_type_opt expr in*)
-        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression (Some local_variables) variable_infos (Some converted_discrete_type) expr in
+        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression (Some local_variables) variable_infos (Some discrete_type) expr in
         let typed_decl_or_expr, decl_or_expr_discrete_type, is_decl_or_expr_has_side_effects = type_check_fun_decl_or_expr local_variables variable_infos infer_type_opt decl_or_expr in
 
         (* Check compatibility between local var type and it's init expression *)
-        if not (is_discrete_type_compatibles converted_discrete_type init_discrete_type) then
+        if not (is_discrete_type_compatibles discrete_type init_discrete_type) then
             (* TODO benjamin REFACTOR same message at different places *)
             raise (TypeError (
                 "Variable `"
                 ^ variable_name
                 ^ "` of type "
-                ^ DiscreteType.string_of_var_type_discrete converted_discrete_type
+                ^ DiscreteType.string_of_var_type_discrete discrete_type
                 ^ " is not compatible with expression `"
                 ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
                 ^ "` of type "
@@ -1056,7 +1054,7 @@ let rec type_check_fun_decl_or_expr local_variables variable_infos infer_type_op
 
         Typed_fun_local_decl (
             variable_name,
-            converted_discrete_type,
+            discrete_type,
             typed_init_expr,
             typed_decl_or_expr
         ), decl_or_expr_discrete_type, is_init_expr_has_side_effects || is_decl_or_expr_has_side_effects
@@ -1067,8 +1065,8 @@ let rec type_check_fun_decl_or_expr local_variables variable_infos infer_type_op
 
 let type_check_parsed_fun_definition variable_infos infer_type_opt (fun_definition : ParsingStructure.parsed_fun_definition) =
     (*  *)
-    let converted_signature = List.map ParsingStructureUtilities.convert_var_type_discrete fun_definition.signature in
-    let parameter_discrete_types, return_type = FunctionSig.split_signature converted_signature in
+    let signature = fun_definition.signature in
+    let parameter_discrete_types, return_type = FunctionSig.split_signature signature in
     let nb_parameter_type = List.length parameter_discrete_types in
     let nb_parameter = List.length fun_definition.parameters in
     let local_variables = Hashtbl.create nb_parameter in
@@ -1094,7 +1092,7 @@ let type_check_parsed_fun_definition variable_infos infer_type_opt (fun_definiti
             "Function signature `"
             ^ fun_definition.name
             ^ " : "
-            ^ FunctionSig.string_of_signature converted_signature
+            ^ FunctionSig.string_of_signature signature
             ^ "` doesn't match with implementation `"
             ^ string_of_fun_decl_or_expr variable_infos typed_body
             ^ "` of type "
@@ -1105,7 +1103,7 @@ let type_check_parsed_fun_definition variable_infos infer_type_opt (fun_definiti
     let typed_fun_definition = {
         name = fun_definition.name;
         parameters = fun_definition.parameters;
-        signature = converted_signature;
+        signature = signature;
         body = typed_body;
     }
     in

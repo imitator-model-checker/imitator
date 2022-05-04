@@ -35,28 +35,6 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 (** Declarations *)
 (****************************************************************)
 
-(* TODO benjamin CLEAN use of DiscreteType instead of ParsingStructure.var_type ? *)
-(* Specific type of number *)
-type var_type_discrete_number =
-    | Var_type_discrete_rat
-    | Var_type_discrete_int
-
-(* Specific type of discrete variables *)
-type var_type_discrete =
-    | Var_type_discrete_number of var_type_discrete_number
-    | Var_type_discrete_bool
-    | Var_type_discrete_binary_word of int
-    | Var_type_discrete_array of var_type_discrete * int
-    | Var_type_discrete_list of var_type_discrete
-    | Var_type_discrete_stack of var_type_discrete
-    | Var_type_discrete_queue of var_type_discrete
-
-(* Type of variable in declarations *)
-type var_type =
-	| Var_type_clock
-	| Var_type_discrete of var_type_discrete
-	| Var_type_parameter
-
 (* Type of the sequence *)
 type parsed_sequence_type =
     | Parsed_array
@@ -124,7 +102,7 @@ and parsed_discrete_factor =
 
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
-type variable_declaration = var_type * (variable_name * parsed_global_expression option) list
+type variable_declaration = DiscreteType.var_type * (variable_name * parsed_global_expression option) list
 type variable_declarations = variable_declaration list
 
 (****************************************************************)
@@ -158,13 +136,13 @@ type convex_predicate = nonlinear_constraint list
 (** User functions *)
 (****************************************************************)
 type parsed_fun_decl_or_expr =
-    | Parsed_fun_local_decl of variable_name * var_type_discrete * parsed_global_expression (* init expr *) * parsed_fun_decl_or_expr
+    | Parsed_fun_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_global_expression (* init expr *) * parsed_fun_decl_or_expr
     | Parsed_fun_expr of parsed_global_expression
 
 type parsed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : variable_name list; (* parameter names *)
-    signature : var_type_discrete list; (* signature *)
+    signature : DiscreteType.var_type_discrete list; (* signature *)
     body : parsed_fun_decl_or_expr; (* body *)
 }
 

@@ -204,9 +204,6 @@ val linear_constraint_of_nonlinear_constraint : nonlinear_constraint -> linear_c
 (* Gather all updates of update section (pre-updates, updates and post-updates) *)
 val updates_of_update_section : update_section -> update list
 
-val convert_var_type : ParsingStructure.var_type -> DiscreteType.var_type
-val convert_var_type_discrete : ParsingStructure.var_type_discrete -> DiscreteType.var_type_discrete
-
 type variable_constant_defined_state =
     | Variable_defined
     | Constant_defined
