@@ -888,18 +888,67 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 (* - check that all variables used in user function are declared *)
 let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
 
-    (* Prepare callback function that print error message when undeclared variable is found *)
-    let print_variable_in_fun_not_declared variable_name =
-        print_error (
-            "Variable `"
-            ^ variable_name
-            ^ "` used in function `"
+    (* Check if there is duplicate parameter with inconsistent types *)
+    let is_not_consistent_duplicate_parameters =
+
+        (* Message to display when duplicate parameters found *)
+        let duplicate_parameter_message parameter_name =
+            "Duplicate parameter `"
+            ^ parameter_name
+            ^ "` in function `"
             ^ fun_def.name
-            ^ "` was not declared."
-        )
+            ^ "`"
+        in
+
+        (* Check that each parameter have different name *)
+        (* Group parameters by their names *)
+        let parameters_by_names = OCamlUtilities.group_by first_of_tuple fun_def.parameters in
+        (* If for one parameter name, their is more than one parameter, there is duplicates *)
+        let duplicate_parameters = List.filter (fun (parameter_name, group) -> List.length group > 1) parameters_by_names in
+
+        (* For each parameter get if duplicate definitions are consistent or not *)
+        (* Ex: for fn f (a : int, a : rat), duplicate definition of `a` isn't consistent *)
+        let not_consistent_duplicate_parameters = List.map (fun (parameter_name, group) ->
+                (* Remove parameter duplicates *)
+                let group_without_duplicates = OCamlUtilities.list_only_once group in
+                (* Prepare message *)
+                let current_duplicate_parameter_message = duplicate_parameter_message parameter_name in
+                (* If duplicates remain greater than 1, there is inconsistent definitions *)
+                if List.length group_without_duplicates = 1 then (
+                    print_warning (current_duplicate_parameter_message ^ ".");
+                    false
+                ) else (
+                    let str_parameters_list = List.map (fun (parameter_name, discrete_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete discrete_type) group_without_duplicates in
+                    let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
+                    print_error (current_duplicate_parameter_message ^ "` doesn't have consistent definitions: `" ^ str_parameters ^ "`.");
+                    true
+                )
+            ) duplicate_parameters
+        in
+        (* Check if it exist a non consistent duplicate definition *)
+        List.exists identity not_consistent_duplicate_parameters
     in
-    let print_variable_in_fun_not_declared_opt = Some print_variable_in_fun_not_declared in
-    ParsingStructureUtilities.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt print_variable_in_fun_not_declared_opt fun_def
+
+    (* Check if all variables in function definition are defined *)
+    let is_all_variables_defined =
+
+        (* Prepare callback function that print error message when undeclared variable is found *)
+        let print_variable_in_fun_not_declared variable_name =
+            print_error (
+                "Variable `"
+                ^ variable_name
+                ^ "` used in function `"
+                ^ fun_def.name
+                ^ "` was not declared."
+            )
+        in
+
+        let print_variable_in_fun_not_declared_opt = Some print_variable_in_fun_not_declared in
+        ParsingStructureUtilities.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt print_variable_in_fun_not_declared_opt fun_def
+    in
+
+    (* Return *)
+    not is_not_consistent_duplicate_parameters && is_all_variables_defined
 
 (*------------------------------------------------------------*)
 (* Check that the automata are well-formed *)
