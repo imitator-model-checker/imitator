@@ -345,9 +345,24 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
             ) location.transitions;
         ) locations;
     ) parsed_model.automata;
-    (* TODO benjamin IMPLEMENT gather variables used in user function *)
+
+    (* TODO benjamin CLEAN remove comments *)
+    (*
+    List.iter (fun parsed_fun_definition ->
+        let local_variables, unused_local_variables = ParsingStructureUtilities.get_local_variables_in_parsed_fun_def parsed_fun_definition in
+        let local_variables = StringSet.to_seq local_variables |> List.of_seq in
+        let unused_local_variables = StringSet.to_seq unused_local_variables |> List.of_seq in
+
+        ImitatorUtilities.print_message Verbose_standard ("\nfunction " ^ parsed_fun_definition.name);
+        let str_local_variables = OCamlUtilities.string_of_list_of_string_with_sep "," local_variables in
+        let str_unused_local_variables = OCamlUtilities.string_of_list_of_string_with_sep "," unused_local_variables in
+        ImitatorUtilities.print_message Verbose_standard (" - local variables: " ^ str_local_variables ^ "\n - unused local variables: " ^ str_unused_local_variables);
+    ) parsed_model.fun_definitions;
+    *)
+
 	(* Gather in each user functions *)
-    List.iter (fun parsed_fun_definition -> ()
+    List.iter (fun parsed_fun_definition ->
+        ParsingStructureUtilities.get_variables_in_parsed_fun_def_with_accumulator all_variables_used parsed_fun_definition
     ) parsed_model.fun_definitions;
 
     let all_dependencies_used = get_all_variable_dependencies_used_in_init parsed_model all_variables_used in

@@ -177,12 +177,15 @@ val no_variables_in_linear_expression : variable_infos -> linear_expression -> b
 
 val is_parsed_linear_expression_constant : variable_infos -> linear_expression -> bool
 
+
+
 val get_variables_in_parsed_global_expression_with_accumulator : StringSet.t ref -> parsed_global_expression -> unit
 val get_variables_in_parsed_boolean_expression_with_accumulator : StringSet.t ref -> parsed_boolean_expression -> unit
 val get_variables_in_parsed_discrete_boolean_expression_with_accumulator : StringSet.t ref -> parsed_discrete_boolean_expression -> unit
 val get_variables_in_parsed_update_with_accumulator : StringSet.t ref -> update -> unit
 val get_variables_in_parsed_simple_predicate_with_accumulator : StringSet.t ref -> parsed_simple_predicate -> unit
 val get_variables_in_parsed_state_predicate_with_accumulator : StringSet.t ref -> parsed_state_predicate -> unit
+val get_variables_in_parsed_fun_def_with_accumulator : StringSet.t ref -> parsed_fun_definition -> unit
 
 val get_variables_in_parsed_global_expression : parsed_global_expression -> StringSet.t
 val get_variables_in_parsed_discrete_boolean_expression : parsed_discrete_boolean_expression -> StringSet.t
@@ -193,6 +196,10 @@ val get_variables_in_init_state_predicate : parsed_init_state_predicate -> Strin
 val get_variables_in_nonlinear_convex_predicate : nonlinear_constraint list -> StringSet.t
 val get_variables_in_parsed_simple_predicate : parsed_simple_predicate -> StringSet.t
 val get_variables_in_parsed_state_predicate : parsed_state_predicate -> StringSet.t
+
+(*val get_local_variables_in_parsed_fun_def : parsed_fun_definition -> StringSet.t * StringSet.t*)
+val get_variables_in_parsed_fun_def : parsed_fun_definition -> StringSet.t
+
 
 val variable_name_of_parsed_variable_update_type_opt : parsed_variable_update_type -> variable_name option
 val variable_name_of_parsed_variable_update_type : parsed_variable_update_type -> variable_name

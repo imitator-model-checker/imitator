@@ -280,7 +280,7 @@ fun_decl_or_expression:
 ;
 
 fun_local_decl:
-  | CT_LET NAME COLON var_type_discrete OP_EQ expression COMMA fun_decl_or_expression { Parsed_fun_local_decl ($2, $4, $6, $8) }
+  | CT_LET NAME COLON var_type_discrete OP_EQ expression COMMA fun_decl_or_expression { Parsed_fun_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
 ;
 
 /************************************************************/

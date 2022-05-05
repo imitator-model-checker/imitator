@@ -189,7 +189,7 @@ and fold_map_parsed_variable_update_type operator base leaf_fun leaf_update_fun 
     | Parsed_void_update -> []
 
 and fold_parsed_fun_decl_or_expr operator base leaf_fun leaf_update_fun = function
-    | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr) ->
+    | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr, _) ->
         operator
             (leaf_update_fun (Leaf_update_updated_variable variable_name))
             (fold_parsed_global_expression operator base leaf_fun init_expr)
@@ -520,7 +520,7 @@ and string_of_parsed_discrete_boolean_expression variable_infos = function
             "not (" ^ (string_of_parsed_boolean_expression variable_infos expr) ^ ")"
 
 and string_of_parsed_fun_decl_or_expr variable_infos = function
-        | Parsed_fun_local_decl (variable_name, discrete_type, init_expr, parsed_fun_decl_or_expr) ->
+        | Parsed_fun_local_decl (variable_name, discrete_type, init_expr, parsed_fun_decl_or_expr, _) ->
             "let "
             ^ variable_name
             ^ " : "
@@ -920,7 +920,7 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
     in
     (* Check if all variables defined in user function body using local variables set *)
     let rec all_variables_defined_in_parsed_fun_decl_or_expr_rec local_variables = function
-        | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr) ->
+        | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr, _) ->
             (* Add the new declared local variable to set *)
             let all_variables_defined_in_init_expr = all_variables_defined_in_parsed_global_expression local_variables init_expr in
             let local_variables = StringSet.add variable_name local_variables in
@@ -1047,6 +1047,70 @@ let get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref 
         (function _ -> ())
         (add_variable_of_discrete_boolean_expression variables_used_ref)
 
+type dependency_tree =
+    | Dependency_tree_node of variable_name * dependency_tree list
+    | Dependency_tree_leaf of variable_name
+
+(*
+(* Gather all local variable names used in a parsed function definition *)
+let get_local_variables_in_parsed_fun_def fun_def =
+
+    (* Add parameters as local variables *)
+    let parameter_names = List.map first_of_tuple fun_def.parameters in
+    let local_variables = List.map (fun parameter_name -> Dependency_tree_leaf parameter_name) parameter_names in
+
+    (* Check if all variables defined in user function body using local variables set *)
+    let rec get_local_variables_in_parsed_fun_decl_or_expr_rec local_variables = function
+        | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr) ->
+
+            let variables_used = get_variables_in_parsed_global_expression init_expr in
+
+
+            (* Add the new declared local variable to set *)
+            let local_variables = StringSet.add variable_name local_variables in
+            (* Gather global variable *)
+            let new_local_variables = get_local_variables_in_parsed_fun_decl_or_expr_rec local_variables parsed_fun_decl_or_expr in
+            iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) init_expr;
+            new_local_variables
+
+        | Parsed_fun_expr expr ->
+            let variables_used = get_variables_in_parsed_global_expression expr in
+            let tree_leafs = List.map (fun variable_name -> Dependency_tree_leaf variable_name) variables_used in
+            Dependency_tree_node (fun_def.name, tree_leafs)
+
+
+    in
+    let local_variables = get_local_variables_in_parsed_fun_decl_or_expr_rec local_variables fun_def.body in
+    (* Remove local variables from variable found in function (because we need to get only global variables and local variables shadow global variables) *)
+    let unused_local_variables = StringSet.diff local_variables !variable_used_ref in
+    local_variables, unused_local_variables
+*)
+(* TODO benjamin create function that gather all local variables and reduce this one *)
+(* Gather all variable names (global variables only) used in a parsed function definition in a given accumulator *)
+let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def : parsed_fun_definition) =
+
+    (* Add parameters as local variables *)
+    let parameter_names = List.map first_of_tuple fun_def.parameters in
+    let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
+
+    (* Check if all variables defined in user function body using local variables set *)
+    let rec get_variables_in_parsed_fun_decl_or_expr_rec local_variables = function
+        | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr, id) ->
+            ImitatorUtilities.print_message Verbose_standard ("let" ^ variable_name ^ "id:" ^ string_of_int id);
+            (* Add the new declared local variable to set *)
+            let local_variables = StringSet.add variable_name local_variables in
+            (* Gather global variable *)
+            get_variables_in_parsed_fun_decl_or_expr_rec local_variables parsed_fun_decl_or_expr;
+            iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) init_expr
+
+        | Parsed_fun_expr expr ->
+            iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) expr
+
+    in
+    get_variables_in_parsed_fun_decl_or_expr_rec local_variables fun_def.body;
+    (* Remove local variables from variable found in function (because we need to get only global variables and local variables shadow global variables) *)
+    variable_used_ref := StringSet.diff !variable_used_ref local_variables
+
 (* Create and wrap an accumulator then return result directly *)
 let wrap_accumulator f expr =
     let variables_used_ref = ref StringSet.empty in
@@ -1072,6 +1136,10 @@ let get_variables_in_linear_constraint =
 (* Gather all variable names used in a non-linear constraint *)
 let get_variables_in_nonlinear_constraint =
     wrap_accumulator get_variables_in_nonlinear_constraint_with_accumulator
+
+(* Gather all variable names (global variables only) used in a parsed function definition *)
+let get_variables_in_parsed_fun_def =
+    wrap_accumulator get_variables_in_parsed_fun_def_with_accumulator
 
 (* Gather all variable names used in a parsed init state predicate *)
 let get_variables_in_init_state_predicate = function

@@ -1030,7 +1030,7 @@ let rec type_check_parsed_variable_update_type local_variables variable_infos = 
 
 
 let rec type_check_fun_decl_or_expr local_variables variable_infos infer_type_opt = function
-    | Parsed_fun_local_decl (variable_name, discrete_type, expr, decl_or_expr) ->
+    | Parsed_fun_local_decl (variable_name, discrete_type, expr, decl_or_expr, _) ->
         (* Add local variable to hashtable *)
         Hashtbl.add local_variables variable_name discrete_type;
 (*        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression (Some local_variables) variable_infos infer_type_opt expr in*)
