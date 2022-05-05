@@ -71,12 +71,15 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY CT_DO CT_LET CT_IN
+	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY
+  CT_INSIDE
+  CT_DO
+  CT_LET CT_IN
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IN CT_INIT CT_CONTINUOUS CT_INITIALLY CT_INVARIANT CT_IS
+	CT_IF CT_INIT CT_CONTINUOUS CT_INITIALLY CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
@@ -90,7 +93,7 @@ let unzip l = List.fold_left
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
-    CT_FUN CT_ARROW
+    CT_FUN CT_BEGIN CT_ARROW
 
 
 %token EOF
@@ -246,12 +249,12 @@ decl_fun_nonempty_list:
 
 /* Function definition */
 decl_fun_def:
-  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete fun_decl_or_expression CT_END {
+  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete CT_BEGIN fun_decl_or_expression CT_END {
     {
       name = $2;
       parameters = List.rev $4;
       return_type = $7;
-      body = $8;
+      body = $9;
     }
   }
 ;
@@ -280,7 +283,7 @@ fun_decl_or_expression:
 ;
 
 fun_local_decl:
-  | CT_LET NAME COLON var_type_discrete OP_EQ expression COMMA fun_decl_or_expression { Parsed_fun_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
+  | CT_LET NAME COLON var_type_discrete OP_EQ expression CT_IN fun_decl_or_expression { Parsed_fun_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
 ;
 
 /************************************************************/
@@ -813,9 +816,9 @@ discrete_boolean_expression:
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
 	| discrete_boolean_expression relop discrete_boolean_expression { Parsed_comparison ($1, $2, $3) }
 	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
-	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
+	| arithmetic_expression CT_INSIDE LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
 	/* allowed for convenience */
-	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
+	| arithmetic_expression CT_INSIDE LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
 	/* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) */
 	| LPAREN boolean_expression RPAREN { Parsed_boolean_expression $2 }
 	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }

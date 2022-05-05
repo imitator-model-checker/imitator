@@ -35,7 +35,7 @@ var
  
 loc l1: invariant True 
     (* Guard predicate involve expression with two different types with i as rational and j as int *)
-	when i in [j;10] goto lend;
+	when i inside [j;10] goto lend;
 	
 accepting loc lend: invariant True
  end (* pta *)
