@@ -237,7 +237,7 @@ var_type_discrete_number:
 /************************************************************/
 
 decl_fun_lists:
-	| decl_fun_nonempty_list { $1 }
+	| decl_fun_nonempty_list { List.rev $1 }
 	| { [] }
 ;
 

@@ -346,7 +346,23 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
         ) locations;
     ) parsed_model.automata;
 
+    (* TODO benjamin CLEAN to remove after tests *)
+    let d_string = function
+        | ParsingStructureUtilities.Global_variable_ptr x -> x
+        | ParsingStructureUtilities.Local_variable_ptr (x, id) -> x ^ "_" ^ string_of_int id
+        | ParsingStructureUtilities.Fun_ptr x -> x ^ "_fn"
+        | ParsingStructureUtilities.Param_ptr x -> x ^ "_param"
+    in
+
     (* TODO benjamin CLEAN remove comments *)
+    List.iter (fun parsed_fun_definition ->
+        let dependencies = ParsingStructureUtilities.get_variables_dependency_graph parsed_fun_definition in
+        let s = List.map (fun (a, b) ->
+            d_string a ^ " -> " ^ d_string b
+        ) dependencies in
+        let ss = OCamlUtilities.string_of_list_of_string_with_sep "\n" s in
+        ImitatorUtilities.print_message Verbose_standard ("---- get graph dependencies of " ^ parsed_fun_definition.name ^ "\n" ^ ss ^ "\n----");
+    ) parsed_model.fun_definitions;
     (*
     List.iter (fun parsed_fun_definition ->
         let local_variables, unused_local_variables = ParsingStructureUtilities.get_local_variables_in_parsed_fun_def parsed_fun_definition in
@@ -3940,12 +3956,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         raise InvalidModel;
 
     (* Convert function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
-    let converted_fun_definitions_seq = List.map (fun (x : parsed_fun_definition) -> x.name, DiscreteExpressionConverter.convert_fun_definition variable_infos x) parsed_model.fun_definitions |> List.to_seq in
-    (* Create table from sequence *)
-    let fun_definitions_table = Hashtbl.of_seq converted_fun_definitions_seq in
-    Functions.fun_definitions_table := fun_definitions_table;
-
-
+    List.iter (fun (x : parsed_fun_definition) ->
+        (* Convert fun def from parsing structure to abstract model *)
+        let fun_def = DiscreteExpressionConverter.convert_fun_definition variable_infos x in
+        (* Add fun def to functions table *)
+        Hashtbl.add !Functions.fun_definitions_table x.name fun_def
+    ) parsed_model.fun_definitions;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)
@@ -4838,7 +4854,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	automaton_of_transition = automaton_of_transition;
 
     (* The list of declared functions *)
-    fun_definitions = fun_definitions_table;
+    fun_definitions = !Functions.fun_definitions_table;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;

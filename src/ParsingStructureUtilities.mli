@@ -200,6 +200,13 @@ val get_variables_in_parsed_state_predicate : parsed_state_predicate -> StringSe
 (*val get_local_variables_in_parsed_fun_def : parsed_fun_definition -> StringSet.t * StringSet.t*)
 val get_variables_in_parsed_fun_def : parsed_fun_definition -> StringSet.t
 
+type dep =
+    | Global_variable_ptr of variable_name
+    | Local_variable_ptr of variable_name * int
+    | Param_ptr of variable_name
+    | Fun_ptr of variable_name
+
+val get_variables_dependency_graph : parsed_fun_definition -> (dep * dep) list
 
 val variable_name_of_parsed_variable_update_type_opt : parsed_variable_update_type -> variable_name option
 val variable_name_of_parsed_variable_update_type : parsed_variable_update_type -> variable_name

@@ -1047,44 +1047,7 @@ let get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref 
         (function _ -> ())
         (add_variable_of_discrete_boolean_expression variables_used_ref)
 
-type dependency_tree =
-    | Dependency_tree_node of variable_name * dependency_tree list
-    | Dependency_tree_leaf of variable_name
 
-(*
-(* Gather all local variable names used in a parsed function definition *)
-let get_local_variables_in_parsed_fun_def fun_def =
-
-    (* Add parameters as local variables *)
-    let parameter_names = List.map first_of_tuple fun_def.parameters in
-    let local_variables = List.map (fun parameter_name -> Dependency_tree_leaf parameter_name) parameter_names in
-
-    (* Check if all variables defined in user function body using local variables set *)
-    let rec get_local_variables_in_parsed_fun_decl_or_expr_rec local_variables = function
-        | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr) ->
-
-            let variables_used = get_variables_in_parsed_global_expression init_expr in
-
-
-            (* Add the new declared local variable to set *)
-            let local_variables = StringSet.add variable_name local_variables in
-            (* Gather global variable *)
-            let new_local_variables = get_local_variables_in_parsed_fun_decl_or_expr_rec local_variables parsed_fun_decl_or_expr in
-            iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) init_expr;
-            new_local_variables
-
-        | Parsed_fun_expr expr ->
-            let variables_used = get_variables_in_parsed_global_expression expr in
-            let tree_leafs = List.map (fun variable_name -> Dependency_tree_leaf variable_name) variables_used in
-            Dependency_tree_node (fun_def.name, tree_leafs)
-
-
-    in
-    let local_variables = get_local_variables_in_parsed_fun_decl_or_expr_rec local_variables fun_def.body in
-    (* Remove local variables from variable found in function (because we need to get only global variables and local variables shadow global variables) *)
-    let unused_local_variables = StringSet.diff local_variables !variable_used_ref in
-    local_variables, unused_local_variables
-*)
 (* TODO benjamin create function that gather all local variables and reduce this one *)
 (* Gather all variable names (global variables only) used in a parsed function definition in a given accumulator *)
 let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def : parsed_fun_definition) =
@@ -1096,7 +1059,6 @@ let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def 
     (* Check if all variables defined in user function body using local variables set *)
     let rec get_variables_in_parsed_fun_decl_or_expr_rec local_variables = function
         | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr, id) ->
-            ImitatorUtilities.print_message Verbose_standard ("let" ^ variable_name ^ "id:" ^ string_of_int id);
             (* Add the new declared local variable to set *)
             let local_variables = StringSet.add variable_name local_variables in
             (* Gather global variable *)
@@ -1157,6 +1119,61 @@ let get_variables_in_parsed_simple_predicate =
 
 let get_variables_in_parsed_state_predicate =
     wrap_accumulator get_variables_in_parsed_state_predicate_with_accumulator
+
+type dep =
+    | Global_variable_ptr of variable_name
+    | Local_variable_ptr of variable_name * int
+    | Param_ptr of variable_name
+    | Fun_ptr of variable_name
+
+
+(* TODO benjamin IMPLEMENT *)
+module MyMap = Map.Make(String)
+let get_variables_dependency_graph fun_def =
+
+    let parameter_names = List.map first_of_tuple fun_def.parameters in
+    let local_variables = List.fold_right (fun parameter_name acc -> MyMap.add parameter_name (Param_ptr parameter_name) acc) parameter_names MyMap.empty in
+    let map = [] in
+
+    (* Check if all variables defined in user function body using local variables set *)
+    let rec get_variables_dependency_graph_in_parsed_fun_decl_or_expr_rec local_variables = function
+        | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr, id) ->
+
+            (* Create tuple representing a unique variable ref *)
+            let variable_ref = Local_variable_ptr (variable_name, id) in
+            (* Get variable used in init expression of variable *)
+            let variables_used = get_variables_in_parsed_global_expression init_expr in
+            let map = StringSet.fold (fun used_variable_name acc ->
+                    let used_variable_ref_opt = MyMap.find_opt used_variable_name local_variables in
+                    let used_variable_ref =
+                        match used_variable_ref_opt with
+                        | Some used_variable_ref -> used_variable_ref
+                        | None -> Global_variable_ptr used_variable_name
+                    in
+                    (variable_ref, used_variable_ref) :: acc
+                ) variables_used map
+            in
+            (* Add or update the local variable *)
+            let local_variables = MyMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
+            let inner_map = get_variables_dependency_graph_in_parsed_fun_decl_or_expr_rec local_variables parsed_fun_decl_or_expr in
+            inner_map @ map
+
+        | Parsed_fun_expr expr ->
+            (* Gather variables used in function expression *)
+            let variables_used = get_variables_in_parsed_global_expression expr in
+            let map = StringSet.fold (fun used_variable_name acc ->
+                    let used_variable_ref_opt = MyMap.find_opt used_variable_name local_variables in
+                    let used_variable_ref =
+                        match used_variable_ref_opt with
+                        | Some used_variable_ref -> used_variable_ref
+                        | None -> Global_variable_ptr used_variable_name
+                    in
+                    ((Fun_ptr fun_def.name), used_variable_ref) :: acc
+                ) variables_used map
+            in
+            map
+    in
+    get_variables_dependency_graph_in_parsed_fun_decl_or_expr_rec local_variables fun_def.body
 
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
