@@ -14,17 +14,20 @@
  *
  ************************************************************)
 
+open ParsingStructure
 open DiscreteType
 open DiscreteValue
 open FunctionSig
 
-val fun_definitions_table : (string, AbstractModel.fun_definition) Hashtbl.t ref
+(* Get builtin functions meta *)
+val builtin_functions : function_metadata list
+val fun_definitions_table : (string, AbstractModel.fun_definition) Hashtbl.t
 
-(* Get signature constraint of a function given it's name *)
-val signature_constraint_of_function : string -> signature_constraint
-(* Get if function is subject to side-effects *)
-val is_function_subject_to_side_effect : string -> bool
+(* Get function metadata of a given parsed function definition *)
+val metadata_of_function_definition : parsed_fun_definition -> function_metadata
+
+(* Get function metadata given it's name *)
+val function_metadata_by_name : variable_infos -> variable_name -> function_metadata
 (* Get arity of a function given it's name *)
-val arity_of_function : string -> int
-(* String representation of the function signature constraint *)
-val string_of_function_signature_constraint : string -> string
+val arity_of_function : variable_infos -> string -> int
+

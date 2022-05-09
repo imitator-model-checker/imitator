@@ -38,6 +38,7 @@ let convert_discrete_constant initialized_constants (name, expr, var_type) =
         removed_variable_names = [];
         type_of_variables = (fun _ -> raise (TypeError "oops!"));
         discrete = [];
+        functions = Hashtbl.create 0;
     }
     in
 

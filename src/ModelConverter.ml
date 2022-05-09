@@ -3475,6 +3475,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];
         discrete = [];
+        functions = Hashtbl.create 0;
         type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rat);
     }
     in
@@ -3913,10 +3914,33 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		) automata;
 	);
 
+    (* Gather all functions metadata *)
+
+    (* Get builtin functions metadata *)
+    let builtin_functions_metadata = Functions.builtin_functions in
+    (* Get user function metadata from parsed functions *)
+    let user_functions_metadata = List.map Functions.metadata_of_function_definition parsed_model.fun_definitions in
+    (* Concat builtin & user functions *)
+    let all_functions_metadata = user_functions_metadata @ builtin_functions_metadata in
+    (* Create function table that associate function name to function metadata *)
+    let functions_metadata_table = (List.map (fun (fun_def : ParsingStructure.function_metadata) -> fun_def.name, fun_def) all_functions_metadata) |> List.to_seq |> Hashtbl.of_seq in
+
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	
+
+	let variable_infos = {
+        constants					= constants;
+        discrete					= discrete;
+        index_of_variables			= index_of_variables;
+        type_of_variables			= type_of_variables;
+        variables					= variables;
+        variable_names				= variable_names;
+        removed_variable_names		= removed_variable_names;
+        functions                   = functions_metadata_table;
+    }
+    in
+
 	let useful_parsing_model_information : ParsingStructure.useful_parsing_model_information = {
 		actions						= actions;
 		array_of_location_names		= array_of_location_names;
@@ -3929,18 +3953,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		nb_parameters				= nb_parameters;
 		parameter_names				= parameter_names;
 		removed_action_names		= removed_action_names;
-		variable_infos              = {
-            constants					= constants;
-            discrete					= discrete;
-    		index_of_variables			= index_of_variables;
-    		type_of_variables			= type_of_variables;
-    		variables					= variables;
-            variable_names				= variable_names;
-		    removed_variable_names		= removed_variable_names;
-		}
-	} in
-
-    let variable_infos = useful_parsing_model_information.variable_infos in
+		variable_infos              = variable_infos
+	}
+	in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the user function definitions *)
@@ -3956,11 +3971,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         raise InvalidModel;
 
     (* Convert function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
-    List.iter (fun (x : parsed_fun_definition) ->
+    List.iter (fun (parsed_fun_def : parsed_fun_definition) ->
         (* Convert fun def from parsing structure to abstract model *)
-        let fun_def = DiscreteExpressionConverter.convert_fun_definition variable_infos x in
+        let fun_def = DiscreteExpressionConverter.convert_fun_definition variable_infos parsed_fun_def in
         (* Add fun def to functions table *)
-        Hashtbl.add !Functions.fun_definitions_table x.name fun_def
+        Hashtbl.add Functions.fun_definitions_table fun_def.name fun_def
     ) parsed_model.fun_definitions;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4854,7 +4869,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	automaton_of_transition = automaton_of_transition;
 
     (* The list of declared functions *)
-    fun_definitions = !Functions.fun_definitions_table;
+    fun_definitions = Functions.fun_definitions_table;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;

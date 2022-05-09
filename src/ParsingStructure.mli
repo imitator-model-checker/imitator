@@ -139,6 +139,12 @@ type parsed_fun_decl_or_expr =
     | Parsed_fun_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_global_expression (* init expr *) * parsed_fun_decl_or_expr * int (* id *)
     | Parsed_fun_expr of parsed_global_expression
 
+type function_metadata = {
+    name : variable_name;
+    signature_constraint : FunctionSig.signature_constraint;
+    side_effect : bool;
+}
+
 type parsed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : (variable_name * DiscreteType.var_type_discrete) list; (* parameter names and types *)
@@ -477,13 +483,14 @@ type parsed_property = {
 type constants_table = (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t
 
 type variable_infos = {
-	constants							: constants_table;
-	variables							: variable_name array;
-    variable_names						: variable_name list;
-	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
-	type_of_variables					: Automaton.variable_index -> DiscreteType.var_type;
-	removed_variable_names				: variable_name list;
-	discrete							: Automaton.variable_index list;
+	constants : constants_table;
+	variables : variable_name array;
+    variable_names : variable_name list;
+	index_of_variables : (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
+	type_of_variables : Automaton.variable_index -> DiscreteType.var_type;
+	removed_variable_names : variable_name list;
+	discrete : Automaton.variable_index list;
+	functions : (Automaton.variable_name, function_metadata) Hashtbl.t
 }
 
 type useful_parsing_model_information = {

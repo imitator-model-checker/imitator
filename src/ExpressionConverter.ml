@@ -868,8 +868,10 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         (* Get function name *)
         let function_name = ParsingStructureUtilities.function_name_of_parsed_factor name_factor in
         ImitatorUtilities.print_message Verbose_standard ("function call: " ^ function_name);
+        (* Get function metadata *)
+        let function_metadata = Functions.function_metadata_by_name variable_infos function_name in
         (* Get function arity *)
-        let arity = Functions.arity_of_function function_name in
+        let arity = Functions.arity_of_function variable_infos function_name in
         let arguments_number = List.length argument_expressions in
         ImitatorUtilities.print_message Verbose_standard ("arity: " ^ string_of_int arity);
 
@@ -899,7 +901,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         let has_side_effects = List.exists (fun (_, _, has_side_effects) -> has_side_effects) type_checks in
 
         (* Get function signature *)
-        let function_signature_constraint = Functions.signature_constraint_of_function function_name in
+        let function_signature_constraint = function_metadata.signature_constraint in
         (* Get parameters signature *)
         let function_parameter_signature_constraint, _ = FunctionSig.split_signature function_signature_constraint in
 
@@ -997,7 +999,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         (* Get typed arguments expressions *)
         let typed_expressions = List.map (fun (typed_expr, _, _) -> typed_expr) type_checks in
 
-        let is_subject_to_side_effect = Functions.is_function_subject_to_side_effect function_name in
+        let is_subject_to_side_effect = function_metadata.side_effect in
         Typed_function_call (function_name, typed_expressions, return_type), return_type, is_subject_to_side_effect || has_side_effects
 
 
@@ -1510,7 +1512,7 @@ let label_of_typed_factor_constructor = function
 
 
 let user_function_definition function_name =
-    let fun_def_opt = Hashtbl.find_opt !Functions.fun_definitions_table function_name in
+    let fun_def_opt = Hashtbl.find_opt Functions.fun_definitions_table function_name in
     match fun_def_opt with
     | Some fun_def -> fun_def
     | None -> raise (UndefinedFunction function_name)
