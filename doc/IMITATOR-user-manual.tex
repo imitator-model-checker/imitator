@@ -456,10 +456,11 @@ Examples of array definitions are given below:
 \subsubsection{Lists}
 %------------------------------------------------------------
 
-Lists are collections of variable length - contrary to arrays, the type of a list doesn't depend on it's length, thus it's possible to compare two lists of different lengths.
-List elements can only be accessed - not updated - using an integer-valued arithmetic expression as index.
+Lists are collections of variable length.
+Contrarily to arrays, the type of a list does not depend on its length; it is therefore possible to compare two lists of different lengths.
+List elements can only be accessed---not updated---using an integer-valued arithmetic expression as index.
 A list variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
-For example, it is possible to declare a list of integers, of Booleans, of list of list of Booleans---which can be seen as a multidimensional list.
+For example, it is possible to declare a list of integers, of Booleans, or of list of array of Booleans.
 
 Examples of list definitions are given below:
 
@@ -478,10 +479,12 @@ Examples of list definitions are given below:
 \subsubsection{Stacks}
 %------------------------------------------------------------
 
-Stacks are LIFO collections (Last In First Out) of variable length - contrary to arrays, the type of a stack doesn't depend on it's length, thus it's possible to compare two stacks of different lengths.
-Stack elements can only be accessed - not updated - using pop or top functions.
+Stacks are LIFO collections (Last In First Out) of variable length.
+It is possible to compare two stacks of different lengths.
+Stack elements can only be accessed---not updated---using pop or top functions.
 A stack variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
-For example, it is possible to declare a stack of integers, of Booleans, of stacks of Booleans---which can be seen as a multidimensional stack.
+For example, it is possible to declare a stack of integers, of Booleans, of stacks of list of Booleans.
+
 \begin{remark}
 A literal stack value can only be an empty stack.
 \end{remark}
@@ -503,10 +506,11 @@ Examples of stack definitions are given below:
 \subsubsection{Queues}
 %------------------------------------------------------------
 
-Queues are FIFO collections (First In First Out) of variable length - contrary to arrays, the type of a queue doesn't depend on it's length, thus it's possible to compare two queues of different lengths.
-Queue elements can only be accessed - not updated - using pop or top functions.
+Queues are FIFO collections (First In First Out) of variable length.
+It is possible to compare two queues of different lengths.
+Queue elements can only be accessed---not updated---using pop or top functions.
 A queue variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
-For example, it is possible to declare a queue of integers, of Booleans, of queues of Booleans---which can be seen as a multidimensional queue.
+For example, it is possible to declare a queue of integers, of Booleans, or of stacks of binary words.
 \begin{remark}
 A literal queue value can only be an empty queue.
 \end{remark}
@@ -535,19 +539,20 @@ Examples of queue definitions are given below:
 \begin{table}[h!]
 	\caption{Built-in functions summary}
 	{\centering
+	\small
 		\begin{tabular}{ | l | l | }
 
 			% Non-nested CTL
 			\hline
-			\rowHeader{} Name & Description \\
+			\rowHeader{} \textbf{Name} & \textbf{Description} \\
 			\hline
-		 	\multicolumn{2}{|c|}{Arithmetic} \\
+		 	\multicolumn{2}{|c|}{\textbf{Arithmetic}} \\
 			\hline
 			\hyperref[item:lbl-pow]{\styleIMI{pow}} & Pow a number        \\
 			\hline
 			\hyperref[item:lbl-rational_of_int]{\styleIMI{rational\_of\_int}} & Convert an int expression to a rational one        \\
 			\hline
-		 	\multicolumn{2}{|c|}{Binary words} \\
+		 	\multicolumn{2}{|c|}{\textbf{Binary words}} \\
 			\hline
 			\hyperref[item:lbl-shift_left]{\styleIMI{shift\_left}} & Shift a binary to the left (truncate to the binary word length) \\
 			\hline
@@ -565,7 +570,7 @@ Examples of queue definitions are given below:
 			\hline
 			\hyperref[item:lbl-lognot]{\styleIMI{lognot}} & Not bitwise on a binary number \\
 			\hline
-			\multicolumn{2}{|c|}{Array} \\
+			\multicolumn{2}{|c|}{\textbf{Arrays}} \\
 			\hline
 			\hyperref[item:lbl-array_append]{\styleIMI{array\_append}} & Concatenate two arrays \\
 			\hline
@@ -573,7 +578,7 @@ Examples of queue definitions are given below:
 			\hline
 			\hyperref[item:lbl-array_mem]{\styleIMI{array\_mem}} & Search existence of an element in an array \\
 			\hline
-			\multicolumn{2}{|c|}{List} \\
+			\multicolumn{2}{|c|}{\textbf{Lists}} \\
 			\hline
 			\hyperref[item:lbl-list_cons]{\styleIMI{list\_cons}} & Construct a list by adding an element to the beginning \\
 			\hline
@@ -603,7 +608,7 @@ Examples of queue definitions are given below:
 			\hline
 			\hyperref[item:lbl-stack_length]{\styleIMI{stack\_length}} & Get the number of elements of a stack \\
 			\hline
-			\multicolumn{2}{|c|}{Queue} \\
+			\multicolumn{2}{|c|}{\textbf{Queues}} \\
 			\hline
 			\hyperref[item:lbl-queue_push]{\styleIMI{queue\_push}} & Add an element at the beginning of a queue - the queue is modified \\
 			\hline
