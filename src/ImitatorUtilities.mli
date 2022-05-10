@@ -129,6 +129,9 @@ type shell_highlighting_type =
 (* Print a message if global_verbose_mode >= message_verbose_mode *)
 val print_message : verbose_mode -> string -> unit
 
+(* Print a message as Verbose_standard *)
+val print_standard_message : string -> unit
+
 (* Print a message with some highlighting *)
 val print_highlighted_message : shell_highlighting_type -> verbose_mode -> string -> unit
 

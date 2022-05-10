@@ -22,10 +22,6 @@ open FunctionSig
 open ParsingStructure
 open OCamlUtilities
 
-type side_effect_marker =
-    | No_side_effect
-    | Side_effect
-
 (* binary(l) -> l -> binary(l) *)
 let shift_signature2 =
     [
@@ -84,8 +80,10 @@ let binary_log_signature =
         Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a")))
     ]
 
+(* Table of converted functions *)
 let fun_definitions_table : (string, AbstractModel.fun_definition) Hashtbl.t = Hashtbl.create 0
 
+(* List of builtin functions metadata *)
 let builtin_functions : ParsingStructure.function_metadata list =
     [
         {

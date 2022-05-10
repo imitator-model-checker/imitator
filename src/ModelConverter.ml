@@ -213,181 +213,6 @@ let get_declared_automata_names =
 let get_declared_synclabs_names =
   List.fold_left (fun action_names (_, synclabs, _) -> list_union action_names synclabs) []
 
-(* Get all variable dependencies of a given variable *)
-let get_variable_dependencies parsed_model variable_name =
-    let all_dependant_variables = ref StringSet.empty in
-    let rec get_variable_dependencies_rec dependent_variables variable_name =
-        List.iter (function
-            (* `loc[automaton] = location`: no variable => nothing to do *)
-            | Parsed_loc_assignment _ -> ()
-
-            (* Linear predicate are true or false constraint => nothing to do*)
-            | Parsed_linear_predicate Parsed_true_constraint
-            | Parsed_linear_predicate Parsed_false_constraint
-
-            (* Special form `variable ~ constant` => in this case we assume NOT used *)
-            | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable _), _, Linear_term (Constant _)))
-
-            (* Allow only constant-expression, so no variables to get *)
-            | Parsed_discrete_predicate _ -> ()
-
-            (* Linear constraint: get variables *)
-            | Parsed_linear_predicate (Parsed_linear_constraint _ as linear_constraint) ->
-                (** Gather all left-hand and right-hand variables *)
-                let linear_constraint_variables = ParsingStructureUtilities.get_variables_in_linear_constraint linear_constraint in
-
-                (* If variable appear in linear constraint, get all variable implies *)
-                if StringSet.mem variable_name linear_constraint_variables then (
-                    (* Get all variable that doesn't exists already in dependent_variables set *)
-                    let diff = StringSet.diff linear_constraint_variables !dependent_variables in
-                    let diff_list = StringSet.elements diff in
-                    let length = List.length diff_list in
-                    if length <> 0 then (
-                        dependent_variables := StringSet.union !dependent_variables linear_constraint_variables;
-                        (* Recursively search dependencies for new found variable *)
-                        StringSet.iter (fun dependent_variable_name ->
-                            get_variable_dependencies_rec dependent_variables dependent_variable_name
-                        ) diff;
-                    );
-                )
-
-        ) parsed_model.init_definition;
-    in
-    get_variable_dependencies_rec all_dependant_variables variable_name;
-    all_dependant_variables := StringSet.remove variable_name !all_dependant_variables;
-    !all_dependant_variables
-
-(* For each used variables, get their dependencies *)
-let get_all_variable_dependencies_used_in_init parsed_model all_variables_used =
-    let all_dependencies_used = ref StringSet.empty in
-
-    StringSet.iter (fun variable_name ->
-        let variable_dependencies = get_variable_dependencies parsed_model variable_name in
-        (* Get only variable not used but dependent of a variable used *)
-        let variable_dependencies_not_used = StringSet.diff variable_dependencies !all_variables_used in
-        (* Display warning message *)
-        StringSet.iter(fun variable_dependency_name ->
-            print_warning (
-                "Variable `"
-                ^ variable_dependency_name
-                ^ "` is declared but never used in the model; it is however kept because of a dependency with `"
-                ^ variable_name
-                ^ "`"
-            );
-        ) variable_dependencies_not_used;
-
-        all_dependencies_used := StringSet.union !all_dependencies_used variable_dependencies;
-    ) !all_variables_used;
-
-    !all_dependencies_used
-
-
-(* Get the set of all variable names used in the parsed model *)
-let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_model) =
-	(* Create a set structure for variable names *)
-	let all_variables_used = ref StringSet.empty in
-
-	(*** NOTE: we pass this set by reference ***)
-
-	(* Gather in each automaton *)
-	List.iter (fun (automaton_name, sync_name_list, locations) ->
-		print_message Verbose_total ("      Gathering variables used in automaton " ^ automaton_name);
-
-		(* Gather in each location *)
-		List.iter (fun (location : parsed_location) ->
-			print_message Verbose_total ("        Gathering variables used in location " ^ location.name);
-
-			(* Gather in the cost *)
-			begin
-				match location.cost with
-				| Some cost ->
-				print_message Verbose_total ("          Gathering variables in used cost");
-(*				get_variables_in_linear_expression all_variables_used cost;*)
-				all_variables_used := ParsingStructureUtilities.get_variables_in_linear_expression cost;
-				| None -> ()
-			end;
-
-			(* Gather in the stopwatches *)
-			print_message Verbose_total ("          Gathering variables used in possible stopwatches");
-			List.iter (fun stopwatch_name ->
-				all_variables_used := StringSet.add stopwatch_name !all_variables_used
-				) location.stopped;
-
-			(* Gather in the flows *)
-			print_message Verbose_total ("          Gathering variables used in possible flows");
-			List.iter (fun (clock_name, _) ->
-				all_variables_used := StringSet.add clock_name !all_variables_used
-				) location.flow;
-
-			(* Gather in the convex predicate *)
-			print_message Verbose_total ("          Gathering variables in convex predicate");
-			all_variables_used := StringSet.union !all_variables_used (ParsingStructureUtilities.get_variables_in_nonlinear_convex_predicate location.invariant);
-
-			(* Gather in transitions *)
-			print_message Verbose_total ("          Gathering variables in transitions");
-			List.iter (fun (convex_predicate, update_section, (*sync*)_, (*target_location_name*)_) ->
-				(* Gather in the convex predicate (guard) *)
-				print_message Verbose_total ("            Gathering variables in convex predicate");
-				all_variables_used := StringSet.union !all_variables_used (ParsingStructureUtilities.get_variables_in_nonlinear_convex_predicate convex_predicate);
-
-				(* Gather in the updates *)
-				print_message Verbose_total ("            Gathering variables in updates");
-				let updates = ParsingStructureUtilities.updates_of_update_section update_section in
-				(* List.iter (fun (variable_name, arithmetic_expression) -> *)
-				List.iter (fun update_expression ->
-					(*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
-					(* First add the variable to be updated *)
-					(* 					all_variables_used := StringSet.add variable_name !all_variables_used; *)
-					(* Second add the variable names in the update expression *)
-					(* get_variables_in_parsed_update_arithmetic_expression all_variables_used arithmetic_expression; *)
-					ParsingStructureUtilities.get_variables_in_parsed_update_with_accumulator all_variables_used update_expression
-
-                ) updates;
-            ) location.transitions;
-        ) locations;
-    ) parsed_model.automata;
-
-    (* TODO benjamin CLEAN to remove after tests *)
-    let d_string = function
-        | ParsingStructureUtilities.Global_variable_ptr x -> x
-        | ParsingStructureUtilities.Local_variable_ptr (x, id) -> x ^ "_" ^ string_of_int id
-        | ParsingStructureUtilities.Fun_ptr x -> x ^ "_fn"
-        | ParsingStructureUtilities.Param_ptr x -> x ^ "_param"
-    in
-
-    (* TODO benjamin CLEAN remove comments *)
-    List.iter (fun parsed_fun_definition ->
-        let dependencies = ParsingStructureUtilities.get_variables_dependency_graph parsed_fun_definition in
-        let s = List.map (fun (a, b) ->
-            d_string a ^ " -> " ^ d_string b
-        ) dependencies in
-        let ss = OCamlUtilities.string_of_list_of_string_with_sep "\n" s in
-        ImitatorUtilities.print_message Verbose_standard ("---- get graph dependencies of " ^ parsed_fun_definition.name ^ "\n" ^ ss ^ "\n----");
-    ) parsed_model.fun_definitions;
-    (*
-    List.iter (fun parsed_fun_definition ->
-        let local_variables, unused_local_variables = ParsingStructureUtilities.get_local_variables_in_parsed_fun_def parsed_fun_definition in
-        let local_variables = StringSet.to_seq local_variables |> List.of_seq in
-        let unused_local_variables = StringSet.to_seq unused_local_variables |> List.of_seq in
-
-        ImitatorUtilities.print_message Verbose_standard ("\nfunction " ^ parsed_fun_definition.name);
-        let str_local_variables = OCamlUtilities.string_of_list_of_string_with_sep "," local_variables in
-        let str_unused_local_variables = OCamlUtilities.string_of_list_of_string_with_sep "," unused_local_variables in
-        ImitatorUtilities.print_message Verbose_standard (" - local variables: " ^ str_local_variables ^ "\n - unused local variables: " ^ str_unused_local_variables);
-    ) parsed_model.fun_definitions;
-    *)
-
-	(* Gather in each user functions *)
-    List.iter (fun parsed_fun_definition ->
-        ParsingStructureUtilities.get_variables_in_parsed_fun_def_with_accumulator all_variables_used parsed_fun_definition
-    ) parsed_model.fun_definitions;
-
-    let all_dependencies_used = get_all_variable_dependencies_used_in_init parsed_model all_variables_used in
-    all_variables_used := StringSet.union !all_variables_used all_dependencies_used;
-
-	(* Return the set of variables actually used *)
-	!all_variables_used
-
 (************************************************************)
 (** Checking the model *)
 (************************************************************)
@@ -1816,7 +1641,7 @@ let is_only_resets updates =
     List.for_all (fun (_, update) ->
         ParsingStructureUtilities.exists_in_parsed_global_expression (function
             | Leaf_variable _
-            | Leaf_fun_call _ -> false
+            | Leaf_fun _ -> false
             | Leaf_constant value -> DiscreteValue.is_zero value
         ) update
     ) updates
@@ -2174,7 +1999,7 @@ let get_variables_in_parsed_hyper_rectangle (parsed_hyper_rectangle : ParsingStr
 (* Gather the set of all variable names used in the parsed property *)
 (*------------------------------------------------------------*)
 
-let get_variables_in_property_option (parsed_property_option : ParsingStructure.parsed_property option) =
+let all_variables_in_property_option (parsed_property_option : ParsingStructure.parsed_property option) =
 	(* First create the set *)
 	let variables_used_ref = ref StringSet.empty in
 	
@@ -3604,6 +3429,32 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let single_discrete_names_by_type = list_only_once possibly_multiply_defined_discrete_names_by_type in
 
 	(*------------------------------------------------------------*)
+	(* Resolve dependencies between variables and functions *)
+	(*------------------------------------------------------------*)
+
+    (* Resolve dependency graph of the model *)
+    let dependency_graph = ParsedModelMetadata.dependency_graph parsed_model in
+    (* Get dependency graph as dot format *)
+    let str_dependency_graph = ParsedModelMetadata.string_of_dependency_graph dependency_graph in
+    (* Print dependency graph *)
+    ImitatorUtilities.print_message Verbose_high str_dependency_graph;
+
+    (* Get unused components and print warnings *)
+    let unused_components = ParsedModelMetadata.unused_components_of_model dependency_graph in
+
+    (* Iter on unused components and print warnings *)
+    ParsedModelMetadata.ComponentSet.iter (function
+        | Fun_ref function_name ->
+            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model.")
+        | Local_variable_ref (variable_name, function_name, _) ->
+            print_warning ("Local variable `" ^ variable_name ^ "` in `" ^ function_name ^ "` is declared but never used.")
+        | Param_ref (param_name, function_name) ->
+            print_warning ("Parameter `" ^ param_name ^ "` in `" ^ function_name ^ "` is declared but never used.")
+        | _ -> ()
+    ) unused_components;
+
+
+	(*------------------------------------------------------------*)
 	(* Remove unused variables *)
 	(*------------------------------------------------------------*)
 
@@ -3613,9 +3464,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Nothing to do *)
 		single_clock_names, single_discrete_names, single_parameter_names, single_discrete_names_by_type, []
 	)else (
+
 		(* Gather all variables used *)
-		let all_variables_used_in_model = get_all_variables_used_in_model parsed_model in
-		let all_variables_used_in_property = get_variables_in_property_option parsed_property_option in
+		let all_variables_used_in_model = ParsedModelMetadata.used_variables_of_model dependency_graph in
+		let all_variables_used_in_property = all_variables_in_property_option parsed_property_option in
 		let all_variable_used = StringSet.union all_variables_used_in_model all_variables_used_in_property in
 
 		(* Remove variable unused *)
@@ -3905,12 +3757,16 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		) automata;
 	);
 
-    (* Gather all functions metadata *)
+    (* Gather all functions metadata in a table *)
 
     (* Get builtin functions metadata *)
     let builtin_functions_metadata = Functions.builtin_functions in
-    (* Get user function metadata from parsed functions *)
-    let user_functions_metadata = List.map Functions.metadata_of_function_definition parsed_model.fun_definitions in
+    (* Get user functions metadata from parsed functions *)
+    let used_function_names = ParsedModelMetadata.used_functions_of_model dependency_graph in
+    (* Get only used user functions definition *)
+    let used_function_definitions = List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions in
+    (* Get metadata of these functions *)
+    let user_functions_metadata = List.map Functions.metadata_of_function_definition used_function_definitions in
     (* Concat builtin & user functions *)
     let all_functions_metadata = user_functions_metadata @ builtin_functions_metadata in
     (* Create function table that associate function name to function metadata *)
@@ -3961,13 +3817,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     if not well_formed_user_functions then
         raise InvalidModel;
 
-    (* Convert function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
+    (* Convert (only used) function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
     List.iter (fun (parsed_fun_def : parsed_fun_definition) ->
         (* Convert fun def from parsing structure to abstract model *)
         let fun_def = DiscreteExpressionConverter.convert_fun_definition variable_infos parsed_fun_def in
         (* Add fun def to functions table *)
         Hashtbl.add Functions.fun_definitions_table fun_def.name fun_def
-    ) parsed_model.fun_definitions;
+    ) used_function_definitions;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)

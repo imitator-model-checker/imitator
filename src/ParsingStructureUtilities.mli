@@ -4,7 +4,7 @@
  *
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
- * Module description: General fonctions for map, filter, traverse, evaluating, etc. parsing structure tree
+ * Module description: General functions for map, filter, traverse, evaluating, etc. parsing structure tree
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/05
@@ -19,7 +19,7 @@ open CustomModules
 type parsing_structure_leaf =
     | Leaf_variable of string
     | Leaf_constant of DiscreteValue.discrete_value
-    | Leaf_fun_call of variable_name
+    | Leaf_fun of variable_name
 
 (* Leaf for parsed update *)
 type parsed_update_leaf =
@@ -40,8 +40,10 @@ type nonlinear_constraint_leaf =
     | Leaf_true_nonlinear_constraint
     | Leaf_false_nonlinear_constraint
 
+
 val fold_map_parsed_normal_update : ('a -> 'a -> 'a) -> 'a -> (parsing_structure_leaf -> 'a) -> (parsed_update_leaf -> 'a) -> normal_update -> 'a list
 val fold_map_parsed_update : ('a -> 'a -> 'a) -> 'a -> (parsing_structure_leaf -> 'a) -> (parsed_update_leaf -> 'a) -> update -> 'a list
+
 
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
@@ -92,6 +94,7 @@ val iterate_parsed_discrete_boolean_expression : (parsing_structure_leaf -> unit
 val iterate_parsed_discrete_arithmetic_expression : (parsing_structure_leaf -> unit) -> parsed_discrete_arithmetic_expression -> unit
 val iterate_parsed_discrete_term : (parsing_structure_leaf -> unit) -> parsed_discrete_term -> unit
 val iterate_parsed_discrete_factor : (parsing_structure_leaf -> unit) -> parsed_discrete_factor -> unit
+val iterate_parsed_update : (parsing_structure_leaf -> unit) -> (parsed_update_leaf -> unit) -> update -> unit
 
 (** Iterate over a linear expression applying a unit function **)
 val iterate_parsed_linear_expression : (linear_expression_leaf -> unit) -> linear_expression -> unit
@@ -101,6 +104,8 @@ val iterate_parsed_linear_term : (linear_expression_leaf -> unit) -> linear_term
 val iterate_parsed_linear_constraint : (linear_expression_leaf -> unit) -> (linear_constraint_leaf -> unit) -> linear_constraint -> unit
 (** Iterate over a non-linear constraint applying a unit function **)
 val iterate_parsed_nonlinear_constraint : (parsing_structure_leaf -> unit) -> nonlinear_constraint -> unit
+(** Iterate over a non-linear convex predicate **)
+val iterate_parsed_nonlinear_convex_predicate : (parsing_structure_leaf -> unit) -> convex_predicate -> unit
 
 val label_of_parsed_factor_constructor : parsed_discrete_factor -> string
 
@@ -182,30 +187,25 @@ val get_variables_in_parsed_global_expression_with_accumulator : StringSet.t ref
 val get_variables_in_parsed_boolean_expression_with_accumulator : StringSet.t ref -> parsed_boolean_expression -> unit
 val get_variables_in_parsed_discrete_boolean_expression_with_accumulator : StringSet.t ref -> parsed_discrete_boolean_expression -> unit
 val get_variables_in_parsed_update_with_accumulator : StringSet.t ref -> update -> unit
+val get_functions_in_parsed_update_with_accumulator : StringSet.t ref -> update -> unit
 val get_variables_in_parsed_simple_predicate_with_accumulator : StringSet.t ref -> parsed_simple_predicate -> unit
 val get_variables_in_parsed_state_predicate_with_accumulator : StringSet.t ref -> parsed_state_predicate -> unit
 val get_variables_in_parsed_fun_def_with_accumulator : StringSet.t ref -> parsed_fun_definition -> unit
 
 val get_variables_in_parsed_global_expression : parsed_global_expression -> StringSet.t
+val get_functions_in_parsed_global_expression : parsed_global_expression -> StringSet.t
 val get_variables_in_parsed_discrete_boolean_expression : parsed_discrete_boolean_expression -> StringSet.t
+val get_variables_in_parsed_update : update -> StringSet.t
 val get_variables_in_linear_expression : linear_expression -> StringSet.t
 val get_variables_in_linear_constraint : linear_constraint -> StringSet.t
 val get_variables_in_nonlinear_constraint : nonlinear_constraint -> StringSet.t
 val get_variables_in_init_state_predicate : parsed_init_state_predicate -> StringSet.t
 val get_variables_in_nonlinear_convex_predicate : nonlinear_constraint list -> StringSet.t
+val get_functions_in_nonlinear_convex_predicate : nonlinear_constraint list -> StringSet.t
 val get_variables_in_parsed_simple_predicate : parsed_simple_predicate -> StringSet.t
 val get_variables_in_parsed_state_predicate : parsed_state_predicate -> StringSet.t
 
-(*val get_local_variables_in_parsed_fun_def : parsed_fun_definition -> StringSet.t * StringSet.t*)
 val get_variables_in_parsed_fun_def : parsed_fun_definition -> StringSet.t
-
-type dep =
-    | Global_variable_ptr of variable_name
-    | Local_variable_ptr of variable_name * int
-    | Param_ptr of variable_name
-    | Fun_ptr of variable_name
-
-val get_variables_dependency_graph : parsed_fun_definition -> (dep * dep) list
 
 val variable_name_of_parsed_variable_update_type_opt : parsed_variable_update_type -> variable_name option
 val variable_name_of_parsed_variable_update_type : parsed_variable_update_type -> variable_name

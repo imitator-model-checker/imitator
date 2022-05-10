@@ -4,7 +4,7 @@
  *
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
- * Module description: General fonctions for map, filter, traverse, evaluating, etc. parsing structure tree
+ * Module description: General functions for map, filter, traverse, evaluating, etc. parsing structure tree
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/05
@@ -17,13 +17,12 @@ open VariableInfo
 open DiscreteType
 open OCamlUtilities
 open CustomModules
-open GlobalTypes
 
 (* Leaf for parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of variable_name
     | Leaf_constant of DiscreteValue.discrete_value
-    | Leaf_fun_call of variable_name
+    | Leaf_fun of variable_name
 
 (* Leaf for parsed update *)
 type parsed_update_leaf =
@@ -44,9 +43,11 @@ type nonlinear_constraint_leaf =
     | Leaf_true_nonlinear_constraint
     | Leaf_false_nonlinear_constraint
 
+(* Leaf of init state predicate *)
 type init_state_predicate_leaf =
     | Leaf_loc_assignment of automaton_name * location_name
 
+(* Leaf of state predicate *)
 type state_predicate_leaf =
     | Leaf_predicate_true
     | Leaf_predicate_false
@@ -114,7 +115,7 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
     | Parsed_function_call (factor_name, argument_expressions) ->
         let function_name = function_name_of_parsed_factor factor_name in
         operator
-            (leaf_fun (Leaf_fun_call function_name))
+            (leaf_fun (Leaf_fun function_name))
             (List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression operator base leaf_fun expr) acc) base argument_expressions)
     | Parsed_DF_access (factor, _)
 	(* | Parsed_log_not factor *)
@@ -168,7 +169,7 @@ let fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun (variab
 
 (** Fold a parsed update expression using operator applying custom function on leafs **)
 (** As update expression contain list of leaf, it return list of result from function applications **)
-(* TODO benjamin operator seems useless here because it's fold map and not a fold *)
+(* TODO benjamin operator seems useless here because it's fold map and not a fold, rename to flat_map *)
 let fold_map_parsed_update operator base leaf_fun leaf_update_fun = function
 	| Normal normal_update ->
 	    fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update
@@ -237,6 +238,7 @@ and fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun = func
 	| Parsed_state_predicate_term predicate_term ->
 	    fold_parsed_state_predicate_term operator base predicate_leaf_fun leaf_fun predicate_term
 
+let flat_map_parsed_global_expression = fold_parsed_global_expression (@) []
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
 (* Apply to a fold function the standard parameters for evaluate AND *)
@@ -323,6 +325,9 @@ let iterate_parsed_linear_term = apply_evaluate_unit fold_parsed_linear_term
 let iterate_parsed_linear_constraint = apply_evaluate_unit fold_parsed_linear_constraint
 (** Iterate over a non-linear constraint **)
 let iterate_parsed_nonlinear_constraint = apply_evaluate_unit_with_base fold_parsed_nonlinear_constraint
+(** Iterate over a non-linear convex predicate **)
+let iterate_parsed_nonlinear_convex_predicate leaf_fun convex_predicate =
+    List.iter (iterate_parsed_nonlinear_constraint leaf_fun) convex_predicate
 
 let iterate_parsed_update = apply_evaluate_unit_with_base fold_parsed_update
 
@@ -592,7 +597,7 @@ and string_of_parsed_state_predicate variable_infos = function
 let is_constant variable_infos = function
     | Leaf_variable variable_name -> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
-    | Leaf_fun_call _ -> false
+    | Leaf_fun _ -> false
 
 (* Check if linear leaf is a constant *)
 let is_linear_constant variable_infos = function
@@ -623,7 +628,7 @@ let is_variable_defined_with_callback variable_infos local_variables_opt callbac
         is_defined
     (* TODO benjamin LOOK here, treat function as variable ? or not ? *)
     (*
-    | Leaf_fun_call function_name ->
+    | Leaf_fun function_name ->
         let is_defined = Hashtbl.mem variable_infos.functions function_name in
         if not is_defined then (
             match callback_opt with
@@ -631,7 +636,7 @@ let is_variable_defined_with_callback variable_infos local_variables_opt callbac
             | None -> ()
         ); is_defined
     *)
-    | Leaf_fun_call _ -> true
+    | Leaf_fun _ -> true
     | Leaf_constant _ -> true
 
 (* Check if leaf for update is a variable that is defined *)
@@ -706,7 +711,7 @@ let is_only_discrete variable_infos clock_or_param_found_callback_opt = function
     (* Constants can only be discrete *)
     | Leaf_constant _
     (* As long as function can only return discrete and can't manipulate clocks and parameters *)
-    | Leaf_fun_call _ -> true
+    | Leaf_fun _ -> true
 
 (* Check if leaf isn't a variable *)
 let no_variables variable_infos = function
@@ -933,10 +938,21 @@ let add_variable_of_linear_expression variables_used_ref = function
 (* Gather all variable names used in a discrete boolean expression *)
 let add_variable_of_discrete_boolean_expression variables_used_ref = function
     | Leaf_constant _
-    | Leaf_fun_call _ -> ()
+    | Leaf_fun _ -> ()
     | Leaf_variable variable_name ->
         (* Add the variable name to the set and update the reference *)
         variables_used_ref := StringSet.add variable_name !variables_used_ref
+
+(* Gather all function names used in a discrete boolean expression *)
+let add_function_of_discrete_boolean_expression function_used_ref = function
+    | Leaf_constant _
+    | Leaf_variable _ -> ()
+    | Leaf_fun function_name ->
+        (* Add the variable name to the set and update the reference *)
+        function_used_ref := StringSet.add function_name !function_used_ref
+
+let get_functions_in_parsed_global_expression_with_accumulator function_used_ref =
+    iterate_parsed_global_expression (add_function_of_discrete_boolean_expression function_used_ref)
 
 (* Gather all variable names used in a global expression in a given accumulator *)
 let get_variables_in_parsed_global_expression_with_accumulator variables_used_ref =
@@ -949,6 +965,10 @@ let get_variables_in_parsed_boolean_expression_with_accumulator variables_used_r
 (* Gather all variable names used in a parsed discrete boolean expression in a given accumulator *)
 let get_variables_in_parsed_discrete_boolean_expression_with_accumulator variables_used_ref =
     iterate_parsed_discrete_boolean_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
+
+(* Gather all function names used in a parsed discrete boolean expression in a given accumulator *)
+let get_functions_in_parsed_discrete_boolean_expression_with_accumulator variables_used_ref =
+    iterate_parsed_discrete_boolean_expression (add_function_of_discrete_boolean_expression variables_used_ref)
 
 (* Gather all variable names used in a linear expression in a given accumulator *)
 let get_variables_in_linear_expression_with_accumulator variables_used_ref =
@@ -963,10 +983,19 @@ let get_variables_in_linear_constraint_with_accumulator variables_used_ref =
 (* Gather all variable names used in a non-linear constraint in a given accumulator *)
 let get_variables_in_nonlinear_constraint_with_accumulator = get_variables_in_parsed_discrete_boolean_expression_with_accumulator
 
+(* Gather all function names used in a non-linear constraint in a given accumulator *)
+let get_functions_in_nonlinear_constraint_with_accumulator = get_functions_in_parsed_discrete_boolean_expression_with_accumulator
+
 (* Gather all variable names used in an update in a given accumulator *)
 let get_variables_in_parsed_update_with_accumulator variables_used_ref =
     iterate_parsed_update
         (add_variable_of_discrete_boolean_expression variables_used_ref)
+        (function _ -> ())
+
+(* Gather all function names used in an update in a given accumulator *)
+let get_functions_in_parsed_update_with_accumulator variables_used_ref =
+    iterate_parsed_update
+        (add_function_of_discrete_boolean_expression variables_used_ref)
         (function _ -> ())
 
 (* Gather all variable names used in a parsed simple predicate in a given accumulator *)
@@ -980,7 +1009,6 @@ let get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref 
     iterate_in_parsed_state_predicate
         (function _ -> ())
         (add_variable_of_discrete_boolean_expression variables_used_ref)
-
 
 (* TODO benjamin create function that gather all local variables and reduce this one *)
 (* Gather all variable names (global variables only) used in a parsed function definition in a given accumulator *)
@@ -1013,6 +1041,9 @@ let wrap_accumulator f expr =
     f variables_used_ref expr;
     !variables_used_ref
 
+let get_functions_in_parsed_global_expression =
+    wrap_accumulator get_functions_in_parsed_global_expression_with_accumulator
+
 (* Gather all variable names used in a global expression *)
 let get_variables_in_parsed_global_expression =
     wrap_accumulator get_variables_in_parsed_global_expression_with_accumulator
@@ -1020,6 +1051,10 @@ let get_variables_in_parsed_global_expression =
 (* Gather all variable names used in a parsed discrete boolean expression *)
 let get_variables_in_parsed_discrete_boolean_expression =
     wrap_accumulator get_variables_in_parsed_discrete_boolean_expression_with_accumulator
+
+(* Gather all variable names used in a parsed update expression *)
+let get_variables_in_parsed_update =
+    wrap_accumulator get_variables_in_parsed_update_with_accumulator
 
 (* Gather all variable names used in a linear expression *)
 let get_variables_in_linear_expression =
@@ -1032,6 +1067,10 @@ let get_variables_in_linear_constraint =
 (* Gather all variable names used in a non-linear constraint *)
 let get_variables_in_nonlinear_constraint =
     wrap_accumulator get_variables_in_nonlinear_constraint_with_accumulator
+
+(* Gather all function names used in a non-linear constraint *)
+let get_functions_in_nonlinear_constraint =
+    wrap_accumulator get_functions_in_nonlinear_constraint_with_accumulator
 
 (* Gather all variable names (global variables only) used in a parsed function definition *)
 let get_variables_in_parsed_fun_def =
@@ -1048,66 +1087,16 @@ let get_variables_in_nonlinear_convex_predicate convex_predicate =
     List.map (get_variables_in_nonlinear_constraint) convex_predicate |>
     List.fold_left (fun variables acc -> StringSet.union acc variables) StringSet.empty
 
+(* Gather all function names used in a non-linear convex predicate (non-linear constraint list) *)
+let get_functions_in_nonlinear_convex_predicate convex_predicate =
+    List.map (get_functions_in_nonlinear_constraint) convex_predicate |>
+    List.fold_left (fun variables acc -> StringSet.union acc variables) StringSet.empty
+
 let get_variables_in_parsed_simple_predicate =
     wrap_accumulator get_variables_in_parsed_simple_predicate_with_accumulator
 
 let get_variables_in_parsed_state_predicate =
     wrap_accumulator get_variables_in_parsed_state_predicate_with_accumulator
-
-type dep =
-    | Global_variable_ptr of variable_name
-    | Local_variable_ptr of variable_name * int
-    | Param_ptr of variable_name
-    | Fun_ptr of variable_name
-
-
-(* TODO benjamin IMPLEMENT *)
-module MyMap = Map.Make(String)
-let get_variables_dependency_graph fun_def =
-
-    let parameter_names = List.map first_of_tuple fun_def.parameters in
-    let local_variables = List.fold_right (fun parameter_name acc -> MyMap.add parameter_name (Param_ptr parameter_name) acc) parameter_names MyMap.empty in
-    let map = [] in
-
-    (* Check if all variables defined in user function body using local variables set *)
-    let rec get_variables_dependency_graph_in_parsed_fun_decl_or_expr_rec local_variables = function
-        | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr, id) ->
-
-            (* Create tuple representing a unique variable ref *)
-            let variable_ref = Local_variable_ptr (variable_name, id) in
-            (* Get variable used in init expression of variable *)
-            let variables_used = get_variables_in_parsed_global_expression init_expr in
-            let map = StringSet.fold (fun used_variable_name acc ->
-                    let used_variable_ref_opt = MyMap.find_opt used_variable_name local_variables in
-                    let used_variable_ref =
-                        match used_variable_ref_opt with
-                        | Some used_variable_ref -> used_variable_ref
-                        | None -> Global_variable_ptr used_variable_name
-                    in
-                    (variable_ref, used_variable_ref) :: acc
-                ) variables_used map
-            in
-            (* Add or update the local variable *)
-            let local_variables = MyMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
-            let inner_map = get_variables_dependency_graph_in_parsed_fun_decl_or_expr_rec local_variables parsed_fun_decl_or_expr in
-            inner_map @ map
-
-        | Parsed_fun_expr expr ->
-            (* Gather variables used in function expression *)
-            let variables_used = get_variables_in_parsed_global_expression expr in
-            let map = StringSet.fold (fun used_variable_name acc ->
-                    let used_variable_ref_opt = MyMap.find_opt used_variable_name local_variables in
-                    let used_variable_ref =
-                        match used_variable_ref_opt with
-                        | Some used_variable_ref -> used_variable_ref
-                        | None -> Global_variable_ptr used_variable_name
-                    in
-                    ((Fun_ptr fun_def.name), used_variable_ref) :: acc
-                ) variables_used map
-            in
-            map
-    in
-    get_variables_dependency_graph_in_parsed_fun_decl_or_expr_rec local_variables fun_def.body
 
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)

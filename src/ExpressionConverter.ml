@@ -869,13 +869,11 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 	| Parsed_function_call (name_factor, argument_expressions) as func ->
         (* Get function name *)
         let function_name = ParsingStructureUtilities.function_name_of_parsed_factor name_factor in
-        ImitatorUtilities.print_message Verbose_standard ("function call: " ^ function_name);
         (* Get function metadata *)
         let function_metadata = Functions.function_metadata_by_name variable_infos function_name in
         (* Get function arity *)
         let arity = Functions.arity_of_function variable_infos function_name in
         let arguments_number = List.length argument_expressions in
-        ImitatorUtilities.print_message Verbose_standard ("arity: " ^ string_of_int arity);
 
         (* Check call number of arguments is consistent with function arity *)
         if arguments_number <> arity then

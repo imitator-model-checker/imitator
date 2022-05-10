@@ -294,7 +294,8 @@ let print_highlighted_message shell_highlighting_type message_verbose_mode messa
 (* Print a message if global_verbose_mode >= message_verbose_mode *)
 let print_message = print_highlighted_message Shell_normal
 
-
+(* Print a message as Verbose_standard *)
+let print_standard_message = print_message Verbose_standard
 
 (* Print a warning *)
 let print_warning message =

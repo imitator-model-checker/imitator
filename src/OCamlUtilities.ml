@@ -233,9 +233,11 @@ let list_combination l1 l2 =
     let l = ref acc in
     for i = 0 to (List.length l1) - 1 do
         for j = 0 to (List.length l2) - 1 do
-            if i <> j then
-                l := (List.nth l1 i, List.nth l2 j)::!l;
-        done
+            let e1 = List.nth l1 i in
+            let e2 = List.nth l2 j in
+            if e1 <> e2 then
+                l := (e1, e2)::!l;
+        done;
     done;
     !l
 
@@ -679,3 +681,6 @@ let rev_filter_map f l =
     List.map f l |>
     List.filter (fun x -> match x with | None -> false | Some _ -> true) |>
     List.fold_left (fun acc x -> match x with | None -> acc | Some x -> x :: acc) []
+
+let list_to_string_set x = x |> List.to_seq |> CustomModules.StringSet.of_seq
+let string_set_to_list x = x |> CustomModules.StringSet.to_seq |> List.of_seq

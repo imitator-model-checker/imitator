@@ -256,3 +256,6 @@ val prettify_json : string -> string
 
 (* equivalent to List.filter_map of OCaml 4.08, but reverse the list *)
 val rev_filter_map : ('a -> 'b option) -> 'a list -> 'b list
+
+val list_to_string_set : string list -> CustomModules.StringSet.t
+val string_set_to_list : CustomModules.StringSet.t -> string list
