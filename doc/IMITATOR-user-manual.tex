@@ -46,8 +46,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\imitator{} is a free, open source software tool to perform automated parameter synthesis for concurrent timed systems~\cite{Andre21}.
-\imitator{} takes as input a network of \imitator{} parametric timed automata (\NIPTA{}): \NIPTA{} are an extension of parametric timed automata~\cite{AHV93}, a well-known formalism to specify and verify models of systems where timing constants can be replaced with parameters, \ie{} unknown constants.
+\imitator{} is a tool to perform automated parameter synthesis for concurrent timed systems~\cite{Andre21}.
+\imitator{} takes as input a network of \imitator{} parametric timed automata (\NIPTA{}): \NIPTA{} are an extension of parametric timed automata~\cite{AHV93}, a formalism to specify and verify models of systems where timing constants can be replaced with parameters, \ie{} unknown constants.
 
 \imitator{} addresses several variants of the following problem:
 ``given a concurrent timed system, what are the values of the timing constants that guarantee that the model of the system satisfies some property?''
@@ -68,6 +68,8 @@ Numerous analysis options are available.
 \imitator{} was able to verify numerous case studies from the literature and from the industry, such as communication protocols, hardware asynchronous circuits, schedulability problems and various other systems such as models of coffee machines (probably the most critical systems from a researcher point of view).
 Numerous benchmarks are available at \imitator{} Web page~\cite{imitator}.
 An official benchmarks library is available at~\cite{AMP21}.
+
+\imitator{} is free and open source software.
 
 In this document, we present the input syntax, we formally define the input model of \imitator{}, and we explain how to perform various analyses using the numerous options.
 
@@ -303,7 +305,7 @@ This chapter formally introduces the input model of \imitator{}.
 
 An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of parametric automata (as introduced in~\cite{AHV93}).
 % A first difference between \IPTA{} and the PTA of \cite{AHV93} is that \IPTA{} have no accepting / final location;
-\IPTA{} augment the expressiveness of PTA from~\cite{AHV93} with several features such as invariants, discrete (rational) variables, complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop some clocks in some locations), multi-rate clocks (\ie{} the speed of a clock is not necessarily~1, and can be defined to any rational) and arbitrary clock updates (\ie{} not necessarily to~0, but also to rationals, other clock valuations or even parameters).
+\IPTA{} augment the expressiveness of PTA from~\cite{AHV93} with several features such as invariants, discrete variables which can be simple (\eg{} integer, rational, Boolean variables) or more complex (lists, arrays…), complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop some clocks in some locations), multi-rate clocks (\ie{} the speed of a clock is not necessarily~1, and can be defined to any rational) and arbitrary clock updates (\ie{} not necessarily to~0, but also to rationals, other clock valuations or even parameters).
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
@@ -315,11 +317,11 @@ A set of clocks is $\Clock = \{ \clock_1, \dots, \clock_\ClockCard \}$;
 a clock valuation is
 $\clockval : \Clock \rightarrow \setRplus$.
 By default, all clocks are evolving at the same rate (1), but this rate can be defined to any rational value in \imitator{}.
-Clocks can also be \emph{stopped} in \imitator{}, \ie{} their rate can be null.
+Clocks can also be \emph{stopped} in \imitator{}, \ie{} their rate can be zero.
 
 \emph{Parameters} are rational-valued variables, that act as unknown constants.
 A set of parameters is $\Param = \{ \param_1, \dots, \param_\ParamCard \} $;
-a parameter valuation is a function $\pval : \Param \rightarrow \setR$.
+a parameter valuation is a function $\pval : \Param \rightarrow \setQ$.
 We will often identify a valuation~$\pval$ with the \emph{point} $(\pval(\param_1), \dots, \pval(\param_{\ParamCard}))$.
 
 
@@ -349,7 +351,7 @@ Discrete variables can be tested in guards, and updated along transitions.
 	\item Boolean-valued variables
 	\item binary word variables, allowing to use bitwise binary operations.
 \end{enumerate}
-In addition, \emph{arrays} (of elementary types, or of arrays) can be used.
+In addition, more complex types such as \emph{arrays}, \emph{lists}, \emph{stacks} and \emph{queues} (of elementary types, or of more complex types such as arrays of lists) can be used.
 
 %------------------------------------------------------------
 \subsubsection{Rational-valued variables}
@@ -375,7 +377,7 @@ a rational variable valuation is a function $\rval : \RVar \rightarrow \setQ$.
 \subsubsection{``Int''-valued variables}
 %------------------------------------------------------------
 
-\emph{Int variables} are bounded signed integer-valued variables encoded on 32 bits (which is architecture independent).
+\emph{Int variables} are bounded signed integer-valued variables encoded using 32~bits (which is architecture independent).
 
 Int variables are encoded in \imitator{} using the \texttt{int} type of OCaml.
 
@@ -428,7 +430,7 @@ We denote by~$\WVar$ the set of binary word variables.
 \subsubsection{Arrays}
 %------------------------------------------------------------
 
-Array variables are fixed length collections of indexed elements.
+Array variables are fixed-length collections of indexed elements.
 Array elements can be accessed or updated using an integer-valued arithmetic expression as index.
 An array variable always has a fixed length and an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
 For example, it is possible to declare an array of integers, of Booleans, of arrays of arrays of Booleans---which can be seen as a multidimensional array.
