@@ -12,12 +12,14 @@
  ************************************************************)
 
 open ParsingStructure
+open DiscreteType
 open CustomModules
 
 (* Leaf of parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of string
     | Leaf_constant of DiscreteValue.discrete_value
+    | Leaf_fun_call of variable_name
 
 (* Leaf for parsed update *)
 type parsed_update_leaf =
@@ -134,13 +136,6 @@ val string_of_parsed_state_predicate : variable_infos -> parsed_state_predicate 
 
 (** Utils **)
 
-(* Variable kind type represent a variable or a constant kind *)
-type variable_kind =
-    | Variable_kind of int
-    | Constant_kind of DiscreteValue.discrete_value
-
-val variable_kind_of_variable_name : variable_infos -> variable_name -> variable_kind
-
 val is_parsed_global_expression_constant : variable_infos -> parsed_global_expression -> bool
 val is_parsed_boolean_expression_constant : variable_infos -> parsed_boolean_expression -> bool
 val is_parsed_arithmetic_expression_constant : variable_infos -> parsed_discrete_arithmetic_expression -> bool
@@ -170,7 +165,11 @@ val all_variables_defined_in_nonlinear_convex_predicate : variable_infos -> (var
 
 val all_variable_in_parsed_state_predicate : useful_parsing_model_information -> variable_infos -> (variable_name -> unit) option -> (automaton_name -> unit) option -> (automaton_name -> location_name -> unit) option -> parsed_state_predicate -> bool
 
-val only_discrete_in_parsed_global_expression : variable_infos -> parsed_global_expression -> bool
+(* Check that there is only discrete variables in a parsed global expression *)
+val only_discrete_in_parsed_global_expression : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_global_expression -> bool
+(* Check that there is only discrete variables in a parsed boolean expression *)
+val only_discrete_in_parsed_boolean_expression : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_boolean_expression -> bool
+(* Check that there is only discrete variables in a parsed discrete boolean expression *)
 val only_discrete_in_nonlinear_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
 
 val no_variables_in_linear_expression : variable_infos -> linear_expression -> bool
@@ -217,21 +216,3 @@ val linear_constraint_of_nonlinear_constraint : nonlinear_constraint -> linear_c
 
 (* Gather all updates of update section (pre-updates, updates and post-updates) *)
 val updates_of_update_section : update_section -> update list
-
-type variable_constant_defined_state =
-    | Variable_defined
-    | Constant_defined
-    | Variable_removed
-    | Not_declared
-
-val is_variable_is_defined : variable_infos -> variable_name -> bool
-val is_constant_is_defined : variable_infos -> variable_name -> bool
-val is_variable_or_constant_defined : variable_infos -> variable_name -> bool
-val is_variable_removed : variable_infos -> variable_name -> bool
-val is_variable_or_constant_declared : variable_infos -> variable_name -> bool
-val variable_constant_defined_state_of : variable_infos -> variable_name -> variable_constant_defined_state
-val var_type_of_variable_name : variable_infos -> variable_name -> DiscreteType.var_type
-val discrete_type_of_variable_or_constant : variable_infos -> variable_name -> DiscreteType.var_type_discrete
-val variable_name_of_index : variable_infos -> variable_index -> variable_name
-val index_of_variable_name : variable_infos -> variable_name -> variable_index
-val value_of_constant_name : variable_infos -> variable_name -> DiscreteValue.discrete_value

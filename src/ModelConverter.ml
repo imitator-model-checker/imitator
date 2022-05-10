@@ -27,6 +27,7 @@ open DiscreteExpressions
 open DiscreteExpressionEvaluator
 open AbstractModel
 open ParsingStructure
+open VariableInfo
 open AbstractProperty
 open ParsingStructureUtilities
 open DiscreteType
@@ -495,9 +496,9 @@ let check_normal_update variable_infos automaton_name normal_update =
 
     let updated_variable_name = match updated_variable_name_opt with Some updated_variable_name -> updated_variable_name | None -> "_" in
 
-    if updated_variable_name <> "_" && ParsingStructureUtilities.is_variable_is_defined variable_infos updated_variable_name then
+    if updated_variable_name <> "_" && is_variable_is_defined variable_infos updated_variable_name then
         (* Get kind (variable or constant ?) of updated variable *)
-        let variable_kind = ParsingStructureUtilities.variable_kind_of_variable_name variable_infos updated_variable_name in
+        let variable_kind = variable_kind_of_variable_name variable_infos updated_variable_name in
         (* Get var type of updated variable *)
         let var_type = ExpressionConverter.TypeChecker.get_type_of_variable_by_name variable_infos updated_variable_name in
 
@@ -513,8 +514,9 @@ let check_normal_update variable_infos automaton_name normal_update =
         if is_parameter then print_update_parameter_error updated_variable_name;
 
         if is_discrete then (
-            let is_only_discrete = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos update_expr in
-            if not is_only_discrete then print_error ("Trying to update variable `` with clock(s) or parameter(s) in ``.");
+            let is_only_discrete = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos None update_expr in
+            if not is_only_discrete then
+                print_error ("Trying to update variable `" ^ updated_variable_name ^ "` with clock(s) or parameter(s) in `" ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos normal_update ^ "`.");
         );
 
         all_variables_declared && not (is_constant || is_parameter)
@@ -565,23 +567,9 @@ let check_update variable_infos automaton_name = function
 	    (* Check that all variables in update condition are declared *)
         let all_declared_in_condition = ParsingStructureUtilities.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_variable_in_update_condition_not_declared) bool_expr in
 
-        (* Function that check if a parsing structure tree leaf is a discrete variable *)
-        let is_variable_is_discrete = function
-            | Leaf_variable variable_name ->
-                let var_type_opt = ExpressionConverter.TypeChecker.get_type_of_variable_by_name_opt variable_infos variable_name in
-                (match var_type_opt with
-                | Some (Var_type_clock as var_type)
-                | Some (Var_type_parameter as var_type) ->
-                    print_conditional_update_contain_clock_or_param_error var_type variable_name;
-                    false
-                | _ -> true
-                )
-            | Leaf_constant _ -> true
-        in
-
 	    (* Check that boolean condition expression doesn't contains any clock(s) or parameter(s) *)
 	    let is_condition_use_only_discrete =
-	        ParsingStructureUtilities.for_all_in_parsed_boolean_expression is_variable_is_discrete bool_expr
+	        ParsingStructureUtilities.only_discrete_in_parsed_boolean_expression variable_infos (Some print_conditional_update_contain_clock_or_param_error) bool_expr
         in
 
 	    (* Check all normal updates are valid (make a map for avoid short-circuit eval with for_all) *)
@@ -1129,7 +1117,7 @@ let check_init_definition parsed_model =
     let rec check_init_predicate = function
         | Parsed_discrete_predicate (variable_name, expr) ->
             (* Check that l-value variable exist *)
-            if not (ParsingStructureUtilities.is_variable_or_constant_declared variable_infos variable_name) then (
+            if not (is_variable_or_constant_declared variable_infos variable_name) then (
                 print_error ("Variable `" ^ variable_name ^ "` in discrete init is not declared");
                 false
             )
@@ -1158,7 +1146,7 @@ let check_init_definition parsed_model =
 
     and check_init_constraint = function
         (*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
-        | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when ParsingStructureUtilities.is_variable_removed variable_infos variable_name ->
+        | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when is_variable_removed variable_infos variable_name ->
             print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
             (* Still check the second term *)
             if not (ParsingStructureUtilities.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message linear_expression) then (
@@ -1206,12 +1194,13 @@ let partition_discrete_continuous variable_infos filtered_init_inequalities =
 		(* Check if the left part is only a variable name *)
 		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
 			let is_discrete =
+			(* TODO benjamin REFACTOR, can refactor with VariableInfo *)
 			(* Try to get the variable index *)
-			if (ParsingStructureUtilities.is_variable_is_defined variable_infos variable_name) then (
-				let variable_index =  index_of_variable_name variable_infos variable_name in
+			if (is_variable_is_defined variable_infos variable_name) then (
+				let variable_index = index_of_variable_name variable_infos variable_name in
 				(* Keep if this is a discrete *)
 				DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
-			) else if (ParsingStructureUtilities.is_constant_is_defined variable_infos variable_name) then
+			) else if (is_constant_is_defined variable_infos variable_name) then
 			    false
             else (
                 (* Otherwise: problem! *)
@@ -1277,8 +1266,9 @@ let discrete_predicate_of_discrete_linear_predicate = function
 let check_discrete_predicate_and_init variable_infos init_values_for_discrete = function
     | Parsed_discrete_predicate (variable_name, expr) ->
 
+        (* TODO benjamin REFACTOR with kind_of *)
         (* Check that initialized variable of name 'variable_name' is not a constant *)
-        if ParsingStructureUtilities.is_constant_is_defined variable_infos variable_name then (
+        if is_constant_is_defined variable_infos variable_name then (
             print_error ("Initialize '" ^ variable_name ^ "' constant is forbidden");
             false
         )
@@ -1405,7 +1395,7 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 
         (* Gathering all variables that are non rational *)
         let non_rational_variable_names = StringSet.filter (fun variable_name ->
-            let discrete_type = ParsingStructureUtilities.discrete_type_of_variable_or_constant variable_infos variable_name in
+            let discrete_type = discrete_type_of_variable_or_constant variable_infos variable_name in
             not (DiscreteType.is_discrete_type_rational_type discrete_type)
         ) variable_names
         in
@@ -1825,7 +1815,8 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
 let is_only_resets updates =
     List.for_all (fun (_, update) ->
         ParsingStructureUtilities.exists_in_parsed_global_expression (function
-            | Leaf_variable _ -> false
+            | Leaf_variable _
+            | Leaf_fun_call _ -> false
             | Leaf_constant value -> DiscreteValue.is_zero value
         ) update
     ) updates
@@ -2677,7 +2668,7 @@ let check_parsed_state_predicate parsing_infos expr =
 (*------------------------------------------------------------*)
 let check_parameter_name suffix_explanation_string variable_infos parameter_name =
 	(* First check it is a variable *)
-	if not (ParsingStructureUtilities.is_variable_is_defined variable_infos parameter_name) then(
+	if not (is_variable_is_defined variable_infos parameter_name) then(
 		print_error ("Parameter " ^ parameter_name ^ " is not a defined variable" ^ suffix_explanation_string);
 		false
 	) else(

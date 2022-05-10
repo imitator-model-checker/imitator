@@ -13,15 +13,17 @@
 
 open Exceptions
 open ParsingStructure
+open VariableInfo
+open DiscreteType
 open OCamlUtilities
 open CustomModules
-
-type variable_name = string
+open GlobalTypes
 
 (* Leaf for parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of variable_name
     | Leaf_constant of DiscreteValue.discrete_value
+    | Leaf_fun_call of variable_name
 
 (* Leaf for parsed update *)
 type parsed_update_leaf =
@@ -52,75 +54,10 @@ type state_predicate_leaf =
     | Leaf_predicate_EQ of string (* automaton name *) * string (* location name *)
     | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
 
-(* Variable info utils functions *)
-
-type variable_constant_defined_state =
-    | Variable_defined
-    | Constant_defined
-    | Variable_removed
-    | Not_declared
-
-(* Get variable name given a variable index  *)
-let [@inline] variable_name_of_index variable_infos = List.nth variable_infos.variable_names
-
-(* Get variable index given a variable name *)
-let [@inline] index_of_variable_name variable_infos = Hashtbl.find variable_infos.index_of_variables
-
-(* Get constant value given a constant name *)
-let [@inline] value_of_constant_name variable_infos = Hashtbl.find variable_infos.constants
-
-(* Check if variable is defined => declared and not removed  *)
-let [@inline] is_variable_is_defined variable_infos = Hashtbl.mem variable_infos.index_of_variables
-
-(* Check if variable was removed *)
-let [@inline] is_variable_removed variable_infos variable_name = List.mem variable_name variable_infos.removed_variable_names
-
-(* Check if variable was declared, even if removed *)
-let [@inline] is_variable_declared variable_infos variable_name =
-    is_variable_is_defined variable_infos variable_name
-    || is_variable_removed variable_infos variable_name
-
-(* Check if constant is defined => declared and removed or not *)
-let [@inline] is_constant_is_defined variable_infos = Hashtbl.mem variable_infos.constants
-
-(* Check if variable / constant is defined => declared and removed or not *)
-let [@inline] is_variable_or_constant_defined variable_infos variable_name =
-    is_variable_is_defined variable_infos variable_name || is_constant_is_defined variable_infos variable_name
-
-let [@inline] is_variable_or_constant_declared variable_infos variable_name =
-    is_variable_declared variable_infos variable_name || is_constant_is_defined variable_infos variable_name
-
-let variable_constant_defined_state_of variable_infos variable_name =
-    if is_variable_is_defined variable_infos variable_name then
-        Variable_defined
-    else if is_constant_is_defined variable_infos variable_name then
-        Constant_defined
-    else if is_variable_removed variable_infos variable_name then
-        Variable_removed
-    else
-        Not_declared
-
-let [@inline] var_type_of_variable_index variable_infos = variable_infos.type_of_variables
-
-let var_type_of_variable_name variable_infos variable_name =
-    let variable_index = index_of_variable_name variable_infos variable_name in
-    var_type_of_variable_index variable_infos variable_index
-
-let discrete_type_of_variable_or_constant variable_infos variable_name =
-    let defined_state = variable_constant_defined_state_of variable_infos variable_name in
-    match defined_state with
-    | Variable_defined ->
-        let variable_index = index_of_variable_name variable_infos variable_name in
-        DiscreteType.discrete_type_of_var_type (variable_infos.type_of_variables variable_index)
-    | Constant_defined ->
-        let value =  value_of_constant_name variable_infos variable_name in
-        DiscreteValue.discrete_type_of_value value
-    | Variable_removed
-    | Not_declared ->
-        (* Otherwise problem ! *)
-        raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."))
-
-
+(* Extract function name from parsed factor *)
+let function_name_of_parsed_factor = function
+	| Parsed_DF_variable name -> name
+    | factor -> raise (TypeError "Trying to make a call on a non-function.")
 
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
@@ -174,8 +111,11 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
 	| Parsed_sequence (expr_list, _) -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_list
 	| Parsed_DF_expression expr ->
         fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
-    | Parsed_function_call (_, argument_expressions) ->
-        List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression operator base leaf_fun expr) acc) base argument_expressions
+    | Parsed_function_call (factor_name, argument_expressions) ->
+        let function_name = function_name_of_parsed_factor factor_name in
+        operator
+            (leaf_fun (Leaf_fun_call function_name))
+            (List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression operator base leaf_fun expr) acc) base argument_expressions)
     | Parsed_DF_access (factor, _)
 	(* | Parsed_log_not factor *)
 	| Parsed_DF_unary_min factor ->
@@ -391,11 +331,6 @@ let iterate_in_parsed_simple_predicate = apply_evaluate_unit_with_base fold_pars
 let iterate_in_parsed_state_predicate_factor = apply_evaluate_unit_with_base fold_parsed_state_predicate_factor
 let iterate_in_parsed_state_predicate_term = apply_evaluate_unit_with_base fold_parsed_state_predicate_term
 let iterate_in_parsed_state_predicate = apply_evaluate_unit_with_base fold_parsed_state_predicate
-
-(* Extract function name from parsed factor *)
-let function_name_of_parsed_factor = function
-	| Parsed_DF_variable name -> name
-    | factor -> raise (TypeError "Trying to make a call on a non-function.")
 
 let label_of_parsed_sequence_type = function
     | Parsed_array -> "array"
@@ -657,6 +592,7 @@ and string_of_parsed_state_predicate variable_infos = function
 let is_constant variable_infos = function
     | Leaf_variable variable_name -> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
+    | Leaf_fun_call _ -> false
 
 (* Check if linear leaf is a constant *)
 let is_linear_constant variable_infos = function
@@ -665,7 +601,7 @@ let is_linear_constant variable_infos = function
 
 (* Check if leaf is a variable that is defined *)
 (* A given callback is executed if it's not a defined variable *)
-let is_variable_defined_with_callback variable_infos local_variables_opt callback = function
+let is_variable_defined_with_callback variable_infos local_variables_opt callback_opt = function
     | Leaf_variable variable_name ->
 
         let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
@@ -679,13 +615,23 @@ let is_variable_defined_with_callback variable_infos local_variables_opt callbac
         let is_defined = is_defined_global || is_defined_local in
 
         if not is_defined then (
-            match callback with
-            | Some func -> func variable_name
+            match callback_opt with
+            | Some callback -> callback variable_name
             | None -> ()
         );
 
         is_defined
-
+    (* TODO benjamin LOOK here, treat function as variable ? or not ? *)
+    (*
+    | Leaf_fun_call function_name ->
+        let is_defined = Hashtbl.mem variable_infos.functions function_name in
+        if not is_defined then (
+            match callback_opt with
+            | Some callback -> callback function_name
+            | None -> ()
+        ); is_defined
+    *)
+    | Leaf_fun_call _ -> true
     | Leaf_constant _ -> true
 
 (* Check if leaf for update is a variable that is defined *)
@@ -745,22 +691,22 @@ let is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_info u
         )
 
 (* Check if leaf is only a discrete variable *)
-let is_only_discrete variable_infos = function
-    | Leaf_constant _ -> true
+let is_only_discrete variable_infos clock_or_param_found_callback_opt = function
     | Leaf_variable variable_name ->
-        (* Constants are allowed *)
-        (is_constant_is_defined variable_infos variable_name)
-        (* Or discrete *)
-        ||
-        try(
-            let variable_index = index_of_variable_name variable_infos variable_name in
-            DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
-        ) with Not_found -> (
-            (* Variable not found! *)
-            (*** TODO: why is this checked here…? It should have been checked before ***)
-            ImitatorUtilities.print_error ("The variable `" ^ variable_name ^ "` used in an update was not declared.");
-            false
+        let var_type = var_type_of_variable_or_constant variable_infos variable_name in
+        (match var_type with
+        | Var_type_clock
+        | Var_type_parameter as var_type ->
+            (match clock_or_param_found_callback_opt with
+            | Some clock_or_param_found_callback -> clock_or_param_found_callback var_type variable_name
+            | None -> ()
+            ); false
+        | Var_type_discrete _ -> true
         )
+    (* Constants can only be discrete *)
+    | Leaf_constant _
+    (* As long as function can only return discrete and can't manipulate clocks and parameters *)
+    | Leaf_fun_call _ -> true
 
 (* Check if leaf isn't a variable *)
 let no_variables variable_infos = function
@@ -771,24 +717,7 @@ let no_variables variable_infos = function
         (* Or parameter *)
         ||
         let variable_index = index_of_variable_name variable_infos variable_name in
-        variable_infos.type_of_variables variable_index = DiscreteType.Var_type_parameter
-
-(* Variable kind type represent a variable or a constant kind *)
-type variable_kind =
-    | Variable_kind of int
-    | Constant_kind of DiscreteValue.discrete_value
-
-(* Know if variable with a given name is a variable or a constant *)
-let variable_kind_of_variable_name variable_infos variable_name =
-
-    (* First check whether this is a constant *)
-    if is_constant_is_defined variable_infos variable_name then (
-        let value = value_of_constant_name variable_infos variable_name in
-        Constant_kind value
-    )
-    (* Otherwise: a variable *)
-    else
-        Variable_kind (index_of_variable_name variable_infos variable_name)
+        variable_infos.type_of_variables variable_index = Var_type_parameter
 
 (* Check if a parsed global expression is constant *)
 let is_parsed_global_expression_constant variable_infos =
@@ -975,12 +904,16 @@ let all_variable_in_parsed_state_predicate parsing_infos variable_infos undefine
         expr
 
 (* Check that there is only discrete variables in a parsed global expression *)
-let only_discrete_in_parsed_global_expression variable_infos expr =
-    for_all_in_parsed_global_expression (is_only_discrete variable_infos) expr
+let only_discrete_in_parsed_global_expression variable_infos clock_or_param_found_callback_opt expr =
+    for_all_in_parsed_global_expression (is_only_discrete variable_infos clock_or_param_found_callback_opt) expr
+
+(* Check that there is only discrete variables in a parsed boolean expression *)
+let only_discrete_in_parsed_boolean_expression variable_infos clock_or_param_found_callback_opt expr =
+    for_all_in_parsed_boolean_expression (is_only_discrete variable_infos clock_or_param_found_callback_opt) expr
 
 (* Check that there is only discrete variables in a parsed discrete boolean expression *)
 let only_discrete_in_nonlinear_expression variable_infos expr =
-    for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos) expr
+    for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos None) expr
 
 (* Check if there is no variables in a linear expression *)
 let no_variables_in_linear_expression variable_infos expr =
@@ -999,7 +932,8 @@ let add_variable_of_linear_expression variables_used_ref = function
 
 (* Gather all variable names used in a discrete boolean expression *)
 let add_variable_of_discrete_boolean_expression variables_used_ref = function
-    | Leaf_constant _ -> ()
+    | Leaf_constant _
+    | Leaf_fun_call _ -> ()
     | Leaf_variable variable_name ->
         (* Add the variable name to the set and update the reference *)
         variables_used_ref := StringSet.add variable_name !variables_used_ref

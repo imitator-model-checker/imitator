@@ -1,4 +1,5 @@
 open ParsingStructure
+open VariableInfo
 open ParsingStructureUtilities
 open ImitatorUtilities
 open OCamlUtilities
@@ -7,6 +8,7 @@ open FunctionSig
 open TypeConstraintResolver
 open CustomModules
 open DiscreteType
+
 
 (* Type checking module *)
 (* This module aim to type check expressions and create a typed tree from a parsed tree *)
@@ -443,12 +445,12 @@ let get_discrete_type_of_variable variable_infos variable_index =
     DiscreteType.discrete_type_of_var_type var_type
 
 let get_type_of_variable_by_name_opt variable_infos variable_name =
-    if ParsingStructureUtilities.is_variable_is_defined variable_infos variable_name then (
+    if VariableInfo.is_variable_is_defined variable_infos variable_name then (
         (* Get type of variable *)
         let variable_index = index_of_variable_name variable_infos variable_name in
         let variable_type = get_type_of_variable variable_infos variable_index in
         Some variable_type
-    ) else if ParsingStructureUtilities.is_constant_is_defined variable_infos variable_name then (
+    ) else if VariableInfo.is_constant_is_defined variable_infos variable_name then (
         (* Retrieve the value of the global constant *)
         let value = value_of_constant_name variable_infos variable_name in
         (* Get type of constant *)

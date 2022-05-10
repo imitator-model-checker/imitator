@@ -15,10 +15,9 @@
 (** Names *)
 (****************************************************************)
 
+type variable_name = string
 type automaton_name	= string
 type location_name	= string
-type variable_name	= string
-type variable_index	= int
 type sync_name		= string
 
 
