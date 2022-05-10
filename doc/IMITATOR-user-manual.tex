@@ -326,7 +326,7 @@ We will often identify a valuation~$\pval$ with the \emph{point} $(\pval(\param_
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-\subsection{Discrete variables}\label{section:discrete}
+\subsection{Discrete rational variables}\label{subsection:rational}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 
 \imitator{} features \emph{discrete} variables.
@@ -338,26 +338,10 @@ are global variables.
 Their value is global, in the sense that they are shared by all \IPTA{} of the model.
 They can be seen as syntactic sugar to represent a possibly unbounded number of locations.
 
-
-Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
-if they are not, a warning is issued, and they are arbitrarily set to a standard value (\eg{} \styleIMI{0} for numerical variables, or \BFalse{} for Boolean variables; see \cref{section:init} for the actual value).
-
-Discrete variables can be tested in guards, and updated along transitions.
-
-\imitator{} currently supports four elementary types of discrete variables:
-\begin{enumerate}
-	\item rational-valued variables
-	\item ``int''-valued variables (over 32~bits)
-	\item Boolean-valued variables
-	\item binary word variables, allowing to use bitwise binary operations.
-\end{enumerate}
-In addition, more complex types such as \emph{arrays}, \emph{lists}, \emph{stacks} and \emph{queues} (of elementary types, or of more complex types such as arrays of lists) can be used.
-
-%------------------------------------------------------------
-\subsubsection{Rational-valued variables}
-%------------------------------------------------------------
-
-\emph{Rational variables} are rational-valued variables.
+We only describe here rational-valued variables.
+Rational-valued variables are the only ones to be compared \emph{directly} to clocks or parameters in \imitator{}.
+Further types of discrete variables (\eg{} integers, Booleans, arrays…)\ will be described in \cref{section:discrete}.
+These latter types cannot be directly compared to clocks or parameters.
 
 In \imitator{}, rationals are exact and unbounded, just as in maths (\ie{} they are \emph{not} represented using a limited number of bits, such as 32 or 64 bits).
 %
@@ -372,6 +356,349 @@ In the following, we define the set of rational variables as $\RVar = \{ \rvar_1
 a rational variable valuation is a function $\rval : \RVar \rightarrow \setQ$.
 
 
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+\subsection{Linear constraints}\label{ss:constraints}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+
+Let us formalize the set of linear constraints allowed in \imitator{}.
+Given a set of variables~$\Var = \{ \var_1, \dots, \var_\VarCard \}$ (in the following, this set will be instantiated with $\Clock$ and/or $\Param$ and/or $\RVar$), a \emph{linear term} over $\Var$ is an expression of the form
+$$
+	\sum_{1 \leq i \leq n} \alpha_i \var_i + d
+$$
+for some $n \in \setN$,
+where
+$\var_{i} \in \Var$,
+$\alpha_{i} \in \setQ$, for $1 \leq i \leq n$,
+and
+$d \in \setQ$.
+
+An~\emph{atomic constraint} over $\Var$ is an expression of the form
+% An \emph{inequality} over $\Clock$ and~$\Param$ is $e \bowtie 0$, where , and $e$ is a linear term %of the form
+$
+	\lterm \bowtie 0
+$
+where
+$\lterm$ is a linear term over~$\Var$,
+and
+${\bowtie} \in \{ <, \leq, =, \geq, > \}$.
+
+A~\emph{constraint} over $\Var$ is a conjunction of atomic constraints.
+We denote by $\LTerm(\Var)$ the set of linear terms over~$\Var$, and by $\LConstraint(\Var)$ the set of constraints over~$\Var$.
+In \imitator{}, we will consider constraints belonging to sets such as $\LConstraintXP$ (\ie{} the set of constraints over clocks and parameters), or $\LConstraintXPD$ (\ie{} the set of constraints over clocks, parameters and discrete rational-valued variables).
+
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+\subsection{Arithmetic expressions}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+
+Let $\ArithExprR$ denote the set of arithmetic expressions over the numerical discrete rational variables, \ie{} made of addition, subtraction, multiplication, and division over rational (or integer) constants and discrete numerical variables.
+
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+\subsection{\imitator{} Parametric Timed Automata}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+
+
+% \paragraph{\imitator{} Parametric Timed Automata}
+We can now give a formal definition of \IPTA{}.
+
+%------------------------------------------------------------
+\begin{remark}
+	In the subsequent formal definition, we use for discrete variables the sole set of rational-valued variables instead of other types (int-valued variables, Boolean variables and binary words, lists, arrays, etc.), for sake of simplicity.
+	These more complex types can be used in a straightforward manner.
+	That is, guards (and invariants) can also include operations on such variables.
+	See the section dedicated to discrete variables (\cref{section:discrete}) and the grammar in \cref{chapter:grammar} for the exact behavior allowed by \imitator{}.
+\end{remark}
+%------------------------------------------------------------
+
+Let $\unobs$ denote the unobservable action.
+
+%------------------------------------------------------------
+\begin{definition}[\IPTA{}]\label{definition:IPTA}
+	An \imitator{} parametric timed automaton (\emph{\IPTA{}}) is a tuple $\A = \tuple{\Action, \Loc, \locinit, \RVar, \Clock, \Param, \invariant, \flow, \steps}$, where:
+	\begin{itemize}
+		\item $\Action$ is a finite set of actions;
+		\item $\Loc$ is a finite set of locations;
+		\item $\locinit \in \Loc$ is the initial location;
+		\item $\RVar$ is a set of rational-valued variables;
+		\item $\Clock$ is a set of clocks;
+		\item $\Param$ is a set of parameters;
+		\item $\invariant : \Loc \rightarrow \LConstraintXPD$ assigns to every location~$\loc$ a constraint over all variables, called the \emph{invariant} of~$\loc$;
+		\item $\flow : \Loc \times \Clock \rightarrow \setQ$ assigns to a every location and clock a given flow (or speed), \ie{} a rational number;
+		\item $\steps$ is a set of edges $(\loc, \guard, \action, \Cupdates, \Dupdates, \loc')$, where
+		      $\loc, \loc' \in \Loc$ are the source and destination locations,
+		      $\guard \in \LConstraintXPD$ is a constraint over all variables (called \emph{guard} of the transition),
+		      $\action \in \Action \cup \{ \unobs \}$ is the action associated with the transition,
+		      $\Cupdates : \Clock \rightharpoonup \LTermXPD$ is the (possibly partial) update function for clocks, and
+		      % TODO: sure that we can update to anything??
+		      $\Dupdates : \RVar \rightharpoonup \ArithExprR$ is the (possibly partial) update function for discrete rational variables.
+	\end{itemize}
+\end{definition}
+%------------------------------------------------------------
+
+In the following, we explain this definition.
+
+\paragraph{Guards and invariants}
+Guards and invariants in \imitator{} are linear constraints over all variables.
+For example, the following expression can be used in a guard or an invariant:
+
+\begin{IMITATORmodel}
+r1 + .5 x1 + 3 x2 >= 2 p1 - r2 & p2 < 1/3
+\end{IMITATORmodel}
+
+\noindent{}where \styleIMI{r1}, \styleIMI{r2} are discrete rational variables, \styleIMI{x1}, \styleIMI{x2} are clocks and \styleIMI{p1}, \styleIMI{p2} are parameters.
+This syntax includes in particular diagonal constraints (\eg{} \styleIMI{x1 - x2 <= 2}), not always supported in other model-checking tools.
+
+\paragraph{Actions}
+Transitions can be synchronized on an action in $\Action$, or have no synchronized action (``$\unobs$''), which is often referred to in the literature as a silent transition, or an $\epsilon$-transition.
+For the semantics of the synchronization model between various \IPTA{}, refer to \cref{sect:synchronization}.
+A non-silent transition is said to be \emph{observable}; and it can be synchronized with other automata.
+
+\paragraph{Clock updates}
+Observe that clocks can be updated to any value, \ie{} a clock can be assigned not only to~0, but to any linear term over the other clocks, the parameters and the discrete rational variables.
+This considerably extends the traditional syntax of PTAs defined in~\cite{AHV93}.
+In fact, the \imitator{} includes (more than just) the updatable timed automata of~\cite{BDFP04}, as well as the reset-to-parameter (parametric) timed automata of~\cite{ALR18PresetTA}.
+If clocks are always reset to constants (\ie{} not assigned to more complex linear terms), \imitator{} will apply some optimizations that (may) increase the analysis speed.
+% TODO: nice box with a ``tip'' title
+
+\paragraph{Discrete updates}
+Discrete variables can be assigned to expressions compatible with their type.
+Notably, rational variables can be assigned to rational arithmetic expressions over~$\RVar$.
+	% TODO: more complex than that, now!
+On the one hand, this is more restrictive than clock updates, because discrete rational variables cannot be assigned to a clock or to a parameter.
+On the other hand, arithmetic expressions are richer than linear constraints, as they allow multiplication or division of rational variables with each other.
+
+Since version 2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
+See \cref{ss:updates} for details.
+
+\paragraph{Flows and stopwatches}
+By default, all clocks evolve at the same rate in all locations, and this rate is~1.
+That is, by default, $\forall \loc \in \Loc, \forall \clock \in \Clock : \flow(\loc, \clock) = 1$.
+
+However, one can explicitly define an alternative (constant, rational-valued) flow using two methods:
+\begin{description}
+	\item [Using stopwatches]
+A stopwatch~\cite{CL00} is a clock whose elapsing is stopped in some locations, \ie{} $\flow(\loc, \clock) = 0$.
+There is no distinction between clocks and stopwatches.
+That is, any clock can potentially be stopped in some location.
+\imitator{} will detect whether a model has or not stopwatches; if there is no stopwatch in the model, \imitator{} will apply some optimizations that (may) increase the analysis speed.
+% TODO: nice box with a ``tip'' title
+
+Clocks can be stopped in locations, thanks to the optional \styleIMI{stop \{ … \}} keyword (see grammar in  \cref{section:grammar:model}).
+A clock is stopped in a location if it belongs to the list of clocks in \styleIMI{stop \{ … \}}.
+It is resumed when leaving the location---unless the target location again stops this clock.
+
+\item [Using explicit flows]
+\imitator{} also support constant flows, \ie{} multi-rate (parametric) timed automata~\cite{ACHHHNOSY95}.
+That is, it is possible to specify the \emph{speed} of a clock in a location.
+This value is an arbitrary rational number, including 0 (in which case it is equivalent to a stopwatch~\cite{CL00}) or a negative number.
+This can be specified using a syntax of the following form: \styleIMI{flow \{x' = 2\}}.
+A clock for which no flow is explicitly defined has of course flow~1.
+A stopwatch has flow~0.
+\end{description}
+
+
+
+%------------------------------------------------------------
+\begin{remark}
+	It is possible to defined ill-formed models where contradictory flows are defined for a given clock.
+	For example, in
+
+	\styleIMI{stop \{ x \} flow \{x' = 2, y' = 0\}}
+
+	\noindent
+	\styleIMI{x} is assigned both flow~0 (because it is defined as a stopped clock) and 2 (in the explicit flow definition).
+
+	Alternatively, in an \NIPTA{}, it is possible to be in a global location such that, in one location of one of the automata a given clock is assigned a given flow, and in another location of another automata in parallel, the same clock is assigned another flow.
+
+	In the case of such contradictory flows, \imitator{} will trigger a warning on-the-fly, and the result of the analysis is unspecified.
+\end{remark}
+%------------------------------------------------------------
+
+
+
+\paragraph{Urgent locations}
+A location can be defined as \emph{urgent}, using the keyword \styleIMI{urgent} (see grammar in  \cref{section:grammar:model}).
+In an urgent location, time cannot elapse, \ie{} it must be left in $0$-time.
+Note however that ``in $0$-time'' does not necessarily mean immediately: that is, several actions may be performed (in $0$-time) before the location is left.
+
+
+
+% TODO: give semantics?
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+\subsection{Networks of \imitator{} Parametric Timed Automata}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+
+%------------------------------------------------------------
+\begin{definition}[\NIPTA{}]
+	Given a set of \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \RVar_i, \Clock_i, \Param_i, \invariant_i, \flow_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \setN$,
+	a network of \IPTA{} (\emph{\NIPTA{}}) is a tuple
+	$\tuple{\Action, \RVar, \Clock, \Param, \{ \A_i \mid 1 \leq i \leq N \}, \Cinit}$, where:
+	\begin{itemize}
+		\item $\Action = \bigcup_{1 \leq i \leq N} \Action_i$ is the set of all actions;
+		\item $\RVar = \bigcup_{1 \leq i \leq N} \RVar_i$ is the set of all discrete rational variables;
+		\item $\Clock = \bigcup_{1 \leq i \leq N} \Clock_i$ is the set of all clocks;
+		\item $\Param = \bigcup_{1 \leq i \leq N} \Param_i$ is the set of all parameters;
+		\item $\Cinit \in \LConstraintXPD$ is the initial constraint over $\RVar$, $\Clock$ and $\Param$. % TODO
+	\end{itemize}
+\end{definition}
+%------------------------------------------------------------
+
+Observe that each set of actions, discrete variables, clocks and parameters is not disjoint between all \IPTA{}.
+That is, actions, discrete variables, clocks and parameters may be shared between different \IPTA{}.
+If a variable is required to be local to an \IPTA{}, then it should just not be used in any other \IPTA{} of the model.
+
+Different from many tools for (parametric) timed automata, clocks are not necessarily initially equal to~0 (this is similar to \hytech{}~\cite{HHW95} but different from \uppaal{}~\cite{LPY97}).
+The initial value of the clocks is defined by~$\Cinit$ (see \cref{section:init}).
+If nothing is defined in~$\Cinit$, then their value is supposed to be arbitrary (any real value).
+
+
+In an \NIPTA{}, a clock~$\clock$ is stopped in a location $(\loc_1, \dots, \loc_N)$ if it stopped in at least one of the locations~$\loc_i$, \ie{} $\clock \in \flow_i(\loc_i) = 0$ for some~$i \in \{ 1 , \dots , N \}$.
+% TODO
+
+Note that parameters are not assumed to be positive; however, the behavior of \imitator{} has not been tested for negative parameters, and it is strongly advised to constrain them to be non-negative in $\Cinit$ (if it is not the case, a warning is issued by \imitator{}).
+
+% TODO: example
+
+Finally, note that the number of \IPTA{}, locations, variables and actions that can be defined in a model is bounded in \imitator{} by some very large number (most probably $2^{32}$); but, well, you don't seriously plan to build such a large model, do you?
+
+\bigskip
+
+\imitator{} may use the determinism in (yet to come) algorithms; and the deterministic nature of an \NIPTA{} is detected by \imitator{}.
+In our setting, the strong determinism denotes at most one transition going out from a location and labeled with a given observable (\ie{} non-silent) transition.
+Let us precisely define what it means:
+
+%------------------------------------------------------------
+\begin{definition}[strong determinism]
+	Let $\A$ be an \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \RVar_i, \Clock_i, \Param_i, \invariant_i, \flow_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \setN$.
+
+	$\A$ is \emph{strongly-deterministic} if
+	for all automaton $\A_i$,
+	for all location $\loc_i \in \Loc_i$,
+	for all \emph{observable} action $\action \in \Action_i$,
+	there exists at most one transition from~$\loc_i$ labeled with~$\action$.
+\end{definition}
+%------------------------------------------------------------
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Initial state and initialization of variables}\label{section:init}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+For each \IPTA{}, a unique initial location must be defined.
+
+For variables, the definition of the initial value is very permissive in \imitator{}.
+Clocks are not necessarily equal to~0, and parameters are not even necessarily positive.
+
+Parameters and clocks can be initially bound by any linear constraint over parameters, clocks, and discrete variables.
+That is, we can define initial constraints such as:
+
+\begin{IMITATORmodel}
+x1 + x2 <= 2 p1 + 0.5 p2 - i
+\end{IMITATORmodel}
+
+However, discrete variables must be initialized to a \emph{constant} compatible with their type.
+See \cref{ss:initial} for details.
+Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i := ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to a default value, and will issue a warning.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Synchronization model}\label{sect:synchronization}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+By default, all \IPTA{} of an \imitator{} model declare their set of actions.\footnote{%
+	An alternative is an automatic recognition of the actions used, see option \styleOption{-sync-auto-detect} in \cref{chapter:options}.
+}
+
+The \imitator{} synchronization model is such that \emph{all} \IPTA{} declaring an action must synchronize \emph{together} on this action.
+This can be seen as a \emph{strong broadcast}.
+That is, for a transition labeled with action~\styleIMI{act} to be executed, all \IPTA{} declaring \styleIMI{act} must be ready to execute \styleIMI{act} locally.
+Otherwise, this transition cannot be taken (yet).
+
+If an \IPTA{} declares an action \styleIMI{act} that is never used in this \IPTA{}, then action \styleIMI{act} will never be executed in the entire model.\footnote{%
+	In this case, \imitator{} will detect this situation and will entirely delete this action from the model, while issuing a warning.
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Global constants}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\imitator{} supports global constants, \ie{} a variable the value of which is known once for all.
+The syntax is the following one:
+
+\begin{IMITATORmodel}
+c = 1: constant;
+\end{IMITATORmodel}
+
+Then, any occurrence of \styleIMI{c} in the model is replaced with \styleIMI{1}.
+
+By default, constants are (unbounded, exact) rationals.
+It is possible to define constants of another type by making their type explicit:
+
+\begin{IMITATORmodel}
+c = 1: int;
+\end{IMITATORmodel}
+
+In this case, \styleIMI{c} is a constant of type \styleIMI{int}.
+
+Limited linear expressions over rationals can be used in the definition of a (rational) constant; however no other constant can be used in a definition, \ie{} one cannot (yet) write \styleIMI{c1 = c2 + 1: constant;}.
+
+
+%------------------------------------------------------------
+\begin{hint}
+	In fact, a variable (\eg{} a parameter) can be turned to a constant as follows in the definition of the parameters:
+
+\begin{IMITATORmodel}
+p = 2: parameter;
+\end{IMITATORmodel}
+
+	This is equivalent to replacing \styleIMI{p} with \styleIMI{2} everywhere in the model; this is particularly useful when some parameters should be instantiated.
+	In contrast, if the parameter is instantiated in the initial definition, \imitator{} still counts it as a parameter, which makes all constraints suffer from an additional dimension.
+\end{hint}
+%------------------------------------------------------------
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Discrete variables}\label{section:discrete}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Types}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+Discrete, global variables are syntactic sugar for a potentially unbounded number of locations.
+Discrete variables can be tested in guards, and updated along transitions.
+
+\imitator{} currently supports four elementary types of discrete variables:
+\begin{enumerate}
+	\item rational-valued variables
+	\item ``int''-valued variables (over 32~bits)
+	\item Boolean-valued variables
+	\item binary word variables, allowing to use bitwise binary operations.
+\end{enumerate}
+
+In addition, more complex types such as \emph{arrays}, \emph{lists}, \emph{stacks} and \emph{queues} (of elementary types, or of more complex types such as arrays of lists) can be used.
+
+We review in the following these various types, together with their associated built-in functions.
+
+
+%------------------------------------------------------------
+\subsubsection{Rational-valued variables}
+%------------------------------------------------------------
+
+\emph{Rational variables} are rational-valued variables, and were described in \cref{subsection:rational}.
 
 %------------------------------------------------------------
 \subsubsection{``Int''-valued variables}
@@ -390,6 +717,47 @@ Int variables are encoded in \imitator{} using the \texttt{int} type of OCaml.
 
 Formally, the set of integer variables is $\IVar = \{ \ivar_1, \dots, \ivar_\IVarCard \} $;
 an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \cap \left[-2,147,483,648, +2,147,483,647\right]$.
+
+
+
+\paragraph{Arithmetic functions}
+
+\begin{itemize}
+    \item \label{item:lbl-pow} \styleIMI{pow(x:'a number, e:int):'a with 'a number:[rational|int]} - compute the power of a number
+\end{itemize}
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate above operation, note that all the following guards in the model fragment below will evaluate to true:
+
+%------------------------------------------------------------
+	\begin{IMITATORmodel}
+		when pow(2, 3) = 8 goto l1;
+	\end{IMITATORmodel}
+%------------------------------------------------------------
+\end{example}
+%------------------------------------------------------------
+
+\paragraph{Conversion functions}
+
+\begin{itemize}
+    \item \label{item:lbl-rational_of_int} \styleIMI{rational\_of\_int(x:int):rational} - convert an int number to a rational one
+\end{itemize}
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate above operation, note that all the following guards in the model fragment below will evaluate to true:
+
+%------------------------------------------------------------
+	\begin{IMITATORmodel}
+		(* i : int *)
+		(* r : rational *)
+		when rational_of_int(i) = r goto l1;
+	\end{IMITATORmodel}
+%------------------------------------------------------------
+\end{example}
+%------------------------------------------------------------
+
 
 
 %------------------------------------------------------------
@@ -426,6 +794,43 @@ Note that binary words are of fixed length, and operations can only be applied t
 % a Binary word variable valuation is a function $\wval : \WVar \rightarrow \setW(l)$, where $\setW(l)$ is an ordered set of length $l$ and $\setW(l) = \{b_1, ..., b_l \}$ with $b_l = \{0, 1\}$.
 We denote by~$\WVar$ the set of binary word variables.
 
+
+
+\paragraph{Binary word functions}
+
+\begin{itemize}
+    \item \label{item:lbl-shift_left} \styleIMI{shift\_left(b:binary\_word(l), i:int):binary\_word(l)} - shift a binary word of length \styleIMI{l} to left
+		\item \label{item:lbl-shift_right} \styleIMI{shift\_right(b:binary\_word(l), i:int):binary\_word(l)} - shift a binary word of length \styleIMI{l} to right
+		\item \label{item:lbl-fill_left} \styleIMI{fill\_left(b:binary\_word(l), i:const int):binary\_word(l + i)} - shift a binary word of length \styleIMI{l} to left (non destructive)
+		\item \label{item:lbl-fill_right} \styleIMI{fill\_right(b:binary\_word(l), i:const int):binary\_word(l + i)} - shift a binary word of length \styleIMI{l} to right (non destructive)
+		\item \label{item:lbl-logand} \styleIMI{logand(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply AND bitwise operation to two binary words of length \styleIMI{l}
+		\item \label{item:lbl-logor} \styleIMI{logor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply OR bitwise operation to two binary words of length \styleIMI{l}
+		\item \label{item:lbl-logxor} \styleIMI{logxor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply XOR bitwise operation to two binary words of length \styleIMI{l}
+		\item \label{item:lbl-lognot} \styleIMI{lognot(b:binary\_word(l)):binary\_word(l)} - apply NOT bitwise operation to a binary word of length \styleIMI{l}
+\end{itemize}
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate the binary words operations, note that all the following guards in the model fragment below will evaluate to true:
+
+% HACK: always keep one blank space after a binary value (0b…) to have higlighting using moredelim
+%------------------------------------------------------------
+\begin{IMITATORmodel}
+when shift_left(0b010110 , 3)     = 0b110000    goto l1;
+when shift_right(0b010110 , 3)    = 0b000010    goto l1;
+when fill_left(0b010110 , 3)      = 0b010110000 goto l1;
+when fill_right(0b010110 , 3)     = 0b000010110 goto l1;
+when logand(0b010110 , 0b101010 ) = 0b000010    goto l1;
+when logor(0b010110 , 0b101010 )  = 0b111110    goto l1;
+when logxor(0b010110 , 0b101010 ) = 0b111100    goto l1;
+when lognot(0b010110 )            = 0b101001    goto l1;
+\end{IMITATORmodel}
+%------------------------------------------------------------
+
+\end{example}
+%------------------------------------------------------------
+
+
 %------------------------------------------------------------
 \subsubsection{Arrays}
 %------------------------------------------------------------
@@ -452,6 +857,36 @@ Examples of array definitions are given below:
 % an Array variable valuation is a function $\aval : \AVar \rightarrow \setA$, where $\setA$ is the set of the elements of the array.
 
 
+
+\paragraph{Array functions}
+
+\begin{itemize}
+	\item \styleIMI{a[i:int]:'a with 'a:any} - access to element of array \styleIMI{a} at index \styleIMI{i}
+	\item \label{item:lbl-array_append} \styleIMI{array\_append(a1:'a array(l1), a2:'a array(l2)):'a array(l1+l2) with 'a:any} - concatenates an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting in an array of length \styleIMI{l1 + l2}
+	\item \label{item:lbl-array_length} \styleIMI{array\_length(a1:'a array(l1)):int=l1 with 'a:any} - length of the array \styleIMI{a1}
+	\item \label{item:lbl-array_mem} \styleIMI{array\_mem(a1:'a, l:'a array(l1)):bool with 'a:any} - true if \styleIMI{e} is in the the array \styleIMI{a1}
+\end{itemize}
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate the arrays operations, note that the following guard in the model fragment below will evaluate to true:
+
+%------------------------------------------------------------
+	\begin{IMITATORmodel}
+		when
+			& my_const_rational_array[0] = 1
+			& array_append([1, 2, 3], [4, 5, 6]) = [1, 2, 3, 4, 5, 6]
+			& array_append([[1, 2]], [[3, 4]]) = [[1, 2], [3, 4]]
+			& array_length([1, 1, 1]) = 3
+			& array_mem(2, [8, 6, 2])
+		goto l1;
+	\end{IMITATORmodel}
+%------------------------------------------------------------
+
+\end{example}
+%------------------------------------------------------------
+
+
 %------------------------------------------------------------
 \subsubsection{Lists}
 %------------------------------------------------------------
@@ -473,6 +908,42 @@ Examples of list definitions are given below:
 	my_binary_word_list 	: binary(4) list;
 	my_2d_int_list      	: int list list;
 \end{IMITATORmodel}
+%------------------------------------------------------------
+
+
+\paragraph{List functions}
+
+\begin{itemize}
+	\item \styleIMI{l[i:int]:'a with 'a:any} - access to element of list \styleIMI{l} at index \styleIMI{i}
+	\item \label{item:lbl-list_cons} \styleIMI{list\_cons(e:'a, l:'a list):'a list with 'a:any} - construct a list by inserting a new element \styleIMI{e} at the beginning of \styleIMI{l}
+	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a with 'a:any} - head element of a list \styleIMI{l}
+	\item \label{item:lbl-list_is_empty} \styleIMI{list\_is\_empty(l:'a list):bool with 'a:any} - Check if the list \styleIMI{l} has elements
+	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list): int with 'a:any} - length of the list \styleIMI{l}
+	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool with 'a:any} - true if \styleIMI{e} is in the the list \styleIMI{l}
+	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list with 'a:any} - reverse the the list \styleIMI{l}
+	\item \label{item:lbl-list_tl} \styleIMI{list\_tl(l:'a list):'a list with 'a:any} - tail of the list \styleIMI{l}
+\end{itemize}
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate the lists operations, note that the following guard in the model fragment below will evaluate to true:
+
+%------------------------------------------------------------
+	\begin{IMITATORmodel}
+		when
+			& my_int_list[0] = 1
+			& list_cons(1, list([2, 3])) = list([1, 2, 3])
+			& list_hd(list([3,4])) = 3
+			& list_is_empty(list([]))
+		  & list_length(list([1, 1, 1])) = 3
+		  & list_mem(2, list([8, 6, 2]))
+		  & list_rev(list([1, 2, 3])) = list([3, 2, 1])
+		 	& list_tl(list([1, 2, 3])) = list([2, 3])
+		goto l1;
+	\end{IMITATORmodel}
+%------------------------------------------------------------
+
+\end{example}
 %------------------------------------------------------------
 
 %------------------------------------------------------------
@@ -502,6 +973,57 @@ Examples of stack definitions are given below:
 \end{IMITATORmodel}
 %------------------------------------------------------------
 
+
+
+\paragraph{Stack functions}
+
+\begin{itemize}
+	\item \label{item:lbl-stack_push} \styleIMI{stack\_push(e:'a, s:'a stack):'a stack with 'a:any} - Add an element \styleIMI{e} at the top of the stack \styleIMI{s} and return the stack - the stack is modified, this function is subject to side-effects
+	\item \label{item:lbl-stack_pop} \styleIMI{stack\_pop(s:'a stack):'a with 'a:any} - Get and remove the element at the top of the stack \styleIMI{s} - the stack is modified, this function is subject to side-effects
+	\item \label{item:lbl-stack_top} \styleIMI{stack\_top(s:'a stack):'a with 'a:any} - Get the element at the top of the stack \styleIMI{s}
+	\item \label{item:lbl-stack_clear} \styleIMI{stack\_clear(s:'a stack):'a stack with 'a:any} - Remove all elements of the stack \styleIMI{s} and return the stack - the stack is modified, this function is subject to side-effects
+	\item \label{item:lbl-stack_is_empty} \styleIMI{stack\_is\_empty(s:'a stack):bool with 'a:any} - Check if the stack \styleIMI{s} has elements
+	\item \label{item:lbl-stack_length} \styleIMI{stack\_length(s:'a stack):int with 'a:any} - Get the number of elements in the stack \styleIMI{s}
+\end{itemize}
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate the stacks operations, note that the following guard in the model fragment below will evaluate to true:
+
+%------------------------------------------------------------
+	\begin{IMITATORmodel}
+		when
+			& True
+			do {
+				stack_push(1, s),
+				stack_push(2, s),
+				i := stack_top(s),
+				j := stack_pop(s),
+			}
+		goto l1;
+
+		loc l1: invariant
+			i = j
+			& i = 2
+			& stack_length(s) = 1
+			& not(stack_is_empty(s))
+		when
+			& True
+		do {
+			stack_clear(s)
+		}
+		goto l2;
+
+		loc l2: invariant stack_is_empty(s)
+
+	\end{IMITATORmodel}
+%------------------------------------------------------------
+
+\end{example}
+%------------------------------------------------------------
+
+
+
 %------------------------------------------------------------
 \subsubsection{Queues}
 %------------------------------------------------------------
@@ -529,17 +1051,77 @@ Examples of queue definitions are given below:
 %------------------------------------------------------------
 
 
+\paragraph{Queue functions}
+
+\begin{itemize}
+	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue):'a queue with 'a:any} - Add an element \styleIMI{e} at the beginning of the queue \styleIMI{q} and return the queue - the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_pop} \styleIMI{queue\_pop(q:'a queue):'a with 'a:any} - Get and remove the last element of the queue \styleIMI{q} - the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_top} \styleIMI{queue\_top(q:'a queue):'a with 'a:any} - Get the last element of the queue \styleIMI{q}
+	\item \label{item:lbl-queue_clear} \styleIMI{queue\_clear(q:'a queue):'a queue with 'a:any} - Remove all elements of the queue \styleIMI{q} and return the queue - the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_is_empty} \styleIMI{queue\_is\_empty(q:'a queue):bool with 'a:any} - Check if the queue \styleIMI{q} has elements
+	\item \label{item:lbl-queue_length} \styleIMI{queue\_length(q:'a queue):int with 'a:any} - Get the number of elements in the queue \styleIMI{q}
+\end{itemize}
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate the queues operations, note that the following guard in the model fragment below will evaluate to true:
+
+%------------------------------------------------------------
+	\begin{IMITATORmodel}
+		when
+			& True
+			do {
+				queue_push(1, q),
+				queue_push(2, q),
+				i := stack_top(q),
+				j := stack_pop(q),
+			}
+		goto l1;
+
+		loc l1: invariant
+			i = j
+			& i = 1
+			& queue_length(q) = 1
+			& not(queue_is_empty(q))
+		when
+			& True
+		do {
+			queue_clear(q)
+		}
+		goto l2;
+
+		loc l2: invariant queue_is_empty(q)
+
+	\end{IMITATORmodel}
+%------------------------------------------------------------
+
+\end{example}
+%------------------------------------------------------------
+
+
+% %------------------------------------------------------------
+% \subsubsection{Discrete variables definition}
+% %------------------------------------------------------------
+% 
+% The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar \cup \WVar$.
+% (We do not formalize the arrays and lists in the following, as we believe their usage is straightforward.)
+% 
+% %a discrete variable valuation is a function $\dval : \DVar \rightarrow \setN$.
+
+
+
+
 %------------------------------------------------------------
 \subsubsection{Built-in functions over discrete variables}\label{section:builtin-functions}
 %------------------------------------------------------------
 
-\imitator{} 3.1 and higher comes with some built-in functions over discrete variables:
-
+% \imitator{} 3.1 and higher comes with some built-in functions over discrete variables:
+We summarize in \cref{table:summary:builtin-functions} the built-in functions for discrete variables.
 
 \begin{table}[h!]
 	\caption{Built-in functions summary}
 	{\centering
-	\small
+		\small
 		\begin{tabular}{ | l | l | }
 
 			% Non-nested CTL
@@ -634,510 +1216,70 @@ The parameters of a function are evaluated from left to right.
 \end{remark}
 
 \begin{remark}
-Some functions, mistakenly called "Side-effects functions" allow the modification of collections "in-place" and therefore are subject to side-effects.
+Some functions, called ``Side-effects functions'' allow the modification of collections ``in-place'' and therefore are subject to side-effects.
 Side-effects functions can only be used in updates, more precisely in the body of the \styleIMI{let} bloc of an update.
 \end{remark}
 
-\paragraph{Arithmetic functions}
 
-\begin{itemize}
-    \item \label{item:lbl-pow} \styleIMI{pow(x:'a number, e:int):'a with 'a number:[rational|int]} - compute the power of a number
-\end{itemize}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Default initial value}\label{ss:initial}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-%------------------------------------------------------------
-\begin{example}
-	To illustrate above operation, note that all the following guards in the model fragment below will evaluate to true:
+Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
+if they are not, a warning is issued, and they are arbitrarily set to a standard value.
+% (\eg{} \styleIMI{0} for numerical variables, or \BFalse{} for Boolean variables; see \cref{section:init} for the actual value).
 
-%------------------------------------------------------------
-	\begin{IMITATORmodel}
-		when pow(2, 3) = 8 goto l1;
-	\end{IMITATORmodel}
-%------------------------------------------------------------
-\end{example}
-%------------------------------------------------------------
+This initial default value is as follows, depending on the variable type:
 
-\paragraph{Conversion functions}
+\begin{tabular}{l l}
+	Rational & 0\\
+	Integer & 0\\
+	Boolean & \BFalse{}\\
+	Binary words & \styleIMI{0b0}\\
+\end{tabular}
 
-\begin{itemize}
-    \item \label{item:lbl-rational_of_int} \styleIMI{rational\_of\_int(x:int):rational} - convert an int number to a rational one
-\end{itemize}
+The initial default value of arrays and lists is that of their type.
 
-%------------------------------------------------------------
-\begin{example}
-	To illustrate above operation, note that all the following guards in the model fragment below will evaluate to true:
 
-%------------------------------------------------------------
-	\begin{IMITATORmodel}
-		(* i : int *)
-		(* r : rational *)
-		when rational_of_int(i) = r goto l1;
-	\end{IMITATORmodel}
-%------------------------------------------------------------
-\end{example}
-%------------------------------------------------------------
 
-\paragraph{Binary word functions}
 
-\begin{itemize}
-    \item \label{item:lbl-shift_left} \styleIMI{shift\_left(b:binary\_word(l), i:int):binary\_word(l)} - shift a binary word of length \styleIMI{l} to left
-		\item \label{item:lbl-shift_right} \styleIMI{shift\_right(b:binary\_word(l), i:int):binary\_word(l)} - shift a binary word of length \styleIMI{l} to right
-		\item \label{item:lbl-fill_left} \styleIMI{fill\_left(b:binary\_word(l), i:const int):binary\_word(l + i)} - shift a binary word of length \styleIMI{l} to left (non destructive)
-		\item \label{item:lbl-fill_right} \styleIMI{fill\_right(b:binary\_word(l), i:const int):binary\_word(l + i)} - shift a binary word of length \styleIMI{l} to right (non destructive)
-		\item \label{item:lbl-logand} \styleIMI{logand(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply AND bitwise operation to two binary words of length \styleIMI{l}
-		\item \label{item:lbl-logor} \styleIMI{logor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply OR bitwise operation to two binary words of length \styleIMI{l}
-		\item \label{item:lbl-logxor} \styleIMI{logxor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply XOR bitwise operation to two binary words of length \styleIMI{l}
-		\item \label{item:lbl-lognot} \styleIMI{lognot(b:binary\_word(l)):binary\_word(l)} - apply NOT bitwise operation to a binary word of length \styleIMI{l}
-\end{itemize}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Updates}\label{ss:updates}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+The presence of clocks and parameters, discrete variables, and structures (such as arrays) require a particular handling of the updates, which we describe in the following.
+
+In any case, the paradigm is that discrete variables are first tested, then updated.
 
 %------------------------------------------------------------
-\begin{example}
-	To illustrate the binary words operations, note that all the following guards in the model fragment below will evaluate to true:
-
-% HACK: always keep one blank space after a binary value (0b…) to have higlighting using moredelim
-%------------------------------------------------------------
-\begin{IMITATORmodel}
-when shift_left(0b010110 , 3)     = 0b110000    goto l1;
-when shift_right(0b010110 , 3)    = 0b000010    goto l1;
-when fill_left(0b010110 , 3)      = 0b010110000 goto l1;
-when fill_right(0b010110 , 3)     = 0b000010110 goto l1;
-when logand(0b010110 , 0b101010 ) = 0b000010    goto l1;
-when logor(0b010110 , 0b101010 )  = 0b111110    goto l1;
-when logxor(0b010110 , 0b101010 ) = 0b111100    goto l1;
-when lognot(0b010110 )            = 0b101001    goto l1;
-\end{IMITATORmodel}
+\subsubsection{Conflicts in updates}
 %------------------------------------------------------------
 
-\end{example}
-%------------------------------------------------------------
-
-\paragraph{Array functions}
-
-\begin{itemize}
-	\item \styleIMI{a[i:int]:'a with 'a:any} - access to element of array \styleIMI{a} at index \styleIMI{i}
-	\item \label{item:lbl-array_append} \styleIMI{array\_append(a1:'a array(l1), a2:'a array(l2)):'a array(l1+l2) with 'a:any} - concatenates an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting in an array of length \styleIMI{l1 + l2}
-	\item \label{item:lbl-array_length} \styleIMI{array\_length(a1:'a array(l1)):int=l1 with 'a:any} - length of the array \styleIMI{a1}
-	\item \label{item:lbl-array_mem} \styleIMI{array\_mem(a1:'a, l:'a array(l1)):bool with 'a:any} - true if \styleIMI{e} is in the the array \styleIMI{a1}
-\end{itemize}
-
-%------------------------------------------------------------
-\begin{example}
-	To illustrate the arrays operations, note that the following guard in the model fragment below will evaluate to true:
-
-%------------------------------------------------------------
-	\begin{IMITATORmodel}
-		when
-			& my_const_rational_array[0] = 1
-			& array_append([1, 2, 3], [4, 5, 6]) = [1, 2, 3, 4, 5, 6]
-			& array_append([[1, 2]], [[3, 4]]) = [[1, 2], [3, 4]]
-			& array_length([1, 1, 1]) = 3
-			& array_mem(2, [8, 6, 2])
-		goto l1;
-	\end{IMITATORmodel}
-%------------------------------------------------------------
-
-\end{example}
-%------------------------------------------------------------
-
-\paragraph{List functions}
-
-\begin{itemize}
-	\item \styleIMI{l[i:int]:'a with 'a:any} - access to element of list \styleIMI{l} at index \styleIMI{i}
-	\item \label{item:lbl-list_cons} \styleIMI{list\_cons(e:'a, l:'a list):'a list with 'a:any} - construct a list by inserting a new element \styleIMI{e} at the beginning of \styleIMI{l}
-	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a with 'a:any} - head element of a list \styleIMI{l}
-	\item \label{item:lbl-list_is_empty} \styleIMI{list\_is\_empty(l:'a list):bool with 'a:any} - Check if the list \styleIMI{l} has elements
-	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list): int with 'a:any} - length of the list \styleIMI{l}
-	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool with 'a:any} - true if \styleIMI{e} is in the the list \styleIMI{l}
-	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list with 'a:any} - reverse the the list \styleIMI{l}
-	\item \label{item:lbl-list_tl} \styleIMI{list\_tl(l:'a list):'a list with 'a:any} - tail of the list \styleIMI{l}
-\end{itemize}
-
-%------------------------------------------------------------
-\begin{example}
-	To illustrate the lists operations, note that the following guard in the model fragment below will evaluate to true:
-
-%------------------------------------------------------------
-	\begin{IMITATORmodel}
-		when
-			& my_int_list[0] = 1
-			& list_cons(1, list([2, 3])) = list([1, 2, 3])
-			& list_hd(list([3,4])) = 3
-			& list_is_empty(list([]))
-		  & list_length(list([1, 1, 1])) = 3
-		  & list_mem(2, list([8, 6, 2]))
-		  & list_rev(list([1, 2, 3])) = list([3, 2, 1])
-		 	& list_tl(list([1, 2, 3])) = list([2, 3])
-		goto l1;
-	\end{IMITATORmodel}
-%------------------------------------------------------------
-
-\end{example}
-%------------------------------------------------------------
-
-\paragraph{Stack functions}
-
-\begin{itemize}
-	\item \label{item:lbl-stack_push} \styleIMI{stack\_push(e:'a, s:'a stack):'a stack with 'a:any} - Add an element \styleIMI{e} at the top of the stack \styleIMI{s} and return the stack - the stack is modified, this function is subject to side-effects
-	\item \label{item:lbl-stack_pop} \styleIMI{stack\_pop(s:'a stack):'a with 'a:any} - Get and remove the element at the top of the stack \styleIMI{s} - the stack is modified, this function is subject to side-effects
-	\item \label{item:lbl-stack_top} \styleIMI{stack\_top(s:'a stack):'a with 'a:any} - Get the element at the top of the stack \styleIMI{s}
-	\item \label{item:lbl-stack_clear} \styleIMI{stack\_clear(s:'a stack):'a stack with 'a:any} - Remove all elements of the stack \styleIMI{s} and return the stack - the stack is modified, this function is subject to side-effects
-	\item \label{item:lbl-stack_is_empty} \styleIMI{stack\_is\_empty(s:'a stack):bool with 'a:any} - Check if the stack \styleIMI{s} has elements
-	\item \label{item:lbl-stack_length} \styleIMI{stack\_length(s:'a stack):int with 'a:any} - Get the number of elements in the stack \styleIMI{s}
-\end{itemize}
-
-%------------------------------------------------------------
-\begin{example}
-	To illustrate the stacks operations, note that the following guard in the model fragment below will evaluate to true:
-
-%------------------------------------------------------------
-	\begin{IMITATORmodel}
-		when
-			& True
-			do {
-				stack_push(1, s),
-				stack_push(2, s),
-				i := stack_top(s),
-				j := stack_pop(s),
-			}
-		goto l1;
-
-		loc l1: invariant
-			i = j
-			& i = 2
-			& stack_length(s) = 1
-			& not(stack_is_empty(s))
-		when
-			& True
-		do {
-			stack_clear(s)
-		}
-		goto l2;
-
-		loc l2: invariant stack_is_empty(s)
-
-	\end{IMITATORmodel}
-%------------------------------------------------------------
-
-\end{example}
-%------------------------------------------------------------
-
-\paragraph{Queue functions}
-
-\begin{itemize}
-	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue):'a queue with 'a:any} - Add an element \styleIMI{e} at the beginning of the queue \styleIMI{q} and return the queue - the queue is modified, this function is subject to side-effects
-	\item \label{item:lbl-queue_pop} \styleIMI{queue\_pop(q:'a queue):'a with 'a:any} - Get and remove the last element of the queue \styleIMI{q} - the queue is modified, this function is subject to side-effects
-	\item \label{item:lbl-queue_top} \styleIMI{queue\_top(q:'a queue):'a with 'a:any} - Get the last element of the queue \styleIMI{q}
-	\item \label{item:lbl-queue_clear} \styleIMI{queue\_clear(q:'a queue):'a queue with 'a:any} - Remove all elements of the queue \styleIMI{q} and return the queue - the queue is modified, this function is subject to side-effects
-	\item \label{item:lbl-queue_is_empty} \styleIMI{queue\_is\_empty(q:'a queue):bool with 'a:any} - Check if the queue \styleIMI{q} has elements
-	\item \label{item:lbl-queue_length} \styleIMI{queue\_length(q:'a queue):int with 'a:any} - Get the number of elements in the queue \styleIMI{q}
-\end{itemize}
-
-%------------------------------------------------------------
-\begin{example}
-	To illustrate the queues operations, note that the following guard in the model fragment below will evaluate to true:
-
-%------------------------------------------------------------
-	\begin{IMITATORmodel}
-		when
-			& True
-			do {
-				queue_push(1, q),
-				queue_push(2, q),
-				i := stack_top(q),
-				j := stack_pop(q),
-			}
-		goto l1;
-
-		loc l1: invariant
-			i = j
-			& i = 1
-			& queue_length(q) = 1
-			& not(queue_is_empty(q))
-		when
-			& True
-		do {
-			queue_clear(q)
-		}
-		goto l2;
-
-		loc l2: invariant queue_is_empty(q)
-
-	\end{IMITATORmodel}
-%------------------------------------------------------------
-
-\end{example}
-%------------------------------------------------------------
-
-
-%------------------------------------------------------------
-\subsubsection{Discrete variables definition}
-%------------------------------------------------------------
-
-The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar \cup \WVar$.
-(We do not formalize the arrays and lists in the following, as we believe their usage is straightforward.)
-
-%a discrete variable valuation is a function $\dval : \DVar \rightarrow \setN$.
-
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-\subsection{Linear constraints}\label{ss:constraints}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-
-Let us formalize the set of linear constraints allowed in \imitator{}.
-Given a set of variables~$\Var = \{ \var_1, \dots, \var_\VarCard \}$ (in the following, this set will be instantiated with $\Clock$ and/or $\Param$ and/or $\RVar$), a \emph{linear term} over $\Var$ is an expression of the form
-$$
-	\sum_{1 \leq i \leq n} \alpha_i \var_i + d
-$$
-for some $n \in \setN$,
-where
-$\var_{i} \in \Var$,
-$\alpha_{i} \in \setQ$, for $1 \leq i \leq n$,
-and
-$d \in \setQ$.
-
-An~\emph{atomic constraint} over $\Var$ is an expression of the form
-% An \emph{inequality} over $\Clock$ and~$\Param$ is $e \bowtie 0$, where , and $e$ is a linear term %of the form
-$
-	\lterm \bowtie 0
-$
-where
-$\lterm$ is a linear term over~$\Var$,
-and
-${\bowtie} \in \{ <, \leq, =, \geq, > \}$.
-
-A~\emph{constraint} over $\Var$ is a conjunction of atomic constraints.
-We denote by $\LTerm(\Var)$ the set of linear terms over~$\Var$, and by $\LConstraint(\Var)$ the set of constraints over~$\Var$.
-In \imitator{}, we will consider constraints belonging to sets such as $\LConstraintXP$ (\ie{} the set of constraints over clocks and parameters), or $\LConstraintXPD$ (\ie{} the set of constraints over clocks, parameters and discrete rational-valued variables).
-
-
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-\subsection{Arithmetic expressions}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-
-Let $\ArithExprR$ denote the set of arithmetic expressions over the numerical discrete rational variables, \ie{} made of addition, subtraction, multiplication, and division over rational (or integer) constants and discrete numerical variables.
-
-
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-\subsection{\imitator{} Parametric Timed Automata}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-
-
-% \paragraph{\imitator{} Parametric Timed Automata}
-We can now give a formal definition of \IPTA{}.
-
-%------------------------------------------------------------
-\begin{remark}
-	In the subsequent formal definition, we rule out int-valued variables, Boolean variables and binary words, for sake of simplicity.
-	They can be used in a straightforward manner.
-	That is, guards (and invariants) can also include operations on such variables.
-	See the grammar in \cref{chapter:grammar} for the exact behavior allowed by \imitator{}.
-\end{remark}
-%------------------------------------------------------------
-
-Let $\unobs$ denote the unobservable action.
-
-%------------------------------------------------------------
-\begin{definition}[\IPTA{}]\label{definition:IPTA}
-	An \imitator{} parametric timed automaton (\emph{\IPTA{}}) is a tuple $\A = \tuple{\Action, \Loc, \locinit, \DVar, \Clock, \Param, \invariant, \flow, \steps}$, where:
-	\begin{itemize}
-		\item $\Action$ is a finite set of actions;
-		\item $\Loc$ is a finite set of locations;
-		\item $\locinit \in \Loc$ is the initial location;
-		\item $\DVar$ is a set of rational-valued variables;
-		\item $\Clock$ is a set of clocks;
-		\item $\Param$ is a set of parameters;
-		\item $\invariant : \Loc \rightarrow \LConstraintXPD$ assigns to every location~$\loc$ a constraint over all variables, called the \emph{invariant} of~$\loc$;
-		\item $\flow : \Loc \times \Clock \rightarrow \setQ$ assigns to a every location and clock a given flow (or speed), \ie{} a rational number;
-		\item $\steps$ is a set of edges $(\loc, \guard, \action, \Cupdates, \Dupdates, \loc')$, where
-		      $\loc, \loc' \in \Loc$ are the source and destination locations,
-		      $\guard \in \LConstraintXPD$ is a constraint over all variables (called \emph{guard} of the transition),
-		      $\action \in \Action \cup \{ \unobs \}$ is the action associated with the transition,
-		      $\Cupdates : \Clock \rightharpoonup \LTermXPD$ is the (possibly partial) update function for clocks, and
-		      % TODO: sure that we can update to anything??
-		      $\Dupdates : \RVar \rightharpoonup \ArithExprR$ is the (possibly partial) update function for discrete rational variables.
-	\end{itemize}
-\end{definition}
-%------------------------------------------------------------
-
-In the following, we explain this definition.
-
-\paragraph{Guards and invariants}
-Guards and invariants in \imitator{} are linear constraints over all variables.
-For example, the following expression can be used in a guard or an invariant:
-
-\begin{IMITATORmodel}
-r1 + .5 x1 + 3 x2 >= 2 p1 - r2 & p2 < 1/3
-\end{IMITATORmodel}
-
-\noindent{}where \styleIMI{r1}, \styleIMI{r2} are discrete rational variables, \styleIMI{x1}, \styleIMI{x2} are clocks and \styleIMI{p1}, \styleIMI{p2} are parameters.
-This syntax includes in particular diagonal constraints (\eg{} \styleIMI{x1 - x2 <= 2}), not always supported in other model-checking tools.
-
-\paragraph{Actions}
-Transitions can be synchronized on an action in $\Action$, or have no synchronized action (``$\unobs$''), which is often referred to in the literature as a silent transition, or an $\epsilon$-transition.
-For the semantics of the synchronization model between various \IPTA{}, refer to \cref{sect:synchronization}.
-A non-silent transition is said to be \emph{observable}; and it can be synchronized with other automata.
-
-\paragraph{Clock updates}
-Observe that clocks can be updated to any value, \ie{} a clock can be assigned not only to~0, but to any linear term over the other clocks, the parameters and the discrete rational variables.
-This considerably extends the traditional syntax of PTAs defined in~\cite{AHV93}.
-In fact, the \imitator{} includes (more than just) the updatable timed automata of~\cite{BDFP04}, as well as the reset-to-parameter (parametric) timed automata of~\cite{ALR18PresetTA}.
-If clocks are always reset to constants (\ie{} not assigned to more complex linear terms), \imitator{} will apply some optimizations that (may) increase the analysis speed.
-% TODO: nice box with a ``tip'' title
-
-\paragraph{Discrete updates}
-Discrete variables can be assigned to expressions compatible with their type.
-Notably, rational variables can be assigned to rational arithmetic expressions over~$\RVar$.
-On the one hand, this is more restrictive than clock updates, because discrete rational variables cannot be assigned to a clock or to a parameter.
-On the other hand, arithmetic expressions are richer than linear constraints, as they allow multiplication or division of rational variables with each other.
-
-Since version 2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
-
-\paragraph{Flows and stopwatches}
-By default, all clocks evolve at the same rate in all locations, and this rate is~1.
-That is, by default, $\forall \loc \in \Loc, \forall \clock \in \Clock : \flow(\loc, \clock) = 1$.
-
-However, one can explicitly define an alternative (constant, rational-valued) flow using two methods:
-\begin{description}
-	\item [Using stopwatches]
-A stopwatch~\cite{CL00} is a clock whose elapsing is stopped in some locations, \ie{} $\flow(\loc, \clock) = 0$.
-There is no distinction between clocks and stopwatches.
-That is, any clock can potentially be stopped in some location.
-\imitator{} will detect whether a model has or not stopwatches; if there is no stopwatch in the model, \imitator{} will apply some optimizations that (may) increase the analysis speed.
-% TODO: nice box with a ``tip'' title
-
-Clocks can be stopped in locations, thanks to the optional \styleIMI{stop \{ … \}} keyword (see grammar in  \cref{section:grammar:model}).
-A clock is stopped in a location if it belongs to the list of clocks in \styleIMI{stop \{ … \}}.
-It is resumed when leaving the location---unless the target location again stops this clock.
-
-\item [Using explicit flows]
-\imitator{} also support constant flows, \ie{} multi-rate (parametric) timed automata~\cite{ACHHHNOSY95}.
-That is, it is possible to specify the \emph{speed} of a clock in a location.
-This value is an arbitrary rational number, including 0 (in which case it is equivalent to a stopwatch~\cite{CL00}) or a negative number.
-This can be specified using a syntax of the following form: \styleIMI{flow \{x' = 2\}}.
-A clock for which no flow is explicitly defined has of course flow~1.
-A stopwatch has flow~0.
-\end{description}
-
-
-
-%------------------------------------------------------------
-\begin{remark}
-	It is possible to defined ill-formed models where contradictory flows are defined for a given clock.
-	For example, in
-
-	\styleIMI{stop \{ x \} flow \{x' = 2, y' = 0\}}
-
-	\noindent
-	\styleIMI{x} is assigned both flow~0 (because it is defined as a stopped clock) and 2 (in the explicit flow definition).
-
-	Alternatively, in an \NIPTA{}, it is possible to be in a global location such that, in one location of one of the automata a given clock is assigned a given flow, and in another location of another automata in parallel, the same clock is assigned another flow.
-
-	In the case of such contradictory flows, \imitator{} will trigger a warning on-the-fly, and the result of the analysis is unspecified.
-\end{remark}
-%------------------------------------------------------------
-
-
-
-\paragraph{Urgent locations}
-A location can be defined as \emph{urgent}, using the keyword \styleIMI{urgent} (see grammar in  \cref{section:grammar:model}).
-In an urgent location, time cannot elapse, \ie{} it must be left in $0$-time.
-Note however that ``in $0$-time'' does not necessarily mean immediately: that is, several actions may be performed (in $0$-time) before the location is left.
-
-
-
-% TODO: give semantics?
-
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-\subsection{Networks of \imitator{} Parametric Timed Automata}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-
-%------------------------------------------------------------
-\begin{definition}[\NIPTA{}]
-	Given a set of \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \flow_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \setN$,
-	a network of \IPTA{} (\emph{\NIPTA{}}) is a tuple
-	$\tuple{\Action, \DVar, \Clock, \Param, \{ \A_i \mid 1 \leq i \leq N \}, \Cinit}$, where:
-	\begin{itemize}
-		\item $\Action = \bigcup_{1 \leq i \leq N} \Action_i$ is the set of all actions;
-		\item $\DVar = \bigcup_{1 \leq i \leq N} \DVar_i$ is the set of all discrete variables;
-		\item $\Clock = \bigcup_{1 \leq i \leq N} \Clock_i$ is the set of all clocks;
-		\item $\Param = \bigcup_{1 \leq i \leq N} \Param_i$ is the set of all parameters;
-		\item $\Cinit \in \LConstraintXPD$ is the initial constraint over $\RVar$, $\Clock$ and $\Param$. % TODO
-	\end{itemize}
-\end{definition}
-%------------------------------------------------------------
-
-Observe that each set of actions, discrete variables, clocks and parameters is not disjoint between all \IPTA{}.
-That is, actions, discrete variables, clocks and parameters may be shared between different \IPTA{}.
-If a variable is required to be local to an \IPTA{}, then it should just not be used in any other \IPTA{} of the model.
-
-Different from many tools for (parametric) timed automata, clocks are not necessarily initially equal to~0 (this is similar to \hytech{}~\cite{HHW95} but different from \uppaal{}~\cite{LPY97}).
-The initial value of the clocks is defined by~$\Cinit$ (see \cref{section:init}).
-If nothing is defined in~$\Cinit$, then their value is supposed to be arbitrary (any real value).
-
-
-In an \NIPTA{}, a clock~$\clock$ is stopped in a location $(\loc_1, \dots, \loc_N)$ if it stopped in at least one of the locations~$\loc_i$, \ie{} $\clock \in \flow_i(\loc_i) = 0$ for some~$i \in \{ 1 , \dots , N \}$.
-% TODO
-
-Note that parameters are not assumed to be positive; however, the behavior of \imitator{} has not been tested for negative parameters, and it is strongly advised to constrain them to be non-negative in $\Cinit$ (if it is not the case, a warning is issued by \imitator{}).
-
-% TODO: example
-
-Finally, note that the number of \IPTA{}, locations, variables and actions that can be defined in a model is bounded in \imitator{} by some very large number (most probably $2^{32}$); but, well, you don't seriously plan to build such a large model, do you?
-
-\bigskip
-
-\imitator{} may use the determinism in (yet to come) algorithms; and the deterministic nature of an \NIPTA{} is detected by \imitator{}.
-In our setting, the strong determinism denotes at most one transition going out from a location and labeled with a given observable (\ie{} non-silent) transition.
-Let us precisely define what it means:
-
-%------------------------------------------------------------
-\begin{definition}[strong determinism]
-	Let $\A$ be an \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \flow_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \setN$.
-
-	$\A$ is \emph{strongly-deterministic} if
-	for all automaton $\A_i$,
-	for all location $\loc_i \in \Loc_i$,
-	for all \emph{observable} action $\action \in \Action_i$,
-	there exists at most one transition from~$\loc_i$ labeled with $\action$.
-\end{definition}
-%------------------------------------------------------------
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Discrete variables updates}\label{section:discrete_boolean}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Standard updates}\label{section:standard_updates}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Discrete variables are first tested, then updated.
 If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i := 2} while another one performs \styleIMI{i := 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
-If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
-For more information on how the standard updates works, read the section \styleIMI{do-then} form updates below.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{do-then form updates}\label{section:do_then_form_updates}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
+
+% For more information on how the standard updates works, read the section \styleIMI{do-then} form updates below.
+
+
+% TODO: here, something general on updates is missing
+
+%------------------------------------------------------------
+\subsubsection{do-then form updates}\label{section:do_then_form_updates}
+%------------------------------------------------------------
 
 \styleIMI{do-then} form updates are more complex updates, allowing, at the one hand, sequential updates on discrete values, at the other hand
 the use of side-effects functions for in-place modification of data structure values.
 If you don't need these functionalities, we recommend the use the standard updates. \styleIMI{do-then} form updates are updates composed of two parts.
 
-\subsubsection{do bloc}
-
-\paragraph{}
+\paragraph{do bloc}
 
 \styleIMI{do} bloc can be used to make sequential updates on any discrete variables whatever their types.
 Contrary to \styleIMI{then} bloc (or standard update) it's possible to make in-place modifications on data structures (like stacks and queues) with side-effects functions.
 The \styleIMI{do} bloc can be seen as an imperative update part that is processed before the constraints updates (\styleIMI{then} bloc).
 It's not possible to update clock constraint in \styleIMI{do} bloc because of the sequential behavior.
 
-\paragraph{}
+% \paragraph{}
 Examples of a \styleIMI{do} update expression:
 
 \begin{IMITATORmodel}
@@ -1166,16 +1308,14 @@ Examples of a \styleIMI{do} update expression:
 	}
 \end{IMITATORmodel}
 
-\subsubsection{then bloc}
-
-\paragraph{}
+\paragraph{then bloc}
 
 \styleIMI{then} bloc can be used to update clock(s) or discrete variable(s) constraints.
-Update of a discrete variable constraint is equivalent to an assignment. However, these updates are not sequentials,
+Update of a discrete variable constraint is equivalent to an assignment. However, these updates are not sequential,
 so as described before, in case of multiple update of one variable, a warning is issued, and the behavior of the \NIPTA{} becomes unspecified.
 \styleIMI{then} bloc is the same as a standard update, see \cref{section:standard_updates}.
+	% TODO
 
-\paragraph{}
 An example of a \styleIMI{then} update expression:
 
 \begin{IMITATORmodel}
@@ -1198,7 +1338,7 @@ An example of a \styleIMI{then} update expression:
 	}
 \end{IMITATORmodel}
 
-\subsubsection{do-then bloc}
+\paragraph{do-then bloc}
 
 \begin{remark}
 For a given transition, \styleIMI{do} bloc is executed before the \styleIMI{then} bloc.
@@ -1213,7 +1353,6 @@ Only once after all \styleIMI{do} blocs are computed, all \styleIMI{then} bloc a
 Note the use of semicolon in the sequential part (\styleIMI{do} bloc) and comma in the declarative part (\styleIMI{then} bloc).
 \end{remark}
 
-\paragraph{}
 Examples of a \styleIMI{do-then} update expression:
 
 \begin{IMITATORmodel}
@@ -1258,95 +1397,6 @@ Examples of a \styleIMI{do-then} update expression:
 
 	}
 \end{IMITATORmodel}
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Initial state and initialization of variables}\label{section:init}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-For each \IPTA{}, a unique initial location must be defined.
-
-For variables, the definition of the initial value is very permissive in \imitator{}.
-Clocks are not necessarily equal to~0, and parameters are not even necessarily positive.
-
-Parameters and clocks can be initially bound by any linear constraint over parameters, clocks, and discrete variables.
-That is, we can define initial constraints such as:
-
-\begin{IMITATORmodel}
-x1 + x2 <= 2 p1 + 0.5 p2 - i
-\end{IMITATORmodel}
-
-However, discrete variables must be initialized to a \emph{constant} compatible with their type.
-Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i := ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to a default value, and will issue a warning.
-
-This initial default value is as follows, depending on the variable type:
-
-\begin{tabular}{l l}
-	Rational & 0\\
-	Integer & 0\\
-	Boolean & \BFalse{}\\
-	Binary words & \styleIMI{0b0}\\
-\end{tabular}
-
-The initial default value of arrays and lists is that of their type.
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Synchronization model}\label{sect:synchronization}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-By default, all \IPTA{} of an \imitator{} model declare their set of actions.\footnote{%
-	An alternative is an automatic recognition of the actions used, see option \styleOption{-sync-auto-detect} in \cref{chapter:options}.
-}
-
-The \imitator{} synchronization model is such that \emph{all} \IPTA{} declaring an action must synchronize \emph{together} on this action.
-This can be seen as a \emph{strong broadcast}.
-That is, for a transition labeled with action~\styleIMI{a} to be executed, all \IPTA{} declaring \styleIMI{a} must be ready to execute \styleIMI{a} locally.
-Otherwise, this transition cannot be taken (yet).
-
-If an \IPTA{} declares an action \styleIMI{a} that is never used in this \IPTA{}, then action \styleIMI{a} will never be executed in the entire model.\footnote{%
-	In this case, \imitator{} will detect this situation and will entirely delete this action from the model, while issuing a warning.
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Global constants}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\imitator{} supports global constants, \ie{} a variable the value of which is known once for all.
-The syntax is the following one:
-
-\begin{IMITATORmodel}
-c = 1: constant;
-\end{IMITATORmodel}
-
-Then, any occurrence of \styleIMI{c} in the model is replaced with \styleIMI{1}.
-
-By default, constants are (unbounded, exact) rationals.
-It is possible to define constants of another type by making their type explicit:
-
-\begin{IMITATORmodel}
-c = 1: int;
-\end{IMITATORmodel}
-
-In this case, \styleIMI{c} is a constant of type \styleIMI{int}.
-
-Limited linear expressions over rationals can be used in the definition of a (rational) constant; however no other constant can be used in a definition, \ie{} one cannot (yet) write \styleIMI{c1 = c2 + 1: constant;}.
-
-
-%------------------------------------------------------------
-\begin{hint}
-	In fact, a variable (\eg{} a parameter) can be turned to a constant as follows in the definition of the parameters:
-
-\begin{IMITATORmodel}
-p = 2: parameter;
-\end{IMITATORmodel}
-
-	This is equivalent to replacing \styleIMI{p} with \styleIMI{2} everywhere in the model; this is particularly useful when some parameters should be instantiated.
-	In contrast, if the parameter is instantiated in the initial definition, \imitator{} still counts it as a parameter, which makes all constraints suffer from an additional dimension.
-\end{hint}
-%------------------------------------------------------------
 
 
 
@@ -2049,9 +2099,9 @@ property := #synth PRP(state_predicate , parameter_valuation);
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection*{Parametric reachability preservation cartography}\label{sss:mode:PRPC}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 An extension of $\PRP$ to the cartography (named \PRPC{}) is also available: \PRPC{} synthesizes parameter constraints in which the (non-)reachability of $\loc$ is uniform.
 \PRPC{} was showed in~\cite{ALNS15} to be a suitable alternative to \EFsynth{}, especially when distributed (see option \styleOption{-distributed}).
@@ -2796,7 +2846,9 @@ These types are divided into three categories: numerical (for \styleIMI{rational
 % In this continuity, discrete variables are not latently typed.
 % The types are associated with variables and not with values. In other terms, once a variable is declared with a defined type, it only accept this type.
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Type checking}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 In order to verify the model type consistency, a step called \emph{type checking} is applied---during the semantic analysis prior to the start of the verification or synthesis algorithm---on all expressions of the model: declarations, assignments, updates, conditions (\styleIMI{if-then-else}), guards and invariants.
 Type checking does the following :
@@ -2809,7 +2861,9 @@ Type checking does the following :
 	\item It checks consistency between an expression type and its grammar rule.
 \end{itemize}
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Expression type solving}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 The expression tree is traversed (depth-first search) in order to deduce its type.
 As soon as a variable, constant or literal is found, the expression takes its type.
@@ -2823,14 +2877,18 @@ Neither is allowed \styleIMI{r := i}.
 If an expression mixes different types, a type error is risen before the start of the algorithm.
 
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Literal number type inference}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 The types of literal numbers are automatically resolved during the semantic analysis and more precisely during the type checking step.
 Once an expression type is resolved, all literal numbers within are automatically typed as the numerical type holding by the expression.
 
 For example, in the following update expression \styleIMI{b := True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1} will be automatically typed as a \styleIMI{int}.
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Type conversion}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 As said previously, there is no implicit conversion of variables, constants or literals from one type to another type. All expressions are holding exactly one type and cannot mix different types. However, it is possible to convert an expression to another type using built-in conversion functions:
 
