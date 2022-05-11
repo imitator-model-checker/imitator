@@ -1,0 +1,11 @@
+--- METAS/META.ppl.orig	2022-05-12 18:53:06.000000000 +0200
++++ METAS/META.ppl	2022-05-12 18:52:58.000000000 +0200
+@@ -4,6 +4,6 @@
+ archive(byte)="ppl_ocaml.cma"
+ archive(native)="ppl_ocaml.cmxa"
+ requires=""
+-directory="/usr/lib/ppl"
+-linkopts = "-cclib -lppl -cclib -lppl_ocaml"
++#directory="/usr/lib/ppl"
++#linkopts = "-cclib -lppl -cclib -lppl_ocaml"
+ #  -cclib -lgmp -cclib -lgmpxx
