@@ -1216,8 +1216,8 @@ The parameters of a function are evaluated from left to right.
 \end{remark}
 
 \begin{remark}
-Some functions, called ``Side-effects functions'' allow the modification of collections ``in-place'' and therefore are subject to side-effects.
-Side-effects functions can only be used in updates, more precisely in the body of the \styleIMI{let} bloc of an update.
+	Some functions, called ``Side-effects functions'' allow the modification of collections ``in-place'' and therefore are subject to side-effects.
+	Side-effects functions can only be used in updates, more precisely in the body of the \styleIMI{let} block of an update (see \cref{ss:updates}).
 \end{remark}
 
 
@@ -1247,14 +1247,15 @@ The initial default value of arrays and lists is that of their type.
 \subsection{Updates}\label{ss:updates}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-The presence of clocks and parameters, discrete variables, and structures (such as arrays) require a particular handling of the updates, which we describe in the following.
+The presence of clocks and parameters, discrete variables, and structures (such as arrays) requires a particular handling of the updates, which we describe in the following.
 
-In any case, the paradigm is that discrete variables are first tested, then updated.
+In any case, the paradigm is that discrete variables are first tested in guards, then updated in updates.
 
 %------------------------------------------------------------
 \subsubsection{Conflicts in updates}
 %------------------------------------------------------------
 
+Conflicts can arise from the modular nature of \NIPTA{}.
 If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i := 2} while another one performs \styleIMI{i := 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
 
 If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
@@ -1262,22 +1263,33 @@ If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, 
 % For more information on how the standard updates works, read the section \styleIMI{do-then} form updates below.
 
 
-% TODO: here, something general on updates is missing
-
 %------------------------------------------------------------
-\subsubsection{do-then form updates}\label{section:do_then_form_updates}
+\subsubsection{Standard updates}\label{sss:standard-updates}
 %------------------------------------------------------------
 
-\styleIMI{do-then} form updates are more complex updates, allowing, at the one hand, sequential updates on discrete values, at the other hand
-the use of side-effects functions for in-place modification of data structure values.
-If you don't need these functionalities, we recommend the use the standard updates. \styleIMI{do-then} form updates are updates composed of two parts.
+By default, updates are not sequential in \imitator{}, but rather define a partial function on variables (including clocks).
+That is, in the following block:
 
-\paragraph{do bloc}
+\begin{IMITATORmodel}
+	when x = 0 & i = 1 do {i := i+1, i := 5, x := i}
+\end{IMITATORmodel}
 
-\styleIMI{do} bloc can be used to make sequential updates on any discrete variables whatever their types.
-Contrary to \styleIMI{then} bloc (or standard update) it is possible to make in-place modifications on data structures (like stacks and queues) with side-effects functions.
-The \styleIMI{do} bloc can be seen as an imperative update part that is processed before the constraints updates (\styleIMI{then} bloc).
-It is not possible to update clock constraint in \styleIMI{do} bloc because of the sequential behavior.
+\noindent{}after the update, \styleIMI{x} is equal to~0, while the value of \styleIMI{i} is unspecified due to a non-deterministic assignment (this is an ill-formed behavior, and a warning will be triggered).
+
+Since \imitator{} 3.3, we also allow for some sequential updates on the discrete variables, as explained in the following.
+
+%------------------------------------------------------------
+\subsubsection{\styleIMI{do-then} updates}\label{section:do_then_form_updates}
+%------------------------------------------------------------
+
+\styleIMI{do-then} updates are more complex updates, allowing first a set of sequential updates (on the discrete variables only) called the \styleIMI{do} block, followed by ``standard updates'' (including side-effects functions), called the \styleIMI{then} block.
+
+\paragraph{The \styleIMI{do} block}
+
+A \styleIMI{do} block can be used to define sequential updates on any discrete variable of any type.
+Contrary to the \styleIMI{then} block (or to the standard updates), it is possible to make modifications of data structures (such as stacks and queues) with side-effects functions.
+The \styleIMI{do} block can be seen as an imperative update part that is processed before the \styleIMI{then} block.
+It is not possible to update clocks in a \styleIMI{do} block.
 
 % \paragraph{}
 Examples of a \styleIMI{do} update expression:
@@ -1287,8 +1299,8 @@ Examples of a \styleIMI{do} update expression:
 
 		(* only do expression *)
 		do
-			i := 1; (* i = 1 *)
-			i := i + 1; (* now, i = 1 + 1 = 2 *)
+			i := 1; (* after this update: i = 1 *)
+			i := i + 1; (* after this update: i = 2 *)
 		end
 
 	}
@@ -1299,58 +1311,60 @@ Examples of a \styleIMI{do} update expression:
 
 		(* only do expression *)
 		do
-			(* in-place modification of stack s *)
+			(* modification of stack s (with side-effet) *)
 			stack_push(1, s);
-			(* in-place modification of stack s *)
+			(* modification of stack s (with side-effet) *)
 			stack_push(2, s);
 		end
 
 	}
 \end{IMITATORmodel}
 
-\paragraph{then bloc}
+\paragraph{The \styleIMI{then} block}
 
-\styleIMI{then} bloc can be used to update clock(s) or discrete variable(s) constraints.
-Update of a discrete variable constraint is equivalent to an assignment. However, these updates are not sequential,
-so as described before, in case of multiple update of one variable, a warning is issued, and the behavior of the \NIPTA{} becomes unspecified.
-\styleIMI{then} bloc is the same as a standard update, see \cref{section:standard_updates}.
-	% TODO
+The \styleIMI{then} block can be used to update clock(s) or discrete variable(s).
+These updates are not sequential so, as described before, in case of multiple updates of the same variable, a warning is issued, and the behavior of the \NIPTA{} becomes unspecified.
+The \styleIMI{then} block is essentially the same as a standard update (see \cref{sss:standard-updates}).
 
 An example of a \styleIMI{then} update expression:
 
 \begin{IMITATORmodel}
-	(* initial value of: *)
-	(* i = 0 *)
-	(* j = 0 *)
+	(* Assume initially i = 1, j = 2 *)
 
 	do {
-
 		(* only "then" expression *)
-		i := 1; (* i = 1 *)
-		(* multiple update of i below, it doesn't take into account *)
-		(* i will still be equal to 1 *)
-		i := i + 1;
-		(* below j = i, as initial value of i = 0 for this state, j = 0 *)
-		(* keep in mind that it is not a sequential update *)
-		(* but an update based on the initial variable values of the current state *)
+		i := 3,
+		i := 4,
 		j := i
-
 	}
+	(* Now, j = 1, while i = 3 OR i = 4 (unspecified!) *)
 \end{IMITATORmodel}
 
-\paragraph{do-then bloc}
+% BEGIN OLD EXAMPLE
+% 		(* only "then" expression *)
+% 		i := 1; (* i = 1 *)
+% 		(* multiple updates of i below (not taken into account) *)
+% 		(* i will still be equal to 1 *)
+% 		i := i + 1;
+% 		(* below j = i, as initial value of i = 0 for this state, j = 0 *)
+% 		(* keep in mind that it is not a sequential update *)
+% 		(* but an update based on the initial variable values of the current state *)
+% 		j := i
+% END OLD EXAMPLE
+
+\paragraph{The \styleIMI{do-then} block}
 
 \begin{remark}
-For a given transition, \styleIMI{do} bloc is executed before the \styleIMI{then} bloc.
+For a given transition, \styleIMI{do} block is executed before the \styleIMI{then} block.
 \end{remark}
 
 \begin{remark}
-In a model that contain multiple synchronized \IPTA{}, all \styleIMI{do} blocs (all sequential updates) in all PTAs are processed first, following the definition order of PTAs.
-Only once after all \styleIMI{do} blocs are computed, all \styleIMI{then} bloc are updated. Contrary to \styleIMI{do} blocs, keep in mind that updates contained in \styleIMI{then} blocs doesn't be computed sequentially.
+In a model that contain multiple synchronized \IPTA{}, all \styleIMI{do} blocks (all sequential updates) in all PTAs are processed first, following the definition order of PTAs.
+Only once after all \styleIMI{do} blocks are computed, all \styleIMI{then} block are updated. Contrary to \styleIMI{do} blocks, keep in mind that updates contained in \styleIMI{then} blocks does not be computed sequentially.
 \end{remark}
 
 \begin{remark}
-Note the use of semicolon in the sequential part (\styleIMI{do} bloc) and comma in the declarative part (\styleIMI{then} bloc).
+Note the use of semicolon in the sequential part (\styleIMI{do} block) and comma in the declarative part (\styleIMI{then} block).
 \end{remark}
 
 Examples of a \styleIMI{do-then} update expression:
@@ -1363,7 +1377,7 @@ Examples of a \styleIMI{do-then} update expression:
 			i := 0; (* i = 0 *)
 			i := i + 1; (* now, i = 1 *)
 		then
-			j := i (* as then bloc is executed after do bloc, j = 1 *)
+			j := i (* as then block is executed after do block, j = 1 *)
 		end
 
 	}
