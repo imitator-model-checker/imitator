@@ -129,8 +129,8 @@ and fold_map_parsed_variable_update_type operator base leaf_fun leaf_update_fun 
             [fold_parsed_discrete_arithmetic_expression operator base leaf_fun index_expr]
     | Parsed_void_update -> []
 
-and fold_parsed_fun_decl_or_expr operator base leaf_fun leaf_update_fun = function
-    | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr, _) ->
+and fold_parsed_fun_body operator base leaf_fun leaf_update_fun = function
+    | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_body, _) ->
         operator
             (leaf_update_fun (Leaf_update_updated_variable variable_name))
             (fold_parsed_global_expression operator base leaf_fun init_expr)
@@ -251,7 +251,7 @@ let for_all_in_parsed_discrete_boolean_expression = apply_evaluate_and_with_base
 let for_all_in_parsed_discrete_arithmetic_expression = apply_evaluate_and_with_base fold_parsed_discrete_arithmetic_expression
 let for_all_in_parsed_discrete_term = apply_evaluate_and_with_base fold_parsed_discrete_term
 let for_all_in_parsed_discrete_factor = apply_evaluate_and_with_base fold_parsed_discrete_factor
-let for_all_in_parsed_fun_decl_or_expr = apply_evaluate_and_with_base fold_parsed_fun_decl_or_expr
+let for_all_in_parsed_fun_body = apply_evaluate_and_with_base fold_parsed_fun_body
 
 (** Check if all leaf of a linear expression satisfy the predicate **)
 let for_all_in_parsed_linear_expression = apply_evaluate_and fold_parsed_linear_expression
@@ -459,8 +459,8 @@ and string_of_parsed_discrete_boolean_expression variable_infos = function
     | Parsed_Not expr ->
             "not (" ^ (string_of_parsed_boolean_expression variable_infos expr) ^ ")"
 
-and string_of_parsed_fun_decl_or_expr variable_infos = function
-        | Parsed_fun_local_decl (variable_name, discrete_type, init_expr, parsed_fun_decl_or_expr, _) ->
+and string_of_parsed_fun_body variable_infos = function
+        | Parsed_fun_local_decl (variable_name, discrete_type, init_expr, parsed_fun_body, _) ->
             "let "
             ^ variable_name
             ^ " : "
@@ -468,7 +468,7 @@ and string_of_parsed_fun_decl_or_expr variable_infos = function
             ^ " = "
             ^ string_of_parsed_global_expression variable_infos init_expr
             ^ ", \n"
-            ^ string_of_parsed_fun_decl_or_expr variable_infos parsed_fun_decl_or_expr
+            ^ string_of_parsed_fun_body variable_infos parsed_fun_body
 
         | Parsed_fun_expr expr ->
             string_of_parsed_global_expression variable_infos expr
@@ -480,7 +480,7 @@ let string_of_parsed_fun_def variable_infos fun_def =
     let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
     (* Format function definition to string *)
     "fn " ^ fun_def.name ^ " (" ^ str_parameters ^ ") : " ^ DiscreteType.string_of_var_type_discrete fun_def.return_type ^ "\n"
-    ^ string_of_parsed_fun_decl_or_expr variable_infos fun_def.body ^ "\n"
+    ^ string_of_parsed_fun_body variable_infos fun_def.body ^ "\n"
     ^ "end\n"
 
 let rec string_of_parsed_linear_constraint variable_infos = function
@@ -853,18 +853,18 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
         for_all_in_parsed_global_expression (is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback) (* expr *)
     in
     (* Check if all variables defined in user function body using local variables set *)
-    let rec all_variables_defined_in_parsed_fun_decl_or_expr_rec local_variables = function
-        | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr, _) ->
+    let rec all_variables_defined_in_parsed_fun_body_rec local_variables = function
+        | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_body, _) ->
             (* Add the new declared local variable to set *)
             let all_variables_defined_in_init_expr = all_variables_defined_in_parsed_global_expression local_variables init_expr in
             let local_variables = StringSet.add variable_name local_variables in
-            all_variables_defined_in_parsed_fun_decl_or_expr_rec local_variables parsed_fun_decl_or_expr && all_variables_defined_in_init_expr
+            all_variables_defined_in_parsed_fun_body_rec local_variables parsed_fun_body && all_variables_defined_in_init_expr
 
         | Parsed_fun_expr expr ->
             all_variables_defined_in_parsed_global_expression local_variables expr
 
     in
-    all_variables_defined_in_parsed_fun_decl_or_expr_rec local_variables fun_def.body
+    all_variables_defined_in_parsed_fun_body_rec local_variables fun_def.body
 
 
 
@@ -1019,19 +1019,19 @@ let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def 
     let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
 
     (* Check if all variables defined in user function body using local variables set *)
-    let rec get_variables_in_parsed_fun_decl_or_expr_rec local_variables = function
-        | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_decl_or_expr, id) ->
+    let rec get_variables_in_parsed_fun_body_rec local_variables = function
+        | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_body, id) ->
             (* Add the new declared local variable to set *)
             let local_variables = StringSet.add variable_name local_variables in
             (* Gather global variable *)
-            get_variables_in_parsed_fun_decl_or_expr_rec local_variables parsed_fun_decl_or_expr;
+            get_variables_in_parsed_fun_body_rec local_variables parsed_fun_body;
             iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) init_expr
 
         | Parsed_fun_expr expr ->
             iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) expr
 
     in
-    get_variables_in_parsed_fun_decl_or_expr_rec local_variables fun_def.body;
+    get_variables_in_parsed_fun_body_rec local_variables fun_def.body;
     (* Remove local variables from variable found in function (because we need to get only global variables and local variables shadow global variables) *)
     variable_used_ref := StringSet.diff !variable_used_ref local_variables
 

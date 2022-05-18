@@ -133,29 +133,6 @@ type nonlinear_constraint = parsed_discrete_boolean_expression
 type convex_predicate = nonlinear_constraint list
 
 (****************************************************************)
-(** User functions *)
-(****************************************************************)
-type parsed_fun_decl_or_expr =
-    | Parsed_fun_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_global_expression (* init expr *) * parsed_fun_decl_or_expr * int (* id *)
-    | Parsed_fun_expr of parsed_global_expression
-
-type function_metadata = {
-    name : variable_name;
-    signature_constraint : FunctionSig.signature_constraint;
-    side_effect : bool;
-}
-
-type parsed_fun_definition = {
-    name : variable_name; (* function name *)
-    parameters : (variable_name * DiscreteType.var_type_discrete) list; (* parameter names and types *)
-    return_type : DiscreteType.var_type_discrete; (* return type *)
-    body : parsed_fun_decl_or_expr; (* body *)
-}
-
-type parsed_fun_definition_list = parsed_fun_definition list
-
-
-(****************************************************************)
 (** Automata *)
 (****************************************************************)
 (* Type of locations: urgent or not *)
@@ -184,6 +161,7 @@ type parsed_variable_update_type =
 type updates_type =
     | Parsed_pre_updates
     | Parsed_updates
+    (* TODO benjamin CLEAN remove post updates *)
     | Parsed_post_updates
 
 (** basic updating *)
@@ -199,8 +177,30 @@ type update =
 (* Three type of updates (pre-updates, updates, post-updates) grouped in section *)
 type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *) * update list (* post-updates sequential *)
 
+(****************************************************************)
+(** User functions *)
+(****************************************************************)
+type parsed_fun_body =
+    | Parsed_fun_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_global_expression (* init expr *) * parsed_fun_body * int (* id *)
+    | Parsed_fun_instruction of normal_update
+    | Parsed_fun_expr of parsed_global_expression
 
+(* Metadata of a function *)
+type function_metadata = {
+    name : variable_name;
+    signature_constraint : FunctionSig.signature_constraint;
+    side_effect : bool;
+}
 
+(* Parsed function definition *)
+type parsed_fun_definition = {
+    name : variable_name; (* function name *)
+    parameters : (variable_name * DiscreteType.var_type_discrete) list; (* parameter names and types *)
+    return_type : DiscreteType.var_type_discrete; (* return type *)
+    body : parsed_fun_body; (* body *)
+}
+
+type parsed_fun_definition_list = parsed_fun_definition list
 
 (* A list of pairs (clock, rational) *)
 type parsed_flow = (variable_name * NumConst.t) list

@@ -598,11 +598,11 @@ and eval_inline_function_with_context eval_context_opt param_names expr_args fun
 
     (* Eval function body *)
     let new_eval_context = {eval_context with local_variables = local_variables } in
-    let r = eval_fun_decl_or_expr_with_context new_eval_context fun_decl in
+    let r = eval_fun_body_with_context new_eval_context fun_decl in
     ImitatorUtilities.print_message Verbose_standard ("result: " ^ DiscreteValue.string_of_value r);
     r
 
-and eval_fun_decl_or_expr_with_context eval_context = function
+and eval_fun_body_with_context eval_context = function
     | Fun_local_decl (variable_name, expr, decl_or_expr) ->
 
         let value = eval_global_expression_with_context (Some eval_context) expr in
@@ -616,7 +616,7 @@ and eval_fun_decl_or_expr_with_context eval_context = function
         );
         Hashtbl.add eval_context.local_variables variable_name value;
 
-        eval_fun_decl_or_expr_with_context eval_context decl_or_expr
+        eval_fun_body_with_context eval_context decl_or_expr
     | Fun_expr expr ->
         eval_global_expression_with_context (Some eval_context) expr
 

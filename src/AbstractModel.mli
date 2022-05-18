@@ -133,7 +133,7 @@ type fun_definition = {
     name : variable_name;
     parameters : variable_name list;
     signature : FunctionSig.signature_constraint;
-    body : DiscreteExpressions.fun_decl_or_expr;
+    body : DiscreteExpressions.fun_body;
 }
 
 (************************************************************)

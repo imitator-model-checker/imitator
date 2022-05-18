@@ -101,8 +101,8 @@ and typed_state_predicate =
 
 type typed_guard = typed_discrete_boolean_expression list
 
-type typed_fun_decl_or_expr =
-    | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_decl_or_expr
+type typed_fun_body =
+    | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_body
     | Typed_fun_expr of typed_global_expression
 
 
@@ -110,7 +110,7 @@ type typed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
-    body : typed_fun_decl_or_expr; (* body *)
+    body : typed_fun_body; (* body *)
 }
 
 val get_type_of_variable_by_name : variable_infos -> variable_name -> var_type
@@ -229,15 +229,15 @@ and typed_state_predicate =
 
 type typed_guard = typed_discrete_boolean_expression list
 
-type typed_fun_decl_or_expr =
-    | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_decl_or_expr
+type typed_fun_body =
+    | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_body
     | Typed_fun_expr of typed_global_expression
 
 type typed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
-    body : typed_fun_decl_or_expr; (* body *)
+    body : typed_fun_body; (* body *)
 }
 
 (** Strings **)
@@ -371,7 +371,7 @@ and string_of_typed_discrete_factor variable_infos discrete_type = function
 	    Constants.default_arithmetic_string.unary_min_string
         ^ string_of_typed_discrete_factor variable_infos discrete_type factor
 
-let rec string_of_fun_decl_or_expr variable_infos = function
+let rec string_of_fun_body variable_infos = function
     | Typed_fun_local_decl (variable_name, discrete_type, expr, decl_or_expr) ->
         "let "
         ^ variable_name
@@ -380,7 +380,7 @@ let rec string_of_fun_decl_or_expr variable_infos = function
         ^ " = "
         ^ string_of_typed_global_expression variable_infos expr
         ^ ", "
-        ^ string_of_fun_decl_or_expr variable_infos decl_or_expr
+        ^ string_of_fun_body variable_infos decl_or_expr
 
     | Typed_fun_expr expr ->
         string_of_typed_global_expression variable_infos expr
@@ -1031,13 +1031,13 @@ let rec type_check_parsed_variable_update_type local_variables variable_infos = 
     | Parsed_void_update -> Typed_void_update, Var_type_weak, false
 
 
-let rec type_check_fun_decl_or_expr local_variables variable_infos infer_type_opt = function
+let rec type_check_fun_body local_variables variable_infos infer_type_opt = function
     | Parsed_fun_local_decl (variable_name, discrete_type, expr, decl_or_expr, _) ->
         (* Add local variable to hashtable *)
         Hashtbl.add local_variables variable_name discrete_type;
 (*        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression (Some local_variables) variable_infos infer_type_opt expr in*)
         let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression (Some local_variables) variable_infos (Some discrete_type) expr in
-        let typed_decl_or_expr, decl_or_expr_discrete_type, is_decl_or_expr_has_side_effects = type_check_fun_decl_or_expr local_variables variable_infos infer_type_opt decl_or_expr in
+        let typed_decl_or_expr, decl_or_expr_discrete_type, is_decl_or_expr_has_side_effects = type_check_fun_body local_variables variable_infos infer_type_opt decl_or_expr in
 
         (* Check compatibility between local var type and it's init expression *)
         if not (is_discrete_type_compatibles discrete_type init_discrete_type) then
@@ -1081,7 +1081,7 @@ let type_check_parsed_fun_definition variable_infos infer_type_opt (fun_definiti
     ) fun_definition.parameters;
 
 
-    let typed_body, body_discrete_type, is_body_has_side_effects = type_check_fun_decl_or_expr local_variables variable_infos infer_type_opt fun_definition.body in
+    let typed_body, body_discrete_type, is_body_has_side_effects = type_check_fun_body local_variables variable_infos infer_type_opt fun_definition.body in
     (* Check type compatibility between function body and return type *)
     let is_body_type_compatible = is_discrete_type_compatibles body_discrete_type return_type in
 
@@ -1092,7 +1092,7 @@ let type_check_parsed_fun_definition variable_infos infer_type_opt (fun_definiti
             ^ " : "
             ^ FunctionSig.string_of_signature signature
             ^ "` doesn't match with implementation `"
-            ^ string_of_fun_decl_or_expr variable_infos typed_body
+            ^ string_of_fun_body variable_infos typed_body
             ^ "` of type "
             ^ DiscreteType.string_of_var_type_discrete body_discrete_type
             ^ "."
@@ -3307,12 +3307,12 @@ let linear_term_of_typed_global_expression variable_infos = function
     | Typed_global_expr (expr, _) ->
         linear_term_of_typed_boolean_expression variable_infos expr
 
-let rec fun_decl_or_expr_of_typed_fun_decl_or_expr variable_infos = function
-    | Typed_fun_local_decl (variable_name, discrete_type, typed_init_expr, typed_fun_decl_or_expr) ->
+let rec fun_body_of_typed_fun_body variable_infos = function
+    | Typed_fun_local_decl (variable_name, discrete_type, typed_init_expr, typed_fun_body) ->
         Fun_local_decl (
             variable_name,
             global_expression_of_typed_global_expression variable_infos typed_init_expr,
-            fun_decl_or_expr_of_typed_fun_decl_or_expr variable_infos typed_fun_decl_or_expr
+            fun_body_of_typed_fun_body variable_infos typed_fun_body
         )
 
     | Typed_fun_expr typed_expr ->
@@ -3325,7 +3325,7 @@ let fun_definition_of_typed_fun_definition variable_infos (typed_fun_definition 
         name = typed_fun_definition.name;
         parameters = typed_fun_definition.parameters;
         signature = FunctionSig.signature_constraint_of_signature typed_fun_definition.signature;
-        body = fun_decl_or_expr_of_typed_fun_decl_or_expr variable_infos typed_fun_definition.body
+        body = fun_body_of_typed_fun_body variable_infos typed_fun_definition.body
     }
 
 end
