@@ -1287,7 +1287,7 @@ Since \imitator{} 3.3, we also allow for some sequential updates on the discrete
 \paragraph{The \styleIMI{do} block}
 
 A \styleIMI{do} block can be used to define sequential updates on any discrete variable of any type.
-Contrary to the \styleIMI{then} block (or to the standard updates), it is possible to make modifications of data structures (such as stacks and queues) with side-effects functions.
+Contrary to the \styleIMI{then} block (or to the standard updates), it is possible to make modifications of data structures (such as stacks and queues) using side-effects functions.
 The \styleIMI{do} block can be seen as an imperative update part that is processed before the \styleIMI{then} block.
 It is not possible to update clocks in a \styleIMI{do} block.
 
@@ -1325,19 +1325,20 @@ Examples of a \styleIMI{do} update expression:
 The \styleIMI{then} block can be used to update clock(s) or discrete variable(s).
 These updates are not sequential so, as described before, in case of multiple updates of the same variable, a warning is issued, and the behavior of the \NIPTA{} becomes unspecified.
 The \styleIMI{then} block is essentially the same as a standard update (see \cref{sss:standard-updates}).
+This kind of update was the only one in \imitator{} until version~3.3.
 
-An example of a \styleIMI{then} update expression:
+An example of a \styleIMI{then} update expression (that is ill-formed and will trigger a warning):
 
 \begin{IMITATORmodel}
-	(* Assume initially i = 1, j = 2 *)
+	(* Assume initially i = 1 *)
 
 	do {
 		(* only "then" expression *)
 		i := 3,
 		i := 4,
-		j := i
+		x := i
 	}
-	(* Now, j = 1, while i = 3 OR i = 4 (unspecified!) *)
+	(* Now, x = 1, while i = 3 OR i = 4 (unspecified!) *)
 \end{IMITATORmodel}
 
 % BEGIN OLD EXAMPLE
@@ -1354,17 +1355,17 @@ An example of a \styleIMI{then} update expression:
 
 \paragraph{The \styleIMI{do-then} block}
 
-\begin{remark}
-For a given transition, \styleIMI{do} block is executed before the \styleIMI{then} block.
-\end{remark}
+In one given transition, the \styleIMI{do} block is executed \emph{before} the \styleIMI{then} block.
+
+In a model that contains multiple synchronized \IPTA{}, given a transition, all \styleIMI{do} blocks (all sequential updates) in all \IPTA{} are processed first;
+the updates are performed sequentially starting from the top-most \IPTA{} in the input model file (\ie{} following the definition order of \IPTA{}).
+Only once all \styleIMI{do} blocks are computed, all \styleIMI{then} block are then executed.
+Again, contrarily to the \styleIMI{do} blocks, keep in mind that updates contained in \styleIMI{then} blocks are \emph{not} computed sequentially.
+
+The value of the variables used in the right-hand part of an update in the \styleIMI{then} block is the value computed \emph{after} executing the \styleIMI{do} block updates.
 
 \begin{remark}
-In a model that contain multiple synchronized \IPTA{}, all \styleIMI{do} blocks (all sequential updates) in all PTAs are processed first, following the definition order of PTAs.
-Only once after all \styleIMI{do} blocks are computed, all \styleIMI{then} block are updated. Contrary to \styleIMI{do} blocks, keep in mind that updates contained in \styleIMI{then} blocks does not be computed sequentially.
-\end{remark}
-
-\begin{remark}
-Note the use of semicolon in the sequential part (\styleIMI{do} block) and comma in the declarative part (\styleIMI{then} block).
+Note the use of semicolon in the sequential part (\styleIMI{do} block), in contrast to the comma in the declarative part (\styleIMI{then} block).
 \end{remark}
 
 Examples of a \styleIMI{do-then} update expression:
@@ -1372,12 +1373,11 @@ Examples of a \styleIMI{do-then} update expression:
 \begin{IMITATORmodel}
 	do {
 
-		(* only do expression *)
 		do
 			i := 0; (* i = 0 *)
 			i := i + 1; (* now, i = 1 *)
 		then
-			j := i (* as then block is executed after do block, j = 1 *)
+			i := 3, j := i (* now, i = 3 and j = 1 *)
 		end
 
 	}
@@ -1395,7 +1395,7 @@ Examples of a \styleIMI{do-then} update expression:
 			i := 0;
 			(* i = 1, below *)
 			i := i + 1;
-			(* below, updating clock constraint is forbidden *)
+			(* below, updating a clock is forbidden in a do block *)
 			(* x := 0 *)
 		then
 			x := i,
@@ -1405,7 +1405,7 @@ Examples of a \styleIMI{do-then} update expression:
 			(* the value of r will be unspecified *)
 			r := 0,
 			r := 1
-			(* below, using side-effects function is forbidden *)
+			(* using side-effects functions is forbidden in a then block *)
 			(* r := stack_pop(s) *)
 		end
 
