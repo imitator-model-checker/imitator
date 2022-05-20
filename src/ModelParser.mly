@@ -249,7 +249,7 @@ decl_fun_nonempty_list:
 
 /* Function definition */
 decl_fun_def:
-  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete CT_BEGIN fun_bodyession CT_END {
+  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete CT_BEGIN fun_body CT_END {
     {
       name = $2;
       parameters = List.rev $4;
@@ -277,13 +277,18 @@ fun_signature:
 ;
 
 /* Body of function, declarations or expression */
-fun_bodyession:
+fun_body:
   | fun_local_decl { $1 }
+  | fun_instruction { $1 }
   | expression { Parsed_fun_expr $1 }
 ;
 
 fun_local_decl:
-  | CT_LET NAME COLON var_type_discrete OP_EQ expression CT_IN fun_bodyession { Parsed_fun_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
+  | CT_LET NAME COLON var_type_discrete OP_EQ expression CT_IN fun_body { Parsed_fun_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
+;
+
+fun_instruction:
+  | update SEMICOLON fun_body { Parsed_fun_instruction ($1, $3) }
 ;
 
 /************************************************************/

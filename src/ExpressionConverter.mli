@@ -63,6 +63,8 @@ type typed_variable_update_type =
     | Typed_parsed_variable_update_type of typed_variable_update_type * typed_discrete_arithmetic_expression * var_type_discrete
     | Typed_void_update
 
+type typed_normal_update = typed_variable_update_type * typed_global_expression
+
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
 	| Typed_loc_predicate_NEQ of automaton_name * location_name
@@ -91,6 +93,7 @@ type typed_guard = typed_discrete_boolean_expression list
 
 type typed_fun_body =
     | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_body
+    | Typed_fun_instruction of typed_normal_update * typed_fun_body
     | Typed_fun_expr of typed_global_expression
 
 type typed_fun_definition = {
@@ -114,7 +117,7 @@ val check_constant_expression : variable_infos -> variable_name * parsed_global_
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
 (* Check that an update is well typed *)
-val check_update : variable_infos -> updates_type -> parsed_variable_update_type -> ParsingStructure.parsed_global_expression -> typed_variable_update_type * typed_global_expression
+val check_update : variable_infos -> updates_type -> parsed_variable_update_type -> ParsingStructure.parsed_global_expression -> typed_normal_update
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)

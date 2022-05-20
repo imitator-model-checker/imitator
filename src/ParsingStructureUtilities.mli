@@ -188,6 +188,7 @@ val get_variables_in_parsed_boolean_expression_with_accumulator : StringSet.t re
 val get_variables_in_parsed_discrete_boolean_expression_with_accumulator : StringSet.t ref -> parsed_discrete_boolean_expression -> unit
 val get_variables_in_parsed_update_with_accumulator : StringSet.t ref -> update -> unit
 val get_functions_in_parsed_update_with_accumulator : StringSet.t ref -> update -> unit
+val get_variables_in_parsed_normal_update_with_accumulator : StringSet.t ref -> normal_update -> unit
 val get_variables_in_parsed_simple_predicate_with_accumulator : StringSet.t ref -> parsed_simple_predicate -> unit
 val get_variables_in_parsed_state_predicate_with_accumulator : StringSet.t ref -> parsed_state_predicate -> unit
 val get_variables_in_parsed_fun_def_with_accumulator : StringSet.t ref -> parsed_fun_definition -> unit
@@ -196,6 +197,7 @@ val get_variables_in_parsed_global_expression : parsed_global_expression -> Stri
 val get_functions_in_parsed_global_expression : parsed_global_expression -> StringSet.t
 val get_variables_in_parsed_discrete_boolean_expression : parsed_discrete_boolean_expression -> StringSet.t
 val get_variables_in_parsed_update : update -> StringSet.t
+val get_variables_in_parsed_normal_update : normal_update -> StringSet.t
 val get_variables_in_linear_expression : linear_expression -> StringSet.t
 val get_variables_in_linear_constraint : linear_constraint -> StringSet.t
 val get_variables_in_nonlinear_constraint : nonlinear_constraint -> StringSet.t

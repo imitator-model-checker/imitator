@@ -75,6 +75,8 @@ type typed_variable_update_type =
     | Typed_parsed_variable_update_type of typed_variable_update_type * typed_discrete_arithmetic_expression * var_type_discrete
     | Typed_void_update
 
+type typed_normal_update = typed_variable_update_type * typed_global_expression
+
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
 	| Typed_loc_predicate_NEQ of automaton_name * location_name
@@ -103,6 +105,7 @@ type typed_guard = typed_discrete_boolean_expression list
 
 type typed_fun_body =
     | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_body
+    | Typed_fun_instruction of typed_normal_update * typed_fun_body
     | Typed_fun_expr of typed_global_expression
 
 
@@ -203,6 +206,8 @@ type typed_variable_update_type =
     | Typed_parsed_variable_update_type of typed_variable_update_type * typed_discrete_arithmetic_expression * var_type_discrete
     | Typed_void_update
 
+type typed_normal_update = typed_variable_update_type * typed_global_expression
+
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
 	| Typed_loc_predicate_NEQ of automaton_name * location_name
@@ -231,6 +236,7 @@ type typed_guard = typed_discrete_boolean_expression list
 
 type typed_fun_body =
     | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_body
+    | Typed_fun_instruction of typed_normal_update * typed_fun_body
     | Typed_fun_expr of typed_global_expression
 
 type typed_fun_definition = {
@@ -372,7 +378,7 @@ and string_of_typed_discrete_factor variable_infos discrete_type = function
         ^ string_of_typed_discrete_factor variable_infos discrete_type factor
 
 let rec string_of_fun_body variable_infos = function
-    | Typed_fun_local_decl (variable_name, discrete_type, expr, decl_or_expr) ->
+    | Typed_fun_local_decl (variable_name, discrete_type, expr, next_expr) ->
         "let "
         ^ variable_name
         ^ " : "
@@ -380,8 +386,10 @@ let rec string_of_fun_body variable_infos = function
         ^ " = "
         ^ string_of_typed_global_expression variable_infos expr
         ^ ", "
-        ^ string_of_fun_body variable_infos decl_or_expr
-
+        ^ string_of_fun_body variable_infos next_expr
+    | Typed_fun_instruction _ ->
+        (* TODO benjamin IMPLEMENT *)
+        ""
     | Typed_fun_expr expr ->
         string_of_typed_global_expression variable_infos expr
 
@@ -767,7 +775,11 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 	    let discrete_type, scope =
             match local_variables_opt with
             | Some local_variables when Hashtbl.mem local_variables variable_name  ->
-                Hashtbl.find local_variables variable_name, Local
+                ImitatorUtilities.print_standard_message ("found local var: " ^ variable_name);
+
+                let discrete_type = Hashtbl.find local_variables variable_name in
+                ImitatorUtilities.print_standard_message ("discrete type:" ^ DiscreteType.string_of_var_type_discrete discrete_type);
+                discrete_type, Local
             | _ ->
                 get_discrete_type_of_variable_by_name variable_infos variable_name, Global
         in
@@ -1032,14 +1044,22 @@ let rec type_check_parsed_variable_update_type local_variables variable_infos = 
 
 
 let rec type_check_fun_body local_variables variable_infos infer_type_opt = function
-    | Parsed_fun_local_decl (variable_name, discrete_type, expr, decl_or_expr, _) ->
+    | Parsed_fun_local_decl (variable_name, discrete_type, expr, next_expr, _) ->
         (* Add local variable to hashtable *)
         Hashtbl.add local_variables variable_name discrete_type;
-(*        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression (Some local_variables) variable_infos infer_type_opt expr in*)
-        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression (Some local_variables) variable_infos (Some discrete_type) expr in
-        let typed_decl_or_expr, decl_or_expr_discrete_type, is_decl_or_expr_has_side_effects = type_check_fun_body local_variables variable_infos infer_type_opt decl_or_expr in
 
-        (* Check compatibility between local var type and it's init expression *)
+        (* Get inner type of discrete type to infer *)
+        (* For example : `let s : int stack = stack()` extract `int` type of `int stack` declaration *)
+        (* And then, with the type `int` we can infer the right expression having the type `weak stack` to a `int stack` *)
+        (* Same examples with queue, array, and any composed type... *)
+        let variable_number_type_opt = Some (DiscreteType.extract_inner_type discrete_type) in
+
+        (* Type check and infer init expression of the local variable declaration *)
+        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_global_expression (Some local_variables) variable_infos variable_number_type_opt expr in
+        (* Type check and infer the next expression of the function body *)
+        let typed_next_expr, next_expr_discrete_type, is_next_expr_has_side_effects = type_check_fun_body local_variables variable_infos infer_type_opt next_expr in
+
+        (* Check compatibility between local variable declared type and it's init expression *)
         if not (is_discrete_type_compatibles discrete_type init_discrete_type) then
             (* TODO benjamin REFACTOR same message at different places *)
             raise (TypeError (
@@ -1054,12 +1074,23 @@ let rec type_check_fun_body local_variables variable_infos infer_type_opt = func
                 ^ "."
             ));
 
+        (* All is ok, convert to a typed function local declaration *)
         Typed_fun_local_decl (
             variable_name,
             discrete_type,
             typed_init_expr,
-            typed_decl_or_expr
-        ), decl_or_expr_discrete_type, is_init_expr_has_side_effects || is_decl_or_expr_has_side_effects
+            typed_next_expr
+        ), next_expr_discrete_type, is_init_expr_has_side_effects || is_next_expr_has_side_effects
+
+    | Parsed_fun_instruction ((parsed_variable_update_type, expr), next_expr) ->
+        (* Resolve typed expression *)
+        let typed_expr, expr_type, has_side_effects (* side effects *) = type_check_global_expression (Some local_variables) variable_infos infer_type_opt expr in
+        (* Resolve typed update type *)
+        let typed_variable_update_type, l_value_type, is_parsed_variable_update_type_has_side_effects (* side effects *) = type_check_parsed_variable_update_type (Some local_variables) variable_infos parsed_variable_update_type in
+        (* Resolve typed next expr *)
+        let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_fun_body local_variables variable_infos infer_type_opt next_expr in
+
+        Typed_fun_instruction ((typed_variable_update_type, typed_expr), typed_next_expr), next_expr_discrete_type, true
 
     | Parsed_fun_expr expr ->
         let typed_expr, discrete_type, has_side_effects = type_check_global_expression (Some local_variables) variable_infos infer_type_opt expr in
@@ -1476,7 +1507,7 @@ val global_expression_of_typed_boolean_expression : variable_infos -> TypeChecke
 val bool_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.typed_boolean_expression -> DiscreteExpressions.boolean_expression
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
-
+(* TODO benjamin CLEAN rename to variable_update_type_of_typed_variable_update_type 9*)
 val parsed_variable_update_type_of_typed_variable_update_type : variable_infos -> TypeChecker.typed_variable_update_type -> DiscreteExpressions.variable_update_type
 
 val fun_definition_of_typed_fun_definition : variable_infos -> TypeChecker.typed_fun_definition -> AbstractModel.fun_definition
@@ -3308,13 +3339,18 @@ let linear_term_of_typed_global_expression variable_infos = function
         linear_term_of_typed_boolean_expression variable_infos expr
 
 let rec fun_body_of_typed_fun_body variable_infos = function
-    | Typed_fun_local_decl (variable_name, discrete_type, typed_init_expr, typed_fun_body) ->
+    | Typed_fun_local_decl (variable_name, discrete_type, typed_init_expr, typed_next_expr) ->
         Fun_local_decl (
             variable_name,
             global_expression_of_typed_global_expression variable_infos typed_init_expr,
-            fun_body_of_typed_fun_body variable_infos typed_fun_body
+            fun_body_of_typed_fun_body variable_infos typed_next_expr
         )
-
+    | Typed_fun_instruction ((typed_variable_update_type, typed_expr), typed_next_expr) ->
+        Fun_instruction (
+            (parsed_variable_update_type_of_typed_variable_update_type variable_infos typed_variable_update_type,
+            global_expression_of_typed_global_expression variable_infos typed_expr),
+            fun_body_of_typed_fun_body variable_infos typed_next_expr
+        )
     | Typed_fun_expr typed_expr ->
         Fun_expr (
             global_expression_of_typed_global_expression variable_infos typed_expr

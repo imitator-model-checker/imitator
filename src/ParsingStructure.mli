@@ -180,9 +180,9 @@ type update_section = update list (* pre-updates sequential *) * update list (* 
 (****************************************************************)
 (** User functions *)
 (****************************************************************)
-type parsed_fun_body =
-    | Parsed_fun_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_global_expression (* init expr *) * parsed_fun_body * int (* id *)
-    | Parsed_fun_instruction of normal_update
+type parsed_next_expr =
+    | Parsed_fun_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_global_expression (* init expr *) * parsed_next_expr * int (* id *)
+    | Parsed_fun_instruction of normal_update * parsed_next_expr
     | Parsed_fun_expr of parsed_global_expression
 
 (* Metadata of a function *)
@@ -197,7 +197,7 @@ type parsed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : (variable_name * DiscreteType.var_type_discrete) list; (* parameter names and types *)
     return_type : DiscreteType.var_type_discrete; (* return type *)
-    body : parsed_fun_body; (* body *)
+    body : parsed_next_expr; (* body *)
 }
 
 type parsed_fun_definition_list = parsed_fun_definition list

@@ -241,10 +241,11 @@ and expression_access_type =
 (* Function local declaration or expression *)
 and fun_body =
     | Fun_local_decl of variable_name * global_expression (* init expr *) * fun_body
+    | Fun_instruction of (variable_update_type * global_expression) * fun_body
     | Fun_expr of global_expression
 
 (* Update type *)
-type variable_update_type =
+and variable_update_type =
     (* Variable update, ie: x := 1 *)
     | Variable_update of Automaton.discrete_index
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)

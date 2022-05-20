@@ -6,6 +6,8 @@ type eval_context = {
     discrete_valuation : discrete_valuation;
     (* Current local variables *)
     local_variables : variable_table;
+    (* Array of the discrete variable (can be used for direct update of variables) *)
+    discrete : DiscreteValue.discrete_value array;
 }
 
 val eval_global_expression : discrete_valuation option -> global_expression -> DiscreteValue.discrete_value

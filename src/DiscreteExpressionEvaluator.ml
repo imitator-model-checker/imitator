@@ -8,12 +8,14 @@ type eval_context = {
     discrete_valuation : discrete_valuation;
     (* Current local variables table *)
     local_variables : variable_table;
+    (* Array of the discrete variable (can be used for direct update of variables) *)
+    discrete : DiscreteValue.discrete_value array;
 }
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context_opt = function
     | Some discrete_valuation ->
-        Some { discrete_valuation = discrete_valuation; local_variables = Hashtbl.create 0 }
+        Some { discrete_valuation = discrete_valuation; local_variables = Hashtbl.create 0; discrete = [||] }
     | None -> None
 
 (* Get operator function from relop *)
@@ -579,7 +581,8 @@ and eval_inline_function_with_context eval_context_opt param_names expr_args fun
         let param_name = List.nth param_names i in
         let expr_arg = List.nth expr_args i in
         let arg_val = eval_global_expression_with_context eval_context_opt expr_arg in
-        (**)
+        (* TODO benjamin CLEAN remove comments *)
+        (*
         ImitatorUtilities.print_message Verbose_standard (
             "param: `"
             ^ param_name
@@ -587,38 +590,59 @@ and eval_inline_function_with_context eval_context_opt param_names expr_args fun
             ^ DiscreteValue.string_of_value arg_val
             ^ DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value arg_val)
         );
+        *)
         Hashtbl.add local_variables param_name arg_val;
     done;
 
     let eval_context =
         match eval_context_opt with
         | Some eval_context -> eval_context
-        | None -> raise (InternalError "")
+        | None -> raise (InternalError
+            "Trying to evaluate a function without `eval_context`.
+            Only constant expression can be evaluated without context
+            and constant expression can't contains functions calls.
+            Some checks may failed before."
+        )
     in
 
     (* Eval function body *)
     let new_eval_context = {eval_context with local_variables = local_variables } in
-    let r = eval_fun_body_with_context new_eval_context fun_decl in
-    ImitatorUtilities.print_message Verbose_standard ("result: " ^ DiscreteValue.string_of_value r);
-    r
+    ImitatorUtilities.print_standard_message ("Eval function body");
+
+    eval_fun_body_with_context new_eval_context fun_decl
 
 and eval_fun_body_with_context eval_context = function
-    | Fun_local_decl (variable_name, expr, decl_or_expr) ->
-
+    | Fun_local_decl (variable_name, expr, next_expr) ->
+        ImitatorUtilities.print_standard_message ("Eval function decl");
         let value = eval_global_expression_with_context (Some eval_context) expr in
-
-        ImitatorUtilities.print_message Verbose_standard (
-            "local var: `"
-            ^ variable_name
-            ^ "` set val: "
-            ^ DiscreteValue.string_of_value value
-            ^ DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value value)
-        );
         Hashtbl.add eval_context.local_variables variable_name value;
 
-        eval_fun_body_with_context eval_context decl_or_expr
+        eval_fun_body_with_context eval_context next_expr
+
+    | Fun_instruction ((variable_update_type, expr), next_expr) ->
+        ImitatorUtilities.print_standard_message ("Eval function instruction");
+
+        let rec discrete_index_of_parsed_variable_update_type = function
+            | Variable_update discrete_index -> Some discrete_index
+            | Indexed_update (parsed_variable_update_type, _) -> discrete_index_of_parsed_variable_update_type parsed_variable_update_type
+            | Void_update -> None
+        in
+        let discrete_index_opt = discrete_index_of_parsed_variable_update_type variable_update_type in
+        eval_fun_instruction_with_context eval_context expr discrete_index_opt;
+        eval_fun_body_with_context eval_context next_expr
+
     | Fun_expr expr ->
+        ImitatorUtilities.print_standard_message ("Eval function expr");
         eval_global_expression_with_context (Some eval_context) expr
+
+and eval_fun_instruction_with_context eval_context expr = function
+    | None ->
+        ImitatorUtilities.print_standard_message "eval fun instruction";
+        let _ = eval_global_expression_with_context (Some eval_context) expr in ()
+    (* TODO benjamin IMPLEMENT SOME*)
+    | Some _ -> ()
+
+
 
 
 (* Wrap a scalar value to an array value according to the modified index of an old value *)

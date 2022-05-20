@@ -181,6 +181,7 @@ let declared_components_of_model parsed_model =
             | Parsed_fun_local_decl (variable_name, _, _, fun_body, id) ->
                     Local_variable_ref (variable_name, fun_def.name, id) ::
                     all_local_variable_of_fun_body fun_body
+            | Parsed_fun_instruction _
             | Parsed_fun_expr _ -> []
         in
         all_local_variable_of_fun_body fun_def.body
@@ -222,15 +223,15 @@ let dependency_graph parsed_model =
         in
 
         (* Function that return dependency graph of a given function expression *)
-        let rec dependency_graph_of_function_in_parsed_fun_body_rec local_variables = function
-            | Parsed_fun_local_decl (variable_name, _, init_expr, parsed_fun_body, id) ->
+        let rec dependency_graph_of_function_in_parsed_next_expr_rec local_variables = function
+            | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, id) ->
 
                 (* Create local variable ref representing a unique variable ref *)
                 let variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
 
                 (* Get variables used in the local init expression of the variable *)
                 let variables_used = get_variables_in_parsed_global_expression init_expr in
-                (* TODO benjamin REFACTOR simplify creating a function in ParsingStructureUtilities that return refs *)
+
                 (* For each variable used in init expression get *)
                 let variable_to_variable_relations = StringSet.fold (fun used_variable_name acc ->
                     let used_variable_ref = get_variable_ref used_variable_name local_variables in
@@ -248,10 +249,38 @@ let dependency_graph parsed_model =
                 (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
                 let local_variables = StringMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
                 (* Get list of relations for the next expression / declaration *)
-                let next_declaration_relations = dependency_graph_of_function_in_parsed_fun_body_rec local_variables parsed_fun_body in
+                let next_declaration_relations = dependency_graph_of_function_in_parsed_next_expr_rec local_variables next_expr in
                 (* Concat current relations with next relations *)
                 next_declaration_relations @ variable_to_variable_relations @ variable_to_fun_relations
 
+            | Parsed_fun_instruction ((parsed_variable_update_type, expr), next_expr) ->
+                let rec relations_of_variable_update = function
+                    | Parsed_variable_update variable_name ->
+                        (* Updated variable use all variables found in expression *)
+                        (* For example x = a + b, x use a, b *)
+                        []
+                    | Parsed_indexed_update (inner_variable_update_type, expr) ->
+                        (* Updated variable use all variables found in expression, and all variables found in index *)
+                        (* For example x[y + z] = a + b, x use y, z, a, b *)
+                        []
+                    | Parsed_void_update ->
+                        (* All variables found in expression are used by current function *)
+                        (* For example: stack_pop(s) + x + y *)
+                        (* Current function 'f' use x, y *)
+                        []
+                in
+                let relations = relations_of_variable_update parsed_variable_update_type in
+
+
+                (* Get variables used in update expression*)
+                (*
+                let variables_used = get_variables_in_parsed_global_expression expr in
+                let variables_used_in_update = get_variables_in_parsed_normal_update
+                *)
+                (* Get list of relations for the next expression / declaration *)
+                let next_declaration_relations = dependency_graph_of_function_in_parsed_next_expr_rec local_variables next_expr in
+                (* Concat current relations with next relations *)
+                relations @ next_declaration_relations
             | Parsed_fun_expr expr ->
                 (* Get variables used in the local init expression of the variable *)
                 let variables_used = get_variables_in_parsed_global_expression expr in
@@ -272,7 +301,7 @@ let dependency_graph parsed_model =
                 fun_to_variable_relations @ fun_to_fun_relations
         in
         (* Get dependency graph of current function body *)
-        dependency_graph_of_function_in_parsed_fun_body_rec local_variables fun_def.body
+        dependency_graph_of_function_in_parsed_next_expr_rec local_variables fun_def.body
     in
     (* Get variables and functions used by automatons *)
     let dependency_graph_of_automatons =
