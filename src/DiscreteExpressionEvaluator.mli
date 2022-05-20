@@ -16,7 +16,7 @@ val eval_boolean_expression : discrete_access option -> boolean_expression -> bo
 val eval_discrete_boolean_expression : discrete_access option -> discrete_boolean_expression -> bool
 
 (** Checks whether a global_location satisfies a state_predicate; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
-val match_state_predicate : discrete_access -> (automaton_index -> location_index -> bool) -> AbstractProperty.state_predicate -> Location.global_location -> bool
+val match_state_predicate : discrete_access -> (automaton_index -> location_index -> bool) -> Location.global_location -> AbstractProperty.state_predicate-> bool
 
 val try_eval_constant_global_expression : global_expression -> DiscreteValue.discrete_value
 val try_eval_constant_rational_term : rational_term -> NumConst.t

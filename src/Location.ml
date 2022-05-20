@@ -269,17 +269,8 @@ let discrete_access_of_location location =
 
 (** Check whether a global location is accepting according to the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
 let is_accepting (locations_acceptance_condition : automaton_index -> location_index -> bool) (global_location : global_location) =
-	
-	let result = ref false in
 	(* Check whether a local location is accepting *)
-	
-	(*** TODO: rewrite using Array.exists! ***)
-	
-	Array.iteri (fun automaton_index location_index ->
-		result := !result || locations_acceptance_condition automaton_index location_index) (get_locations global_location);
-	
-	(* Return result *)
-	!result
+	get_locations global_location |> Array.mapi locations_acceptance_condition |> Array.exists identity
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)

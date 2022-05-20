@@ -710,22 +710,6 @@ and pack_value (* variable_names *) discrete_access old_value new_value parsed_v
     | None -> new_value
 
 
-
-(************************************************************)
-(** Matching state predicates with a global location *)
-(************************************************************)
-
-(*------------------------------------------------------------*)
-(* Matching global_location predicates with a given global_location *)
-(*------------------------------------------------------------*)
-
-let match_loc_predicate loc_predicate global_location =
-	match loc_predicate with
-	| Loc_predicate_EQ (automaton_index, location_index) ->
-		get_location global_location automaton_index = location_index
-	| Loc_predicate_NEQ (automaton_index, location_index) ->
-		get_location global_location automaton_index <> location_index
-
 (* Try to evaluate a constant global expression, if expression isn't constant, it raise an error *)
 let try_eval_constant_global_expression = eval_global_expression_with_context None
 (* Try to evaluate a constant rational term, if expression isn't constant, it raise an error *)
@@ -747,25 +731,36 @@ let eval_boolean_expression discrete_access_opt = eval_boolean_expression_with_c
 (**)
 let eval_discrete_boolean_expression discrete_access_opt = eval_discrete_boolean_expression_with_context (create_eval_context_opt discrete_access_opt)
 
+(************************************************************)
+(** Matching state predicates with a global location *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Matching global_location predicates with a given global_location *)
+(*------------------------------------------------------------*)
+
+let match_loc_predicate global_location = function
+	| Loc_predicate_EQ (automaton_index, location_index) ->
+		get_location global_location automaton_index = location_index
+	| Loc_predicate_NEQ (automaton_index, location_index) ->
+		get_location global_location automaton_index <> location_index
+
 (*------------------------------------------------------------*)
 (* Matching simple predicates with a given global_location *)
 (*------------------------------------------------------------*)
 
-let match_simple_predicate discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) simple_predicate global_location =
-	match simple_predicate with
-
-	(* Here convert the global_location to a variable valuation *)
+let match_simple_predicate discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
 	| State_predicate_discrete_boolean_expression discrete_boolean_expression ->
 	    eval_discrete_boolean_expression (Some discrete_access) discrete_boolean_expression
 
-	| Loc_predicate loc_predicate -> match_loc_predicate loc_predicate global_location
+	| Loc_predicate loc_predicate ->
+	    match_loc_predicate global_location loc_predicate
+
+	| State_predicate_accepting ->
+	    is_accepting locations_acceptance_condition global_location
 
 	| State_predicate_true -> true
-
 	| State_predicate_false -> false
-
-	| State_predicate_accepting -> is_accepting locations_acceptance_condition global_location
-
 
 (*------------------------------------------------------------*)
 (* Matching state predicates with a given global_location *)
@@ -774,27 +769,31 @@ let match_simple_predicate discrete_access (locations_acceptance_condition : aut
 (***TODO/NOTE: Might have been nicer to convert the acceptance condition during the ModelConverter phase :-/ ***)
 
 (* TODO benjamin CLEAN see here if we can remove global_location parameter, as it as discrete_access for write / read variables *)
-let rec match_state_predicate_factor discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) state_predicate_factor global_location : bool =
-	match state_predicate_factor with
-	| State_predicate_factor_NOT state_predicate_factor_neg -> not (match_state_predicate_factor discrete_access locations_acceptance_condition state_predicate_factor_neg global_location)
-	| Simple_predicate simple_predicate -> match_simple_predicate discrete_access locations_acceptance_condition simple_predicate global_location
-	| State_predicate state_predicate -> match_state_predicate discrete_access locations_acceptance_condition state_predicate global_location
+let rec match_state_predicate_factor discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
+	| State_predicate_factor_NOT state_predicate_factor_neg ->
+	    not (match_state_predicate_factor discrete_access locations_acceptance_condition global_location state_predicate_factor_neg)
+	| Simple_predicate simple_predicate ->
+	    match_simple_predicate discrete_access locations_acceptance_condition global_location simple_predicate
+	| State_predicate state_predicate ->
+	    match_state_predicate discrete_access locations_acceptance_condition global_location state_predicate
 
-and match_state_predicate_term discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) state_predicate_term global_location : bool =
-	match state_predicate_term with
+and match_state_predicate_term discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
 	| State_predicate_term_AND (state_predicate_term_1, state_predicate_term_2) ->
-		match_state_predicate_term discrete_access locations_acceptance_condition state_predicate_term_1 global_location
+		match_state_predicate_term discrete_access locations_acceptance_condition global_location state_predicate_term_1
 		&&
-		match_state_predicate_term discrete_access locations_acceptance_condition state_predicate_term_2 global_location
-	| State_predicate_factor state_predicate_factor -> match_state_predicate_factor discrete_access locations_acceptance_condition state_predicate_factor global_location
+		match_state_predicate_term discrete_access locations_acceptance_condition global_location state_predicate_term_2
 
-and match_state_predicate discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) state_predicate global_location : bool =
-	match state_predicate with
+	| State_predicate_factor state_predicate_factor ->
+	    match_state_predicate_factor discrete_access locations_acceptance_condition global_location state_predicate_factor
+
+and match_state_predicate discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
 	| State_predicate_OR (state_predicate_1, state_predicate_2) ->
-		match_state_predicate discrete_access locations_acceptance_condition state_predicate_1 global_location
+		match_state_predicate discrete_access locations_acceptance_condition global_location state_predicate_1
 		||
-		match_state_predicate discrete_access locations_acceptance_condition state_predicate_2 global_location
-	| State_predicate_term state_predicate_term -> match_state_predicate_term discrete_access locations_acceptance_condition state_predicate_term global_location
+		match_state_predicate discrete_access locations_acceptance_condition global_location state_predicate_2
+
+	| State_predicate_term state_predicate_term ->
+	    match_state_predicate_term discrete_access locations_acceptance_condition global_location state_predicate_term
 
 
 
