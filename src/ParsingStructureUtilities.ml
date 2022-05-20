@@ -636,25 +636,23 @@ let is_variable_defined_with_callback variable_infos local_variables_opt callbac
         );
 
         is_defined
-    (* TODO benjamin LOOK here, treat function as variable ? or not ? *)
-    (*
-    | Leaf_fun function_name ->
-        let is_defined = Hashtbl.mem variable_infos.functions function_name in
-        if not is_defined then (
-            match callback_opt with
-            | Some callback -> callback function_name
-            | None -> ()
-        ); is_defined
-    *)
     | Leaf_fun _ -> true
     | Leaf_constant _ -> true
 
 (* Check if leaf for update is a variable that is defined *)
 (* A given callback is executed if it's not a defined variable *)
-let is_variable_defined_in_update_with_callback variable_infos callback = function
+let is_variable_defined_in_update_with_callback variable_infos local_variables_opt callback = function
     | Leaf_update_updated_variable variable_name ->
 
-        let is_defined = is_variable_or_constant_declared variable_infos variable_name in
+        let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
+
+        let is_defined_local =
+            match local_variables_opt with
+            | Some local_variables -> StringSet.mem variable_name local_variables
+            | None -> false
+        in
+
+        let is_defined = is_defined_global || is_defined_local in
 
         if not is_defined then (
             match callback with
@@ -853,11 +851,11 @@ let all_variables_defined_in_parsed_discrete_arithmetic_expression variable_info
 
 (* Check that all variables in a parsed normal update are effectively be defined *)
 let all_variables_defined_in_parsed_normal_update variable_infos undefined_variable_callback undefined_updated_variable_callback expr =
-    for_all_in_parsed_normal_update (is_variable_defined_with_callback variable_infos None undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos undefined_updated_variable_callback) expr
+    for_all_in_parsed_normal_update (is_variable_defined_with_callback variable_infos None undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos None undefined_updated_variable_callback) expr
 
 (* Check that all variables in a parsed update are effectively be defined *)
 let all_variables_defined_in_parsed_update variable_infos undefined_variable_callback undefined_updated_variable_callback expr =
-    for_all_in_parsed_update (is_variable_defined_with_callback variable_infos None undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos undefined_updated_variable_callback) expr
+    for_all_in_parsed_update (is_variable_defined_with_callback variable_infos None undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos None undefined_updated_variable_callback) expr
 
 (* Check that all variables in a parsed fun declaration are effectively be defined *)
 let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_callback undefined_updated_variable_callback (fun_def : parsed_fun_definition) =
@@ -866,10 +864,17 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
     let parameter_names = List.map first_of_tuple fun_def.parameters in
     let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
 
-    (* Overwrite function adding a parameter for taking into account local variables set *)
+    (* Overwrite function `all_variables_defined_in_parsed_global_expression` adding a parameter for taking into account local variables set *)
     let all_variables_defined_in_parsed_global_expression local_variables (* expr *) =
         for_all_in_parsed_global_expression (is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback) (* expr *)
     in
+    (* Overwrite function `all_variables_defined_in_parsed_normal_update` adding a parameter for taking into account local variables set *)
+    let all_variables_defined_in_parsed_normal_update local_variables (* expr *) =
+        let leaf_fun = is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback in
+        let leaf_update = is_variable_defined_in_update_with_callback variable_infos (Some local_variables) undefined_updated_variable_callback in
+        for_all_in_parsed_normal_update leaf_fun leaf_update (* expr *)
+    in
+
     (* Check if all variables defined in user function body using local variables set *)
     let rec all_variables_defined_in_parsed_next_expr_rec local_variables = function
         | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, _) ->
@@ -880,7 +885,7 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
 
         | Parsed_fun_instruction (normal_update, next_expr) ->
             (* Check if variables defined in normal update *)
-            let all_variables_defined_in_normal_update = all_variables_defined_in_parsed_normal_update variable_infos undefined_variable_callback undefined_updated_variable_callback normal_update in
+            let all_variables_defined_in_normal_update = all_variables_defined_in_parsed_normal_update local_variables normal_update in
             (* Check if variables defined in next expressions *)
             let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_next_expr_rec local_variables next_expr in
             (* Is all defined ? *)
