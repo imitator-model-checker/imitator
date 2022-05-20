@@ -29,7 +29,10 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (** Valuation *)
 (************************************************************)
 (************************************************************)
+(* TODO benjamin CLEAN declaration here ? move in evaluator ?? *)
 type discrete_valuation = Automaton.discrete_index -> DiscreteValue.discrete_value
+type discrete_setter = Automaton.discrete_index -> DiscreteValue.discrete_value -> unit
+type discrete_access = discrete_valuation * discrete_setter
 type variable_table = (variable_name, DiscreteValue.discrete_value) Hashtbl.t
 
 type conj_dis =

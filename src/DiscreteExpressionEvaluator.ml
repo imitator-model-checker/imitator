@@ -2,20 +2,20 @@ open DiscreteExpressions
 open DiscreteValue
 open Exceptions
 
-(* An eval context record contain a discrete valuation function (global variable) and a local variables table *)
+(* Record that contain context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
-    (* Valuation of global variables at the global level *)
+    (* Valuation of global variables at the context (current location) *)
     discrete_valuation : discrete_valuation;
-    (* Current local variables table *)
+    (* Setter of global variables at the context (current location) *)
+    discrete_setter : discrete_setter;
+    (* Current local variables *)
     local_variables : variable_table;
-    (* Array of the discrete variable (can be used for direct update of variables) *)
-    discrete : DiscreteValue.discrete_value array;
 }
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context_opt = function
-    | Some discrete_valuation ->
-        Some { discrete_valuation = discrete_valuation; local_variables = Hashtbl.create 0; discrete = [||] }
+    | Some (discrete_valuation, discrete_setter) ->
+        Some { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = Hashtbl.create 0 }
     | None -> None
 
 (* Get operator function from relop *)
@@ -619,28 +619,40 @@ and eval_fun_body_with_context eval_context = function
 
         eval_fun_body_with_context eval_context next_expr
 
-    | Fun_instruction ((variable_update_type, expr), next_expr) ->
+    | Fun_instruction (normal_update, next_expr) ->
         ImitatorUtilities.print_standard_message ("Eval function instruction");
-
-        let rec discrete_index_of_parsed_variable_update_type = function
-            | Variable_update discrete_index -> Some discrete_index
-            | Indexed_update (parsed_variable_update_type, _) -> discrete_index_of_parsed_variable_update_type parsed_variable_update_type
-            | Void_update -> None
-        in
-        let discrete_index_opt = discrete_index_of_parsed_variable_update_type variable_update_type in
-        eval_fun_instruction_with_context eval_context expr discrete_index_opt;
+        direct_update eval_context normal_update;
         eval_fun_body_with_context eval_context next_expr
 
     | Fun_expr expr ->
         ImitatorUtilities.print_standard_message ("Eval function expr");
         eval_global_expression_with_context (Some eval_context) expr
 
-and eval_fun_instruction_with_context eval_context expr = function
+and direct_update eval_context (variable_update_type, expr) =
+
+    let rec discrete_index_of_parsed_variable_update_type = function
+        | Variable_update discrete_index -> Some discrete_index
+        | Indexed_update (parsed_variable_update_type, _) -> discrete_index_of_parsed_variable_update_type parsed_variable_update_type
+        | Void_update -> None
+    in
+
+    let discrete_index_opt = discrete_index_of_parsed_variable_update_type variable_update_type in
+
+    match discrete_index_opt with
     | None ->
-        ImitatorUtilities.print_standard_message "eval fun instruction";
         let _ = eval_global_expression_with_context (Some eval_context) expr in ()
-    (* TODO benjamin IMPLEMENT SOME*)
-    | Some _ -> ()
+    (* TODO benjamin IMPLEMENT SOME, check local var are immutables *)
+    | Some discrete_index ->
+        (**)
+        let old_value = eval_context.discrete_valuation discrete_index in
+
+        (* Compute its new value *)
+        let new_value = eval_global_expression_with_context (Some eval_context) expr in
+        (* TODO benjamin CLEAN here replace tuple by single element *)
+        let new_value = pack_value (eval_context.discrete_valuation, eval_context.discrete_setter) old_value new_value variable_update_type in
+
+        (* Direct update ! *)
+        eval_context.discrete_setter discrete_index new_value
 
 
 
@@ -654,7 +666,7 @@ and eval_fun_instruction_with_context eval_context expr = function
 (* a[1] = [[5, 6], [7, 8]] *)
 (* a[1][1] = [7, 8] *)
 (* a[1][1][0] = 7 *)
-let pack_value variable_names discrete_valuation old_value new_value parsed_variable_update_type =
+and pack_value (* variable_names *) discrete_access old_value new_value parsed_variable_update_type =
 
     let rec pack_value_rec = function
         | Void_update -> old_value, [||], None
@@ -664,7 +676,7 @@ let pack_value variable_names discrete_valuation old_value new_value parsed_vari
             let old_value, _, _ = pack_value_rec inner_parsed_variable_update_type in
 
             (* TODO benjamin REFACTOR look this, maybe pass eval_context_opt directly as parameter of pack_value *)
-            let eval_context_opt = create_eval_context_opt (Some discrete_valuation) in
+            let eval_context_opt = create_eval_context_opt (Some discrete_access) in
             (* Compute index *)
             let index = Int32.to_int (eval_int_expression_with_context eval_context_opt index_expr) in
 (*            ImitatorUtilities.print_message Verbose_standard ("access index: " ^ string_of_int index ^ "for " ^ string_of_value old_value);*)
@@ -673,7 +685,9 @@ let pack_value variable_names discrete_valuation old_value new_value parsed_vari
 
             (* Check bounds *)
             if index >= Array.length old_array || index < 0 then (
-                let str_parsed_variable_update_type = DiscreteExpressions.string_of_variable_update_type variable_names parsed_variable_update_type in
+                (* TODO benjamin IMPLEMENT repair that *)
+                let str_parsed_variable_update_type = "" in
+(*                let str_parsed_variable_update_type = DiscreteExpressions.string_of_variable_update_type variable_names parsed_variable_update_type in*)
                 raise (Out_of_bound ("Array index out of range: `" ^ str_parsed_variable_update_type ^ "`"))
             );
 
@@ -705,11 +719,11 @@ let eval_constant_rational_term_opt expr = try Some (try_eval_constant_rational_
 let eval_constant_rational_factor_opt expr = try Some (try_eval_constant_rational_factor expr) with _ -> None
 
 (**)
-let eval_global_expression discrete_valuation_opt = eval_global_expression_with_context (create_eval_context_opt discrete_valuation_opt)
+let eval_global_expression discrete_access_opt = eval_global_expression_with_context (create_eval_context_opt discrete_access_opt)
 (**)
-let eval_boolean_expression discrete_valuation_opt = eval_boolean_expression_with_context (create_eval_context_opt discrete_valuation_opt)
+let eval_boolean_expression discrete_access_opt = eval_boolean_expression_with_context (create_eval_context_opt discrete_access_opt)
 (**)
-let eval_discrete_boolean_expression discrete_valuation_opt = eval_discrete_boolean_expression_with_context (create_eval_context_opt discrete_valuation_opt)
+let eval_discrete_boolean_expression discrete_access_opt = eval_discrete_boolean_expression_with_context (create_eval_context_opt discrete_access_opt)
 
 
 (* TODO benjamin REPLACE BY A REAL EVALUATION OF CONSTANT and not this tricky function using try *)

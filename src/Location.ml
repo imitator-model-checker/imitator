@@ -246,9 +246,19 @@ let get_discrete_value location discrete_index =
 	(* Do not forget the offset *)
 	discrete.(discrete_index - !min_discrete_index)
 
+(** Get the NumConst value associated to some discrete variable *)
 let get_discrete_rational_value location discrete_index =
     let value = get_discrete_value location discrete_index in
     DiscreteValue.numconst_value value
+
+(** Set the value associated to some discrete variable *)
+let set_discrete_value location discrete_index value =
+    let discrete = get_discrete location in
+	(* Do not forget the offset *)
+    discrete.(discrete_index - !min_discrete_index) <- value
+
+
+
 
 (************************************************************)
 (* Check whether the global location is accepting *)
@@ -293,7 +303,10 @@ let match_simple_predicate (locations_acceptance_condition : automaton_index -> 
 	match simple_predicate with
 
 	(* Here convert the global_location to a variable valuation *)
-	| Discrete_boolean_expression discrete_boolean_expression -> DiscreteExpressionEvaluator.eval_discrete_boolean_expression (Some (get_discrete_value global_location)) discrete_boolean_expression
+	| Discrete_boolean_expression discrete_boolean_expression ->
+	    (* TODO benjamin CLEAN replace here by a function  for get directly a discrete_access *)
+	    let discrete_access = get_discrete_value global_location, set_discrete_value global_location in
+	    DiscreteExpressionEvaluator.eval_discrete_boolean_expression (Some discrete_access) discrete_boolean_expression
 	
 	| Loc_predicate loc_predicate -> match_loc_predicate loc_predicate global_location
 

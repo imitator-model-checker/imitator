@@ -85,7 +85,11 @@ val get_location : global_location -> automaton_index -> location_index
 
 (** Get the value associated to some discrete variable *)
 val get_discrete_value : global_location -> discrete_index -> DiscreteValue.discrete_value
+(** Get the NumConst value associated to some discrete variable *)
 val get_discrete_rational_value : global_location -> discrete_index -> NumConst.t
+(** Set the value associated to some discrete variable *)
+val set_discrete_value : global_location -> discrete_index -> DiscreteValue.discrete_value -> unit
+
 
 (** Get a hash value for a location, including discrete values *)
 val hash_code : global_location -> int

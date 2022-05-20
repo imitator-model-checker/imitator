@@ -1,18 +1,19 @@
 open DiscreteExpressions
 open Automaton
 
+(* Record that contain context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
-    (* Valuation of global variables at the context *)
+    (* Valuation of global variables at the context (current location) *)
     discrete_valuation : discrete_valuation;
+    (* Setter of global variables at the context (current location) *)
+    discrete_setter : discrete_setter;
     (* Current local variables *)
     local_variables : variable_table;
-    (* Array of the discrete variable (can be used for direct update of variables) *)
-    discrete : DiscreteValue.discrete_value array;
 }
 
-val eval_global_expression : discrete_valuation option -> global_expression -> DiscreteValue.discrete_value
-val eval_boolean_expression : discrete_valuation option -> boolean_expression -> bool
-val eval_discrete_boolean_expression : discrete_valuation option -> discrete_boolean_expression -> bool
+val eval_global_expression : discrete_access option -> global_expression -> DiscreteValue.discrete_value
+val eval_boolean_expression : discrete_access option -> boolean_expression -> bool
+val eval_discrete_boolean_expression : discrete_access option -> discrete_boolean_expression -> bool
 
 val try_eval_constant_global_expression : global_expression -> DiscreteValue.discrete_value
 val try_eval_constant_rational_term : rational_term -> NumConst.t
@@ -24,4 +25,4 @@ val eval_constant_rational_factor_opt : rational_factor -> NumConst.t option
 
 val is_global_expression_constant : global_expression -> bool
 
-val pack_value : (Automaton.variable_index -> string) -> discrete_valuation -> DiscreteValue.discrete_value -> DiscreteValue.discrete_value -> variable_update_type -> DiscreteValue.discrete_value
+val pack_value : (* (Automaton.variable_index -> string) -> *) discrete_access -> DiscreteValue.discrete_value -> DiscreteValue.discrete_value -> variable_update_type -> DiscreteValue.discrete_value

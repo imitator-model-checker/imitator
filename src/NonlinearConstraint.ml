@@ -10,11 +10,11 @@ type nonlinear_inequality = DiscreteExpressions.discrete_arithmetic_expression *
 type nonlinear_constraint = DiscreteExpressions.discrete_boolean_expression list
 
 (* if all true, it's satisfied *)
-let check_nonlinear_inequalities discrete_valuation =
-  List.for_all (DiscreteExpressionEvaluator.eval_discrete_boolean_expression (Some discrete_valuation))
+let check_nonlinear_inequalities discrete_access =
+  List.for_all (DiscreteExpressionEvaluator.eval_discrete_boolean_expression (Some discrete_access))
 
 (* Check if a nonlinear constraint is satisfied *)
-let check_nonlinear_constraint discrete_valuation (* nonlinear_inequalities *) = check_nonlinear_inequalities discrete_valuation (* nonlinear_inequalities *)
+let check_nonlinear_constraint discrete_access (* nonlinear_inequalities *) = check_nonlinear_inequalities discrete_access (* nonlinear_inequalities *)
 
 let is_linear_nonlinear_constraint (* nonlinear_inequalities *) = List.for_all DiscreteExpressions.is_linear_discrete_boolean_expression (* nonlinear_inequalities *)
 
