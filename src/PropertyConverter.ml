@@ -36,7 +36,7 @@ let loc_predicate_of_typed_loc_predicate model_info = function
 let simple_predicate_of_typed_simple_predicate model_info = function
 	| Typed_discrete_boolean_expression (expr, _) ->
 
-	    AbstractProperty.Discrete_boolean_expression (
+	    State_predicate_discrete_boolean_expression (
             ExpressionConverter.Convert.bool_expression_of_typed_discrete_boolean_expression model_info.variable_infos expr
         )
 

@@ -81,7 +81,10 @@ let match_state_predicate (locations_acceptance_condition : Automaton.automaton_
 (*	(is_one_location_accepting state)
 	||
 	(match_state_predicate state_predicate state)*)
-	Location.match_state_predicate locations_acceptance_condition state_predicate state.global_location
+    (* TODO benjamin CLEAN replace here by a function  for get directly a discrete_access *)
+    let discrete_access = Location.get_discrete_value state.global_location, Location.set_discrete_value state.global_location in
+
+	DiscreteExpressionEvaluator.match_state_predicate discrete_access locations_acceptance_condition state_predicate state.global_location
 
 
 

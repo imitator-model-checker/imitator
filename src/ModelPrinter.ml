@@ -916,7 +916,7 @@ let string_of_loc_predicate (model : AbstractModel.abstract_model) = function
 
 
 let string_of_simple_predicate (model : AbstractModel.abstract_model) = function
-	| Discrete_boolean_expression discrete_boolean_expression ->
+	| State_predicate_discrete_boolean_expression discrete_boolean_expression ->
 		string_of_discrete_boolean_expression model.variable_names discrete_boolean_expression
 
 	| Loc_predicate loc_predicate ->
