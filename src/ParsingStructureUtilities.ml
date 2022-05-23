@@ -991,6 +991,14 @@ let get_variables_in_parsed_discrete_boolean_expression_with_accumulator variabl
 let get_functions_in_parsed_discrete_boolean_expression_with_accumulator variables_used_ref =
     iterate_parsed_discrete_boolean_expression (add_function_of_discrete_boolean_expression variables_used_ref)
 
+(* Gather all variable names used in a parsed discrete arithmetic expression in a given accumulator *)
+let get_variables_in_parsed_discrete_arithmetic_expression_with_accumulator variables_used_ref =
+    iterate_parsed_discrete_arithmetic_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
+
+(* Gather all function names used in a parsed discrete arithmetic expression in a given accumulator *)
+let get_functions_in_parsed_discrete_arithmetic_expression_with_accumulator functions_used_ref =
+    iterate_parsed_discrete_arithmetic_expression (add_function_of_discrete_boolean_expression functions_used_ref)
+
 (* Gather all variable names used in a linear expression in a given accumulator *)
 let get_variables_in_linear_expression_with_accumulator variables_used_ref =
     iterate_parsed_linear_expression (add_variable_of_linear_expression variables_used_ref)
@@ -1085,6 +1093,14 @@ let get_variables_in_parsed_global_expression =
 (* Gather all variable names used in a parsed discrete boolean expression *)
 let get_variables_in_parsed_discrete_boolean_expression =
     wrap_accumulator get_variables_in_parsed_discrete_boolean_expression_with_accumulator
+
+(* Gather all variable names used in a parsed discrete arithmetic expression *)
+let get_variables_in_parsed_discrete_arithmetic_expression =
+    wrap_accumulator get_variables_in_parsed_discrete_arithmetic_expression_with_accumulator
+
+(* Gather all function names used in a parsed discrete arithmetic expression *)
+let get_functions_in_parsed_discrete_arithmetic_expression =
+    wrap_accumulator get_functions_in_parsed_discrete_arithmetic_expression_with_accumulator
 
 (* Gather all variable names used in a parsed update expression *)
 let get_variables_in_parsed_update =

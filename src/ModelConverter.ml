@@ -776,6 +776,8 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         ParsingStructureUtilities.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt print_variable_in_fun_not_declared_opt fun_def
     in
 
+    (* TODO benjamin IMPLEMENT check that a local variable is not updated *)
+
     (* Return *)
     not is_not_consistent_duplicate_parameters && is_all_variables_defined
 
@@ -1121,7 +1123,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
                     "Init variable \""
                     ^ variable_name
                     ^ "\" with a non constant expression \""
-                    ^ DiscreteExpressions.string_of_global_expression (variable_name_of_index variable_infos) converted_expr
+                    ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
                     ^ "\" is forbidden."
                 );
                 false

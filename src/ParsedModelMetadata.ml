@@ -215,11 +215,29 @@ let dependency_graph parsed_model =
         (* Add parameter names to local variables of function *)
         let local_variables = List.fold_right (fun parameter_name acc -> StringMap.add parameter_name (Param_ref (parameter_name, fun_def.name)) acc) parameter_names StringMap.empty in
 
-        let get_variable_ref used_variable_name local_variables =
+        (**)
+        let get_variable_ref local_variables used_variable_name =
             let used_variable_ref_opt = StringMap.find_opt used_variable_name local_variables in
             match used_variable_ref_opt with
             | Some used_variable_ref -> used_variable_ref
             | None -> Global_variable_ref used_variable_name
+        in
+
+        (* TODO benjamin CLEAN comment *)
+        (**)
+        let variable_to_variable_relations variable_ref variables_used =
+            StringSet.fold (fun used_variable_name acc ->
+                let used_variable_ref = get_variable_ref local_variables used_variable_name in
+                (variable_ref, used_variable_ref) :: acc
+            ) variables_used []
+        in
+
+        (* TODO benjamin CLEAN comment *)
+        (**)
+        let variable_to_fun_relations variable_ref functions_used =
+            StringSet.fold (fun used_function_name acc ->
+                (variable_ref, Fun_ref used_function_name) :: acc
+            ) functions_used []
         in
 
         (* Function that return dependency graph of a given function expression *)
@@ -231,16 +249,13 @@ let dependency_graph parsed_model =
 
                 (* Get variables used in the local init expression of the variable *)
                 let variables_used = get_variables_in_parsed_global_expression init_expr in
+                (* Get functions used in the local init expression of the variable *)
+                let functions_used = get_functions_in_parsed_global_expression init_expr in
 
                 (* For each variable used in init expression get *)
-                let variable_to_variable_relations = StringSet.fold (fun used_variable_name acc ->
-                    let used_variable_ref = get_variable_ref used_variable_name local_variables in
-                    (variable_ref, used_variable_ref) :: acc
-                ) variables_used []
-                in
+                let variable_to_variable_relations = variable_to_variable_relations variable_ref variables_used in
 
-                (* Get functions used in the local init expression of the variable *)
-                let functions_used = ParsingStructureUtilities.get_functions_in_parsed_global_expression init_expr in
+
 
                 let variable_to_fun_relations = StringSet.fold (fun used_function_name acc ->
                     (variable_ref, Fun_ref used_function_name) :: acc
@@ -254,16 +269,58 @@ let dependency_graph parsed_model =
                 next_declaration_relations @ variable_to_variable_relations @ variable_to_fun_relations
 
             | Parsed_fun_instruction ((parsed_variable_update_type, expr), next_expr) ->
+
                 let rec relations_of_variable_update = function
                     | Parsed_variable_update variable_name ->
                         (* Updated variable use all variables found in expression *)
-                        (* For example x = a + b, x use a, b *)
-                        []
-                    | Parsed_indexed_update (inner_variable_update_type, expr) ->
+                        (* For example x := a + b, x use a, b *)
+                        (* and current function use x *)
+
+                        (* Create local variable ref representing a unique variable ref *)
+                        let variable_ref = get_variable_ref local_variables variable_name in
+
+                        (* Get variables used in the local init expression of the variable *)
+                        let variables_used = get_variables_in_parsed_global_expression expr in
+                        (* Get functions used in the local init expression of the variable *)
+                        let functions_used = get_functions_in_parsed_global_expression expr in
+
+                        (* For each variable used in expression *)
+                        let variable_to_variable_relations = variable_to_variable_relations variable_ref variables_used in
+                        (* For each function used in expression *)
+                        let variable_to_fun_relations = StringSet.fold (fun used_function_name acc ->
+                            (variable_ref, Fun_ref used_function_name) :: acc
+                        ) functions_used [] in
+
+                        (* TODO benjamin REFACTOR, remove that, an instruction that use global variable that is not used elsewhere should be removed *)
+                        (* Create relation between current function and assigned variable *)
+                        let cur_fun_used_variable_relation = Fun_ref fun_def.name, variable_ref in
+                        (* Concat all relations *)
+                        cur_fun_used_variable_relation :: (variable_to_variable_relations @ variable_to_fun_relations)
+
+                    | Parsed_indexed_update (inner_variable_update_type, index_expr) ->
                         (* Updated variable use all variables found in expression, and all variables found in index *)
                         (* For example x[y + z] = a + b, x use y, z, a, b *)
-                        []
+                        (* and current function use x *)
+                        let variable_name = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type inner_variable_update_type in
+
+                        (* Create local variable ref representing a unique variable ref *)
+                        let variable_ref = get_variable_ref local_variables variable_name in
+
+                        (* Get variables / functions used in the indexed expression of the variable *)
+                        let variables_used = get_variables_in_parsed_discrete_arithmetic_expression index_expr in
+                        let functions_used = get_functions_in_parsed_discrete_arithmetic_expression index_expr in
+
+                        (* Get relations between current variable and variables contained in indexed expression *)
+                        let variable_to_variable_relations = variable_to_variable_relations variable_ref variables_used in
+                        (* Get relations between current variable and functions contained in indexed expression *)
+                        let variable_to_fun_relations = variable_to_fun_relations variable_ref functions_used in
+
+                        let variable_use_indexed_variables_functions_relations = variable_to_variable_relations @ variable_to_fun_relations in
+                        let variable_use_variables_relations = relations_of_variable_update inner_variable_update_type in
+                        variable_use_indexed_variables_functions_relations @ variable_use_variables_relations
+
                     | Parsed_void_update ->
+                        (* TODO benjamin IMPLEMENT *)
                         (* All variables found in expression are used by current function *)
                         (* For example: stack_pop(s) + x + y *)
                         (* Current function 'f' use x, y *)
@@ -271,23 +328,18 @@ let dependency_graph parsed_model =
                 in
                 let relations = relations_of_variable_update parsed_variable_update_type in
 
-
-                (* Get variables used in update expression*)
-                (*
-                let variables_used = get_variables_in_parsed_global_expression expr in
-                let variables_used_in_update = get_variables_in_parsed_normal_update
-                *)
                 (* Get list of relations for the next expression / declaration *)
                 let next_declaration_relations = dependency_graph_of_function_in_parsed_next_expr_rec local_variables next_expr in
                 (* Concat current relations with next relations *)
                 relations @ next_declaration_relations
+
             | Parsed_fun_expr expr ->
                 (* Get variables used in the local init expression of the variable *)
                 let variables_used = get_variables_in_parsed_global_expression expr in
                 (* TODO benjamin REFACTOR simplify creating a function in ParsingStructureUtilities that return refs *)
                 (* For each variable used in init expression get *)
                 let fun_to_variable_relations = StringSet.fold (fun used_variable_name acc ->
-                    let used_variable_ref = get_variable_ref used_variable_name local_variables in
+                    let used_variable_ref = get_variable_ref local_variables used_variable_name in
                     (Fun_ref fun_def.name, used_variable_ref) :: acc
                 ) variables_used []
                 in

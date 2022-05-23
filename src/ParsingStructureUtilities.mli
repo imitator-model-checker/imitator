@@ -196,6 +196,8 @@ val get_variables_in_parsed_fun_def_with_accumulator : StringSet.t ref -> parsed
 val get_variables_in_parsed_global_expression : parsed_global_expression -> StringSet.t
 val get_functions_in_parsed_global_expression : parsed_global_expression -> StringSet.t
 val get_variables_in_parsed_discrete_boolean_expression : parsed_discrete_boolean_expression -> StringSet.t
+val get_variables_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> StringSet.t
+val get_functions_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> StringSet.t
 val get_variables_in_parsed_update : update -> StringSet.t
 val get_variables_in_parsed_normal_update : normal_update -> StringSet.t
 val get_variables_in_linear_expression : linear_expression -> StringSet.t
