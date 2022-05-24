@@ -11,6 +11,13 @@ type eval_context = {
     local_variables : variable_table;
 }
 
+(* Result returned on delayed update *)
+type delayed_update_result =
+    | Delayed_update_recorded
+    | Delayed_update_already_updated of discrete_index
+
+val direct_update : discrete_access -> variable_update_type * global_expression -> unit
+val delayed_update : discrete_access -> (discrete_index, DiscreteValue.discrete_value) Hashtbl.t -> variable_update_type * global_expression -> delayed_update_result
 val eval_global_expression : discrete_access option -> global_expression -> DiscreteValue.discrete_value
 val eval_boolean_expression : discrete_access option -> boolean_expression -> bool
 val eval_discrete_boolean_expression : discrete_access option -> discrete_boolean_expression -> bool

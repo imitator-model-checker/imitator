@@ -17,11 +17,23 @@ type eval_context = {
     local_variables : variable_table;
 }
 
+(* Result returned on delayed update *)
+type delayed_update_result =
+    | Delayed_update_recorded
+    | Delayed_update_already_updated of discrete_index
+
+
+(* Create an evaluation context with a discrete valuation function and a local variables table *)
+let [@inline] create_eval_context (discrete_valuation, discrete_setter) =
+    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = Hashtbl.create 0 }
+
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context_opt = function
-    | Some (discrete_valuation, discrete_setter) ->
-        Some { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = Hashtbl.create 0 }
+    | Some discrete_access ->
+        Some (create_eval_context discrete_access)
     | None -> None
+
+
 
 (* Get operator function from relop *)
 let operator_of_relop = function
@@ -626,14 +638,14 @@ and eval_fun_body_with_context eval_context = function
 
     | Fun_instruction (normal_update, next_expr) ->
         ImitatorUtilities.print_standard_message ("Eval function instruction");
-        direct_update eval_context normal_update;
+        direct_update_with_context eval_context normal_update;
         eval_fun_body_with_context eval_context next_expr
 
     | Fun_expr expr ->
         ImitatorUtilities.print_standard_message ("Eval function expr");
         eval_global_expression_with_context (Some eval_context) expr
 
-and direct_update eval_context (variable_update_type, expr) =
+and compute_update_value_opt_with_context eval_context (variable_update_type, expr) =
 
     let rec discrete_index_of_parsed_variable_update_type = function
         | Variable_update discrete_index -> Some discrete_index
@@ -645,7 +657,7 @@ and direct_update eval_context (variable_update_type, expr) =
 
     match discrete_index_opt with
     | None ->
-        let _ = eval_global_expression_with_context (Some eval_context) expr in ()
+        let _ = eval_global_expression_with_context (Some eval_context) expr in None
     (* TODO benjamin IMPLEMENT SOME, check local var are immutables *)
     | Some discrete_index ->
         (**)
@@ -655,9 +667,41 @@ and direct_update eval_context (variable_update_type, expr) =
         let new_value = eval_global_expression_with_context (Some eval_context) expr in
         (* TODO benjamin CLEAN here replace tuple by single element *)
         let new_value = pack_value (eval_context.discrete_valuation, eval_context.discrete_setter) old_value new_value variable_update_type in
+        Some (discrete_index, new_value)
 
+
+and direct_update_with_context eval_context update =
+
+    let discrete_index_new_value_pair_opt = compute_update_value_opt_with_context eval_context update in
+    match discrete_index_new_value_pair_opt with
+    | None -> ()
+    | Some (discrete_index, new_value) ->
         (* Direct update ! *)
         eval_context.discrete_setter discrete_index new_value
+
+and delayed_update_with_context eval_context updated_discrete update =
+
+    let discrete_index_new_value_pair_opt = compute_update_value_opt_with_context eval_context update in
+    match discrete_index_new_value_pair_opt with
+    | None ->
+        Delayed_update_recorded (* update ok *)
+    | Some (discrete_index, new_value) ->
+        (* Check if already updated *)
+        if Hashtbl.mem updated_discrete discrete_index then (
+            (* Find its value *)
+            let previous_new_value = Hashtbl.find updated_discrete discrete_index in
+            (* Compare with the new one *)
+            if DiscreteValue.neq previous_new_value new_value then (
+                (* If different, return already update result *)
+                Delayed_update_already_updated discrete_index
+            ) else
+                Delayed_update_recorded
+
+        ) else (
+            (* Else keep it in memory for update *)
+            Hashtbl.add updated_discrete discrete_index new_value;
+            Delayed_update_recorded
+        )
 
 
 
@@ -716,6 +760,9 @@ let try_eval_constant_global_expression = eval_global_expression_with_context No
 let try_eval_constant_rational_term = eval_rational_term_with_context None
 (* Try to evaluate a constant rational factor, if expression isn't constant, it raise an error *)
 let try_eval_constant_rational_factor = eval_rational_factor_with_context None
+
+let direct_update discrete_access = direct_update_with_context (create_eval_context discrete_access)
+let delayed_update discrete_access = delayed_update_with_context (create_eval_context discrete_access)
 
 (* Try to evaluate a constant global expression, if expression isn't constant, it return None *)
 let eval_constant_global_expression_opt expr = try Some (try_eval_constant_global_expression expr) with _ -> None
