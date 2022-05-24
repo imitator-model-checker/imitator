@@ -262,7 +262,7 @@ let string_of_discrete_updates model updates =
 (** NOTE: currently HyTech does not support conditional *)
 let string_of_transition model automaton_index transition =
 	let clock_updates = transition.updates.clock in
-	let seq_updates = transition.pre_updates.discrete in
+	let seq_updates = transition.seq_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
 	let all_updates = seq_updates @ discrete_updates in
 	let conditional_updates = transition.updates.conditional in

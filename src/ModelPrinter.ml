@@ -564,7 +564,7 @@ let string_of_transition model automaton_index (transition : transition) =
 (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")` with target `" ^ (model.location_names automaton_index transition.target) ^ "` via action `" ^ (string_of_action model transition.action) ^ "`…"); *)
 
 	let clock_updates = transition.updates.clock in
-	let seq_updates = transition.pre_updates.discrete in
+	let seq_updates = transition.seq_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
 	let conditional_updates = transition.updates.conditional in
 	let first_separator, second_separator = separator_comma transition.updates in
@@ -610,7 +610,7 @@ let string_of_transition_for_runs model automaton_index (transition : transition
 (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
 
 	let clock_updates = transition.updates.clock in
-	let seq_updates = transition.pre_updates.discrete in
+	let seq_updates = transition.seq_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
 	let conditional_updates = transition.updates.conditional in
 	let first_separator, second_separator = separator_comma transition.updates in

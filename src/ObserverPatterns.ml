@@ -55,7 +55,7 @@ let untimedt action_index target_index =
 	[{
 		guard		= True_guard;
 		action		= action_index;
-		pre_updates = create_update No_update [] [];
+		seq_updates = create_update No_update [] [];
 		updates		= create_update No_update [] [];
 		target		= target_index;
 	}]
@@ -405,7 +405,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= nosync_index;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
 				target		= location_nok;
 			}];
@@ -448,7 +448,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= location_inter;
 			}];
@@ -457,7 +457,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= location_inter;
 			}];
@@ -466,7 +466,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			{
 				guard		= Continuous_guard (ct_x_leq_d observer_clock_index d);
 				action		= a2;
-                pre_updates = create_update No_update [] [];
+                seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
 				target		= location_ok;
 			}
@@ -474,7 +474,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= a2;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
 				target		= location_nok;
 			}
@@ -513,7 +513,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-                pre_updates = create_update No_update [] [];
+                seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= location_ok;
 			}];
@@ -522,7 +522,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= location_ok;
 			}];
@@ -531,7 +531,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			{
 				guard		= Continuous_guard (ct_x_leq_d observer_clock_index d);
 				action		= a2;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
 				target		= location_init;
 			}
@@ -539,7 +539,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= a2;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
 				target		= location_nok;
 			}
@@ -577,7 +577,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= location_ok;
 			}];
@@ -588,7 +588,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			{
 				guard		= Continuous_guard (ct_x_leq_d observer_clock_index d);
 				action		= a2;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
 				target		= location_init;
 			}
@@ -596,7 +596,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= a2;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
 				target		= location_nok;
 			}
@@ -633,7 +633,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= 1;
 			}];
@@ -644,7 +644,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= nosync_index;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
 				target		= 3;
 			}];
@@ -680,7 +680,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= 1;
 			}];
@@ -691,7 +691,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= nosync_index;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
 				target		= 2;
 			}];
@@ -727,7 +727,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= 1;
 			}];
@@ -738,7 +738,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= nosync_index;
-				pre_updates = create_update No_update [] [];
+				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
 				target		= 2;
 			}];

@@ -1679,7 +1679,7 @@ let convert_normal_updates variable_infos updates_type updates_list =
 
     (* Check that pre and post updates not updating clocks ! It's only for discrete variables *)
     (match updates_type with
-    | Parsed_pre_updates when List.length parsed_clock_updates > 0 ->
+    | Parsed_seq_updates when List.length parsed_clock_updates > 0 ->
         print_error "`do` bloc is reserved for sequential updates on discrete variables. This bloc cannot be used for updating clock(s).";
         raise InvalidModel
     | _ -> ()
@@ -1751,7 +1751,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
   let dummy_transition = {
 	guard		= True_guard;
 	action		= -1;
-	pre_updates	= { clock = No_update; discrete = [] ; conditional = []};
+	seq_updates	= { clock = No_update; discrete = [] ; conditional = []};
 	updates		= { clock = No_update; discrete = [] ; conditional = []};
 	target		= -1;
 	} in
@@ -1788,9 +1788,9 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
                  					not (List.mem variable_name removed_variable_names)
                  				) updates
                  				in *)
-              let pre_updates, updates = update_section in
+              let seq_updates, updates = update_section in
 
-              let filtered_pre_updates = filter_updates removed_variable_names pre_updates in
+              let filtered_seq_updates = filter_updates removed_variable_names seq_updates in
               let filtered_updates = filter_updates removed_variable_names updates in
 
               (* Flag to check if there are clock resets only to 0 *)
@@ -1814,8 +1814,8 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
                  				in *)
 
               (* translate parsed updates into their abstract model *)
-              let converted_pre_updates = convert_updates variable_infos Parsed_pre_updates filtered_pre_updates in
-              let converted_updates = convert_updates variable_infos Parsed_updates filtered_updates in
+              let converted_seq_updates = convert_updates variable_infos Parsed_seq_updates filtered_seq_updates in
+              let converted_updates = convert_updates variable_infos Parsed_std_updates filtered_updates in
 
               (* Convert the updates *)
               (* let converted_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
@@ -1847,7 +1847,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               transitions_description.(!transition_index) <- {
 					guard   = converted_guard;
 					action  = action_index;
-					pre_updates = converted_pre_updates;
+					seq_updates = converted_seq_updates;
 					updates = converted_updates;
 					target  = target_location_index;
 				};

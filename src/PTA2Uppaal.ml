@@ -652,7 +652,7 @@ let string_of_sync model automaton_index action_index =
 (** TODO: Add conditions to the translation *)
 let string_of_transition model actions_and_nb_automata automaton_index source_location transition =
 	let clock_updates = transition.updates.clock in
-	let seq_updates = transition.pre_updates.discrete in
+	let seq_updates = transition.seq_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
 	let all_updates = seq_updates @ discrete_updates in
 

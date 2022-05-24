@@ -1411,14 +1411,14 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
 		(* Access the transition and get the components *)
 		let transition = model.transitions_description transition_index in
-		let guard, pre_updates, updates, target_index = transition.guard, transition.pre_updates, transition.updates, transition.target in
+		let guard, seq_updates, updates, target_index = transition.guard, transition.seq_updates, transition.updates, transition.target in
 
 		(** Collecting the updates by evaluating the conditions, if there is any *)
 		let clock_updates, discrete_updates = get_updates source_location updates in
-        let _ (* no clock update for pre-updates *), pre_discrete_updates = get_updates source_location pre_updates in
+        let _ (* no clock update for pre-updates *), discrete_seq_updates = get_updates source_location seq_updates in
 
         (* Make `do` sequential updates (make these updates now, only on discrete) *)
-        List.iter (direct_update discrete_access) (List.rev pre_discrete_updates);
+        List.iter (direct_update discrete_access) (List.rev discrete_seq_updates);
 
         (* Make `then` standard discrete updates (make updates (on discrete) after all recorded in a table *)
         (* These update allow *)

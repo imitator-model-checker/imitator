@@ -1397,7 +1397,7 @@ let check_update variable_infos update_types parsed_variable_update_type expr =
     let typed_variable_update_type, l_value_type, is_parsed_variable_update_type_has_side_effects (* side effects *) = type_check_parsed_variable_update_type None variable_infos parsed_variable_update_type in
 
     (* Check that continuous / discrete not sequential updates doesn't contain side effects *)
-    if update_types = Parsed_updates && (has_side_effects || is_parsed_variable_update_type_has_side_effects) then
+    if update_types = Parsed_std_updates && (has_side_effects || is_parsed_variable_update_type_has_side_effects) then
         raise (TypeError (
             "`then` update bloc contain one or more expression with side effects `"
             ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr

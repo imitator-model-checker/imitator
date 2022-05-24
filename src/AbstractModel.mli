@@ -117,7 +117,7 @@ and conditional_update = DiscreteExpressions.boolean_expression * updates * upda
 type transition = {
     guard : guard;
     action : action_index;
-    pre_updates : updates;
+    seq_updates : updates;
     updates : updates;
     target : location_index;
 }

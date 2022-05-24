@@ -160,10 +160,10 @@ type parsed_variable_update_type =
     | Parsed_indexed_update of parsed_variable_update_type * parsed_discrete_arithmetic_expression
     | Parsed_void_update
 
-(* TODO benjamin REFACTOR rename to do update and then update *)
+(* Type of the batch of updates *)
 type updates_type =
-    | Parsed_pre_updates
-    | Parsed_updates
+    | Parsed_seq_updates (* Sequential updates `do` *)
+    | Parsed_std_updates (* Standard updates `then` *)
 
 (** basic updating *)
 type normal_update = parsed_variable_update_type * parsed_global_expression
