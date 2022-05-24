@@ -363,7 +363,7 @@ let dependency_graph parsed_model =
     let dependency_graph_of_system_functions =
         List.fold_left (fun acc fun_def -> dependency_graph_of_function fun_def @ acc) [] parsed_model.fun_definitions
     in
-    (* TODO benjamin IMPLEMENT get functions or maybe functions are forbidden ? *)
+
     (* Get variables and functions dependencies in init *)
     let dependency_graph_of_init =
         List.fold_left (fun acc init ->

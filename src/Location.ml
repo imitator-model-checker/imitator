@@ -257,7 +257,7 @@ let set_discrete_value location discrete_index value =
 	(* Do not forget the offset *)
     discrete.(discrete_index - !min_discrete_index) <- value
 
-(** Get the discrete access tuple of a given location *)
+(** Get a tuple of functions for reading / writing a global variable at a given location *)
 (* A discrete access enable to read or write a value of a variable at a given discrete index *)
 let discrete_access_of_location location =
     get_discrete_value location, set_discrete_value location

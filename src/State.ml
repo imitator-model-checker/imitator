@@ -78,8 +78,7 @@ let match_state_predicate state_predicate state =
 
 (* Tests whether a state matches `state_predicate`; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
 let match_state_predicate (locations_acceptance_condition : Automaton.automaton_index -> Automaton.location_index -> bool) (state_predicate : AbstractProperty.state_predicate) (state : state) : bool =
-    (* TODO benjamin CLEAN replace here by a function  for get directly a discrete_access *)
-    let discrete_access = Location.get_discrete_value state.global_location, Location.set_discrete_value state.global_location in
+    let discrete_access = Location.discrete_access_of_location state.global_location in
 	DiscreteExpressionEvaluator.match_state_predicate discrete_access locations_acceptance_condition state.global_location state_predicate
 
 

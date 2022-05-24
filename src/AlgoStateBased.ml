@@ -290,7 +290,7 @@ let evaluate_d_linear_constraint_in_location location =
 (** Check whether a discrete non-linear constraint is satisfied by the discrete values in a location **)
 let evaluate_d_nonlinear_constraint_in_location location =
     (* TODO benjamin CLEAN here replace by a function that return directly a discrete_access *)
-    let discrete_access = Location.get_discrete_value location, Location.set_discrete_value location in
+    let discrete_access = Location.discrete_access_of_location location in
     NonlinearConstraint.check_nonlinear_constraint discrete_access
 
 (** Check whether the discrete part of a guard is satisfied by the discrete values in a location *)
@@ -1354,8 +1354,7 @@ let get_updates (source_location : Location.global_location) (updates : Abstract
 	List.fold_left (
 	fun (acc_clock, acc_discrete) (conditional_update : AbstractModel.conditional_update) ->
 		let boolean_expr, if_updates, else_updates = conditional_update in
-		(* TODO benjamin CLEAN replace by a function that return directly a discrete_access *)
-		let discrete_access = Location.get_discrete_value source_location, Location.set_discrete_value source_location in
+		let discrete_access = Location.discrete_access_of_location source_location in
 		let filter_updates = if (eval_boolean_expression (Some discrete_access) boolean_expr) then if_updates else else_updates in
 		(merge_clock_updates acc_clock filter_updates.clock, list_append acc_discrete filter_updates.discrete)
 	) (updates.clock, updates.discrete) updates.conditional
