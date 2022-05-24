@@ -160,11 +160,10 @@ type parsed_variable_update_type =
     | Parsed_indexed_update of parsed_variable_update_type * parsed_discrete_arithmetic_expression
     | Parsed_void_update
 
+(* TODO benjamin REFACTOR rename to do update and then update *)
 type updates_type =
     | Parsed_pre_updates
     | Parsed_updates
-    (* TODO benjamin CLEAN remove post updates *)
-    | Parsed_post_updates
 
 (** basic updating *)
 type normal_update = parsed_variable_update_type * parsed_global_expression
@@ -177,7 +176,7 @@ type update =
 	| Condition of condition_update (** Updates with conditions *)
 
 (* Three type of updates (pre-updates, updates, post-updates) grouped in section *)
-type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *) * update list (* post-updates sequential *)
+type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *)
 
 (****************************************************************)
 (** User functions *)

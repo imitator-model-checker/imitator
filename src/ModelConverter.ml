@@ -1679,8 +1679,7 @@ let convert_normal_updates variable_infos updates_type updates_list =
 
     (* Check that pre and post updates not updating clocks ! It's only for discrete variables *)
     (match updates_type with
-    | Parsed_pre_updates
-    | Parsed_post_updates when List.length parsed_clock_updates > 0 ->
+    | Parsed_pre_updates when List.length parsed_clock_updates > 0 ->
         print_error "`do` bloc is reserved for sequential updates on discrete variables. This bloc cannot be used for updating clock(s).";
         raise InvalidModel
     | _ -> ()
@@ -1754,7 +1753,6 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 	action		= -1;
 	pre_updates	= { clock = No_update; discrete = [] ; conditional = []};
 	updates		= { clock = No_update; discrete = [] ; conditional = []};
-	post_updates= { clock = No_update; discrete = [] ; conditional = []};
 	target		= -1;
 	} in
   let transitions_description : AbstractModel.transition array = Array.make nb_transitions dummy_transition in
@@ -1790,11 +1788,10 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
                  					not (List.mem variable_name removed_variable_names)
                  				) updates
                  				in *)
-              let pre_updates, updates, post_updates = update_section in
+              let pre_updates, updates = update_section in
 
               let filtered_pre_updates = filter_updates removed_variable_names pre_updates in
               let filtered_updates = filter_updates removed_variable_names updates in
-              let filtered_post_updates = filter_updates removed_variable_names post_updates in
 
               (* Flag to check if there are clock resets only to 0 *)
               (* let only_resets = ref true in *)
@@ -1819,7 +1816,6 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* translate parsed updates into their abstract model *)
               let converted_pre_updates = convert_updates variable_infos Parsed_pre_updates filtered_pre_updates in
               let converted_updates = convert_updates variable_infos Parsed_updates filtered_updates in
-              let converted_post_updates = convert_updates variable_infos Parsed_post_updates filtered_post_updates in
 
               (* Convert the updates *)
               (* let converted_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
@@ -1853,7 +1849,6 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 					action  = action_index;
 					pre_updates = converted_pre_updates;
 					updates = converted_updates;
-					post_updates = converted_post_updates;
 					target  = target_location_index;
 				};
               (* Add the automaton *)

@@ -325,7 +325,6 @@ and eval_discrete_boolean_expression_with_context eval_context_opt = function
         let discrete_value = try_eval_local_variable variable_name eval_context_opt in
         bool_value discrete_value
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
-    (* TODO benjamin WARNING here we compare a DiscreteValue.discrete_value type with operator it's bad *)
     (* We just have to create a Rational_comparison and a Int_comparison to solve this *)
     | Arithmetic_comparison (l_expr, relop, r_expr) ->
         (operator_of_relop relop)
@@ -598,16 +597,6 @@ and eval_inline_function_with_context eval_context_opt param_names expr_args fun
         let param_name = List.nth param_names i in
         let expr_arg = List.nth expr_args i in
         let arg_val = eval_global_expression_with_context eval_context_opt expr_arg in
-        (* TODO benjamin CLEAN remove comments *)
-        (*
-        ImitatorUtilities.print_message Verbose_standard (
-            "param: `"
-            ^ param_name
-            ^ "` set val: "
-            ^ DiscreteValue.string_of_value arg_val
-            ^ DiscreteType.string_of_var_type_discrete (DiscreteValue.discrete_type_of_value arg_val)
-        );
-        *)
         Hashtbl.add local_variables param_name arg_val;
     done;
 
@@ -665,7 +654,6 @@ and compute_update_value_opt_with_context eval_context (variable_update_type, ex
 
         (* Compute its new value *)
         let new_value = eval_global_expression_with_context (Some eval_context) expr in
-        (* TODO benjamin CLEAN here replace tuple by single element *)
         let new_value = pack_value (eval_context.discrete_valuation, eval_context.discrete_setter) old_value new_value variable_update_type in
         Some (discrete_index, new_value)
 

@@ -1282,5 +1282,5 @@ let linear_constraint_of_nonlinear_constraint = try_convert_linear_expression_of
 
 (* Gather all updates of update section (pre-updates, updates and post-updates) *)
 let updates_of_update_section update_section =
-    let pre_updates, updates, post_updates = update_section in
-    pre_updates @ updates @ post_updates
+    let pre_updates, updates = update_section in
+    pre_updates @ updates

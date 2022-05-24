@@ -289,7 +289,6 @@ let evaluate_d_linear_constraint_in_location location =
 
 (** Check whether a discrete non-linear constraint is satisfied by the discrete values in a location **)
 let evaluate_d_nonlinear_constraint_in_location location =
-    (* TODO benjamin CLEAN here replace by a function that return directly a discrete_access *)
     let discrete_access = Location.discrete_access_of_location location in
     NonlinearConstraint.check_nonlinear_constraint discrete_access
 
@@ -1412,7 +1411,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
 		(* Access the transition and get the components *)
 		let transition = model.transitions_description transition_index in
-		let guard, pre_updates, updates, post_updates, target_index = transition.guard, transition.pre_updates, transition.updates, transition.post_updates, transition.target in
+		let guard, pre_updates, updates, target_index = transition.guard, transition.pre_updates, transition.updates, transition.target in
 
 		(** Collecting the updates by evaluating the conditions, if there is any *)
 		let clock_updates, discrete_updates = get_updates source_location updates in

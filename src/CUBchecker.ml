@@ -3182,7 +3182,6 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				discrete   = discrete_update; (** List of discrete updates *)
 				conditional= []
 			};
-			post_updates = {clock = No_update; discrete=[]; conditional=[]};
 			target		= target_location_index;
 		} in
 		

@@ -119,7 +119,6 @@ type transition = {
     action : action_index;
     pre_updates : updates;
     updates : updates;
-    post_updates : updates;
     target : location_index;
 }
 

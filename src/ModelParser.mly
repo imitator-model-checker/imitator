@@ -501,9 +501,9 @@ transition:
 
 /* A l'origine de 3 conflits ("2 shift/reduce conflicts, 1 reduce/reduce conflict.") donc petit changement */
 update_synchronization:
-	| { ([], [], []), NoSync }
+	| { ([], []), NoSync }
 	| updates { $1, NoSync }
-	| syn_label { ([], [], []), (Sync $1) }
+	| syn_label { ([], []), (Sync $1) }
 	| updates syn_label { $1, (Sync $2) }
 	| syn_label updates { $2, (Sync $1) }
 ;
@@ -511,15 +511,15 @@ update_synchronization:
 /************************************************************/
 
 updates:
-  | CT_DO LBRACE let_in_updates RBRACE { $3 }
+  | CT_DO LBRACE do_then_updates RBRACE { $3 }
 ;
 
-let_in_updates:
-  | CT_DO update_seq_nonempty_list in_updates { $2, $3, [] }
-  | update_list { [], $1, [] }
+do_then_updates:
+  | CT_DO update_seq_nonempty_list then_updates { $2, $3 }
+  | update_list { [], $1 }
 ;
 
-in_updates:
+then_updates:
   | CT_THEN update_nonempty_list end_opt { $2 }
   | { [] }
 ;
