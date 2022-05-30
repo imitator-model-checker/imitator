@@ -1507,8 +1507,7 @@ val global_expression_of_typed_boolean_expression : variable_infos -> TypeChecke
 val bool_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.typed_boolean_expression -> DiscreteExpressions.boolean_expression
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
-(* TODO benjamin CLEAN rename to variable_update_type_of_typed_variable_update_type 9*)
-val parsed_variable_update_type_of_typed_variable_update_type : variable_infos -> TypeChecker.typed_variable_update_type -> DiscreteExpressions.variable_update_type
+val variable_update_type_of_typed_variable_update_type : variable_infos -> TypeChecker.typed_variable_update_type -> DiscreteExpressions.variable_update_type
 
 val fun_definition_of_typed_fun_definition : variable_infos -> TypeChecker.typed_fun_definition -> AbstractModel.fun_definition
 
@@ -3004,7 +3003,7 @@ and expression_access_type_of_typed_factor variable_infos factor = function
 
 let nonlinear_constraint_of_typed_nonlinear_constraint = bool_expression_of_typed_discrete_boolean_expression
 
-let rec parsed_variable_update_type_of_typed_variable_update_type variable_infos = function
+let rec variable_update_type_of_typed_variable_update_type variable_infos = function
     | Typed_variable_name variable_name ->
         let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
         (match variable_kind with
@@ -3014,7 +3013,7 @@ let rec parsed_variable_update_type_of_typed_variable_update_type variable_infos
 
     | Typed_parsed_variable_update_type (parsed_variable_update_type, index_expr, _) ->
         Indexed_update (
-            parsed_variable_update_type_of_typed_variable_update_type variable_infos parsed_variable_update_type,
+            variable_update_type_of_typed_variable_update_type variable_infos parsed_variable_update_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -3347,7 +3346,7 @@ let rec fun_body_of_typed_fun_body variable_infos = function
         )
     | Typed_fun_instruction ((typed_variable_update_type, typed_expr), typed_next_expr) ->
         Fun_instruction (
-            (parsed_variable_update_type_of_typed_variable_update_type variable_infos typed_variable_update_type,
+            (variable_update_type_of_typed_variable_update_type variable_infos typed_variable_update_type,
             global_expression_of_typed_global_expression variable_infos typed_expr),
             fun_body_of_typed_fun_body variable_infos typed_next_expr
         )

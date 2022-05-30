@@ -145,7 +145,7 @@ val bool_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 
-val parsed_variable_update_type_of_typed_variable_update_type : variable_infos -> TypeChecker.typed_variable_update_type -> DiscreteExpressions.variable_update_type
+val variable_update_type_of_typed_variable_update_type : variable_infos -> TypeChecker.typed_variable_update_type -> DiscreteExpressions.variable_update_type
 val fun_definition_of_typed_fun_definition : variable_infos -> TypeChecker.typed_fun_definition -> AbstractModel.fun_definition
 
 end
