@@ -70,12 +70,15 @@ and typed_discrete_factor =
     | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * inner_type
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
 
-type typed_variable_update_type =
-    | Typed_variable_name of variable_name
-    | Typed_parsed_variable_update_type of typed_variable_update_type * typed_discrete_arithmetic_expression * var_type_discrete
+type typed_scalar_or_index_update_type =
+    | Typed_scalar_update of variable_name
+    | Typed_indexed_update of typed_scalar_or_index_update_type * typed_discrete_arithmetic_expression * var_type_discrete
+
+type typed_update_type =
+    | Typed_variable_update of typed_scalar_or_index_update_type
     | Typed_void_update
 
-type typed_normal_update = typed_variable_update_type * typed_global_expression
+type typed_normal_update = typed_update_type * typed_global_expression
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
@@ -134,7 +137,7 @@ val check_constant_expression : variable_infos -> variable_name * parsed_global_
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
 (* Check that an update is well typed *)
-val check_update : variable_infos -> updates_type -> parsed_variable_update_type -> ParsingStructure.parsed_global_expression -> typed_variable_update_type * typed_global_expression
+val check_update : variable_infos -> updates_type -> parsed_update_type -> ParsingStructure.parsed_global_expression -> typed_update_type * typed_global_expression
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
@@ -201,12 +204,15 @@ and typed_discrete_factor =
     | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * inner_type
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
 
-type typed_variable_update_type =
-    | Typed_variable_name of variable_name
-    | Typed_parsed_variable_update_type of typed_variable_update_type * typed_discrete_arithmetic_expression * var_type_discrete
+type typed_scalar_or_index_update_type =
+    | Typed_scalar_update of variable_name
+    | Typed_indexed_update of typed_scalar_or_index_update_type * typed_discrete_arithmetic_expression * var_type_discrete
+
+type typed_update_type =
+    | Typed_variable_update of typed_scalar_or_index_update_type
     | Typed_void_update
 
-type typed_normal_update = typed_variable_update_type * typed_global_expression
+type typed_normal_update = typed_update_type * typed_global_expression
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
@@ -1016,21 +1022,21 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 
 
 
-let rec type_check_parsed_variable_update_type local_variables variable_infos = function
-    | Parsed_variable_update variable_name ->
+let rec type_check_parsed_scalar_or_index_update_type local_variables variable_infos = function
+    | Parsed_scalar_update variable_name ->
         (* Get assigned variable type *)
         let var_type = get_type_of_variable_by_name variable_infos variable_name in
         let discrete_type = discrete_type_of_var_type var_type in
-        Typed_variable_name variable_name, discrete_type, false (* no side effect *)
+        Typed_scalar_update variable_name, discrete_type, false (* no side effect *)
 
-    | Parsed_indexed_update (parsed_variable_update_type, index_expr) as indexed_update ->
+    | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) as indexed_update ->
 
-        let typed_variable_update_type, discrete_type, is_parsed_variable_update_type_has_side_effects = type_check_parsed_variable_update_type local_variables variable_infos parsed_variable_update_type in
+        let typed_update_type, discrete_type, is_parsed_scalar_or_index_update_type_has_side_effects = type_check_parsed_scalar_or_index_update_type local_variables variable_infos parsed_scalar_or_index_update_type in
         let typed_index_expr_type, index_discrete_type, is_index_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression local_variables variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) index_expr in
 
         (* Check that index expression is an int expression *)
         if index_discrete_type <> Var_type_discrete_number Var_type_discrete_int then
-            raise (TypeError ("Index of expression `" ^ ParsingStructureUtilities.string_of_parsed_variable_update_type variable_infos indexed_update ^ "` is not an integer."));
+            raise (TypeError ("Index of expression `" ^ ParsingStructureUtilities.string_of_parsed_scalar_or_index_update_type variable_infos indexed_update ^ "` is not an integer."));
 
         (* Check is an array *)
         let discrete_type =
@@ -1038,7 +1044,12 @@ let rec type_check_parsed_variable_update_type local_variables variable_infos = 
             | Var_type_discrete_array (inner_type, _) -> inner_type
             | _ -> raise (TypeError "Trying to make a write access to a non-array variable.")
         in
-        Typed_parsed_variable_update_type (typed_variable_update_type, typed_index_expr_type, discrete_type), discrete_type, is_parsed_variable_update_type_has_side_effects || is_index_expr_has_side_effects
+        Typed_indexed_update (typed_update_type, typed_index_expr_type, discrete_type), discrete_type, is_parsed_scalar_or_index_update_type_has_side_effects || is_index_expr_has_side_effects
+
+let type_check_parsed_update_type local_variables variable_infos = function
+    | Parsed_variable_update parsed_scalar_or_index_update_type ->
+        let typed_parsed_scalar_or_index_update_type, discrete_type, has_side_effects = type_check_parsed_scalar_or_index_update_type local_variables variable_infos parsed_scalar_or_index_update_type in
+        Typed_variable_update typed_parsed_scalar_or_index_update_type, discrete_type, has_side_effects
 
     | Parsed_void_update -> Typed_void_update, Var_type_weak, false
 
@@ -1082,15 +1093,15 @@ let rec type_check_fun_body local_variables variable_infos infer_type_opt = func
             typed_next_expr
         ), next_expr_discrete_type, is_init_expr_has_side_effects || is_next_expr_has_side_effects
 
-    | Parsed_fun_instruction ((parsed_variable_update_type, expr), next_expr) ->
+    | Parsed_fun_instruction ((parsed_update_type, expr), next_expr) ->
         (* Resolve typed expression *)
         let typed_expr, expr_type, has_side_effects (* side effects *) = type_check_global_expression (Some local_variables) variable_infos infer_type_opt expr in
         (* Resolve typed update type *)
-        let typed_variable_update_type, l_value_type, is_parsed_variable_update_type_has_side_effects (* side effects *) = type_check_parsed_variable_update_type (Some local_variables) variable_infos parsed_variable_update_type in
+        let typed_update_type, l_value_type, is_parsed_update_type_has_side_effects (* side effects *) = type_check_parsed_update_type (Some local_variables) variable_infos parsed_update_type in
         (* Resolve typed next expr *)
         let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_fun_body local_variables variable_infos infer_type_opt next_expr in
 
-        Typed_fun_instruction ((typed_variable_update_type, typed_expr), typed_next_expr), next_expr_discrete_type, true
+        Typed_fun_instruction ((typed_update_type, typed_expr), typed_next_expr), next_expr_discrete_type, true
 
     | Parsed_fun_expr expr ->
         let typed_expr, discrete_type, has_side_effects = type_check_global_expression (Some local_variables) variable_infos infer_type_opt expr in
@@ -1371,10 +1382,10 @@ let check_guard variable_infos =
 
 
 (* Type check an update *)
-let check_update variable_infos update_types parsed_variable_update_type expr =
+let check_update variable_infos update_types parsed_update_type expr =
 
     (* Get assigned variable name *)
-    let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type in
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_update_type_opt parsed_update_type in
 
     (* Get assigned variable type *)
     let variable_name, var_type =
@@ -1394,10 +1405,10 @@ let check_update variable_infos update_types parsed_variable_update_type expr =
     (* Resolve typed expression *)
     let typed_expr, expr_type, has_side_effects (* side effects *) = type_check_global_expression None variable_infos variable_number_type_opt expr in
 
-    let typed_variable_update_type, l_value_type, is_parsed_variable_update_type_has_side_effects (* side effects *) = type_check_parsed_variable_update_type None variable_infos parsed_variable_update_type in
+    let typed_update_type, l_value_type, is_parsed_update_type_has_side_effects (* side effects *) = type_check_parsed_update_type None variable_infos parsed_update_type in
 
     (* Check that continuous / discrete not sequential updates doesn't contain side effects *)
-    if update_types = Parsed_std_updates && (has_side_effects || is_parsed_variable_update_type_has_side_effects) then
+    if update_types = Parsed_std_updates && (has_side_effects || is_parsed_update_type_has_side_effects) then
         raise (TypeError (
             "`then` update bloc contain one or more expression with side effects `"
             ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
@@ -1428,7 +1439,7 @@ let check_update variable_infos update_types parsed_variable_update_type expr =
         ^ string_of_typed_global_expression variable_infos typed_expr
     );
 
-    typed_variable_update_type,
+    typed_update_type,
     typed_expr
 
 (* Type check a conditional expression *)
@@ -1507,7 +1518,7 @@ val global_expression_of_typed_boolean_expression : variable_infos -> TypeChecke
 val bool_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.typed_boolean_expression -> DiscreteExpressions.boolean_expression
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
-val variable_update_type_of_typed_variable_update_type : variable_infos -> TypeChecker.typed_variable_update_type -> DiscreteExpressions.variable_update_type
+val update_type_of_typed_update_type : variable_infos -> TypeChecker.typed_update_type -> DiscreteExpressions.update_type
 
 val fun_definition_of_typed_fun_definition : variable_infos -> TypeChecker.typed_fun_definition -> AbstractModel.fun_definition
 
@@ -3003,20 +3014,25 @@ and expression_access_type_of_typed_factor variable_infos factor = function
 
 let nonlinear_constraint_of_typed_nonlinear_constraint = bool_expression_of_typed_discrete_boolean_expression
 
-let rec variable_update_type_of_typed_variable_update_type variable_infos = function
-    | Typed_variable_name variable_name ->
+let rec scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos = function
+    | Typed_scalar_update variable_name ->
         let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
         (match variable_kind with
         | Constant_kind value -> raise (InternalError "Unable to set a constant expression")
-        | Variable_kind discrete_index -> Variable_update discrete_index
+        | Variable_kind discrete_index -> Scalar_update discrete_index
         )
 
-    | Typed_parsed_variable_update_type (parsed_variable_update_type, index_expr, _) ->
+    | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, _) ->
         Indexed_update (
-            variable_update_type_of_typed_variable_update_type variable_infos parsed_variable_update_type,
+            scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
+let update_type_of_typed_update_type variable_infos = function
+    | Typed_variable_update typed_scalar_or_index_update_type ->
+        Variable_update (
+            scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
+        )
     | Typed_void_update -> Void_update
 
 
@@ -3344,9 +3360,9 @@ let rec fun_body_of_typed_fun_body variable_infos = function
             global_expression_of_typed_global_expression variable_infos typed_init_expr,
             fun_body_of_typed_fun_body variable_infos typed_next_expr
         )
-    | Typed_fun_instruction ((typed_variable_update_type, typed_expr), typed_next_expr) ->
+    | Typed_fun_instruction ((typed_update_type, typed_expr), typed_next_expr) ->
         Fun_instruction (
-            (variable_update_type_of_typed_variable_update_type variable_infos typed_variable_update_type,
+            (update_type_of_typed_update_type variable_infos typed_update_type,
             global_expression_of_typed_global_expression variable_infos typed_expr),
             fun_body_of_typed_fun_body variable_infos typed_next_expr
         )

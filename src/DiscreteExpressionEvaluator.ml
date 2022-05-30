@@ -634,15 +634,20 @@ and eval_fun_body_with_context eval_context = function
         ImitatorUtilities.print_standard_message ("Eval function expr");
         eval_global_expression_with_context (Some eval_context) expr
 
-and compute_update_value_opt_with_context eval_context (variable_update_type, expr) =
+and compute_update_value_opt_with_context eval_context (update_type, expr) =
 
-    let rec discrete_index_of_parsed_variable_update_type = function
-        | Variable_update discrete_index -> Some discrete_index
-        | Indexed_update (parsed_variable_update_type, _) -> discrete_index_of_parsed_variable_update_type parsed_variable_update_type
+    let rec discrete_index_of_parsed_scalar_or_index_update_type = function
+        | Scalar_update discrete_index -> discrete_index
+        | Indexed_update (scalar_or_index_update_type, _) ->
+            discrete_index_of_parsed_scalar_or_index_update_type scalar_or_index_update_type
+    in
+    let discrete_index_of_parsed_update_type_opt = function
+        | Variable_update scalar_or_index_update_type ->
+            Some (discrete_index_of_parsed_scalar_or_index_update_type scalar_or_index_update_type)
         | Void_update -> None
     in
 
-    let discrete_index_opt = discrete_index_of_parsed_variable_update_type variable_update_type in
+    let discrete_index_opt = discrete_index_of_parsed_update_type_opt update_type in
 
     match discrete_index_opt with
     | None ->
@@ -654,7 +659,7 @@ and compute_update_value_opt_with_context eval_context (variable_update_type, ex
 
         (* Compute its new value *)
         let new_value = eval_global_expression_with_context (Some eval_context) expr in
-        let new_value = pack_value (eval_context.discrete_valuation, eval_context.discrete_setter) old_value new_value variable_update_type in
+        let new_value = pack_value (eval_context.discrete_valuation, eval_context.discrete_setter) old_value new_value update_type in
         Some (discrete_index, new_value)
 
 
@@ -703,14 +708,13 @@ and delayed_update_with_context eval_context updated_discrete update =
 (* a[1] = [[5, 6], [7, 8]] *)
 (* a[1][1] = [7, 8] *)
 (* a[1][1][0] = 7 *)
-and pack_value (* variable_names *) discrete_access old_value new_value parsed_variable_update_type =
+and pack_value (* variable_names *) discrete_access old_value new_value parsed_update_type =
 
-    let rec pack_value_rec = function
-        | Void_update -> old_value, [||], None
-        | Variable_update discrete_index -> old_value, [||], None
-        | Indexed_update (inner_parsed_variable_update_type, index_expr) ->
+    let rec pack_value_scalar_or_index_update_type = function
+        | Scalar_update discrete_index -> old_value, [||], None
+        | Indexed_update (inner_scalar_or_index_update_type, index_expr) ->
 
-            let old_value, _, _ = pack_value_rec inner_parsed_variable_update_type in
+            let old_value, _, _ = pack_value_scalar_or_index_update_type inner_scalar_or_index_update_type in
 
             (* TODO benjamin REFACTOR look this, maybe pass eval_context_opt directly as parameter of pack_value *)
             let eval_context_opt = create_eval_context_opt (Some discrete_access) in
@@ -723,9 +727,9 @@ and pack_value (* variable_names *) discrete_access old_value new_value parsed_v
             (* Check bounds *)
             if index >= Array.length old_array || index < 0 then (
                 (* TODO benjamin IMPLEMENT repair that *)
-                let str_parsed_variable_update_type = "" in
-(*                let str_parsed_variable_update_type = DiscreteExpressions.string_of_variable_update_type variable_names parsed_variable_update_type in*)
-                raise (Out_of_bound ("Array index out of range: `" ^ str_parsed_variable_update_type ^ "`"))
+                let str_parsed_update_type = "" in
+(*                let str_parsed_update_type = DiscreteExpressions.string_of_update_type variable_names parsed_update_type in*)
+                raise (Out_of_bound ("Array index out of range: `" ^ str_parsed_update_type ^ "`"))
             );
 
             (* Get element at given index *)
@@ -733,7 +737,13 @@ and pack_value (* variable_names *) discrete_access old_value new_value parsed_v
 (*            ImitatorUtilities.print_message Verbose_standard ("unpacked old array: " ^ DiscreteValue.string_of_value unpacked_old_array);*)
             unpacked_old_array, old_array, Some index
     in
-    let unpacked_old_array, old_array, some_index = pack_value_rec parsed_variable_update_type in
+    let pack_value_rec = function
+        | Variable_update scalar_or_index_update_type ->
+            pack_value_scalar_or_index_update_type scalar_or_index_update_type
+        | Void_update -> old_value, [||], None
+    in
+
+    let unpacked_old_array, old_array, some_index = pack_value_rec parsed_update_type in
     match some_index with
     | Some index ->
         old_array.(index) <- new_value;

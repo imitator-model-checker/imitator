@@ -468,23 +468,25 @@ let json_of_clock_updates model clock_updates =
 	let wrap_expr variable_index linear_term = "\n\t\t\t\t\t\t\t" ^ (json_of_string (model.variable_names variable_index)) ^ ": " ^ (json_of_string (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)) ^ "" in
 	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
 
-
-
-
-(* Access to either variable or array *)
-let rec string_of_variable_update_type model = function
-	| Variable_update (variable_index) ->
+(* String representation of a variable update *)
+let rec string_of_scalar_or_index_update_type model = function
+	| Scalar_update (variable_index) ->
 		model.variable_names variable_index
-	| Indexed_update (parsed_variable_update_type, index_expr) ->
-		string_of_variable_update_type model parsed_variable_update_type
+	| Indexed_update (scalar_or_index_update_type, index_expr) ->
+		string_of_scalar_or_index_update_type model scalar_or_index_update_type
 		^ "[" ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names index_expr  ^ "]"
+
+(* String representation of an update *)
+let string_of_update_type model = function
+    | Variable_update scalar_or_index_update_type ->
+        string_of_scalar_or_index_update_type model scalar_or_index_update_type
     | Void_update -> ""
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (fun (parsed_variable_update_type, arithmetic_expression) ->
+	string_of_list_of_string_with_sep sep (List.rev_map (fun (parsed_update_type, arithmetic_expression) ->
 		(* Convert the variable name *)
-		let variable_name = string_of_variable_update_type model parsed_variable_update_type in
+		let variable_name = string_of_update_type model parsed_update_type in
 
 		variable_name
 		^ (if variable_name <> "" then " := " else "")
@@ -494,9 +496,9 @@ let string_of_discrete_updates ?(sep=", ") model updates =
 
 (* Convert a list of discrete updates into a JSON-like string *)
 let json_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (fun (parsed_variable_update_type, arithmetic_expression) ->
+	string_of_list_of_string_with_sep sep (List.rev_map (fun (parsed_update_type, arithmetic_expression) ->
 		(* Convert the variable name *)
-		"" ^ (json_of_string (string_of_variable_update_type model parsed_variable_update_type)) ^ ""
+		"" ^ (json_of_string (string_of_update_type model parsed_update_type)) ^ ""
 		^ ": "
 		(* Convert the arithmetic_expression *)
 		^ "" ^ (json_of_string (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)) ^ ""
@@ -764,13 +766,17 @@ let string_of_automata model =
 	) model.automata)
 
 
-let rec customized_string_of_parsed_variable_update_type customized_string model = function
-    | Variable_update variable_index -> model.variable_names variable_index
-    | Indexed_update (parsed_variable_update_type, index_expr) ->
-        customized_string_of_parsed_variable_update_type customized_string model parsed_variable_update_type ^ "[" ^ DiscreteExpressions.customized_string_of_int_arithmetic_expression customized_string model.variable_names index_expr ^ "]"
+let rec customized_string_of_parsed_scalar_or_index_update_type customized_string model = function
+    | Scalar_update variable_index -> model.variable_names variable_index
+    | Indexed_update (scalar_or_index_update_type, index_expr) ->
+        customized_string_of_parsed_scalar_or_index_update_type customized_string model scalar_or_index_update_type ^ "[" ^ DiscreteExpressions.customized_string_of_int_arithmetic_expression customized_string model.variable_names index_expr ^ "]"
+
+let customized_string_of_parsed_update_type customized_string model = function
+    | Variable_update scalar_or_index_update_type ->
+        customized_string_of_parsed_scalar_or_index_update_type customized_string model scalar_or_index_update_type
     | Void_update -> ""
 
-let string_of_parsed_variable_update_type = customized_string_of_parsed_variable_update_type Constants.global_default_string
+let string_of_parsed_update_type = customized_string_of_parsed_update_type Constants.global_default_string
 
 (* Convert initial state of locations to string *)
 let string_of_new_initial_locations ?indent_level:(i=1) model =

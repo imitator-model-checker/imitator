@@ -78,7 +78,7 @@ type clock_updates =
 
 (** update: variable_index := linear_term *)
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
-type discrete_update = DiscreteExpressions.variable_update_type * DiscreteExpressions.global_expression
+type discrete_update = DiscreteExpressions.update_type * DiscreteExpressions.global_expression
 
 
 

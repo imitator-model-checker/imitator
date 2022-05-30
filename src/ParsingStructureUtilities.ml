@@ -122,11 +122,15 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
 	| Parsed_DF_unary_min factor ->
 	    fold_parsed_discrete_factor operator base leaf_fun factor
 
-and fold_map_parsed_variable_update_type operator base leaf_fun leaf_update_fun = function
-    | Parsed_variable_update variable_name -> [leaf_update_fun (Leaf_update_updated_variable variable_name)]
-    | Parsed_indexed_update (variable_update_type, index_expr) ->
-            (fold_map_parsed_variable_update_type operator base leaf_fun leaf_update_fun variable_update_type) @
+and fold_map_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun = function
+    | Parsed_scalar_update variable_name -> [leaf_update_fun (Leaf_update_updated_variable variable_name)]
+    | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) ->
+            (fold_map_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun parsed_scalar_or_index_update_type) @
             [fold_parsed_discrete_arithmetic_expression operator base leaf_fun index_expr]
+
+and fold_map_parsed_update_type operator base leaf_fun leaf_update_fun = function
+    | Parsed_variable_update parsed_scalar_or_index_update_type ->
+        fold_map_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun parsed_scalar_or_index_update_type
     | Parsed_void_update -> []
 
 and fold_parsed_next_expr operator base leaf_fun leaf_update_fun = function
@@ -147,8 +151,8 @@ and fold_parsed_next_expr operator base leaf_fun leaf_update_fun = function
         fold_parsed_global_expression operator base leaf_fun expr
 
 
-and fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun (variable_update_type, expr) =
-    (fold_map_parsed_variable_update_type operator base leaf_fun leaf_update_fun variable_update_type) @
+and fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun (update_type, expr) =
+    (fold_map_parsed_update_type operator base leaf_fun leaf_update_fun update_type) @
     [fold_parsed_global_expression operator base leaf_fun expr]
 
 (** Fold a parsed update expression using operator applying custom function on leafs **)
@@ -483,8 +487,8 @@ and string_of_parsed_next_expr variable_infos = function
         | Parsed_fun_expr expr ->
             string_of_parsed_global_expression variable_infos expr
 
-and string_of_parsed_normal_update variable_infos (variable_update_type, expr) =
-    let str_left_member = string_of_parsed_variable_update_type variable_infos variable_update_type in
+and string_of_parsed_normal_update variable_infos (update_type, expr) =
+    let str_left_member = string_of_parsed_update_type variable_infos update_type in
     str_left_member
     ^ (if str_left_member <> "" then " := " else "") (* TODO benjamin CLEAN remove hard-coded := *)
     ^ string_of_parsed_global_expression variable_infos expr
@@ -505,12 +509,17 @@ and string_of_parsed_update variable_infos = function
 
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
-and string_of_parsed_variable_update_type variable_infos = function
-    | Parsed_variable_update variable_name -> variable_name
-    | Parsed_indexed_update (parsed_variable_update_type, expr) ->
+and string_of_parsed_scalar_or_index_update_type variable_infos = function
+    | Parsed_scalar_update variable_name -> variable_name
+    | Parsed_indexed_update (parsed_scalar_or_index_update_type, expr) ->
         let l_del, r_del = Constants.default_array_string.array_access_delimiter in
-        string_of_parsed_variable_update_type variable_infos parsed_variable_update_type
+        string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type
         ^ l_del ^ string_of_parsed_arithmetic_expression variable_infos expr ^ r_del
+
+(* Get variable name if any *)
+and string_of_parsed_update_type variable_infos = function
+    | Parsed_variable_update parsed_scalar_or_index_update_type ->
+        string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type
     | Parsed_void_update -> ""
 
 let string_of_parsed_fun_def variable_infos fun_def =
@@ -1154,25 +1163,21 @@ let get_variables_in_parsed_state_predicate =
 
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
-let rec variable_name_of_parsed_variable_update_type_opt = function
-    | Parsed_variable_update variable_name -> Some variable_name
-    | Parsed_indexed_update (parsed_variable_update_type, _) -> variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type
+let rec variable_name_of_parsed_scalar_or_index_update_type = function
+    | Parsed_scalar_update variable_name -> variable_name
+    | Parsed_indexed_update (parsed_scalar_or_index_update_type, _) -> variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type
+
+(* Get variable name if any *)
+let rec variable_name_of_parsed_update_type_opt = function
+    | Parsed_variable_update parsed_scalar_or_index_update_type ->
+        Some (variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type)
     | Parsed_void_update -> None
 
-let variable_name_of_parsed_variable_update_type parsed_variable_update_type =
-    let variable_name_opt = variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type in
+let variable_name_of_parsed_update_type parsed_update_type =
+    let variable_name_opt = variable_name_of_parsed_update_type_opt parsed_update_type in
     match variable_name_opt with
     | Some variable_name -> variable_name
     | None -> raise (InternalError "Unable to get variable name of an update.")
-
-(* Check if variable access is a variable name directly *)
-(* ex : my_var -> true, my_var[i] -> false *)
-let is_parsed_variable_update_type_is_a_variable_name = function
-    | Parsed_variable_update _ -> true
-    | Parsed_void_update
-    | Parsed_indexed_update _ -> false
-
-
 
 (* - --- - -- - *)
 

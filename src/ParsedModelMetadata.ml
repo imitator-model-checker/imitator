@@ -268,10 +268,10 @@ let dependency_graph parsed_model =
                 (* Concat current relations with next relations *)
                 next_declaration_relations @ variable_to_variable_relations @ variable_to_fun_relations
 
-            | Parsed_fun_instruction ((parsed_variable_update_type, expr), next_expr) ->
+            | Parsed_fun_instruction ((parsed_update_type, expr), next_expr) ->
 
-                let rec relations_of_variable_update = function
-                    | Parsed_variable_update variable_name ->
+                let rec relations_of_scalar_or_index_update_type = function
+                    | Parsed_scalar_update variable_name ->
                         (* Updated variable use all variables found in expression *)
                         (* For example x := a + b, x use a, b *)
                         (* and current function use x *)
@@ -297,11 +297,11 @@ let dependency_graph parsed_model =
                         (* Concat all relations *)
                         cur_fun_used_variable_relation :: (variable_to_variable_relations @ variable_to_fun_relations)
 
-                    | Parsed_indexed_update (inner_variable_update_type, index_expr) ->
+                    | Parsed_indexed_update (inner_scalar_or_index_update_type, index_expr) ->
                         (* Updated variable use all variables found in expression, and all variables found in index *)
                         (* For example x[y + z] = a + b, x use y, z, a, b *)
                         (* and current function use x *)
-                        let variable_name = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type inner_variable_update_type in
+                        let variable_name = ParsingStructureUtilities.variable_name_of_parsed_scalar_or_index_update_type inner_scalar_or_index_update_type in
 
                         (* Create local variable ref representing a unique variable ref *)
                         let variable_ref = get_variable_ref local_variables variable_name in
@@ -316,9 +316,14 @@ let dependency_graph parsed_model =
                         let variable_to_fun_relations = variable_to_fun_relations variable_ref functions_used in
 
                         let variable_use_indexed_variables_functions_relations = variable_to_variable_relations @ variable_to_fun_relations in
-                        let variable_use_variables_relations = relations_of_variable_update inner_variable_update_type in
+                        let variable_use_variables_relations = relations_of_scalar_or_index_update_type inner_scalar_or_index_update_type in
                         variable_use_indexed_variables_functions_relations @ variable_use_variables_relations
 
+
+                in
+                let relations_of_update_type = function
+                    | Parsed_variable_update parsed_scalar_or_index_update_type ->
+                        relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type
                     | Parsed_void_update ->
                         (* TODO benjamin IMPLEMENT *)
                         (* All variables found in expression are used by current function *)
@@ -326,7 +331,7 @@ let dependency_graph parsed_model =
                         (* Current function 'f' use x, y *)
                         []
                 in
-                let relations = relations_of_variable_update parsed_variable_update_type in
+                let relations = relations_of_update_type parsed_update_type in
 
                 (* Get list of relations for the next expression / declaration *)
                 let next_declaration_relations = dependency_graph_of_function_in_parsed_next_expr_rec local_variables next_expr in

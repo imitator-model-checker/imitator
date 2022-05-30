@@ -243,15 +243,19 @@ and expression_access_type =
 (* Function local declaration or expression *)
 and fun_body =
     | Fun_local_decl of variable_name * global_expression (* init expr *) * fun_body
-    | Fun_instruction of (variable_update_type * global_expression) * fun_body
+    | Fun_instruction of (update_type * global_expression) * fun_body
     | Fun_expr of global_expression
 
 (* Update type *)
-and variable_update_type =
+and scalar_or_index_update_type =
     (* Variable update, ie: x := 1 *)
-    | Variable_update of Automaton.discrete_index
+    | Scalar_update of Automaton.discrete_index
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
-    | Indexed_update of variable_update_type * int_arithmetic_expression
+    | Indexed_update of scalar_or_index_update_type * int_arithmetic_expression
+
+and update_type =
+    (* Expression with assignment *)
+    | Variable_update of scalar_or_index_update_type
     (* Unit expression, side effect expression without assignment, ie: stack_pop(s) *)
     | Void_update
 
@@ -974,12 +978,16 @@ let string_of_list_expression = customized_string_of_list_expression Constants.g
 let string_of_stack_expression = customized_string_of_stack_expression Constants.global_default_string
 let string_of_queue_expression = customized_string_of_queue_expression Constants.global_default_string
 
-let rec string_of_variable_update_type variable_names = function
-    | Variable_update discrete_index ->
+let rec string_of_scalar_or_index_update_type variable_names = function
+    | Scalar_update discrete_index ->
         variable_names discrete_index
-    | Indexed_update (parsed_variable_update_type, index_expr) ->
-        string_of_variable_update_type variable_names parsed_variable_update_type
+    | Indexed_update (scalar_or_index_update_type, index_expr) ->
+        string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type
         ^ "["
         ^ string_of_int_arithmetic_expression variable_names index_expr
         ^ "]"
+
+let string_of_update_type variable_names = function
+    | Variable_update scalar_or_index_update_type ->
+        string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type
     | Void_update -> ""

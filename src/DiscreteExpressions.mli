@@ -247,15 +247,19 @@ and expression_access_type =
 (* Function local declaration or expression *)
 and fun_body =
     | Fun_local_decl of variable_name * global_expression (* init expr *) * fun_body
-    | Fun_instruction of (variable_update_type * global_expression) * fun_body
+    | Fun_instruction of (update_type * global_expression) * fun_body
     | Fun_expr of global_expression
 
 (* Update type *)
-and variable_update_type =
+and scalar_or_index_update_type =
     (* Variable update, ie: x := 1 *)
-    | Variable_update of Automaton.discrete_index
+    | Scalar_update of Automaton.discrete_index
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
-    | Indexed_update of variable_update_type * int_arithmetic_expression
+    | Indexed_update of scalar_or_index_update_type * int_arithmetic_expression
+
+and update_type =
+    (* Expression with assignment *)
+    | Variable_update of scalar_or_index_update_type
     (* Unit expression, side effect expression without assignment, ie: stack_pop(s) *)
     | Void_update
 
@@ -304,4 +308,4 @@ val string_of_list_expression : (Automaton.variable_index -> string) -> list_exp
 val string_of_stack_expression : (Automaton.variable_index -> string) -> stack_expression -> string
 val string_of_queue_expression : (Automaton.variable_index -> string) -> queue_expression -> string
 
-val string_of_variable_update_type : (Automaton.variable_index -> string) -> variable_update_type -> string
+val string_of_update_type : (Automaton.variable_index -> string) -> update_type -> string

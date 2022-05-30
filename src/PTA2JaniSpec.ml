@@ -1081,7 +1081,7 @@ let string_of_discrete_update model (update_type, expr) =
 
     | _ ->
         json_struct [|
-            json_property "ref" (json_quoted (ModelPrinter.string_of_parsed_variable_update_type model update_type));
+            json_property "ref" (json_quoted (ModelPrinter.string_of_parsed_update_type model update_type));
             json_property "value" (string_of_global_expression model.variable_names expr)
         |]
 
@@ -1121,10 +1121,10 @@ let string_of_conditional_clock_updates model boolean_expr order = function
 
 (* Convert a list of discrete updates into a string *)
 let string_of_conditional_discrete_updates model boolean_expr order updates =
-	string_of_list_of_string_with_sep (jani_separator) (List.rev_map (fun (parsed_variable_update_type, global_expression) ->
+	string_of_list_of_string_with_sep (jani_separator) (List.rev_map (fun (parsed_update_type, global_expression) ->
 
 		let expression = (string_of_global_expression model.variable_names global_expression) in
-		let variable_name = "\"" ^ ModelPrinter.string_of_parsed_variable_update_type model parsed_variable_update_type ^ "\"" in
+		let variable_name = "\"" ^ ModelPrinter.string_of_parsed_update_type model parsed_update_type ^ "\"" in
 		"{\"ref\": " ^ variable_name ^ jani_separator
 		^ " \"value\" : "
 		^ " {\"op\": \"ite\"" ^ jani_separator

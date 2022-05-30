@@ -123,7 +123,8 @@ val string_of_parsed_fun_def : variable_infos -> parsed_fun_definition -> string
 
 val string_of_parsed_update : variable_infos -> update -> string
 val string_of_parsed_normal_update : variable_infos -> normal_update -> string
-val string_of_parsed_variable_update_type : variable_infos -> parsed_variable_update_type -> string
+val string_of_parsed_update_type : variable_infos -> parsed_update_type -> string
+val string_of_parsed_scalar_or_index_update_type : variable_infos -> parsed_scalar_or_index_update_type -> string
 
 (* Parsed linear constraint to string *)
 val string_of_parsed_linear_constraint : variable_infos -> linear_constraint -> string
@@ -211,10 +212,9 @@ val get_variables_in_parsed_state_predicate : parsed_state_predicate -> StringSe
 
 val get_variables_in_parsed_fun_def : parsed_fun_definition -> StringSet.t
 
-val variable_name_of_parsed_variable_update_type_opt : parsed_variable_update_type -> variable_name option
-val variable_name_of_parsed_variable_update_type : parsed_variable_update_type -> variable_name
-
-val is_parsed_variable_update_type_is_a_variable_name : parsed_variable_update_type -> bool
+val variable_name_of_parsed_update_type_opt : parsed_update_type -> variable_name option
+val variable_name_of_parsed_update_type : parsed_update_type -> variable_name
+val variable_name_of_parsed_scalar_or_index_update_type : parsed_scalar_or_index_update_type -> variable_name
 
 val linear_constraint_of_nonlinear_constraint : nonlinear_constraint -> linear_constraint
 

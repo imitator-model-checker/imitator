@@ -140,14 +140,14 @@ let convert_guard variable_infos guard_convex_predicate =
     (* If some false construct found: false guard *)
     ) with False_exception -> False_guard
 
-let convert_update variable_infos updates_type parsed_variable_update_type expr =
-    let typed_variable_update_type, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos updates_type parsed_variable_update_type expr in
-    ExpressionConverter.Convert.variable_update_type_of_typed_variable_update_type variable_infos typed_variable_update_type,
+let convert_update variable_infos updates_type parsed_update_type expr =
+    let typed_update_type, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos updates_type parsed_update_type expr in
+    ExpressionConverter.Convert.update_type_of_typed_update_type variable_infos typed_update_type,
     ExpressionConverter.Convert.global_expression_of_typed_global_expression variable_infos typed_expr
 
-let convert_continuous_update variable_infos parsed_variable_update_type expr =
-    let typed_variable_update_type, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos Parsed_std_updates parsed_variable_update_type expr in
-    ExpressionConverter.Convert.variable_update_type_of_typed_variable_update_type variable_infos typed_variable_update_type,
+let convert_continuous_update variable_infos parsed_update_type expr =
+    let typed_update_type, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos Parsed_std_updates parsed_update_type expr in
+    ExpressionConverter.Convert.update_type_of_typed_update_type variable_infos typed_update_type,
     ExpressionConverter.Convert.linear_term_of_typed_global_expression variable_infos typed_expr
 
 let convert_conditional variable_infos expr =

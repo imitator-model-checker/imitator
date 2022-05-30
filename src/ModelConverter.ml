@@ -413,7 +413,7 @@ let check_update variable_infos automaton_name = function
 (*
 let check_update variable_infos automaton_name update =
 
-    let check_update_normal (parsed_variable_update_type, global_expression) =
+    let check_update_normal (parsed_update_type, global_expression) =
 
         (* Function that check that variable kind of an update is not a constant *)
         let check_variable_kind_of_update variable_name =
@@ -429,7 +429,7 @@ let check_update variable_infos automaton_name update =
             | ParsingStructureUtilities.Constant_kind _ ->
                     print_error (
                         "Trying to update a constant: `"
-                        ^ ParsingStructureUtilities.string_of_parsed_variable_update_type variable_infos parsed_variable_update_type
+                        ^ ParsingStructureUtilities.string_of_parsed_update_type variable_infos parsed_update_type
                         ^ " := "
                         ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos global_expression
                         ^ "`"
@@ -479,21 +479,21 @@ let check_update variable_infos automaton_name update =
         in
 
         (* Function that check update on variable or variable access *)
-        let rec check_parsed_variable_update_type = function
+        let rec check_parsed_update_type = function
             | Parsed_void_update ->
                 check_all_variables_defined_in_update "_"
 
-            | Parsed_indexed_update (inner_variable_update_type, index_expr) as variable_update_type ->
+            | Parsed_indexed_update (inner_update_type, index_expr) as update_type ->
 
                 (* String representation of the current indexed update *)
-                let str_indexed_update = ParsingStructureUtilities.string_of_parsed_variable_update_type variable_infos variable_update_type in
+                let str_indexed_update = ParsingStructureUtilities.string_of_parsed_update_type variable_infos update_type in
 
                 (* Check that all variable in index expression was declared *)
                 let all_variable_declared_in_index_expr = ParsingStructureUtilities.all_variables_defined_in_parsed_discrete_arithmetic_expression variable_infos (Some (print_variable_in_update_not_declared str_indexed_update)) index_expr in
                 (* Update is valid only if all variables are declared and inner update type is valid *)
-                all_variable_declared_in_index_expr && check_parsed_variable_update_type inner_variable_update_type
+                all_variable_declared_in_index_expr && check_parsed_update_type inner_update_type
 
-            | Parsed_variable_update variable_name ->
+            | Parsed_scalar_update variable_name ->
 
                 (* Check whether this variable is to be removed because unused elsewhere than in resets *)
                 let to_be_removed = List.mem variable_name variable_infos.removed_variable_names in
@@ -523,7 +523,7 @@ let check_update variable_infos automaton_name update =
                     all_variables_defined && is_updated_variable_defined && Lazy.force is_variable_not_a_constant
                 )
         in
-        check_parsed_variable_update_type parsed_variable_update_type
+        check_parsed_update_type parsed_update_type
 
     in
 
@@ -1571,8 +1571,8 @@ let get_conditional_update_value = function
 
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filter_updates removed_variable_names updates =
-  let not_removed_variable (parsed_variable_update_type, _) =
-    let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type in
+  let not_removed_variable (parsed_update_type, _) =
+    let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_update_type_opt parsed_update_type in
     match variable_name_opt with
     | Some variable_name ->
         not (List.mem variable_name removed_variable_names)
@@ -1595,7 +1595,7 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
     (** Translate parsed clock update into the tuple clock_index, linear_term *)
     let to_intermediate_abstract_clock_update clock_update =
 
-        let parsed_variable_update_type, update_expr = clock_update in
+        let parsed_update_type, update_expr = clock_update in
 
         (* Check that clock update is a linear expression *)
         let is_linear = ParsingStructureUtilities.is_linear_parsed_global_expression variable_infos update_expr in
@@ -1606,11 +1606,11 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
                 ^ "` is not a linear expression. A linear expression is expected for clock update."
             ));
 
-        let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type in
+        let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_update_type_opt parsed_update_type in
         match variable_name_opt with
         | Some variable_name ->
             let variable_index = index_of_variable_name variable_infos variable_name in
-            let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos parsed_variable_update_type update_expr in
+            let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos parsed_update_type update_expr in
             (variable_index, converted_update)
         (* TODO benjamin REFACTOR it never can happen, should pass variable_name, update_expr instead of parsed_update_variable_type, update_expr *)
         | None -> raise (InternalError "Try to convert a unit expression value to a rational-valued clock.")
@@ -1652,10 +1652,10 @@ let is_only_resets updates =
 let split_to_clock_discrete_updates variable_infos updates =
 
     (** Function that check if a normal update is a clock update *)
-    let is_clock_update (parsed_variable_update_type, _) =
+    let is_clock_update (parsed_update_type, _) =
 
         (* Get updated variable name *)
-        let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_variable_update_type_opt parsed_variable_update_type in
+        let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_update_type_opt parsed_update_type in
 
         match variable_name_opt with
         | Some variable_name ->
@@ -1686,7 +1686,7 @@ let convert_normal_updates variable_infos updates_type updates_list =
     );
 
     (* Convert discrete udpates *)
-    let converted_discrete_updates = List.map (fun (parsed_variable_update_type, expr) -> DiscreteExpressionConverter.convert_update variable_infos updates_type parsed_variable_update_type expr) parsed_discrete_updates in
+    let converted_discrete_updates = List.map (fun (parsed_update_type, expr) -> DiscreteExpressionConverter.convert_update variable_infos updates_type parsed_update_type expr) parsed_discrete_updates in
     (* Convert continuous udpates *)
     let converted_clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
 

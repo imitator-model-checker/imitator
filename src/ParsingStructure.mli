@@ -153,11 +153,13 @@ type guard = convex_predicate
 type invariant = convex_predicate
 
 (* Variable name or variable access (x or x[index]) *)
-(* TODO benjamin CLEAN here an indexed update can ONLY CONTAIN indexed_update (rec) or variable_update, I have to split this type to two variant types *)
-(* TODO benjamin CLEAN, Parsed_variable_non_void_update (that contain Parsed_variable_update and Parsed_indexed_update), Parsed_void_update *)
-type parsed_variable_update_type =
-    | Parsed_variable_update of variable_name
-    | Parsed_indexed_update of parsed_variable_update_type * parsed_discrete_arithmetic_expression
+type parsed_scalar_or_index_update_type =
+    | Parsed_scalar_update of variable_name
+    | Parsed_indexed_update of parsed_scalar_or_index_update_type * parsed_discrete_arithmetic_expression
+
+(* Update type, void update is an instruction, variable update is update of a variable *)
+type parsed_update_type =
+    | Parsed_variable_update of parsed_scalar_or_index_update_type
     | Parsed_void_update
 
 (* Type of the batch of updates *)
@@ -166,7 +168,7 @@ type updates_type =
     | Parsed_std_updates (* Standard updates `then` *)
 
 (** basic updating *)
-type normal_update = parsed_variable_update_type * parsed_global_expression
+type normal_update = parsed_update_type * parsed_global_expression
 (** conditional updating *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 
