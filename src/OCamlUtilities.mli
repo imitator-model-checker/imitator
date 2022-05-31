@@ -114,6 +114,12 @@ val group_by : ('a -> 'b) -> 'a list -> ('b * 'a list) list
 (* and map values associated by keys according to valueSelector function *)
 val group_by_and_map : ('a -> 'b) -> ('a -> 'c) -> 'a list -> ('b * 'c list) list
 
+(* Type used for partition map *)
+type ('a, 'b) my_either = My_left of 'a | My_right of 'b
+
+(* Partition and map list *)
+val partition_map : ('a -> ('b, 'c) my_either) -> 'a list -> ('b list * 'c list)
+
 (* Partition list by grouping elements by keys in a hashtable *)
 val hashtbl_group_by : ('a -> 'b) -> 'a list -> ('b, 'a list) Hashtbl.t
 

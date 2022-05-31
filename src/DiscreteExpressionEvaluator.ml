@@ -641,27 +641,21 @@ and compute_update_value_opt_with_context eval_context (update_type, expr) =
         | Indexed_update (scalar_or_index_update_type, _) ->
             discrete_index_of_parsed_scalar_or_index_update_type scalar_or_index_update_type
     in
-    let discrete_index_of_parsed_update_type_opt = function
-        | Variable_update scalar_or_index_update_type ->
-            Some (discrete_index_of_parsed_scalar_or_index_update_type scalar_or_index_update_type)
-        | Void_update -> None
-    in
-
-    let discrete_index_opt = discrete_index_of_parsed_update_type_opt update_type in
-
-    match discrete_index_opt with
-    | None ->
-        let _ = eval_global_expression_with_context (Some eval_context) expr in None
-    (* TODO benjamin IMPLEMENT SOME, check local var are immutables *)
-    | Some discrete_index ->
-        (**)
+    match update_type with
+    (* TODO benjamin IMPLEMENT check local var are immutables (not here) *)
+    | Variable_update scalar_or_index_update_type ->
+        (* Get discrete index *)
+        let discrete_index = discrete_index_of_parsed_scalar_or_index_update_type scalar_or_index_update_type in
+        (* Get value before update as old value *)
         let old_value = eval_context.discrete_valuation discrete_index in
 
         (* Compute its new value *)
         let new_value = eval_global_expression_with_context (Some eval_context) expr in
         let new_value = pack_value (eval_context.discrete_valuation, eval_context.discrete_setter) old_value new_value update_type in
-        Some (discrete_index, new_value)
 
+        Some (discrete_index, new_value)
+    | Void_update ->
+        let _ = eval_global_expression_with_context (Some eval_context) expr in None
 
 and direct_update_with_context eval_context update =
 

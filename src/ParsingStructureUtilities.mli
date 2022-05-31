@@ -123,6 +123,7 @@ val string_of_parsed_fun_def : variable_infos -> parsed_fun_definition -> string
 
 val string_of_parsed_update : variable_infos -> update -> string
 val string_of_parsed_normal_update : variable_infos -> normal_update -> string
+val string_of_parsed_clock_update : variable_infos -> parsed_scalar_or_index_update_type * parsed_global_expression -> string
 val string_of_parsed_update_type : variable_infos -> parsed_update_type -> string
 val string_of_parsed_scalar_or_index_update_type : variable_infos -> parsed_scalar_or_index_update_type -> string
 

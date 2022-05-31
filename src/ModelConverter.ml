@@ -70,11 +70,11 @@ let rec get_clocks_in_updates updates : clock_index list =
     | Updates clock_update_list ->
       let result, _ = List.split clock_update_list in result
   in
-  let clocks_in_conditons = List.flatten (List.map
+  let clocks_in_conditions = List.flatten (List.map
     (fun (b, u1, u2) -> (get_clocks_in_updates u1) @ (get_clocks_in_updates u2) )
     updates.conditional)
   in
-  (get_clocks updates.clock) @ clocks_in_conditons
+  (get_clocks updates.clock) @ clocks_in_conditions
 
 (************************************************************)
 (** Print error messages *)
@@ -1595,25 +1595,21 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
     (** Translate parsed clock update into the tuple clock_index, linear_term *)
     let to_intermediate_abstract_clock_update clock_update =
 
-        let parsed_update_type, update_expr = clock_update in
+        let parsed_scalar_or_index_update_type, update_expr = clock_update in
 
         (* Check that clock update is a linear expression *)
         let is_linear = ParsingStructureUtilities.is_linear_parsed_global_expression variable_infos update_expr in
         if not is_linear then
             raise (InvalidExpression (
                 "Clock update `"
-                ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos clock_update
+                ^ ParsingStructureUtilities.string_of_parsed_clock_update variable_infos clock_update
                 ^ "` is not a linear expression. A linear expression is expected for clock update."
             ));
 
-        let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_update_type_opt parsed_update_type in
-        match variable_name_opt with
-        | Some variable_name ->
-            let variable_index = index_of_variable_name variable_infos variable_name in
-            let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos parsed_update_type update_expr in
-            (variable_index, converted_update)
-        (* TODO benjamin REFACTOR it never can happen, should pass variable_name, update_expr instead of parsed_update_variable_type, update_expr *)
-        | None -> raise (InternalError "Try to convert a unit expression value to a rational-valued clock.")
+        let variable_name = ParsingStructureUtilities.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+        let variable_index = index_of_variable_name variable_infos variable_name in
+        let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos parsed_scalar_or_index_update_type update_expr in
+        variable_index, converted_update
     in
 
     let converted_clock_updates = List.map to_intermediate_abstract_clock_update updates_list in
@@ -1651,6 +1647,7 @@ let is_only_resets updates =
 (** Split normal updates into clock, discrete updates *)
 let split_to_clock_discrete_updates variable_infos updates =
 
+    (*
     (** Function that check if a normal update is a clock update *)
     let is_clock_update (parsed_update_type, _) =
 
@@ -1664,8 +1661,23 @@ let split_to_clock_discrete_updates variable_infos updates =
         (* Unit update, so it's not a clock *)
         | None -> false
     in
+    *)
 
-    List.partition is_clock_update updates
+    (** Function that check if a normal update is a clock update *)
+    let is_clock_update (parsed_update_type, update_expr) =
+        match parsed_update_type with
+        | Parsed_variable_update (Parsed_scalar_update variable_name)
+        when variable_infos.type_of_variables (index_of_variable_name variable_infos variable_name) = DiscreteType.Var_type_clock ->
+            (* Retrieve variable type *)
+            My_left (Parsed_scalar_update variable_name, update_expr)
+
+        | _ ->
+            My_right (parsed_update_type, update_expr)
+    in
+
+
+(*    List.partition is_clock_update updates*)
+    OCamlUtilities.partition_map is_clock_update updates
 
 
 (** Translate a normal parsed update into its abstract model *)
@@ -1685,9 +1697,9 @@ let convert_normal_updates variable_infos updates_type updates_list =
     | _ -> ()
     );
 
-    (* Convert discrete udpates *)
+    (* Convert discrete updates *)
     let converted_discrete_updates = List.map (fun (parsed_update_type, expr) -> DiscreteExpressionConverter.convert_update variable_infos updates_type parsed_update_type expr) parsed_discrete_updates in
-    (* Convert continuous udpates *)
+    (* Convert continuous updates *)
     let converted_clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
 
 	(** update abstract model *)

@@ -493,6 +493,12 @@ and string_of_parsed_normal_update variable_infos (update_type, expr) =
     ^ (if str_left_member <> "" then " := " else "") (* TODO benjamin CLEAN remove hard-coded := *)
     ^ string_of_parsed_global_expression variable_infos expr
 
+and string_of_parsed_clock_update variable_infos (scalar_or_index_update_type, expr) =
+    let str_left_member = string_of_parsed_scalar_or_index_update_type variable_infos scalar_or_index_update_type in
+    str_left_member
+    ^ (if str_left_member <> "" then " := " else "") (* TODO benjamin CLEAN remove hard-coded := *)
+    ^ string_of_parsed_global_expression variable_infos expr
+
 and string_of_parsed_update variable_infos = function
 	| Normal normal_update ->
         string_of_parsed_normal_update variable_infos normal_update

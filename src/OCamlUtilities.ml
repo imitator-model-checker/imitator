@@ -269,6 +269,17 @@ let group_by_and_map keySelector valueSelector l =
     let group_by_keys = List.map (fun key -> (key, List.map valueSelector (List.filter (fun x -> keySelector x = key) l))) uniq_keys in
     group_by_keys
 
+(* Type used for partition map *)
+type ('a, 'b) my_either = My_left of 'a | My_right of 'b
+
+(* Partition and map list *)
+let partition_map f l =
+    let lm = List.map f l in
+    let a, b = List.partition (function My_left _ -> true | My_right _ -> false) lm in
+    List.map (function My_left x -> x | My_right _ -> raise (Exceptions.InternalError "impossible")) a,
+    List.map (function My_left _ ->  raise (Exceptions.InternalError "impossible") | My_right x -> x) b
+
+
 (* Partition list by grouping elements by keys in a hashtable *)
 let hashtbl_group_by keySelector l =
     let group_by_keys = group_by keySelector l in
