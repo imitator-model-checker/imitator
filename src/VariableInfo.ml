@@ -93,6 +93,16 @@ let var_type_of_variable_or_constant variable_infos variable_name =
         (* Otherwise problem ! *)
         raise (InternalError ("The variable `" ^ variable_name ^ "` was not declared."))
 
+(* Get some var type of a variable or a constant given it's name *)
+(* it return None if constant or variable was not declared or removed *)
+let var_type_of_variable_or_constant_opt variable_infos variable_name =
+    try
+        Some (var_type_of_variable_or_constant variable_infos variable_name)
+    with _ ->
+        None
+
+
+
 (* Get discrete type of a variable or a constant given it's name *)
 let discrete_type_of_variable_or_constant variable_infos variable_name =
     let var_type = var_type_of_variable_or_constant variable_infos variable_name in

@@ -479,7 +479,6 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 	!ok
 
 (* Check if user function definition is well formed *)
-(* - check that all variables used in user function are declared *)
 let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
 
     (* Check if there isn't duplicate parameter with inconsistent types *)
@@ -560,11 +559,12 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
 
         (* Check that no clocks are updated *)
         (* Get only clock update and map to a clock names list *)
-        let assigned_clock_names = OCamlUtilities.rev_filter_map (function
+        let assigned_clock_names = List.filter_map (function
             | Global_variable_ref variable_name ->
-                let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
-                (match var_type with
-                | Var_type_clock -> Some variable_name
+                (* Get eventual var type (or none if variable was not declared or removed) *)
+                let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+                (match var_type_opt with
+                | Some Var_type_clock -> Some variable_name
                 | _ -> None
                 )
             | _ -> None
@@ -838,19 +838,6 @@ let is_inequality_has_left_hand_removed_variable removed_variable_names = functi
     (* Any other combination is OK *)
     | _ ->
         false
-
-(*
-let is_inequality_has_left_hand_removed_variable_used_in_init removed_variable_names only_used_in_init_variable_names = function
-    | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _))
-    | Parsed_discrete_predicate (variable_name, _) ->
-        (* Filter out if the left-hand is in the removed variable names *)
-        List.mem variable_name removed_variable_names
-        &&
-        not (List.mem variable_name only_used_in_init_variable_names)
-    (* Any other combination is OK *)
-    | _ ->
-        false
-*)
 
 let partition_discrete_continuous variable_infos filtered_init_inequalities =
     List.partition (function
