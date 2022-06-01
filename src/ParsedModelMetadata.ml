@@ -223,8 +223,7 @@ let dependency_graph parsed_model =
             | None -> Global_variable_ref used_variable_name
         in
 
-        (* TODO benjamin CLEAN comment *)
-        (**)
+        (* Create relations between a set of variables used by another variable reference *)
         let variable_to_variable_relations variable_ref variables_used =
             StringSet.fold (fun used_variable_name acc ->
                 let used_variable_ref = get_variable_ref local_variables used_variable_name in
@@ -232,8 +231,7 @@ let dependency_graph parsed_model =
             ) variables_used []
         in
 
-        (* TODO benjamin CLEAN comment *)
-        (**)
+        (* Create relations between a set of functions used by another variable reference *)
         let variable_to_fun_relations variable_ref functions_used =
             StringSet.fold (fun used_function_name acc ->
                 (variable_ref, Fun_ref used_function_name) :: acc
@@ -252,14 +250,10 @@ let dependency_graph parsed_model =
                 (* Get functions used in the local init expression of the variable *)
                 let functions_used = get_functions_in_parsed_global_expression init_expr in
 
-                (* For each variable used in init expression get *)
+                (* For each variable used in init expression, create relations *)
                 let variable_to_variable_relations = variable_to_variable_relations variable_ref variables_used in
-
-
-
-                let variable_to_fun_relations = StringSet.fold (fun used_function_name acc ->
-                    (variable_ref, Fun_ref used_function_name) :: acc
-                ) functions_used [] in
+                (* For each function used in init expression, create relations *)
+                let variable_to_fun_relations = variable_to_fun_relations variable_ref functions_used in
 
                 (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
                 let local_variables = StringMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
@@ -284,14 +278,14 @@ let dependency_graph parsed_model =
                         (* Get functions used in the local init expression of the variable *)
                         let functions_used = get_functions_in_parsed_global_expression expr in
 
-                        (* For each variable used in expression *)
+                        (* For each variable used in init expression, create relations *)
                         let variable_to_variable_relations = variable_to_variable_relations variable_ref variables_used in
-                        (* For each function used in expression *)
-                        let variable_to_fun_relations = StringSet.fold (fun used_function_name acc ->
-                            (variable_ref, Fun_ref used_function_name) :: acc
-                        ) functions_used [] in
+                        (* For each function used in init expression, create relations *)
+                        let variable_to_fun_relations = variable_to_fun_relations variable_ref functions_used in
 
-                        (* TODO benjamin REFACTOR, remove that, an instruction that use global variable that is not used elsewhere should be removed *)
+                        (* TODO benjamin IMPROVE, an instruction that use global variable that is not used elsewhere should be removed *)
+                        (* Here for sake of simplicity, we consider that all global variables modified in function are used (it's not always the case) *)
+
                         (* Create relation between current function and assigned variable *)
                         let cur_fun_used_variable_relation = Fun_ref fun_def.name, variable_ref in
                         (* Concat all relations *)
@@ -499,3 +493,57 @@ let string_of_dependency_graph (components, component_relations) =
     let str_component_relations = OCamlUtilities.string_of_list_of_string_with_sep "; " str_relations_list in
     (* Dependency graph as dot format *)
     "digraph dependency_graph {" ^ str_components ^ ";" ^ str_component_relations ^ "}"
+
+(* Get all assigned variables (locals and globals) in function body implementation *)
+let assigned_variables_of_fun_def (fun_def : parsed_fun_definition) =
+
+    (* Add parameters as local variables *)
+    let parameter_refs = List.map (fun (param_name, _) -> Param_ref (param_name, fun_def.name)) fun_def.parameters in
+    let local_variable_components = List.fold_right ComponentSet.add parameter_refs ComponentSet.empty in
+    (* Create ref of local variable components set *)
+    let local_variable_components_ref = ref local_variable_components in
+    (* Create set of assigned variables *)
+    let components_ref = ref ComponentSet.empty in
+
+    (* Function that get assigned variable in function body expression *)
+    let rec get_assigned_variables_in_parsed_next_expr_rec = function
+        | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, id) ->
+            (* Add the new declared local variable to set *)
+            let local_variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
+            local_variable_components_ref := ComponentSet.add local_variable_ref !local_variable_components_ref;
+
+            (* Gather variables in next expressions *)
+            get_assigned_variables_in_parsed_next_expr_rec next_expr;
+
+        | Parsed_fun_instruction ((parsed_update_type, _), next_expr) ->
+
+            let variable_name_opt = variable_name_of_parsed_update_type_opt parsed_update_type in
+            (match variable_name_opt with
+            | Some variable_name ->
+                (* Check existence of any local variable / parameter that may shadow global variable of the same name *)
+                let local_variable_component_opt = ComponentSet.find_first_opt (function
+                    | Param_ref (v, _)
+                    | Local_variable_ref (v, _, _) -> variable_name = v
+                    | _ -> false
+                ) !local_variable_components_ref
+                in
+
+                let component =
+                    match local_variable_component_opt with
+                    (* If any local variable shadow a global variable, get it's reference *)
+                    | Some local_variable_component -> local_variable_component
+                    (* Else it's possibly an update of a global variable (or an nonexistent variable) *)
+                    | None -> Global_variable_ref variable_name
+                in
+                components_ref := ComponentSet.add component !components_ref
+
+            | None -> ()
+            );
+
+            (* Gather variables in next expressions *)
+            get_assigned_variables_in_parsed_next_expr_rec next_expr;
+
+        | Parsed_fun_expr expr -> ()
+    in
+    get_assigned_variables_in_parsed_next_expr_rec fun_def.body;
+    !components_ref

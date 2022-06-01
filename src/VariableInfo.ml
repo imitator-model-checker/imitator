@@ -87,10 +87,11 @@ let var_type_of_variable_or_constant variable_infos variable_name =
     | Constant_defined ->
         let value = value_of_constant_name variable_infos variable_name in
         Var_type_discrete (DiscreteValue.discrete_type_of_value value)
-    | Variable_removed
+    | Variable_removed ->
+        raise (InternalError ("The variable `" ^ variable_name ^ "` was removed."))
     | Not_declared ->
         (* Otherwise problem ! *)
-        raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."))
+        raise (InternalError ("The variable `" ^ variable_name ^ "` was not declared."))
 
 (* Get discrete type of a variable or a constant given it's name *)
 let discrete_type_of_variable_or_constant variable_infos variable_name =

@@ -30,6 +30,7 @@ open ParsingStructure
 open VariableInfo
 open AbstractProperty
 open ParsingStructureUtilities
+open ParsedModelMetadata
 open DiscreteType
 open CustomModules
 
@@ -717,8 +718,8 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 (* - check that all variables used in user function are declared *)
 let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
 
-    (* Check if there is duplicate parameter with inconsistent types *)
-    let is_not_consistent_duplicate_parameters =
+    (* Check if there isn't duplicate parameter with inconsistent types *)
+    let is_consistent_duplicate_parameters =
 
         (* Message to display when duplicate parameters found *)
         let duplicate_parameter_message parameter_name =
@@ -737,25 +738,23 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
 
         (* For each parameter get if duplicate definitions are consistent or not *)
         (* Ex: for fn f (a : int, a : rat), duplicate definition of `a` isn't consistent *)
-        let not_consistent_duplicate_parameters = List.map (fun (parameter_name, group) ->
-                (* Remove parameter duplicates *)
-                let group_without_duplicates = OCamlUtilities.list_only_once group in
-                (* Prepare message *)
-                let current_duplicate_parameter_message = duplicate_parameter_message parameter_name in
-                (* If duplicates remain greater than 1, there is inconsistent definitions *)
-                if List.length group_without_duplicates = 1 then (
-                    print_warning (current_duplicate_parameter_message ^ ".");
-                    false
-                ) else (
-                    let str_parameters_list = List.map (fun (parameter_name, discrete_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete discrete_type) group_without_duplicates in
-                    let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
-                    print_error (current_duplicate_parameter_message ^ "` doesn't have consistent definitions: `" ^ str_parameters ^ "`.");
-                    true
-                )
-            ) duplicate_parameters
-        in
-        (* Check if it exist a non consistent duplicate definition *)
-        List.exists identity not_consistent_duplicate_parameters
+        List.iter (fun (parameter_name, group) ->
+            (* Remove parameter duplicates *)
+            let group_without_duplicates = OCamlUtilities.list_only_once group in
+            (* Prepare message *)
+            let current_duplicate_parameter_message = duplicate_parameter_message parameter_name in
+            (* If duplicates remain greater than 1, there is inconsistent definitions *)
+            if List.length group_without_duplicates = 1 then (
+                print_error (current_duplicate_parameter_message ^ ".");
+            ) else (
+                let str_parameters_list = List.map (fun (parameter_name, discrete_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete discrete_type) group_without_duplicates in
+                let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
+                print_error (current_duplicate_parameter_message ^ "` doesn't have consistent definitions: `" ^ str_parameters ^ "`.");
+            )
+        ) duplicate_parameters;
+
+        (* Check if it exist duplicate parameters *)
+        List.length duplicate_parameters = 0
     in
 
     (* Check if all variables in function definition are defined *)
@@ -776,10 +775,83 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         ParsingStructureUtilities.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt print_variable_in_fun_not_declared_opt fun_def
     in
 
-    (* TODO benjamin IMPLEMENT check that a local variable is not updated *)
+    (* Check if assignments found in function body are allowed *)
+    let is_assignments_are_allowed =
+
+        (* Check for assigned variables (local and global) in function implementation *)
+        let variable_components = ParsedModelMetadata.assigned_variables_of_fun_def fun_def in
+        let variable_components_list = ComponentSet.elements variable_components in
+
+        (* Check that no local variable are updated *)
+        let assigned_local_variable_names = List.filter_map (function
+            | Local_variable_ref (variable_name, _, _) -> Some variable_name
+            | _ -> None
+        ) variable_components_list in
+
+        (* Check that no parameter are updated *)
+        let assigned_parameter_names = List.filter_map (function
+            | Param_ref (param_name, _) -> Some param_name
+            | _ -> None
+        ) variable_components_list in
+
+        (* Check that no clocks are updated *)
+        (* Get only clock update and map to a clock names list *)
+        let assigned_clock_names = OCamlUtilities.rev_filter_map (function
+            | Global_variable_ref variable_name ->
+                let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
+                (match var_type with
+                | Var_type_clock -> Some variable_name
+                | _ -> None
+                )
+            | _ -> None
+
+        ) variable_components_list in
+
+        (* Is any local variable modifications in user function ? *)
+        let has_parameter_modifications = List.length assigned_parameter_names > 0 in
+        (* Is any local variable modifications in user function ? *)
+        let has_local_variable_modifications = List.length assigned_local_variable_names > 0 in
+        (* Is any clock modifications in user function ? *)
+        let has_clock_modifications = List.length assigned_clock_names > 0 in
+
+        (* Print possible errors *)
+        List.iter (fun param_name ->
+            print_error (
+                "Modification of parameter `"
+                ^ param_name
+                ^ "` found in `"
+                ^ fun_def.name ^
+                "`. Parameters are immutables."
+            );
+        ) assigned_parameter_names;
+
+        List.iter (fun variable_name ->
+            print_error (
+                "Modification of local variable `"
+                ^ variable_name
+                ^ "` found in `"
+                ^ fun_def.name ^
+                "`. Local variables are immutables."
+            );
+        ) assigned_local_variable_names;
+
+        List.iter (fun variable_name ->
+            print_error (
+                "Modification of clock `"
+                ^ variable_name
+                ^ "` found in `"
+                ^ fun_def.name ^
+                "`. Clock cannot be modified in user functions."
+            );
+        ) assigned_clock_names;
+
+        not (has_parameter_modifications || has_local_variable_modifications || has_clock_modifications)
+    in
 
     (* Return *)
-    not is_not_consistent_duplicate_parameters && is_all_variables_defined
+    is_consistent_duplicate_parameters
+    && is_assignments_are_allowed
+    && is_all_variables_defined
 
 (*------------------------------------------------------------*)
 (* Check that the automata are well-formed *)
@@ -3819,8 +3891,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	print_message Verbose_high ("*** Checking user functions definitions…");
 
-    (* Check user functions are well formed *)
-	let well_formed_user_functions_list = List.map (check_fun_definition variable_infos) parsed_model.fun_definitions in
+    (* Check that (only used) user functions are well formed *)
+	let well_formed_user_functions_list = List.map (check_fun_definition variable_infos) used_function_definitions in
 	let well_formed_user_functions = List.for_all identity well_formed_user_functions_list in
 
     if not well_formed_user_functions then

@@ -67,3 +67,5 @@ val unused_local_variables_of_model : dependency_graph -> local_variable_ref lis
 val used_parameters_of_model : dependency_graph -> param_ref list
 val unused_parameters_of_model : dependency_graph -> param_ref list
 *)
+
+val assigned_variables_of_fun_def : parsed_fun_definition -> ComponentSet.t
