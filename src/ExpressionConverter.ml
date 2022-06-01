@@ -383,19 +383,32 @@ and string_of_typed_discrete_factor variable_infos discrete_type = function
 	    Constants.default_arithmetic_string.unary_min_string
         ^ string_of_typed_discrete_factor variable_infos discrete_type factor
 
+let rec string_of_typed_scalar_or_index_update_type variable_infos = function
+    | Typed_scalar_update variable_name -> variable_name
+    | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, discrete_type) ->
+        string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
+        ^ "[" ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) index_expr ^ "]"
+
+let string_of_typed_update_type variable_infos = function
+    | Typed_variable_update typed_scalar_or_index_update_type ->
+        string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
+    | Typed_void_update -> ""
+
 let rec string_of_fun_body variable_infos = function
     | Typed_fun_local_decl (variable_name, discrete_type, expr, next_expr) ->
-        "let "
-        ^ variable_name
-        ^ " : "
-        ^ DiscreteType.string_of_var_type_discrete discrete_type
-        ^ " = "
-        ^ string_of_typed_global_expression variable_infos expr
-        ^ ", "
+        ParsingStructureUtilities.string_of_let_in
+            variable_name
+            (DiscreteType.string_of_var_type_discrete discrete_type)
+            (string_of_typed_global_expression variable_infos expr)
         ^ string_of_fun_body variable_infos next_expr
-    | Typed_fun_instruction _ ->
-        (* TODO benjamin IMPLEMENT *)
-        ""
+
+    | Typed_fun_instruction ((typed_update_type, update_expr), next_expr) ->
+        let str_left_member = string_of_typed_update_type variable_infos typed_update_type in
+        let str_right_member = string_of_typed_global_expression variable_infos update_expr in
+        ParsingStructureUtilities.string_of_assignment str_left_member str_right_member
+        ^ ";\n"
+        ^ string_of_fun_body variable_infos next_expr
+
     | Typed_fun_expr expr ->
         string_of_typed_global_expression variable_infos expr
 

@@ -112,6 +112,9 @@ val label_of_parsed_factor_constructor : parsed_discrete_factor -> string
 (* Parsed expression to string *)
 val function_name_of_parsed_factor : parsed_discrete_factor -> string
 
+val string_of_assignment : string -> string -> string
+val string_of_let_in : string -> string -> string -> string
+
 val string_of_parsed_global_expression : variable_infos -> parsed_global_expression -> string
 val string_of_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> string
 val string_of_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> string
