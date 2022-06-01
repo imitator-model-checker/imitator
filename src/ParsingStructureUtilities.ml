@@ -155,7 +155,7 @@ and fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun (update
     (fold_map_parsed_update_type operator base leaf_fun leaf_update_fun update_type) @
     [fold_parsed_global_expression operator base leaf_fun expr]
 
-(** Fold a parsed update expression using operator applying custom function on leafs **)
+(** Fold a parsed update expression using operator applying custom function on leaves **)
 (** As update expression contain list of leaf, it return list of result from function applications **)
 (* TODO benjamin operator seems useless here because it's fold map and not a fold, rename to flat_map *)
 and fold_map_parsed_update operator base leaf_fun leaf_update_fun = function
@@ -173,7 +173,7 @@ and fold_parsed_normal_update operator base leaf_fun leaf_update_fun expr =
     let elements = fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun expr in
     List.fold_left operator base elements
 
-(** Fold a parsed update expression using operator applying custom function on leafs **)
+(** Fold a parsed update expression using operator applying custom function on leaves **)
 (** And fold the list of leaf using base **)
 and fold_parsed_update operator base leaf_fun leaf_update_fun expr =
     let elements = fold_map_parsed_update operator base leaf_fun leaf_update_fun expr in
@@ -391,6 +391,20 @@ let string_of_parsed_conj_dis = function
     | Parsed_and -> Constants.default_string.and_operator
     | Parsed_or -> Constants.default_string.or_operator
 
+let string_of_assignment str_left_member str_right_member =
+    str_left_member
+    ^ (if str_left_member <> "" then " := " else "")
+    ^ str_right_member
+
+let string_of_let_in variable_name str_discrete_type str_init_expr =
+    "let "
+    ^ variable_name
+    ^ " : "
+    ^ str_discrete_type
+    ^ " = "
+    ^ str_init_expr
+    ^ "in \n"
+
 let rec string_of_parsed_global_expression variable_infos = function
     | Parsed_global_expression expr -> string_of_parsed_boolean_expression variable_infos expr
 
@@ -473,31 +487,28 @@ and string_of_parsed_discrete_boolean_expression variable_infos = function
 
 and string_of_parsed_next_expr variable_infos = function
         | Parsed_fun_local_decl (variable_name, discrete_type, init_expr, next_expr, _) ->
-            "let "
-            ^ variable_name
-            ^ " : "
-            ^ DiscreteType.string_of_var_type_discrete discrete_type
-            ^ " = "
-            ^ string_of_parsed_global_expression variable_infos init_expr
-            ^ ", \n"
+            string_of_let_in
+                variable_name
+                (DiscreteType.string_of_var_type_discrete discrete_type)
+                (string_of_parsed_global_expression variable_infos init_expr)
             ^ string_of_parsed_next_expr variable_infos next_expr
+
         | Parsed_fun_instruction (normal_update, next_expr) ->
             string_of_parsed_normal_update variable_infos normal_update
             ^ string_of_parsed_next_expr variable_infos next_expr
+
         | Parsed_fun_expr expr ->
             string_of_parsed_global_expression variable_infos expr
 
 and string_of_parsed_normal_update variable_infos (update_type, expr) =
     let str_left_member = string_of_parsed_update_type variable_infos update_type in
-    str_left_member
-    ^ (if str_left_member <> "" then " := " else "") (* TODO benjamin CLEAN remove hard-coded := *)
-    ^ string_of_parsed_global_expression variable_infos expr
+    let str_right_member = string_of_parsed_global_expression variable_infos expr in
+    string_of_assignment str_left_member str_right_member
 
 and string_of_parsed_clock_update variable_infos (scalar_or_index_update_type, expr) =
     let str_left_member = string_of_parsed_scalar_or_index_update_type variable_infos scalar_or_index_update_type in
-    str_left_member
-    ^ (if str_left_member <> "" then " := " else "") (* TODO benjamin CLEAN remove hard-coded := *)
-    ^ string_of_parsed_global_expression variable_infos expr
+    let str_right_member = string_of_parsed_global_expression variable_infos expr in
+    string_of_assignment str_left_member str_right_member
 
 and string_of_parsed_update variable_infos = function
 	| Normal normal_update ->

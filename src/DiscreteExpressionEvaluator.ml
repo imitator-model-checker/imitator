@@ -588,7 +588,6 @@ and get_expression_access_value_with_context eval_context_opt index_expr = funct
         get_list_value_at_with_context eval_context_opt list_expr index_expr
 
 and eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl =
-    ImitatorUtilities.print_message Verbose_standard ("Eval function");
     (* Get or create local variables table *)
     let local_variables = Hashtbl.create 0 in
 
@@ -613,25 +612,20 @@ and eval_inline_function_with_context eval_context_opt param_names expr_args fun
 
     (* Eval function body *)
     let new_eval_context = {eval_context with local_variables = local_variables } in
-    ImitatorUtilities.print_standard_message ("Eval function body");
-
     eval_fun_body_with_context new_eval_context fun_decl
 
 and eval_fun_body_with_context eval_context = function
     | Fun_local_decl (variable_name, expr, next_expr) ->
-        ImitatorUtilities.print_standard_message ("Eval function decl");
         let value = eval_global_expression_with_context (Some eval_context) expr in
         Hashtbl.add eval_context.local_variables variable_name value;
 
         eval_fun_body_with_context eval_context next_expr
 
     | Fun_instruction (normal_update, next_expr) ->
-        ImitatorUtilities.print_standard_message ("Eval function instruction");
         direct_update_with_context eval_context normal_update;
         eval_fun_body_with_context eval_context next_expr
 
     | Fun_expr expr ->
-        ImitatorUtilities.print_standard_message ("Eval function expr");
         eval_global_expression_with_context (Some eval_context) expr
 
 and compute_update_value_opt_with_context eval_context (update_type, expr) =
