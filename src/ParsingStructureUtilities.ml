@@ -391,11 +391,13 @@ let string_of_parsed_conj_dis = function
     | Parsed_and -> Constants.default_string.and_operator
     | Parsed_or -> Constants.default_string.or_operator
 
+(* String representation of an assignment *)
 let string_of_assignment str_left_member str_right_member =
     str_left_member
     ^ (if str_left_member <> "" then " := " else "")
     ^ str_right_member
 
+(* String representation of let-in structure *)
 let string_of_let_in variable_name str_discrete_type str_init_expr =
     "let "
     ^ variable_name
@@ -403,7 +405,7 @@ let string_of_let_in variable_name str_discrete_type str_init_expr =
     ^ str_discrete_type
     ^ " = "
     ^ str_init_expr
-    ^ "in \n"
+    ^ "in"
 
 let rec string_of_parsed_global_expression variable_infos = function
     | Parsed_global_expression expr -> string_of_parsed_boolean_expression variable_infos expr
@@ -491,6 +493,7 @@ and string_of_parsed_next_expr variable_infos = function
                 variable_name
                 (DiscreteType.string_of_var_type_discrete discrete_type)
                 (string_of_parsed_global_expression variable_infos init_expr)
+            ^ "\n"
             ^ string_of_parsed_next_expr variable_infos next_expr
 
         | Parsed_fun_instruction (normal_update, next_expr) ->

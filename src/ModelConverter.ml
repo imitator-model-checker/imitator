@@ -3653,7 +3653,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     List.iter (fun (parsed_fun_def : parsed_fun_definition) ->
         (* Convert fun def from parsing structure to abstract model *)
         let fun_def = DiscreteExpressionConverter.convert_fun_definition variable_infos parsed_fun_def in
-        (* Add fun def to functions table *)
+        (* Add converted fun def to functions table *)
         Hashtbl.add Functions.fun_definitions_table fun_def.name fun_def
     ) used_function_definitions;
 

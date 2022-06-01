@@ -400,6 +400,7 @@ let rec string_of_fun_body variable_infos = function
             variable_name
             (DiscreteType.string_of_var_type_discrete discrete_type)
             (string_of_typed_global_expression variable_infos expr)
+        ^ "\n"
         ^ string_of_fun_body variable_infos next_expr
 
     | Typed_fun_instruction ((typed_update_type, update_expr), next_expr) ->
