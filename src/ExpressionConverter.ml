@@ -3245,8 +3245,7 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 		    update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
 
 	and update_coef_array_in_parsed_update_factor mult_factor = function
-		| Typed_variable (variable_name, _, scope) ->
-		    (* TODO benjamin IMPLEMENT if scope Local, error *)
+		| Typed_variable (variable_name, _, _) ->
 			(* Try to find the variable_index *)
 			if Hashtbl.mem index_of_variables variable_name then (
 				let variable_index = Hashtbl.find index_of_variables variable_name in

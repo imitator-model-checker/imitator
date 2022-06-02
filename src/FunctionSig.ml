@@ -170,6 +170,8 @@ let is_signature_compatible_with_signature_constraint signature signature_constr
 let type_number_constraint_of_discrete_number_type = function
     | Var_type_discrete_rat -> Rat_constraint
     | Var_type_discrete_int -> Int_constraint Int_type_constraint
+    (* Note benjamin: a case that never happen shouldn't appear, due to a bad modeling, to fix *)
+    | Var_type_discrete_unknown_number -> raise (InternalError "should never happen")
 
 let type_constraint_of_discrete_type discrete_type =
     let rec type_constraint_of_discrete_type_rec = function
@@ -190,6 +192,8 @@ let type_constraint_of_discrete_type discrete_type =
         | Var_type_discrete_queue inner_type ->
             let inner_type_constraint = Defined_type_constraint (type_constraint_of_discrete_type_rec inner_type) in
             Queue_constraint inner_type_constraint
+        (* Note benjamin: a case that never happen shouldn't appear, due to a bad modeling, to fix *)
+        | Var_type_weak -> raise (InternalError "should never happen")
     in
     Defined_type_constraint (type_constraint_of_discrete_type_rec discrete_type)
 

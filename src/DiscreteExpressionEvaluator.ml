@@ -636,7 +636,6 @@ and compute_update_value_opt_with_context eval_context (update_type, expr) =
             discrete_index_of_parsed_scalar_or_index_update_type scalar_or_index_update_type
     in
     match update_type with
-    (* TODO benjamin IMPLEMENT check local var are immutables (not here) *)
     | Variable_update scalar_or_index_update_type ->
         (* Get discrete index *)
         let discrete_index = discrete_index_of_parsed_scalar_or_index_update_type scalar_or_index_update_type in

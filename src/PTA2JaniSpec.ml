@@ -312,6 +312,8 @@ and string_of_discrete_boolean_expression variable_names = function
 	        (string_of_boolean_expression variable_names b)
 
     | Bool_variable discrete_index -> json_quoted (variable_names discrete_index)
+    | Bool_local_variable variable_name -> json_quoted variable_name
+
     | Bool_constant value -> DiscreteExpressions.customized_string_of_bool_value jani_strings.boolean_string value
 
     | Bool_sequence_function func ->
@@ -392,6 +394,8 @@ and string_of_rational_arithmetic_expression variable_names =
 
 	and string_of_factor = function
 		| Rational_variable discrete_index -> json_quoted (variable_names discrete_index)
+        | Rational_local_variable variable_name -> json_quoted variable_name
+
 		| Rational_constant value -> NumConst.jani_string_of_numconst value
 
 		| Rational_unary_min discrete_factor ->
@@ -443,7 +447,9 @@ and string_of_int_arithmetic_expression variable_names =
 		| Int_factor discrete_factor -> string_of_int_factor discrete_factor
 
 	and string_of_int_factor = function
-		| Int_variable discrete_index -> "\"" ^ variable_names discrete_index ^ "\""
+		| Int_variable discrete_index -> json_quoted (variable_names discrete_index)
+        | Int_local_variable variable_name -> json_quoted variable_name
+
 		| Int_constant value -> Int32.to_string value
 
 		| Int_unary_min discrete_factor ->
@@ -536,7 +542,9 @@ and string_of_binary_word_expression variable_names binary_word_expr =
                 ~str_comment:(Lazy.force undeclared_function_warning)
 
         | Binary_word_constant value -> string_of_value (Binary_word_value value)
-        | Binary_word_variable (variable_index, _) -> "\"" ^ variable_names variable_index ^ "\""
+        | Binary_word_variable (variable_index, _) -> json_quoted (variable_names variable_index)
+        | Binary_word_local_variable variable_name -> json_quoted variable_name
+
         | Binary_word_sequence_function func ->
             string_of_sequence_function variable_names func
     in
@@ -551,7 +559,8 @@ and string_of_array_expression variable_names = function
         let str_values = Array.map string_of_value values in
         jani_array_value str_values
 
-    | Array_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
+    | Array_variable variable_index -> json_quoted (variable_names variable_index)
+    | Array_local_variable variable_name -> json_quoted variable_name
 
     | Array_concat (array_expr_0, array_expr_1) as func ->
         (* Get label of expression *)
@@ -575,7 +584,9 @@ and string_of_list_expression variable_names = function
         let str_values = List.map string_of_value values in
         jani_array_value (Array.of_list str_values)
 
-    | List_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
+    | List_variable variable_index -> json_quoted (variable_names variable_index)
+    | List_local_variable variable_name -> json_quoted variable_name
+
     | List_cons (expr, list_expr) as func ->
         (* Get label of expression *)
         let label = label_of_list_expression func in
@@ -604,7 +615,9 @@ and string_of_stack_expression variable_names = function
         let label = label_of_stack_expression expr_stack in
         jani_function_call label [||] ~str_comment:(undeclared_function_warning label)
 
-    | Stack_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
+    | Stack_variable variable_index -> json_quoted (variable_names variable_index)
+    | Stack_local_variable variable_name -> json_quoted variable_name
+
     | Stack_push (expr, stack_expr) as func ->
         (* Get label of expression *)
         let label = label_of_stack_expression func in
@@ -631,7 +644,8 @@ and string_of_queue_expression variable_names = function
         let label = label_of_queue_expression expr_queue in
         jani_function_call label [||] ~str_comment:(undeclared_function_warning label)
 
-    | Queue_variable variable_index -> "\"" ^ variable_names variable_index ^ "\""
+    | Queue_variable variable_index -> json_quoted (variable_names variable_index)
+    | Queue_local_variable variable_name -> json_quoted variable_name
     | Queue_push (expr, queue_expr) as func ->
         (* Get label of expression *)
         let label = label_of_queue_expression func in
