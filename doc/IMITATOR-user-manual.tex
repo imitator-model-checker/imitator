@@ -468,11 +468,13 @@ If clocks are always reset to constants (\ie{} not assigned to more complex line
 Discrete variables can be assigned to expressions compatible with their type.
 Notably, rational variables can be assigned to rational arithmetic expressions over~$\RVar$.
 	% TODO: more complex than that, now!
-On the one hand, this is more restrictive than clock updates, because discrete rational variables cannot be assigned to a clock or to a parameter.
-On the other hand, arithmetic expressions are richer than linear constraints, as they allow multiplication or division of rational variables with each other.
+On the one hand, this is more restrictive than clock updates, because discrete rational variables cannot be assigned to a clock or to a parameter (in contrast to clocks, that \emph{can} be assigned to linear expressions over clocks, parameters and discrete rational variables).
+On the other hand, arithmetic expressions are richer than linear constraints, as they notably allow multiplication or division of rational variables with each other.
 
 Since version 2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
 See \cref{ss:updates} for details.
+
+Finally note that, by definition, parameters (that are unknown timing \emph{constants}) cannot be updated.
 
 \paragraph{Flows and stopwatches}
 By default, all clocks evolve at the same rate in all locations, and this rate is~1.
@@ -728,7 +730,7 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 
 %------------------------------------------------------------
 \begin{example}
-	To illustrate above operation, note that all the following guards in the model fragment below will evaluate to true:
+	To illustrate above operation, note that the following guard in the model fragment below will evaluate to true:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
@@ -746,7 +748,7 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 
 %------------------------------------------------------------
 \begin{example}
-	To illustrate above operation, note that all the following guards in the model fragment below will evaluate to true:
+	To illustrate above operation, note that the following guard in the model fragment below will evaluate to true:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
@@ -768,6 +770,20 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 \imitator{} also features Boolean-valued variables.
 The set of Boolean variables is $\BVar = \{ \bvar_1, \dots, \bvar_\BVarCard \} $;
 a Boolean variable valuation is a function $\bval : \BVar \rightarrow \setB$, where $\setB = \{\BTrue, \BFalse \}$.
+
+%------------------------------------------------------------
+\begin{example}
+	To illustrate Boolean variables, note that the following guard in the model fragment below will evaluate to true:
+
+%------------------------------------------------------------
+	\begin{IMITATORmodel}
+		when TODO goto l1;
+	\end{IMITATORmodel}
+%------------------------------------------------------------
+\end{example}
+%------------------------------------------------------------
+
+
 
 %------------------------------------------------------------
 \subsubsection{Binary word variables}
@@ -1176,7 +1192,7 @@ We summarize in \cref{table:summary:builtin-functions} the built-in functions fo
 			\hline
 			\hyperref[item:lbl-list_tl]{\styleIMI{list\_tl}} & Get tail of a list \\
 			\hline
-			\multicolumn{2}{|c|}{Stack} \\
+			\multicolumn{2}{|c|}{\textbf{Stack}} \\
 			\hline
 			\hyperref[item:lbl-stack_push]{\styleIMI{stack\_push}} & Push an element on the top of a stack - the stack is modified \\
 			\hline
@@ -1217,7 +1233,7 @@ The parameters of a function are evaluated from left to right.
 
 \begin{remark}
 	Some functions, called ``Side-effects functions'' allow the modification of collections ``in-place'' and therefore are subject to side-effects.
-	Side-effects functions can only be used in updates, more precisely in the body of the \styleIMI{let} block of an update (see \cref{ss:updates}).
+	Side-effects functions can only be used in updates, more precisely in the body of the \styleIMI{do} block of an update (see \cref{ss:updates}).
 \end{remark}
 
 
@@ -1282,7 +1298,7 @@ Since \imitator{} 3.3, we also allow for some sequential updates on the discrete
 \subsubsection{\styleIMI{do-then} updates}\label{section:do_then_form_updates}
 %------------------------------------------------------------
 
-\styleIMI{do-then} updates are more complex updates, allowing first a set of sequential updates (on the discrete variables only) called the \styleIMI{do} block, followed by ``standard updates'' (including side-effects functions), called the \styleIMI{then} block.
+\styleIMI{do-then} updates are more complex updates, allowing first a set of sequential updates (on the discrete variables only, including side-effects functions), called the ``\styleIMI{do} block'' , followed by ``standard updates'', called the \styleIMI{then} block.
 
 \paragraph{The \styleIMI{do} block}
 
