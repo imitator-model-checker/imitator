@@ -85,6 +85,10 @@ val exists_in_parsed_linear_constraint : (linear_expression_leaf -> bool) -> (li
 (** Check if any leaf of a non-linear constraint satisfy the predicate **)
 val exists_in_parsed_nonlinear_constraint : (parsing_structure_leaf -> bool) -> nonlinear_constraint -> bool
 
+(** Check if any leaf of a parsed update satisfy the predicate **)
+val exists_in_parsed_update : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> update -> bool
+(** Check if any leaf of a parsed normal update satisfy the predicate **)
+val exists_in_parsed_normal_update : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> normal_update -> bool
 
 (** Apply units over leaf of a parsing structure **)
 

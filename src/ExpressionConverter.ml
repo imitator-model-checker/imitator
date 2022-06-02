@@ -739,11 +739,9 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 	    let discrete_type, scope =
             match local_variables_opt with
             | Some local_variables when Hashtbl.mem local_variables variable_name  ->
-                ImitatorUtilities.print_standard_message ("found local var: " ^ variable_name);
-
                 let discrete_type = Hashtbl.find local_variables variable_name in
-                ImitatorUtilities.print_standard_message ("discrete type:" ^ DiscreteType.string_of_var_type_discrete discrete_type);
                 discrete_type, Local
+
             | _ ->
                 VariableInfo.discrete_type_of_variable_or_constant variable_infos variable_name, Global
         in

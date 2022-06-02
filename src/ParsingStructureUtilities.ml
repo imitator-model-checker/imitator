@@ -305,8 +305,11 @@ let exists_in_parsed_linear_term = apply_evaluate_or fold_parsed_linear_term
 let exists_in_parsed_linear_constraint = apply_evaluate_or fold_parsed_linear_constraint
 (** Check if any leaf of a non-linear constraint satisfy the predicate **)
 let exists_in_parsed_nonlinear_constraint = apply_evaluate_or_with_base fold_parsed_nonlinear_constraint
+
 (** Check if any leaf of a parsed update satisfy the predicate **)
 let exists_in_parsed_update = apply_evaluate_or_with_base fold_parsed_update
+(** Check if any leaf of a parsed normal update satisfy the predicate **)
+let exists_in_parsed_normal_update = apply_evaluate_or_with_base fold_parsed_normal_update
 
 let exists_in_parsed_loc_predicate = apply_evaluate_or_with_base fold_parsed_loc_predicate
 let exists_in_parsed_simple_predicate = apply_evaluate_or_with_base fold_parsed_simple_predicate
