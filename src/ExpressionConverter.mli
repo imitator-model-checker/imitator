@@ -106,11 +106,6 @@ type typed_fun_definition = {
     body : typed_fun_body; (* body *)
 }
 
-val get_type_of_variable_by_name : variable_infos -> variable_name -> var_type
-val get_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type option
-val get_discrete_type_of_variable_by_name : variable_infos -> variable_name -> var_type_discrete
-val get_discrete_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type_discrete option
-
 val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
 
 (* Check that a discrete init is well typed *)

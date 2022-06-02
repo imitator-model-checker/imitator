@@ -88,10 +88,10 @@ let var_type_of_variable_or_constant variable_infos variable_name =
         let value = value_of_constant_name variable_infos variable_name in
         Var_type_discrete (DiscreteValue.discrete_type_of_value value)
     | Variable_removed ->
-        raise (InternalError ("The variable `" ^ variable_name ^ "` was removed."))
+        raise (InternalError ("Impossible to get the type of variable `" ^ variable_name ^ "` because it was removed."))
     | Not_declared ->
         (* Otherwise problem ! *)
-        raise (InternalError ("The variable `" ^ variable_name ^ "` was not declared."))
+        raise (InternalError ("Impossible to get the type of variable `" ^ variable_name ^ "` because it was not declared."))
 
 (* Get some var type of a variable or a constant given it's name *)
 (* it return None if constant or variable was not declared or removed *)
@@ -101,12 +101,18 @@ let var_type_of_variable_or_constant_opt variable_infos variable_name =
     with _ ->
         None
 
-
-
 (* Get discrete type of a variable or a constant given it's name *)
 let discrete_type_of_variable_or_constant variable_infos variable_name =
     let var_type = var_type_of_variable_or_constant variable_infos variable_name in
     DiscreteType.discrete_type_of_var_type var_type
+
+(* Get some discrete type of a variable or a constant given it's name *)
+(* it return None if constant or variable was not declared or removed *)
+let discrete_type_of_variable_or_constant_opt variable_infos variable_name =
+    let var_type_opt = var_type_of_variable_or_constant_opt variable_infos variable_name in
+    match var_type_opt with
+    | Some var_type -> Some (DiscreteType.discrete_type_of_var_type var_type)
+    | None -> None
 
 (* Know if variable with a given name is a variable or a constant *)
 let variable_kind_of_variable_name variable_infos variable_name =

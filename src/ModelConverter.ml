@@ -260,7 +260,7 @@ let check_normal_update variable_infos automaton_name normal_update =
         (* Get kind (variable or constant ?) of updated variable *)
         let variable_kind = variable_kind_of_variable_name variable_infos updated_variable_name in
         (* Get var type of updated variable *)
-        let var_type = ExpressionConverter.TypeChecker.get_type_of_variable_by_name variable_infos updated_variable_name in
+        let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos updated_variable_name in
 
         (* Check if variable is a constant *)
         let is_constant = match variable_kind with Constant_kind _ -> true | Variable_kind _ -> false in
@@ -384,7 +384,7 @@ let synclab_used_everywhere automata synclab_name =
 let check_stopwatches variable_infos location_name stopwatches =
 
     List.map (fun stopwatch_name ->
-            let var_type = ExpressionConverter.TypeChecker.get_type_of_variable_by_name_opt variable_infos stopwatch_name in
+            let var_type = VariableInfo.var_type_of_variable_or_constant_opt variable_infos stopwatch_name in
             match var_type with
             (* Ok *)
             | Some Var_type_clock -> true

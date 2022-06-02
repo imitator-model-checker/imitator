@@ -119,11 +119,6 @@ type typed_fun_definition = {
     body : typed_fun_body; (* body *)
 }
 
-val get_type_of_variable_by_name : variable_infos -> variable_name -> var_type
-val get_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type option
-val get_discrete_type_of_variable_by_name : variable_infos -> variable_name -> var_type_discrete
-val get_discrete_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type_discrete option
-
 val string_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> string
 val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
 val string_of_typed_discrete_arithmetic_expression : variable_infos -> var_type_discrete -> typed_discrete_arithmetic_expression -> string
@@ -460,56 +455,6 @@ and string_of_typed_state_predicate variable_infos = function
 	| Typed_state_predicate_term (predicate_term, _) ->
         string_of_typed_state_predicate_term variable_infos predicate_term
 
-
-(** Get variables types **)
-
-(* Get var type of a variable given it's index *)
-let get_type_of_variable variable_infos variable_index =
-    variable_infos.type_of_variables variable_index
-
-(* Get discrete type of a variable given it's index *)
-let get_discrete_type_of_variable variable_infos variable_index =
-    let var_type = get_type_of_variable variable_infos variable_index in
-    DiscreteType.discrete_type_of_var_type var_type
-
-let get_type_of_variable_by_name_opt variable_infos variable_name =
-    if VariableInfo.is_variable_is_defined variable_infos variable_name then (
-        (* Get type of variable *)
-        let variable_index = index_of_variable_name variable_infos variable_name in
-        let variable_type = get_type_of_variable variable_infos variable_index in
-        Some variable_type
-    ) else if VariableInfo.is_constant_is_defined variable_infos variable_name then (
-        (* Retrieve the value of the global constant *)
-        let value = value_of_constant_name variable_infos variable_name in
-        (* Get type of constant *)
-        Some (DiscreteValue.var_type_of_value value)
-    ) else
-        None
-
-(* Get var type of a variable given it's name *)
-let get_type_of_variable_by_name variable_infos variable_name =
-    let discrete_type_opt = get_type_of_variable_by_name_opt variable_infos variable_name in
-    match discrete_type_opt with
-    | Some discrete_type -> discrete_type
-    | None ->
-        raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
-
-
-(* Get discrete type of a variable given it's name *)
-(* Raise an exception if the variable cannot be found *)
-let get_discrete_type_of_variable_by_name variable_infos variable_name =
-    let var_type = get_type_of_variable_by_name variable_infos variable_name in
-    DiscreteType.discrete_type_of_var_type var_type
-
-(* Get discrete type of a variable given it's name *)
-(* Get Some discrete type if found, otherwise None *)
-let get_discrete_type_of_variable_by_name_opt variable_infos variable_name =
-    let var_type_opt = get_type_of_variable_by_name_opt variable_infos variable_name in
-    match var_type_opt with
-    | Some var_type -> Some (DiscreteType.discrete_type_of_var_type var_type)
-    | None -> None
-
-
 (* ------------------------------------------------------------------ *)
 (* ------------------------------------------------------------------ *)
 (* ------------------------------------------------------------------ *)
@@ -800,7 +745,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
                 ImitatorUtilities.print_standard_message ("discrete type:" ^ DiscreteType.string_of_var_type_discrete discrete_type);
                 discrete_type, Local
             | _ ->
-                get_discrete_type_of_variable_by_name variable_infos variable_name, Global
+                VariableInfo.discrete_type_of_variable_or_constant variable_infos variable_name, Global
         in
 
         (* If infer type is given and discrete type is unknown number *)
@@ -1038,7 +983,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 let rec type_check_parsed_scalar_or_index_update_type local_variables_opt variable_infos = function
     | Parsed_scalar_update variable_name ->
         (* Get assigned variable type *)
-        let var_type = get_type_of_variable_by_name variable_infos variable_name in
+        let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
         let discrete_type = discrete_type_of_var_type var_type in
         Typed_scalar_update variable_name, discrete_type, false (* no side effect *)
 
@@ -1315,7 +1260,7 @@ let check_discrete_init variable_infos variable_name expr =
     (* Get the variable index *)
     let discrete_index = index_of_variable_name variable_infos variable_name in
     (* Get variable type *)
-    let var_type = get_type_of_variable variable_infos discrete_index in
+    let var_type = VariableInfo.var_type_of_variable_index variable_infos discrete_index in
 
     (* Check whether variable is clock or parameter *)
     let is_clock_or_parameter = var_type == DiscreteType.Var_type_clock || var_type == DiscreteType.Var_type_parameter in
@@ -1326,7 +1271,7 @@ let check_discrete_init variable_infos variable_name expr =
     );
 
     (* Get variable type *)
-    let variable_type = get_discrete_type_of_variable_by_name variable_infos variable_name in
+    let variable_type = VariableInfo.discrete_type_of_variable_or_constant variable_infos variable_name in
     (* Check expression / variable type consistency *)
     let typed_expr = check_type_assignment variable_infos variable_name variable_type expr in
     (* Print type annotations *)
@@ -1403,7 +1348,7 @@ let check_update variable_infos update_types parsed_update_type expr =
     (* Get assigned variable type *)
     let variable_name, var_type =
         match variable_name_opt with
-        | Some variable_name -> variable_name, get_type_of_variable_by_name variable_infos variable_name
+        | Some variable_name -> variable_name, VariableInfo.var_type_of_variable_or_constant variable_infos variable_name
         | None -> "", Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number) (* By default, infer numbers to unknown numbers *)
     in
 

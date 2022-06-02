@@ -40,5 +40,6 @@ val var_type_of_variable_name : variable_infos -> variable_name -> var_type
 val var_type_of_variable_or_constant : variable_infos -> variable_name -> var_type
 val var_type_of_variable_or_constant_opt : variable_infos -> variable_name -> var_type option
 val discrete_type_of_variable_or_constant : variable_infos -> variable_name -> var_type_discrete
+val discrete_type_of_variable_or_constant_opt : variable_infos -> variable_name -> var_type_discrete option
 
 val variable_kind_of_variable_name : variable_infos -> variable_name -> variable_kind
