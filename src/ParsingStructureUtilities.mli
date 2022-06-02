@@ -67,6 +67,8 @@ val for_all_in_parsed_normal_update : (parsing_structure_leaf -> bool) -> (parse
 (** Check if all leaf of a parsed update satisfy the predicate **)
 val for_all_in_parsed_update : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> update -> bool
 
+val for_all_in_parsed_function_definition : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> parsed_fun_definition -> bool
+
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
 val exists_in_parsed_global_expression : (parsing_structure_leaf -> bool) -> parsed_global_expression -> bool
@@ -90,6 +92,8 @@ val exists_in_parsed_update : (parsing_structure_leaf -> bool) -> (parsed_update
 (** Check if any leaf of a parsed normal update satisfy the predicate **)
 val exists_in_parsed_normal_update : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> normal_update -> bool
 
+val exists_in_parsed_function_definition : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> parsed_fun_definition -> bool
+
 (** Apply units over leaf of a parsing structure **)
 
 val iterate_parsed_global_expression : (parsing_structure_leaf -> unit) -> parsed_global_expression -> unit
@@ -110,6 +114,8 @@ val iterate_parsed_linear_constraint : (linear_expression_leaf -> unit) -> (line
 val iterate_parsed_nonlinear_constraint : (parsing_structure_leaf -> unit) -> nonlinear_constraint -> unit
 (** Iterate over a non-linear convex predicate **)
 val iterate_parsed_nonlinear_convex_predicate : (parsing_structure_leaf -> unit) -> convex_predicate -> unit
+
+val iterate_in_parsed_function_definition : (parsing_structure_leaf -> unit) -> (parsed_update_leaf -> unit) -> parsed_fun_definition -> unit
 
 val label_of_parsed_factor_constructor : parsed_discrete_factor -> string
 

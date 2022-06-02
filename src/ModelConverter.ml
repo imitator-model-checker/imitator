@@ -224,8 +224,16 @@ let all_locations_different =
 		)
 		true
 
-
-
+let has_side_effects variable_infos =
+    ParsingStructureUtilities.exists_in_parsed_normal_update
+        (function
+            | Leaf_fun function_name ->
+                (* Get function metadata *)
+                let function_metadata = Functions.function_metadata_by_name variable_infos function_name in
+                function_metadata.side_effect
+            | _ -> false
+        )
+        (function _ -> false)
 
 (*------------------------------------------------------------*)
 (* Check that a normal update is well formed *)
@@ -234,6 +242,10 @@ let check_normal_update variable_infos automaton_name normal_update =
 
     (* Extract update expression *)
     let _, update_expr = normal_update in
+
+    let has_side_effects = has_side_effects variable_infos normal_update in
+    if has_side_effects then
+        print_standard_message ("Update `" ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos normal_update ^ "` has side effects.");
 
     (* Prepare callback function that print error message when undeclared variable is found *)
     let print_variable_in_update_not_declared variable_name =
@@ -1618,6 +1630,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* Convert the guard *)
               let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
 
+              (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
               (* Filter the updates that should assign some variable name to be removed to any expression *)
               (* let filtered_updates = List.filter (fun (variable_name, (*linear_expression*)_) ->
                  					not (List.mem variable_name removed_variable_names)
@@ -1628,6 +1641,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               let filtered_seq_updates = filter_updates removed_variable_names seq_updates in
               let filtered_updates = filter_updates removed_variable_names updates in
 
+              (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
               (* Flag to check if there are clock resets only to 0 *)
               (* let only_resets = ref true in *)
 
@@ -1652,6 +1666,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               let converted_seq_updates = convert_updates variable_infos Parsed_seq_updates filtered_seq_updates in
               let converted_updates = convert_updates variable_infos Parsed_std_updates filtered_updates in
 
+              (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
               (* Convert the updates *)
               (* let converted_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
                  					let variable_index = Hashtbl.find index_of_variables variable_name in

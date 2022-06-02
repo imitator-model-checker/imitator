@@ -250,6 +250,27 @@ and fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun = func
 	| Parsed_state_predicate_term predicate_term ->
 	    fold_parsed_state_predicate_term operator base predicate_leaf_fun leaf_fun predicate_term
 
+let fold_parsed_function_definition operator base leaf_fun leaf_update_fun (fun_def : parsed_fun_definition) =
+
+    let rec fold_parsed_function_next_expr = function
+        | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, id) ->
+            operator
+                (operator
+                    (leaf_fun (Leaf_variable variable_name))
+                    (fold_parsed_global_expression operator base leaf_fun init_expr)
+                )
+                (fold_parsed_function_next_expr next_expr)
+
+        | Parsed_fun_instruction (normal_update, next_expr) ->
+            operator
+                (fold_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update)
+                (fold_parsed_function_next_expr next_expr)
+
+        | Parsed_fun_expr expr ->
+            fold_parsed_global_expression operator base leaf_fun expr
+    in
+    fold_parsed_function_next_expr fun_def.body
+
 let flat_map_parsed_global_expression = fold_parsed_global_expression (@) []
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
@@ -275,7 +296,10 @@ let for_all_in_parsed_linear_constraint = apply_evaluate_and fold_parsed_linear_
 let for_all_in_parsed_nonlinear_constraint = apply_evaluate_and_with_base fold_parsed_nonlinear_constraint
 (** Check if all leaf of a parsed update satisfy the predicate **)
 let for_all_in_parsed_normal_update = apply_evaluate_and_with_base fold_parsed_normal_update
+(** Check if all leaf of a parsed update satisfy the predicate **)
 let for_all_in_parsed_update = apply_evaluate_and_with_base fold_parsed_update
+(** Check if all leaf of a parsed normal update satisfy the predicate **)
+let for_all_in_parsed_normal_update = apply_evaluate_and_with_base fold_parsed_normal_update
 
 let for_all_in_parsed_loc_predicate = apply_evaluate_and_with_base fold_parsed_loc_predicate
 let for_all_in_parsed_simple_predicate = apply_evaluate_and_with_base fold_parsed_simple_predicate
@@ -283,6 +307,7 @@ let for_all_in_parsed_state_predicate_factor = apply_evaluate_and_with_base fold
 let for_all_in_parsed_state_predicate_term = apply_evaluate_and_with_base fold_parsed_state_predicate_term
 let for_all_in_parsed_state_predicate = apply_evaluate_and_with_base fold_parsed_state_predicate
 
+let for_all_in_parsed_function_definition = apply_evaluate_and_with_base fold_parsed_function_definition
 
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
@@ -316,6 +341,8 @@ let exists_in_parsed_simple_predicate = apply_evaluate_or_with_base fold_parsed_
 let exists_in_parsed_state_predicate_factor = apply_evaluate_or_with_base fold_parsed_state_predicate_factor
 let exists_in_parsed_state_predicate_term = apply_evaluate_or_with_base fold_parsed_state_predicate_term
 let exists_in_parsed_state_predicate = apply_evaluate_or_with_base fold_parsed_state_predicate
+
+let exists_in_parsed_function_definition = apply_evaluate_or_with_base fold_parsed_function_definition
 
 (** Iterate over a parsing structure **)
 
@@ -351,6 +378,9 @@ let iterate_in_parsed_simple_predicate = apply_evaluate_unit_with_base fold_pars
 let iterate_in_parsed_state_predicate_factor = apply_evaluate_unit_with_base fold_parsed_state_predicate_factor
 let iterate_in_parsed_state_predicate_term = apply_evaluate_unit_with_base fold_parsed_state_predicate_term
 let iterate_in_parsed_state_predicate = apply_evaluate_unit_with_base fold_parsed_state_predicate
+
+let iterate_in_parsed_function_definition = apply_evaluate_unit_with_base fold_parsed_function_definition
+
 
 let label_of_parsed_sequence_type = function
     | Parsed_array -> "array"

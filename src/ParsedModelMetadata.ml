@@ -479,6 +479,37 @@ let used_functions_of_model dependency_graph =
 let unused_functions_of_model dependency_graph =
     filter_map_components_unused_in_model dependency_graph (function Fun_ref name -> Some name | _ -> None)
 
+(* Return if the model contains functions mutually recursive *)
+(* TODO benjamin IMPLEMENT if necessary to know if model contains mutual recursive function (that are forbidden) *)
+(*
+let model_has_mutual_recursive_functions (_, relations) =
+
+    let already_seen = ref RelationSet.empty in
+
+    let rec was_already_seen fun_relation =
+        (* Check if already seen *)
+        if RelationSet.mem fun_relation !already_seen then
+            true
+        else (
+            already_seen := RelationSet.add fun_relation !already_seen;
+            let src_fun_ref, dst_fun_ref = fun_relation in
+            (* Get all fun refs reachable from source fun ref *)
+            let next_relations = List.filter_map (function (new_source_fun_ref, new_dst_fun_ref) when new_source_fun_ref = dst_fun_ref  -> Some new_dst_fun_ref | _ -> None) relations in
+            List.exists was_already_seen next_relations
+        )
+    in
+
+    (* Get all relation between automaton and function *)
+    let automaton_use_fun_relations = List.filter_map (function | (Automaton_ref _, Fun_ref _) as relation -> Some relation | _ -> None) relations in
+    List.exists was_already_seen automaton_use_fun_relations
+    *)
+
+(* TODO benjamin IMPLEMENT if necessary to get function in order of dependency *)
+(*
+let sort_functions_of_model dependency_graph =
+    (* Get all fun refs reachable from automaton *)
+    let fun_refs = List.filter_map (function (Automaton_ref _, Fun_ref _ as fun_ref) -> Some fun_ref | _ -> None) dependency_graph in
+*)
 
 (* Get dependency graph as string (dot graphviz format) (generate png of this graph with the cmd: dot -Tpng file.dot file.png) *)
 let string_of_dependency_graph (components, component_relations) =
