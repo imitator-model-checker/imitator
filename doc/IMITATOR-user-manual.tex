@@ -662,8 +662,8 @@ Limited linear expressions over rationals can be used in the definition of a (ra
 p = 2: parameter;
 \end{IMITATORmodel}
 
-	This is equivalent to replacing \styleIMI{p} with \styleIMI{2} everywhere in the model; this is particularly useful when some parameters should be instantiated.
-	In contrast, if the parameter is instantiated in the initial definition, \imitator{} still counts it as a parameter, which makes all constraints suffer from an additional dimension.
+	This is equivalent to replacing \styleIMI{p} with \styleIMI{2} everywhere in the model; this is particularly useful when some parameters should be valuated.
+	In contrast, if the parameter is valuated in the initial state definition, \imitator{} still counts it as a parameter, which makes all constraints suffer from an additional dimension.
 \end{hint}
 %------------------------------------------------------------
 
@@ -700,7 +700,7 @@ We review in the following these various types, together with their associated b
 \subsubsection{Rational-valued variables}
 %------------------------------------------------------------
 
-\emph{Rational variables} are rational-valued variables, and were described in \cref{subsection:rational}.
+\emph{Rational variables} are (exact, unbounded) rational-valued variables, and were described in \cref{subsection:rational}.
 
 %------------------------------------------------------------
 \subsubsection{``Int''-valued variables}
@@ -714,7 +714,7 @@ Int variables are encoded in \imitator{} using the \texttt{int} type of OCaml.
 	All arithmetic operations over the ``int'' variables are taken modulo $2^{32}$.
 	Overflow can therefore occur.
 
-	For critical models, it is highly advised to use \emph{rational} variables instead (the computation using rational variables may be significantly slower but always exact).
+	For critical models, it is highly advised to use \emph{rational} variables instead (the computation using rational variables may be significantly slower, but is always exact).
 \end{becareful}
 
 Formally, the set of integer variables is $\IVar = \{ \ivar_1, \dots, \ivar_\IVarCard \} $;
@@ -725,12 +725,12 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 \paragraph{Arithmetic functions}
 
 \begin{itemize}
-    \item \label{item:lbl-pow} \styleIMI{pow(x:'a number, e:int):'a with 'a number:[rational|int]} - compute the power of a number
+    \item \label{item:lbl-pow} \styleIMI{pow(x:'a number, e:int):'a} with \styleIMI{'a number:[rational|int]} - compute the power of a number
 \end{itemize}
 
 %------------------------------------------------------------
 \begin{example}
-	To illustrate above operation, note that the following guard in the model fragment below will evaluate to true:
+	To illustrate this operation, note that the following guard in the model fragment below will evaluate to true:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
@@ -748,7 +748,7 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 
 %------------------------------------------------------------
 \begin{example}
-	To illustrate above operation, note that the following guard in the model fragment below will evaluate to true:
+	To illustrate this operation, note that the following guard in the model fragment below will evaluate to true:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
@@ -877,10 +877,10 @@ Examples of array definitions are given below:
 \paragraph{Array functions}
 
 \begin{itemize}
-	\item \styleIMI{a[i:int]:'a with 'a:any} - access to element of array \styleIMI{a} at index \styleIMI{i}
-	\item \label{item:lbl-array_append} \styleIMI{array\_append(a1:'a array(l1), a2:'a array(l2)):'a array(l1+l2) with 'a:any} - concatenates an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting in an array of length \styleIMI{l1 + l2}
-	\item \label{item:lbl-array_length} \styleIMI{array\_length(a1:'a array(l1)):int=l1 with 'a:any} - length of the array \styleIMI{a1}
-	\item \label{item:lbl-array_mem} \styleIMI{array\_mem(a1:'a, l:'a array(l1)):bool with 'a:any} - true if \styleIMI{e} is in the the array \styleIMI{a1}
+	\item \styleIMI{a[i:int]:'a} with \styleIMI{'a:any} - access to element of array \styleIMI{a} at index \styleIMI{i}
+	\item \label{item:lbl-array_append} \styleIMI{array\_append(a1:'a array(l1), a2:'a array(l2)):'a array(l1+l2)} with \styleIMI{'a:any} - concatenates an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting in an array of length \styleIMI{l1 + l2}
+	\item \label{item:lbl-array_length} \styleIMI{array\_length(a1:'a array(l1)):int=l1} with \styleIMI{'a:any} - length of the array \styleIMI{a1}
+	\item \label{item:lbl-array_mem} \styleIMI{array\_mem(a1:'a, l:'a array(l1)):bool} with \styleIMI{'a:any} - true if \styleIMI{e} is in the array~\styleIMI{a1}
 \end{itemize}
 
 %------------------------------------------------------------
@@ -908,10 +908,10 @@ Examples of array definitions are given below:
 %------------------------------------------------------------
 
 Lists are collections of variable length.
-Contrarily to arrays, the type of a list does not depend on its length; it is therefore possible to compare two lists of different lengths.
+Contrarily to arrays, the type of a list does include its length; it is therefore possible to compare two lists of different lengths.
 List elements can only be accessed---not updated---using an integer-valued arithmetic expression as index.
 A list variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
-For example, it is possible to declare a list of integers, of Booleans, or of list of array of Booleans.
+For example, it is possible to declare a list of integers, or a list of Booleans, or a list of lists of arrays of Booleans.
 
 Examples of list definitions are given below:
 
@@ -930,14 +930,14 @@ Examples of list definitions are given below:
 \paragraph{List functions}
 
 \begin{itemize}
-	\item \styleIMI{l[i:int]:'a with 'a:any} - access to element of list \styleIMI{l} at index \styleIMI{i}
-	\item \label{item:lbl-list_cons} \styleIMI{list\_cons(e:'a, l:'a list):'a list with 'a:any} - construct a list by inserting a new element \styleIMI{e} at the beginning of \styleIMI{l}
-	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a with 'a:any} - head element of a list \styleIMI{l}
-	\item \label{item:lbl-list_is_empty} \styleIMI{list\_is\_empty(l:'a list):bool with 'a:any} - Check if the list \styleIMI{l} has elements
-	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list): int with 'a:any} - length of the list \styleIMI{l}
-	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool with 'a:any} - true if \styleIMI{e} is in the the list \styleIMI{l}
-	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list with 'a:any} - reverse the the list \styleIMI{l}
-	\item \label{item:lbl-list_tl} \styleIMI{list\_tl(l:'a list):'a list with 'a:any} - tail of the list \styleIMI{l}
+	\item \styleIMI{l[i:int]:'a} with \styleIMI{'a:any} - access to element of list \styleIMI{l} at index \styleIMI{i}
+	\item \label{item:lbl-list_cons} \styleIMI{list\_cons(e:'a, l:'a list):'a list} with \styleIMI{'a:any} - construct a list by inserting a new element \styleIMI{e} at the beginning of \styleIMI{l}
+	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a} with \styleIMI{'a:any} - head element of a list \styleIMI{l}
+	\item \label{item:lbl-list_is_empty} \styleIMI{list\_is\_empty(l:'a list):bool} with \styleIMI{'a:any} - Check if the list \styleIMI{l} is empty
+	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list): int} with \styleIMI{'a:any} - length of the list \styleIMI{l}
+	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool} with \styleIMI{'a:any} - true if \styleIMI{e} belongs to the list~ˇ\styleIMI{l}
+	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list} with \styleIMI{'a:any} - reverse the list~\styleIMI{l}
+	\item \label{item:lbl-list_tl} \styleIMI{list\_tl(l:'a list):'a list} with \styleIMI{'a:any} - tail of the list \styleIMI{l}
 \end{itemize}
 
 %------------------------------------------------------------
@@ -970,7 +970,7 @@ Stacks are LIFO collections (Last In First Out) of variable length.
 It is possible to compare two stacks of different lengths.
 Stack elements can only be accessed---not updated---using pop or top functions.
 A stack variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
-For example, it is possible to declare a stack of integers, of Booleans, of stacks of list of Booleans.
+For example, it is possible to declare a stack of integers, or a stack of Booleans, or a stack of arrays of lists of binary words of length~5.
 
 \begin{remark}
 A literal stack value can only be an empty stack.
@@ -994,12 +994,12 @@ Examples of stack definitions are given below:
 \paragraph{Stack functions}
 
 \begin{itemize}
-	\item \label{item:lbl-stack_push} \styleIMI{stack\_push(e:'a, s:'a stack):'a stack with 'a:any} - Add an element \styleIMI{e} at the top of the stack \styleIMI{s} and return the stack - the stack is modified, this function is subject to side-effects
-	\item \label{item:lbl-stack_pop} \styleIMI{stack\_pop(s:'a stack):'a with 'a:any} - Get and remove the element at the top of the stack \styleIMI{s} - the stack is modified, this function is subject to side-effects
-	\item \label{item:lbl-stack_top} \styleIMI{stack\_top(s:'a stack):'a with 'a:any} - Get the element at the top of the stack \styleIMI{s}
-	\item \label{item:lbl-stack_clear} \styleIMI{stack\_clear(s:'a stack):'a stack with 'a:any} - Remove all elements of the stack \styleIMI{s} and return the stack - the stack is modified, this function is subject to side-effects
-	\item \label{item:lbl-stack_is_empty} \styleIMI{stack\_is\_empty(s:'a stack):bool with 'a:any} - Check if the stack \styleIMI{s} has elements
-	\item \label{item:lbl-stack_length} \styleIMI{stack\_length(s:'a stack):int with 'a:any} - Get the number of elements in the stack \styleIMI{s}
+	\item \label{item:lbl-stack_push} \styleIMI{stack\_push(e:'a, s:'a stack):'a stack} with \styleIMI{'a:any} - Add an element \styleIMI{e} at the top of the stack \styleIMI{s} and return the stack---the stack is modified, this function is subject to side-effects
+	\item \label{item:lbl-stack_pop} \styleIMI{stack\_pop(s:'a stack):'a} with \styleIMI{'a:any} - Get and remove the element at the top of the stack \styleIMI{s}---the stack is modified, this function is subject to side-effects
+	\item \label{item:lbl-stack_top} \styleIMI{stack\_top(s:'a stack):'a} with \styleIMI{'a:any} - Get the element at the top of stack~\styleIMI{s}---the stack is left unchanged
+	\item \label{item:lbl-stack_clear} \styleIMI{stack\_clear(s:'a stack):'a stack} with \styleIMI{'a:any} - Remove all elements of the stack \styleIMI{s} and return the stack---the stack is modified, this function is subject to side-effects
+	\item \label{item:lbl-stack_is_empty} \styleIMI{stack\_is\_empty(s:'a stack):bool} with \styleIMI{'a:any} - Check if the stack \styleIMI{s} is empty
+	\item \label{item:lbl-stack_length} \styleIMI{stack\_length(s:'a stack):int} with \styleIMI{'a:any} - Get the number of elements in the stack \styleIMI{s}
 \end{itemize}
 
 %------------------------------------------------------------
@@ -1048,7 +1048,8 @@ Queues are FIFO collections (First In First Out) of variable length.
 It is possible to compare two queues of different lengths.
 Queue elements can only be accessed---not updated---using pop or top functions.
 A queue variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
-For example, it is possible to declare a queue of integers, of Booleans, or of stacks of binary words.
+For example, it is possible to declare a queue of integers, a queue of Booleans, or a queue of stacks of binary words of length~3.
+
 \begin{remark}
 A literal queue value can only be an empty queue.
 \end{remark}
@@ -1070,17 +1071,17 @@ Examples of queue definitions are given below:
 \paragraph{Queue functions}
 
 \begin{itemize}
-	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue):'a queue with 'a:any} - Add an element \styleIMI{e} at the beginning of the queue \styleIMI{q} and return the queue - the queue is modified, this function is subject to side-effects
-	\item \label{item:lbl-queue_pop} \styleIMI{queue\_pop(q:'a queue):'a with 'a:any} - Get and remove the last element of the queue \styleIMI{q} - the queue is modified, this function is subject to side-effects
-	\item \label{item:lbl-queue_top} \styleIMI{queue\_top(q:'a queue):'a with 'a:any} - Get the last element of the queue \styleIMI{q}
-	\item \label{item:lbl-queue_clear} \styleIMI{queue\_clear(q:'a queue):'a queue with 'a:any} - Remove all elements of the queue \styleIMI{q} and return the queue - the queue is modified, this function is subject to side-effects
-	\item \label{item:lbl-queue_is_empty} \styleIMI{queue\_is\_empty(q:'a queue):bool with 'a:any} - Check if the queue \styleIMI{q} has elements
-	\item \label{item:lbl-queue_length} \styleIMI{queue\_length(q:'a queue):int with 'a:any} - Get the number of elements in the queue \styleIMI{q}
+	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue):'a queue} with \styleIMI{'a:any} - Add an element \styleIMI{e} at the beginning of the queue \styleIMI{q} and return the queue---the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_pop} \styleIMI{queue\_pop(q:'a queue):'a} with \styleIMI{'a:any} - Get and remove the last element of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_top} \styleIMI{queue\_top(q:'a queue):'a} with \styleIMI{'a:any} - Get the last element of the queue \styleIMI{q}---the queue is left unmodified
+	\item \label{item:lbl-queue_clear} \styleIMI{queue\_clear(q:'a queue):'a queue} with \styleIMI{'a:any} - Remove all elements of the queue \styleIMI{q} and return the queue---the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_is_empty} \styleIMI{queue\_is\_empty(q:'a queue):bool} with \styleIMI{'a:any} - Check if the queue \styleIMI{q} is empty
+	\item \label{item:lbl-queue_length} \styleIMI{queue\_length(q:'a queue):int} with \styleIMI{'a:any} - Get the number of elements in the queue \styleIMI{q}
 \end{itemize}
 
 %------------------------------------------------------------
 \begin{example}
-	To illustrate the queues operations, note that the following guard in the model fragment below will evaluate to true:
+	The following code fragment illustrates some possibilities offered by the queues operations:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
@@ -1131,7 +1132,6 @@ Examples of queue definitions are given below:
 \subsubsection{Built-in functions over discrete variables}\label{section:builtin-functions}
 %------------------------------------------------------------
 
-% \imitator{} 3.1 and higher comes with some built-in functions over discrete variables:
 We summarize in \cref{table:summary:builtin-functions} the built-in functions for discrete variables.
 
 \begin{table}[h!]
@@ -1343,7 +1343,22 @@ These updates are not sequential so, as described before, in case of multiple up
 The \styleIMI{then} block is essentially the same as a standard update (see \cref{sss:standard-updates}).
 This kind of update was the only one in \imitator{} until version~3.3.
 
-An example of a \styleIMI{then} update expression (that is ill-formed and will trigger a warning):
+Below is an example of a \styleIMI{then} update expression:
+
+\begin{IMITATORmodel}
+	(* Assume initially i = 1, j = 2, x = 2046 *)
+
+	do {
+		(* only "then" expression *)
+		i := j + 3,
+		j := i * 3,
+		x := i - j
+	}
+	(* Now: i=5, j=3, x=-1 *)
+\end{IMITATORmodel}
+
+
+Below is an example of a \styleIMI{then} update expression, that is ill-formed and will trigger a warning:
 
 \begin{IMITATORmodel}
 	(* Assume initially i = 1 *)
@@ -1403,9 +1418,9 @@ Examples of a \styleIMI{do-then} update expression:
 	do {
 
 		do
-			(* in-place modification of stack s *)
+			(* modification of stack s using side-effects *)
 			stack_push(1, s);
-			(* in-place modification of stack s *)
+			(* modification of stack s using side-effects *)
 			stack_push(2, s);
 			(* set i to 0 *)
 			i := 0;
@@ -1415,7 +1430,7 @@ Examples of a \styleIMI{do-then} update expression:
 			(* x := 0 *)
 		then
 			x := i,
-			y := stack_top(s),
+			j := stack_top(s),
 			(* below, r is update several time *)
 			(* as these constraints updates are not sequential *)
 			(* the value of r will be unspecified *)
