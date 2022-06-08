@@ -777,7 +777,18 @@ a Boolean variable valuation is a function $\bval : \BVar \rightarrow \setB$, wh
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
-		when TODO goto l1;
+
+		(* true_bool = True, another_true_bool = True *)
+		(* false_bool = False *)
+		(* i = 1 *)
+
+		when True goto l1;
+		when true_bool = True goto l1;
+		when false_bool = False goto l1;
+		when (true_bool | i = 0) goto l1;
+		when true_bool = another_true_bool & not(i = 5) goto l1;
+		when true_bool <> false_bool goto l1;
+
 	\end{IMITATORmodel}
 %------------------------------------------------------------
 \end{example}
@@ -1119,10 +1130,10 @@ Examples of queue definitions are given below:
 % %------------------------------------------------------------
 % \subsubsection{Discrete variables definition}
 % %------------------------------------------------------------
-% 
+%
 % The set of discrete variables is $\DVar = \RVar \cup \IVar \cup \BVar \cup \WVar$.
 % (We do not formalize the arrays and lists in the following, as we believe their usage is straightforward.)
-% 
+%
 % %a discrete variable valuation is a function $\dval : \DVar \rightarrow \setN$.
 
 
@@ -1256,7 +1267,12 @@ This initial default value is as follows, depending on the variable type:
 
 The initial default value of arrays and lists is that of their type.
 
-
+\begin{tabular}{l l}
+	Array & \styleIMI{[]}\\
+	List & \styleIMI{list([])}\\
+	Stack & \styleIMI{stack([])}\\
+	Queue & \styleIMI{queue([])}\\
+\end{tabular}
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -3385,7 +3401,7 @@ and specify when to update the statespace.
 \paragraph{\styleOption{-merge-restart} (default: depending on the algorithm)}
 %------------------------------------------------------------
 Use the merging technique of [AMPP2x] % TODO: update ref
-and set if a state can be merged to one of its siblings, 
+and set if a state can be merged to one of its siblings,
 if the search through all candidate siblings is restarted.
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
