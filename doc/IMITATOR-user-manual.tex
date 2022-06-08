@@ -471,7 +471,7 @@ Notably, rational variables can be assigned to rational arithmetic expressions o
 On the one hand, this is more restrictive than clock updates, because discrete rational variables cannot be assigned to a clock or to a parameter (in contrast to clocks, that \emph{can} be assigned to linear expressions over clocks, parameters and discrete rational variables).
 On the other hand, arithmetic expressions are richer than linear constraints, as they notably allow multiplication or division of rational variables with each other.
 
-Since version 2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
+Since version~2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
 See \cref{ss:updates} for details.
 
 Finally note that, by definition, parameters (that are unknown timing \emph{constants}) cannot be updated.
@@ -2004,7 +2004,7 @@ Two options are possible in \imitator{}:
 		\item in a guard or invariant, each clock must be used at most once;
 		\item invariants should not contain discrete inequalities (\ie{} inequalities over discrete variables only);
 		\item the use of discrete variables was not tested (and may not be always working);
-		\item the conditional updates (new since version 2.12) are not supported;
+		\item the conditional updates (new since version~2.12) are not supported;
 		\item the use of coefficients on parameters (different from 0 or~1) was not tested;
 		\item the use of stopwatches or multi-rate was not tested.
 	\end{itemize}
@@ -2262,7 +2262,7 @@ Whenever merging is enabled (cell \cellYes{}), the following options are used by
 
 %------------------------------------------------------------
 \begin{terminal}
--merge reconstruct -merge-candidates queue -merge-update merge -merge-restart off
+-merge onthefly -merge-candidates queue -merge-update merge -merge-restart off
 \end{terminal}
 %------------------------------------------------------------
 
@@ -3364,7 +3364,7 @@ The possible values for this option are:
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
 	\styleOption{none} & No merging even if the algorithm requires it by default \\
-	\styleOption{on-the-fly} & Update the statespace by deleting the merged state and updating its transitions \emph{in situ}~\cite{AMPP22}\\
+	\styleOption{onthefly} & Update the statespace by deleting the merged state and updating its transitions \emph{in situ}~\cite{AMPP22}\\
 	\styleOption{reconstruct} & Update the statespace with a copy of the reachable part~\cite{AMPP22} \\
 	\styleOption{2.12} & Former version of merging in \imitator{}~2.12~\cite{AFS13atva} reimplemented into \imitator{}~3.3 \\
 \end{longtable}
