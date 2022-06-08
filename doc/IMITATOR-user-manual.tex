@@ -3376,7 +3376,7 @@ Force disabling merging, even if the selected algorithm normally requires it.
 %------------------------------------------------------------
 \paragraph{\styleOption{-merge-candidates} (default: depending on the algorithm)}
 %------------------------------------------------------------
-Use the merging technique of [AMPP2x] % TODO: update ref
+Use the merging technique of~\cite{AMPP22}
 and specify the candidates to merge with a state.
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
@@ -3388,7 +3388,7 @@ and specify the candidates to merge with a state.
 %------------------------------------------------------------
 \paragraph{\styleOption{-merge-update} (default: depending on the algorithm)}
 %------------------------------------------------------------
-Use the merging technique of [AMPP2x] % TODO: update ref
+Use the merging technique of~\cite{AMPP22}
 and specify when to update the statespace.
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
@@ -3400,7 +3400,7 @@ and specify when to update the statespace.
 %------------------------------------------------------------
 \paragraph{\styleOption{-merge-restart} (default: depending on the algorithm)}
 %------------------------------------------------------------
-Use the merging technique of [AMPP2x] % TODO: update ref
+Use the merging technique of~\cite{AMPP22}
 and set if a state can be merged to one of its siblings,
 if the search through all candidate siblings is restarted.
 
@@ -4953,8 +4953,8 @@ We define each of those two components below.
 
 The following words are reserved keywords and cannot be used as names for automata, variables, actions or locations.
 
-\begin{multicols}{2}
-	\styleIMI{\#exhibit} \\
+\noindent\begin{multicols}{2}%
+\styleIMI{\#exhibit} \\
 	\styleIMI{\#include} \\
 	\styleIMI{\#synth} \\
 	\styleIMI{\#witness}\\
@@ -5172,9 +5172,11 @@ Jaime~Arias simplified a lot the source code management and implemented new feat
 %
 Jiří~Srba suggested the translation of \imitator{}'s strong broadcast into \uppaal{}.
 %
-Benjamin~Loillier significantly enhanced the syntax, notably allowing Boolean and int types, and new syntactic enhancements such as arrays.
+Benjamin~Loillier significantly enhanced the syntax, notably allowing new primitive types (Boolean, int, binary words), and composite types (arrays, lists, stacks, queues).
 %
 Dylan~Marinho reformatted the library of benchmarks~\cite{AMP21} and implemented the translation to~\jani{}.
+%
+Johan~Arcile implemented the extrapolation~\cite{AA22}.
 
 We acknowledge the help of the PPL~\cite{BHZ08} developers for their help with solving several issues over the years, and more generally for making this very useful library available.
 
@@ -5203,6 +5205,7 @@ The following people contributed to the development of \imitator{}.
 
 \begin{tabular}{l l @{ } c @{ } l}
 	Étienne André        & 2008 & -- &      \\
+	Johan Arcile         & 2021 & -- & 2022 \\
 	Jaime Arias          & 2018 & -- &      \\
 	Vincent Bloemen      & 2018 &    &      \\
 	Camille Coti         & 2014 &    &      \\
