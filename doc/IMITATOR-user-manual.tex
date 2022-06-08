@@ -2072,7 +2072,6 @@ The corresponding problem being undecidable~\cite{ALM20}, the analysis is not gu
 
 The property syntax is of the following form:
 
-
 \begin{IMITATORproperty}
 property := #synth BCcover(hyper_rectangle);
 \end{IMITATORproperty}
@@ -2257,6 +2256,15 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 
 
 
+We give in \cref{table:summary:options} the default values for merging and comparison.
+Whenever merging is enabled (cell \cellYes{}), the following options are used by default:
+
+
+%------------------------------------------------------------
+\begin{terminal}
+-merge reconstruct -merge-candidates queue -merge-update merge -merge-restart off
+\end{terminal}
+%------------------------------------------------------------
 
 
 \begin{table}[h!]
@@ -2266,8 +2274,7 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 
 			% Non-nested CTL
 			\hline
-			% TODO: update default merge options!
-			\rowHeader{} Algorithm & Syntax                                           & \styleOption{-merge}      & \styleOption{-comparison}    \\
+			\rowHeader{} Algorithm & Syntax                                           & Merging      & \styleOption{-comparison}    \\
 			\hline
 			State space computation           & \cellNA{}                  & \cellNo{} & \styleOption{equality} \\
 			\hline
@@ -2408,8 +2415,7 @@ The resulting constraint comes with two other information:
 	\item its soundness, \ie{} whether the constraint is exact (\imitator{} returned exactly the set of parameter valuations solution to the analysis requested), a possible under-approximation of that result, a possible over-approximation of that result (in some rare cases), or a possibly invalid constraint (in which case the result output by \imitator{} shall not be used).
 \end{itemize}
 Note that in almost all analyses, \imitator{} returns an exact or an under-approximated constraint.
-A possibly invalid constraint can be synthesized when some options are used: for example, computing the result of \IM{} with the merging enabled (\styleOption{-merge}) % TODO: update
-yields a possibly invalid constraint, as it was shown that the merging optimization does not preserve the validity of the result of~\IM{}~\cite{AFS13atva}.
+A possibly invalid constraint can be synthesized when some options are used: for example, computing the result of \IM{} with the merging enabled (\styleOption{-merge yes}) yields a possibly invalid constraint, as it was shown that the merging optimization does not preserve the validity of the result of~\IM{}~\cite{AFS13atva}.
 
 Finally, the result also comes with an evaluation of the termination: the termination can be regular (the analysis went to its end without interruption) or an early termination, with some states unexplored (\eg{} if a maximum analysis time (\styleOption{-time-limit}), a maximum exploration depth (\styleOption{-depth-limit}), etc., was set).
 
@@ -2683,8 +2689,7 @@ imitator model.imi -imi2HyTech
 
 \imitator{} will generate a file \stylePath{model.hy}. \\
 
-The syntax going beyond that of \hytech{} (typically, Booleans, binary words, arrays, lists…)\ and \imitator{} built-in functions
-is obviously not translated correctly.
+The syntax going beyond that of \hytech{} (typically, Booleans, binary words, arrays, lists…), which notably includes \imitator{} built-in functions, is obviously not translated correctly.
 In addition, the translation of properties is not supported.
 % TODO
 
@@ -3241,10 +3246,7 @@ This technique uses some basic static analysis of the \IPTA{} composing the \NIP
 %------------------------------------------------------------
 \paragraph{\styleOption{-expl-order} } % TODO (default: false)
 %------------------------------------------------------------
-Exploration orders are considered %in two frameworks.
-
-%First,
-for standard reachability analysis (and counterexample analysis, using \styleIMI{\#witness}), and are documented in~\cite{ANP17}.
+Exploration orders are considered for standard reachability analysis (and counterexample analysis, using \styleIMI{\#witness}), and are documented in~\cite{ANP17}.
 \begin{itemize}
 	\item \styleOption{-expl-order layerBFS}: layer-based breadth-first search (default);
 	\item \styleOption{-expl-order queueBFS}: queue-based breadth-first search;
@@ -3350,51 +3352,59 @@ For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}), consider la
 For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}), do not consider layered NDFS~\cite{NPP18}.
 
 
-% TODO: update
 %------------------------------------------------------------
 \paragraph{\styleOption{-merge} (default: depending on the algorithm)}
 %------------------------------------------------------------
-Use the merging technique of \cite{AFS13atva}.
+Use the merging techniques of~\cite{AFS13atva,AMPP22}.
 This option is safe (and used by default) for the \EFsynth{} algorithm, and similar algorithms.
-
+%
 However, not all the properties of the inverse method are preserved when using merging (see \cite{AFS13atva} for details).
 
-See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
+The possible values for this option are:
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
-	\styleOption{reconstruct} & Update the statespace with a copy of the reachable part \\
-	\styleOption{on-the-fly} & Update the statespace by deleting the merged state and updating its transitions \emph{in situ}
+	\styleOption{none} & No merging even if the algorithm requires it by default \\
+	\styleOption{on-the-fly} & Update the statespace by deleting the merged state and updating its transitions \emph{in situ}~\cite{AMPP22}\\
+	\styleOption{reconstruct} & Update the statespace with a copy of the reachable part~\cite{AMPP22} \\
+	\styleOption{2.12} & Former version of merging in \imitator{}~2.12~\cite{AFS13atva} reimplemented into \imitator{}~3.3 \\
 \end{longtable}
 
+See \cref{table:summary:options} for the default value of this option depending on the algorithm.
 
-%------------------------------------------------------------
-\paragraph{\styleOption{-merge none} (default: depending on the algorithm)}
-%------------------------------------------------------------
-Force disabling merging, even if the selected algorithm normally requires it.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-merge-candidates} (default: depending on the algorithm)}
 %------------------------------------------------------------
 Use the merging technique of~\cite{AMPP22}
 and specify the candidates to merge with a state.
+The value of option \styleOption{-merge} must be different from \styleOption{none} for this option to be enabled.
+
+The possible values for this option are:
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
-	\styleOption{visited} & All the visited states \\
+	\styleOption{ordered} & First within the queue, and then the visited states\\
 	\styleOption{queue} & Only the states in the queue \\
-	\styleOption{ordered} & First within the queue, and then the visited states
+	\styleOption{visited} & All the visited states \\
 \end{longtable}
+
+See \cref{table:summary:options} for the default value of this option depending on the algorithm.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-merge-update} (default: depending on the algorithm)}
 %------------------------------------------------------------
 Use the merging technique of~\cite{AMPP22}
 and specify when to update the statespace.
+The value of option \styleOption{-merge} must be different from \styleOption{none} for this option to be enabled.
+
+The possible values for this option are:
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
-	\styleOption{merge} & After each successful merge with each sibling \\
 	\styleOption{candidates} & After having processed the whole candidate list of a state \\
 	%\styleOption{level} & After dealing all the complete level %Not implemented for now
+	\styleOption{merge} & After each successful merge with each sibling \\
 \end{longtable}
+
+See \cref{table:summary:options} for the default value of this option depending on the algorithm.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-merge-restart} (default: depending on the algorithm)}
@@ -3402,22 +3412,28 @@ and specify when to update the statespace.
 Use the merging technique of~\cite{AMPP22}
 and set if a state can be merged to one of its siblings,
 if the search through all candidate siblings is restarted.
+The value of option \styleOption{-merge} must be different from \styleOption{none} for this option to be enabled.
+
+The possible values for this option are:
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
 	\styleOption{on} & \\
 	\styleOption{off} & \\
 \end{longtable}
 
+See \cref{table:summary:options} for the default value of this option depending on the algorithm.
+
 %------------------------------------------------------------
 \paragraph{\styleOption{-mode} (default: none)}
 %------------------------------------------------------------
 When executing \imitator{} without a property, \ie{} in a special mode.
 
+The possible values for this option are:
+
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
-	\styleOption{checksyntax} & Simple syntax check and no analysis.
+	\styleOption{checksyntax} & Simple syntax check and no analysis.\\
 	% Use option \styleOption{-output-result} to generate a simple file with statistics on the model (numbers of variables, automata, L/U-nature, strong determinism…)
 	% 		(see \cref{ss:mode:statespace}) %TODO?
-	\\
 
 	\styleOption{statespace}  & Generation of the entire parametric state space \\
 	                          & (see \cref{ss:mode:statespace})                 \\
