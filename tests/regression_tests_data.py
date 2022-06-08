@@ -18551,8 +18551,6 @@ Constraint nature                       : good/bad
 		'options'    : '-mode statespace -states-description -merge yes',
 		'expectations' : [
 			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
-		*/
-
   DESCRIPTION OF THE STATES
 
   /************************************************************/
@@ -18577,8 +18575,8 @@ Constraint nature                       : good/bad
 
   /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_2 via "b"
   s_0 -> s_2 via "a"
+  s_0 -> s_2 via "b"
   """ 
 			} # end result file
 			,
