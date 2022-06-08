@@ -322,7 +322,7 @@ let dependency_graph parsed_model =
                         (* TODO benjamin IMPLEMENT *)
                         (* All variables found in expression are used by current function *)
                         (* For example: stack_pop(s) + x + y *)
-                        (* Current function 'f' use x, y *)
+                        (* Current function 'f' use s, x, y *)
                         []
                 in
                 let relations = relations_of_update_type parsed_update_type in

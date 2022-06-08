@@ -20,7 +20,68 @@ open DiscreteValue
 open DiscreteExpressions
 open FunctionSig
 open ParsingStructure
+open ParsingStructureUtilities
 open OCamlUtilities
+
+(* Shortcuts to hash table types *)
+type fun_metadata_table = (string, function_metadata) Hashtbl.t
+type fun_definitions_table = (string, parsed_fun_definition) Hashtbl.t
+
+(* Infer whether a user function is subject to side effects *)
+let rec is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
+
+    (* Check if a tree leaf has side effect *)
+    let is_leaf_has_side_effects = function
+        | Leaf_fun function_name ->
+            (* Is call found is a call to a builtin function ? *)
+            if Hashtbl.mem builtin_functions_metadata_table function_name then (
+                let function_metadata = Hashtbl.find builtin_functions_metadata_table function_name in
+                function_metadata.side_effect
+            )
+            (* Is call found is a call to a user function ? *)
+            else if Hashtbl.mem user_function_definitions_table function_name then (
+                let found_function_def = Hashtbl.find user_function_definitions_table function_name in
+                is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table found_function_def
+            )
+            else
+                raise (UndefinedFunction fun_def.name);
+
+        | _ -> false
+    in
+    (* Loop into function body - OK *)
+    (* For each expression in body : *)
+    (* check for leaf_fun in init_expr, expr *)
+    (* Search fun in builtin, if found get side_effect property *)
+    (* If not found search into user_function_def, and call recursively this function *)
+    (* if no function found -> undefined function *)
+    let rec is_next_expr_has_side_effects = function
+        | Parsed_fun_local_decl (_, _, init_expr, next_expr, _) ->
+            (* Check if init expression has side-effects *)
+            let has_init_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_global_expression is_leaf_has_side_effects init_expr in
+            (* Check if next expressions has side-effects *)
+            let has_next_expr_side_effects = is_next_expr_has_side_effects next_expr in
+            (* Check if any has side-effects *)
+            has_init_expr_side_effects || has_next_expr_side_effects
+
+        | Parsed_fun_instruction ((parsed_update_type, update_expr), next_expr) ->
+            (match parsed_update_type with
+            (* When any variable is assigned (written) the function is subject to side-effects *)
+            | Parsed_variable_update _ -> true
+            (* If the instruction is not an assignment *)
+            | Parsed_void_update ->
+                (* Check if the update expression has side-effects *)
+                let has_update_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_global_expression is_leaf_has_side_effects update_expr in
+                (* Check if next expressions has side-effects *)
+                let has_next_expr_side_effects = is_next_expr_has_side_effects next_expr in
+                (* Check if any has side-effects *)
+                has_update_expr_side_effects || has_next_expr_side_effects
+            )
+
+        | Parsed_fun_expr expr ->
+            (* Check if expression has side-effects *)
+            ParsingStructureUtilities.exists_in_parsed_global_expression is_leaf_has_side_effects expr
+    in
+    is_next_expr_has_side_effects fun_def.body
 
 (* binary(l) -> l -> binary(l) *)
 let shift_signature2 =
@@ -335,13 +396,14 @@ let builtin_functions : ParsingStructure.function_metadata list =
         };
     ]
 
-let metadata_of_function_definition (fun_def : parsed_fun_definition) =
+(* Compute metadata of a user function definition *)
+let metadata_of_function_definition builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
     (* Concat parameters type and return type *)
     let signature = List.map second_of_tuple fun_def.parameters @ [fun_def.return_type] in
     {
         name = fun_def.name;
         signature_constraint = FunctionSig.signature_constraint_of_signature signature;
-        side_effect = false; (* TODO benjamin IMPLEMENT check if body contain side effect expr *)
+        side_effect = is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table fun_def;
     }
 
 let function_metadata_by_name (variable_infos : variable_infos) function_name =

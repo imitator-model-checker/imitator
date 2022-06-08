@@ -224,17 +224,6 @@ let all_locations_different =
 		)
 		true
 
-let has_side_effects variable_infos =
-    ParsingStructureUtilities.exists_in_parsed_normal_update
-        (function
-            | Leaf_fun function_name ->
-                (* Get function metadata *)
-                let function_metadata = Functions.function_metadata_by_name variable_infos function_name in
-                function_metadata.side_effect
-            | _ -> false
-        )
-        (function _ -> false)
-
 (*------------------------------------------------------------*)
 (* Check that a normal update is well formed *)
 (*------------------------------------------------------------*)
@@ -242,10 +231,6 @@ let check_normal_update variable_infos automaton_name normal_update =
 
     (* Extract update expression *)
     let _, update_expr = normal_update in
-
-    let has_side_effects = has_side_effects variable_infos normal_update in
-    if has_side_effects then
-        print_standard_message ("Update `" ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos normal_update ^ "` has side effects.");
 
     (* Prepare callback function that print error message when undeclared variable is found *)
     let print_variable_in_update_not_declared variable_name =
@@ -3608,16 +3593,28 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     (* Get builtin functions metadata *)
     let builtin_functions_metadata = Functions.builtin_functions in
+    (* Create table of builtin function metadata *)
+    let builtin_functions_metadata_table = List.map (fun (fun_def : function_metadata) -> fun_def.name, fun_def) builtin_functions_metadata |> List.to_seq |> Hashtbl.of_seq in
+
     (* Get user functions metadata from parsed functions *)
     let used_function_names = ParsedModelMetadata.used_functions_of_model dependency_graph in
     (* Get only used user functions definition *)
     let used_function_definitions = List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions in
+
+    (* Create table of user function definitions *)
+    let user_function_definitions_table = List.map (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def) used_function_definitions |> List.to_seq |> Hashtbl.of_seq in
+
     (* Get metadata of these functions *)
-    let user_functions_metadata = List.map Functions.metadata_of_function_definition used_function_definitions in
+    let metadata_of_function_definition = Functions.metadata_of_function_definition builtin_functions_metadata_table user_function_definitions_table in
+    let user_functions_metadata = List.map metadata_of_function_definition used_function_definitions in
     (* Concat builtin & user functions *)
     let all_functions_metadata = user_functions_metadata @ builtin_functions_metadata in
     (* Create function table that associate function name to function metadata *)
     let functions_metadata_table = (List.map (fun (fun_def : ParsingStructure.function_metadata) -> fun_def.name, fun_def) all_functions_metadata) |> List.to_seq |> Hashtbl.of_seq in
+
+    List.iter (fun (fm : function_metadata) ->
+        print_standard_message ("fun: `" ^ fm.name ^ "` has side effects : `" ^ string_of_bool fm.side_effect ^ "`");
+    ) all_functions_metadata;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)
