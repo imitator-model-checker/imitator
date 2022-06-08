@@ -683,7 +683,7 @@ p = 2: parameter;
 Discrete, global variables are syntactic sugar for a potentially unbounded number of locations.
 Discrete variables can be tested in guards, and updated along transitions.
 
-\imitator{} currently supports four elementary types of discrete variables:
+\imitator{} currently supports four primitive types of discrete variables:
 \begin{enumerate}
 	\item rational-valued variables
 	\item ``int''-valued variables (over 32~bits)
@@ -691,7 +691,7 @@ Discrete variables can be tested in guards, and updated along transitions.
 	\item binary word variables, allowing to use bitwise binary operations.
 \end{enumerate}
 
-In addition, more complex types such as \emph{arrays}, \emph{lists}, \emph{stacks} and \emph{queues} (of elementary types, or of more complex types such as arrays of lists) can be used.
+In addition, more complex types such as \emph{arrays}, \emph{lists}, \emph{stacks} and \emph{queues} (of primitive types, or of composite types such as arrays of lists) can be used.
 
 We review in the following these various types, together with their associated built-in functions.
 
@@ -725,7 +725,7 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 \paragraph{Arithmetic functions}
 
 \begin{itemize}
-    \item \label{item:lbl-pow} \styleIMI{pow(x:'a number, e:int):'a} with \styleIMI{'a number:[rational|int]} - compute the power of a number
+    \item \label{item:lbl-pow} \styleIMI{pow(x:'a number, e:int):'a} with \styleIMI{'a number:[rational|int]} - compute the power of a (rational or integer) number
 \end{itemize}
 
 %------------------------------------------------------------
@@ -773,18 +773,18 @@ a Boolean variable valuation is a function $\bval : \BVar \rightarrow \setB$, wh
 
 %------------------------------------------------------------
 \begin{example}
-	To illustrate Boolean variables, note that the following guard in the model fragment below will evaluate to true:
+	To illustrate Boolean variables, note that the following guards in the dummy model fragment below will all evaluate to true:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
 
-		(* true_bool = True, another_true_bool = True *)
-		(* false_bool = False *)
-		(* i = 1 *)
+		(* Assume true_bool = True, another_true_bool = True *)
+		(* Assume false_bool = False *)
+		(* Assume i = 1 *)
 
 		when True goto l1;
-		when true_bool = True goto l1;
-		when false_bool = False goto l1;
+		when true_bool goto l1;
+		when not(false_bool) goto l1;
 		when (true_bool | i = 0) goto l1;
 		when true_bool = another_true_bool & not(i = 5) goto l1;
 		when true_bool <> false_bool goto l1;
@@ -945,7 +945,7 @@ Examples of list definitions are given below:
 	\item \label{item:lbl-list_cons} \styleIMI{list\_cons(e:'a, l:'a list):'a list} with \styleIMI{'a:any} - construct a list by inserting a new element \styleIMI{e} at the beginning of \styleIMI{l}
 	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a} with \styleIMI{'a:any} - head element of a list \styleIMI{l}
 	\item \label{item:lbl-list_is_empty} \styleIMI{list\_is\_empty(l:'a list):bool} with \styleIMI{'a:any} - Check if the list \styleIMI{l} is empty
-	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list): int} with \styleIMI{'a:any} - length of the list \styleIMI{l}
+	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list):int} with \styleIMI{'a:any} - length of the list \styleIMI{l}
 	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool} with \styleIMI{'a:any} - true if \styleIMI{e} belongs to the list~ˇ\styleIMI{l}
 	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list} with \styleIMI{'a:any} - reverse the list~\styleIMI{l}
 	\item \label{item:lbl-list_tl} \styleIMI{list\_tl(l:'a list):'a list} with \styleIMI{'a:any} - tail of the list \styleIMI{l}
@@ -1256,7 +1256,7 @@ Discrete variables must be initialized to a single constant value in the \styleI
 if they are not, a warning is issued, and they are arbitrarily set to a standard value.
 % (\eg{} \styleIMI{0} for numerical variables, or \BFalse{} for Boolean variables; see \cref{section:init} for the actual value).
 
-This initial default value is as follows, depending on the variable type:
+This initial default value of primitive types is as follows, depending on the variable type:
 
 \begin{tabular}{l l}
 	Rational & 0\\
@@ -1265,7 +1265,7 @@ This initial default value is as follows, depending on the variable type:
 	Binary words & \styleIMI{0b0}\\
 \end{tabular}
 
-The initial default value of arrays and lists is that of their type.
+The initial default value of composite types is as follows:
 
 \begin{tabular}{l l}
 	Array & \styleIMI{[]}\\
@@ -2891,7 +2891,7 @@ No floating-point approximations (\styleIMI{float}) are used, except for the gen
 
 Since version 3.1 \imitator{} supports several types of discrete variables.
 Common primitive types as integer, rational and Booleans are available.
-They can be declared with the following keywords:
+Recall from \cref{section:discrete} that they can be declared with the following keywords:
 
 \begin{itemize}
 	\item Rational: \styleIMI{rational} (or \styleIMI{discrete} for backward-compatibility)
@@ -2918,15 +2918,15 @@ Type checking does the following :
 	\item It checks type consistency within the expressions;
 	\item It resolves the types of the expressions;
 	\item It applies a numerical type to literal numbers according to the numerical type held by their outer expression;
-	\item It checks consistency between an expression type and variable type, in case of assignment;
-	\item It checks consistency between an expression type and its grammar rule.
+	\item It checks consistency between an expression type and variable type, in case of an assignment;
+	\item It checks the consistency between an expression type and its grammar rule.
 \end{itemize}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Expression type solving}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-The expression tree is traversed (depth-first search) in order to deduce its type.
+The expression tree is traversed (in a depth-first search manner) in order to deduce its type.
 As soon as a variable, constant or literal is found, the expression takes its type.
 If the expression only contains numbers (\eg{} \styleIMI{2 + 3 * 4}), the inferred type will be a \emph{rational} arithmetic expression (and not the \styleIMI{int} type).
 
@@ -2943,15 +2943,15 @@ If an expression mixes different types, a type error is risen before the start o
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 The types of literal numbers are automatically resolved during the semantic analysis and more precisely during the type checking step.
-Once an expression type is resolved, all literal numbers within are automatically typed as the numerical type holding by the expression.
+Once an expression type is resolved, all literal numbers within this expression are automatically typed as the numerical type held by the expression.
 
-For example, in the following update expression \styleIMI{b := True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1} will be automatically typed as a \styleIMI{int}.
+For example, in the following update expression \styleIMI{b := True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1} will be automatically typed as an~\styleIMI{int}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Type conversion}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-As said previously, there is no implicit conversion of variables, constants or literals from one type to another type. All expressions are holding exactly one type and cannot mix different types. However, it is possible to convert an expression to another type using built-in conversion functions:
+As said previously, there is no implicit conversion of variables, constants or literals from one type to another type. All expressions hold exactly one type and cannot mix different types. However, it is possible to convert an expression to another type using built-in conversion functions:
 
 \begin{itemize}
 	\item \styleIMI{rational\_of\_int}: converts an \styleIMI{int} expression to a rational one.
