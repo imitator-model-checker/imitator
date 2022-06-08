@@ -361,6 +361,7 @@ let print_header_string () =
 let print_contributors()  = 
 	print_string ("    " ^ Constants.program_name ^ " has been developed by:\n");
 	print_string ("    * Étienne André       (2008 - " ^ (BuildInfo.build_year) ^ "), lead developer\n");
+	print_string ("    * Johan Arcile        (2021 - 2022)\n");
 	print_string ("    * Jaime Arias         (2018 - " ^ (BuildInfo.build_year) ^ ")\n");
 	print_string ("    * Vincent Bloemen     (2018)\n");
 	print_string ("    * Camille Coti        (2014)\n");
