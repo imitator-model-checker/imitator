@@ -159,7 +159,7 @@ type merge_algorithm =
 	(* (reimplemented) version of IMITATOR 2.12 merge *)
 	| Merge_212
 
-let default_merge_algorithm = Merge_reconstruct
+let default_merge_algorithm = Merge_onthefly
 
 
 (* Main merge algorithms from IMITATOR 3.3 *)
