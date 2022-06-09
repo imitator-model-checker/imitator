@@ -1,5 +1,0 @@
-version = "20120224"
-description = "GMP"
-archive(byte) = "gmp.cma"
-archive(native) = "gmp.cmxa"
-exists_if = "gmp.cma"
