@@ -743,6 +743,7 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 	| Not_bool b ->
 	    customized_string.boolean_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
     | Bool_variable discrete_index -> variable_names discrete_index
+    | Bool_local_variable variable_name -> variable_name
     | Bool_constant value -> customized_string_of_bool_value customized_string.boolean_string value
     | Bool_sequence_function func ->
         customized_string_of_sequence_function customized_string variable_names func
@@ -859,7 +860,8 @@ and customized_string_of_binary_word_expression customized_string variable_names
     | Binary_word_variable (variable_index, length) as binary_word_expression ->
         print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
         variable_names variable_index
-
+    | Binary_word_local_variable variable_name ->
+        variable_name
     | Binary_word_sequence_function func ->
         customized_string_of_sequence_function customized_string variable_names func
 
@@ -876,7 +878,7 @@ and customized_string_of_array_expression customized_string variable_names = fun
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
         l_delimiter ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ r_delimiter
     | Array_variable variable_index -> variable_names variable_index
-
+    | Array_local_variable variable_name -> variable_name
     | Array_concat (array_expr_0, array_expr_1) as func ->
         print_function
             (label_of_array_expression func)
@@ -903,6 +905,7 @@ and customized_string_of_list_expression customized_string variable_names = func
         label_of_list_expression list_expr
         ^ "(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_delimiter ^ ")"
     | List_variable variable_index -> variable_names variable_index
+    | List_local_variable variable_name -> variable_name
     | List_cons (global_expression, list_expr) as func ->
         print_function
             (label_of_list_expression func)
@@ -926,6 +929,7 @@ and customized_string_of_list_expression customized_string variable_names = func
 and customized_string_of_stack_expression customized_string variable_names = function
     | Literal_stack -> "stack()"
     | Stack_variable variable_index -> variable_names variable_index
+    | Stack_local_variable variable_name -> variable_name
     | Stack_push (expr, stack_expr) as func ->
         print_function
             (label_of_stack_expression func)
@@ -947,6 +951,7 @@ and customized_string_of_stack_expression customized_string variable_names = fun
 and customized_string_of_queue_expression customized_string variable_names = function
     | Literal_queue -> "queue()"
     | Queue_variable variable_index -> variable_names variable_index
+    | Queue_local_variable variable_name -> variable_name
     | Queue_push (expr, queue_expr) as func ->
         print_function
             (label_of_queue_expression func)

@@ -74,6 +74,9 @@ val json_of_impossible_concrete_run         : AbstractModel.abstract_model -> St
 between discrete and conditional updates *)
 val separator_comma : updates -> bool * bool
 
+(* Convert the function definitions into a string *)
+val string_of_fun_definitions : AbstractModel.abstract_model -> string
+
 (** Convert the discrete updates into a string *)
 val string_of_discrete_updates : ?sep:string -> AbstractModel.abstract_model -> discrete_update list -> string
 

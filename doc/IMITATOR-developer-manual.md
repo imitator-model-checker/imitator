@@ -2,7 +2,18 @@
 
 ## Sequential and continuous updates
 
+Updates triggers from the `AlgoStateBased` module, using the `DiscreteExpressionEvaluator` module.
 
+There is two types of update:
+
+ - Sequential update (Direct update)
+ - Delayed update
+
+Updates are makes at `AlgoStateBased.compute_new_location_guards_updates`.
+
+### Sequential
+
+Sequential
 
 ## Assignment mode
 
@@ -11,7 +22,7 @@
 In an update, in both sequential or not-sequential, variables are assigned by copy. It means that when we make an assignment of one variable `x` to another `y`, the value of `x` is copied to `y`. The two variables are independent. Therefore, modifying the value of one of these doesn't impact the value of the other.
 
 For example in the update `a := b`, `b` is copied and assigned to `a`. This behavior is valid whatever the type of the variable.
-The copy is a deep copy.
+The described copy is a deep copy.
 
 Why ? because as a function can be executed many time in a given transition, using reference instead of a copy of a variable make unpredictable results. Especially when update is make through a user function used in a guard or invariant (as they may be called many time given one transition).
 

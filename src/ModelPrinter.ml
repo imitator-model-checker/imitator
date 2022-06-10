@@ -315,14 +315,16 @@ let string_of_declarations model =
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
+(* Convert the function definitions into a string *)
 let string_of_fun_definitions model =
 
+    (* Convert a function definition into a string *)
     let string_of_fun_definition fun_def =
 
+        (* Convert a function expression into a stirng *)
         let rec string_of_next_expr = function
             | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
-                "let " ^ variable_name
-                ^ " : "
+                "let " ^ variable_name ^ " : "
                 ^ DiscreteType.string_of_var_type_discrete discrete_type
                 ^ " = "
                 ^ DiscreteExpressions.string_of_global_expression model.variable_names init_expr
@@ -338,12 +340,15 @@ let string_of_fun_definitions model =
         in
 
         let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature in
-        let x = List.combine fun_def.parameters parameters_signature in
-        let x = List.map (fun (param_name, type_constraint) -> param_name ^ " : " ^ FunctionSig.string_of_type_constraint type_constraint) x in
-        let s = OCamlUtilities.string_of_list_of_string_with_sep ", " x in
-        "fn " ^ fun_def.name ^ "(" ^ s ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin \n"
+        let parameter_names_with_constraints = List.combine fun_def.parameters parameters_signature in
+        (* Convert parameters into a string *)
+        let str_param_list = List.map (fun (param_name, type_constraint) -> param_name ^ " : " ^ FunctionSig.string_of_type_constraint type_constraint) parameter_names_with_constraints in
+        let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in
+        (* Format function definition *)
+        "fn " ^ fun_def.name ^ "(" ^ str_params ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin \n"
         ^ string_of_next_expr fun_def.body
         ^ "end"
+
     in
 
     (* Convert hashtbl values to list *)

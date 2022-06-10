@@ -133,6 +133,13 @@ let string_of_declarations model stopwatches clocks =
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
+(* Convert function definitions into a string *)
+let string_of_fun_definitions model =
+    (* Print warning *)
+    if Hashtbl.length model.fun_definitions > 0 then
+        print_warning "Model contains custom user functions. HyTech doesn't support user functions.";
+    (* Get function definitions string as IMITATOR format *)
+    ModelPrinter.string_of_fun_definitions model
 
 (************************************************************)
 (** Automata *)
@@ -270,7 +277,7 @@ let string_of_transition model automaton_index transition =
     let str_guard = ModelPrinter.string_of_guard model.variable_names transition.guard in
 
     if not (is_linear_guard transition.guard) then
-        print_warning ("Guard `" ^ str_guard ^ "` contains non-linear expression(s) or are not rational-valued, HyTech doesn't such expressions.");
+        print_warning ("Guard `" ^ str_guard ^ "` contains non-linear expression(s) or are not rational-valued, HyTech doesn't support such expressions.");
 
 	(if conditional_updates <> [] then print_warning "Conditional updates are not supported by HyTech. Ignoring…" );
 	"\n\t" ^ "when "
@@ -571,7 +578,8 @@ let string_of_model model =
 	string_of_header model
 	(* The variable declarations *)
 	^  "\n" ^ string_of_declarations model stopwatches clocks
-
+	(* The function declarations *)
+	^  "\n" ^ string_of_fun_definitions model
 	(* All automata *)
 	^  "\n" ^ string_of_automata model stopwatches clocks
 
