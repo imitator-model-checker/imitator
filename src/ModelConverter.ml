@@ -1929,6 +1929,13 @@ let all_variables_in_property_option (parsed_property_option : ParsingStructure.
 		
 		
 		(*------------------------------------------------------------*)
+		(* 1-clock timed opacity synthesis *)
+		(*------------------------------------------------------------*)
+		| Parsed_OneClockOpacity parsed_state_predicate ->
+			ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
+		
+
+		(*------------------------------------------------------------*)
 		(* Cartography algorithms *)
 		(*------------------------------------------------------------*)
 		
@@ -2568,6 +2575,13 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		
 		
 		(*------------------------------------------------------------*)
+		(* 1-clock timed opacity synthesis *)
+		(*------------------------------------------------------------*)
+		| Parsed_OneClockOpacity parsed_state_predicate ->
+			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+		
+
+		(*------------------------------------------------------------*)
 		(* Cartography algorithms *)
 		(*------------------------------------------------------------*)
 		
@@ -2890,6 +2904,16 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			None
 
 			
+		(*------------------------------------------------------------*)
+		(* 1-clock timed opacity synthesis *)
+		(*------------------------------------------------------------*)
+		| Parsed_OneClockOpacity parsed_state_predicate ->
+			(* Return a property and no observer *)
+			OneClockOpacity (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+		
+
 		(*------------------------------------------------------------*)
 		(* Cartography algorithms *)
 		(*------------------------------------------------------------*)
