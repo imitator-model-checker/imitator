@@ -984,11 +984,11 @@ match options#imitator_mode with
 					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMunion.algoIMunion pval in myalgo
 
 		(*------------------------------------------------------------*)
-		(* 1-clock timed opacity synthesis (experimental) *)
+		(* 1-clock timed opacity synthesis *)
 		(*------------------------------------------------------------*)
 	
-		| OneClockOpacity state_predicate ->
-			raise (NotImplemented "OneClockOpacity")
+			| OneClockOpacity state_predicate ->
+				let myalgo :> AlgoGeneric.algoGeneric = new Algo1cOpa.algo1cOpa state_predicate in myalgo
 
 
 		(*------------------------------------------------------------*)
