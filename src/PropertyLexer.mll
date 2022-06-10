@@ -45,6 +45,7 @@ rule token = parse
  	| "#synth"         { CT_SYNTH }
 
  	(* Keywords for properties *)
+	| "1cOpacity"      { CT_ONECLOCKOPACITY }
 	| "AccCycle"       { CT_ACCEPTINGCYCLE }
 	| "AcceptingCycle" { CT_ACCEPTINGCYCLE }
 	| "AccLoop"        { CT_ACCEPTINGCYCLE }

@@ -3000,6 +3000,9 @@ class virtual algoStateBased =
 				| ConvexIM _
 				| IMK _
 				| IMunion _
+				
+				(* Opacity *)
+				| OneClockOpacity _
 
 				(* Cartography *)
 				| Cover_cartography _

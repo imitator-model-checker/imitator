@@ -983,6 +983,13 @@ match options#imitator_mode with
 			| IMunion pval ->
 					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMunion.algoIMunion pval in myalgo
 
+		(*------------------------------------------------------------*)
+		(* 1-clock timed opacity synthesis (experimental) *)
+		(*------------------------------------------------------------*)
+	
+		| OneClockOpacity state_predicate ->
+			raise (NotImplemented "OneClockOpacity")
+
 
 		(*------------------------------------------------------------*)
 		(* Cartography algorithms *)

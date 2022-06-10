@@ -164,6 +164,8 @@ let get_v0_option () =
 			| ConvexIM _
 			| IMK _
 			| IMunion _
+			
+			| OneClockOpacity _
 				-> None
 			
 			| Cover_cartography (v0, _)
@@ -1358,6 +1360,8 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				| ConvexIM _
 				| IMK _
 				| IMunion _
+				
+				| OneClockOpacity _
 				
 				| Cover_cartography _
 				| Learning_cartography _

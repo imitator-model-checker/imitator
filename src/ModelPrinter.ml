@@ -1110,6 +1110,12 @@ let string_of_abstract_property model property =
 
 		
 		(*------------------------------------------------------------*)
+		(* 1-clock timed opacity synthesis *)
+		(*------------------------------------------------------------*)
+		
+		| OneClockOpacity state_predicate -> "1cOpacity(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+
+		(*------------------------------------------------------------*)
 		(* Cartography algorithms *)
 		(*------------------------------------------------------------*)
 		

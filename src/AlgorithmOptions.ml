@@ -105,6 +105,13 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 
 	
 	(*------------------------------------------------------------*)
+	(* 1-clock timed opacity synthesis *)
+	(*------------------------------------------------------------*)
+	
+	| OneClockOpacity _ -> Inclusion_check
+
+	
+	(*------------------------------------------------------------*)
 	(* Cartography algorithms *)
 	(*------------------------------------------------------------*)
 	
@@ -211,6 +218,15 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 
 	(* Parametric reachability preservation *)
 	| PRP _
+		(* All comparison operators preserve correctness *)
+		-> true
+
+	
+	(*------------------------------------------------------------*)
+	(* 1-clock timed opacity synthesis *)
+	(*------------------------------------------------------------*)
+	
+	| OneClockOpacity _
 		(* All comparison operators preserve correctness *)
 		-> true
 
@@ -328,6 +344,13 @@ let merge_needed property =
 	(* Variant IMunion of the Inverse method *)
 	| IMunion _
 		-> false
+
+
+	(*------------------------------------------------------------*)
+	(* 1-clock timed opacity synthesis *)
+	(*------------------------------------------------------------*)
+	
+	| OneClockOpacity _ -> true
 
 	
 	(*------------------------------------------------------------*)
@@ -554,6 +577,14 @@ let supports_witness property =
 
 	
 	(*------------------------------------------------------------*)
+	(* 1-clock timed opacity synthesis *)
+	(*------------------------------------------------------------*)
+	
+	| OneClockOpacity _
+	(*** NOTE: should be possible though ***)
+		-> false
+
+	(*------------------------------------------------------------*)
 	(* Cartography algorithms *)
 	(*------------------------------------------------------------*)
 	
@@ -708,6 +739,13 @@ let text_of_property property =
 
 	(* Variant IMunion of the Inverse method *)
 	| IMunion _ -> "IMunion [AS13]"
+
+
+	(*------------------------------------------------------------*)
+	(* 1-clock timed opacity synthesis *)
+	(*------------------------------------------------------------*)
+	
+	| OneClockOpacity _ -> "1-clock opacity synthesis [EXPERIMENTAL]"
 
 	
 	(*------------------------------------------------------------*)
