@@ -3129,6 +3129,364 @@ Error                                   : invalid model
 	,
 
 	#------------------------------------------------------------
+	{
+		'purpose'    : 'Toy example for exemplifying specifications over Booleans only',
+		'author':'lbinria',
+		'tags':'boolean, computing, toy',
+		'input_files': ['boolean_expressions/bool-exemplifying.imi', 'boolean_expressions/bool-exemplifying.imiprop'],
+		'options'    : '-merge none -comparison equality',
+		'expectations' : [
+			{'file': 'bool-exemplifying.res' , 'content' : """
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"plma": "l1",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "False",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "p1up",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": " not  (p1)",
+						"updates": {"p1": "True"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l1",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "p2up",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": " not  (p2)",
+						"updates": {"p2": "True"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l1",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "True"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "p1down",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": "p1",
+						"updates": {"p1": "False"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l1",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "False",
+					"p2": "True"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a1",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "plma",
+						"guard": "True",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l2",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "False",
+					"p2": "True"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/4",
+				"action": "p2down",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": "p2",
+						"updates": {"p2": "False"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l2",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "False",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "1/4",
+					"global_time": "1/4"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/4",
+				"action": "p1up",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": " not  (p1)",
+						"updates": {"p1": "True"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l2",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "1/2",
+					"global_time": "1/2"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/2",
+				"action": "check",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "plma",
+						"guard": "p1 AND  x > 0",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l3",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "3",
+				"action": "a2",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "plma",
+						"guard": " not  (p2) AND  x = 3",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l4",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "3",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
 	# END : Test Boolean expressions
 	#------------------------------------------------------------
 
