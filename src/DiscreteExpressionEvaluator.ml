@@ -179,7 +179,7 @@ and eval_rational_factor_with_context eval_context_opt = function
     | Rational_sequence_function func ->
         let value = eval_sequence_function_with_context eval_context_opt func in
         numconst_value value
-    | Rational_inline_function (param_names, expr_args, fun_decl) ->
+    | Rational_inline_function (_, param_names, expr_args, fun_decl) ->
         let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
         numconst_value result
 
@@ -291,7 +291,7 @@ and eval_int_expression_with_context eval_context_opt (* expr *) =
             let queue = eval_queue_expression_with_context eval_context_opt queue_expr in
             Int32.of_int (Queue.length queue)
 
-        | Int_inline_function (param_names, expr_args, fun_decl) ->
+        | Int_inline_function (_, param_names, expr_args, fun_decl) ->
             let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
             int_value result
 
@@ -390,7 +390,7 @@ and eval_discrete_boolean_expression_with_context eval_context_opt = function
     | Queue_is_empty queue_expr ->
         let queue = eval_queue_expression_with_context eval_context_opt queue_expr in
         Queue.is_empty queue
-    | Bool_inline_function (param_names, expr_args, fun_decl) ->
+    | Bool_inline_function (_, param_names, expr_args, fun_decl) ->
         let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
         bool_value result
 
@@ -438,7 +438,7 @@ and eval_binary_word_expression_with_context eval_context_opt = function
     | Binary_word_sequence_function func ->
         let value = eval_sequence_function_with_context eval_context_opt func in
         binary_word_value value
-    | Binary_word_inline_function (param_names, expr_args, fun_decl) ->
+    | Binary_word_inline_function (_, param_names, expr_args, fun_decl) ->
         let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
         binary_word_value result
 
@@ -461,7 +461,7 @@ and eval_array_expression_with_context eval_context_opt = function
     | Array_sequence_function func ->
         let value = eval_sequence_function_with_context eval_context_opt func in
         array_value value
-    | Array_inline_function (param_names, expr_args, fun_decl) ->
+    | Array_inline_function (_, param_names, expr_args, fun_decl) ->
         let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
         array_value result
 
@@ -493,7 +493,7 @@ and eval_list_expression_with_context eval_context_opt = function
         let list = eval_list_expression_with_context eval_context_opt list_expr in
         List.rev list
 
-    | List_inline_function (param_names, expr_args, fun_decl) ->
+    | List_inline_function (_, param_names, expr_args, fun_decl) ->
         let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
         list_value result
 
@@ -521,7 +521,7 @@ and eval_stack_expression_with_context eval_context_opt = function
         let value = eval_sequence_function_with_context eval_context_opt func in
         stack_value value
 
-    | Stack_inline_function (param_names, expr_args, fun_decl) ->
+    | Stack_inline_function (_, param_names, expr_args, fun_decl) ->
         let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
         stack_value result
 
@@ -549,7 +549,7 @@ and eval_queue_expression_with_context eval_context_opt = function
         let value = eval_sequence_function_with_context eval_context_opt func in
         queue_value value
 
-    | Queue_inline_function (param_names, expr_args, fun_decl) ->
+    | Queue_inline_function (_, param_names, expr_args, fun_decl) ->
         let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
         queue_value result
 
@@ -615,7 +615,7 @@ and eval_inline_function_with_context eval_context_opt param_names expr_args fun
     eval_fun_body_with_context new_eval_context fun_decl
 
 and eval_fun_body_with_context eval_context = function
-    | Fun_local_decl (variable_name, expr, next_expr) ->
+    | Fun_local_decl (variable_name, _, expr, next_expr) ->
         let value = eval_global_expression_with_context (Some eval_context) expr in
         Hashtbl.add eval_context.local_variables variable_name value;
 

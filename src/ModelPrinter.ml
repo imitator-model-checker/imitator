@@ -315,6 +315,44 @@ let string_of_declarations model =
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
+let string_of_fun_definitions model =
+
+    let string_of_fun_definition fun_def =
+
+        let rec string_of_next_expr = function
+            | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
+                "let " ^ variable_name
+                ^ " : "
+                ^ DiscreteType.string_of_var_type_discrete discrete_type
+                ^ " = "
+                ^ DiscreteExpressions.string_of_global_expression model.variable_names init_expr
+                ^ " in \n"
+                ^ string_of_next_expr next_expr
+
+            | Fun_instruction (discrete_update, next_expr) ->
+                DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
+                ^ string_of_next_expr next_expr
+
+            | Fun_expr expr ->
+                DiscreteExpressions.string_of_global_expression model.variable_names expr ^ "\n"
+        in
+
+        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature in
+        let x = List.combine fun_def.parameters parameters_signature in
+        let x = List.map (fun (param_name, type_constraint) -> param_name ^ " : " ^ FunctionSig.string_of_type_constraint type_constraint) x in
+        let s = OCamlUtilities.string_of_list_of_string_with_sep ", " x in
+        "fn " ^ fun_def.name ^ "(" ^ s ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin \n"
+        ^ string_of_next_expr fun_def.body
+        ^ "end"
+    in
+
+    (* Convert hashtbl values to list *)
+    let fun_definition_list = model.fun_definitions |> Hashtbl.to_seq_values |> List.of_seq in
+    (* Map each definition to it's string representation *)
+    let str_fun_definitions_list = List.map string_of_fun_definition fun_definition_list in
+    (* Join all strings *)
+    OCamlUtilities.string_of_list_of_string_with_sep "\n\n" str_fun_definitions_list
+
 (* Get string of a global expression *)
 let string_of_global_expression = DiscreteExpressions.string_of_global_expression
 (* Get string of an arithmetic expression *)
@@ -343,18 +381,6 @@ let customized_string_of_guard customized_boolean_string variable_names = functi
 
 (** Convert a guard into a string *)
 let string_of_guard = customized_string_of_guard Constants.global_default_string
-(*
-let string_of_guard variable_names = function
-	| True_guard -> LinearConstraint.string_of_true
-	| False_guard -> LinearConstraint.string_of_false
-	| Discrete_guard discrete_guard -> NonlinearConstraint.string_of_nonlinear_constraint variable_names discrete_guard
-	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
-	| Discrete_continuous_guard discrete_continuous_guard ->
-		(NonlinearConstraint.string_of_nonlinear_constraint variable_names discrete_continuous_guard.discrete_guard)
-		^ LinearConstraint.string_of_and ^
-		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
-*)
-
 
 (** Convert a guard into a JSON-style string *)
 let json_of_guard variable_names guard =
@@ -1140,6 +1166,8 @@ let string_of_model model =
 	model_header ()
 	(* The variable declarations *)
 	^  "\n" ^ string_of_declarations model
+	(* The function declarations *)
+	^  "\n" ^ string_of_fun_definitions model
 	(* All automata *)
 	^  "\n" ^ string_of_automata model
 	(* The initial state *)

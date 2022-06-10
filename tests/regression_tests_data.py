@@ -1061,6 +1061,98 @@ Error                                   : model parsing error
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/06/09
+		# Last modified            : 2022/06/09
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test include: functions',
+		'author': 'lbinria',
+		'tags':'include, function',
+		'input_files': ['tests_include_model/example-include-functions-1a.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'example-include-functions-1a-regenerated.imi' , 'content' : """
+var
+	res, j, i
+		: int;
+
+fn f() : int begin
+let i1 : int = i + 1 in
+let i2 : int = (i + 1) * 2 in
+i1 + i2
+end
+
+(************************************************************)
+ automaton P1
+(************************************************************)
+ synclabs: ;
+
+loc s0: invariant True
+	when True do {}  (* sync nosync_1*)  goto lend;
+
+accepting loc lend: invariant True
+ end (* P1 *)
+(************************************************************)
+
+
+(************************************************************)
+ automaton P2
+(************************************************************)
+ synclabs: ;
+
+loc s0: invariant True
+	when f() + j = 4 do {res := f()}  (* sync nosync_2*)  goto lend;
+
+accepting loc lend: invariant res = 3
+ end (* P2 *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[P1] := s0,
+		loc[P2] := s0,
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		res := 0,
+		j := 1,
+		i := 0
+	;
+
+	(*------------------------------------------------------------*)
+	(* Initial continuous constraint *)
+	(*------------------------------------------------------------*)
+	continuous =
+		& True
+	;
+
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# AUTOMATIC VARIABLES REMOVAL

@@ -230,11 +230,14 @@ let default_arithmetic_string_without_whitespace = {
     unary_min_string = "-";
 }
 
-(** Default string values of array delimiters symbols without white spaces around operators *)
+(** Default string values of array delimiters symbols without whitespaces around operators *)
 let default_array_string = {
     array_literal_delimiter = "[", "]";
     array_access_delimiter = "[", "]";
 }
+
+(** Default string values of parenthesis delimiters symbols without whitespaces *)
+let default_paren_delimiter = "(", ")"
 
 (** Default string values of symbols *)
 let global_default_string = {

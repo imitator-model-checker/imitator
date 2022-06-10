@@ -76,9 +76,7 @@ type clock_updates =
 
 
 
-(** update: variable_index := linear_term *)
-(*** TO OPTIMIZE (in terms of dimensions!) ***)
-type discrete_update = DiscreteExpressions.update_type * DiscreteExpressions.global_expression
+
 
 
 
@@ -107,7 +105,7 @@ type invariant = guard
 (** Updates *)
 type updates = {
   clock      : clock_updates;           (** Clock updates *)
-  discrete   : discrete_update list;    (** List of discrete updates *)
+  discrete   : DiscreteExpressions.discrete_update list;    (** List of discrete updates *)
   conditional: conditional_update list; (** List of conditional updates *)
 }
 (** Conditional updates *)

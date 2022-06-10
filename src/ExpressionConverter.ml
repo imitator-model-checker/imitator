@@ -1858,6 +1858,7 @@ and bool_expression_of_typed_function_call variable_infos argument_expressions =
         let fun_def = user_function_definition function_name in
 
         Bool_inline_function (
+            function_name,
             fun_def.parameters,
             List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
             fun_def.body
@@ -2010,6 +2011,7 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
         let fun_def = user_function_definition function_name in
 
         Rational_inline_function (
+            function_name,
             fun_def.parameters,
             List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
             fun_def.body
@@ -2177,6 +2179,7 @@ and int_expression_of_typed_function_call variable_infos argument_expressions = 
         let fun_def = user_function_definition function_name in
 
         Int_inline_function (
+            function_name,
             fun_def.parameters,
             List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
             fun_def.body
@@ -2365,6 +2368,7 @@ and binary_expression_of_typed_function_call variable_infos length argument_expr
         let fun_def = user_function_definition function_name in
 
         Binary_word_inline_function (
+            function_name,
             fun_def.parameters,
             List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
             fun_def.body
@@ -2509,6 +2513,7 @@ and array_expression_of_typed_function_call variable_infos discrete_type argumen
         let fun_def = user_function_definition function_name in
 
         Array_inline_function (
+            function_name,
             fun_def.parameters,
             List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
             fun_def.body
@@ -2660,6 +2665,7 @@ and list_expression_of_typed_function_call variable_infos discrete_type argument
         let fun_def = user_function_definition function_name in
 
         List_inline_function (
+            function_name,
             fun_def.parameters,
             List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
             fun_def.body
@@ -2800,6 +2806,7 @@ and stack_expression_of_typed_function_call variable_infos discrete_type argumen
         let fun_def = user_function_definition function_name in
 
         Stack_inline_function (
+            function_name,
             fun_def.parameters,
             List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
             fun_def.body
@@ -2943,6 +2950,7 @@ and queue_expression_of_typed_function_call variable_infos discrete_type argumen
         let fun_def = user_function_definition function_name in
 
         Queue_inline_function (
+            function_name,
             fun_def.parameters,
             List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
             fun_def.body
@@ -3312,6 +3320,7 @@ let rec fun_body_of_typed_fun_body variable_infos = function
     | Typed_fun_local_decl (variable_name, discrete_type, typed_init_expr, typed_next_expr) ->
         Fun_local_decl (
             variable_name,
+            discrete_type,
             global_expression_of_typed_global_expression variable_infos typed_init_expr,
             fun_body_of_typed_fun_body variable_infos typed_next_expr
         )

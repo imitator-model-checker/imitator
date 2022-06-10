@@ -3612,8 +3612,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Create function table that associate function name to function metadata *)
     let functions_metadata_table = (List.map (fun (fun_def : ParsingStructure.function_metadata) -> fun_def.name, fun_def) all_functions_metadata) |> List.to_seq |> Hashtbl.of_seq in
 
+    (* Print some info on side effects resolution *)
     List.iter (fun (fm : function_metadata) ->
-        print_standard_message ("fun: `" ^ fm.name ^ "` has side effects : `" ^ string_of_bool fm.side_effect ^ "`");
+        print_message Verbose_high ("fun `" ^ fm.name ^ "` has side effects :" ^ string_of_bool fm.side_effect);
     ) all_functions_metadata;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

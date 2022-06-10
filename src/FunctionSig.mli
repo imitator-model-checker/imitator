@@ -64,7 +64,7 @@ type signature = var_type_discrete list
 
 val string_of_signature : signature -> string
 val string_of_signature_constraint : signature_constraint -> string
-
+val string_of_type_constraint : type_constraint -> string
 (*val constraint_signature : var_type_discrete -> var_type_discrete list -> var_type_discrete list*)
 
 (**)

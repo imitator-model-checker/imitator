@@ -1,0 +1,45 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            :
+ * Description      :
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/10/04
+ * Last modified    : 2021/10/18
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.2
+ ************************************************************)
+
+var
+
+  j : int;
+  res : int;
+
+automaton P2
+
+  loc s0: invariant True
+  when f() + j = 4 do { res := f() } goto lend;
+
+  accepting loc lend : invariant res = 3
+
+end
+
+
+init := {
+  discrete =
+    loc[P2]:=s0,
+    j := 1
+  ;
+
+}
