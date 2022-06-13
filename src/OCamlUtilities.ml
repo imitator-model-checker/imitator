@@ -440,6 +440,9 @@ let rec string_of_list_of_string_with_sep sep = function
 	| [elem] -> elem
 	| head :: tail -> head ^ sep ^ (string_of_list_of_string_with_sep sep tail)
 
+(** Convert a list of string into a string with separators removing empty strings *)
+let string_of_list_of_string_with_sep_without_empty_strings sep list =
+    string_of_list_of_string_with_sep sep (List.filter (fun string -> string<>"") list)
 
 (** Convert a list of int into a string with , separator *)
 let string_of_list_of_int l =
@@ -695,3 +698,8 @@ let rev_filter_map f l =
 
 let list_to_string_set x = x |> List.to_seq |> CustomModules.StringSet.of_seq
 let string_set_to_list x = x |> CustomModules.StringSet.to_seq |> List.of_seq
+
+(* Convert list to array *)
+let array_of_list x = x |> List.to_seq |> Array.of_seq
+(* Convert array to list *)
+let list_of_array x = x |> Array.to_seq |> List.of_seq

@@ -191,6 +191,9 @@ val string_of_array_of_string_with_sep : string -> string array -> string
 (** Convert a list of string into a string with separators (uses an internal conversion to array) *)
 val string_of_list_of_string_with_sep : string -> string list -> string
 
+(** Convert a list of string into a string with separators removing empty strings *)
+val string_of_list_of_string_with_sep_without_empty_strings : string -> string list -> string
+
 (* Add \t identation of string according to the given level *)
 val indent_paragraph : int -> string -> string
 
@@ -265,3 +268,8 @@ val rev_filter_map : ('a -> 'b option) -> 'a list -> 'b list
 
 val list_to_string_set : string list -> CustomModules.StringSet.t
 val string_set_to_list : CustomModules.StringSet.t -> string list
+
+(* Convert list to array *)
+val array_of_list : 'a list -> 'a array
+(* Convert array to list *)
+val list_of_array : 'a array -> 'a list

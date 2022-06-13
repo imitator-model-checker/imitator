@@ -23,6 +23,7 @@ open NonlinearConstraint
 open AbstractModel
 open DiscreteValue
 open DiscreteType
+open FunctionSig
 open Result
 
 (************************************************************)
@@ -117,6 +118,12 @@ let jani_expression str_expression =
         json_property "exp" str_expression
     |]
 
+let jani_named_expression str_name str_expression =
+    json_struct [|
+        json_property "name" str_name;
+        json_property "exp" str_expression
+    |]
+
 (* Format a Jani array value *)
 let jani_array_value str_values =
     let str_array = OCamlUtilities.string_of_array_of_string_with_sep "," str_values in
@@ -166,7 +173,7 @@ let jani_function_call ?(str_comment="") str_function_name str_args =
 let jani_function_declaration str_function_name str_type parameters str_body =
     json_struct [|
         json_property "name" (json_quoted str_function_name);
-        json_property "type" (json_quoted str_type);
+        json_property "type" str_type;
         json_property "parameters" (json_array parameters);
         json_property "body" str_body
     |]
@@ -186,6 +193,93 @@ let jani_features =
         json_quoted "datatypes";
         json_quoted "functions";
     |]
+
+(* Format a jani datatype reference *)
+let jani_datatype_ref str_datatype =
+    json_struct [|
+        json_property "kind" "datatype";
+        json_property "ref" (json_quoted str_datatype)
+    |]
+
+let jani_compound_datatype_ref str_datatype str_compound_datatype =
+    json_struct [|
+        json_property "kind" (json_quoted str_datatype);
+        json_property "base" str_compound_datatype
+    |]
+
+(* String of number var type *)
+let string_of_var_type_discrete_number = function
+    | Var_type_discrete_rat -> json_quoted "real"
+    | Var_type_discrete_int -> json_quoted "int"
+    | Var_type_discrete_unknown_number -> json_quoted "number"
+
+(* String of discrete var type *)
+let rec string_of_var_type_discrete = function
+    | Var_type_discrete_number x -> string_of_var_type_discrete_number x
+    | Var_type_discrete_bool -> json_quoted "bool"
+    | Var_type_discrete_binary_word _ ->
+        json_struct [|
+            json_property "kind" (json_quoted "array");
+            json_property "base" (json_quoted "bool");
+        |]
+
+    | Var_type_discrete_array (inner_type, _)
+    | Var_type_discrete_list inner_type
+    | Var_type_discrete_stack inner_type
+    | Var_type_discrete_queue inner_type ->
+        json_struct [|
+            json_property "kind" (json_quoted "array");
+            json_property "base" (string_of_var_type_discrete inner_type)
+        |]
+    | Var_type_weak ->
+        raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
+
+(* String of length constraint for Jani *)
+let rec string_of_length_constraint = function
+    | Length_constraint_expression length_constraint_expr -> string_of_length_constraint_expression length_constraint_expr
+    | Length_constraint length -> string_of_int length
+
+(* String of length constraint expression for Jani *)
+and string_of_length_constraint_expression = function
+    | Length_scalar_constraint constraint_name -> constraint_name
+    | Length_plus_constraint (constraint_name, length_constraint) -> constraint_name ^ " + " ^ string_of_length_constraint length_constraint
+
+(* String of int type constraint for Jani *)
+let string_of_int_type_constraint = function
+    | Int_type_constraint -> json_quoted "int"
+    | Int_name_constraint constraint_name -> json_quoted (constraint_name ^ ":int")
+
+(* String of number type for Jani *)
+let string_of_type_number = function
+    | Int_constraint int_constraint -> string_of_int_type_constraint int_constraint
+    | Rat_constraint -> json_quoted "real"
+
+(* String of number type constraint for Jani *)
+let string_of_type_number_constraint = function
+    | Number_type_name_constraint constraint_name -> json_quoted ("'" ^ constraint_name ^ " number")
+    | Defined_type_number_constraint defined_type_constraint_number -> string_of_type_number defined_type_constraint_number
+
+(* String of defined type constraint for Jani *)
+let rec string_of_defined_type_constraint = function
+    | Number_constraint type_number_constraint ->
+        string_of_type_number_constraint type_number_constraint
+    | Bool_constraint ->
+        json_quoted "bool"
+    | Binary_constraint length_constraint ->
+        jani_datatype_ref "binary_word"
+    | Array_constraint (type_constraint, length_constraint) ->
+        jani_compound_datatype_ref "array" (string_of_type_constraint type_constraint)
+    | List_constraint type_constraint ->
+        jani_compound_datatype_ref "list" (string_of_type_constraint type_constraint)
+    | Stack_constraint type_constraint ->
+        jani_compound_datatype_ref "stack" (string_of_type_constraint type_constraint)
+    | Queue_constraint type_constraint ->
+        jani_compound_datatype_ref "queue" (string_of_type_constraint type_constraint)
+
+(* String of type constraint for Jani *)
+and string_of_type_constraint = function
+    | Type_name_constraint constraint_name -> json_quoted ("'" ^ constraint_name)
+    | Defined_type_constraint defined_type_constraint -> string_of_defined_type_constraint defined_type_constraint
 
 (* Get string representation of a discrete value in Jani *)
 let rec string_of_value = function
@@ -360,6 +454,9 @@ and string_of_discrete_boolean_expression variable_names = function
             [|string_of_queue_expression variable_names queue_expr|]
             ~str_comment:(undeclared_function_warning label)
 
+    | Bool_inline_function (function_name, _, args_expr, _) ->
+        string_of_function_call variable_names function_name args_expr
+
 and string_of_arithmetic_expression variable_names = function
     | Rational_arithmetic_expression expr -> string_of_rational_arithmetic_expression variable_names expr
     | Int_arithmetic_expression expr -> string_of_int_arithmetic_expression variable_names expr
@@ -416,6 +513,9 @@ and string_of_rational_arithmetic_expression variable_names =
 
         | Rational_sequence_function func ->
             string_of_sequence_function variable_names func
+
+        | Rational_inline_function (function_name, _, args_expr, _) ->
+            string_of_function_call variable_names function_name args_expr
 
 	(* Call top-level *)
 	in string_of_arithmetic_expression
@@ -497,6 +597,9 @@ and string_of_int_arithmetic_expression variable_names =
                 [|string_of_queue_expression variable_names queue_expr|]
                 ~str_comment:(undeclared_function_warning label)
 
+        | Int_inline_function (function_name, _, args_expr, _) ->
+            string_of_function_call variable_names function_name args_expr
+
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression
 
@@ -547,6 +650,10 @@ and string_of_binary_word_expression variable_names binary_word_expr =
 
         | Binary_word_sequence_function func ->
             string_of_sequence_function variable_names func
+
+        | Binary_word_inline_function (function_name, _, args_expr, _) ->
+            string_of_function_call variable_names function_name args_expr
+
     in
     string_of_binary_word_expression binary_word_expr
 
@@ -575,6 +682,9 @@ and string_of_array_expression variable_names = function
     | Array_sequence_function func ->
         string_of_sequence_function variable_names func
 
+    | Array_inline_function (function_name, _, args_expr, _) ->
+        string_of_function_call variable_names function_name args_expr
+
 and string_of_list_expression variable_names = function
     | Literal_list expr_list ->
         let str_values = List.map (string_of_global_expression variable_names) expr_list in
@@ -598,6 +708,7 @@ and string_of_list_expression variable_names = function
                 string_of_list_expression variable_names list_expr
             |]
             ~str_comment:(undeclared_function_warning label)
+
     | List_list_tl list_expr
     | List_rev list_expr as func ->
         (* Get label of expression *)
@@ -606,8 +717,12 @@ and string_of_list_expression variable_names = function
             label
             [| string_of_list_expression variable_names list_expr |]
             ~str_comment:(undeclared_function_warning label)
+
     | List_sequence_function func ->
         string_of_sequence_function variable_names func
+
+    | List_inline_function (function_name, _, args_expr, _) ->
+        string_of_function_call variable_names function_name args_expr
 
 and string_of_stack_expression variable_names = function
     | Literal_stack as expr_stack ->
@@ -628,6 +743,7 @@ and string_of_stack_expression variable_names = function
                 string_of_stack_expression variable_names stack_expr
             |]
             ~str_comment:(undeclared_function_warning label)
+
     | Stack_clear stack_expr as func ->
         (* Get label of expression *)
         let label = label_of_stack_expression func in
@@ -635,8 +751,12 @@ and string_of_stack_expression variable_names = function
             label
             [|string_of_stack_expression variable_names stack_expr|]
             ~str_comment:(undeclared_function_warning label)
+
     | Stack_sequence_function func ->
         string_of_sequence_function variable_names func
+
+    | Stack_inline_function (function_name, _, args_expr, _) ->
+        string_of_function_call variable_names function_name args_expr
 
 and string_of_queue_expression variable_names = function
     | Literal_queue as expr_queue ->
@@ -646,6 +766,7 @@ and string_of_queue_expression variable_names = function
 
     | Queue_variable variable_index -> json_quoted (variable_names variable_index)
     | Queue_local_variable variable_name -> json_quoted variable_name
+
     | Queue_push (expr, queue_expr) as func ->
         (* Get label of expression *)
         let label = label_of_queue_expression func in
@@ -656,6 +777,7 @@ and string_of_queue_expression variable_names = function
                 string_of_queue_expression variable_names queue_expr
             |]
             ~str_comment:(undeclared_function_warning label)
+
     | Queue_clear queue_expr as func ->
         (* Get label of expression *)
         let label = label_of_queue_expression func in
@@ -663,8 +785,12 @@ and string_of_queue_expression variable_names = function
             label
             [|string_of_queue_expression variable_names queue_expr|]
             ~str_comment:(undeclared_function_warning label)
+
     | Queue_sequence_function func ->
         string_of_sequence_function variable_names func
+
+    | Queue_inline_function (function_name, _, args_expr, _) ->
+        string_of_function_call variable_names function_name args_expr
 
 and string_of_sequence_function variable_names = function
     | Array_access (access_type, index_expr) ->
@@ -716,21 +842,18 @@ and string_of_expression_access variable_names access_type index_expr =
     let str_index_expr = string_of_int_arithmetic_expression variable_names index_expr in
     jani_array_access str_expr str_index_expr
 
+(* String representation of a function call *)
+and string_of_function_call variable_names function_name args_expr =
+    let str_args_expr_list = List.map (string_of_global_expression variable_names) args_expr in
+    let str_args_expr_array = array_of_list str_args_expr_list in
+
+    jani_function_call
+        function_name
+        str_args_expr_array
 
 (* Get list of non-linear constraint inequalities with customized strings *)
 let strings_of_nonlinear_constraint variable_names (* nonlinear_constraint *) =
     List.rev_map (string_of_discrete_boolean_expression variable_names ) (* nonlinear_constraint *)
-
-
-
-(************************************************************)
-(** OCaml Utilities overwrite. TODO: fusion if OK *)
-(************************************************************)
-let string_of_list_of_string_with_sep sep list =
-	let deal_string sep list =
-		OCamlUtilities.string_of_list_of_string_with_sep sep list
-	in
-		deal_string sep (List.filter (fun string -> string<>"") list)
 
 (************************************************************)
 (** Header *)
@@ -767,15 +890,59 @@ let string_of_custom_datatypes =
     |])
 
 (* Declarations of custom functions *)
-let string_of_custom_functions = 
-    json_property "functions" (json_array [|
+let string_of_custom_user_functions model =
 
-    |])
+
+    (* Convert a function definition into a string *)
+    let string_of_fun_definition fun_def =
+
+        (* Convert a function expression into a string *)
+        let rec string_of_next_expr = function
+            | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
+                (* TODO benjamin see with etienne (add TODO in translation ?) *)
+                print_warning "Local declarations in custom user functions are not supported by Jani and will not be translated.";
+                string_of_next_expr next_expr
+
+            | Fun_instruction (discrete_update, next_expr) ->
+                (* TODO benjamin see with etienne (add TODO in translation ?) *)
+                print_warning "Instructions in custom user functions are not supported by Jani and will not be translated.";
+                string_of_next_expr next_expr
+
+            | Fun_expr expr ->
+                string_of_global_expression model.variable_names expr
+        in
+
+        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature in
+        let parameter_names_with_constraints = List.combine fun_def.parameters parameters_signature in
+        (* Convert parameters into a string *)
+        let str_param_list = List.map (fun (param_name, type_constraint) ->
+            jani_function_parameter param_name (string_of_type_constraint type_constraint)
+        ) parameter_names_with_constraints in
+
+        let str_param_array = array_of_list str_param_list in
+
+        (* Format function definition *)
+        jani_function_declaration
+            fun_def.name
+            (string_of_type_constraint return_type_constraint)
+            str_param_array
+            (string_of_next_expr fun_def.body)
+
+    in
+
+    (* Convert hashtbl values to list *)
+    let fun_definition_list = model.fun_definitions |> Hashtbl.to_seq_values |> List.of_seq in
+    (* Map each definition to it's string representation *)
+    let str_fun_definitions_list = List.map string_of_fun_definition fun_definition_list in
+    let str_fun_definition_array = array_of_list str_fun_definitions_list in
+
+    (* Join all strings *)
+    json_property "functions" (json_array str_fun_definition_array)
 
 (* Declaration of actions *)
 let string_of_actions model =
   "\"actions\": ["
-  ^ (string_of_list_of_string_with_sep jani_separator
+  ^ (string_of_list_of_string_with_sep_without_empty_strings jani_separator
 		(List.filter (fun string -> string<>"")
 		   (List.map (fun action_index ->
 			  (* Do not declare silent actions *)
@@ -802,7 +969,7 @@ let string_of_actions model =
 let string_of_clocks model =
   let multirate_bol = model.has_non_1rate_clocks in
   let string_of_variables list_of_variables =
-    string_of_list_of_string_with_sep jani_separator (List.map
+    string_of_list_of_string_with_sep_without_empty_strings jani_separator (List.map
       (fun var ->
 		let clocks_type = if multirate_bol then "continuous" else "clock" in
 		json_struct [|
@@ -818,46 +985,18 @@ let string_of_clocks model =
     (string_of_variables model.clocks_without_special_reset_clock)
     else ""
 
-(* String of number var type *)
-let string_of_var_type_discrete_number_for_jani = function
-    | Var_type_discrete_rat -> json_quoted "real"
-    | Var_type_discrete_int -> json_quoted "int"
-    | Var_type_discrete_unknown_number -> json_quoted "number"
-
-(* String of discrete var type *)
-let rec string_of_var_type_discrete_for_jani = function
-    | Var_type_discrete_number x -> string_of_var_type_discrete_number_for_jani x
-    | Var_type_discrete_bool -> json_quoted "bool"
-    | Var_type_discrete_binary_word _ ->
-        json_struct [|
-            json_property "kind" (json_quoted "array");
-            json_property "base" (json_quoted "bool");
-        |]
-
-    | Var_type_discrete_array (inner_type, _)
-    | Var_type_discrete_list inner_type
-    | Var_type_discrete_stack inner_type
-    | Var_type_discrete_queue inner_type ->
-        json_struct [|
-            json_property "kind" (json_quoted "array");
-            json_property "base" (string_of_var_type_discrete_for_jani inner_type)
-        |]
-    | Var_type_weak ->
-        raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
-
-
 (* Convert the initial discrete var declarations into a string *)
 let string_of_discrete model =
 
 	if model.nb_discrete > 0 then(
-		(string_of_list_of_string_with_sep jani_separator
+		(string_of_list_of_string_with_sep_without_empty_strings jani_separator
 			(List.map (fun discrete_index ->
 				(* Get the name *)
 				let discrete_name = model.variable_names discrete_index in
                 (* Get the type *)
                 let discrete_type = DiscreteType.discrete_type_of_var_type (model.type_of_variables discrete_index) in
                 (* Get str for the type*)
-                let str_discrete_type = string_of_var_type_discrete_for_jani discrete_type in
+                let str_discrete_type = string_of_var_type_discrete discrete_type in
 				(* Get the initial value *)
 				let inital_global_location  = model.initial_location in
 
@@ -880,7 +1019,7 @@ let string_of_discrete model =
 (* Convert the parameter declarations into a string *)
 let string_of_parameters model =
 	if model.nb_parameters > 0 then (
-		(string_of_list_of_string_with_sep (jani_separator)
+		(string_of_list_of_string_with_sep_without_empty_strings (jani_separator)
 			(List.map (fun parameter_index ->
 				(* Get the name *)
 				let parameter_name = model.variable_names parameter_index in
@@ -1057,7 +1196,7 @@ let string_of_location model actions_and_nb_automata automaton_index location_in
 
 (* Convert the locations of an automaton into a string *)
 let string_of_locations model actions_and_nb_automata automaton_index =
-	string_of_list_of_string_with_sep (jani_separator) (List.map (fun location_index ->
+	string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (List.map (fun location_index ->
 		string_of_location model actions_and_nb_automata automaton_index location_index
 	) (model.locations_per_automaton automaton_index))
 
@@ -1070,13 +1209,13 @@ let string_of_initial_location model automaton_index =
 let string_of_clock_updates model = function
 	| No_update -> ""
 	| Resets list_of_clocks ->
-		string_of_list_of_string_with_sep (jani_separator) (List.map (fun variable_index ->
+		string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (List.map (fun variable_index ->
 			"{\"ref\": \""
 			^ (model.variable_names variable_index)
 			^ "\"" ^ jani_separator ^ " \"value\" : 0}"
 		) list_of_clocks)
 	| Updates list_of_clocks_lt ->
-		string_of_list_of_string_with_sep jani_separator (List.map (fun (variable_index, linear_term) ->
+		string_of_list_of_string_with_sep_without_empty_strings jani_separator (List.map (fun (variable_index, linear_term) ->
 			"{\"ref\": \""
 			^ (model.variable_names variable_index)
 			^ "\"" ^ jani_separator ^ " \"value\" : "
@@ -1110,7 +1249,7 @@ let no_clock_updates clock_updates =
 let string_of_conditional_clock_updates model boolean_expr order = function
 	| No_update -> ""
 	| Resets list_of_clocks ->
-		string_of_list_of_string_with_sep (jani_separator) (List.map (fun variable_index ->
+		string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (List.map (fun variable_index ->
 			let variable_name = "\"" ^ (model.variable_names variable_index) ^ "\"" in
 			"{\"ref\": " ^ variable_name ^ jani_separator
 			^ " \"value\" : "
@@ -1121,7 +1260,7 @@ let string_of_conditional_clock_updates model boolean_expr order = function
 			^ "}}"
 		) list_of_clocks)
 	| Updates list_of_clocks_lt ->
-		string_of_list_of_string_with_sep (jani_separator) (List.map (fun (variable_index, linear_term) ->
+		string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (List.map (fun (variable_index, linear_term) ->
 			let variable_name = "\"" ^ (model.variable_names variable_index) ^ "\"" in
 			let expression = (LinearConstraint.string_of_pxd_linear_term_for_jani model.variable_names linear_term) in
 			"{\"ref\": " ^ variable_name ^ jani_separator
@@ -1135,7 +1274,7 @@ let string_of_conditional_clock_updates model boolean_expr order = function
 
 (* Convert a list of discrete updates into a string *)
 let string_of_conditional_discrete_updates model boolean_expr order updates =
-	string_of_list_of_string_with_sep (jani_separator) (List.rev_map (fun (parsed_update_type, global_expression) ->
+	string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (List.rev_map (fun (parsed_update_type, global_expression) ->
 
 		let expression = (string_of_global_expression model.variable_names global_expression) in
 		let variable_name = "\"" ^ ModelPrinter.string_of_parsed_update_type model parsed_update_type ^ "\"" in
@@ -1150,7 +1289,7 @@ let string_of_conditional_discrete_updates model boolean_expr order updates =
 
 (** Convert a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
-  string_of_list_of_string_with_sep (jani_separator) (List.map (fun (boolean_expr, if_updates, else_updates) ->
+  string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (List.map (fun (boolean_expr, if_updates, else_updates) ->
     let empty_else = no_clock_updates else_updates.clock && else_updates.discrete = [] && else_updates.conditional = [] in
 
     (*Then*)
@@ -1227,17 +1366,17 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 
 (* Convert the transitions of an automaton into a string *)
 let string_of_transitions model actions_and_nb_automata automaton_index =
-	string_of_list_of_string_with_sep (jani_separator)
+	string_of_list_of_string_with_sep_without_empty_strings (jani_separator)
 			(
 			(* For each location *)
 			List.map (fun location_index ->
-				string_of_list_of_string_with_sep (jani_separator) (
+				string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (
 				(* For each action *)
 				List.map (fun action_index ->
 					(* Get the list of transitions *)
 					let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
 					(* Convert to string *)
-					string_of_list_of_string_with_sep (jani_separator) (
+					string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (
 						(* For each transition *)
 						List.map (string_of_transition model actions_and_nb_automata automaton_index location_index) transitions
 						)
@@ -1261,7 +1400,7 @@ let string_of_automata model actions_and_nb_automata =
 	in
 	(* Print all (other) PTA *)
     "\"automata\": ["
-  ^ string_of_list_of_string_with_sep (jani_separator) (
+  ^ string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (
   		List.map (fun automaton_index ->
         string_of_automaton model actions_and_nb_automata automaton_index
   	) pta_without_obs)
@@ -1281,7 +1420,7 @@ let string_of_system model =
 	"\"system\": {"
 	^ "\"elements\": ["
 		(* System definition *)
-		^ "" ^ (string_of_list_of_string_with_sep (jani_separator) (
+		^ "" ^ (string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (
 					List.map (fun automaton_index ->
 						let automaton = model.automata_names automaton_index in
 						"{\"automaton\": \"" ^ automaton ^ "\"}"
@@ -1293,12 +1432,12 @@ let string_of_system model =
 		^ "]" ^ jani_separator ^ ""
 	^ "\"syncs\": ["
 		(* Actions *)
-		^ "" ^ (string_of_list_of_string_with_sep (jani_separator) (
+		^ "" ^ (string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (
 					List.map (fun action_index ->
 						let action_name = model.action_names action_index in
 						  "{\"synchronise\": ["
 						^ (
-							string_of_list_of_string_with_sep (jani_separator^" ") (
+							string_of_list_of_string_with_sep_without_empty_strings (jani_separator^" ") (
 							List.map (fun automaton_index ->
 								if (is_in_automaton action_index automaton_index)
 								then ("\"" ^ action_name ^ "\"")
@@ -1338,7 +1477,7 @@ let string_of_model model =
         json_struct [|
             string_of_header model;
             string_of_custom_datatypes;
-            string_of_custom_functions;
+            string_of_custom_user_functions model;
             string_of_actions model;
             if variables = "" then "" else variables;
             string_of_properties;
