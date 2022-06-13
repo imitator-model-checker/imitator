@@ -1171,7 +1171,7 @@ let string_of_model model =
 	model_header ()
 	(* The variable declarations *)
 	^  "\n" ^ string_of_declarations model
-	(* The function declarations *)
+	(* The function definitions *)
 	^  "\n" ^ string_of_fun_definitions model
 	(* All automata *)
 	^  "\n" ^ string_of_automata model
