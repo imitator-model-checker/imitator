@@ -2652,6 +2652,7 @@ let grow_to_infinity_assign_gen nb_dimensions variables_elapse variables_constan
 
 let p_grow_to_infinity_assign variables_elapse variables_constant linear_constraint = grow_to_infinity_assign_gen !p_dim variables_elapse variables_constant linear_constraint
 let px_grow_to_infinity_assign variables_elapse variables_constant linear_constraint = grow_to_infinity_assign_gen !px_dim variables_elapse variables_constant linear_constraint
+let pxd_grow_to_infinity_assign variables_elapse variables_constant linear_constraint = grow_to_infinity_assign_gen !pxd_dim variables_elapse variables_constant linear_constraint
 
 
 (** Remove all lower bounds on the first variable list; the second list will remain constant *)
