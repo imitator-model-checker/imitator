@@ -4727,6 +4727,41 @@ END CONSTRAINT
 
     ,
 
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/03/16
+      ## Last modified            : 2022/03/16
+      ## Test for IMITATOR version: 3.3
+      ## Author 					: lbinria
+      'author': 'lbinria',
+      'purpose'    : 'Test some behaviors on user functions',
+      'input_files': ['functions/user-function-1.imi'],
+      'tags': 'behavior, function',
+      'options'    : '-mode statespace -states-description -no-var-autoremove',
+      'expectations' : [
+        {'file': 'user-function-1-statespace.states' , 'content' : """
+  INITIAL
+  STATE 0:
+  P: l0, top_stack = 0, top_queue = 0, r_result = 0, lerp_result = 0, i_result = 0, i_result_2 = 0, a_global = [0, 0], r_global = 0, i_global = 0, bin = 0b1011, q = queue(), s = stack(), r1 = 1, i1 = 1 ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  P: lend, top_stack = 2, top_queue = 0, r_result = 4, lerp_result = 1583/200, i_result = 3, i_result_2 = 3, a_global = [0, 1], r_global = 15, i_global = 10, bin = 0b0011, q = queue([0, 1, 2]), s = stack([2, 1, 0]), r1 = 1, i1 = 1 ==>
+&True
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
 	#------------------------------------------------------------
 	# END : Test custom function
 	#------------------------------------------------------------
