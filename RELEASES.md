@@ -7,9 +7,9 @@
 * New complex types for discrete global variables: lists, arrays, stacks, queues, and associated functions
 
 ### Major features
-* New: extrapolation for parametric zones [AA22]
+* New: extrapolation for parametric zones [[AA22](https://www.doi.org/10.1007/978-3-031-06773-0_24)]
 * Refactoring of merging functions, with more efficient heuristics [AMPP2x]
-* Exemplification algorithm: given a parametric timed specification, exhibit concrete parameter valuations, and concrete positive and negative runs, with a graphical representation of the evolution over time of the clock and discrete variables [AWUH22] (slightly experimental)
+* Exemplification algorithm: given a parametric timed specification, exhibit concrete parameter valuations, and concrete positive and negative runs, with a graphical representation of the evolution over time of the clock and discrete variables [[AWUH22](https://www.doi.org/10.1007/978-3-031-06773-0_25)] (slightly experimental)
 
 
 
