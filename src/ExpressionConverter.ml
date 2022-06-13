@@ -1063,7 +1063,7 @@ let rec type_check_fun_body local_variables variable_infos infer_type_opt = func
         let typed_expr, discrete_type, has_side_effects = type_check_global_expression (Some local_variables) variable_infos infer_type_opt expr in
         Typed_fun_expr typed_expr, discrete_type, has_side_effects
 
-let type_check_parsed_fun_definition variable_infos infer_type_opt (fun_definition : ParsingStructure.parsed_fun_definition) =
+let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStructure.parsed_fun_definition) =
     (* Get parameter types and return type of the function *)
     let parameter_names, parameter_discrete_types = List.split fun_definition.parameters in
     let return_type = fun_definition.return_type in
@@ -1078,7 +1078,8 @@ let type_check_parsed_fun_definition variable_infos infer_type_opt (fun_definiti
         Hashtbl.add local_variables parameter_name parameter_type
     ) fun_definition.parameters;
 
-
+    (* Eventually infer the body expression type of function to the return type underlying type of the function *)
+    let infer_type_opt = Some (DiscreteType.extract_inner_type return_type) in
     let typed_body, body_discrete_type, is_body_has_side_effects = type_check_fun_body local_variables variable_infos infer_type_opt fun_definition.body in
     (* Check type compatibility between function body and return type *)
     let is_body_type_compatible = is_discrete_type_compatibles body_discrete_type return_type in
@@ -1447,7 +1448,7 @@ let check_state_predicate variable_infos predicate =
         ))
 
 let check_fun_definition variable_infos (parsed_fun_definition : parsed_fun_definition) =
-    let typed_fun_definition, _, _ = type_check_parsed_fun_definition variable_infos None parsed_fun_definition in
+    let typed_fun_definition, _, _ = type_check_parsed_fun_definition variable_infos parsed_fun_definition in
     typed_fun_definition
 
 end
