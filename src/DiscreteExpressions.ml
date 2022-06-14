@@ -398,10 +398,10 @@ let add_parenthesis_to_unary_minus_int str = function
 let label_of_sequence_function = function
     | Array_access _ -> "array_get"
     | List_hd _ -> "list_hd"
-    | Stack_top _ -> "stack_pop"
-    | Stack_pop _ -> "stack_top"
-    | Queue_top _ -> "queue_pop"
-    | Queue_pop _ -> "queue_top"
+    | Stack_top _ -> "stack_top"
+    | Stack_pop _ -> "stack_pop"
+    | Queue_top _ -> "queue_top"
+    | Queue_pop _ -> "queue_pop"
 
 let label_of_bool_factor = function
 	| Arithmetic_comparison _

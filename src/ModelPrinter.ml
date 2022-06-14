@@ -484,8 +484,10 @@ let rec string_of_variable_update_type model = function
 let string_of_discrete_updates ?(sep=", ") model updates =
 	string_of_list_of_string_with_sep sep (List.rev_map (fun (parsed_variable_update_type, arithmetic_expression) ->
 		(* Convert the variable name *)
-		string_of_variable_update_type model parsed_variable_update_type
-		^ " := "
+		let variable_name = string_of_variable_update_type model parsed_variable_update_type in
+
+		variable_name
+		^ (if variable_name <> "" then " := " else "")
 		(* Convert the arithmetic_expression *)
 		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
 	) updates)
@@ -562,9 +564,13 @@ let string_of_transition model automaton_index (transition : transition) =
 (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")` with target `" ^ (model.location_names automaton_index transition.target) ^ "` via action `" ^ (string_of_action model transition.action) ^ "`…"); *)
 
 	let clock_updates = transition.updates.clock in
+	let seq_updates = transition.pre_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
 	let conditional_updates = transition.updates.conditional in
 	let first_separator, second_separator = separator_comma transition.updates in
+
+    let str_do_or_empty, str_do_final_semi_colon = if List.length seq_updates > 0 then " do ", ";" else "", "" in
+    let str_then_or_empty = if List.length seq_updates > 0 && List.length discrete_updates > 0 then " then " else "" in
 
 	(* Print some information *)
 (* 	print_message Verbose_total ("Updates retrieved…"); *)
@@ -575,6 +581,10 @@ let string_of_transition model automaton_index (transition : transition) =
 
 	(* Convert the updates *)
 	^ " do {"
+	^ str_do_or_empty
+	^ string_of_discrete_updates ~sep:";" model seq_updates
+	^ str_do_final_semi_colon
+	^ str_then_or_empty
 	(* Clock updates *)
 	^ (string_of_clock_updates model clock_updates)
 	(* Add a coma in case of both clocks and discrete *)
@@ -600,9 +610,15 @@ let string_of_transition_for_runs model automaton_index (transition : transition
 (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
 
 	let clock_updates = transition.updates.clock in
+	let seq_updates = transition.pre_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
 	let conditional_updates = transition.updates.conditional in
 	let first_separator, second_separator = separator_comma transition.updates in
+
+    let str_do_or_empty, str_do_final_semi_colon = if List.length seq_updates > 0 then " do ", ";" else "", "" in
+    let str_then_or_empty = if List.length seq_updates > 0 && List.length discrete_updates > 0 then " then " else "" in
+
+    (* TODO benjamin IMPLEMENT do-then *)
 
 	"[PTA " ^ (model.automata_names automaton_index) ^ ": guard{"
 	(* Convert the guard *)
