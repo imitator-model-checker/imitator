@@ -321,7 +321,7 @@ let string_of_fun_definitions model =
     (* Convert a function definition into a string *)
     let string_of_fun_definition fun_def =
 
-        (* Convert a function expression into a stirng *)
+        (* Convert a function expression into a string *)
         let rec string_of_next_expr = function
             | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
                 "let " ^ variable_name ^ " : "
