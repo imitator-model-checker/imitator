@@ -1,3 +1,15 @@
+# Type inference
+
+TODO
+
+# Function signature resolver
+
+TODO
+
+# Graph dependency resolver
+
+TODO
+
 # Updates
 
 ## Sequential and continuous updates
@@ -50,3 +62,7 @@ The functions that return reference can be found at:
 
  - `DiscreteExpressionEvaluator.eval_stack_expression_with_context`
  - `DiscreteExpressionEvaluator.eval_queue_expression_with_context`
+
+# Value packing
+
+TODO
