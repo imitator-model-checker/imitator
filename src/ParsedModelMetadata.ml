@@ -226,7 +226,7 @@ let dependency_graph parsed_model =
         in
 
         (* Create relations between a set of variables used by another variable reference *)
-        let variable_to_variable_relations variable_ref variables_used =
+        let variable_to_variable_relations local_variables variable_ref variables_used =
             StringSet.fold (fun used_variable_name acc ->
                 let used_variable_ref = get_variable_ref local_variables used_variable_name in
                 (variable_ref, used_variable_ref) :: acc
@@ -246,6 +246,8 @@ let dependency_graph parsed_model =
 
                 (* Create local variable ref representing a unique variable ref *)
                 let variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
+                (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
+                let local_variables = StringMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
 
                 (* Get variables used in the local init expression of the variable *)
                 let variables_used = get_variables_in_parsed_global_expression init_expr in
@@ -253,7 +255,7 @@ let dependency_graph parsed_model =
                 let functions_used = get_functions_in_parsed_global_expression init_expr in
 
                 (* For each variable used in init expression, create relations *)
-                let variable_use_variable_relations = variable_to_variable_relations variable_ref variables_used in
+                let variable_use_variable_relations = variable_to_variable_relations local_variables variable_ref variables_used in
                 (* For each function used in init expression, create relations *)
                 let variable_use_fun_relations = variable_to_fun_relations variable_ref functions_used in
 
@@ -276,8 +278,6 @@ let dependency_graph parsed_model =
                 let fun_use_global_variable_relations = List.map (fun global_variable_ref -> fun_ref, global_variable_ref) global_variable_refs in
                 (* ----- *)
 
-                (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
-                let local_variables = StringMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
                 (* Get list of relations for the next expression / declaration *)
                 let next_declaration_relations = dependency_graph_of_function_in_parsed_next_expr_rec local_variables next_expr in
                 (* Concat current relations with next relations *)
@@ -300,7 +300,7 @@ let dependency_graph parsed_model =
                         let functions_used = get_functions_in_parsed_global_expression expr in
 
                         (* For each variable used in init expression, create relations *)
-                        let variable_to_variable_relations = variable_to_variable_relations variable_ref variables_used in
+                        let variable_to_variable_relations = variable_to_variable_relations local_variables variable_ref variables_used in
                         (* For each function used in init expression, create relations *)
                         let variable_to_fun_relations = variable_to_fun_relations variable_ref functions_used in
 
@@ -326,7 +326,7 @@ let dependency_graph parsed_model =
                         let functions_used = get_functions_in_parsed_discrete_arithmetic_expression index_expr in
 
                         (* Get relations between current variable and variables contained in indexed expression *)
-                        let variable_to_variable_relations = variable_to_variable_relations variable_ref variables_used in
+                        let variable_to_variable_relations = variable_to_variable_relations local_variables variable_ref variables_used in
                         (* Get relations between current variable and functions contained in indexed expression *)
                         let variable_to_fun_relations = variable_to_fun_relations variable_ref functions_used in
 
@@ -348,7 +348,7 @@ let dependency_graph parsed_model =
                         let variables_used = get_variables_in_parsed_global_expression expr in
                         let functions_used = get_functions_in_parsed_global_expression expr in
 
-                        let fun_use_variables_relations = variable_to_variable_relations fun_ref variables_used in
+                        let fun_use_variables_relations = variable_to_variable_relations local_variables fun_ref variables_used in
 
                         let fun_use_fun_relations = StringSet.fold (fun used_function_name acc ->
                             (fun_ref, Fun_ref used_function_name) :: acc
