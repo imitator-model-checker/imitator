@@ -28,6 +28,7 @@ open Statistics
 open State
 open Automaton
 open LinearConstraint
+open Location
 
 
 (************************************************************)	
@@ -38,11 +39,7 @@ open LinearConstraint
 (************************************************************)
 
 let check_1cPTA (model : AbstractModel.abstract_model) : unit = (
-	(*? nb_discrete*)
 	(*? has_non_1rate_clocks*)
-	(*? has_silent_actions*)
-	(*? observer_pta*)
-	(*? is_accepting*)
 	(*? stopwatches*)
 	(*? flow*)
 	(* The PTA has only 1 automaton *)
@@ -57,11 +54,7 @@ let check_1cPTA (model : AbstractModel.abstract_model) : unit = (
 
 (* Same function but result is a boolean *)
 let is_1cPTA (model : AbstractModel.abstract_model) : bool =
-	(*? nb_discrete*)
 	(*? has_non_1rate_clocks*)
-	(*? has_silent_actions*)
-	(*? observer_pta*)
-	(*? is_accepting*)
 	(*? stopwatches*)
 	(*? flow*)
 	let result = ref true in
@@ -126,9 +119,7 @@ let compute_couples reset_loc index_l0 index_lf =
 
 (* Returns the set Pairs between the initial location and lf (cf. paper Definition 8) *)
 let compute_sub_list (model : AbstractModel.abstract_model) (lf : int) : (int * int) list = 
-	(* let l0 = model.initial_location in *)
-	let l0 = 0 in
-	(* TODO : getting initial location *)
+	let l0 = get_location (model.initial_location) (List.hd model.automata) in
 	compute_couples (get_reset_loc model) l0 lf
 
 
@@ -213,7 +204,6 @@ let upper_cyl_constraint clock pxd_linear_constraint =
 	pxd_linear_constraint
 
 (* Returns the upper cylindrification of a clock in the continuous part of a guard *)
-(* TODO : How to deal with discrete ? *)
 let upper_cyl clock g =
 	match g with
 	|True_guard -> True_guard
@@ -399,16 +389,14 @@ let compute_modifs (model : AbstractModel.abstract_model) (lf : int) ((li,lj) : 
 		|_ -> f a l
 	);
 (* Step 3, Definition 9 *)
-	(* TODO : Sets initial location *)
 	if li != lj then (
-		(* let g_loc : Location.global_location = ([|li|],[||]) in
-		modifs.initial_location <- g_loc; *)
+		modifs.initial_location <- (make_location ([(List.hd model.automata,li)]) ([]));
 	) else (
-		(* modifs.initial_location <- ([|dup_lj|],[||]); *)
+		modifs.initial_location <- (make_location ([(List.hd model.automata,dup_lj)]) ([]));
 	);
 (* Step 4, Definition 9 *)
 	(* Removes outgoing transitions from lf *)
-	(* TODO : update automaton_of_transition ? *)
+	(* WARNING : automaton_of_transition not updated *)
 	let f = modifs.transitions in
 	modifs.transitions <- (
 		fun a l e -> match (a,l) with
@@ -448,10 +436,7 @@ let compute_modifs (model : AbstractModel.abstract_model) (lf : int) ((li,lj) : 
 		|_ -> f t
 	);
 	(* Removes transitions with a reset *)
-	(* TODO : update automaton_of_transition ? *)
-	(* TODO : update actions_per_automaton ? *)
-	(* TODO : update automata_per_action ? *)
-	(* TODO : update actions_per_location ? *)
+	(* WARNING : automaton_of_transition, actions_per_automaton, automata_per_action, actions_per_location not updated *)
 	let f = modifs.transitions in
 	modifs.transitions <- (
 		fun a l e -> List.filter (fun e -> (modifs.transitions_description e).updates.clock=No_update) (f a l e)
@@ -601,6 +586,12 @@ type reg_exp =
 	| Concatenation of reg_exp * reg_exp
 	| Star of reg_exp
 	| Element of int * int
+	| Epsilon
+	
+(* A type for regular expression and empty set *)
+type reg_exp_or_empty =
+	| RegExp of reg_exp
+	| EmptySet
 
 (* Structure of an arc in the finite automaton *)
 type arc = {
@@ -613,10 +604,61 @@ type arc = {
 let initialize_DFA (sub_list : (int * int) list) : arc list =
 	List.map (fun (i,j) -> {source=i;target=j;expression=Element(i,j);}) sub_list
 
-let compute_reg_exp (sub_list : (int * int) list) (l0 : int) (lf : int) : reg_exp = 
-	let dfa = initialize_DFA sub_list in
-	(*TODO : work in progress *)
-	Element(0,0);
+
+(* Returns the union of reg_exp of a set of arcs *)
+let rec arcs_to_regexp_union arc_list =
+	match arc_list with
+	|h::t -> Union(h.expression, arcs_to_regexp_union t)
+	|[]-> Epsilon	
+
+(* Performs the elimination of loc from dfa *)	
+let state_elimination (dfa : arc list) (loc : int) : arc list =
+	let dfa = ref dfa in
+	(* Computation of the sets of arcs to replace *)
+	let source_list_init = List.filter (fun e -> e.source = loc && e.target != loc) !dfa in
+	let loops_list = List.filter (fun e -> e.source = loc && e.target = loc) !dfa in
+	let target_list_init = List.filter (fun e -> e.source != loc && e.target = loc) !dfa in
+	(* Deletion of those arcs *)
+	dfa := List.filter (fun e -> e.source != loc && e.target != loc) !dfa;
+	(* Computation of the regular expression of the loops on loc*)
+	let regexp_loops = Star(arcs_to_regexp_union loops_list) in
+	(* Addition of the new arcs *)
+	List.iter (
+		fun s -> List.iter (
+			fun t -> dfa := !dfa@[{
+				source=s.source;
+				target=t.target;
+				expression=Concatenation(s.expression,Concatenation(regexp_loops,t.expression));
+			}]
+		)
+		target_list_init
+	) source_list_init;
+	(* Return the dfa *)
+	!dfa
+	
+	
+(* Returns either a regular expression or an empty set by generating a DFA and performing a state elimination procedure on it *)
+let compute_reg_exp (sub_list : (int * int) list) (l0 : int) (lf : int) (nb_locations : int) : reg_exp_or_empty = 
+	(* DFA generation *)
+	let dfa = ref (initialize_DFA sub_list) in
+	(* Addition of a pre-initial state with a silent arcs to l0 *)
+	let pre_init = -1 in
+	dfa := !dfa@[{
+		source=pre_init;
+		target=l0;
+		expression=Epsilon;
+			
+	}];
+	(* State elimination *)
+	for i=0 to nb_locations-1 do 
+		if i != lf then dfa := state_elimination (!dfa) i;
+	done;
+	(* Returns EmptySet if lf was not reachable, and the regular expression otherwise *)
+	if (List.length !dfa) = 0 then EmptySet else(
+	let global_exp = ref Epsilon in
+	List.iter (fun e -> global_exp := Union(!global_exp,e.expression)) !dfa;
+	RegExp(!global_exp)
+	)
 	
 
 (************************************************************)
@@ -658,14 +700,20 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 		let model = Input.get_model () in
 		(* Check is the model is 1cPTA*)
 		check_1cPTA model;
+		(* Retrieve the initial location *)
+		let l0 = get_location (model.initial_location) (List.hd model.automata) in
 		(* Retrieve the target location *)
 		let lf = get_lf state_predicate in
 		(* Compute the set of Pairs of localitions (cf paper, Definition 8 *)
 		let sub_list = compute_sub_list model lf in
 		(* Compute the set of reset-free automata (cf paper, Definition 9 *)
 		let sub_automata = List.map (fun e -> (generate_sub_automaton model lf e)) sub_list in
+		(* TODO : perform EF synth on each sub-automaton *)
 		
+		(* Compute the regular expression describing the language of the PTA *)
+		let expression = compute_reg_exp sub_list l0 lf model.nb_locations in
 		
+		(* TODO : evaluate the regular expression with the "bar" operators (cf paper, after Definition 10)  *)
 		
 		raise (NotImplemented "1cOpa.run")
 		
