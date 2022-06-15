@@ -615,15 +615,12 @@ let string_of_transition_for_runs model automaton_index (transition : transition
 	let conditional_updates = transition.updates.conditional in
 	let first_separator, second_separator = separator_comma transition.updates in
 
-    let str_do_or_empty, str_do_final_semi_colon = if List.length seq_updates > 0 then " do ", ";" else "", "" in
-    let str_then_or_empty = if List.length seq_updates > 0 && List.length discrete_updates > 0 then " then " else "" in
-
-    (* TODO benjamin IMPLEMENT do-then *)
-
 	"[PTA " ^ (model.automata_names automaton_index) ^ ": guard{"
 	(* Convert the guard *)
 	^ (string_of_guard model.variable_names transition.guard)
 
+    ^ "} seq_updates{"
+	^ string_of_discrete_updates ~sep:";" model seq_updates
 	(* Convert the updates *)
 	^ "} updates{"
 	(* Clock updates *)
