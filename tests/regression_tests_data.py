@@ -20597,8 +20597,8 @@ system pta1, pta2, pta3;
 							[
 
 								{
-									"ref": "i",
-									 "value" :
+									"ref":"i",
+									"value":
 									{
 										"op":"+",
 										"left":
@@ -20650,6 +20650,8 @@ system pta1, pta2, pta3;
 		]
 
 	}
+
+}
 """
 			} # end result file
 			,
