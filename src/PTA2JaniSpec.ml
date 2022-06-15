@@ -1070,16 +1070,24 @@ let string_of_clock_updates model = function
 			^ "}"
 		) list_of_clocks_lt)
 
+(* Convert an update into a string *)
+let string_of_discrete_update model (update_type, expr) =
+    match update_type with
+    | Void_update ->
+        json_struct [|
+            json_property "ref" (json_quoted "_");
+            json_property "value" (string_of_global_expression model.variable_names expr)
+        |]
+
+    | _ ->
+        json_struct [|
+            json_property "ref" (json_quoted (ModelPrinter.string_of_parsed_variable_update_type model update_type));
+            json_property "value" (string_of_global_expression model.variable_names expr)
+        |]
+
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep jani_separator (List.map (fun (parsed_variable_update_type, global_expression) ->
-		"{\"ref\": \""
-		(* Convert variable access to string *)
-		^ ModelPrinter.string_of_parsed_variable_update_type model parsed_variable_update_type
-		^ "\"" ^ jani_separator ^ " \"value\" : "
-		^ (string_of_global_expression model.variable_names global_expression)
-		^ "}"
-	) updates)
+	string_of_list_of_string_with_sep jani_separator (List.map (string_of_discrete_update model) updates)
 
 (** Return if there is no clock updates *)
 let no_clock_updates clock_updates =
@@ -1177,9 +1185,11 @@ let string_of_updates model automaton_index action_index clock_updates discrete_
 (* Convert a transition of a location into a string *)
 let string_of_transition model actions_and_nb_automata automaton_index source_location transition =
 	let clock_updates = transition.updates.clock in
+	let seq_updates = transition.pre_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
+	let all_updates = seq_updates @ discrete_updates in
 	let guard = string_of_guard model actions_and_nb_automata model.variable_names transition.guard in
-	let assignments = (string_of_updates model automaton_index transition.action clock_updates discrete_updates transition) in
+	let assignments = (string_of_updates model automaton_index transition.action clock_updates all_updates transition) in
 	(* Header *)
 	"{"
 
