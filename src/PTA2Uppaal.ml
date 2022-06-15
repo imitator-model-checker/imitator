@@ -542,8 +542,9 @@ let string_of_clock_updates model = function
 let string_of_discrete_updates model updates =
 	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (parsed_variable_update_type, global_expression) ->
         (* Convert the variable access to string *)
-		ModelPrinter.string_of_parsed_variable_update_type model parsed_variable_update_type
-		^ uppaal_assignment
+		let variable_name = ModelPrinter.string_of_parsed_variable_update_type model parsed_variable_update_type in
+		variable_name
+		^ (if variable_name <> "" then uppaal_assignment else "")
 		(* Convert the arithmetic_expression *)
 		^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names global_expression
 	) updates)
@@ -651,7 +652,10 @@ let string_of_sync model automaton_index action_index =
 (** TODO: Add conditions to the translation *)
 let string_of_transition model actions_and_nb_automata automaton_index source_location transition =
 	let clock_updates = transition.updates.clock in
+	let seq_updates = transition.pre_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
+	let all_updates = seq_updates @ discrete_updates in
+
 	(* Arbitrary positioning: x = between source_location and target_location *)
 	(*** NOTE: integer division here, so first multiplication, then division (otherwise result can be 0) ***)
 	let x_coord_str = (string_of_int ((source_location + transition.target) * scaling_factor / 2)) in
@@ -683,7 +687,7 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 	^ (
 		(* Quite arbitrary positioning *)
 		let y_coord_str = (string_of_int (- scaling_factor / 5)) in
-		"\n\t\t" ^ (string_of_updates model automaton_index transition.action x_coord_str y_coord_str clock_updates discrete_updates)
+		"\n\t\t" ^ (string_of_updates model automaton_index transition.action x_coord_str y_coord_str clock_updates all_updates)
 	)
 
 	(* Footer *)
