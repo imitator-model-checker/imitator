@@ -458,14 +458,14 @@ let label_of_binary_word_expression = function
 	| Binary_word_sequence_function func -> label_of_sequence_function func
 
 let label_of_array_expression = function
-    | Literal_array _ -> "literal array"
+    | Literal_array _ -> "array"
     | Array_constant _ -> "array"
     | Array_variable _ -> "array"
     | Array_concat _ -> "array_append"
 	| Array_sequence_function func -> label_of_sequence_function func
 
 let label_of_list_expression = function
-    | Literal_list _ -> "literal list"
+    | Literal_list _ -> "list"
     | List_constant _ -> "list"
     | List_variable _ -> "list"
     | List_cons _ -> "list_cons"
@@ -474,14 +474,14 @@ let label_of_list_expression = function
 	| List_sequence_function func -> label_of_sequence_function func
 
 let label_of_stack_expression = function
-    | Literal_stack -> "literal stack"
+    | Literal_stack -> "stack"
     | Stack_variable _ -> "stack"
     | Stack_push _ -> "stack_push"
     | Stack_clear _ -> "stack_clear"
 	| Stack_sequence_function func -> label_of_sequence_function func
 
 let label_of_queue_expression = function
-    | Literal_queue -> "literal queue"
+    | Literal_queue -> "queue"
     | Queue_variable _ -> "queue"
     | Queue_push _ -> "queue_push"
     | Queue_clear _ -> "queue_clear"
@@ -872,9 +872,7 @@ and customized_string_of_list_expression customized_string variable_names = func
         customized_string_of_sequence_function customized_string variable_names func
 
 and customized_string_of_stack_expression customized_string variable_names = function
-    | Literal_stack as stack_expr ->
-        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        label_of_stack_expression stack_expr ^ "(" ^ l_delimiter ^ r_delimiter ^ ")"
+    | Literal_stack -> "stack()"
     | Stack_variable variable_index -> variable_names variable_index
     | Stack_push (expr, stack_expr) as func ->
         print_function
@@ -892,9 +890,7 @@ and customized_string_of_stack_expression customized_string variable_names = fun
         customized_string_of_sequence_function customized_string variable_names func
 
 and customized_string_of_queue_expression customized_string variable_names = function
-    | Literal_queue as queue_expr ->
-        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        label_of_queue_expression queue_expr ^ "(" ^ l_delimiter ^ r_delimiter ^ ")"
+    | Literal_queue -> "queue()"
     | Queue_variable variable_index -> variable_names variable_index
     | Queue_push (expr, queue_expr) as func ->
         print_function
