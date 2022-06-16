@@ -896,16 +896,18 @@ let string_of_custom_user_functions model =
     (* Convert a function definition into a string *)
     let string_of_fun_definition fun_def =
 
+        print_warning ("Trying to translate `" ^ fun_def.name ^ "`");
+
         (* Convert a function expression into a string *)
         let rec string_of_next_expr = function
             | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
                 (* TODO benjamin see with etienne (add TODO in translation ?) *)
-                print_warning "Local declarations in custom user functions are not supported by Jani and will not be translated.";
+                print_warning ("Local declaration of `" ^ variable_name ^ "` in function `" ^ fun_def.name ^ "` are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
             | Fun_instruction (discrete_update, next_expr) ->
                 (* TODO benjamin see with etienne (add TODO in translation ?) *)
-                print_warning "Instructions in custom user functions are not supported by Jani and will not be translated.";
+                print_warning ("Instruction found in function `" ^ fun_def.name ^ "`. Instructions are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
             | Fun_expr expr ->
@@ -929,6 +931,9 @@ let string_of_custom_user_functions model =
             (string_of_next_expr fun_def.body)
 
     in
+
+    (* TODO benjamin see with etienne *)
+    print_warning "User functions are usually not well translated to Jani formalism.";
 
     (* Convert hashtbl values to list *)
     let fun_definition_list = model.fun_definitions |> Hashtbl.to_seq_values |> List.of_seq in
