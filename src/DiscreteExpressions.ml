@@ -448,6 +448,7 @@ let label_of_bool_factor = function
 	| Boolean_expression _ -> "bool expression"
 	| Not_bool _ -> "bool negation expression"
 	| Bool_variable _ -> "bool variable"
+	| Bool_local_variable variable_name -> variable_name
 	| Bool_constant _ -> "bool constant"
     | List_mem _ -> "list_mem"
     | Array_mem _ -> "array_mem"
@@ -455,18 +456,22 @@ let label_of_bool_factor = function
     | Stack_is_empty _ -> "stack_is_empty"
     | Queue_is_empty _ -> "queue_is_empty"
 	| Bool_sequence_function func -> label_of_sequence_function func
+	| Bool_inline_function (function_name, _, _, _) -> function_name
 
 let label_of_rational_factor = function
 	| Rational_variable _ -> "rational variable"
+	| Rational_local_variable variable_name -> variable_name
 	| Rational_constant _ -> "rational constant"
 	| Rational_expression _ -> "rational expression"
 	| Rational_unary_min _ -> "rational minus"
 	| Rational_of_int _ -> "rational_of_int"
 	| Rational_pow _ -> "pow"
 	| Rational_sequence_function func -> label_of_sequence_function func
+    | Rational_inline_function (function_name, _, _, _) -> function_name
 
 let label_of_int_factor = function
 	| Int_variable _ -> "int variable"
+	| Int_local_variable variable_name -> variable_name
 	| Int_constant _ -> "int constant"
 	| Int_expression _ -> "int expression"
 	| Int_unary_min _ -> "int minus"
@@ -476,6 +481,8 @@ let label_of_int_factor = function
 	| Stack_length _ -> "stack_length"
 	| Queue_length _ -> "queue_length"
 	| Int_sequence_function func -> label_of_sequence_function func
+	| Int_inline_function (function_name, _, _, _) -> function_name
+
 
 let label_of_binary_word_expression = function
     | Logical_shift_left _ -> "shift_left"
@@ -488,37 +495,47 @@ let label_of_binary_word_expression = function
     | Logical_not _ -> "lognot"
     | Binary_word_constant _ -> "binary word constant"
     | Binary_word_variable _ -> "binary word variable"
+    | Binary_word_local_variable variable_name -> variable_name
 	| Binary_word_sequence_function func -> label_of_sequence_function func
+    | Binary_word_inline_function (function_name, _, _, _) -> function_name
 
 let label_of_array_expression = function
     | Literal_array _ -> "array"
     | Array_constant _ -> "array"
     | Array_variable _ -> "array"
+    | Array_local_variable variable_name -> variable_name
     | Array_concat _ -> "array_append"
 	| Array_sequence_function func -> label_of_sequence_function func
+    | Array_inline_function (function_name, _, _, _) -> function_name
 
 let label_of_list_expression = function
     | Literal_list _ -> "list"
     | List_constant _ -> "list"
     | List_variable _ -> "list"
+    | List_local_variable variable_name -> variable_name
     | List_cons _ -> "list_cons"
     | List_list_tl _ -> "list_tl"
     | List_rev _ -> "list_rev"
 	| List_sequence_function func -> label_of_sequence_function func
+    | List_inline_function (function_name, _, _, _) -> function_name
 
 let label_of_stack_expression = function
     | Literal_stack -> "stack"
     | Stack_variable _ -> "stack"
+    | Stack_local_variable variable_name -> variable_name
     | Stack_push _ -> "stack_push"
     | Stack_clear _ -> "stack_clear"
 	| Stack_sequence_function func -> label_of_sequence_function func
+    | Stack_inline_function (function_name, _, _, _) -> function_name
 
 let label_of_queue_expression = function
     | Literal_queue -> "queue"
     | Queue_variable _ -> "queue"
+    | Queue_local_variable variable_name -> variable_name
     | Queue_push _ -> "queue_push"
     | Queue_clear _ -> "queue_clear"
 	| Queue_sequence_function func -> label_of_sequence_function func
+    | Queue_inline_function (function_name, _, _, _) -> function_name
 
 (* Check if a binary word encoded on an integer have length greater than 31 bits *)
 (* If it's the case, print a warning *)
