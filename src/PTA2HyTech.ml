@@ -234,17 +234,27 @@ let string_of_clock_updates model = function
 
 
 (* Convert a list of updates into a string *)
-(*** WARNING: calling string_of_arithmetic_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
+(*** WARNING: calling string_of_global_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
 (*** TODO: fix or print warning ***)
 let string_of_discrete_updates model updates =
+
+    (* TODO benjamin see with etienne *)
+    print_warning ("Some update expressions may not be well translated to HyTech formalism.");
 
 	string_of_list_of_string_with_sep ", " (List.map (fun (parsed_variable_update_type, global_expression) ->
 	    (* Convert the variable access to string *)
 	    let variable_name = ModelPrinter.string_of_parsed_variable_update_type model parsed_variable_update_type in
+		(* Convert the global_expression *)
+        let str_update_expr = ModelPrinter.string_of_global_expression model.variable_names global_expression in
+
+	    (* If update is a void update *)
+	    if variable_name = "" then
+	        print_warning ("Side effect update expression `" ^ str_update_expr ^ "` are not supported by HyTech.");
+
 		variable_name
 		^ "' = "
-		(* Convert the global_expression *)
-		^ ModelPrinter.string_of_global_expression model.variable_names global_expression
+		^ str_update_expr
+
 	) updates)
 
 
@@ -252,7 +262,9 @@ let string_of_discrete_updates model updates =
 (** NOTE: currently HyTech does not support conditional *)
 let string_of_transition model automaton_index transition =
 	let clock_updates = transition.updates.clock in
+	let seq_updates = transition.pre_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
+	let all_updates = seq_updates @ discrete_updates in
 	let conditional_updates = transition.updates.conditional in
 
     let str_guard = ModelPrinter.string_of_guard model.variable_names transition.guard in
@@ -271,7 +283,7 @@ let string_of_transition model automaton_index transition =
 	(* Add a coma in case of both clocks and discrete *)
 	^ (if clock_updates <> No_update && discrete_updates <> [] then ", " else "")
 	(* Discrete updates *)
-	^ (string_of_discrete_updates model discrete_updates)
+	^ (string_of_discrete_updates model all_updates)
 	^ "} "
 
 	(* Convert the sync *)
