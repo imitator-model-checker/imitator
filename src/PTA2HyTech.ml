@@ -137,8 +137,7 @@ let string_of_declarations model stopwatches clocks =
 let string_of_fun_definitions model =
     (* Print warning *)
     if Hashtbl.length model.fun_definitions > 0 then
-        (* TODO benjamin see with etienne *)
-        print_warning "Model contains custom user functions. HyTech doesn't support user functions.";
+        print_warning "Model contains user defined functions. HyTech doesn't support user defined functions.";
     (* Get function definitions string as IMITATOR format *)
     ModelPrinter.string_of_fun_definitions model
 
@@ -243,11 +242,9 @@ let string_of_clock_updates model = function
 
 (* Convert a list of updates into a string *)
 (*** WARNING: calling string_of_global_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
-(*** TODO: fix or print warning ***)
 let string_of_discrete_updates model updates =
 
-    (* TODO benjamin see with etienne *)
-    print_warning ("Some update expressions may not be well translated to HyTech formalism.");
+    print_warning ("Some update expressions may not be well translated to HyTech.");
 
 	string_of_list_of_string_with_sep ", " (List.map (fun (parsed_update_type, global_expression) ->
 	    (* Convert the variable access to string *)

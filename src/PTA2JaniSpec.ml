@@ -932,8 +932,7 @@ let string_of_custom_user_functions model =
 
     in
 
-    (* TODO benjamin see with etienne *)
-    print_warning "User functions are usually not well translated to Jani formalism.";
+    print_warning "User defined functions are usually not well translated to Jani formalism.";
 
     (* Convert hashtbl values to list *)
     let fun_definition_list = model.fun_definitions |> Hashtbl.to_seq_values |> List.of_seq in

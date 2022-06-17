@@ -395,15 +395,14 @@ let string_of_fun_definitions model =
 
     in
 
-    (* TODO benjamin see with etienne this message ... *)
-    print_warning "Some custom user functions may not be well translated to UPPAAL formalism.";
+    print_warning "Some user defined functions may not be well translated to UPPAAL.";
 
     (* Convert hashtbl values to list *)
     let fun_definition_list = model.fun_definitions |> Hashtbl.to_seq_values |> List.of_seq in
     (* Map each definition to it's string representation *)
     let str_fun_definitions_list = List.map string_of_fun_definition fun_definition_list in
     (* Join all strings *)
-    "/* Custom user function declarations (WARNING: some custom user functions may not be well translated) */\n\n"
+    "/* User defined function declarations (WARNING: some user defined functions may not be well translated) */\n\n"
     ^ OCamlUtilities.string_of_list_of_string_with_sep "\n\n" str_fun_definitions_list
 
 (* Convert the initial variable declarations into a string *)
