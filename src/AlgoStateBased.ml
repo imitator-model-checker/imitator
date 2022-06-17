@@ -1395,6 +1395,11 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
+    let automaton_and_transition_of_transition_index transition_index =
+        model.automaton_of_transition transition_index,
+        model.transitions_description transition_index
+    in
+
 	(* Make a copy of the location *)
 	let location = Location.copy_location source_location in
 	(* Create a temporary table for discrete values *)
@@ -1404,24 +1409,32 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
 	(* Check if we actually have updates *)
 	let has_updates = ref false in
-	(* Update the location for the automata synchronized with 'action_index'; return the list of guards and updates *)
-	let guards_and_updates = List.map (fun transition_index ->
+
+    (* Make all sequential update first ! *)
+	List.iter (fun transition_index ->
 		(* Get the automaton concerned *)
-		let automaton_index = model.automaton_of_transition transition_index in
-
 		(* Access the transition and get the components *)
-		let transition = model.transitions_description transition_index in
-		let guard, seq_updates, updates, target_index = transition.guard, transition.seq_updates, transition.updates, transition.target in
-
+		let automaton_index, transition = automaton_and_transition_of_transition_index transition_index in
 		(** Collecting the updates by evaluating the conditions, if there is any *)
-		let clock_updates, discrete_updates = get_updates source_location updates in
-        let _ (* no clock update for pre-updates *), discrete_seq_updates = get_updates source_location seq_updates in
+        let _ (* no clock update for pre-updates *), discrete_seq_updates = get_updates source_location transition.seq_updates in
 
         (* Make `do` sequential updates (make these updates now, only on discrete) *)
         List.iter (direct_update discrete_access) (List.rev discrete_seq_updates);
 
-        (* Make `then` standard discrete updates (make updates (on discrete) after all recorded in a table *)
-        (* These update allow *)
+	) combined_transition;
+
+	(* Update the location for the automata synchronized with 'action_index' *)
+	(* make all non-sequential updates and return the list of guards and updates *)
+	let guards_and_updates = List.map (fun transition_index ->
+		(* Get the automaton concerned *)
+		(* Access the transition and get the components *)
+		let automaton_index, transition = automaton_and_transition_of_transition_index transition_index in
+		let guard, updates, target_index = transition.guard, transition.updates, transition.target in
+
+		(** Collecting the updates by evaluating the conditions, if there is any *)
+		let clock_updates, discrete_updates = get_updates source_location updates in
+
+        (* Make `then` standard discrete non-sequential updates (make updates (on discrete) after all recorded in a table *)
         let delayed_update_results = List.map (delayed_update discrete_access updated_discrete) (List.rev discrete_updates) in
 
         (* Print warnings if discrete variable updated several times with different value for the same sync *)
@@ -1457,6 +1470,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
 	(* Compute pairs to update the discrete variables *)
 	let updated_discrete_pairs = updated_discrete |> Hashtbl.to_seq |> List.of_seq in
+
 	(* Update the global location *)
 	Location.update_location_with [] updated_discrete_pairs location;
 

@@ -513,17 +513,17 @@ let string_of_update_type model = function
         string_of_scalar_or_index_update_type model scalar_or_index_update_type
     | Void_update -> ""
 
+let string_of_discrete_update model (update_type, expr) =
+    (* Convert the variable name *)
+    let variable_name = string_of_update_type model update_type in
+    variable_name
+    ^ (if variable_name <> "" then " := " else "")
+    (* Convert the arithmetic_expression *)
+    ^ DiscreteExpressions.string_of_global_expression model.variable_names expr
+
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (fun (parsed_update_type, arithmetic_expression) ->
-		(* Convert the variable name *)
-		let variable_name = string_of_update_type model parsed_update_type in
-
-		variable_name
-		^ (if variable_name <> "" then " := " else "")
-		(* Convert the arithmetic_expression *)
-		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
-	) updates)
+	string_of_list_of_string_with_sep sep (List.rev_map (string_of_discrete_update model) updates)
 
 (* Convert a list of discrete updates into a JSON-like string *)
 let json_of_discrete_updates ?(sep=", ") model updates =
