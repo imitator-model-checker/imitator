@@ -4831,16 +4831,16 @@ END CONSTRAINT
         ## Test for IMITATOR version: < 3.0
         ## Author 					: lbinria
         'author': 'lbinria',
-        'purpose'    : 'Test let-in updates evaluation order',
-        'input_files': ['let_in_update_order.imi'],
+        'purpose'    : 'Test complex updates evaluation order',
+        'input_files': ['updates/complex-update-order.imi'],
 		'tags': 'behavior, update',
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
-			{'file': 'let_in_update_order-statespace.states' , 'content' : """
-  pta1: lend, pta2: lend, i = 2, j = 2, k = 4, l = 2, m = 2 ==>
+			{'file': 'complex-update-order-statespace.states' , 'content' : """
+pta1: lend, pta2: lend, pta3: lend, i = 3, j = 2, k = 6, l = 2, m = 2, w2 = 2, r1 = 1, r2 = 1, r3 = 1, s = stack([1, 0]) ==>
 & x >= 2
 & x = 2 + z
-& x + 2 = y
+& x + 4 = y
 & x = w
 & x = v
 		"""
