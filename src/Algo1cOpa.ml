@@ -587,10 +587,6 @@ type reg_exp =
 	| Star of reg_exp
 	| Element of int * int
 	| Epsilon
-	
-(* A type for regular expression and empty set *)
-type reg_exp_or_empty =
-	| RegExp of reg_exp
 	| EmptySet
 
 (* Structure of an arc in the finite automaton *)
@@ -605,19 +601,20 @@ let initialize_DFA (sub_list : (int * int) list) : arc list =
 	List.map (fun (i,j) -> {source=i;target=j;expression=Element(i,j);}) sub_list
 
 
-(* Returns the union of reg_exp of a set of arcs *)
+(* Returns the union of reg_exp of a set of arcs, or Epsilon if the set is empty *)
 let rec arcs_to_regexp_union arc_list =
 	match arc_list with
-	|h::t -> Union(h.expression, arcs_to_regexp_union t)
-	|[]-> Epsilon	
+	|h::t when (t != []) -> Union(h.expression, arcs_to_regexp_union t)
+	|h::t -> h.expression
+	|[] -> Epsilon (* This item allows that application of Star on the results wields Epsilon is the set is empty (for a correct union, this item should return EmptySet *)
 
 (* Performs the elimination of loc from dfa *)	
 let state_elimination (dfa : arc list) (loc : int) : arc list =
 	let dfa = ref dfa in
 	(* Computation of the sets of arcs to replace *)
-	let source_list_init = List.filter (fun e -> e.source = loc && e.target != loc) !dfa in
+	let source_list_init = List.filter (fun e -> e.source != loc && e.target = loc) !dfa in
 	let loops_list = List.filter (fun e -> e.source = loc && e.target = loc) !dfa in
-	let target_list_init = List.filter (fun e -> e.source != loc && e.target = loc) !dfa in
+	let target_list_init = List.filter (fun e -> e.source = loc && e.target != loc) !dfa in
 	(* Deletion of those arcs *)
 	dfa := List.filter (fun e -> e.source != loc && e.target != loc) !dfa;
 	(* Computation of the regular expression of the loops on loc*)
@@ -638,7 +635,7 @@ let state_elimination (dfa : arc list) (loc : int) : arc list =
 	
 	
 (* Returns either a regular expression or an empty set by generating a DFA and performing a state elimination procedure on it *)
-let compute_reg_exp (sub_list : (int * int) list) (l0 : int) (lf : int) (nb_locations : int) : reg_exp_or_empty = 
+let compute_reg_exp (sub_list : (int * int) list) (l0 : int) (lf : int) (nb_locations : int) : reg_exp = 
 	(* DFA generation *)
 	let dfa = ref (initialize_DFA sub_list) in
 	(* Addition of a pre-initial state with a silent arcs to l0 *)
@@ -653,12 +650,10 @@ let compute_reg_exp (sub_list : (int * int) list) (l0 : int) (lf : int) (nb_loca
 	for i=0 to nb_locations-1 do 
 		if i != lf then dfa := state_elimination (!dfa) i;
 	done;
-	(* Returns EmptySet if lf was not reachable, and the regular expression otherwise *)
-	if (List.length !dfa) = 0 then EmptySet else(
-	let global_exp = ref Epsilon in
+	(* Returns the regular expression *)
+	let global_exp = ref EmptySet in
 	List.iter (fun e -> global_exp := Union(!global_exp,e.expression)) !dfa;
-	RegExp(!global_exp)
-	)
+	!global_exp
 	
 
 (************************************************************)
