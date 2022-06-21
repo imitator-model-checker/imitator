@@ -21025,7 +21025,8 @@ system pta1, pta2, pta3;
 			[
 
 				{
-					"location": "l1",
+					"location":"l1",
+					"action":"nosync_1",
 					"guard":
 					{
 						"exp":
@@ -21077,7 +21078,7 @@ system pta1, pta2, pta3;
 					[
 
 						{
-							"location": "lend",
+							"location":"lend",
 							"assignments":
 							[
 

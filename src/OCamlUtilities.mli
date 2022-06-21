@@ -188,6 +188,9 @@ val string_of_list_of_string : string list -> string
 (* Convert an array of string into a string with separators *)
 val string_of_array_of_string_with_sep : string -> string array -> string
 
+(* Convert an array of string into a string with separators removing empty strings *)
+val string_of_array_of_string_with_sep_without_empty_strings : string -> string array -> string
+
 (** Convert a list of string into a string with separators (uses an internal conversion to array) *)
 val string_of_list_of_string_with_sep : string -> string list -> string
 

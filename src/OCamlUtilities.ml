@@ -434,6 +434,19 @@ let string_of_array_of_string_with_sep sep a =
 		!the_string ^ a.(length - 1)
 	)
 
+(* Convert an array of string into a string with separators removing empty strings *)
+let string_of_array_of_string_with_sep_without_empty_strings sep a =
+	let length = Array.length a in
+	if length = 0 then "" else (
+		let the_string = ref "" in
+		for i = 0 to length - 2 do
+		    let s = a.(i) in
+		    if s <> "" then
+			    the_string := (!the_string) ^ s ^ sep;
+		done;
+		!the_string ^ a.(length - 1)
+	)
+
 (** Convert a list of string into a string with separators *)
 let rec string_of_list_of_string_with_sep sep = function
 	| [] -> ""
