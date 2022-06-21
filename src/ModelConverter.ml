@@ -3267,9 +3267,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Resolve dependency graph of the model *)
     let dependency_graph = ParsedModelMetadata.dependency_graph parsed_model in
     (* Get dependency graph as dot format *)
-    let str_dependency_graph = ParsedModelMetadata.string_of_dependency_graph dependency_graph in
+    let str_dependency_graph = lazy (ParsedModelMetadata.string_of_dependency_graph dependency_graph) in
     (* Print dependency graph *)
-    ImitatorUtilities.print_message Verbose_high str_dependency_graph;
+    ImitatorUtilities.print_message_lazy Verbose_high str_dependency_graph;
 
     (* Get unused components and print warnings *)
     let unused_components = ParsedModelMetadata.unused_components_of_model dependency_graph in
