@@ -425,7 +425,7 @@ let dependency_graph parsed_model =
 
 (* Get all components that are effectively used by automatons of the model *)
 (* It mean all components that are reachable starting from the system reference *)
-let used_components_of_model_list (_, dependency_graph) =
+let used_components_of_model_list (_, component_relations) =
 
     (* A set that will contain already processed references, to avoid circular *)
     let already_processed_ref = ref RelationSet.empty in
@@ -443,7 +443,7 @@ let used_components_of_model_list (_, dependency_graph) =
         if RelationSet.mem relation already_processed then [] else (
             already_processed_ref := RelationSet.add relation already_processed;
             (* Get destination refs as new source starting from the current ref *)
-            let source_refs = List.filter (fun (a, b) -> a = used_variable_ref) dependency_graph in
+            let source_refs = List.filter (fun (a, b) -> a = used_variable_ref) component_relations in
             (* Compute destination refs *)
             let dest_refs = List.fold_left (fun acc s -> all_reachable_ref s @ acc) [] source_refs in
             (* Add current ref with computed destination refs *)
@@ -452,7 +452,7 @@ let used_components_of_model_list (_, dependency_graph) =
     in
 
     (* Get system refs *)
-    let system_refs = List.filter (fun (s, d) -> match s with Automaton_ref _ -> true | _ -> false) dependency_graph in
+    let system_refs = List.filter (fun (s, d) -> match s with Automaton_ref _ -> true | _ -> false) component_relations in
     (* Find all reachable refs (variables / functions) from system refs... *)
     List.fold_left (fun acc system_ptr -> all_reachable_ref system_ptr @ acc) [] system_refs
 
