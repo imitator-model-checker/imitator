@@ -11,6 +11,8 @@
  *
  ************************************************************)
 
+type variable_name = string
+
 (************************************************************)
 (************************************************************)
 (** Operators *)
@@ -27,7 +29,11 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (** Valuation *)
 (************************************************************)
 (************************************************************)
+(* TODO benjamin CLEAN declaration here ? move in evaluator ?? *)
 type discrete_valuation = Automaton.discrete_index -> DiscreteValue.discrete_value
+type discrete_setter = Automaton.discrete_index -> DiscreteValue.discrete_value -> unit
+type discrete_access = discrete_valuation * discrete_setter
+type variable_table = (variable_name, DiscreteValue.discrete_value) Hashtbl.t
 
 type conj_dis =
     | And
@@ -71,12 +77,14 @@ and product_quotient =
 
 and rational_factor =
 	| Rational_variable of Automaton.variable_index
+	| Rational_local_variable of variable_name
 	| Rational_constant of NumConst.t
 	| Rational_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
 	| Rational_of_int of int_arithmetic_expression
 	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
     | Rational_sequence_function of sequence_function
+    | Rational_inline_function of variable_name * variable_name list * global_expression list * fun_body
 (*	| Rational_function_call of string * global_expression list*)
 
 and sequence_function =
@@ -101,6 +109,7 @@ and int_term =
 
 and int_factor =
 	| Int_variable of Automaton.variable_index
+	| Int_local_variable of variable_name
 	| Int_constant of Int32.t
 	| Int_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
@@ -111,8 +120,8 @@ and int_factor =
     | List_length of list_expression
     | Stack_length of stack_expression
     | Queue_length of queue_expression
-
-(*    | Int_function_call of string * global_expression list*)
+    (* | Int_function_call of variable_name * global_expression list *)
+    | Int_inline_function of variable_name * variable_name list * global_expression list * fun_body
 
 
 (************************************************************)
@@ -148,6 +157,7 @@ and discrete_boolean_expression =
 	| Not_bool of boolean_expression (** Negation *)
 	(** discrete variable in boolean expression *)
 	| Bool_variable of Automaton.variable_index
+	| Bool_local_variable of variable_name
 	(** discrete constant in boolean expression *)
 	| Bool_constant of bool
     (* Add here some function on array *)
@@ -157,6 +167,7 @@ and discrete_boolean_expression =
     | List_is_empty of list_expression
     | Stack_is_empty of stack_expression
     | Queue_is_empty of queue_expression
+    | Bool_inline_function of variable_name * variable_name list * global_expression list * fun_body
 (*    | Bool_function_call of string * global_expression list*)
 
 (************************************************************)
@@ -178,7 +189,10 @@ and binary_word_expression =
     | Logical_not of binary_word_expression * int
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
+	| Binary_word_local_variable of variable_name
     | Binary_word_sequence_function of sequence_function
+    | Binary_word_inline_function of variable_name * variable_name list * global_expression list * fun_body
+
 (*    | Binary_word_function_call of string * global_expression list*)
 
 (** Array expression **)
@@ -186,9 +200,12 @@ and array_expression =
     | Literal_array of global_expression array
     | Array_constant of DiscreteValue.discrete_value array
     | Array_variable of Automaton.variable_index
+    | Array_local_variable of variable_name
     (* Add here some functions on array *)
     | Array_concat of array_expression * array_expression
     | Array_sequence_function of sequence_function
+    | Array_inline_function of variable_name * variable_name list * global_expression list * fun_body
+
 (*    | Array_function_call of string * global_expression list*)
 
 (** List expression **)
@@ -196,42 +213,59 @@ and list_expression =
     | Literal_list of global_expression list
     | List_constant of DiscreteValue.discrete_value list
     | List_variable of Automaton.variable_index
+    | List_local_variable of variable_name
     (* Add here some functions on list *)
     | List_cons of global_expression * list_expression
     | List_sequence_function of sequence_function
     | List_list_tl of list_expression
     | List_rev of list_expression
+    | List_inline_function of variable_name * variable_name list * global_expression list * fun_body
 (*    | List_function_call of string * global_expression list*)
 
 and stack_expression =
     | Literal_stack
     | Stack_variable of Automaton.variable_index
+    | Stack_local_variable of variable_name
     | Stack_push of global_expression * stack_expression
     | Stack_clear of stack_expression
     | Stack_sequence_function of sequence_function
+    | Stack_inline_function of variable_name * variable_name list * global_expression list * fun_body
 
 and queue_expression =
     | Literal_queue
     | Queue_variable of Automaton.variable_index
+    | Queue_local_variable of variable_name
     | Queue_push of global_expression * queue_expression
     | Queue_clear of queue_expression
     | Queue_sequence_function of sequence_function
-
-
+    | Queue_inline_function of variable_name * variable_name list * global_expression list * fun_body
 
 and expression_access_type =
     | Expression_array_access of array_expression
     | Expression_list_access of list_expression
 
+(* Function local declaration or expression *)
+and fun_body =
+    | Fun_local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * fun_body
+    | Fun_instruction of (update_type * global_expression) * fun_body
+    | Fun_expr of global_expression
+
 (* Update type *)
-type variable_update_type =
+and scalar_or_index_update_type =
     (* Variable update, ie: x := 1 *)
-    | Variable_update of Automaton.discrete_index
+    | Scalar_update of Automaton.discrete_index
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
-    | Indexed_update of variable_update_type * int_arithmetic_expression
+    | Indexed_update of scalar_or_index_update_type * int_arithmetic_expression
+
+and update_type =
+    (* Expression with assignment *)
+    | Variable_update of scalar_or_index_update_type
     (* Unit expression, side effect expression without assignment, ie: stack_pop(s) *)
     | Void_update
 
+(** update: variable_index := linear_term *)
+(*** TO OPTIMIZE (in terms of dimensions!) ***)
+type discrete_update = update_type * global_expression
 
 val is_linear_discrete_boolean_expression : discrete_boolean_expression -> bool
 
@@ -277,4 +311,8 @@ val string_of_list_expression : (Automaton.variable_index -> string) -> list_exp
 val string_of_stack_expression : (Automaton.variable_index -> string) -> stack_expression -> string
 val string_of_queue_expression : (Automaton.variable_index -> string) -> queue_expression -> string
 
-val string_of_variable_update_type : (Automaton.variable_index -> string) -> variable_update_type -> string
+val string_of_update_type : (Automaton.variable_index -> string) -> update_type -> string
+val string_of_discrete_update : (Automaton.variable_index -> string) -> discrete_update -> string
+(* Type *)
+
+(*val discrete_type_of_global_expression : global_expression -> DiscreteType.var_type_discrete*)

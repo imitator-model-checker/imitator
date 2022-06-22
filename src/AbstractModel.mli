@@ -76,9 +76,7 @@ type clock_updates =
 
 
 
-(** update: variable_index := linear_term *)
-(*** TO OPTIMIZE (in terms of dimensions!) ***)
-type discrete_update = DiscreteExpressions.variable_update_type * DiscreteExpressions.global_expression
+
 
 
 
@@ -107,7 +105,7 @@ type invariant = guard
 (** Updates *)
 type updates = {
   clock      : clock_updates;           (** Clock updates *)
-  discrete   : discrete_update list;    (** List of discrete updates *)
+  discrete   : DiscreteExpressions.discrete_update list;    (** List of discrete updates *)
   conditional: conditional_update list; (** List of conditional updates *)
 }
 (** Conditional updates *)
@@ -117,15 +115,23 @@ and conditional_update = DiscreteExpressions.boolean_expression * updates * upda
 type transition = {
     guard : guard;
     action : action_index;
-    pre_updates : updates;
+    seq_updates : updates;
     updates : updates;
-    post_updates : updates;
     target : location_index;
 }
 
 type transition_index = int
 
+(************************************************************)
+(** Declared functions *)
+(************************************************************)
 
+type fun_definition = {
+    name : variable_name;
+    parameters : variable_name list;
+    signature : FunctionSig.signature_constraint;
+    body : DiscreteExpressions.fun_body;
+}
 
 (************************************************************)
 (** Bounds for the parameters *)
@@ -266,6 +272,9 @@ type abstract_model = {
 	transitions_description : transition_index -> transition;
 	(* An array transition_index -> automaton_index *)
 	automaton_of_transition : transition_index -> automaton_index;
+
+    (* The list of declared functions *)
+    fun_definitions : (variable_name, fun_definition) Hashtbl.t;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative: LinearConstraint.px_linear_constraint;

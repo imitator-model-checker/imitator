@@ -315,6 +315,49 @@ let string_of_declarations model =
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
+(* Convert the function definitions into a string *)
+let string_of_fun_definitions model =
+
+    (* Convert a function definition into a string *)
+    let string_of_fun_definition fun_def =
+
+        (* Convert a function expression into a string *)
+        let rec string_of_next_expr = function
+            | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
+                "let " ^ variable_name ^ " : "
+                ^ DiscreteType.string_of_var_type_discrete discrete_type
+                ^ " = "
+                ^ DiscreteExpressions.string_of_global_expression model.variable_names init_expr
+                ^ " in \n"
+                ^ string_of_next_expr next_expr
+
+            | Fun_instruction (discrete_update, next_expr) ->
+                DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
+                ^ string_of_next_expr next_expr
+
+            | Fun_expr expr ->
+                DiscreteExpressions.string_of_global_expression model.variable_names expr ^ "\n"
+        in
+
+        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature in
+        let parameter_names_with_constraints = List.combine fun_def.parameters parameters_signature in
+        (* Convert parameters into a string *)
+        let str_param_list = List.map (fun (param_name, type_constraint) -> param_name ^ " : " ^ FunctionSig.string_of_type_constraint type_constraint) parameter_names_with_constraints in
+        let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in
+        (* Format function definition *)
+        "fn " ^ fun_def.name ^ "(" ^ str_params ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin \n"
+        ^ string_of_next_expr fun_def.body
+        ^ "end"
+
+    in
+
+    (* Convert hashtbl values to list *)
+    let fun_definition_list = model.fun_definitions |> Hashtbl.to_seq_values |> List.of_seq |> List.rev in
+    (* Map each definition to it's string representation *)
+    let str_fun_definitions_list = List.map string_of_fun_definition fun_definition_list in
+    (* Join all strings *)
+    OCamlUtilities.string_of_list_of_string_with_sep "\n\n" str_fun_definitions_list
+
 (* Get string of a global expression *)
 let string_of_global_expression = DiscreteExpressions.string_of_global_expression
 (* Get string of an arithmetic expression *)
@@ -343,18 +386,6 @@ let customized_string_of_guard customized_boolean_string variable_names = functi
 
 (** Convert a guard into a string *)
 let string_of_guard = customized_string_of_guard Constants.global_default_string
-(*
-let string_of_guard variable_names = function
-	| True_guard -> LinearConstraint.string_of_true
-	| False_guard -> LinearConstraint.string_of_false
-	| Discrete_guard discrete_guard -> NonlinearConstraint.string_of_nonlinear_constraint variable_names discrete_guard
-	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
-	| Discrete_continuous_guard discrete_continuous_guard ->
-		(NonlinearConstraint.string_of_nonlinear_constraint variable_names discrete_continuous_guard.discrete_guard)
-		^ LinearConstraint.string_of_and ^
-		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
-*)
-
 
 (** Convert a guard into a JSON-style string *)
 let json_of_guard variable_names guard =
@@ -468,35 +499,37 @@ let json_of_clock_updates model clock_updates =
 	let wrap_expr variable_index linear_term = "\n\t\t\t\t\t\t\t" ^ (json_of_string (model.variable_names variable_index)) ^ ": " ^ (json_of_string (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)) ^ "" in
 	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
 
-
-
-
-(* Access to either variable or array *)
-let rec string_of_variable_update_type model = function
-	| Variable_update (variable_index) ->
+(* String representation of a variable update *)
+let rec string_of_scalar_or_index_update_type model = function
+	| Scalar_update (variable_index) ->
 		model.variable_names variable_index
-	| Indexed_update (parsed_variable_update_type, index_expr) ->
-		string_of_variable_update_type model parsed_variable_update_type
+	| Indexed_update (scalar_or_index_update_type, index_expr) ->
+		string_of_scalar_or_index_update_type model scalar_or_index_update_type
 		^ "[" ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names index_expr  ^ "]"
+
+(* String representation of an update *)
+let string_of_update_type model = function
+    | Variable_update scalar_or_index_update_type ->
+        string_of_scalar_or_index_update_type model scalar_or_index_update_type
     | Void_update -> ""
+
+let string_of_discrete_update model (update_type, expr) =
+    (* Convert the variable name *)
+    let variable_name = string_of_update_type model update_type in
+    variable_name
+    ^ (if variable_name <> "" then " := " else "")
+    (* Convert the arithmetic_expression *)
+    ^ DiscreteExpressions.string_of_global_expression model.variable_names expr
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (fun (parsed_variable_update_type, arithmetic_expression) ->
-		(* Convert the variable name *)
-		let variable_name = string_of_variable_update_type model parsed_variable_update_type in
-
-		variable_name
-		^ (if variable_name <> "" then " := " else "")
-		(* Convert the arithmetic_expression *)
-		^ (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)
-	) updates)
+	string_of_list_of_string_with_sep sep (List.rev_map (string_of_discrete_update model) updates)
 
 (* Convert a list of discrete updates into a JSON-like string *)
 let json_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (fun (parsed_variable_update_type, arithmetic_expression) ->
+	string_of_list_of_string_with_sep sep (List.rev_map (fun (parsed_update_type, arithmetic_expression) ->
 		(* Convert the variable name *)
-		"" ^ (json_of_string (string_of_variable_update_type model parsed_variable_update_type)) ^ ""
+		"" ^ (json_of_string (string_of_update_type model parsed_update_type)) ^ ""
 		^ ": "
 		(* Convert the arithmetic_expression *)
 		^ "" ^ (json_of_string (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)) ^ ""
@@ -564,7 +597,7 @@ let string_of_transition model automaton_index (transition : transition) =
 (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")` with target `" ^ (model.location_names automaton_index transition.target) ^ "` via action `" ^ (string_of_action model transition.action) ^ "`…"); *)
 
 	let clock_updates = transition.updates.clock in
-	let seq_updates = transition.pre_updates.discrete in
+	let seq_updates = transition.seq_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
 	let conditional_updates = transition.updates.conditional in
 	let first_separator, second_separator = separator_comma transition.updates in
@@ -610,7 +643,7 @@ let string_of_transition_for_runs model automaton_index (transition : transition
 (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
 
 	let clock_updates = transition.updates.clock in
-	let seq_updates = transition.pre_updates.discrete in
+	let seq_updates = transition.seq_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
 	let conditional_updates = transition.updates.conditional in
 	let first_separator, second_separator = separator_comma transition.updates in
@@ -764,13 +797,17 @@ let string_of_automata model =
 	) model.automata)
 
 
-let rec customized_string_of_parsed_variable_update_type customized_string model = function
-    | Variable_update variable_index -> model.variable_names variable_index
-    | Indexed_update (parsed_variable_update_type, index_expr) ->
-        customized_string_of_parsed_variable_update_type customized_string model parsed_variable_update_type ^ "[" ^ DiscreteExpressions.customized_string_of_int_arithmetic_expression customized_string model.variable_names index_expr ^ "]"
+let rec customized_string_of_parsed_scalar_or_index_update_type customized_string model = function
+    | Scalar_update variable_index -> model.variable_names variable_index
+    | Indexed_update (scalar_or_index_update_type, index_expr) ->
+        customized_string_of_parsed_scalar_or_index_update_type customized_string model scalar_or_index_update_type ^ "[" ^ DiscreteExpressions.customized_string_of_int_arithmetic_expression customized_string model.variable_names index_expr ^ "]"
+
+let customized_string_of_parsed_update_type customized_string model = function
+    | Variable_update scalar_or_index_update_type ->
+        customized_string_of_parsed_scalar_or_index_update_type customized_string model scalar_or_index_update_type
     | Void_update -> ""
 
-let string_of_parsed_variable_update_type = customized_string_of_parsed_variable_update_type Constants.global_default_string
+let string_of_parsed_update_type = customized_string_of_parsed_update_type Constants.global_default_string
 
 (* Convert initial state of locations to string *)
 let string_of_new_initial_locations ?indent_level:(i=1) model =
@@ -916,7 +953,7 @@ let string_of_loc_predicate (model : AbstractModel.abstract_model) = function
 
 
 let string_of_simple_predicate (model : AbstractModel.abstract_model) = function
-	| Discrete_boolean_expression discrete_boolean_expression ->
+	| State_predicate_discrete_boolean_expression discrete_boolean_expression ->
 		string_of_discrete_boolean_expression model.variable_names discrete_boolean_expression
 
 	| Loc_predicate loc_predicate ->
@@ -1134,6 +1171,8 @@ let string_of_model model =
 	model_header ()
 	(* The variable declarations *)
 	^  "\n" ^ string_of_declarations model
+	(* The function definitions *)
+	^  "\n" ^ string_of_fun_definitions model
 	(* All automata *)
 	^  "\n" ^ string_of_automata model
 	(* The initial state *)

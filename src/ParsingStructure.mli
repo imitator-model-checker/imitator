@@ -15,10 +15,10 @@
 (** Names *)
 (****************************************************************)
 
+type variable_index = int
+type variable_name = string
 type automaton_name	= string
 type location_name	= string
-type variable_name	= string
-type variable_index	= int
 type sync_name		= string
 
 
@@ -34,27 +34,6 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 (****************************************************************)
 (** Declarations *)
 (****************************************************************)
-
-(* Specific type of number *)
-type var_type_discrete_number =
-    | Var_type_discrete_rat
-    | Var_type_discrete_int
-
-(* Specific type of discrete variables *)
-type var_type_discrete =
-    | Var_type_discrete_number of var_type_discrete_number
-    | Var_type_discrete_bool
-    | Var_type_discrete_binary_word of int
-    | Var_type_discrete_array of var_type_discrete * int
-    | Var_type_discrete_list of var_type_discrete
-    | Var_type_discrete_stack of var_type_discrete
-    | Var_type_discrete_queue of var_type_discrete
-
-(* Type of variable in declarations *)
-type var_type =
-	| Var_type_clock
-	| Var_type_discrete of var_type_discrete
-	| Var_type_parameter
 
 (* Type of the sequence *)
 type parsed_sequence_type =
@@ -123,7 +102,7 @@ and parsed_discrete_factor =
 
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
-type variable_declaration = var_type * (variable_name * parsed_global_expression option) list
+type variable_declaration = DiscreteType.var_type * (variable_name * parsed_global_expression option) list
 type variable_declarations = variable_declaration list
 
 (****************************************************************)
@@ -153,7 +132,6 @@ type nonlinear_constraint = parsed_discrete_boolean_expression
 
 type convex_predicate = nonlinear_constraint list
 
-
 (****************************************************************)
 (** Automata *)
 (****************************************************************)
@@ -175,18 +153,22 @@ type guard = convex_predicate
 type invariant = convex_predicate
 
 (* Variable name or variable access (x or x[index]) *)
-type parsed_variable_update_type =
-    | Parsed_variable_update of variable_name
-    | Parsed_indexed_update of parsed_variable_update_type * parsed_discrete_arithmetic_expression
+type parsed_scalar_or_index_update_type =
+    | Parsed_scalar_update of variable_name
+    | Parsed_indexed_update of parsed_scalar_or_index_update_type * parsed_discrete_arithmetic_expression
+
+(* Update type, void update is an instruction, variable update is update of a variable *)
+type parsed_update_type =
+    | Parsed_variable_update of parsed_scalar_or_index_update_type
     | Parsed_void_update
 
+(* Type of the batch of updates *)
 type updates_type =
-    | Parsed_pre_updates
-    | Parsed_updates
-    | Parsed_post_updates
+    | Parsed_seq_updates (* Sequential updates `do` *)
+    | Parsed_std_updates (* Standard updates `then` *)
 
 (** basic updating *)
-type normal_update = parsed_variable_update_type * parsed_global_expression
+type normal_update = parsed_update_type * parsed_global_expression
 (** conditional updating *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 
@@ -196,10 +178,32 @@ type update =
 	| Condition of condition_update (** Updates with conditions *)
 
 (* Three type of updates (pre-updates, updates, post-updates) grouped in section *)
-type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *) * update list (* post-updates sequential *)
+type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *)
 
+(****************************************************************)
+(** User functions *)
+(****************************************************************)
+type parsed_next_expr =
+    | Parsed_fun_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_global_expression (* init expr *) * parsed_next_expr * int (* id *)
+    | Parsed_fun_instruction of normal_update * parsed_next_expr
+    | Parsed_fun_expr of parsed_global_expression
 
+(* Metadata of a function *)
+type function_metadata = {
+    name : variable_name;
+    signature_constraint : FunctionSig.signature_constraint;
+    side_effect : bool;
+}
 
+(* Parsed function definition *)
+type parsed_fun_definition = {
+    name : variable_name; (* function name *)
+    parameters : (variable_name * DiscreteType.var_type_discrete) list; (* parameter names and types *)
+    return_type : DiscreteType.var_type_discrete; (* return type *)
+    body : parsed_next_expr; (* body *)
+}
+
+type parsed_fun_definition_list = parsed_fun_definition list
 
 (* A list of pairs (clock, rational) *)
 type parsed_flow = (variable_name * NumConst.t) list
@@ -266,6 +270,7 @@ type parsed_projection = (variable_name list) option
 
 type parsed_model = {
 	variable_declarations	: variable_declarations;
+	fun_definitions         : parsed_fun_definition_list;
 	automata				: parsed_automaton list;
 	init_definition			: init_definition;
 }
@@ -480,33 +485,30 @@ type parsed_property = {
 (************************************************************)
 type constants_table = (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t
 
+type variable_infos = {
+	constants : constants_table;
+	variables : variable_name array;
+    variable_names : variable_name list;
+	index_of_variables : (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
+	type_of_variables : Automaton.variable_index -> DiscreteType.var_type;
+	removed_variable_names : variable_name list;
+	discrete : Automaton.variable_index list;
+	functions : (Automaton.variable_name, function_metadata) Hashtbl.t
+}
+
 type useful_parsing_model_information = {
 	(* The locations for each automaton: automaton_index -> location_index -> location_name *)
 	actions								: Automaton.action_name array;
 	array_of_location_names				: location_name array array;
 	automata							: Automaton.automaton_index list;
 	automata_names						: (Automaton.automaton_index -> automaton_name);
-	constants							: constants_table;
-	discrete							: Automaton.variable_index list;
 	index_of_actions					: (Automaton.action_name , Automaton.action_index) Hashtbl.t;
 	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
 	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
-	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
 	nb_clocks							: int;
 	nb_parameters						: int;
 	parameter_names						: variable_name list;
 	removed_action_names				: Automaton.action_name list;
-	type_of_variables					: Automaton.variable_index -> DiscreteType.var_type;
-	variable_names						: variable_name list;
-	variables							: variable_name array;
-	removed_variable_names				: variable_name list;
+	variable_infos                      : variable_infos;
 }
 
-type variable_infos = {
-	constants							: constants_table;
-    variable_names						: variable_name list;
-	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
-	type_of_variables					: Automaton.variable_index -> DiscreteType.var_type;
-	removed_variable_names				: variable_name list;
-	discrete							: Automaton.variable_index list;
-}

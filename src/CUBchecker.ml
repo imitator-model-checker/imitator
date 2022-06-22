@@ -3176,13 +3176,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let new_transition = {
 			guard		= Continuous_guard guard;
 			action		= action_index;
-			pre_updates = {clock = No_update; discrete=[]; conditional=[]};
+			seq_updates = {clock = No_update; discrete=[]; conditional=[]};
 			updates		= {
 				clock      = Resets clock_updates; (** Clock updates *)
 				discrete   = discrete_update; (** List of discrete updates *)
 				conditional= []
 			};
-			post_updates = {clock = No_update; discrete=[]; conditional=[]};
 			target		= target_location_index;
 		} in
 		
@@ -3677,6 +3676,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		transitions_description = new_transitions_description;
 		(* An array transition_index -> automaton_index *)
 		automaton_of_transition = new_automaton_of_transition;
+
+        (* The list of declared functions *)
+        fun_definitions = Hashtbl.create 0;
 
 		(* The cost for each automaton and each location *)
 		(*** TODO ***)

@@ -133,6 +133,13 @@ let string_of_declarations model stopwatches clocks =
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
+(* Convert function definitions into a string *)
+let string_of_fun_definitions model =
+    (* Print warning *)
+    if Hashtbl.length model.fun_definitions > 0 then
+        print_warning "Model contains user defined functions. HyTech doesn't support user defined functions.";
+    (* Get function definitions string as IMITATOR format *)
+    ModelPrinter.string_of_fun_definitions model
 
 (************************************************************)
 (** Automata *)
@@ -235,15 +242,13 @@ let string_of_clock_updates model = function
 
 (* Convert a list of updates into a string *)
 (*** WARNING: calling string_of_global_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
-(*** TODO: fix or print warning ***)
 let string_of_discrete_updates model updates =
 
-    (* TODO benjamin see with etienne *)
-    print_warning ("Some update expressions may not be well translated to HyTech formalism.");
+    print_warning ("Some update expressions may not be well translated to HyTech.");
 
-	string_of_list_of_string_with_sep ", " (List.map (fun (parsed_variable_update_type, global_expression) ->
+	string_of_list_of_string_with_sep ", " (List.map (fun (parsed_update_type, global_expression) ->
 	    (* Convert the variable access to string *)
-	    let variable_name = ModelPrinter.string_of_parsed_variable_update_type model parsed_variable_update_type in
+	    let variable_name = ModelPrinter.string_of_parsed_update_type model parsed_update_type in
 		(* Convert the global_expression *)
         let str_update_expr = ModelPrinter.string_of_global_expression model.variable_names global_expression in
 
@@ -262,7 +267,7 @@ let string_of_discrete_updates model updates =
 (** NOTE: currently HyTech does not support conditional *)
 let string_of_transition model automaton_index transition =
 	let clock_updates = transition.updates.clock in
-	let seq_updates = transition.pre_updates.discrete in
+	let seq_updates = transition.seq_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
 	let all_updates = seq_updates @ discrete_updates in
 	let conditional_updates = transition.updates.conditional in
@@ -270,7 +275,7 @@ let string_of_transition model automaton_index transition =
     let str_guard = ModelPrinter.string_of_guard model.variable_names transition.guard in
 
     if not (is_linear_guard transition.guard) then
-        print_warning ("Guard `" ^ str_guard ^ "` contains non-linear expression(s) or are not rational-valued, HyTech doesn't such expressions.");
+        print_warning ("Guard `" ^ str_guard ^ "` contains non-linear expression(s) or are not rational-valued, HyTech doesn't support such expressions.");
 
 	(if conditional_updates <> [] then print_warning "Conditional updates are not supported by HyTech. Ignoring…" );
 	"\n\t" ^ "when "
@@ -571,7 +576,8 @@ let string_of_model model =
 	string_of_header model
 	(* The variable declarations *)
 	^  "\n" ^ string_of_declarations model stopwatches clocks
-
+	(* The function declarations *)
+	^  "\n" ^ string_of_fun_definitions model
 	(* All automata *)
 	^  "\n" ^ string_of_automata model stopwatches clocks
 

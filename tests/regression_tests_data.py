@@ -1061,6 +1061,98 @@ Error                                   : model parsing error
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/06/09
+		# Last modified            : 2022/06/09
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test include: functions',
+		'author': 'lbinria',
+		'tags':'include, function',
+		'input_files': ['tests_include_model/example-include-functions-1a.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'example-include-functions-1a-regenerated.imi' , 'content' : """
+var
+	res, j, i
+		: int;
+
+fn f() : int begin
+let i1 : int = i + 1 in
+let i2 : int = (i + 1) * 2 in
+i1 + i2
+end
+
+(************************************************************)
+ automaton P1
+(************************************************************)
+ synclabs: ;
+
+loc s0: invariant True
+	when True do {}  (* sync nosync_1*)  goto lend;
+
+accepting loc lend: invariant True
+ end (* P1 *)
+(************************************************************)
+
+
+(************************************************************)
+ automaton P2
+(************************************************************)
+ synclabs: ;
+
+loc s0: invariant True
+	when f() + j = 4 do {res := f()}  (* sync nosync_2*)  goto lend;
+
+accepting loc lend: invariant res = 3
+ end (* P2 *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[P1] := s0,
+		loc[P2] := s0,
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		res := 0,
+		j := 1,
+		i := 0
+	;
+
+	(*------------------------------------------------------------*)
+	(* Initial continuous constraint *)
+	(*------------------------------------------------------------*)
+	continuous =
+		& True
+	;
+
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# AUTOMATIC VARIABLES REMOVAL
@@ -3037,6 +3129,364 @@ Error                                   : invalid model
 	,
 
 	#------------------------------------------------------------
+	{
+		'purpose'    : 'Toy example for exemplifying specifications over Booleans only',
+		'author':'lbinria',
+		'tags':'boolean, computing, toy',
+		'input_files': ['boolean_expressions/bool-exemplifying.imi', 'boolean_expressions/bool-exemplifying.imiprop'],
+		'options'    : '-merge none -comparison equality',
+		'expectations' : [
+			{'file': 'bool-exemplifying.res' , 'content' : """
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"plma": "l1",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "False",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "p1up",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": " not  (p1)",
+						"updates": {"p1": "True"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l1",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "p2up",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": " not  (p2)",
+						"updates": {"p2": "True"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l1",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "True"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "p1down",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": "p1",
+						"updates": {"p1": "False"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l1",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "False",
+					"p2": "True"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a1",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "plma",
+						"guard": "True",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l2",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "False",
+					"p2": "True"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/4",
+				"action": "p2down",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": "p2",
+						"updates": {"p2": "False"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l2",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "False",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "1/4",
+					"global_time": "1/4"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/4",
+				"action": "p1up",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": " not  (p1)",
+						"updates": {"p1": "True"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l2",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "1/2",
+					"global_time": "1/2"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/2",
+				"action": "check",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "plma",
+						"guard": "p1 AND  x > 0",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l3",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "3",
+				"action": "a2",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "plma",
+						"guard": " not  (p2) AND  x = 3",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l4",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "3",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
 	# END : Test Boolean expressions
 	#------------------------------------------------------------
 
@@ -4277,6 +4727,41 @@ END CONSTRAINT
 
     ,
 
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/03/16
+      ## Last modified            : 2022/03/16
+      ## Test for IMITATOR version: 3.3
+      ## Author 					: lbinria
+      'author': 'lbinria',
+      'purpose'    : 'Test some behaviors on user functions',
+      'input_files': ['functions/user-function-1.imi'],
+      'tags': 'behavior, function',
+      'options'    : '-mode statespace -states-description -no-var-autoremove',
+      'expectations' : [
+        {'file': 'user-function-1-statespace.states' , 'content' : """
+  INITIAL
+  STATE 0:
+  P: l0, top_stack = 0, top_queue = 0, r_result = 0, lerp_result = 0, i_result = 0, i_result_2 = 0, a_global = [0, 0], r_global = 0, i_global = 0, bin = 0b1011, q = queue(), s = stack(), r1 = 1, i1 = 1 ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  P: lend, top_stack = 2, top_queue = 0, r_result = 4, lerp_result = 1583/200, i_result = 3, i_result_2 = 3, a_global = [0, 1], r_global = 15, i_global = 10, bin = 0b0011, q = queue([0, 1, 2]), s = stack([2, 1, 0]), r1 = 1, i1 = 1 ==>
+&True
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
 	#------------------------------------------------------------
 	# END : Test custom function
 	#------------------------------------------------------------
@@ -4346,16 +4831,16 @@ END CONSTRAINT
         ## Test for IMITATOR version: < 3.0
         ## Author 					: lbinria
         'author': 'lbinria',
-        'purpose'    : 'Test let-in updates evaluation order',
-        'input_files': ['let_in_update_order.imi'],
+        'purpose'    : 'Test complex updates evaluation order',
+        'input_files': ['updates/complex-update-order.imi'],
 		'tags': 'behavior, update',
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
-			{'file': 'let_in_update_order-statespace.states' , 'content' : """
-  pta1: lend, pta2: lend, i = 2, j = 2, k = 4, l = 2, m = 2 ==>
+			{'file': 'complex-update-order-statespace.states' , 'content' : """
+pta1: lend, pta2: lend, pta3: lend, i = 3, j = 2, k = 6, l = 2, m = 2, w2 = 2, r1 = 1, r2 = 1, r3 = 1, s = stack([1, 0]) ==>
 & x >= 2
 & x = 2 + z
-& x + 2 = y
+& x + 4 = y
 & x = w
 & x = v
 		"""
@@ -20540,7 +21025,8 @@ system pta1, pta2, pta3;
 			[
 
 				{
-					"location": "l1",
+					"location":"l1",
+					"action":"nosync_1",
 					"guard":
 					{
 						"exp":
@@ -20592,7 +21078,7 @@ system pta1, pta2, pta3;
 					[
 
 						{
-							"location": "lend",
+							"location":"lend",
 							"assignments":
 							[
 

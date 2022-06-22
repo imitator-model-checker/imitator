@@ -294,7 +294,15 @@ let print_highlighted_message shell_highlighting_type message_verbose_mode messa
 (* Print a message if global_verbose_mode >= message_verbose_mode *)
 let print_message = print_highlighted_message Shell_normal
 
+(* Print a message if global_verbose_mode >= message_verbose_mode, message is only constructed if global_verbose_mode >= message_verbose_mode *)
+let print_message_lazy verbose_mode lazy_message =
+    if verbose_mode_greater verbose_mode then (
+        let message = Lazy.force lazy_message in
+        print_message verbose_mode message
+    ) else ()
 
+(* Print a message as Verbose_standard *)
+let print_standard_message = print_message Verbose_standard
 
 (* Print a warning *)
 let print_warning message =

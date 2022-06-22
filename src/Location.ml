@@ -246,9 +246,22 @@ let get_discrete_value location discrete_index =
 	(* Do not forget the offset *)
 	discrete.(discrete_index - !min_discrete_index)
 
+(** Get the NumConst value associated to some discrete variable *)
 let get_discrete_rational_value location discrete_index =
     let value = get_discrete_value location discrete_index in
     DiscreteValue.numconst_value value
+
+(** Set the value associated to some discrete variable *)
+let set_discrete_value location discrete_index value =
+    let discrete = get_discrete location in
+	(* Do not forget the offset *)
+    discrete.(discrete_index - !min_discrete_index) <- value
+
+(** Get a tuple of functions for reading / writing a global variable at a given location *)
+(* A discrete access enable to read or write a value of a variable at a given discrete index *)
+let discrete_access_of_location location =
+    get_discrete_value location, set_discrete_value location
+
 
 (************************************************************)
 (* Check whether the global location is accepting *)
@@ -256,84 +269,8 @@ let get_discrete_rational_value location discrete_index =
 
 (** Check whether a global location is accepting according to the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
 let is_accepting (locations_acceptance_condition : automaton_index -> location_index -> bool) (global_location : global_location) =
-	
-	let result = ref false in
 	(* Check whether a local location is accepting *)
-	
-	(*** TODO: rewrite using Array.exists! ***)
-	
-	Array.iteri (fun automaton_index location_index ->
-		result := !result || locations_acceptance_condition automaton_index location_index) (get_locations global_location);
-	
-	(* Return result *)
-	!result
-
-
-
-(************************************************************)
-(** Matching state predicates with a global location *)
-(************************************************************)
-
-(*------------------------------------------------------------*)
-(* Matching global_location predicates with a given global_location *)
-(*------------------------------------------------------------*)
-
-let match_loc_predicate loc_predicate global_location =
-	match loc_predicate with
-	| Loc_predicate_EQ (automaton_index, location_index) ->
-		get_location global_location automaton_index = location_index
-	| Loc_predicate_NEQ (automaton_index, location_index) ->
-		get_location global_location automaton_index <> location_index
-
-(*------------------------------------------------------------*)
-(* Matching simple predicates with a given global_location *)
-(*------------------------------------------------------------*)
-
-let match_simple_predicate (locations_acceptance_condition : automaton_index -> location_index -> bool) simple_predicate global_location =
-	match simple_predicate with
-
-	(* Here convert the global_location to a variable valuation *)
-	| Discrete_boolean_expression discrete_boolean_expression -> DiscreteExpressionEvaluator.eval_discrete_boolean_expression (Some (get_discrete_value global_location)) discrete_boolean_expression
-	
-	| Loc_predicate loc_predicate -> match_loc_predicate loc_predicate global_location
-
-	| State_predicate_true -> true
-	
-	| State_predicate_false -> false
-	
-	| State_predicate_accepting -> is_accepting locations_acceptance_condition global_location
-
-
-(*------------------------------------------------------------*)
-(* Matching state predicates with a given global_location *)
-(*------------------------------------------------------------*)
-
-(***TODO/NOTE: Might have been nicer to convert the acceptance condition during the ModelConverter phase :-/ ***)
-
-let rec match_state_predicate_factor (locations_acceptance_condition : automaton_index -> location_index -> bool) state_predicate_factor global_location : bool =
-	match state_predicate_factor with
-	| State_predicate_factor_NOT state_predicate_factor_neg -> not (match_state_predicate_factor locations_acceptance_condition state_predicate_factor_neg global_location)
-	| Simple_predicate simple_predicate -> match_simple_predicate locations_acceptance_condition simple_predicate global_location
-	| State_predicate state_predicate -> match_state_predicate locations_acceptance_condition state_predicate global_location
-
-and match_state_predicate_term (locations_acceptance_condition : automaton_index -> location_index -> bool) state_predicate_term global_location : bool =
-	match state_predicate_term with
-	| State_predicate_term_AND (state_predicate_term_1, state_predicate_term_2) ->
-		match_state_predicate_term locations_acceptance_condition state_predicate_term_1 global_location
-		&&
-		match_state_predicate_term locations_acceptance_condition state_predicate_term_2 global_location
-	| State_predicate_factor state_predicate_factor -> match_state_predicate_factor locations_acceptance_condition state_predicate_factor global_location
-
-and match_state_predicate (locations_acceptance_condition : automaton_index -> location_index -> bool) state_predicate global_location : bool =
-	match state_predicate with
-	| State_predicate_OR (state_predicate_1, state_predicate_2) ->
-		match_state_predicate locations_acceptance_condition state_predicate_1 global_location
-		||
-		match_state_predicate locations_acceptance_condition state_predicate_2 global_location
-	| State_predicate_term state_predicate_term -> match_state_predicate_term locations_acceptance_condition state_predicate_term global_location
-
-
-
+	get_locations global_location |> Array.mapi locations_acceptance_condition |> Array.exists identity
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)

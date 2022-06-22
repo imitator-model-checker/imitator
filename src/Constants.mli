@@ -178,8 +178,10 @@ val default_string_without_whitespace : customized_boolean_string
 val default_arithmetic_string : customized_arithmetic_string
 (** Default string values of arithmetic symbols without white spaces around operators *)
 val default_arithmetic_string_without_whitespace : customized_arithmetic_string
-(** Default string values of array delimiters symbols without white spaces around operators *)
+(** Default string values of array delimiters symbols without whitespaces around operators *)
 val default_array_string : customized_array_string
+(** Default string values of parenthesis delimiters symbols without whitespaces *)
+val default_paren_delimiter : string * string
 
 (** Default string of symbols *)
 val global_default_string : customized_string

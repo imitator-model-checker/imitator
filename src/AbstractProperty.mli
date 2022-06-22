@@ -29,7 +29,7 @@ type loc_predicate =
 
 
 type simple_predicate =
-	| Discrete_boolean_expression of discrete_boolean_expression
+	| State_predicate_discrete_boolean_expression of discrete_boolean_expression
 	| Loc_predicate of loc_predicate
 	| State_predicate_true
 	| State_predicate_false

@@ -79,9 +79,11 @@ rule token = parse
   | "array"          { CT_ARRAY }
 	| "do"             { CT_DO }
   | "let"            { CT_LET }
+  | "begin"          { CT_BEGIN }
   | "in"             { CT_IN }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
+  | "inside"         { CT_INSIDE }
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
 	| "False"          { CT_FALSE }
@@ -132,6 +134,8 @@ rule token = parse
   | "list"           { CT_LIST }
   | "stack"          { CT_STACK }
   | "queue"          { CT_QUEUE }
+  | "fn"             { CT_FUN   }
+  | "->"             { CT_ARROW }
 
 
 

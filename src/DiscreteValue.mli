@@ -62,7 +62,9 @@ val is_binary_word_value : discrete_value -> bool
 
 (** Default values  **)
 
-(* Get default discrete value *)
+(* Get default discrete value of discrete type *)
+val default_discrete_value : var_type_discrete -> discrete_value
+(* Get default discrete value of var type *)
 val default_value : var_type -> discrete_value
 
 (* Get zero value of Rational_value *)

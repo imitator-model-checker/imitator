@@ -35,10 +35,9 @@ let loc_predicate_of_typed_loc_predicate model_info = function
 (* Convert parsed_simple_predicate *)
 let simple_predicate_of_typed_simple_predicate model_info = function
 	| Typed_discrete_boolean_expression (expr, _) ->
-	    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model model_info in
 
-	    AbstractProperty.Discrete_boolean_expression (
-            ExpressionConverter.Convert.bool_expression_of_typed_discrete_boolean_expression variable_infos expr
+	    State_predicate_discrete_boolean_expression (
+            ExpressionConverter.Convert.bool_expression_of_typed_discrete_boolean_expression model_info.variable_infos expr
         )
 
 	| Typed_loc_predicate predicate ->
@@ -93,9 +92,7 @@ and state_predicate_of_typed_state_predicate model_info = function
 
 
 let convert_state_predicate model_info predicate =
-    (* Get variable info *)
-    let variable_infos = ParsingStructureUtilities.variable_infos_of_parsed_model model_info in
     (* Type check *)
-    let typed_predicate = ExpressionConverter.TypeChecker.check_state_predicate variable_infos predicate in
+    let typed_predicate = ExpressionConverter.TypeChecker.check_state_predicate model_info.variable_infos predicate in
     (* Convert *)
     state_predicate_of_typed_state_predicate model_info typed_predicate

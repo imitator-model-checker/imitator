@@ -19,6 +19,7 @@ open ParsingStructure;;
 open Exceptions;;
 open NumConst;;
 open ImitatorUtilities;;
+open DiscreteType;;
 
 
 let parse_error s =
@@ -34,6 +35,7 @@ let include_list = ref [];;
 let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
 	{
 		variable_declarations	= List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
+    fun_definitions = List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
 		automata				= List.append parsed_model.automata parsed_model_list.automata;
 		init_definition			= List.append parsed_model.init_definition parsed_model_list.init_definition;
 	}
@@ -43,6 +45,7 @@ let unzip l = List.fold_left
 	add_parsed_model_to_parsed_model_list
 	{
 		variable_declarations	= [];
+    fun_definitions = [];
 		automata				= [];
 		init_definition			= [];
 	}
@@ -68,12 +71,15 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY CT_DO CT_LET CT_IN
+	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY
+  CT_INSIDE
+  CT_DO
+  CT_LET CT_IN
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IN CT_INIT CT_CONTINUOUS CT_INITIALLY CT_INVARIANT CT_IS
+	CT_IF CT_INIT CT_CONTINUOUS CT_INITIALLY CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
@@ -87,6 +93,7 @@ let unzip l = List.fold_left
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
+    CT_FUN CT_BEGIN CT_ARROW
 
 
 %token EOF
@@ -109,16 +116,18 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	declarations automata init_definition_option
+	declarations decl_fun_lists automata init_definition_option
 	end_opt EOF
 	{
 		let declarations	= $1 in
-		let automata		= $2 in
-		let init_definition	= $3 in
+    let fun_definitions = $2 in
+		let automata		= $3 in
+		let init_definition	= $4 in
 
 		let main_model =
 		{
 			variable_declarations	= declarations;
+      fun_definitions = fun_definitions;
 			automata				= automata;
 			init_definition			= init_definition;
 		}
@@ -220,11 +229,69 @@ var_type_discrete_queue:
   | var_type_discrete_queue CT_QUEUE { Var_type_discrete_queue $1 }
 ;
 
-
 var_type_discrete_number:
     | CT_DISCRETE { Var_type_discrete_rat }
     | CT_INT { Var_type_discrete_int }
 ;
+
+/************************************************************/
+
+decl_fun_lists:
+	| decl_fun_nonempty_list { List.rev $1 }
+	| { [] }
+;
+
+/* Declaration function list */
+decl_fun_nonempty_list:
+  | decl_fun_def { [$1] }
+  | decl_fun_nonempty_list decl_fun_def { $2 :: $1 }
+;
+
+/* Function definition */
+decl_fun_def:
+  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete CT_BEGIN fun_body CT_END {
+    {
+      name = $2;
+      parameters = List.rev $4;
+      return_type = $7;
+      body = $9;
+    }
+  }
+;
+
+fun_parameter_list:
+  | { [] }
+  | fun_parameter_nonempty_list { $1 }
+;
+
+/* Function parameters list (separated by whitespace) */
+fun_parameter_nonempty_list:
+  | NAME COLON var_type_discrete { [($1, $3)] }
+  | fun_parameter_list COMMA NAME COLON var_type_discrete { ($3, $5) :: $1 }
+;
+
+/* Function signature (OCaml form) */
+fun_signature:
+  | var_type_discrete { [$1] }
+  | fun_signature CT_ARROW var_type_discrete { $3 :: $1 }
+;
+
+/* Body of function, declarations or expression */
+fun_body:
+  | fun_local_decl { $1 }
+  | fun_instruction { $1 }
+  | expression { Parsed_fun_expr $1 }
+;
+
+fun_local_decl:
+  | CT_LET NAME COLON var_type_discrete OP_EQ expression CT_IN fun_body { Parsed_fun_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
+;
+
+fun_instruction:
+  | update SEMICOLON fun_body { Parsed_fun_instruction ($1, $3) }
+;
+
+/************************************************************/
 
 /************************************************************
   AUTOMATA
@@ -434,9 +501,9 @@ transition:
 
 /* A l'origine de 3 conflits ("2 shift/reduce conflicts, 1 reduce/reduce conflict.") donc petit changement */
 update_synchronization:
-	| { ([], [], []), NoSync }
+	| { ([], []), NoSync }
 	| updates { $1, NoSync }
-	| syn_label { ([], [], []), (Sync $1) }
+	| syn_label { ([], []), (Sync $1) }
 	| updates syn_label { $1, (Sync $2) }
 	| syn_label updates { $2, (Sync $1) }
 ;
@@ -444,15 +511,15 @@ update_synchronization:
 /************************************************************/
 
 updates:
-  | CT_DO LBRACE let_in_updates RBRACE { $3 }
+  | CT_DO LBRACE do_then_updates RBRACE { $3 }
 ;
 
-let_in_updates:
-  | CT_DO update_seq_nonempty_list in_updates { $2, $3, [] }
-  | update_list { [], $1, [] }
+do_then_updates:
+  | CT_DO update_seq_nonempty_list then_updates { $2, $3 }
+  | update_list { [], $1 }
 ;
 
-in_updates:
+then_updates:
   | CT_THEN update_nonempty_list end_opt { $2 }
   | { [] }
 ;
@@ -489,9 +556,9 @@ update_seq_nonempty_list:
 /************************************************************/
 
 /* Variable or variable access */
-parsed_variable_update_type:
-  | NAME { Parsed_variable_update $1 }
-  | parsed_variable_update_type LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
+parsed_update_type:
+  | NAME { Parsed_scalar_update $1 }
+  | parsed_update_type LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
 ;
 
 /** Normal updates */
@@ -499,21 +566,21 @@ update:
 	/*** NOTE: deprecated syntax ***/
 	| NAME APOSTROPHE OP_EQ expression {
 		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_variable_update $1, $4)
+		(Parsed_variable_update (Parsed_scalar_update $1), $4)
 		}
 
 		/** NOT ALLOWED FROM 3.2 (2021/10) */
 /*	| NAME APOSTROPHE OP_ASSIGN expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_variable_update $1, $4)
+		(Parsed_variable_update (Parsed_scalar_update $1), $4)
 	}*/
 	/*** NOTE: deprecated syntax ***/
 	| NAME OP_EQ expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_variable_update $1, $3)
+		(Parsed_variable_update (Parsed_scalar_update $1), $3)
 	}
 
-	| parsed_variable_update_type OP_ASSIGN expression { ($1, $3) }
+	| parsed_update_type OP_ASSIGN expression { (Parsed_variable_update $1, $3) }
   | expression { (Parsed_void_update, $1) }
 ;
 
@@ -754,9 +821,9 @@ discrete_boolean_expression:
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
 	| discrete_boolean_expression relop discrete_boolean_expression { Parsed_comparison ($1, $2, $3) }
 	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
-	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
+	| arithmetic_expression CT_INSIDE LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
 	/* allowed for convenience */
-	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
+	| arithmetic_expression CT_INSIDE LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
 	/* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) */
 	| LPAREN boolean_expression RPAREN { Parsed_boolean_expression $2 }
 	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }

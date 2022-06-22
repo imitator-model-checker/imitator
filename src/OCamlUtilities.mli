@@ -114,6 +114,12 @@ val group_by : ('a -> 'b) -> 'a list -> ('b * 'a list) list
 (* and map values associated by keys according to valueSelector function *)
 val group_by_and_map : ('a -> 'b) -> ('a -> 'c) -> 'a list -> ('b * 'c list) list
 
+(* Type used for partition map *)
+type ('a, 'b) my_either = My_left of 'a | My_right of 'b
+
+(* Partition and map list *)
+val partition_map : ('a -> ('b, 'c) my_either) -> 'a list -> ('b list * 'c list)
+
 (* Partition list by grouping elements by keys in a hashtable *)
 val hashtbl_group_by : ('a -> 'b) -> 'a list -> ('b, 'a list) Hashtbl.t
 
@@ -182,8 +188,14 @@ val string_of_list_of_string : string list -> string
 (* Convert an array of string into a string with separators *)
 val string_of_array_of_string_with_sep : string -> string array -> string
 
+(* Convert an array of string into a string with separators removing empty strings *)
+val string_of_array_of_string_with_sep_without_empty_strings : string -> string array -> string
+
 (** Convert a list of string into a string with separators (uses an internal conversion to array) *)
 val string_of_list_of_string_with_sep : string -> string list -> string
+
+(** Convert a list of string into a string with separators removing empty strings *)
+val string_of_list_of_string_with_sep_without_empty_strings : string -> string list -> string
 
 (* Add \t identation of string according to the given level *)
 val indent_paragraph : int -> string -> string
@@ -256,3 +268,11 @@ val prettify_json : string -> string
 
 (* equivalent to List.filter_map of OCaml 4.08, but reverse the list *)
 val rev_filter_map : ('a -> 'b option) -> 'a list -> 'b list
+
+val list_to_string_set : string list -> CustomModules.StringSet.t
+val string_set_to_list : CustomModules.StringSet.t -> string list
+
+(* Convert list to array *)
+val array_of_list : 'a list -> 'a array
+(* Convert array to list *)
+val list_of_array : 'a array -> 'a list

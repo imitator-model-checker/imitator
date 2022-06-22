@@ -233,9 +233,11 @@ let list_combination l1 l2 =
     let l = ref acc in
     for i = 0 to (List.length l1) - 1 do
         for j = 0 to (List.length l2) - 1 do
-            if i <> j then
-                l := (List.nth l1 i, List.nth l2 j)::!l;
-        done
+            let e1 = List.nth l1 i in
+            let e2 = List.nth l2 j in
+            if e1 <> e2 then
+                l := (e1, e2)::!l;
+        done;
     done;
     !l
 
@@ -266,6 +268,17 @@ let group_by_and_map keySelector valueSelector l =
     let uniq_keys = list_only_once keys in
     let group_by_keys = List.map (fun key -> (key, List.map valueSelector (List.filter (fun x -> keySelector x = key) l))) uniq_keys in
     group_by_keys
+
+(* Type used for partition map *)
+type ('a, 'b) my_either = My_left of 'a | My_right of 'b
+
+(* Partition and map list *)
+let partition_map f l =
+    let lm = List.map f l in
+    let a, b = List.partition (function My_left _ -> true | My_right _ -> false) lm in
+    List.map (function My_left x -> x | My_right _ -> raise (Exceptions.InternalError "impossible")) a,
+    List.map (function My_left _ ->  raise (Exceptions.InternalError "impossible") | My_right x -> x) b
+
 
 (* Partition list by grouping elements by keys in a hashtable *)
 let hashtbl_group_by keySelector l =
@@ -421,12 +434,28 @@ let string_of_array_of_string_with_sep sep a =
 		!the_string ^ a.(length - 1)
 	)
 
+(* Convert an array of string into a string with separators removing empty strings *)
+let string_of_array_of_string_with_sep_without_empty_strings sep a =
+	let length = Array.length a in
+	if length = 0 then "" else (
+		let the_string = ref "" in
+		for i = 0 to length - 2 do
+		    let s = a.(i) in
+		    if s <> "" then
+			    the_string := (!the_string) ^ s ^ sep;
+		done;
+		!the_string ^ a.(length - 1)
+	)
+
 (** Convert a list of string into a string with separators *)
 let rec string_of_list_of_string_with_sep sep = function
 	| [] -> ""
 	| [elem] -> elem
 	| head :: tail -> head ^ sep ^ (string_of_list_of_string_with_sep sep tail)
 
+(** Convert a list of string into a string with separators removing empty strings *)
+let string_of_list_of_string_with_sep_without_empty_strings sep list =
+    string_of_list_of_string_with_sep sep (List.filter (fun string -> string<>"") list)
 
 (** Convert a list of int into a string with , separator *)
 let string_of_list_of_int l =
@@ -679,3 +708,11 @@ let rev_filter_map f l =
     List.map f l |>
     List.filter (fun x -> match x with | None -> false | Some _ -> true) |>
     List.fold_left (fun acc x -> match x with | None -> acc | Some x -> x :: acc) []
+
+let list_to_string_set x = x |> List.to_seq |> CustomModules.StringSet.of_seq
+let string_set_to_list x = x |> CustomModules.StringSet.to_seq |> List.of_seq
+
+(* Convert list to array *)
+let array_of_list x = x |> List.to_seq |> Array.of_seq
+(* Convert array to list *)
+let list_of_array x = x |> Array.to_seq |> List.of_seq

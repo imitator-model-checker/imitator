@@ -94,7 +94,7 @@ val compute_valuated_invariant : Location.global_location -> LinearConstraint.px
 (*------------------------------------------------------------------*)
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
-val get_updates : Location.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (AbstractModel.discrete_update list)
+val get_updates : Location.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)
 
 
 
@@ -106,7 +106,7 @@ val get_updates : Location.global_location -> AbstractModel.updates -> AbstractM
 (*------------------------------------------------------------------*)
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
-val get_updates_in_combined_transition : Location.global_location -> StateSpace.combined_transition -> AbstractModel.clock_updates * (AbstractModel.discrete_update list)
+val get_updates_in_combined_transition : Location.global_location -> StateSpace.combined_transition -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)
 
 
 (*------------------------------------------------------------------*)

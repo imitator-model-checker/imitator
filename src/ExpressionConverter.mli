@@ -5,6 +5,10 @@ open DiscreteType
 
 type inner_type = var_type_discrete
 
+type typed_variable_scope =
+    | Global
+    | Local
+
 type typed_sequence_type =
     | Typed_array
     | Typed_list
@@ -46,7 +50,7 @@ and typed_product_quotient =
     | Typed_div
 
 and typed_discrete_factor =
-	| Typed_variable of variable_name * var_type_discrete
+	| Typed_variable of variable_name * var_type_discrete * typed_variable_scope
 	| Typed_constant of DiscreteValue.discrete_value * var_type_discrete
 	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
 	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
@@ -54,10 +58,15 @@ and typed_discrete_factor =
     | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * inner_type
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
 
-type typed_variable_update_type =
-    | Typed_variable_name of variable_name
-    | Typed_parsed_variable_update_type of typed_variable_update_type * typed_discrete_arithmetic_expression * var_type_discrete
+type typed_scalar_or_index_update_type =
+    | Typed_scalar_update of variable_name
+    | Typed_indexed_update of typed_scalar_or_index_update_type * typed_discrete_arithmetic_expression * var_type_discrete
+
+type typed_update_type =
+    | Typed_variable_update of typed_scalar_or_index_update_type
     | Typed_void_update
+
+type typed_normal_update = typed_update_type * typed_global_expression
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
@@ -85,10 +94,17 @@ and typed_state_predicate =
 
 type typed_guard = typed_discrete_boolean_expression list
 
-val get_type_of_variable_by_name : variable_infos -> variable_name -> var_type
-val get_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type option
-val get_discrete_type_of_variable_by_name : variable_infos -> variable_name -> var_type_discrete
-val get_discrete_type_of_variable_by_name_opt : variable_infos -> variable_name -> var_type_discrete option
+type typed_fun_body =
+    | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_body
+    | Typed_fun_instruction of typed_normal_update * typed_fun_body
+    | Typed_fun_expr of typed_global_expression
+
+type typed_fun_definition = {
+    name : variable_name; (* function name *)
+    parameters : variable_name list; (* parameter names *)
+    signature : var_type_discrete list; (* signature *)
+    body : typed_fun_body; (* body *)
+}
 
 val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
 
@@ -99,13 +115,15 @@ val check_constant_expression : variable_infos -> variable_name * parsed_global_
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
 (* Check that an update is well typed *)
-val check_update : variable_infos -> updates_type -> parsed_variable_update_type -> ParsingStructure.parsed_global_expression -> typed_variable_update_type * typed_global_expression
+val check_update : variable_infos -> updates_type -> parsed_update_type -> ParsingStructure.parsed_global_expression -> typed_normal_update
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
 val check_state_predicate : variable_infos -> parsed_state_predicate -> typed_state_predicate
 (* Check that a discrete boolean expression is well typed *)
 (*val check_discrete_boolean_expr : variable_infos -> parsed_discrete_boolean_expression -> typed_discrete_boolean_expression*)
+(* Check that a function definition is well typed *)
+val check_fun_definition : variable_infos -> parsed_fun_definition -> typed_fun_definition
 
 end
 
@@ -125,6 +143,7 @@ val bool_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 
-val parsed_variable_update_type_of_typed_variable_update_type : variable_infos -> TypeChecker.typed_variable_update_type -> DiscreteExpressions.variable_update_type
+val update_type_of_typed_update_type : variable_infos -> TypeChecker.typed_update_type -> DiscreteExpressions.update_type
+val fun_definition_of_typed_fun_definition : variable_infos -> TypeChecker.typed_fun_definition -> AbstractModel.fun_definition
 
 end
