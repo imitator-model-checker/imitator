@@ -200,7 +200,13 @@ property:
 
 	| CT_IMUNION LPAREN reference_valuation RPAREN { Parsed_IMunion $3 }
 
+	
+	/*------------------------------------------------------------*/
+	/* 1-clock timed opacity synthesis (experimental) */
+	/*------------------------------------------------------------*/
+	| CT_ONECLOCKOPACITY LPAREN state_predicate RPAREN { Parsed_OneClockOpacity $3 }
 
+	
 	/*------------------------------------------------------------*/
 	/* Cartography algorithms */
 	/*------------------------------------------------------------*/
