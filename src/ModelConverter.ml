@@ -3613,11 +3613,23 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     let functions_metadata_table = (List.map (fun (fun_def : ParsingStructure.function_metadata) -> fun_def.name, fun_def) all_functions_metadata) |> List.to_seq |> Hashtbl.of_seq in
 
     (* Print some info on side effects resolution *)
+    let str_fun_side_effects = lazy (
+        let str_fun_side_effects_info_list = List.map (fun (fm : function_metadata) ->
+            "`" ^ fm.name ^ "`: " ^ string_of_bool fm.side_effect
+        ) all_functions_metadata
+        in
+        "*** Functions side effects:\n"
+        ^ OCamlUtilities.string_of_list_of_string_with_sep "\n" str_fun_side_effects_info_list
+    ) in
+
+    print_message_lazy Verbose_high str_fun_side_effects;
+    (*
     List.iter (fun (fm : function_metadata) ->
         let str_info = "fun `" ^ fm.name ^ "` has side effects :" ^ string_of_bool fm.side_effect in
         (* ResultProcessor.add_custom_details str_info; *)
         print_message Verbose_high str_info;
     ) all_functions_metadata;
+    *)
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)
