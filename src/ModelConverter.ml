@@ -1455,13 +1455,24 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
     clock_updates
 
 (* Check if there is only resets in an update list *)
-let is_only_resets updates =
-    List.for_all (fun (_, update) ->
-        ParsingStructureUtilities.exists_in_parsed_global_expression (function
-            | Leaf_variable _
-            | Leaf_fun _ -> false
-            | Leaf_constant value -> DiscreteValue.is_zero value
-        ) update
+let is_only_resets variable_infos updates =
+    List.for_all (fun (update_type, update) ->
+        (* An expression to zero *)
+        let is_update_to_zero =
+            match update with
+            | Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant value))))) when DiscreteValue.is_zero value -> true
+            | _ -> false
+        in
+        (* Check if it's a clock *)
+        let is_clock =
+            match update_type with
+            | Parsed_variable_update (Parsed_scalar_update variable_name) ->
+                VariableInfo.var_type_of_variable_or_constant variable_infos variable_name = Var_type_clock
+            | _ -> false
+        in
+        (* Check if it's a clock and update to zero *)
+        not is_clock || (is_clock && is_update_to_zero)
+
     ) updates
 
 (** Split normal updates into clock, discrete updates *)
@@ -1504,7 +1515,7 @@ let split_to_clock_discrete_updates variable_infos updates =
 let convert_normal_updates variable_infos updates_type updates_list =
 
 	(* Flag to check if there are clock resets only to 0 *)
-    let only_resets = is_only_resets updates_list in
+    let only_resets = is_only_resets variable_infos updates_list in
 
 	(** Split clocks and discrete updates *)
 	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates variable_infos updates_list in
