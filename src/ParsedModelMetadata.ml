@@ -474,9 +474,19 @@ let unused_components_of_model dependency_graph =
     let declared_components_set = declared_components |> List.to_seq |> ComponentSet.of_seq in
     let used_components_set = used_components |> List.to_seq |> ComponentSet.of_seq in
     (* Make the diff *)
-    ComponentSet.diff
+    let unused_components = ComponentSet.diff
         (declared_components_set)
         (used_components_set)
+    in
+    (* Remove parameters and local variables from unused components if the function to which they belong is unused *)
+    (* Note that it's useless to print message `param x of f` is unused if the function `f` is unused *)
+    ComponentSet.filter (function
+        | Param_ref (_, function_name)
+        | Local_variable_ref (_, function_name, _) ->
+            not (ComponentSet.mem (Fun_ref function_name) unused_components)
+        | _ -> true
+    ) unused_components
+
 
 let unused_components_of_model_list dependency_graph =
     unused_components_of_model dependency_graph |> ComponentSet.to_seq |> List.of_seq
