@@ -25,7 +25,11 @@ open Statistics
 open AbstractModel
 open Result
 
+let custom_details_ref = ref ""
+let custom_details = !custom_details_ref
 
+let add_custom_details details =
+    custom_details_ref := !custom_details_ref ^ details; ()
 
 (************************************************************)
 (* Statistics *)
@@ -404,6 +408,12 @@ let export_to_file_noresult file_name =
 		(* 3) General statistics *)
 		^ "\n" ^ (Statistics.string_of_all_counters())
 		^ "\n------------------------------------------------------------"
+
+        (*  4) More info about the model *)
+        ^ "\n------------------------------------------------------------"
+        ^ "\n" ^ !custom_details_ref
+        ^ "\n------------------------------------------------------------"
+
 	in
 	
 	(* Write to file *)

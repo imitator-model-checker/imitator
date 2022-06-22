@@ -3614,7 +3614,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     (* Print some info on side effects resolution *)
     List.iter (fun (fm : function_metadata) ->
-        print_message Verbose_high ("fun `" ^ fm.name ^ "` has side effects :" ^ string_of_bool fm.side_effect);
+        let str_info = "fun `" ^ fm.name ^ "` has side effects :" ^ string_of_bool fm.side_effect in
+        (* ResultProcessor.add_custom_details str_info; *)
+        print_message Verbose_high str_info;
     ) all_functions_metadata;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -1280,6 +1280,15 @@ let check_discrete_init variable_infos variable_name expr =
         ^ " := "
         ^ string_of_typed_global_expression variable_infos typed_expr
     );
+    (*
+    ResultProcessor.add_custom_details (
+        "annot - inits - "
+        ^ variable_name
+        ^ " := "
+        ^ string_of_typed_global_expression variable_infos typed_expr
+    );
+    *)
+
     typed_expr
 
 
