@@ -84,13 +84,6 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
     is_next_expr_has_side_effects fun_def.body
 
 (* binary(l) -> l -> binary(l) *)
-let shift_signature2 =
-    [
-        ("a", Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a"))));
-        ("b", Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint))));
-        ("c", Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a"))))
-    ]
-
 let shift_signature =
     [
         Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a")));
@@ -99,13 +92,6 @@ let shift_signature =
     ]
 
 (* binary(l) -> l':int -> binary(l + l') *)
-let fill_signature2 =
-    [
-        ("a", Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "l1"))));
-        ("b", Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint (Int_name_constraint "l")))));
-        ("c", Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_plus_constraint ("l", Length_constraint_expression (Length_scalar_constraint "l1"))))))
-    ]
-
 let fill_signature =
     [
         Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "l1")));
@@ -114,12 +100,6 @@ let fill_signature =
     ]
 
 (* binary(l) -> binary(l) *)
-let unary_log_signature2 =
-    [
-        ("a", Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a"))));
-        ("b", Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a"))))
-    ]
-
 let unary_log_signature =
     [
         Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a")));
@@ -127,13 +107,6 @@ let unary_log_signature =
     ]
 
 (* binary(l) -> binary(l) -> binary(l) *)
-let binary_log_signature2 =
-    [
-        ("a", Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a"))));
-        ("b", Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a"))));
-        ("c", Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a"))))
-    ]
-
 let binary_log_signature =
     [
         Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a")));
