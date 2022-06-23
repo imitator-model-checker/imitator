@@ -696,6 +696,36 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 		()
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Call EF on a given model *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private call_EF (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) =
+		(* Save the verbose mode as it may be modified *)
+		let global_verbose_mode = get_verbose_mode() in
+		
+		(* Backup the "old" model *)
+		let old_model = Input.get_model() in
+
+		(* Prevent the verbose messages (except in verbose medium, high or total) *)
+		(*------------------------------------------------------------*)
+		if not (verbose_mode_greater Verbose_medium) then
+			set_verbose_mode Verbose_mute;
+		
+		(* Call EF *)
+		let algo_EF : AlgoGeneric.algoGeneric = let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEF state_predicate in myalgo in
+		let imitator_result : imitator_result = algo_EF#run() in
+
+		(* Get the verbose mode back *)
+		set_verbose_mode global_verbose_mode;
+
+		(* Get the "old" model back *)
+		Input.set_model old_model;
+		(*------------------------------------------------------------*)
+		
+		(* Return result *)
+		imitator_result
+	
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
@@ -718,6 +748,34 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 		(* Compute the set of reset-free automata (cf paper, Definition 9 *)
 		let sub_automata = List.map (fun e -> (generate_sub_automaton model lf e)) sub_list in
 		(* TODO : perform EF synth on each sub-automaton *)
+		List.iter (fun sub_abstract_model -> 
+			
+			(*** NOTE/TODO/WARNING: the state_predicate here is arbitrary; it should be YOUR final location of your sub abstract_model ***)
+			let state_predicate = state_predicate in
+			
+			(* Call EF *)
+			let imitator_result : imitator_result = self#call_EF sub_abstract_model state_predicate in
+			(* Get the constraint *)
+			let p_constraint : LinearConstraint.p_nnconvex_constraint =
+			match imitator_result with
+			| Single_synthesis_result single_synthesis_result ->
+				let p_constraint =
+					match single_synthesis_result.result with
+					| Good_constraint (p_constraint, _) -> p_constraint
+					| _ -> raise (InternalError "A Good_constraint was expected after calling EF")
+				in
+				p_constraint
+			| _ -> raise (InternalError "A Single_synthesis_result was expected after calling EF")
+			in
+			
+			(* Print the result on screen so far *)
+			(* Print some information *)
+			if verbose_mode_greater Verbose_low then(
+				self#print_algo_message Verbose_low ("Result from EF:");
+				self#print_algo_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_constraint);
+			);
+			
+		) sub_automata;
 		
 		(* Compute the regular expression describing the language of the PTA *)
 		let expression = compute_reg_exp sub_list l0 lf model.nb_locations in
