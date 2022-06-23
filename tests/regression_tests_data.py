@@ -4487,7 +4487,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
-	# BEGIN : Test custom function
+	# BEGIN : Test user defined function
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
@@ -4496,7 +4496,6 @@ END CONSTRAINT
 		## Test since               : 2021/06/07
 		## Last modified            : 2021/06/07
 		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test that behavior of pow function is correct',
 		'input_files': ['functions/pow.imi'],
@@ -4607,7 +4606,6 @@ END CONSTRAINT
 		## Test since               : 2021/06/30
 		## Last modified            : 2021/06/30
 		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test that behaviors of all possible functions on binary word are correct ',
 		'input_files': ['functions/binary-word.imi'],
@@ -4704,7 +4702,6 @@ END CONSTRAINT
       ## Test since               : 2022/03/16
       ## Last modified            : 2022/03/16
       ## Test for IMITATOR version: 3.3
-      ## Author 					: lbinria
       'author': 'lbinria',
       'purpose'    : 'Test that evaluation order of function parameters is left to right',
       'input_files': ['functions/function_argument_eval_order.imi'],
@@ -4732,8 +4729,7 @@ END CONSTRAINT
       ## Test version             : 1
       ## Test since               : 2022/03/16
       ## Last modified            : 2022/03/16
-      ## Test for IMITATOR version: 3.3
-      ## Author 					: lbinria
+      ## Test for IMITATOR version: 3.4
       'author': 'lbinria',
       'purpose'    : 'Test some behaviors on user functions',
       'input_files': ['functions/user-function-1.imi'],
@@ -4762,8 +4758,51 @@ END CONSTRAINT
 
     ,
 
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/06/23
+      ## Last modified            : 2022/06/23
+      ## Test for IMITATOR version: 3.4
+      'author': 'lbinria',
+      'purpose'    : 'Test side effects detection on user defined functions',
+      'input_files': ['functions/function-side-effects-detect.imi'],
+      'tags': 'behavior, function',
+      'options'    : '',
+      'expectations' : [
+        {'file': 'function-side-effects-detect.res' , 'content' : """
+  "function_metas": [
+    {
+      "name": "f1",
+      "side-effects": true
+    },
+    {
+      "name": "f2",
+      "side-effects": true
+    },
+    {
+      "name": "f3",
+      "side-effects": false
+    },
+    {
+      "name": "f4",
+      "side-effects": true
+    },
+    {
+      "name": "f5",
+      "side-effects": false
+    }
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
 	#------------------------------------------------------------
-	# END : Test custom function
+	# END : Test user defined function
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
