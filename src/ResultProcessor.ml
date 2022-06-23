@@ -25,11 +25,11 @@ open Statistics
 open AbstractModel
 open Result
 
-let custom_details_ref = ref ""
-let custom_details = !custom_details_ref
+let custom_details = Hashtbl.create 0
 
-let add_custom_details details =
-    custom_details_ref := !custom_details_ref ^ details; ()
+(* Add a property to custom details json struct *)
+let add_custom_detail_property key details =
+    Hashtbl.add custom_details key details
 
 (************************************************************)
 (* Statistics *)
@@ -239,7 +239,7 @@ let verbose_string_soundness_of_good_or_bad_constraint = function
 let add_constraints_delimiters constraint_str =
 	(* begin delimiter *)
 	"\n\nBEGIN CONSTRAINT\n"
-	^ constraint_str ^ ""
+	^ constraint_str
 	(* end delimiter *)
 	^ "\nEND CONSTRAINT\n"
 
@@ -247,10 +247,17 @@ let add_constraints_delimiters constraint_str =
 let add_result_delimiters constraint_str =
 	(* begin delimiter *)
 	"\n\nBEGIN RESULT\n"
-	^ constraint_str ^ ""
+	^ constraint_str
 	(* end delimiter *)
 	^ "\nEND RESULT\n"
 
+(** Add standardised delimiters to results (e.g. runs) *)
+let add_custom_details_delimiters str =
+	(* begin delimiter *)
+	"\n\nBEGIN DETAILS\n"
+	^ str
+	(* end delimiter *)
+	^ "\nEND DETAILS\n"
 
 (************************************************************)
 (* I/O functions *)
@@ -398,9 +405,15 @@ let export_to_file_noresult file_name =
 
 	(* Prepare the string to write *)
 	let file_content =
+
+        (* Custom details from hashtbl to list *)
+        let custom_details_list = custom_details |> Hashtbl.to_seq |> List.of_seq in
+        (* Create JSON struct with each custom detail *)
+        let custom_details_json_struct = JsonFormatter.Json_struct custom_details_list in
+
 		(* 1) Header *)
 		file_header ()
-		
+
 		(* 2) Statistics about model *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (model_statistics ())
@@ -411,9 +424,7 @@ let export_to_file_noresult file_name =
 		^ "\n------------------------------------------------------------"
 
         (*  4) More info about the model *)
-        ^ "\n------------------------------------------------------------"
-        ^ "\n" ^ !custom_details_ref
-        ^ "\n------------------------------------------------------------"
+        ^ add_custom_details_delimiters (JsonFormatter.to_string ~pretty:true custom_details_json_struct)
 
 	in
 	
