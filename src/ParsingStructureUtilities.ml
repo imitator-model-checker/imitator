@@ -663,6 +663,12 @@ and string_of_parsed_state_predicate variable_infos = function
 	| Parsed_state_predicate_term predicate_term ->
 	    string_of_parsed_state_predicate_term variable_infos predicate_term
 
+let json_of_function_metadata (fm : function_metadata) =
+    JsonFormatter.Json_struct [
+        "name", JsonFormatter.Json_string fm.name;
+        "side-effects", JsonFormatter.Json_bool fm.side_effect
+    ]
+
 (** Utils **)
 
 (* Check if leaf is a constant *)
