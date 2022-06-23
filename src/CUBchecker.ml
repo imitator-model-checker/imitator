@@ -3591,8 +3591,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Is there any invariant in the model? *)
 		(*** HACK: to check! ***)
 		has_invariants = model.has_invariants;
-		(* Is there any stopwatch in the model? *)
+		(* Is there any clock going at a rate <> 1 in the model? *)
 		has_non_1rate_clocks = model.has_non_1rate_clocks;
+		(* Is there any clock reset of another form than x := 0? *)
+		has_complex_updates = model.has_complex_updates;
 		(* Is the model an L/U-PTA? *)
 		(*** TODO (for now, we just assume that after transformation the model is not an L/U PTA anymore ***)
 		lu_status = PTA_notLU;

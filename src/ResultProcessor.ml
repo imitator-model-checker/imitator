@@ -280,6 +280,7 @@ let model_statistics () =
 	^ "\nNumber of clocks                        : " ^ (string_of_int model.nb_clocks)
 	^ "\nHas invariants?                         : " ^ (string_of_bool model.has_invariants)
 	^ "\nHas clocks with rate <>1?               : " ^ (string_of_bool model.has_non_1rate_clocks)
+	^ "\nHas complex updates?                    : " ^ (string_of_bool model.has_complex_updates)
 	^ "\nL/U subclass                            : " ^ (string_of_lu_status model.lu_status)
 	^ "\nBounded parameters?                     : " ^ (string_of_bool model.bounded_parameters)
 	^ "\nHas silent actions?                     : " ^ (string_of_bool model.has_silent_actions)

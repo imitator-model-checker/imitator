@@ -183,6 +183,8 @@ type abstract_model = {
 	has_invariants : bool;
 	(* Is there any clock going at a rate <> 1 in the model? *)
 	has_non_1rate_clocks : bool;
+	(* Is there any clock reset of another form than x := 0? *)
+	has_complex_updates : bool;
 	(* Is the model an L/U-PTA? *)
 	lu_status : lu_status;
 	(* Is the model a strongly deterministic PTA? *)

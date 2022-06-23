@@ -4235,6 +4235,47 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	) automata in
 
 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check existence of complex updates *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	let transition_contains_complex_update (transition : AbstractModel.transition) : bool =
+		let is_clock_update_complex = function
+			| No_update
+			| Resets _
+				-> false
+			| Updates _ -> true
+		in
+		let rec is_updates_complex (updates : AbstractModel.updates) : bool =
+			(* Check the "clock updates" part *)
+			(is_clock_update_complex updates.clock)
+			(* Check the "conditional updates" part *)
+			||
+			(List.exists is_conditional_updates_complex updates.conditional)
+		and is_conditional_updates_complex (conditional_update : AbstractModel.conditional_update) : bool =
+			let (_, updates_if, updates_else) = conditional_update in
+			is_updates_complex updates_if || is_updates_complex updates_else
+		in
+		is_updates_complex transition.updates
+	in
+	
+	let has_complex_updates : bool = 
+	(* For all PTA *)
+	List.exists (fun automaton_index ->
+		let locations_for_this_automaton = locations_per_automaton automaton_index in
+		(* For all locations *)
+		List.exists (fun location_index ->
+			let actions_for_this_location = actions_per_location automaton_index location_index in
+			(* For all actions *)
+			List.exists (fun action_index ->
+				let transitions_for_this_location = List.map transitions_description (transitions automaton_index location_index action_index) in
+				(* For all transitions *)
+				List.exists (fun transition ->
+					transition_contains_complex_update transition
+				) transitions_for_this_location
+			) actions_for_this_location
+		) locations_for_this_automaton
+	) automata in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the initial state *)
@@ -4494,6 +4535,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	has_invariants = has_invariants;
 	(* Is there any clock going at a rate <> 1 in the model? *)
 	has_non_1rate_clocks = has_non_1rate_clocks;
+	(* Is there any clock reset of another form than x := 0? *)
+	has_complex_updates = has_complex_updates;
 	(* Is the model an L/U-PTA? *)
 	lu_status = lu_status;
 	(* Is the model a strongly deterministic PTA? *)
