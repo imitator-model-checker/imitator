@@ -39,43 +39,31 @@ open Location
 (************************************************************)
 
 let check_1cPTA (model : AbstractModel.abstract_model) : unit = (
-	(*? has_non_1rate_clocks*)
-	(*? stopwatches*)
-	(*? flow*)
 	(* The PTA has only 1 automaton *)
 	if model.nb_automata != 1 then raise (Invalid_argument "Not a 1-clock PTA: exactly one automaton is requiered");
-	(* The PTA has only 1 automaton *)
+	(* The PTA has only 1 clock *)
 	if model.nb_clocks != 1 then raise (Invalid_argument "Not a 1-clock PTA: exactly one clock is requiered");	
-	(* On any transition, the clock must either be untouched or reseted (no updates) *)
-	for index=0 to model.nb_transitions-1 do 
-		if ((model.transitions_description index).updates.clock != Resets(model.clocks) && (model.transitions_description index).updates.clock != No_update) then((*TODO: pxd_get ?
-			let Updates(u) = (model.transitions_description index).updates.clock in
-			let (clock,l_term) = List.hd u in
-			if ((p_get_variable_coefficient_in_internal_linear_term clock l_term) != 0) then *)raise (Invalid_argument "Not a 1-clock PTA: clock updates different to 0 are not authorized");
-		) (* TODO : check pre/post too ? *)
-	done;
+	(* The clock is a 1rate clock *)
+	if model.has_non_1rate_clocks then raise (Invalid_argument "Not a 1-clock PTA: the clock must be a 1rate clock");
+	(* The clock does not have complex updates *)
+	if model.has_complex_updates then raise (Invalid_argument "Not a 1-clock PTA: clock updates different to 0 are not authorized");
+		(*Alternative code for complex updates*) 
+	(*for index=0 to model.nb_transitions-1 do 
+		if ((model.transitions_description index).updates.clock != Resets(model.clocks) && (model.transitions_description index).updates.clock != No_update) then raise (Invalid_argument "Not a 1-clock PTA: clock updates different to 0 are not authorized");
+	done;*)
 	)
 
 (* Same function but result is a boolean *)
 let is_1cPTA (model : AbstractModel.abstract_model) : bool =
-	(*? has_non_1rate_clocks*)
-	(*? stopwatches*)
-	(*? flow*)
 	let result = ref true in
-	(* The PTA has only 1 automaton and 1 clock *)
-	if (model.nb_automata != 1 || model.nb_clocks != 1) then (result := false);
-	(* On any transition, the clock must either be untouched or reseted (no updates) *)
-	for index=0 to model.nb_transitions-1 do 
-		if ((model.transitions_description index).updates.clock != Resets(model.clocks) && (model.transitions_description index).updates.clock != No_update) then result := false
-		(* TODO : Update 0 *)
-		(* TODO : check pre/post too ? *)
-	done;
+	(* The PTA has only 1 automaton and 1 clock which is 1rate and does not have complexe updates *)
+	if (model.nb_automata != 1 || model.nb_clocks != 1 || model.has_non_1rate_clocks || model.has_complex_updates ) then (result := false);
 	!result
 	
 	
 (************************************************************)	
 (************************************************************)
-(* Function to get index of target location *)
+(* Function to get/set index of target location *)
 (************************************************************)
 (************************************************************)
 
@@ -84,6 +72,9 @@ let get_lf (state_predicate : AbstractProperty.state_predicate) =
 	match state_predicate with
 	|State_predicate_term(State_predicate_factor(Simple_predicate(Loc_predicate(Loc_predicate_EQ(0,lf))))) -> lf
 	|_ -> raise (Invalid_argument "The state predicate should be a location of the PTA")
+
+(* Sets the index of target location in a state_predicate *)
+let set_lf (lf : int) = State_predicate_term(State_predicate_factor(Simple_predicate(Loc_predicate(Loc_predicate_EQ(0,lf)))))
 	
 
 (************************************************************)	
@@ -102,7 +93,7 @@ let get_lf (state_predicate : AbstractProperty.state_predicate) =
 let get_reset_loc (model : AbstractModel.abstract_model) =
 	let array_loc = Array.make model.nb_locations false in
 	for index=0 to model.nb_transitions-1 do 
-		if ((model.transitions_description index).updates.clock) = (Resets(model.clocks)) (* TODO : or update 0 *) then array_loc.((model.transitions_description index).target) <- true;
+		if ((model.transitions_description index).updates.clock) = (Resets(model.clocks)) then array_loc.((model.transitions_description index).target) <- true;
 	done;
 	array_loc
 	
@@ -268,12 +259,11 @@ let compute_modifs (model : AbstractModel.abstract_model) (lf : int) ((li,lj) : 
 	let f = modifs.transitions_description in
 	modifs.transitions_description <- (
 		fun t -> match ((f t).updates.clock, (f t).target) with
-		|(u,l) when (u=No_update && l=lj) -> { (* TODO : check pre and post too ? *)
+		|(u,l) when (u=No_update && l=lj) -> {
 			guard=(f t).guard;
 			action=(f t).action;
-			pre_updates=(f t).pre_updates;
+			seq_updates=(f t).seq_updates;
 			updates=(f t).updates;
-			post_updates=(f t).post_updates;
 			target=dup_lj;
 		}
 		|_ -> f t
@@ -353,18 +343,12 @@ let compute_modifs (model : AbstractModel.abstract_model) (lf : int) ((li,lj) : 
 			|t when (t=silent_t) -> {
 				guard=True_guard;
 				action=epsilon;
-				(* TODO : is this correct (pre/post) ? *)
-				pre_updates={
+				seq_updates={
 					clock=No_update;
 					discrete=[];
 					conditional=[];
 				};
 				updates={
-					clock=No_update;
-					discrete=[];
-					conditional=[];
-				};
-				post_updates={
 					clock=No_update;
 					discrete=[];
 					conditional=[];
@@ -423,21 +407,15 @@ let compute_modifs (model : AbstractModel.abstract_model) (lf : int) ((li,lj) : 
 		|l when (l = lj) -> {
 			guard=(f t).guard;
 			action=(f t).action;
-			(* TODO : is this correct (pre/post) ? *)
-			pre_updates={
+			seq_updates={
 				clock=No_update;
-				discrete=(f t).pre_updates.discrete;
-				conditional=(f t).pre_updates.conditional;
+				discrete=(f t).seq_updates.discrete;
+				conditional=(f t).seq_updates.conditional;
 			};			
 			updates={
 				clock=No_update;
 				discrete=(f t).updates.discrete;
 				conditional=(f t).updates.conditional;
-			};
-			post_updates={
-				clock=No_update;
-				discrete=(f t).post_updates.discrete;
-				conditional=(f t).post_updates.conditional;
 			};
 			target=lj;
 		}
@@ -447,7 +425,7 @@ let compute_modifs (model : AbstractModel.abstract_model) (lf : int) ((li,lj) : 
 	(* WARNING : automaton_of_transition, actions_per_automaton, automata_per_action, actions_per_location not updated *)
 	let f = modifs.transitions in
 	modifs.transitions <- (
-		fun a l e -> List.filter (fun e -> (modifs.transitions_description e).updates.clock=No_update) (* TODO : check pre/post too ? *) (f a l e)
+		fun a l e -> List.filter (fun e -> (modifs.transitions_description e).updates.clock=No_update) (f a l e)
 	);
 (* Returns the result *)	
 	modifs
@@ -470,6 +448,8 @@ let transform_model (model : AbstractModel.abstract_model) (modifs : mutable_One
 	has_invariants = model.has_invariants;
 	(* Is there any clock going at a rate <> 1 in the model? *)
 	has_non_1rate_clocks = model.has_non_1rate_clocks;
+	(* Is there any clock reset of another form than x := 0? *)
+	has_complex_updates = model.has_complex_updates;
 	(* Is the model an L/U-PTA? *)
 	lu_status = model.lu_status;
 	(* Is the model a strongly deterministic PTA? *)
@@ -558,6 +538,9 @@ let transform_model (model : AbstractModel.abstract_model) (modifs : mutable_One
 	transitions_description = modifs.transitions_description;
 	(* An array transition_index -> automaton_index *)
 	automaton_of_transition = modifs.automaton_of_transition;
+	
+   	(* The list of declared functions *)
+    	fun_definitions = model.fun_definitions;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = model.px_clocks_non_negative;
@@ -608,13 +591,12 @@ type arc = {
 let initialize_DFA (sub_list : (int * int) list) : arc list =
 	List.map (fun (i,j) -> {source=i;target=j;expression=Element(i,j);}) sub_list
 
-
-(* Returns the union of reg_exp of a set of arcs, or Epsilon if the set is empty *)
+(* Returns the union of reg_exp of a set of arcs *)
 let rec arcs_to_regexp_union arc_list =
 	match arc_list with
 	|h::t when (t != []) -> Union(h.expression, arcs_to_regexp_union t)
 	|h::t -> h.expression
-	|[] -> Epsilon (* This item allows that application of Star on the results wields Epsilon is the set is empty (for a correct union, this item should return EmptySet *)
+	|[] -> EmptySet
 
 (* Performs the elimination of loc from dfa *)	
 let state_elimination (dfa : arc list) (loc : int) : arc list =
@@ -731,28 +713,29 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 	method run () =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
-		(* Check is the model is 1cPTA*)
+		(* Check if the model is 1cPTA*)
 		check_1cPTA model;
 		(* Retrieve the initial location *)
 		let l0 = get_location (model.initial_location) (List.hd model.automata) in
-		(*print_message Verbose_low ("Index of l0");
-		print_message Verbose_low (string_of_int l0);*)
+		print_message Verbose_low ("Index of l0");
+		print_message Verbose_low (string_of_int l0);
 		(* Retrieve the target location *)
 		let lf = get_lf state_predicate in
-		(*print_message Verbose_low ("Index of lf");
-		print_message Verbose_low (string_of_int lf);*)
+		print_message Verbose_low ("Index of lf");
+		print_message Verbose_low (string_of_int lf);
 		(* Compute the set of Pairs of localitions (cf paper, Definition 8 *)
-		let sub_list = compute_sub_list model lf in
-		(*print_message Verbose_low ("List of sub_automata : ");
-		List.iter (fun (i,j) -> print_message Verbose_low (String.concat "" ["(";(string_of_int i);",";(string_of_int j);")"])) sub_list;*)
+		let sub_list = Array.of_list (compute_sub_list model lf) in
+		print_message Verbose_low ("List of sub_automata : ");
+		Array.iter (fun (i,j) -> print_message Verbose_low (String.concat "" ["(";(string_of_int i);",";(string_of_int j);")"])) sub_list;
 		(* Compute the set of reset-free automata (cf paper, Definition 9 *)
-		let sub_automata = List.map (fun e -> (generate_sub_automaton model lf e)) sub_list in
-		(* TODO : perform EF synth on each sub-automaton *)
-		List.iter (fun sub_abstract_model -> 
-			
-			(*** NOTE/TODO/WARNING: the state_predicate here is arbitrary; it should be YOUR final location of your sub abstract_model ***)
-			let state_predicate = state_predicate in
-			
+		let sub_automata = Array.map (fun e -> (generate_sub_automaton model lf e)) sub_list in
+		
+		(* Perform EF synth on each sub-automaton *)
+		for s=0 to (Array.length sub_automata)-1 do  
+			let sub_abstract_model = sub_automata.(s) in
+			(* Set lj as the state predicate *)
+			let (li,lj) = sub_list.(s) in
+			let state_predicate = set_lf lj in
 			(* Call EF *)
 			let imitator_result : imitator_result = self#call_EF sub_abstract_model state_predicate in
 			(* Get the constraint *)
@@ -774,11 +757,10 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 				self#print_algo_message Verbose_low ("Result from EF:");
 				self#print_algo_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_constraint);
 			);
-			
-		) sub_automata;
+		done;
 		
 		(* Compute the regular expression describing the language of the PTA *)
-		let expression = compute_reg_exp sub_list l0 lf model.nb_locations in
+		let expression = compute_reg_exp (Array.to_list sub_list) l0 lf model.nb_locations in
 		
 		(* TODO : evaluate the regular expression with the "bar" operators (cf paper, after Definition 10)  *)
 		
