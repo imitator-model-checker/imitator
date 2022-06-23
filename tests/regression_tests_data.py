@@ -4827,22 +4827,67 @@ END CONSTRAINT
 	{
         ## Test version             : 1
         ## Test since               : 2022/03/17
-        ## Last modified            : 2022/03/17
-        ## Test for IMITATOR version: < 3.0
-        ## Author 					: lbinria
+        ## Last modified            : 2022/06/23
+        ## Test for IMITATOR version: 3.3
         'author': 'lbinria',
-        'purpose'    : 'Test complex updates evaluation order',
-        'input_files': ['updates/complex-update-order.imi'],
+        'purpose'    : 'Evaluation order of discrete sequential and constraint updates',
+        'input_files': ['updates/compound-updates-order.imi'],
 		'tags': 'behavior, update',
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
-			{'file': 'complex-update-order-statespace.states' , 'content' : """
+			{'file': 'compound-updates-order-statespace.states' , 'content' : """
 pta1: lend, pta2: lend, pta3: lend, i = 3, j = 2, k = 6, l = 2, m = 2, w2 = 2, r1 = 1, r2 = 1, r3 = 1, s = stack([1, 0]) ==>
 & x >= 2
 & x = 2 + z
 & x + 4 = y
 & x = w
 & x = v
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1
+        ## Test since               : 2022/06/23
+        ## Last modified            : 2022/06/23
+        ## Test for IMITATOR version: 3.3
+        'author': 'lbinria',
+        'purpose'    : 'Does the model have complex updates ?',
+        'input_files': ['updates/has-complex-updates-1.imi'],
+		'tags': 'behavior, update',
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'has-complex-updates-1.res' , 'content' : """
+Has complex updates?                    : false
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1
+        ## Test since               : 2022/06/23
+        ## Last modified            : 2022/06/23
+        ## Test for IMITATOR version: 3.3
+        'author': 'lbinria',
+        'purpose'    : 'Does the model have complex updates ?',
+        'input_files': ['updates/has-complex-updates-2.imi'],
+		'tags': 'behavior, update',
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'has-complex-updates-2.res' , 'content' : """
+Has complex updates?                    : true
 		"""
 			} # end result file
 			,
