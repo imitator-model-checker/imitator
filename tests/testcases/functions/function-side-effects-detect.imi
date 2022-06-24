@@ -1,0 +1,79 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test side effects detection on user defined functions
+ * Description      : Test side effects detection on user defined functions
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/06/23
+ * Last modified    : 2022/06/23
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.4
+ ************************************************************)
+
+var
+
+  i : int;
+  s1 : int stack;
+
+
+
+fn f1() : int
+begin
+  let x : int = stack_pop(s1) in
+  1 + 0
+end
+
+fn f2() : int
+begin
+  f1()
+end
+
+fn f3() : int
+begin
+  0
+end
+
+fn f4() : int
+begin
+  f1() + f3()
+end
+
+fn f5(i : int) : int begin
+  i + 1
+end
+
+automaton P
+
+  loc s0: invariant True
+  when True
+
+  do {
+    do
+      i := f1() + f2() + f3() + f4() + f5(0)
+  }
+  goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+
+init := {
+  discrete =
+    loc[P]:=s0,
+    s1 := stack(),
+    i := 0
+  ;
+
+}

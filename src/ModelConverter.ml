@@ -3634,13 +3634,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     ) in
 
     print_message_lazy Verbose_high str_fun_side_effects;
-    (*
-    List.iter (fun (fm : function_metadata) ->
-        let str_info = "fun `" ^ fm.name ^ "` has side effects :" ^ string_of_bool fm.side_effect in
-        (* ResultProcessor.add_custom_details str_info; *)
-        print_message Verbose_high str_info;
-    ) all_functions_metadata;
-    *)
+
+    (* Function metas to json *)
+    let json_function_metas = List.map ParsingStructureUtilities.json_of_function_metadata all_functions_metadata in
+    (* Create json array *)
+    let json_array_function_metas = JsonFormatter.Json_array json_function_metas in
+    (* Add new property to details *)
+    ResultProcessor.add_custom_detail_property "function_metas" json_array_function_metas;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)
