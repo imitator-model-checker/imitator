@@ -1244,7 +1244,7 @@ The parameters of a function are evaluated from left to right.
 
 \begin{remark}
 	Some functions, called ``Side-effects functions'' can modify the value of some input variables and therefore are subject to side-effects.
-	Side-effects functions can only be used in updates, more precisely in the body of the \styleIMI{do} block of an update (see \cref{ss:updates}).
+	Side-effects functions can only be used in updates, more precisely in the body of the \styleIMI{seq} block of an update (see \cref{ss:updates}).
 \end{remark}
 
 
@@ -1292,7 +1292,7 @@ If two \IPTA{} in parallel update the same variable on the same synchronized tra
 
 If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
 
-% For more information on how the standard updates works, read the section \styleIMI{do-then} form updates below.
+% For more information on how the standard updates works, read the section \styleIMI{seq-then} form updates below.
 
 
 %------------------------------------------------------------
@@ -1311,26 +1311,26 @@ That is, in the following block:
 Since \imitator{} 3.3, we also allow for some sequential updates on the discrete variables, as explained in the following.
 
 %------------------------------------------------------------
-\subsubsection{\styleIMI{do-then} updates}\label{section:do_then_form_updates}
+\subsubsection{\styleIMI{seq-then} updates}\label{section:seq_then_form_updates}
 %------------------------------------------------------------
 
-\styleIMI{do-then} updates are more complex updates, allowing first a set of sequential updates (on the discrete variables only, including side-effects functions), called the ``\styleIMI{do} block'' , followed by ``standard updates'', called the \styleIMI{then} block.
+\styleIMI{seq-then} updates are more complex updates, allowing first a set of sequential updates (on the discrete variables only, including side-effects functions), called the ``\styleIMI{seq} block'' , followed by ``standard updates'', called the \styleIMI{then} block.
 
-\paragraph{The \styleIMI{do} block}
+\paragraph{The \styleIMI{seq} block}
 
-A \styleIMI{do} block can be used to define sequential updates on any discrete variable of any type.
+A \styleIMI{seq} block can be used to define sequential updates on any discrete variable of any type.
 Contrary to the \styleIMI{then} block (or to the standard updates), it is possible to make modifications of data structures (such as stacks and queues) using side-effects functions.
-The \styleIMI{do} block can be seen as an imperative update part that is processed before the \styleIMI{then} block.
-It is not possible to update clocks in a \styleIMI{do} block.
+The \styleIMI{seq} block can be seen as an imperative update part that is processed before the \styleIMI{then} block.
+It is not possible to update clocks in a \styleIMI{seq} block.
 
 % \paragraph{}
-Examples of a \styleIMI{do} update expression:
+Examples of a \styleIMI{seq} update expression:
 
 \begin{IMITATORmodel}
 	do {
 
 		(* only do expression *)
-		do
+		seq
 			i := 1; (* after this update: i = 1 *)
 			i := i + 1; (* after this update: i = 2 *)
 		end
@@ -1342,7 +1342,7 @@ Examples of a \styleIMI{do} update expression:
 	do {
 
 		(* only do expression *)
-		do
+		seq
 			(* modification of stack s (with side-effet) *)
 			stack_push(1, s);
 			(* modification of stack s (with side-effet) *)
@@ -1400,27 +1400,27 @@ Below is an example of a \styleIMI{then} update expression, that is ill-formed a
 % 		j := i
 % END OLD EXAMPLE
 
-\paragraph{The \styleIMI{do-then} block}
+\paragraph{The \styleIMI{seq-then} block}
 
-In one given transition, the \styleIMI{do} block is executed \emph{before} the \styleIMI{then} block.
+In one given transition, the \styleIMI{seq} block is executed \emph{before} the \styleIMI{then} block.
 
-In a model that contains multiple synchronized \IPTA{}, given a transition, all \styleIMI{do} blocks (all sequential updates) in all \IPTA{} are processed first;
+In a model that contains multiple synchronized \IPTA{}, given a transition, all \styleIMI{seq} blocks (all sequential updates) in all \IPTA{} are processed first;
 the updates are performed sequentially starting from the top-most \IPTA{} in the input model file (\ie{} following the definition order of \IPTA{}).
-Only once all \styleIMI{do} blocks are computed, all \styleIMI{then} block are then executed.
-Again, contrarily to the \styleIMI{do} blocks, keep in mind that updates contained in \styleIMI{then} blocks are \emph{not} computed sequentially.
+Only once all \styleIMI{seq} blocks are computed, all \styleIMI{then} block are then executed.
+Again, contrarily to the \styleIMI{seq} blocks, keep in mind that updates contained in \styleIMI{then} blocks are \emph{not} computed sequentially.
 
-The value of the variables used in the right-hand part of an update in the \styleIMI{then} block is the value computed \emph{after} executing the \styleIMI{do} block updates.
+The value of the variables used in the right-hand part of an update in the \styleIMI{then} block is the value computed \emph{after} executing the \styleIMI{seq} block updates.
 
 \begin{remark}
-Note the use of semicolon in the sequential part (\styleIMI{do} block), in contrast to the comma in the declarative part (\styleIMI{then} block).
+Note the use of semicolon in the sequential part (\styleIMI{seq} block), in contrast to the comma in the declarative part (\styleIMI{then} block).
 \end{remark}
 
-Examples of a \styleIMI{do-then} update expression:
+Examples of a \styleIMI{seq-then} update expression:
 
 \begin{IMITATORmodel}
 	do {
 
-		do
+		seq
 			i := 0; (* i = 0 *)
 			i := i + 1; (* now, i = 1 *)
 		then
@@ -1433,7 +1433,7 @@ Examples of a \styleIMI{do-then} update expression:
 \begin{IMITATORmodel}
 	do {
 
-		do
+		seq
 			(* modification of stack s using side-effects *)
 			stack_push(1, s);
 			(* modification of stack s using side-effects *)
@@ -1459,6 +1459,70 @@ Examples of a \styleIMI{do-then} update expression:
 	}
 \end{IMITATORmodel}
 
+Examples of a \styleIMI{seq-then} update expression with multiple synchronized transitions:
+
+\begin{IMITATORmodel}
+(************************************************************)
+automaton pta1
+(************************************************************)
+	synclabs : a;
+
+	loc l1: invariant x <= 0
+	when True
+	do {
+		seq
+			stack_push(0, s);
+			i := 1;
+		then
+			(* r1 = 1 and x = 2, because all seq updates in all IPTA are made before *)
+			r1 := stack_top(s),
+			x := i
+		end
+	}
+	sync a goto lend;
+
+	accepting loc lend: invariant True
+	end (* pta *)
+	(************************************************************)
+
+	(************************************************************)
+	automaton pta2
+	(************************************************************)
+	synclabs : a;
+	loc l1: invariant True
+	when
+	& True
+	do {
+		seq
+			i := 2;
+			stack_push(1, s);
+		then
+			(* r2 = 1, because all seq updates in all IPTA are made before *)
+			r2 := stack_top(s)
+		end
+	}
+	sync a goto lend;
+
+	accepting loc lend: invariant True
+	end (* pta *)
+	(************************************************************)
+
+	(************************************************************)
+	automaton pta3
+	(************************************************************)
+	synclabs : a;
+	loc l1: invariant True
+	when
+	& True
+	do {
+		(* r3 = 1, because all seq updates in all IPTA are made before *)
+		r3 := stack_top(s)
+	}
+	sync a goto lend;
+
+	accepting loc lend: invariant True
+	end (* pta *)
+\end{IMITATORmodel}
 
 
 
@@ -3978,14 +4042,14 @@ We define each of those two components below.
 \regleGrammaire{updates}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{do} \styleIMI{ \{ } \nt{do\_then\_updates} \styleIMI{ \} } \\
+	\  & \styleIMI{do} \styleIMI{ \{ } \nt{seq\_then\_updates} \styleIMI{ \} } \\
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{do\_then\_updates}
+\regleGrammaire{seq\_then\_updates}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{do} \nt{update\_seq\_nonempty\_list} \nt{then\_updates} \\
+	\  & \styleIMI{seq} \nt{update\_seq\_nonempty\_list} \nt{then\_updates} \\
 	$|$  & \nt{update\_list} \\
 \end{tabular}
 
@@ -5034,6 +5098,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{queue\_push} \\
 	\styleIMI{queue\_top} \\
 	\styleIMI{rational\_of\_int} \\
+    \styleIMI{seq} \\
 	\styleIMI{sequence} \\
 	\styleIMI{shift\_left} \\
 	\styleIMI{shift\_right} \\

@@ -32,12 +32,12 @@ automaton P
   when True
 
   do {
-    do
-     b := False;
-   then
-    x :=0,
-    y :=0,
-    b := True
+    seq
+      b := False;
+    then
+      x :=0,
+      y :=0,
+      b := True
 
   }
   goto lend;

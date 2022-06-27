@@ -121,7 +121,7 @@ automaton P
     & zero_left(bin, 2) = 0b0011
 
   do {
-    do
+    seq
       push_on_stack(s);
       push_on_queue(q);
       top_stack = stack_top(s);

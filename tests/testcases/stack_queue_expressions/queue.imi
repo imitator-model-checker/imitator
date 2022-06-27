@@ -45,7 +45,7 @@ loc l1: invariant True
 
   do {
 
-    do
+    seq
 
       (* Test queue functions *)
 
