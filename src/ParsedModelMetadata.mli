@@ -42,9 +42,9 @@ type relation = component * component
 type dependency_graph = component list (* declared components *) * relation list
 
 
-
-val dependency_graph : parsed_model -> dependency_graph
-
+(* Get a dependency graph as a list of relations between variables and functions *)
+(* Each relation is a pair representing a ref to a variable / function using another variable / function *)
+val dependency_graph : ?no_var_autoremove:bool -> parsed_model -> dependency_graph
 
 (* Get dependency graph as string (dot graphviz format) *)
 val string_of_dependency_graph : dependency_graph -> string
@@ -52,7 +52,12 @@ val string_of_dependency_graph : dependency_graph -> string
 (* Get all declared components of model *)
 val components_of_model : dependency_graph -> ComponentSet.t
 
+(* Get all components that are effectively used by automatons of the model *)
+(* It mean all components that are reachable starting from the system reference *)
 val used_components_of_model : dependency_graph -> ComponentSet.t
+
+(* Get all components that are not used by automatons of the model *)
+(* It mean all components that are not reachable starting from the system reference *)
 val unused_components_of_model : dependency_graph -> ComponentSet.t
 
 val used_functions_of_model : dependency_graph -> StringSet.t
@@ -60,12 +65,9 @@ val unused_functions_of_model : dependency_graph -> StringSet.t
 val used_variables_of_model : dependency_graph -> StringSet.t
 val unused_variables_of_model : dependency_graph -> StringSet.t
 
-(* IMPLEMENT comments if needed *)
-(*
-val used_local_variables_of_model : dependency_graph -> local_variable_ref list
-val unused_local_variables_of_model : dependency_graph -> local_variable_ref list
-val used_parameters_of_model : dependency_graph -> param_ref list
-val unused_parameters_of_model : dependency_graph -> param_ref list
-*)
 
+val model_cycle_infos_old : dependency_graph -> bool
+val model_cycle_infos : dependency_graph -> (bool * string) list
+
+(* Get all assigned variables (locals and globals) in function body implementation *)
 val assigned_variables_of_fun_def : parsed_fun_definition -> ComponentSet.t

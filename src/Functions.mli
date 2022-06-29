@@ -27,6 +27,9 @@ type fun_definitions_table = (string, parsed_fun_definition) Hashtbl.t
 val builtin_functions : function_metadata list
 val fun_definitions_table : (string, AbstractModel.fun_definition) Hashtbl.t
 
+(* Remove the declarations of unused local variables from function body *)
+val fun_def_without_unused_local_vars : (string * int) list -> parsed_fun_definition -> parsed_fun_definition
+
 (* Compute metadata of a user function definition *)
 val metadata_of_function_definition : fun_metadata_table -> fun_definitions_table-> parsed_fun_definition -> function_metadata
 

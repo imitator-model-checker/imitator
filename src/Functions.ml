@@ -83,6 +83,29 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
     in
     is_next_expr_has_side_effects fun_def.body
 
+(* Remove the declarations of unused local variables from function body *)
+let fun_def_without_unused_local_vars unused_local_vars (fun_def : parsed_fun_definition) =
+
+    let rec next_expr_without_unused = function
+        | Parsed_fun_local_decl (variable_name, discrete_type, init_expr, next_expr, id) ->
+            (* If current declaration is found in unused local variable, just remove by skipping *)
+            if List.mem (variable_name, id) unused_local_vars then
+                next_expr_without_unused next_expr
+            (* Else,  *)
+            else (
+                let new_next_expr_without_unused = next_expr_without_unused next_expr in
+                Parsed_fun_local_decl (variable_name, discrete_type, init_expr, new_next_expr_without_unused, id)
+            )
+
+        | Parsed_fun_instruction (normal_update, next_expr) ->
+            let new_next_expr_without_unused = next_expr_without_unused next_expr in
+            Parsed_fun_instruction (normal_update, new_next_expr_without_unused)
+
+        | Parsed_fun_expr _ as expr -> expr
+
+    in
+    { fun_def with body = next_expr_without_unused fun_def.body }
+
 (* binary(l) -> l -> binary(l) *)
 let shift_signature =
     [
@@ -369,7 +392,7 @@ let builtin_functions : ParsingStructure.function_metadata list =
         };
     ]
 
-(* Compute metadata of a user function definition *)
+(* Compute metadata of a user defined function definition *)
 let metadata_of_function_definition builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
     (* Concat parameters type and return type *)
     let signature = List.map second_of_tuple fun_def.parameters @ [fun_def.return_type] in
@@ -379,6 +402,7 @@ let metadata_of_function_definition builtin_functions_metadata_table user_functi
         side_effect = is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table fun_def;
     }
 
+(* Get function meta given it's name, raise an error if the function doesn't exists *)
 let function_metadata_by_name (variable_infos : variable_infos) function_name =
     let fun_definition_opt = Hashtbl.find_opt variable_infos.functions function_name in
     match fun_definition_opt with

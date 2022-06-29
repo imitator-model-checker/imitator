@@ -4768,7 +4768,7 @@ END CONSTRAINT
       'purpose'    : 'Test side effects detection on user defined functions',
       'input_files': ['functions/function-side-effects-detect.imi'],
       'tags': 'behavior, function',
-      'options'    : '',
+      'options'    : '-no-var-autoremove',
       'expectations' : [
         {'file': 'function-side-effects-detect.res' , 'content' : """
   "function_metas": [

@@ -3283,7 +3283,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 
     (* Resolve dependency graph of the model *)
-    let dependency_graph = ParsedModelMetadata.dependency_graph parsed_model in
+    let dependency_graph = ParsedModelMetadata.dependency_graph ~no_var_autoremove:options#no_variable_autoremove parsed_model in
     (* Get dependency graph as dot format *)
     let str_dependency_graph = lazy (ParsedModelMetadata.string_of_dependency_graph dependency_graph) in
     (* Print dependency graph *)
@@ -3295,9 +3295,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Iter on unused components and print warnings *)
     ParsedModelMetadata.ComponentSet.iter (function
         | Fun_ref function_name ->
-            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model.")
+            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")
         | Local_variable_ref (variable_name, function_name, _) ->
-            print_warning ("Local variable `" ^ variable_name ^ "` in `" ^ function_name ^ "` is declared but never used.")
+            print_warning ("Local variable `" ^ variable_name ^ "` in `" ^ function_name ^ "` is declared but never used; it is therefore removed from the model. Use option -no-var-autoremove to keep it.")
         | Param_ref (param_name, function_name) ->
             print_warning ("Parameter `" ^ param_name ^ "` in `" ^ function_name ^ "` is declared but never used.")
         | _ -> ()
@@ -3618,6 +3618,49 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     let used_function_names = ParsedModelMetadata.used_functions_of_model dependency_graph in
     (* Get only used user functions definition *)
     let used_function_definitions = List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions in
+
+    (* Check for function cycles *)
+
+    let cycle_infos = model_cycle_infos dependency_graph in
+    let model_has_cycle = List.exists first_of_tuple cycle_infos in
+    let cycle_paths = List.filter_map (fun (has_cycle, path) -> if has_cycle then Some path else None) cycle_infos in
+
+    List.iter (fun cycle_path ->
+        print_error (
+            "Cycle found: `"
+            ^ cycle_path
+            ^ "`. Cycle dependencies are forbidden."
+        )
+    ) cycle_paths;
+
+    if model_has_cycle then
+        raise InvalidModel;
+
+    (* Function that remove unused local variable from function definitions *)
+    let fun_def_without_unused_local_vars =
+        (* Get unused components as a list *)
+        let unused_components_list = unused_components |> ComponentSet.to_seq |> List.of_seq in
+
+        (* For each used user defined function remove unused local vars declaration *)
+        List.map (fun (fun_def : parsed_fun_definition) ->
+            (* Get unused local vars for current function *)
+            let unused_local_vars = List.filter_map (function
+                | Local_variable_ref (variable_name, function_name, id) when function_name = fun_def.name ->
+                    Some (variable_name, id)
+                | _ -> None
+            ) unused_components_list in
+            (* Get function definition without unused local vars *)
+            Functions.fun_def_without_unused_local_vars unused_local_vars fun_def
+        ) used_function_definitions
+    in
+
+    (* Eventually remove unused local variables *)
+    let used_function_definitions =
+        if options#no_variable_autoremove then
+            used_function_definitions
+        else
+            fun_def_without_unused_local_vars
+    in
 
     (* Create table of user function definitions *)
     let user_function_definitions_table = List.map (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def) used_function_definitions |> List.to_seq |> Hashtbl.of_seq in

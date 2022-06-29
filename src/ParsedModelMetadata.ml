@@ -61,6 +61,7 @@ let string_of_component = function
     | Fun_ref x -> "fun_" ^ x
     | Param_ref (x, function_name) -> "param_" ^ x ^ "_of_" ^ function_name
 
+(* String of component with attributes for DOT format *)
 let string_of_component_with_attr = function
     | System_ref -> "sys [color=gray]"
     | Automaton_ref x -> "auto_" ^ x ^ "[color=red]"
@@ -68,6 +69,15 @@ let string_of_component_with_attr = function
     | Local_variable_ref (x, _, id) -> x ^ "_" ^ string_of_int id ^ "[color=darkseagreen2]"
     | Fun_ref x -> "fun_" ^ x ^ "[color=darkseagreen][label=\"" ^ x ^ ":fun\"]"
     | Param_ref (x, function_name) -> "param_" ^ x ^ "_of_" ^ function_name ^ "[color=darkseagreen2][label=\"" ^ x ^ ":param\"]"
+
+(* String of component name only *)
+let string_of_component_name = function
+    | System_ref -> ""
+    | Automaton_ref x -> x
+    | Global_variable_ref x -> x
+    | Local_variable_ref (x, _, _) -> x
+    | Fun_ref x -> x
+    | Param_ref (x, _) -> x
 
 (* Get the set of all variable names used in the parsed model *)
 let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_model) =
@@ -202,10 +212,10 @@ let declared_components_of_model parsed_model =
 
     all_declared_variables_in_model @ all_declared_functions_in_model @ all_declared_local_variables_in_model @ all_declared_params_in_model
 
-
+(* TODO benjamin CLEAN refact and rename dependency to relations *)
 (* Get a dependency graph as a list of relations between variables and functions *)
 (* Each relation is a pair representing a ref to a variable / function using another variable / function *)
-let dependency_graph parsed_model =
+let dependency_graph ?(no_var_autoremove=false) parsed_model =
 
     (* Function that return dependency graph of a given function definition *)
     let dependency_graph_of_function fun_def =
@@ -214,7 +224,7 @@ let dependency_graph parsed_model =
         let parameter_names = List.map first_of_tuple fun_def.parameters in
         (* Add parameter names to local variables of function *)
         let local_variables = List.fold_right (fun parameter_name acc -> StringMap.add parameter_name (Param_ref (parameter_name, fun_def.name)) acc) parameter_names StringMap.empty in
-
+        (* Ref to function *)
         let fun_ref = Fun_ref fun_def.name in
 
         (**)
@@ -225,6 +235,7 @@ let dependency_graph parsed_model =
             | None -> Global_variable_ref used_variable_name
         in
 
+
         (* Create relations between a set of variables used by another variable reference *)
         let variable_to_variable_relations local_variables variable_ref variables_used =
             StringSet.fold (fun used_variable_name acc ->
@@ -233,11 +244,16 @@ let dependency_graph parsed_model =
             ) variables_used []
         in
 
-        (* Create relations between a set of functions used by another variable reference *)
-        let variable_to_fun_relations variable_ref functions_used =
-            StringSet.fold (fun used_function_name acc ->
-                (variable_ref, Fun_ref used_function_name) :: acc
-            ) functions_used []
+        (* TODO benjamin comment *)
+        let get_variable_and_function_refs_in_parsed_global_expression local_variables expr =
+            (* Get variables used in the local init expression of the variable *)
+            let variables_used = string_set_to_list (get_variables_in_parsed_global_expression expr) in
+            let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
+            (* Get functions used in the local init expression of the variable *)
+            let functions_used = string_set_to_list (get_functions_in_parsed_global_expression expr) in
+            let functions_used_refs = List.map (fun function_name -> Fun_ref function_name) functions_used in
+            (* Get refs *)
+            variables_used_refs, functions_used_refs
         in
 
         (* Function that return dependency graph of a given function expression *)
@@ -249,39 +265,23 @@ let dependency_graph parsed_model =
                 (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
                 let local_variables = StringMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
 
-                (* Get variables used in the local init expression of the variable *)
-                let variables_used = get_variables_in_parsed_global_expression init_expr in
-                (* Get functions used in the local init expression of the variable *)
-                let functions_used = get_functions_in_parsed_global_expression init_expr in
+                (* Get variable and function refs used in the local init expression *)
+                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_global_expression local_variables init_expr in
+                let all_refs = variables_used_refs @ functions_used_refs in
+                let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
-                (* For each variable used in init expression, create relations *)
-                let variable_use_variable_relations = variable_to_variable_relations local_variables variable_ref variables_used in
-                (* For each function used in init expression, create relations *)
-                let variable_use_fun_relations = variable_to_fun_relations variable_ref functions_used in
-
-                (* ----- *)
-                (* Create relations between current function and global variables *)
-                (* Note *)
-                (* For example: if a function `f` contains `let x : int = i + 1` and if `i` is a global variable *)
-                (* we consider that current function `f` use `i` even if `x` isn't used by `f` *)
-                (* It will be not necessary if we remove the instruction at the moment as we know that `x` isn't used by `f` ! *)
-                (* So if we make instruction removing before, this part should be removed ! *)
-
-                (* We create relation between global variables and function only *)
-                let global_variable_refs = StringSet.fold (fun variable_used acc ->
-                    let variable_ref = get_variable_ref local_variables variable_used in
-                    match variable_ref with
-                    | Global_variable_ref _ -> variable_ref :: acc
-                    | _ -> acc
-                ) variables_used [] in
-
-                let fun_use_global_variable_relations = List.map (fun global_variable_ref -> fun_ref, global_variable_ref) global_variable_refs in
-                (* ----- *)
+                (* Add a relation between current function and declared variable, if -no-var-autoremove option is set *)
+                let relations =
+                    if no_var_autoremove then
+                        (fun_ref, variable_ref) :: relations
+                    else
+                        relations
+                in
 
                 (* Get list of relations for the next expression / declaration *)
                 let next_declaration_relations = dependency_graph_of_function_in_parsed_next_expr_rec local_variables next_expr in
                 (* Concat current relations with next relations *)
-                next_declaration_relations @ variable_use_variable_relations @ variable_use_fun_relations @ fun_use_global_variable_relations
+                next_declaration_relations @ relations
 
             | Parsed_fun_instruction ((parsed_update_type, expr), next_expr) ->
 
@@ -294,15 +294,10 @@ let dependency_graph parsed_model =
                         (* Create local variable ref representing a unique variable ref *)
                         let variable_ref = get_variable_ref local_variables variable_name in
 
-                        (* Get variables used in the local init expression of the variable *)
-                        let variables_used = get_variables_in_parsed_global_expression expr in
-                        (* Get functions used in the local init expression of the variable *)
-                        let functions_used = get_functions_in_parsed_global_expression expr in
-
-                        (* For each variable used in init expression, create relations *)
-                        let variable_to_variable_relations = variable_to_variable_relations local_variables variable_ref variables_used in
-                        (* For each function used in init expression, create relations *)
-                        let variable_to_fun_relations = variable_to_fun_relations variable_ref functions_used in
+                        (* Get variable and function refs used in the update expression *)
+                        let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_global_expression local_variables expr in
+                        let all_refs = variables_used_refs @ functions_used_refs in
+                        let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
                         (* TODO benjamin IMPROVE, an instruction that use global variable that is not used elsewhere should be removed *)
                         (* Here for sake of simplicity, we consider that all global variables modified in function are used (it's not always the case) *)
@@ -310,7 +305,7 @@ let dependency_graph parsed_model =
                         (* Create relation between current function and assigned variable *)
                         let cur_fun_used_variable_relation = fun_ref, variable_ref in
                         (* Concat all relations *)
-                        cur_fun_used_variable_relation :: (variable_to_variable_relations @ variable_to_fun_relations)
+                        cur_fun_used_variable_relation :: relations
 
                     | Parsed_indexed_update (inner_scalar_or_index_update_type, index_expr) ->
                         (* Updated variable use all variables found in expression, and all variables found in index *)
@@ -322,17 +317,17 @@ let dependency_graph parsed_model =
                         let variable_ref = get_variable_ref local_variables variable_name in
 
                         (* Get variables / functions used in the indexed expression of the variable *)
-                        let variables_used = get_variables_in_parsed_discrete_arithmetic_expression index_expr in
-                        let functions_used = get_functions_in_parsed_discrete_arithmetic_expression index_expr in
+                        let variables_used = string_set_to_list (get_variables_in_parsed_discrete_arithmetic_expression index_expr) in
+                        (* Get functions used in the local init expression of the variable *)
+                        let functions_used = string_set_to_list (get_functions_in_parsed_discrete_arithmetic_expression index_expr) in
 
-                        (* Get relations between current variable and variables contained in indexed expression *)
-                        let variable_to_variable_relations = variable_to_variable_relations local_variables variable_ref variables_used in
-                        (* Get relations between current variable and functions contained in indexed expression *)
-                        let variable_to_fun_relations = variable_to_fun_relations variable_ref functions_used in
+                        let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
+                        let functions_used_refs = List.map (fun function_name -> Fun_ref function_name) functions_used in
+                        let all_refs = variables_used_refs @ functions_used_refs in
+                        let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
-                        let variable_use_indexed_variables_functions_relations = variable_to_variable_relations @ variable_to_fun_relations in
                         let variable_use_variables_relations = relations_of_scalar_or_index_update_type inner_scalar_or_index_update_type in
-                        variable_use_indexed_variables_functions_relations @ variable_use_variables_relations
+                        relations @ variable_use_variables_relations
 
 
                 in
@@ -365,23 +360,10 @@ let dependency_graph parsed_model =
                 relations @ next_declaration_relations
 
             | Parsed_fun_expr expr ->
-                (* Get variables used in the local init expression of the variable *)
-                let variables_used = get_variables_in_parsed_global_expression expr in
-                (* TODO benjamin REFACTOR simplify creating a function in ParsingStructureUtilities that return refs *)
-                (* For each variable used in init expression get *)
-                let fun_to_variable_relations = StringSet.fold (fun used_variable_name acc ->
-                    let used_variable_ref = get_variable_ref local_variables used_variable_name in
-                    (fun_ref, used_variable_ref) :: acc
-                ) variables_used []
-                in
-                (* Get functions used in the local init expression of the variable *)
-                let functions_used = ParsingStructureUtilities.get_functions_in_parsed_global_expression expr in
-
-                let fun_to_fun_relations = StringSet.fold (fun used_function_name acc ->
-                    (fun_ref, Fun_ref used_function_name) :: acc
-                ) functions_used [] in
-
-                fun_to_variable_relations @ fun_to_fun_relations
+                (* Get variable and function refs used in the expression *)
+                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_global_expression local_variables expr in
+                let all_refs = variables_used_refs @ functions_used_refs in
+                List.map (fun _ref -> (fun_ref, _ref)) all_refs
         in
         (* Get dependency graph of current function body *)
         dependency_graph_of_function_in_parsed_next_expr_rec local_variables fun_def.body
@@ -420,8 +402,16 @@ let dependency_graph parsed_model =
                 List.map (fun (l_variable_name, r_variable_name) -> Global_variable_ref l_variable_name, Global_variable_ref r_variable_name) combination @ acc
         ) [] parsed_model.init_definition
     in
-    (* Concat all dependency graphs, to get overall dependency graph of the model *)
-    declared_components_of_model parsed_model, dependency_graph_of_automatons @ dependency_graph_of_system_functions @ dependency_graph_of_init
+    (* Concat all relations, to get overall relations of the model *)
+    let all_model_relations = dependency_graph_of_automatons @ dependency_graph_of_system_functions @ dependency_graph_of_init in
+    (* Remove variable to variable relations when it's an auto reference *)
+    let all_model_relations_without_variable_autoref = List.filter (function
+        | (Global_variable_ref _ as a, (Global_variable_ref _ as b)) -> a <> b
+        | (Local_variable_ref _ as a, (Local_variable_ref _ as b)) -> a <> b
+        | _ -> true
+    ) all_model_relations in
+    (* Return dependency graph of the model *)
+    declared_components_of_model parsed_model, all_model_relations_without_variable_autoref
 
 (* Get all components that are effectively used by automatons of the model *)
 (* It mean all components that are reachable starting from the system reference *)
@@ -521,37 +511,44 @@ let used_functions_of_model dependency_graph =
 let unused_functions_of_model dependency_graph =
     filter_map_components_unused_in_model dependency_graph (function Fun_ref name -> Some name | _ -> None)
 
-(* Return if the model contains functions mutually recursive *)
-(* TODO benjamin IMPLEMENT if necessary to know if model contains mutual recursive function (that are forbidden) *)
-(*
-let model_has_mutual_recursive_functions (_, relations) =
 
-    let already_seen = ref RelationSet.empty in
+let model_cycle_infos_old (_, model_relations) =
 
-    let rec was_already_seen fun_relation =
-        (* Check if already seen *)
-        if RelationSet.mem fun_relation !already_seen then
+    let rec is_cycle_in already_seen c =
+        if List.mem c already_seen then (
+            print_standard_message ("found on: " ^ string_of_component_name c);
             true
+        )
         else (
-            already_seen := RelationSet.add fun_relation !already_seen;
-            let src_fun_ref, dst_fun_ref = fun_relation in
-            (* Get all fun refs reachable from source fun ref *)
-            let next_relations = List.filter_map (function (new_source_fun_ref, new_dst_fun_ref) when new_source_fun_ref = dst_fun_ref  -> Some new_dst_fun_ref | _ -> None) relations in
-            List.exists was_already_seen next_relations
+            let next_components = List.filter_map (function (src, dst) when src = c -> Some dst | _ -> None) model_relations in
+            List.exists (is_cycle_in (c :: already_seen)) next_components
         )
     in
 
-    (* Get all relation between automaton and function *)
-    let automaton_use_fun_relations = List.filter_map (function | (Automaton_ref _, Fun_ref _) as relation -> Some relation | _ -> None) relations in
-    List.exists was_already_seen automaton_use_fun_relations
-    *)
+    let system_components = List.filter_map (function (Fun_ref _, dst) -> Some dst | _ -> None) model_relations in
+    List.exists (is_cycle_in []) system_components
 
-(* TODO benjamin IMPLEMENT if necessary to get function in order of dependency *)
-(*
-let sort_functions_of_model dependency_graph =
-    (* Get all fun refs reachable from automaton *)
-    let fun_refs = List.filter_map (function (Automaton_ref _, Fun_ref _ as fun_ref) -> Some fun_ref | _ -> None) dependency_graph in
-*)
+
+let model_cycle_infos (_, model_relations) =
+
+    let rec is_cycle_in already_seen c =
+        if List.mem c already_seen then (
+            [true, c :: already_seen]
+        )
+        else (
+            let next_components = List.filter_map (function (src, dst) when src = c -> Some dst | _ -> None) model_relations in
+            List.map (is_cycle_in (c :: already_seen)) next_components |> List.flatten
+        )
+    in
+
+    let system_components = List.filter_map (function (Fun_ref _, dst) -> Some dst | _ -> None) model_relations in
+    let cycle_infos = List.map (is_cycle_in []) system_components |> List.flatten in
+    (* Transform path list to str path *)
+    List.map (fun (has_cycle, path) ->
+        let str_path_list = List.map string_of_component_name path |> List.rev in
+        let str_path = OCamlUtilities.string_of_list_of_string_with_sep " -> " str_path_list in
+        has_cycle, str_path
+    ) cycle_infos
 
 (* Get dependency graph as string (dot graphviz format) (generate png of this graph with the cmd: dot -Tpng file.dot file.png) *)
 let string_of_dependency_graph (components, component_relations) =

@@ -276,3 +276,5 @@ val string_set_to_list : CustomModules.StringSet.t -> string list
 val array_of_list : 'a list -> 'a array
 (* Convert array to list *)
 val list_of_array : 'a array -> 'a list
+
+val apply_tuple : ('a -> 'b -> 'c) -> 'a * 'b -> 'c
