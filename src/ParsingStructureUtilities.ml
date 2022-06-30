@@ -346,10 +346,9 @@ let exists_in_parsed_function_definition = apply_evaluate_or_with_base fold_pars
 
 (** Iterate over a parsing structure **)
 
-let binunit (a : unit) (b : unit) = a; b; ()
 (* Apply to a fold function the standard parameters for evaluate unit *)
-let apply_evaluate_unit fold_func = fold_func binunit
-let apply_evaluate_unit_with_base fold_func = fold_func binunit ()
+let apply_evaluate_unit fold_func = fold_func bin_unit
+let apply_evaluate_unit_with_base fold_func = fold_func bin_unit ()
 
 
 let iterate_parsed_global_expression = apply_evaluate_unit_with_base fold_parsed_global_expression

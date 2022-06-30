@@ -545,49 +545,65 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
     (* Check if assignments found in function body are allowed *)
     let is_assignments_are_allowed =
 
-        (* Check for assigned variables (local and global) in function implementation *)
-        let variable_components = ParsedModelMetadata.assigned_variables_of_fun_def fun_def in
-        let variable_components_list = ComponentSet.elements variable_components in
+        (* Check for assigned variables (local and global) in a function implementation *)
+        let left_variable_refs = ParsedModelMetadata.left_variables_of_assignments_in fun_def |> ComponentSet.elements in
+        (* Check for variables (local and global) at the right side of an assignment in a function implementation *)
+        let right_variable_refs = ParsedModelMetadata.right_variables_of_assignments_in fun_def |> ComponentSet.elements in
 
         (* Check that no local variable are updated *)
         let assigned_local_variable_names = List.filter_map (function
             | Local_variable_ref (variable_name, _, _) -> Some variable_name
             | _ -> None
-        ) variable_components_list in
+        ) left_variable_refs in
 
         (* Check that no parameter are updated *)
         let assigned_parameter_names = List.filter_map (function
             | Param_ref (param_name, _) -> Some param_name
             | _ -> None
-        ) variable_components_list in
+        ) left_variable_refs in
 
         (* Check that no clocks are updated *)
         (* Get only clock update and map to a clock names list *)
-        let assigned_clock_names = List.filter_map (function
+        let assigned_clock_type_names = List.filter_map (function
             | Global_variable_ref variable_name ->
                 (* Get eventual var type (or none if variable was not declared or removed) *)
                 let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
                 (match var_type_opt with
-                | Some Var_type_clock -> Some variable_name
+                | Some (Var_type_clock as var_type)
+                | Some (Var_type_parameter as var_type) -> Some (var_type, variable_name)
                 | _ -> None
                 )
             | _ -> None
 
-        ) variable_components_list in
+        ) left_variable_refs in
+
+        let right_variable_clock_type_names = List.filter_map (function
+            | Global_variable_ref variable_name ->
+                (* Get eventual var type (or none if variable was not declared or removed) *)
+                let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+                (match var_type_opt with
+                | Some (Var_type_clock as var_type)
+                | Some (Var_type_parameter as var_type) -> Some (var_type, variable_name)
+                | _ -> None
+                )
+            | _ -> None
+        ) right_variable_refs in
 
         (* Is any local variable modifications in user function ? *)
         let has_parameter_modifications = List.length assigned_parameter_names > 0 in
         (* Is any local variable modifications in user function ? *)
         let has_local_variable_modifications = List.length assigned_local_variable_names > 0 in
         (* Is any clock modifications in user function ? *)
-        let has_clock_modifications = List.length assigned_clock_names > 0 in
+        let has_clock_param_modifications = List.length assigned_clock_type_names > 0 in
+        (* Is any discrete is updated by a clock or parameter ? *)
+        let was_updated_by_clock_param = List.length right_variable_clock_type_names > 0 in
 
         (* Print possible errors *)
         List.iter (fun param_name ->
             print_error (
-                "Modification of parameter `"
+                "Trying to update function parameter `"
                 ^ param_name
-                ^ "` found in `"
+                ^ "` in `"
                 ^ fun_def.name ^
                 "`. Parameters are immutables."
             );
@@ -595,25 +611,47 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
 
         List.iter (fun variable_name ->
             print_error (
-                "Modification of local variable `"
+                "Trying to update local variable `"
                 ^ variable_name
-                ^ "` found in `"
+                ^ "` in `"
                 ^ fun_def.name ^
                 "`. Local variables are immutables."
             );
         ) assigned_local_variable_names;
 
-        List.iter (fun variable_name ->
+        List.iter (fun (var_type, variable_name) ->
+            let str_var_type = string_of_var_type var_type in
+            let capitalized_str_var_type = String.capitalize_ascii str_var_type in
             print_error (
-                "Modification of clock `"
+                "Trying to update "
+                ^ str_var_type
+                ^ " `"
                 ^ variable_name
-                ^ "` found in `"
-                ^ fun_def.name ^
-                "`. Clock cannot be modified in user functions."
+                ^ "` in `"
+                ^ fun_def.name
+                ^ "`. "
+                ^ capitalized_str_var_type
+                ^ " cannot be updated in user defined functions."
             );
-        ) assigned_clock_names;
+        ) assigned_clock_type_names;
 
-        not (has_parameter_modifications || has_local_variable_modifications || has_clock_modifications)
+        List.iter (fun (var_type, variable_name) ->
+            let str_var_type = string_of_var_type var_type in
+            let capitalized_str_var_type = String.capitalize_ascii str_var_type in
+            print_error (
+                "Trying to update a discrete variable with "
+                ^ str_var_type
+                ^ " `"
+                ^ variable_name
+                ^ "` in `"
+                ^ fun_def.name
+                ^ "`. "
+                ^ capitalized_str_var_type
+                ^ " cannot be used for updating discrete variable."
+            );
+        ) right_variable_clock_type_names;
+
+        not (has_parameter_modifications || has_local_variable_modifications || has_clock_param_modifications || was_updated_by_clock_param)
     in
 
     (* Return *)

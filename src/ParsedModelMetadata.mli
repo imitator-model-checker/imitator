@@ -66,8 +66,9 @@ val used_variables_of_model : dependency_graph -> StringSet.t
 val unused_variables_of_model : dependency_graph -> StringSet.t
 
 
-val model_cycle_infos_old : dependency_graph -> bool
 val model_cycle_infos : dependency_graph -> (bool * string) list
 
-(* Get all assigned variables (locals and globals) in function body implementation *)
-val assigned_variables_of_fun_def : parsed_fun_definition -> ComponentSet.t
+(* Get all variables (local and global) at the left side of an assignment in a function body implementation *)
+val left_variables_of_assignments_in : parsed_fun_definition -> ComponentSet.t
+(* Get all variables (local and global) at the right side of an assignment in a function body implementation *)
+val right_variables_of_assignments_in : parsed_fun_definition -> ComponentSet.t

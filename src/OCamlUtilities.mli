@@ -45,8 +45,15 @@ val identity : 'a -> 'a
 (************************************************************)
 (** Useful functions on tuples *)
 (************************************************************)
+
+(* Get first element of tuple *)
 val first_of_tuple : 'a * 'b -> 'a
+(* Get second element of tuple *)
 val second_of_tuple : 'a * 'b -> 'b
+(* Apply a tuple as argument to a function *)
+val apply_tuple : ('a -> 'b -> 'c) -> 'a * 'b -> 'c
+(* Map first element of tuple *)
+val map_first_of_tuple : ('a -> 'c) -> 'a * 'b -> 'c * 'b
 
 (************************************************************)
 (** Useful functions on lists *)
@@ -216,7 +223,6 @@ val waswere_of_int  : int -> string
 (** Escape \n & > for use in dot *)
 val escape_string_for_dot : string -> string
 
-
 (************************************************************)
 (** Useful functions on booleans *)
 (************************************************************)
@@ -277,4 +283,5 @@ val array_of_list : 'a list -> 'a array
 (* Convert array to list *)
 val list_of_array : 'a array -> 'a list
 
-val apply_tuple : ('a -> 'b -> 'c) -> 'a * 'b -> 'c
+(* Unit as binary operator *)
+val bin_unit : unit -> unit -> unit

@@ -512,22 +512,6 @@ let unused_functions_of_model dependency_graph =
     filter_map_components_unused_in_model dependency_graph (function Fun_ref name -> Some name | _ -> None)
 
 
-let model_cycle_infos_old (_, model_relations) =
-
-    let rec is_cycle_in already_seen c =
-        if List.mem c already_seen then (
-            print_standard_message ("found on: " ^ string_of_component_name c);
-            true
-        )
-        else (
-            let next_components = List.filter_map (function (src, dst) when src = c -> Some dst | _ -> None) model_relations in
-            List.exists (is_cycle_in (c :: already_seen)) next_components
-        )
-    in
-
-    let system_components = List.filter_map (function (Fun_ref _, dst) -> Some dst | _ -> None) model_relations in
-    List.exists (is_cycle_in []) system_components
-
 
 let model_cycle_infos (_, model_relations) =
 
@@ -564,26 +548,46 @@ let string_of_dependency_graph (components, component_relations) =
     (* Dependency graph as dot format *)
     "digraph dependency_graph {" ^ str_components ^ ";" ^ str_component_relations ^ "}"
 
-(* Get all assigned variables (locals and globals) in function body implementation *)
-let assigned_variables_of_fun_def (fun_def : parsed_fun_definition) =
-
+let traverse_function operator f (fun_def : parsed_fun_definition) =
     (* Add parameters as local variables *)
     let parameter_refs = List.map (fun (param_name, _) -> Param_ref (param_name, fun_def.name)) fun_def.parameters in
     let local_variable_components = List.fold_right ComponentSet.add parameter_refs ComponentSet.empty in
     (* Create ref of local variable components set *)
     let local_variable_components_ref = ref local_variable_components in
-    (* Create set of assigned variables *)
-    let components_ref = ref ComponentSet.empty in
 
-    (* Function that get assigned variable in function body expression *)
-    let rec get_assigned_variables_in_parsed_next_expr_rec = function
-        | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, id) ->
+    (* Function that traverse function body expression *)
+    let rec traverse_parsed_next_expr = function
+        | Parsed_fun_local_decl (variable_name, _, _, next_expr, id) as expr ->
             (* Add the new declared local variable to set *)
             let local_variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
             local_variable_components_ref := ComponentSet.add local_variable_ref !local_variable_components_ref;
 
-            (* Gather variables in next expressions *)
-            get_assigned_variables_in_parsed_next_expr_rec next_expr;
+            operator
+                (f !local_variable_components_ref expr)
+                (traverse_parsed_next_expr next_expr)
+
+        | Parsed_fun_instruction (_, next_expr) as expr ->
+            operator
+                (f !local_variable_components_ref expr)
+                (traverse_parsed_next_expr next_expr)
+
+        | Parsed_fun_expr _ as expr ->
+            f !local_variable_components_ref expr
+
+    in
+    traverse_parsed_next_expr fun_def.body
+
+
+
+(* Get all variables (local and global) at the left side of an assignment in a function body implementation *)
+let left_variables_of_assignments_in (fun_def : parsed_fun_definition) =
+
+    (* Create set of assigned variables *)
+    let components_ref = ref ComponentSet.empty in
+
+    (* Function that get assigned variable in function body expression *)
+    let rec left_variables_of_assignments_in_parsed_next_expr local_variable_components = function
+        | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, id) -> ()
 
         | Parsed_fun_instruction ((parsed_update_type, _), next_expr) ->
 
@@ -595,7 +599,7 @@ let assigned_variables_of_fun_def (fun_def : parsed_fun_definition) =
                     | Param_ref (v, _)
                     | Local_variable_ref (v, _, _) -> variable_name = v
                     | _ -> false
-                ) !local_variable_components_ref
+                ) local_variable_components
                 in
 
                 let component =
@@ -609,11 +613,41 @@ let assigned_variables_of_fun_def (fun_def : parsed_fun_definition) =
 
             | None -> ()
             );
+        | Parsed_fun_expr expr -> ()
+    in
+    traverse_function bin_unit left_variables_of_assignments_in_parsed_next_expr fun_def;
+    !components_ref
 
-            (* Gather variables in next expressions *)
-            get_assigned_variables_in_parsed_next_expr_rec next_expr;
+let variable_ref_of local_variable_components variable_name =
+    (* Check existence of any local variable / parameter that may shadow global variable of the same name *)
+    let local_variable_component_opt = ComponentSet.find_first_opt (function
+        | Param_ref (v, _)
+        | Local_variable_ref (v, _, _) -> variable_name = v
+        | _ -> false
+    ) local_variable_components
+    in
+
+    match local_variable_component_opt with
+    (* If any local variable shadow a global variable, get it's reference *)
+    | Some local_variable_component -> local_variable_component
+    (* Else it's possibly an update of a global variable (or an nonexistent variable) *)
+    | None -> Global_variable_ref variable_name
+
+(* Get all variables (local and global) at the right side of an assignment in a function body implementation *)
+let right_variables_of_assignments_in (fun_def : parsed_fun_definition) =
+
+    (* Create set of assigned variables *)
+    let component_refs = ref ComponentSet.empty in
+
+    (* Function that get assigned variable in function body expression *)
+    let right_variables_of_assignments_in_parsed_next_expr local_variable_components = function
+        | Parsed_fun_local_decl (_, _, expr, _, _)
+        | Parsed_fun_instruction ((_, expr), _) ->
+            let variable_names = string_set_to_list (ParsingStructureUtilities.get_variables_in_parsed_global_expression expr) in
+            let variable_refs = List.map (variable_ref_of local_variable_components) variable_names in
+            component_refs := List.fold_left (Fun.flip ComponentSet.add) !component_refs variable_refs
 
         | Parsed_fun_expr expr -> ()
     in
-    get_assigned_variables_in_parsed_next_expr_rec fun_def.body;
-    !components_ref
+    traverse_function bin_unit right_variables_of_assignments_in_parsed_next_expr fun_def;
+    !component_refs
