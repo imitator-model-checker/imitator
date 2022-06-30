@@ -270,13 +270,20 @@ let check_normal_update variable_infos automaton_name normal_update =
         if is_constant then print_update_constant_error updated_variable_name;
         if is_parameter then print_update_parameter_error updated_variable_name;
 
-        if is_discrete then (
-            let is_only_discrete = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos None update_expr in
-            if not is_only_discrete then
-                print_error ("Trying to update variable `" ^ updated_variable_name ^ "` with clock(s) or parameter(s) in `" ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos normal_update ^ "`.");
-        );
+        let is_trying_to_assign_a_clock_or_param =
+            if is_discrete then (
+                let is_only_discrete = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos None update_expr in
+                if not is_only_discrete then (
+                    print_error ("Trying to update variable `" ^ updated_variable_name ^ "` with clock(s) or parameter(s) in `" ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos normal_update ^ "`.");
+                    true
+                )
+                else
+                    false
+            ) else
+                false
+        in
 
-        all_variables_declared && not (is_constant || is_parameter)
+        all_variables_declared && not (is_constant || is_parameter || is_trying_to_assign_a_clock_or_param)
     else (
         all_variables_declared
     )
