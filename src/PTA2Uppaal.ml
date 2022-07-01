@@ -479,7 +479,7 @@ let string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_c
 
 	| Discrete_guard discrete_guard ->
 
-        let str_discrete_guard = NonlinearConstraint.customized_string_of_nonlinear_constraint all_uppaal_strings variable_names discrete_guard in
+        let str_discrete_guard = DiscreteExpressions.customized_string_of_nonlinear_constraint all_uppaal_strings variable_names discrete_guard in
         let str_discrete_guard_without_true = if kind = "invariant" && str_discrete_guard = "true" then "" else str_discrete_guard in
         str_discrete_guard_without_true
 
@@ -490,7 +490,7 @@ let string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_c
 
 	| Discrete_continuous_guard discrete_continuous_guard ->
 	    let content = (
-            (NonlinearConstraint.customized_string_of_nonlinear_constraint all_uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
+            (DiscreteExpressions.customized_string_of_nonlinear_constraint all_uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
             ^
             (
                 (* Remove true guard *)

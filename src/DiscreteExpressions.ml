@@ -259,6 +259,8 @@ and update_type =
     (* Unit expression, side effect expression without assignment, ie: stack_pop(s) *)
     | Void_update
 
+type nonlinear_constraint = discrete_boolean_expression list
+
 (** update: variable_index := linear_term *)
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
 type discrete_update = update_type * global_expression
@@ -329,6 +331,9 @@ and is_linear_rational_factor = function
     | Rational_unary_min factor -> is_linear_rational_factor factor
     | Rational_expression expr -> is_linear_rational_arithmetic_expression expr
     | _ -> false
+
+let is_linear_nonlinear_constraint = List.for_all is_linear_discrete_boolean_expression
+
 
 (****************************************************************)
 (** Strings *)
@@ -1055,14 +1060,11 @@ let string_of_discrete_update variable_names (update_type, expr) =
     ^ (if str_left_member <> "" then " := " else "")
     ^ string_of_global_expression variable_names expr
 
-(* Type *)
-(*
-let rec discrete_type_of_global_expression = function
-    | Arithmetic_expression expr ->
-    | Bool_expression -> DiscreteType.Var_type_discrete_bool
-    | Binary_word_expression -> DiscreteType.Var_type_discrete_binary_word 0
-    | Array_expression expr -> DiscreteType.Var_type_discrete_array (discrete_type_of_global_expression expr, 0)
-    | List_expression expr -> DiscreteType.
-    | Stack_expression expr ->
-    | Queue_expression expr ->
-*)
+(* Get string of non-linear constraint inequalities with customized strings *)
+let customized_string_of_nonlinear_constraint customized_string variable_names nonlinear_constraint =
+	    OCamlUtilities.string_of_list_of_string_with_sep
+            (" " ^ customized_string.boolean_string.and_operator)
+            (List.rev_map (customized_string_of_discrete_boolean_expression customized_string variable_names) nonlinear_constraint)
+
+(* Get string of non-linear constraint inequalities with default strings *)
+let string_of_nonlinear_constraint = customized_string_of_nonlinear_constraint global_default_string

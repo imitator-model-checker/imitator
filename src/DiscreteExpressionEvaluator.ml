@@ -764,6 +764,10 @@ let eval_boolean_expression discrete_access_opt = eval_boolean_expression_with_c
 (**)
 let eval_discrete_boolean_expression discrete_access_opt = eval_discrete_boolean_expression_with_context (create_eval_context_opt discrete_access_opt)
 
+(* Check if a nonlinear constraint is satisfied *)
+let check_nonlinear_constraint discrete_access =
+  List.for_all (eval_discrete_boolean_expression (Some discrete_access))
+
 (************************************************************)
 (** Matching state predicates with a global location *)
 (************************************************************)

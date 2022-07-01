@@ -106,7 +106,7 @@ val get_updates : Location.global_location -> AbstractModel.updates -> AbstractM
 (*------------------------------------------------------------------*)
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
-val get_updates_in_combined_transition : Location.global_location -> StateSpace.combined_transition -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)
+(*val get_updates_in_combined_transition : Location.global_location -> StateSpace.combined_transition -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)*)
 
 
 (*------------------------------------------------------------------*)
@@ -116,7 +116,7 @@ val get_updates_in_combined_transition : Location.global_location -> StateSpace.
 (*------------------------------------------------------------------*)
 (* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
 (*------------------------------------------------------------------*)
-val compute_new_location_guards_updates : Location.global_location -> StateSpace.combined_transition -> (Location.global_location * NonlinearConstraint.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list)
+val compute_new_location_guards_updates : Location.global_location -> StateSpace.combined_transition -> (Location.global_location * DiscreteExpressions.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list)
 
 
 (*------------------------------------------------------------*)

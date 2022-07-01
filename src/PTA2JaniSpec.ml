@@ -19,7 +19,6 @@ open OCamlUtilities
 open ImitatorUtilities
 open LinearConstraint
 open DiscreteExpressions
-open NonlinearConstraint
 open AbstractModel
 open DiscreteValue
 open DiscreteType

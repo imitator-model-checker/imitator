@@ -263,11 +263,15 @@ and update_type =
     (* Unit expression, side effect expression without assignment, ie: stack_pop(s) *)
     | Void_update
 
+
+type nonlinear_constraint = discrete_boolean_expression list
+
 (** update: variable_index := linear_term *)
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
 type discrete_update = update_type * global_expression
 
 val is_linear_discrete_boolean_expression : discrete_boolean_expression -> bool
+val is_linear_nonlinear_constraint : nonlinear_constraint -> bool
 
 (* String *)
 
@@ -313,6 +317,6 @@ val string_of_queue_expression : (Automaton.variable_index -> string) -> queue_e
 
 val string_of_update_type : (Automaton.variable_index -> string) -> update_type -> string
 val string_of_discrete_update : (Automaton.variable_index -> string) -> discrete_update -> string
-(* Type *)
 
-(*val discrete_type_of_global_expression : global_expression -> DiscreteType.var_type_discrete*)
+val customized_string_of_nonlinear_constraint : Constants.customized_string -> (Automaton.variable_index -> string) -> nonlinear_constraint -> string
+val string_of_nonlinear_constraint : (Automaton.variable_index -> string) -> nonlinear_constraint -> string

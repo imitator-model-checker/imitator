@@ -175,8 +175,8 @@ let is_linear_guard = function
 	| True_guard
 	| False_guard
 	| Continuous_guard _ -> true
-	| Discrete_guard guard -> NonlinearConstraint.is_linear_nonlinear_constraint guard
-	| Discrete_continuous_guard guard -> NonlinearConstraint.is_linear_nonlinear_constraint guard.discrete_guard
+	| Discrete_guard guard -> DiscreteExpressions.is_linear_nonlinear_constraint guard
+	| Discrete_continuous_guard guard -> DiscreteExpressions.is_linear_nonlinear_constraint guard.discrete_guard
 
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model automaton_index location_index stopwatches clocks =

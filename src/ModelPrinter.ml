@@ -377,10 +377,10 @@ let string_of_discrete_boolean_expression = DiscreteExpressions.string_of_discre
 let customized_string_of_guard customized_boolean_string variable_names = function
 	| True_guard -> LinearConstraint.string_of_true
 	| False_guard -> LinearConstraint.string_of_false
-	| Discrete_guard discrete_guard -> NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard
+	| Discrete_guard discrete_guard -> DiscreteExpressions.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard
 	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard ->
-		(NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard)
+		(DiscreteExpressions.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard)
 		^ LinearConstraint.string_of_and ^
 		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
 
@@ -393,11 +393,11 @@ let json_of_guard variable_names guard =
 	match guard with
 	| True_guard -> json_TRUE
 	| False_guard -> json_FALSE
-	| Discrete_guard discrete_guard -> json_escape_ampersand (NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard)
+	| Discrete_guard discrete_guard -> json_escape_ampersand (DiscreteExpressions.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard)
 	| Continuous_guard continuous_guard -> json_escape_ampersand (LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard)
 	| Discrete_continuous_guard discrete_continuous_guard ->
 		(*** HACK for now (2021/12/09): just replace the " & " with some suited string ***)
-		(json_escape_ampersand (NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard))
+		(json_escape_ampersand (DiscreteExpressions.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard))
 		^ " AND " ^
 		(json_escape_ampersand (LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard))
 
