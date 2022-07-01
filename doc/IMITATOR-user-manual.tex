@@ -1727,6 +1727,26 @@ Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using prede
 	These properties assume \emph{time-progress}, \ie{} if the model is stuck in a \emph{time-lock}, these properties may give incorrect results.
 \end{becareful}
 
+% TODO: add example illustrating the issue with livelocks e.g. by Adrien Jaillet (2022/07/01):
+% loc l0: invariant True
+% 	when True sync a do {x := 0} goto l1;
+% 
+% loc l1: invariant x < 1 + v
+% 	when True goto l10;
+% 
+% loc l10: invariant x < 1 + u
+% 	when True goto l11;
+% 
+% loc l11: invariant x < 2 + p
+% 	when True sync b goto l2;
+% 
+% loc l2: invariant True
+% 	when True goto l2;
+% 
+% PROP:
+% property := #synth pattern(everytime a then eventually b within 10);
+
+
 
 If using a predefined property pattern, the property pattern must be specified as follows:
 
