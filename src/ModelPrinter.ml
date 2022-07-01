@@ -436,7 +436,7 @@ let string_of_invariant model automaton_index location_index =
 	"invariant "
 	^ (string_of_guard model.variable_names (model.invariants automaton_index location_index))
 
-	(* Handle stopwatches *)
+(**START DROP	(* Handle stopwatches *)
 	^
 	let stopped = model.stopwatches automaton_index location_index in
 	(* Case 1: no stopwatches *)
@@ -455,7 +455,7 @@ let string_of_invariant model automaton_index location_index =
 	else
 	let flow_str = string_of_list_of_string_with_sep "," (List.map (fun (variable_index, flow_value) -> (model.variable_names variable_index) ^ "' = " ^ (NumConst.string_of_numconst flow_value) ) flow) in
 	" flow{" ^ flow_str ^ "}"
-
+END DROP**)
 
 (* Convert an action into a string *)
 let string_of_action model (action_index : Automaton.action_index) =
@@ -746,10 +746,11 @@ let string_of_location model automaton_index location_index =
 	^ (if model.is_accepting automaton_index location_index then "accepting " else "")
 	^ "loc "
 	^ (model.location_names automaton_index location_index)
-	 ^ (match model.costs automaton_index location_index with
+(**START DROP	 ^ (match model.costs automaton_index location_index with
 		| None -> ""
 		| Some cost -> "[" ^ (LinearConstraint.string_of_p_linear_term model.variable_names cost) ^ "]"
 	)
+END DROP**)
 	^ ": "
 	^ (string_of_invariant model automaton_index location_index) (* bug here! *)
 	^ (string_of_transitions model automaton_index location_index)
