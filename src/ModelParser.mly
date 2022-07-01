@@ -289,7 +289,7 @@ fun_local_decl:
 ;
 
 fun_instruction:
-  | update SEMICOLON fun_body { Parsed_fun_instruction ($1, $3) }
+  | update_without_deprecated SEMICOLON fun_body { Parsed_fun_instruction ($1, $3) }
 ;
 
 /************************************************************/
@@ -581,6 +581,12 @@ update:
 		(Parsed_variable_update (Parsed_scalar_update $1), $3)
 	}
 
+	| parsed_update_type OP_ASSIGN expression { (Parsed_variable_update $1, $3) }
+  | expression { (Parsed_void_update, $1) }
+;
+
+/** Normal updates without deprecated (avoid parsing errors on function)*/
+update_without_deprecated:
 	| parsed_update_type OP_ASSIGN expression { (Parsed_variable_update $1, $3) }
   | expression { (Parsed_void_update, $1) }
 ;
