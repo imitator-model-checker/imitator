@@ -38,6 +38,13 @@ open Location
 (************************************************************)
 (************************************************************)
 
+let xabs_present (model : AbstractModel.abstract_model) : bool =
+	let result = ref false in
+	List.iter (
+		fun p -> if (model.variable_names p) = "xabs" then result := true;
+	) model.parameters;
+	!result
+
 let check_1cPTA (model : AbstractModel.abstract_model) : unit = (
 	(* The PTA has only 1 automaton *)
 	if model.nb_automata != 1 then raise (Invalid_argument "Not a 1-clock PTA: exactly one automaton is requiered");
@@ -47,25 +54,32 @@ let check_1cPTA (model : AbstractModel.abstract_model) : unit = (
 	if model.has_non_1rate_clocks then raise (Invalid_argument "Not a 1-clock PTA: the clock must be a 1rate clock");
 	(* The clock does not have complex updates *)
 	if model.has_complex_updates then raise (Invalid_argument "Not a 1-clock PTA: clock updates different to 0 are not authorized");
-		(*Alternative code for complex updates*) 
-	(*for index=0 to model.nb_transitions-1 do 
-		if ((model.transitions_description index).updates.clock != Resets(model.clocks) && (model.transitions_description index).updates.clock != No_update) then raise (Invalid_argument "Not a 1-clock PTA: clock updates different to 0 are not authorized");
-	done;*)
+	if not (xabs_present model) then raise (Invalid_argument "Temporary hack for global time value : a parameter named \"xabs\" must be present in the model");
+	(**WARNING: If xabs is costrainted in the model, the result will be INCORRECT **)
 	)
 
 (* Same function but result is a boolean *)
 let is_1cPTA (model : AbstractModel.abstract_model) : bool =
 	let result = ref true in
 	(* The PTA has only 1 automaton and 1 clock which is 1rate and does not have complexe updates *)
-	if (model.nb_automata != 1 || model.nb_clocks != 1 || model.has_non_1rate_clocks || model.has_complex_updates ) then (result := false);
+	if (model.nb_automata != 1 || model.nb_clocks != 1 || model.has_non_1rate_clocks || model.has_complex_updates || not (xabs_present model) ) then (result := false);
 	!result
 	
 	
 (************************************************************)	
 (************************************************************)
-(* Function to get/set index of target location *)
+(* Function to get/set indexes of specific items *)
 (************************************************************)
 (************************************************************)
+
+
+(* Gets the index of parameter xabs used to store global time *)
+let get_xabs (model : AbstractModel.abstract_model) =
+	let result = ref (-1) in
+	List.iter (
+		fun p -> if (model.variable_names p) = "xabs" then result := p;
+	) model.parameters;
+	!result
 
 (* Gets the index of target location from state_predicate *)
 let get_lf (state_predicate : AbstractProperty.state_predicate) =
@@ -193,6 +207,18 @@ type mutable_OneClockPTA = {
 (************************************************************)
 (* Sub-functions *)
 (************************************************************)
+
+(* Create a linear constraint of the form xabs = x *)
+let generate_constraint_xabs (model : AbstractModel.abstract_model) =
+pxd_linear_constraint_of_clock_and_parameters (List.hd model.clocks) Op_eq (make_p_linear_term [(NumConst.one,(get_xabs model))] NumConst.zero) true
+
+let add_pxd_linear_constraint_to_guard (g : AbstractModel.guard) (c : LinearConstraint.pxd_linear_constraint) =
+	match g with
+	|True_guard -> Continuous_guard(c)
+	|False_guard -> False_guard
+	|Discrete_guard(discrete_guard) -> Discrete_continuous_guard({discrete_guard = discrete_guard; continuous_guard = c;})
+	|Continuous_guard(pxd_linear_constraint) -> Continuous_guard(pxd_intersection [pxd_linear_constraint;c])
+	|Discrete_continuous_guard(discrete_continuous_guard) -> Discrete_continuous_guard({discrete_guard = discrete_continuous_guard.discrete_guard; continuous_guard = pxd_intersection [discrete_continuous_guard.continuous_guard;c];})
 
 
 (* Returns the upper cylindrification of a clock in a pxd_linear_constraint *)
@@ -401,11 +427,12 @@ let compute_modifs (model : AbstractModel.abstract_model) (lf : int) ((li,lj) : 
 		|_ -> f a l
 	);
 	(* Removes resets on incoming transitions to lj *)
+	(**WARNING: Also adding a constraint xabs = x as part of the hack*)
 	let f = modifs.transitions_description in
 	modifs.transitions_description <- (
 		fun t -> match (f t).target with
 		|l when (l = lj) -> {
-			guard=(f t).guard;
+			guard=add_pxd_linear_constraint_to_guard ((f t).guard) (generate_constraint_xabs model);(*Hack is here*)
 			action=(f t).action;
 			seq_updates={
 				clock=No_update;
@@ -751,9 +778,11 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 			| _ -> raise (InternalError "A Single_synthesis_result was expected after calling EF")
 			in
 			
-			(* Print the result on screen so far *)
+		
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then(
+				self#print_algo_message Verbose_low ("Content of the sub-model :");
+				self#print_algo_message Verbose_low (ModelPrinter.string_of_model sub_abstract_model);
 				self#print_algo_message Verbose_low ("Result from EF:");
 				self#print_algo_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_constraint);
 			);
