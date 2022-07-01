@@ -3780,7 +3780,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* Convert fun def from parsing structure to abstract model *)
         let fun_def = DiscreteExpressionConverter.convert_fun_definition variable_infos parsed_fun_def in
         (* Add converted fun def to functions table *)
-        Hashtbl.add Functions.fun_definitions_table fun_def.name fun_def
+        Hashtbl.add Functions.functions_table fun_def.name fun_def
     ) used_function_definitions;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4717,7 +4717,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	automaton_of_transition = automaton_of_transition;
 
     (* The list of declared functions *)
-    fun_definitions = Functions.fun_definitions_table;
+    functions_table = Functions.functions_table;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;

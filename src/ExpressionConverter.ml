@@ -1540,7 +1540,7 @@ let label_of_typed_factor_constructor = function
 
 
 let user_function_definition function_name =
-    let fun_def_opt = Hashtbl.find_opt Functions.fun_definitions_table function_name in
+    let fun_def_opt = Hashtbl.find_opt Functions.functions_table function_name in
     match fun_def_opt with
     | Some fun_def -> fun_def
     | None -> raise (UndefinedFunction function_name)

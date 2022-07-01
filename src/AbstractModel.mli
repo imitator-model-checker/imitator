@@ -276,7 +276,7 @@ type abstract_model = {
 	automaton_of_transition : transition_index -> automaton_index;
 
     (* The list of declared functions *)
-    fun_definitions : (variable_name, fun_definition) Hashtbl.t;
+    functions_table : (variable_name, fun_definition) Hashtbl.t;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative: LinearConstraint.px_linear_constraint;

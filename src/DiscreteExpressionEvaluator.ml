@@ -15,6 +15,8 @@ type eval_context = {
     discrete_setter : discrete_setter;
     (* Current local variables *)
     local_variables : variable_table;
+    (* Function table *)
+    (* function_getter : (variable_name, fun_definition) Hashtbl.t *)
 }
 
 (* Result returned on delayed update *)

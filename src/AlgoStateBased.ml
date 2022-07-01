@@ -1416,7 +1416,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		(* Access the transition and get the components *)
 		let automaton_index, transition = automaton_and_transition_of_transition_index transition_index in
 		(** Collecting the updates by evaluating the conditions, if there is any *)
-        let _ (* no clock update for pre-updates *), discrete_seq_updates = get_updates source_location transition.seq_updates in
+        let _ (* no clock update for seq updates *), discrete_seq_updates = get_updates source_location transition.seq_updates in
 
         (* Make `seq` sequential updates (make these updates now, only on discrete) *)
         List.iter (direct_update discrete_access) (List.rev discrete_seq_updates);

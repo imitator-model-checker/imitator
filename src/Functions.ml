@@ -24,8 +24,8 @@ open ParsingStructureUtilities
 open OCamlUtilities
 
 (* Shortcuts to hash table types *)
-type fun_metadata_table = (string, function_metadata) Hashtbl.t
-type fun_definitions_table = (string, parsed_fun_definition) Hashtbl.t
+type functions_meta_table = (string, function_metadata) Hashtbl.t
+type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
 (* Infer whether a user function is subject to side effects *)
 let rec is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
@@ -138,7 +138,7 @@ let binary_log_signature =
     ]
 
 (* Table of converted functions *)
-let fun_definitions_table : (string, AbstractModel.fun_definition) Hashtbl.t = Hashtbl.create 0
+let functions_table : (string, AbstractModel.fun_definition) Hashtbl.t = Hashtbl.create 0
 
 (* List of builtin functions metadata *)
 let builtin_functions : ParsingStructure.function_metadata list =

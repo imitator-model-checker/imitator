@@ -9,12 +9,16 @@ type eval_context = {
     discrete_setter : discrete_setter;
     (* Current local variables *)
     local_variables : variable_table;
+    (* Function table *)
+    (* function_getter : (variable_name, fun_definition) Hashtbl.t *)
 }
 
 (* Result returned on delayed update *)
 type delayed_update_result =
     | Delayed_update_recorded
     | Delayed_update_already_updated of discrete_index
+
+
 
 val direct_update : discrete_access -> update_type * global_expression -> unit
 val delayed_update : discrete_access -> (discrete_index, DiscreteValue.discrete_value) Hashtbl.t -> update_type * global_expression -> delayed_update_result

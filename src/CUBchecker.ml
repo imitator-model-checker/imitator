@@ -3680,7 +3680,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		automaton_of_transition = new_automaton_of_transition;
 
         (* The list of declared functions *)
-        fun_definitions = Hashtbl.create 0;
+        functions_table = Hashtbl.create 0;
 
 		(* The cost for each automaton and each location *)
 		(*** TODO ***)

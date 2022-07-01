@@ -136,8 +136,8 @@ let string_of_declarations model stopwatches clocks =
 (* Convert function definitions into a string *)
 let string_of_fun_definitions model =
     (* Print warning *)
-    if Hashtbl.length model.fun_definitions > 0 then
-        print_warning "Model contains user defined functions. HyTech does not support user-defined functions.";
+    if Hashtbl.length model.functions_table > 0 then
+        print_warning "Model contains user defined functions. HyTech doesn't support user defined functions.";
     (* Get function definitions string as IMITATOR format *)
     ModelPrinter.string_of_fun_definitions model
 

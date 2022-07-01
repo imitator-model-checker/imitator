@@ -352,7 +352,7 @@ let string_of_fun_definitions model =
     in
 
     (* Convert hashtbl values to list *)
-    let fun_definition_list = model.fun_definitions |> Hashtbl.to_seq_values |> List.of_seq |> List.rev in
+    let fun_definition_list = model.functions_table |> Hashtbl.to_seq_values |> List.of_seq |> List.rev in
     (* Map each definition to it's string representation *)
     let str_fun_definitions_list = List.map string_of_fun_definition fun_definition_list in
     (* Join all strings *)
