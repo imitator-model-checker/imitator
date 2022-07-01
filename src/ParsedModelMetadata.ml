@@ -160,6 +160,23 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 
                 ) updates;
 
+                (* Only for seq updates *)
+                let seq_updates, _ = update_section in
+
+                (* In seq update an assigned variable is considered as used (even if not used in any guard / invariant) *)
+                (* For example r := <anything>, r is considered as used *)
+                (* We make this choice for sake of simplicity, because seq updates can contains side effect functions that should be executed *)
+                (* eg: r := stack_pop(s) *)
+				List.iter (fun update_expression ->
+					ParsingStructureUtilities.iterate_parsed_update
+					    (function _ -> ())
+					    (function
+					        | Leaf_update_updated_variable variable_name ->
+                                all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                        )
+                    update_expression;
+                ) seq_updates;
+
             ) location.transitions;
         ) locations;
 
@@ -270,6 +287,11 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 let all_refs = variables_used_refs @ functions_used_refs in
                 let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
+                (* Add a relation between current function and declared variable *)
+                (* The declared variable will always be considered as used here *)
+                let relations = (fun_ref, variable_ref) :: relations in
+                (* Old behavior (deprecated) *)
+                (*
                 (* Add a relation between current function and declared variable, if -no-var-autoremove option is set *)
                 let relations =
                     if no_var_autoremove then
@@ -277,6 +299,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                     else
                         relations
                 in
+                *)
 
                 (* Get list of relations for the next expression / declaration *)
                 let next_declaration_relations = dependency_graph_of_function_in_parsed_next_expr_rec local_variables next_expr in
@@ -516,8 +539,15 @@ let unused_functions_of_model dependency_graph =
 let model_cycle_infos (_, model_relations) =
 
     let rec is_cycle_in already_seen c =
+        let is_fun_ref = function
+            | Fun_ref _ -> true
+            | _ -> false
+        in
         if List.mem c already_seen then (
-            [true, c :: already_seen]
+            if is_fun_ref c then
+                [true, c :: already_seen]
+            else
+                []
         )
         else (
             let next_components = List.filter_map (function (src, dst) when src = c -> Some dst | _ -> None) model_relations in
