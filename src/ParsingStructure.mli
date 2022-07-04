@@ -191,6 +191,7 @@ type parsed_next_expr =
 (* Metadata of a function *)
 type function_metadata = {
     name : variable_name;
+    parameter_names : variable_name list;
     signature_constraint : FunctionSig.signature_constraint;
     side_effect : bool;
 }
