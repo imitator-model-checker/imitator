@@ -42,5 +42,5 @@ val eval_constant_rational_factor_opt : rational_factor -> NumConst.t option
 
 val is_global_expression_constant : global_expression -> bool
 
-val pack_value : (* (Automaton.variable_index -> string) -> *) discrete_access -> DiscreteValue.discrete_value -> DiscreteValue.discrete_value -> update_type -> DiscreteValue.discrete_value
+val pack_value : (* (Automaton.variable_index -> string) -> *) eval_context option -> DiscreteValue.discrete_value -> DiscreteValue.discrete_value -> update_type -> DiscreteValue.discrete_value
 

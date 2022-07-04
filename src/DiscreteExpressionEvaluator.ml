@@ -645,7 +645,7 @@ and compute_update_value_opt_with_context eval_context (update_type, expr) =
 
         (* Compute its new value *)
         let new_value = eval_global_expression_with_context (Some eval_context) expr in
-        let new_value = pack_value (eval_context.discrete_valuation, eval_context.discrete_setter) old_value new_value update_type in
+        let new_value = pack_value (Some eval_context) old_value new_value update_type in
 
         Some (discrete_index, new_value)
     | Void_update ->
@@ -696,7 +696,7 @@ and delayed_update_with_context eval_context updated_discrete update =
 (* a[1] = [[5, 6], [7, 8]] *)
 (* a[1][1] = [7, 8] *)
 (* a[1][1][0] = 7 *)
-and pack_value (* variable_names *) discrete_access old_value new_value parsed_update_type =
+and pack_value (* variable_names *) eval_context_opt old_value new_value parsed_update_type =
 
     let rec pack_value_scalar_or_index_update_type = function
         | Scalar_update discrete_index -> old_value, [||], None
@@ -704,8 +704,6 @@ and pack_value (* variable_names *) discrete_access old_value new_value parsed_u
 
             let old_value, _, _ = pack_value_scalar_or_index_update_type inner_scalar_or_index_update_type in
 
-            (* TODO benjamin REFACTOR look this, maybe pass eval_context_opt directly as parameter of pack_value *)
-            let eval_context_opt = create_eval_context_opt (Some discrete_access) in
             (* Compute index *)
             let index = Int32.to_int (eval_int_expression_with_context eval_context_opt index_expr) in
 (*            ImitatorUtilities.print_message Verbose_standard ("access index: " ^ string_of_int index ^ "for " ^ string_of_value old_value);*)
