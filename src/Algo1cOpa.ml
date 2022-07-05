@@ -55,7 +55,7 @@ let check_1cPTA (model : AbstractModel.abstract_model) : unit = (
 	(* The clock does not have complex updates *)
 	if model.has_complex_updates then raise (Invalid_argument "Not a 1-clock PTA: clock updates different to 0 are not authorized");
 	if not (xabs_present model) then raise (Invalid_argument "Temporary hack for global time value : a parameter named \"xabs\" must be present in the model");
-	(**WARNING: If xabs is costrainted in the model, the result will be INCORRECT **)
+	(**WARNING: If xabs is constrainted in the model by anything not included in 'xabs >= 0', the result may be INCORRECT **)
 	)
 
 (* Same function but result is a boolean *)
@@ -88,7 +88,7 @@ let get_lf (state_predicate : AbstractProperty.state_predicate) =
 	|_ -> raise (Invalid_argument "The state predicate should be a location of the PTA")
 
 (* Sets the index of target location in a state_predicate *)
-let set_lf (lf : int) = State_predicate_term(State_predicate_factor(Simple_predicate(Loc_predicate(Loc_predicate_EQ(0,lf)))))
+let set_predicate (lj : int) = State_predicate_term(State_predicate_factor(Simple_predicate(Loc_predicate(Loc_predicate_EQ(0,lj)))))
 	
 
 (************************************************************)	
@@ -178,15 +178,19 @@ type mutable_OneClockPTA = {
 	mutable automata_per_action : action_index -> (automaton_index list);
 	(* The list of actions for each automaton for each location *)
 	mutable actions_per_location : automaton_index -> location_index -> (action_index list);
-(*
+
 	(* The cost for each automaton and each location *)
-	costs : automaton_index -> location_index -> LinearConstraint.p_linear_term option;
-*)
+	mutable costs : automaton_index -> location_index -> LinearConstraint.p_linear_term option;
+
 	(* The invariant for each automaton and each location *)
 	mutable invariants : automaton_index -> location_index -> invariant;
 
 	(* The transitions for each automaton and each location and each action *)
 	mutable transitions : automaton_index -> location_index -> action_index -> (transition_index list);
+		(* The list of clocks stopped for each automaton and each location *)
+	mutable stopwatches : automaton_index -> location_index -> clock_index list;
+	(* The list of pairs (clock, NumConst.t) defining the flow of some clocks at each automaton and each location *)
+	mutable flow : automaton_index -> location_index -> flow list;
 	(* An array transition_index -> transition *)
 	mutable transitions_description : transition_index -> transition;
 	(* An array transition_index -> automaton_index *)
@@ -222,9 +226,11 @@ let add_pxd_linear_constraint_to_guard (g : AbstractModel.guard) (c : LinearCons
 
 
 (* Returns the upper cylindrification of a clock in a pxd_linear_constraint *)
-let upper_cyl_constraint clock pxd_linear_constraint =		
-	pxd_grow_to_infinity_assign [clock] (list_diff (pxd_get_dimensions_list pxd_linear_constraint) [clock]) pxd_linear_constraint;
-	pxd_linear_constraint
+let upper_cyl_constraint clock pxd_linear_constraint =
+	let c = pxd_copy pxd_linear_constraint in
+	pxd_grow_to_infinity_assign [clock] (list_diff (pxd_get_dimensions_list c) [clock]) c;
+	c
+	
 
 (* Returns the upper cylindrification of a clock in the continuous part of a guard *)
 let upper_cyl clock g =
@@ -253,8 +259,11 @@ let compute_modifs (model : AbstractModel.abstract_model) (lf : int) ((li,lj) : 
 		actions_per_automaton = model.actions_per_automaton;
 		automata_per_action = model.automata_per_action;
 		actions_per_location = model.actions_per_location;
+		costs = model.costs;
 		invariants = model.invariants;
 		transitions = model.transitions;
+		stopwatches = model.stopwatches;
+		flow = model.flow;
 		transitions_description = model.transitions_description;
 		automaton_of_transition = model.automaton_of_transition;
 		initial_location = model.initial_location;
@@ -275,8 +284,45 @@ let compute_modifs (model : AbstractModel.abstract_model) (lf : int) ((li,lj) : 
 		|(a,l) when (a=List.hd model.automata && l=dup_lj) -> "duplicate"
 		|_ -> f a l
 	);
+		(* Setting values for all entries *)
+	let f = modifs.is_accepting in
+	modifs.is_accepting <- (
+		fun a l -> match (a,l) with
+		|(a,l) when (a=List.hd model.automata && l=dup_lj) -> false
+		|_ -> f a l
+	);
+	let f = modifs.actions_per_location in
+		modifs.actions_per_location <- (
+		fun a l -> match (a,l) with
+		|(a,l) when (a=List.hd model.automata && l=dup_lj) -> []
+		|_ -> f a l
+	);
+	let f = modifs.is_urgent in
+	modifs.is_urgent<- (
+		fun a l -> match (a,l) with
+		|(a,l) when (a=List.hd model.automata && l=dup_lj) -> false
+		|_ -> f a l
+	);
+	let f = modifs.costs in
+	modifs.costs <- (
+		fun a l -> match (a,l) with
+		|(a,l) when (a=List.hd model.automata && l=dup_lj) -> f a lj
+		|_ -> f a l
+	);
 	let f = modifs.invariants in
 	modifs.invariants <- (
+		fun a l -> match (a,l) with
+		|(a,l) when (a=List.hd model.automata && l=dup_lj) -> f a lj
+		|_ -> f a l
+	);
+	let f = modifs.stopwatches in
+	modifs.stopwatches <- (
+		fun a l -> match (a,l) with
+		|(a,l) when (a=List.hd model.automata && l=dup_lj) -> f a lj
+		|_ -> f a l
+	);
+	let f = modifs.flow in
+	modifs.flow <- (
 		fun a l -> match (a,l) with
 		|(a,l) when (a=List.hd model.automata && l=dup_lj) -> f a lj
 		|_ -> f a l
@@ -300,7 +346,7 @@ let compute_modifs (model : AbstractModel.abstract_model) (lf : int) ((li,lj) : 
 		modifs.transitions <- (
 			fun a l e -> match (a,l,e) with
 			|(a,l,e) when (a=List.hd model.automata && l=lj) -> []
-			|(a,l,e) when (a=List.hd model.automata && l=dup_lj) -> modifs.transitions a lj e
+			|(a,l,e) when (a=List.hd model.automata && l=dup_lj) -> f a lj e
 			|_ -> f a l e
 		);
 		let f = modifs.actions_per_location in
@@ -352,6 +398,12 @@ let compute_modifs (model : AbstractModel.abstract_model) (lf : int) ((li,lj) : 
 			fun a l -> match (a,l) with
 			|(a,l) when (a=List.hd model.automata && l=dup_lj) -> [epsilon]
 			|_ -> f a l
+		);
+		let f = modifs.transitions in
+		modifs.transitions <- (
+			fun a l e -> match (a,l,e) with
+			|(a,l,e) when (e = epsilon) -> []
+			|_ -> f a l e
 		);
 		(* Adds the transition *)
 		modifs.has_silent_actions <- true;
@@ -550,7 +602,7 @@ let transform_model (model : AbstractModel.abstract_model) (modifs : mutable_One
 	actions_per_location = modifs.actions_per_location;
 
 	(* The cost for each automaton and each location *)
-	costs = model.costs;
+	costs = modifs.costs;
 
 	(* The invariant for each automaton and each location *)
 	invariants = modifs.invariants;
@@ -558,9 +610,9 @@ let transform_model (model : AbstractModel.abstract_model) (modifs : mutable_One
 	(* The transitions for each automaton and each location and each action *)
 	transitions = modifs.transitions;
 	(* The list of clocks stopped for each automaton and each location *)
-	stopwatches = model.stopwatches;
+	stopwatches = modifs.stopwatches;
 	(* The list of pairs (clock, NumConst.t) defining the flow of some clocks at each automaton and each location *)
-	flow = model.flow;
+	flow = modifs.flow;
 	(* An array transition_index -> transition *)
 	transitions_description = modifs.transitions_description;
 	(* An array transition_index -> automaton_index *)
@@ -744,25 +796,23 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 		check_1cPTA model;
 		(* Retrieve the initial location *)
 		let l0 = get_location (model.initial_location) (List.hd model.automata) in
-		print_message Verbose_low ("Index of l0");
-		print_message Verbose_low (string_of_int l0);
 		(* Retrieve the target location *)
 		let lf = get_lf state_predicate in
-		print_message Verbose_low ("Index of lf");
-		print_message Verbose_low (string_of_int lf);
 		(* Compute the set of Pairs of localitions (cf paper, Definition 8 *)
 		let sub_list = Array.of_list (compute_sub_list model lf) in
 		print_message Verbose_low ("List of sub_automata : ");
-		Array.iter (fun (i,j) -> print_message Verbose_low (String.concat "" ["(";(string_of_int i);",";(string_of_int j);")"])) sub_list;
+		Array.iter (fun (i,j) -> print_message Verbose_low (String.concat "" ["(";(model.location_names (List.hd model.automata) i);",";(model.location_names (List.hd model.automata) j);")"])) sub_list;
 		(* Compute the set of reset-free automata (cf paper, Definition 9 *)
 		let sub_automata = Array.map (fun e -> (generate_sub_automaton model lf e)) sub_list in
+		(* Prepare the array that will stores the PETS of each sub_automaton *)
+		(*let sub_PETS = Array.make (Array.length sub_automata) (*TODO: set as empty p_nnconvex_constraint*) in*)
 		
 		(* Perform EF synth on each sub-automaton *)
 		for s=0 to (Array.length sub_automata)-1 do  
 			let sub_abstract_model = sub_automata.(s) in
 			(* Set lj as the state predicate *)
 			let (li,lj) = sub_list.(s) in
-			let state_predicate = set_lf lj in
+			let state_predicate = set_predicate lj in
 			(* Call EF *)
 			let imitator_result : imitator_result = self#call_EF sub_abstract_model state_predicate in
 			(* Get the constraint *)
