@@ -455,7 +455,7 @@ and string_of_discrete_boolean_expression variable_names = function
             [|string_of_queue_expression variable_names queue_expr|]
             ~str_comment:(undeclared_function_warning label)
 
-    | Bool_inline_function (function_name, _, args_expr, _) ->
+    | Bool_function_call (function_name, _, args_expr) ->
         string_of_function_call variable_names function_name args_expr
 
 and string_of_arithmetic_expression variable_names = function
@@ -515,7 +515,7 @@ and string_of_rational_arithmetic_expression variable_names =
         | Rational_sequence_function func ->
             string_of_sequence_function variable_names func
 
-        | Rational_inline_function (function_name, _, args_expr, _) ->
+        | Rational_function_call (function_name, _, args_expr) ->
             string_of_function_call variable_names function_name args_expr
 
 	(* Call top-level *)
@@ -598,7 +598,7 @@ and string_of_int_arithmetic_expression variable_names =
                 [|string_of_queue_expression variable_names queue_expr|]
                 ~str_comment:(undeclared_function_warning label)
 
-        | Int_inline_function (function_name, _, args_expr, _) ->
+        | Int_function_call (function_name, _, args_expr) ->
             string_of_function_call variable_names function_name args_expr
 
 	(* Call top-level *)
@@ -652,7 +652,7 @@ and string_of_binary_word_expression variable_names binary_word_expr =
         | Binary_word_sequence_function func ->
             string_of_sequence_function variable_names func
 
-        | Binary_word_inline_function (function_name, _, args_expr, _) ->
+        | Binary_word_function_call (function_name, _, args_expr) ->
             string_of_function_call variable_names function_name args_expr
 
     in
@@ -683,7 +683,7 @@ and string_of_array_expression variable_names = function
     | Array_sequence_function func ->
         string_of_sequence_function variable_names func
 
-    | Array_inline_function (function_name, _, args_expr, _) ->
+    | Array_function_call (function_name, _, args_expr) ->
         string_of_function_call variable_names function_name args_expr
 
 and string_of_list_expression variable_names = function
@@ -722,7 +722,7 @@ and string_of_list_expression variable_names = function
     | List_sequence_function func ->
         string_of_sequence_function variable_names func
 
-    | List_inline_function (function_name, _, args_expr, _) ->
+    | List_function_call (function_name, _, args_expr) ->
         string_of_function_call variable_names function_name args_expr
 
 and string_of_stack_expression variable_names = function
@@ -756,7 +756,7 @@ and string_of_stack_expression variable_names = function
     | Stack_sequence_function func ->
         string_of_sequence_function variable_names func
 
-    | Stack_inline_function (function_name, _, args_expr, _) ->
+    | Stack_function_call (function_name, _, args_expr) ->
         string_of_function_call variable_names function_name args_expr
 
 and string_of_queue_expression variable_names = function
@@ -790,7 +790,7 @@ and string_of_queue_expression variable_names = function
     | Queue_sequence_function func ->
         string_of_sequence_function variable_names func
 
-    | Queue_inline_function (function_name, _, args_expr, _) ->
+    | Queue_function_call (function_name, _, args_expr) ->
         string_of_function_call variable_names function_name args_expr
 
 and string_of_sequence_function variable_names = function

@@ -80,8 +80,7 @@ and rational_factor =
     | Rational_of_int of int_arithmetic_expression
     | Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
     | Rational_sequence_function of sequence_function
-    | Rational_inline_function of variable_name * variable_name list * global_expression list * fun_body
-(*    | Rational_function_call of string * global_expression list*)
+    | Rational_function_call of variable_name * variable_name list * global_expression list
 
 and sequence_function =
     | Array_access of expression_access_type * int_arithmetic_expression
@@ -115,8 +114,7 @@ and int_factor =
     | List_length of list_expression
     | Stack_length of stack_expression
     | Queue_length of queue_expression
-    (* | Int_function_call of variable_name * global_expression list *)
-    | Int_inline_function of variable_name * variable_name list * global_expression list * fun_body
+    | Int_function_call of variable_name * variable_name list * global_expression list
 
 
 (****************************************************************)
@@ -158,8 +156,7 @@ and discrete_boolean_expression =
     | List_is_empty of list_expression
     | Stack_is_empty of stack_expression
     | Queue_is_empty of queue_expression
-    | Bool_inline_function of variable_name * variable_name list * global_expression list * fun_body
-(*    | Bool_function_call of string * global_expression list*)
+    | Bool_function_call of variable_name * variable_name list * global_expression list
 
 (************************************************************)
 (************************************************************)
@@ -183,8 +180,7 @@ and binary_word_expression =
     | Binary_word_local_variable of variable_name
     (* Add here some functions *)
     | Binary_word_sequence_function of sequence_function
-    | Binary_word_inline_function of variable_name * variable_name list * global_expression list * fun_body
-(*    | Binary_word_function_call of string * global_expression list*)
+    | Binary_word_function_call of variable_name * variable_name list * global_expression list
 
 (************************************************************)
 (************************************************************)
@@ -202,8 +198,7 @@ and array_expression =
     (* Add here some function on array *)
     | Array_concat of array_expression * array_expression
     | Array_sequence_function of sequence_function
-    | Array_inline_function of variable_name * variable_name list * global_expression list * fun_body
-(*    | Array_function_call of string * global_expression list*)
+    | Array_function_call of variable_name * variable_name list * global_expression list
 
 (** List expression **)
 and list_expression =
@@ -215,8 +210,7 @@ and list_expression =
     | List_sequence_function of sequence_function
 	| List_list_tl of list_expression
 	| List_rev of list_expression
-    | List_inline_function of variable_name * variable_name list * global_expression list * fun_body
-(*    | List_function_call of string * global_expression list*)
+    | List_function_call of variable_name * variable_name list * global_expression list
 
 and stack_expression =
     | Literal_stack
@@ -225,7 +219,7 @@ and stack_expression =
     | Stack_push of global_expression * stack_expression
     | Stack_clear of stack_expression
     | Stack_sequence_function of sequence_function
-    | Stack_inline_function of variable_name * variable_name list * global_expression list * fun_body
+    | Stack_function_call of variable_name * variable_name list * global_expression list
 
 and queue_expression =
     | Literal_queue
@@ -234,7 +228,7 @@ and queue_expression =
     | Queue_push of global_expression * queue_expression
     | Queue_clear of queue_expression
     | Queue_sequence_function of sequence_function
-    | Queue_inline_function of variable_name * variable_name list * global_expression list * fun_body
+    | Queue_function_call of variable_name * variable_name list * global_expression list
 
 and expression_access_type =
     | Expression_array_access of array_expression
@@ -461,7 +455,7 @@ let label_of_bool_factor = function
     | Stack_is_empty _ -> "stack_is_empty"
     | Queue_is_empty _ -> "queue_is_empty"
 	| Bool_sequence_function func -> label_of_sequence_function func
-	| Bool_inline_function (function_name, _, _, _) -> function_name
+    | Bool_function_call (function_name, _, _) -> function_name
 
 let label_of_rational_factor = function
 	| Rational_variable _ -> "rational variable"
@@ -472,7 +466,7 @@ let label_of_rational_factor = function
 	| Rational_of_int _ -> "rational_of_int"
 	| Rational_pow _ -> "pow"
 	| Rational_sequence_function func -> label_of_sequence_function func
-    | Rational_inline_function (function_name, _, _, _) -> function_name
+	| Rational_function_call (function_name, _, _) -> function_name
 
 let label_of_int_factor = function
 	| Int_variable _ -> "int variable"
@@ -486,7 +480,7 @@ let label_of_int_factor = function
 	| Stack_length _ -> "stack_length"
 	| Queue_length _ -> "queue_length"
 	| Int_sequence_function func -> label_of_sequence_function func
-	| Int_inline_function (function_name, _, _, _) -> function_name
+	| Int_function_call (function_name, _, _) -> function_name
 
 
 let label_of_binary_word_expression = function
@@ -502,7 +496,7 @@ let label_of_binary_word_expression = function
     | Binary_word_variable _ -> "binary word variable"
     | Binary_word_local_variable variable_name -> variable_name
 	| Binary_word_sequence_function func -> label_of_sequence_function func
-    | Binary_word_inline_function (function_name, _, _, _) -> function_name
+    | Binary_word_function_call (function_name, _, _) -> function_name
 
 let label_of_array_expression = function
     | Literal_array _ -> "array"
@@ -511,7 +505,7 @@ let label_of_array_expression = function
     | Array_local_variable variable_name -> variable_name
     | Array_concat _ -> "array_append"
 	| Array_sequence_function func -> label_of_sequence_function func
-    | Array_inline_function (function_name, _, _, _) -> function_name
+	| Array_function_call (function_name, _, _) -> function_name
 
 let label_of_list_expression = function
     | Literal_list _ -> "list"
@@ -522,7 +516,7 @@ let label_of_list_expression = function
     | List_list_tl _ -> "list_tl"
     | List_rev _ -> "list_rev"
 	| List_sequence_function func -> label_of_sequence_function func
-    | List_inline_function (function_name, _, _, _) -> function_name
+	| List_function_call (function_name, _, _) -> function_name
 
 let label_of_stack_expression = function
     | Literal_stack -> "stack"
@@ -531,7 +525,7 @@ let label_of_stack_expression = function
     | Stack_push _ -> "stack_push"
     | Stack_clear _ -> "stack_clear"
 	| Stack_sequence_function func -> label_of_sequence_function func
-    | Stack_inline_function (function_name, _, _, _) -> function_name
+	| Stack_function_call (function_name, _, _) -> function_name
 
 let label_of_queue_expression = function
     | Literal_queue -> "queue"
@@ -540,7 +534,7 @@ let label_of_queue_expression = function
     | Queue_push _ -> "queue_push"
     | Queue_clear _ -> "queue_clear"
 	| Queue_sequence_function func -> label_of_sequence_function func
-    | Queue_inline_function (function_name, _, _, _) -> function_name
+	| Queue_function_call (function_name, _, _) -> function_name
 
 (* Check if a binary word encoded on an integer have length greater than 31 bits *)
 (* If it's the case, print a warning *)
@@ -631,7 +625,8 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 
 		| Rational_expression discrete_arithmetic_expression ->
 			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
-        | Rational_inline_function (function_name, _, args_expr, _) ->
+
+        | Rational_function_call (function_name, _, args_expr) ->
             customized_string_of_function_call customized_string variable_names function_name args_expr
 
 	(* Call top-level *)
@@ -703,7 +698,7 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
             print_function
                 (label_of_int_factor func)
                 [customized_string_of_queue_expression customized_string variable_names queue_expr]
-        | Int_inline_function (function_name, _, args_expr, _) ->
+        | Int_function_call (function_name, _, args_expr) ->
             customized_string_of_function_call customized_string variable_names function_name args_expr
 
 	(* Call top-level *)
@@ -800,7 +795,7 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
             (label_of_bool_factor func)
             [customized_string_of_queue_expression customized_string variable_names queue_expr]
 
-    | Bool_inline_function (function_name, _, args_expr, _) ->
+    | Bool_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and customized_string_of_boolean_operations customized_string = function
@@ -886,8 +881,7 @@ and customized_string_of_binary_word_expression customized_string variable_names
         variable_name
     | Binary_word_sequence_function func ->
         customized_string_of_sequence_function customized_string variable_names func
-
-    | Binary_word_inline_function (function_name, _, args_expr, _) ->
+    | Binary_word_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and customized_string_of_array_expression customized_string variable_names = function
@@ -912,7 +906,7 @@ and customized_string_of_array_expression customized_string variable_names = fun
     | Array_sequence_function func ->
         customized_string_of_sequence_function customized_string variable_names func
 
-    | Array_inline_function (function_name, _, args_expr, _) ->
+    | Array_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and customized_string_of_list_expression customized_string variable_names = function
@@ -945,7 +939,7 @@ and customized_string_of_list_expression customized_string variable_names = func
     | List_sequence_function func ->
         customized_string_of_sequence_function customized_string variable_names func
 
-    | List_inline_function (function_name, _, args_expr, _) ->
+    | List_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and customized_string_of_stack_expression customized_string variable_names = function
@@ -967,7 +961,7 @@ and customized_string_of_stack_expression customized_string variable_names = fun
     | Stack_sequence_function func ->
         customized_string_of_sequence_function customized_string variable_names func
 
-    | Stack_inline_function (function_name, _, args_expr, _) ->
+    | Stack_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and customized_string_of_queue_expression customized_string variable_names = function
@@ -989,7 +983,7 @@ and customized_string_of_queue_expression customized_string variable_names = fun
     | Queue_sequence_function func ->
         customized_string_of_sequence_function customized_string variable_names func
 
-    | Queue_inline_function (function_name, _, args_expr, _) ->
+    | Queue_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and customized_string_of_sequence_function customized_string variable_names = function

@@ -6,6 +6,7 @@ open DiscreteExpressions
 open DiscreteValue
 open Exceptions
 
+type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
 
 (* Record that contain context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
@@ -13,10 +14,10 @@ type eval_context = {
     discrete_valuation : discrete_valuation;
     (* Setter of global variables at the context (current location) *)
     discrete_setter : discrete_setter;
+    (* Function table (current model) *)
+    functions_table : functions_table;
     (* Current local variables *)
     local_variables : variable_table;
-    (* Function table *)
-    (* function_getter : (variable_name, fun_definition) Hashtbl.t *)
 }
 
 (* Result returned on delayed update *)
@@ -26,13 +27,13 @@ type delayed_update_result =
 
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
-let [@inline] create_eval_context (discrete_valuation, discrete_setter) =
-    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = Hashtbl.create 0 }
+let [@inline] create_eval_context functions_table (discrete_valuation, discrete_setter) =
+    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; functions_table = functions_table; local_variables = Hashtbl.create 0 }
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
-let [@inline] create_eval_context_opt = function
+let [@inline] create_eval_context_opt functions_table = function
     | Some discrete_access ->
-        Some (create_eval_context discrete_access)
+        Some (create_eval_context functions_table discrete_access)
     | None -> None
 
 
@@ -96,6 +97,11 @@ let try_eval_variable variable_index = function
     | Some eval_context -> eval_context.discrete_valuation variable_index
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
+
+let try_eval_function function_name = function
+    | Some eval_context -> Hashtbl.find eval_context.functions_table function_name
+    (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
+    | None -> raise (InternalError ("Unable to evaluate a non-constant expression without an eval context."))
 
 (* Try evaluating a local variable value if an eval context is given *)
 (* Otherwise, it means that we are trying to evaluate an expression that should have to be constant (without variable) *)
@@ -180,8 +186,10 @@ and eval_rational_factor_with_context eval_context_opt = function
     | Rational_sequence_function func ->
         let value = eval_sequence_function_with_context eval_context_opt func in
         numconst_value value
-    | Rational_inline_function (_, param_names, expr_args, fun_decl) ->
-        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
+
+    | Rational_function_call (function_name, param_names, expr_args) ->
+        let fun_def = try_eval_function function_name eval_context_opt in
+        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_def.body in
         numconst_value result
 
 and eval_sequence_function_with_context eval_context_opt = function
@@ -291,9 +299,9 @@ and eval_int_expression_with_context eval_context_opt (* expr *) =
         | Queue_length queue_expr ->
             let queue = eval_queue_expression_with_context eval_context_opt queue_expr in
             Int32.of_int (Queue.length queue)
-
-        | Int_inline_function (_, param_names, expr_args, fun_decl) ->
-            let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
+        | Int_function_call (function_name, param_names, expr_args) ->
+            let fun_def = try_eval_function function_name eval_context_opt in
+            let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_def.body in
             int_value result
 
     in
@@ -391,8 +399,10 @@ and eval_discrete_boolean_expression_with_context eval_context_opt = function
     | Queue_is_empty queue_expr ->
         let queue = eval_queue_expression_with_context eval_context_opt queue_expr in
         Queue.is_empty queue
-    | Bool_inline_function (_, param_names, expr_args, fun_decl) ->
-        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
+
+    | Bool_function_call (function_name, param_names, expr_args) ->
+        let fun_def = try_eval_function function_name eval_context_opt in
+        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_def.body in
         bool_value result
 
 and eval_binary_word_expression_with_context eval_context_opt = function
@@ -439,8 +449,10 @@ and eval_binary_word_expression_with_context eval_context_opt = function
     | Binary_word_sequence_function func ->
         let value = eval_sequence_function_with_context eval_context_opt func in
         binary_word_value value
-    | Binary_word_inline_function (_, param_names, expr_args, fun_decl) ->
-        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
+
+    | Binary_word_function_call (function_name, param_names, expr_args) ->
+        let fun_def = try_eval_function function_name eval_context_opt in
+        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_def.body in
         binary_word_value result
 
 and eval_array_expression_with_context eval_context_opt = function
@@ -462,8 +474,10 @@ and eval_array_expression_with_context eval_context_opt = function
     | Array_sequence_function func ->
         let value = eval_sequence_function_with_context eval_context_opt func in
         array_value value
-    | Array_inline_function (_, param_names, expr_args, fun_decl) ->
-        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
+
+    | Array_function_call (function_name, param_names, expr_args) ->
+        let fun_def = try_eval_function function_name eval_context_opt in
+        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_def.body in
         array_value result
 
 and eval_list_expression_with_context eval_context_opt = function
@@ -493,9 +507,9 @@ and eval_list_expression_with_context eval_context_opt = function
     | List_rev list_expr ->
         let list = eval_list_expression_with_context eval_context_opt list_expr in
         List.rev list
-
-    | List_inline_function (_, param_names, expr_args, fun_decl) ->
-        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
+    | List_function_call (function_name, param_names, expr_args) ->
+        let fun_def = try_eval_function function_name eval_context_opt in
+        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_def.body in
         list_value result
 
 and eval_stack_expression_with_context eval_context_opt = function
@@ -522,8 +536,9 @@ and eval_stack_expression_with_context eval_context_opt = function
         let value = eval_sequence_function_with_context eval_context_opt func in
         stack_value value
 
-    | Stack_inline_function (_, param_names, expr_args, fun_decl) ->
-        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
+    | Stack_function_call (function_name, param_names, expr_args) ->
+        let fun_def = try_eval_function function_name eval_context_opt in
+        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_def.body in
         stack_value result
 
 and eval_queue_expression_with_context eval_context_opt = function
@@ -550,8 +565,9 @@ and eval_queue_expression_with_context eval_context_opt = function
         let value = eval_sequence_function_with_context eval_context_opt func in
         queue_value value
 
-    | Queue_inline_function (_, param_names, expr_args, fun_decl) ->
-        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl in
+    | Queue_function_call (function_name, param_names, expr_args) ->
+        let fun_def = try_eval_function function_name eval_context_opt in
+        let result = eval_inline_function_with_context eval_context_opt param_names expr_args fun_def.body in
         queue_value result
 
 and get_array_value_at_with_context eval_context_opt array_expr index_expr =
@@ -745,8 +761,8 @@ let try_eval_constant_rational_term = eval_rational_term_with_context None
 (* Try to evaluate a constant rational factor, if expression isn't constant, it raise an error *)
 let try_eval_constant_rational_factor = eval_rational_factor_with_context None
 
-let direct_update discrete_access = direct_update_with_context (create_eval_context discrete_access)
-let delayed_update discrete_access = delayed_update_with_context (create_eval_context discrete_access)
+let direct_update functions_table discrete_access = direct_update_with_context (create_eval_context functions_table discrete_access)
+let delayed_update functions_table discrete_access = delayed_update_with_context (create_eval_context functions_table discrete_access)
 
 (* Try to evaluate a constant global expression, if expression isn't constant, it return None *)
 let eval_constant_global_expression_opt expr = try Some (try_eval_constant_global_expression expr) with _ -> None
@@ -756,15 +772,15 @@ let eval_constant_rational_term_opt expr = try Some (try_eval_constant_rational_
 let eval_constant_rational_factor_opt expr = try Some (try_eval_constant_rational_factor expr) with _ -> None
 
 (**)
-let eval_global_expression discrete_access_opt = eval_global_expression_with_context (create_eval_context_opt discrete_access_opt)
+let eval_global_expression functions_table discrete_access_opt = eval_global_expression_with_context (create_eval_context_opt functions_table discrete_access_opt)
 (**)
-let eval_boolean_expression discrete_access_opt = eval_boolean_expression_with_context (create_eval_context_opt discrete_access_opt)
+let eval_boolean_expression functions_table discrete_access_opt = eval_boolean_expression_with_context (create_eval_context_opt functions_table discrete_access_opt)
 (**)
-let eval_discrete_boolean_expression discrete_access_opt = eval_discrete_boolean_expression_with_context (create_eval_context_opt discrete_access_opt)
+let eval_discrete_boolean_expression functions_table discrete_access_opt = eval_discrete_boolean_expression_with_context (create_eval_context_opt functions_table discrete_access_opt)
 
 (* Check if a nonlinear constraint is satisfied *)
-let check_nonlinear_constraint discrete_access =
-  List.for_all (eval_discrete_boolean_expression (Some discrete_access))
+let check_nonlinear_constraint functions_table discrete_access =
+  List.for_all (eval_discrete_boolean_expression functions_table (Some discrete_access))
 
 (************************************************************)
 (** Matching state predicates with a global location *)
@@ -784,9 +800,9 @@ let match_loc_predicate global_location = function
 (* Matching simple predicates with a given global_location *)
 (*------------------------------------------------------------*)
 
-let match_simple_predicate discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
+let match_simple_predicate functions_table discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
 	| State_predicate_discrete_boolean_expression discrete_boolean_expression ->
-	    eval_discrete_boolean_expression (Some discrete_access) discrete_boolean_expression
+	    eval_discrete_boolean_expression functions_table (Some discrete_access) discrete_boolean_expression
 
 	| Loc_predicate loc_predicate ->
 	    match_loc_predicate global_location loc_predicate
@@ -804,31 +820,31 @@ let match_simple_predicate discrete_access (locations_acceptance_condition : aut
 (***TODO/NOTE: Might have been nicer to convert the acceptance condition during the ModelConverter phase :-/ ***)
 
 (* TODO benjamin CLEAN see here if we can remove global_location parameter, as it as discrete_access for write / read variables *)
-let rec match_state_predicate_factor discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
+let rec match_state_predicate_factor functions_table discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
 	| State_predicate_factor_NOT state_predicate_factor_neg ->
-	    not (match_state_predicate_factor discrete_access locations_acceptance_condition global_location state_predicate_factor_neg)
+	    not (match_state_predicate_factor functions_table discrete_access locations_acceptance_condition global_location state_predicate_factor_neg)
 	| Simple_predicate simple_predicate ->
-	    match_simple_predicate discrete_access locations_acceptance_condition global_location simple_predicate
+	    match_simple_predicate functions_table discrete_access locations_acceptance_condition global_location simple_predicate
 	| State_predicate state_predicate ->
-	    match_state_predicate discrete_access locations_acceptance_condition global_location state_predicate
+	    match_state_predicate functions_table discrete_access locations_acceptance_condition global_location state_predicate
 
-and match_state_predicate_term discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
+and match_state_predicate_term functions_table discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
 	| State_predicate_term_AND (state_predicate_term_1, state_predicate_term_2) ->
-		match_state_predicate_term discrete_access locations_acceptance_condition global_location state_predicate_term_1
+		match_state_predicate_term functions_table discrete_access locations_acceptance_condition global_location state_predicate_term_1
 		&&
-		match_state_predicate_term discrete_access locations_acceptance_condition global_location state_predicate_term_2
+		match_state_predicate_term functions_table discrete_access locations_acceptance_condition global_location state_predicate_term_2
 
 	| State_predicate_factor state_predicate_factor ->
-	    match_state_predicate_factor discrete_access locations_acceptance_condition global_location state_predicate_factor
+	    match_state_predicate_factor functions_table discrete_access locations_acceptance_condition global_location state_predicate_factor
 
-and match_state_predicate discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
+and match_state_predicate functions_table discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
 	| State_predicate_OR (state_predicate_1, state_predicate_2) ->
-		match_state_predicate discrete_access locations_acceptance_condition global_location state_predicate_1
+		match_state_predicate functions_table discrete_access locations_acceptance_condition global_location state_predicate_1
 		||
-		match_state_predicate discrete_access locations_acceptance_condition global_location state_predicate_2
+		match_state_predicate functions_table discrete_access locations_acceptance_condition global_location state_predicate_2
 
 	| State_predicate_term state_predicate_term ->
-	    match_state_predicate_term discrete_access locations_acceptance_condition global_location state_predicate_term
+	    match_state_predicate_term functions_table discrete_access locations_acceptance_condition global_location state_predicate_term
 
 
 

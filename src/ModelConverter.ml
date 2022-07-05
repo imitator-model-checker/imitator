@@ -3776,12 +3776,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         raise InvalidModel;
 
     (* Convert (only used) function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
-    List.iter (fun (parsed_fun_def : parsed_fun_definition) ->
+    let functions_list = List.map (fun (parsed_fun_def : parsed_fun_definition) ->
         (* Convert fun def from parsing structure to abstract model *)
         let fun_def = DiscreteExpressionConverter.convert_fun_definition variable_infos parsed_fun_def in
-        (* Add converted fun def to functions table *)
-        Hashtbl.add Functions.functions_table fun_def.name fun_def
-    ) used_function_definitions;
+        fun_def.name, fun_def
+    ) used_function_definitions
+    in
+    (* Convert to table *)
+    let functions_table = functions_list |> List.to_seq |> Hashtbl.of_seq in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)
@@ -4717,7 +4719,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	automaton_of_transition = automaton_of_transition;
 
     (* The list of declared functions *)
-    functions_table = Functions.functions_table;
+    functions_table = functions_table;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;

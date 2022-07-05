@@ -1538,11 +1538,10 @@ let label_of_typed_factor_constructor = function
 	| Typed_unary_min _ -> "minus"
     | Typed_function_call (function_name, _, _) -> function_name
 
-
-let user_function_definition function_name =
-    let fun_def_opt = Hashtbl.find_opt Functions.functions_table function_name in
-    match fun_def_opt with
-    | Some fun_def -> fun_def
+let user_function_meta variable_infos function_name =
+    let fun_meta_opt = Hashtbl.find_opt variable_infos.functions function_name in
+    match fun_meta_opt with
+    | Some fun_meta -> fun_meta
     | None -> raise (UndefinedFunction function_name)
 
 (* Messages *)
@@ -1886,13 +1885,12 @@ and bool_expression_of_typed_function_call variable_infos argument_expressions =
         )
 
     | function_name ->
-        let fun_def = user_function_definition function_name in
+        let fun_meta = user_function_meta variable_infos function_name in
 
-        Bool_inline_function (
+        Bool_function_call (
             function_name,
-            fun_def.parameters,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
-            fun_def.body
+            fun_meta.parameter_names,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
         )
 
 (* --------------------*)
@@ -2039,13 +2037,12 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
             )
         )
     | function_name ->
-        let fun_def = user_function_definition function_name in
+        let fun_meta = user_function_meta variable_infos function_name in
 
-        Rational_inline_function (
+        Rational_function_call (
             function_name,
-            fun_def.parameters,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
-            fun_def.body
+            fun_meta.parameter_names,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
         )
 
 (* --------------------*)
@@ -2207,13 +2204,12 @@ and int_expression_of_typed_function_call variable_infos argument_expressions = 
             queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
     | function_name ->
-        let fun_def = user_function_definition function_name in
+        let fun_meta = user_function_meta variable_infos function_name in
 
-        Int_inline_function (
+        Int_function_call (
             function_name,
-            fun_def.parameters,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
-            fun_def.body
+            fun_meta.parameter_names,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
         )
 
 
@@ -2396,13 +2392,13 @@ and binary_expression_of_typed_function_call variable_infos length argument_expr
             )
         )
     | function_name ->
-        let fun_def = user_function_definition function_name in
 
-        Binary_word_inline_function (
+        let fun_meta = user_function_meta variable_infos function_name in
+
+        Binary_word_function_call (
             function_name,
-            fun_def.parameters,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
-            fun_def.body
+            fun_meta.parameter_names,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
         )
 
 (* --------------------*)
@@ -2541,13 +2537,12 @@ and array_expression_of_typed_function_call variable_infos discrete_type argumen
             )
         )
     | function_name ->
-        let fun_def = user_function_definition function_name in
+        let fun_meta = user_function_meta variable_infos function_name in
 
-        Array_inline_function (
+        Array_function_call (
             function_name,
-            fun_def.parameters,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
-            fun_def.body
+            fun_meta.parameter_names,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
         )
 
 (* --------------------*)
@@ -2693,13 +2688,12 @@ and list_expression_of_typed_function_call variable_infos discrete_type argument
             list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
         )
     | function_name ->
-        let fun_def = user_function_definition function_name in
+        let fun_meta = user_function_meta variable_infos function_name in
 
-        List_inline_function (
+        List_function_call (
             function_name,
-            fun_def.parameters,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
-            fun_def.body
+            fun_meta.parameter_names,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
         )
 
 and stack_expression_of_typed_boolean_expression_with_type variable_infos = function
@@ -2834,13 +2828,12 @@ and stack_expression_of_typed_function_call variable_infos discrete_type argumen
         )
 
     | function_name ->
-        let fun_def = user_function_definition function_name in
+        let fun_meta = user_function_meta variable_infos function_name in
 
-        Stack_inline_function (
+        Stack_function_call (
             function_name,
-            fun_def.parameters,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
-            fun_def.body
+            fun_meta.parameter_names,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
         )
 
 
@@ -2978,15 +2971,13 @@ and queue_expression_of_typed_function_call variable_infos discrete_type argumen
         )
 
     | function_name ->
-        let fun_def = user_function_definition function_name in
+        let fun_meta = user_function_meta variable_infos function_name in
 
-        Queue_inline_function (
+        Queue_function_call (
             function_name,
-            fun_def.parameters,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions,
-            fun_def.body
+            fun_meta.parameter_names,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
         )
-
 
 (* --------------------*)
 (* Access conversion *)

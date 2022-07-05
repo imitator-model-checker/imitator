@@ -137,9 +137,6 @@ let binary_log_signature =
         Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a")))
     ]
 
-(* Table of converted functions *)
-let functions_table : (string, AbstractModel.fun_definition) Hashtbl.t = Hashtbl.create 0
-
 (* List of builtin functions metadata *)
 let builtin_functions : ParsingStructure.function_metadata list =
     [

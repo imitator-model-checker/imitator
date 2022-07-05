@@ -1,3 +1,15 @@
+# Toolboxes
+
+## ParsingStructureUtilities module
+
+This module contains a lot of generic functions that allow you to traverse and fold the parsing structure tree and applying a given function to the leaves of the tree. Note that a leaf in parsing structure is either a variable, constant or a function call.
+
+Like `List` in OCaml, this module contains `exist`, `for_all`, `iterate` functions on all parsing structure types.
+
+### Some examples
+
+
+
 # Type inference
 
 TODO

@@ -94,7 +94,7 @@ val compute_valuated_invariant : Location.global_location -> LinearConstraint.px
 (*------------------------------------------------------------------*)
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
-val get_updates : Location.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)
+val get_updates : (string, AbstractModel.fun_definition) Hashtbl.t -> Location.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)
 
 
 

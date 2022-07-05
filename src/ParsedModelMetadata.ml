@@ -539,15 +539,19 @@ let unused_functions_of_model dependency_graph =
 let model_cycle_infos (_, model_relations) =
 
     let rec is_cycle_in already_seen c =
+
         let is_fun_ref = function
             | Fun_ref _ -> true
             | _ -> false
         in
+
         if List.mem c already_seen then (
-            if is_fun_ref c then
+            if is_fun_ref c then (
                 [true, c :: already_seen]
-            else
+            )
+            else (
                 []
+            )
         )
         else (
             let next_components = List.filter_map (function (src, dst) when src = c -> Some dst | _ -> None) model_relations in
@@ -555,7 +559,7 @@ let model_cycle_infos (_, model_relations) =
         )
     in
 
-    let system_components = List.filter_map (function (Fun_ref _, dst) -> Some dst | _ -> None) model_relations in
+    let system_components = List.filter_map (function (System_ref _, dst) -> Some dst | _ -> None) model_relations in
     let cycle_infos = List.map (is_cycle_in []) system_components |> List.flatten in
     (* Transform path list to str path *)
     List.map (fun (has_cycle, path) ->
