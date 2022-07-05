@@ -786,66 +786,60 @@ let check_nonlinear_constraint functions_table discrete_access =
 (** Matching state predicates with a global location *)
 (************************************************************)
 
-(*------------------------------------------------------------*)
-(* Matching global_location predicates with a given global_location *)
-(*------------------------------------------------------------*)
-
-let match_loc_predicate global_location = function
-	| Loc_predicate_EQ (automaton_index, location_index) ->
-		get_location global_location automaton_index = location_index
-	| Loc_predicate_NEQ (automaton_index, location_index) ->
-		get_location global_location automaton_index <> location_index
-
-(*------------------------------------------------------------*)
-(* Matching simple predicates with a given global_location *)
-(*------------------------------------------------------------*)
-
-let match_simple_predicate functions_table discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
-	| State_predicate_discrete_boolean_expression discrete_boolean_expression ->
-	    eval_discrete_boolean_expression functions_table (Some discrete_access) discrete_boolean_expression
-
-	| Loc_predicate loc_predicate ->
-	    match_loc_predicate global_location loc_predicate
-
-	| State_predicate_accepting ->
-	    is_accepting locations_acceptance_condition global_location
-
-	| State_predicate_true -> true
-	| State_predicate_false -> false
-
-(*------------------------------------------------------------*)
-(* Matching state predicates with a given global_location *)
-(*------------------------------------------------------------*)
-
 (***TODO/NOTE: Might have been nicer to convert the acceptance condition during the ModelConverter phase :-/ ***)
+let match_state_predicate functions_table discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location =
 
-(* TODO benjamin CLEAN see here if we can remove global_location parameter, as it as discrete_access for write / read variables *)
-let rec match_state_predicate_factor functions_table discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
-	| State_predicate_factor_NOT state_predicate_factor_neg ->
-	    not (match_state_predicate_factor functions_table discrete_access locations_acceptance_condition global_location state_predicate_factor_neg)
-	| Simple_predicate simple_predicate ->
-	    match_simple_predicate functions_table discrete_access locations_acceptance_condition global_location simple_predicate
-	| State_predicate state_predicate ->
-	    match_state_predicate functions_table discrete_access locations_acceptance_condition global_location state_predicate
+    (* Match loc predicate *)
+    let match_loc_predicate = function
+        | Loc_predicate_EQ (automaton_index, location_index) ->
+            get_location global_location automaton_index = location_index
+        | Loc_predicate_NEQ (automaton_index, location_index) ->
+            get_location global_location automaton_index <> location_index
+    in
 
-and match_state_predicate_term functions_table discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
-	| State_predicate_term_AND (state_predicate_term_1, state_predicate_term_2) ->
-		match_state_predicate_term functions_table discrete_access locations_acceptance_condition global_location state_predicate_term_1
-		&&
-		match_state_predicate_term functions_table discrete_access locations_acceptance_condition global_location state_predicate_term_2
+    (* Match simple predicate *)
+    let match_simple_predicate = function
+        | State_predicate_discrete_boolean_expression expr ->
+            eval_discrete_boolean_expression functions_table (Some discrete_access) expr
 
-	| State_predicate_factor state_predicate_factor ->
-	    match_state_predicate_factor functions_table discrete_access locations_acceptance_condition global_location state_predicate_factor
+        | Loc_predicate loc_predicate ->
+            match_loc_predicate loc_predicate
 
-and match_state_predicate functions_table discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location = function
-	| State_predicate_OR (state_predicate_1, state_predicate_2) ->
-		match_state_predicate functions_table discrete_access locations_acceptance_condition global_location state_predicate_1
-		||
-		match_state_predicate functions_table discrete_access locations_acceptance_condition global_location state_predicate_2
+        | State_predicate_accepting ->
+            is_accepting locations_acceptance_condition global_location
 
-	| State_predicate_term state_predicate_term ->
-	    match_state_predicate_term functions_table discrete_access locations_acceptance_condition global_location state_predicate_term
+        | State_predicate_true -> true
+        | State_predicate_false -> false
+    in
 
+    (* Match state predicate *)
+    let rec match_state_predicate = function
+        | State_predicate_OR (l_predicate, r_predicate) ->
+            match_state_predicate l_predicate
+            || match_state_predicate r_predicate
+
+        | State_predicate_term predicate_term ->
+            match_state_predicate_term predicate_term
+
+    (* Match state predicate term *)
+    and match_state_predicate_term = function
+        | State_predicate_term_AND (l_predicate_term, r_predicate_term) ->
+            match_state_predicate_term l_predicate_term
+            && match_state_predicate_term r_predicate_term
+
+        | State_predicate_factor predicate_factor ->
+            match_state_predicate_factor predicate_factor
+
+    (* Match state predicate factor *)
+    and match_state_predicate_factor = function
+        | State_predicate_factor_NOT predicate_factor ->
+            not (match_state_predicate_factor predicate_factor)
+        | Simple_predicate simple_predicate ->
+            match_simple_predicate simple_predicate
+        | State_predicate state_predicate ->
+            match_state_predicate state_predicate
+    in
+    match_state_predicate
 
 
 
