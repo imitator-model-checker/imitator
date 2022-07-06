@@ -291,7 +291,7 @@ let evaluate_d_linear_constraint_in_location location =
 let evaluate_d_nonlinear_constraint_in_location location =
     let discrete_access = Location.discrete_access_of_location location in
     let functions_table = (Input.get_model ()).functions_table in
-    DiscreteExpressionEvaluator.check_nonlinear_constraint functions_table discrete_access
+    DiscreteExpressionEvaluator.check_nonlinear_constraint (Some functions_table) discrete_access
 
 (** Check whether the discrete part of a guard is satisfied by the discrete values in a location *)
 let is_discrete_guard_satisfied location (guard : AbstractModel.guard) : bool =
@@ -1419,10 +1419,10 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		(* Access the transition and get the components *)
 		let automaton_index, transition = automaton_and_transition_of_transition_index transition_index in
 		(** Collecting the updates by evaluating the conditions, if there is any *)
-        let _ (* no clock update for seq updates *), discrete_seq_updates = get_updates model.functions_table source_location transition.seq_updates in
+        let _ (* no clock update for seq updates *), discrete_seq_updates = get_updates (Some model.functions_table) source_location transition.seq_updates in
 
         (* Make `seq` sequential updates (make these updates now, only on discrete) *)
-        List.iter (direct_update model.functions_table discrete_access) (List.rev discrete_seq_updates);
+        List.iter (direct_update (Some model.functions_table) discrete_access) (List.rev discrete_seq_updates);
 
 	) combined_transition;
 
@@ -1435,10 +1435,10 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		let guard, updates, target_index = transition.guard, transition.updates, transition.target in
 
 		(** Collecting the updates by evaluating the conditions, if there is any *)
-		let clock_updates, discrete_updates = get_updates model.functions_table source_location updates in
+		let clock_updates, discrete_updates = get_updates (Some model.functions_table) source_location updates in
 
         (* Make `then` standard discrete non-sequential updates (make updates (on discrete) after all recorded in a table *)
-        let delayed_update_results = List.map (delayed_update model.functions_table discrete_access updated_discrete) (List.rev discrete_updates) in
+        let delayed_update_results = List.map (delayed_update (Some model.functions_table) discrete_access updated_discrete) (List.rev discrete_updates) in
 
         (* Print warnings if discrete variable updated several times with different value for the same sync *)
         List.iter (function

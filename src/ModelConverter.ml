@@ -955,7 +955,7 @@ let discrete_predicate_of_discrete_linear_predicate = function
     | _ ->
         raise (InternalError "Trying to convert a non discrete linear constraint to discrete predicate")
 
-let check_discrete_predicate_and_init variable_infos init_values_for_discrete = function
+let check_discrete_predicate_and_init functions_table variable_infos init_values_for_discrete = function
     | Parsed_discrete_predicate (variable_name, expr) ->
 
         (* TODO benjamin REFACTOR with kind_of *)
@@ -982,7 +982,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
                 false
             )
             (* Try to reduce expression to a value *)
-            else if not (DiscreteExpressionEvaluator.is_global_expression_constant converted_expr) then (
+            else if not (DiscreteExpressionEvaluator.is_global_expression_constant (Some functions_table) converted_expr) then (
 
                 print_error (
                     "Init variable \""
@@ -993,7 +993,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
                 );
                 false
             ) else (
-                let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression converted_expr in
+                let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression (Some functions_table) converted_expr in
                 Hashtbl.add init_values_for_discrete discrete_index value;
                 true
             )
@@ -1006,7 +1006,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
 (*------------------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
 (*------------------------------------------------------------*)
-let check_init (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
+let check_init functions_table (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
 
     let variable_infos = useful_parsing_model_information.variable_infos in
 
@@ -1048,7 +1048,7 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 	let init_values_for_discrete = Hashtbl.create (List.length variable_infos.discrete) in
 
     (* Compute discrete init values and add to init hash table *)
-    let discrete_initialization_well_formed = List.for_all (check_discrete_predicate_and_init variable_infos init_values_for_discrete) discrete_predicates in
+    let discrete_initialization_well_formed = List.for_all (check_discrete_predicate_and_init functions_table variable_infos init_values_for_discrete) discrete_predicates in
     (* If some value is None, there is errors *)
     well_formed := !well_formed && discrete_initialization_well_formed;
 
@@ -3203,9 +3203,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
         (* TYPE CHECKING *)
         let constant = name, expr, var_type in
-
         let typed_expr(*, expr_type *) = DiscreteExpressionConverter.convert_discrete_constant initialized_constants constant in
-        let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression typed_expr in
+        (* TODO benjamin IMPLEMENT replace None by functions_table *)
+        let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression None typed_expr in
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;
         (* Return *)
@@ -3805,7 +3805,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Checking init definition…");
 	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
 
-	let init_discrete_pairs, well_formed_init = check_init useful_parsing_model_information parsed_model.init_definition observer_automaton_index_option in
+	let init_discrete_pairs, well_formed_init = check_init functions_table useful_parsing_model_information parsed_model.init_definition observer_automaton_index_option in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the constants inits *)

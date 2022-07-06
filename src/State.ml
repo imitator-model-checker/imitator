@@ -80,7 +80,7 @@ let match_state_predicate state_predicate state =
 let match_state_predicate (locations_acceptance_condition : Automaton.automaton_index -> Automaton.location_index -> bool) (state_predicate : AbstractProperty.state_predicate) (state : state) : bool =
     let discrete_access = Location.discrete_access_of_location state.global_location in
     let functions_table = (Input.get_model ()).functions_table in
-	DiscreteExpressionEvaluator.match_state_predicate functions_table discrete_access locations_acceptance_condition state.global_location state_predicate
+	DiscreteExpressionEvaluator.match_state_predicate (Some functions_table) discrete_access locations_acceptance_condition state.global_location state_predicate
 
 
 
