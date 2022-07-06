@@ -104,6 +104,7 @@ type typed_fun_definition = {
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
     body : typed_fun_body; (* body *)
+    side_effect : bool;
 }
 
 val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string

@@ -559,7 +559,7 @@ let model_cycle_infos (_, model_relations) =
         )
     in
 
-    let system_components = List.filter_map (function (System_ref _, dst) -> Some dst | _ -> None) model_relations in
+    let system_components = List.filter_map (function (System_ref, dst) -> Some dst | _ -> None) model_relations in
     let cycle_infos = List.map (is_cycle_in []) system_components |> List.flatten in
     (* Transform path list to str path *)
     List.map (fun (has_cycle, path) ->

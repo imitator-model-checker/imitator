@@ -35,6 +35,14 @@ type conj_dis =
     | And
     | Or
 
+type sum_diff =
+    | Plus
+    | Minus
+
+type product_quotient =
+    | Mul
+    | Div
+
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
@@ -59,17 +67,9 @@ and rational_arithmetic_expression =
     | Rational_sum_diff of rational_arithmetic_expression * rational_term * sum_diff
 	| Rational_term of rational_term
 
-and sum_diff =
-    | Plus
-    | Minus
-
 and rational_term =
 	| Rational_product_quotient of rational_term * rational_factor * product_quotient
 	| Rational_factor of rational_factor
-
-and product_quotient =
-    | Mul
-    | Div
 
 and rational_factor =
 	| Rational_variable of Automaton.variable_index
@@ -236,6 +236,7 @@ and expression_access_type =
 
 (* Function local declaration or expression *)
 and fun_body =
+    | Fun_builtin of (string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value)
     | Fun_local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * fun_body
     | Fun_instruction of (update_type * global_expression) * fun_body
     | Fun_expr of global_expression
@@ -252,6 +253,47 @@ and update_type =
     | Variable_update of scalar_or_index_update_type
     (* Unit expression, side effect expression without assignment, ie: stack_pop(s) *)
     | Void_update
+
+
+type 'a my_expression =
+    (* A typed expression *)
+    | My_arithmetic_expression of 'a my_arithmetic_expression
+    | Bool_expression of 'a my_boolean_expression
+    | Other_expression of 'a my_factor
+
+and 'a my_boolean_expression =
+	| My_true_bool
+	| My_false_bool
+	(** Conjunction / Disjunction *)
+	| My_conj_dis of 'a my_boolean_expression * 'a my_boolean_expression * conj_dis
+	| My_discrete_boolean_expression of 'a my_discrete_boolean_expression
+
+and 'a my_discrete_boolean_expression =
+	(** Discrete expression of the form Expr ~ Expr *)
+	| My_comparison of 'a my_expression * relop * 'a my_expression
+	(** Discrete expression of the form 'Expr in [Expr, Expr ]' *)
+	| My_comparison_in of 'a my_arithmetic_expression * 'a my_arithmetic_expression * 'a my_arithmetic_expression
+	| My_not_bool of 'a my_boolean_expression
+	| Bool_factor of bool my_factor
+
+and 'a my_arithmetic_expression =
+    | Sum_diff of 'a my_arithmetic_expression * 'a my_term * sum_diff
+	| My_term of 'a my_term
+
+and 'a my_term =
+	| Product_quotient of 'a my_term * 'a my_factor * product_quotient
+	| My_factor of 'a my_factor
+
+and 'a my_factor =
+	| My_global_variable of Automaton.variable_index
+	| My_global_constant of 'a
+	| My_local_variable of variable_name
+	| My_expression of 'a my_arithmetic_expression
+	| My_unary_min of 'a my_factor
+    | My_rat_of of 'a my_arithmetic_expression
+    | My_pow of 'a my_arithmetic_expression * int my_arithmetic_expression
+    | My_sequence_function of sequence_function
+    | My_function_call of variable_name * variable_name list * 'a my_expression list
 
 type nonlinear_constraint = discrete_boolean_expression list
 

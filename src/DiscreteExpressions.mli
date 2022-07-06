@@ -239,6 +239,7 @@ and expression_access_type =
 
 (* Function local declaration or expression *)
 and fun_body =
+    | Fun_builtin of (string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value)
     | Fun_local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * fun_body
     | Fun_instruction of (update_type * global_expression) * fun_body
     | Fun_expr of global_expression

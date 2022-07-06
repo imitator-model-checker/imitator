@@ -20,8 +20,6 @@ type delayed_update_result =
     | Delayed_update_recorded
     | Delayed_update_already_updated of discrete_index
 
-
-
 val direct_update : functions_table -> discrete_access -> update_type * global_expression -> unit
 val delayed_update : functions_table -> discrete_access -> (discrete_index, DiscreteValue.discrete_value) Hashtbl.t -> update_type * global_expression -> delayed_update_result
 val eval_global_expression : functions_table -> discrete_access option -> global_expression -> DiscreteValue.discrete_value
@@ -41,6 +39,10 @@ val try_eval_constant_rational_factor : rational_factor -> NumConst.t
 val eval_constant_global_expression_opt : global_expression -> DiscreteValue.discrete_value option
 val eval_constant_rational_term_opt : rational_term -> NumConst.t option
 val eval_constant_rational_factor_opt : rational_factor -> NumConst.t option
+
+val eval_pow : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_rational_of_int : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_stack_pop : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
 
 val is_global_expression_constant : global_expression -> bool
 

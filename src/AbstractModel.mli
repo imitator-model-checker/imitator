@@ -128,9 +128,10 @@ type transition_index = int
 
 type fun_definition = {
     name : variable_name;
-    parameters : variable_name list;
-    signature : FunctionSig.signature_constraint;
+    parameter_names : variable_name list;
+    signature_constraint : FunctionSig.signature_constraint;
     body : DiscreteExpressions.fun_body;
+    side_effect : bool;
 }
 
 (************************************************************)

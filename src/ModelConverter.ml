@@ -3647,11 +3647,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     (* Gather all functions metadata in a table *)
 
-    (* Get builtin functions metadata *)
-    let builtin_functions_metadata = Functions.builtin_functions in
-    (* Create table of builtin function metadata *)
-    let builtin_functions_metadata_table = List.map (fun (fun_def : function_metadata) -> fun_def.name, fun_def) builtin_functions_metadata |> List.to_seq |> Hashtbl.of_seq in
-
     (* Get user functions metadata from parsed functions *)
     let used_function_names = ParsedModelMetadata.used_functions_of_model dependency_graph in
     (* Get only used user functions definition *)
@@ -3701,15 +3696,15 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     in
 
     (* Create table of user function definitions *)
-    let user_function_definitions_table = List.map (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def) used_function_definitions |> List.to_seq |> Hashtbl.of_seq in
+    let user_function_definitions_table = List.map (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def) used_function_definitions |> OCamlUtilities.hashtbl_of_tuples in
 
     (* Get metadata of these functions *)
-    let metadata_of_function_definition = Functions.metadata_of_function_definition builtin_functions_metadata_table user_function_definitions_table in
+    let metadata_of_function_definition = Functions.metadata_of_function_definition Functions.builtin_functions_table user_function_definitions_table in
     let user_functions_metadata = List.map metadata_of_function_definition used_function_definitions in
     (* Concat builtin & user functions *)
-    let all_functions_metadata = user_functions_metadata @ builtin_functions_metadata in
+    let all_functions_metadata = user_functions_metadata @ Functions.builtin_functions in
     (* Create function table that associate function name to function metadata *)
-    let functions_metadata_table = (List.map (fun (fun_def : ParsingStructure.function_metadata) -> fun_def.name, fun_def) all_functions_metadata) |> List.to_seq |> Hashtbl.of_seq in
+    let functions_metadata_table = (List.map (fun (fun_def : ParsingStructure.function_metadata) -> fun_def.name, fun_def) all_functions_metadata) |> OCamlUtilities.hashtbl_of_tuples in
 
     (* Print some info on side effects resolution *)
     let str_fun_side_effects = lazy (
@@ -3776,14 +3771,18 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         raise InvalidModel;
 
     (* Convert (only used) function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
-    let functions_list = List.map (fun (parsed_fun_def : parsed_fun_definition) ->
+    let user_functions_list = List.map (fun (parsed_fun_def : parsed_fun_definition) ->
         (* Convert fun def from parsing structure to abstract model *)
         let fun_def = DiscreteExpressionConverter.convert_fun_definition variable_infos parsed_fun_def in
         fun_def.name, fun_def
     ) used_function_definitions
     in
+    (* Get builtin functions implementations as associative list *)
+    let builtin_functions_list = List.map (fun (fun_def : fun_definition) -> fun_def.name, fun_def) Functions.builtin_function_bodies in
+    (* Concat all functions *)
+    let functions_list = user_functions_list @ builtin_functions_list in
     (* Convert to table *)
-    let functions_table = functions_list |> List.to_seq |> Hashtbl.of_seq in
+    let functions_table = OCamlUtilities.hashtbl_of_tuples functions_list in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)

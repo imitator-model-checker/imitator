@@ -370,6 +370,7 @@ let string_of_fun_definitions model =
 
         (* Convert a function expression into a string *)
         let rec string_of_next_expr = function
+            | Fun_builtin _ -> "" (* TODO benjamin see here, because it will write fn builtin_f () begin end on builtin function *)
             | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
                 string_of_var_type_discrete discrete_type ^ " " ^ variable_name ^ " = "
                 ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names init_expr ^ ";\n"
@@ -383,8 +384,8 @@ let string_of_fun_definitions model =
                 "return " ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names expr ^ ";\n"
         in
 
-        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature in
-        let parameter_names_with_constraints = List.combine fun_def.parameters parameters_signature in
+        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
+        let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
         (* Convert parameters into a string *)
         let str_param_list = List.map (fun (param_name, type_constraint) -> FunctionSig.string_of_type_constraint type_constraint ^ " " ^ param_name) parameter_names_with_constraints in
         let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in

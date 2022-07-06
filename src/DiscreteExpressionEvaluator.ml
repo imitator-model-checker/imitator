@@ -36,8 +36,6 @@ let [@inline] create_eval_context_opt functions_table = function
         Some (create_eval_context functions_table discrete_access)
     | None -> None
 
-
-
 (* Get operator function from relop *)
 let operator_of_relop = function
     | OP_L -> (<)
@@ -88,7 +86,6 @@ let try_eval_stack_pop seq (* fail_message *) = eval_if_not_empty Stack.length S
 let try_eval_stack_top seq (* fail_message *) = eval_if_not_empty Stack.length Stack.top seq (* fail_message *)
 let try_eval_queue_pop seq (* fail_message *) = eval_if_not_empty Queue.length Queue.pop seq (* fail_message *)
 let try_eval_queue_top seq (* fail_message *) = eval_if_not_empty Queue.length Queue.top seq (* fail_message *)
-
 
 (* Try evaluating a global variable value if an eval context is given *)
 (* Otherwise, it means that we are trying to evaluate an expression that should have to be constant (without variable) *)
@@ -605,45 +602,68 @@ and get_expression_access_value_with_context eval_context_opt index_expr = funct
         get_list_value_at_with_context eval_context_opt list_expr index_expr
 
 and eval_inline_function_with_context eval_context_opt param_names expr_args fun_decl =
+
+    (* Compute arguments values *)
+    let arg_values = List.map (eval_global_expression_with_context eval_context_opt) expr_args in
+    (* Associate each parameter with their value *)
+    let param_names_with_arg_values = List.combine param_names arg_values in
     (* Get or create local variables table *)
-    let local_variables = Hashtbl.create 0 in
+    let local_variables = OCamlUtilities.hashtbl_of_tuples param_names_with_arg_values in
 
-    (* Compute parameters values *)
-    for i = 0 to (List.length param_names) - 1 do
-        let param_name = List.nth param_names i in
-        let expr_arg = List.nth expr_args i in
-        let arg_val = eval_global_expression_with_context eval_context_opt expr_arg in
-        Hashtbl.add local_variables param_name arg_val;
-    done;
-
-    let eval_context =
+    (* Update (optional) context *)
+    let new_eval_context_opt =
         match eval_context_opt with
-        | Some eval_context -> eval_context
-        | None -> raise (InternalError
-            "Trying to evaluate a function without `eval_context`.
-            Only constant expression can be evaluated without context
-            and constant expression can't contains functions calls.
-            Some checks may failed before."
-        )
+        | Some eval_context -> Some {eval_context with local_variables = local_variables }
+        | None -> None
     in
 
     (* Eval function body *)
-    let new_eval_context = {eval_context with local_variables = local_variables } in
-    eval_fun_body_with_context new_eval_context fun_decl
+    let rec eval_fun_body_with_context eval_context_opt = function
+        | Fun_builtin builtin_f ->
+            (* Execute built-in function given argument values *)
+            (* TODO benjamin IMPLEMENT here str_expr *)
+            builtin_f "TODO benjamin fill here" arg_values
 
-and eval_fun_body_with_context eval_context = function
-    | Fun_local_decl (variable_name, _, expr, next_expr) ->
-        let value = eval_global_expression_with_context (Some eval_context) expr in
-        Hashtbl.add eval_context.local_variables variable_name value;
+        | Fun_local_decl (variable_name, _, expr, next_expr) ->
 
-        eval_fun_body_with_context eval_context next_expr
+            (* TODO benjamin IMPLEMENT HERE group Fun_local_decl and Fun_instruction in Fun_user_function to make this checking one time only *)
+            let eval_context =
+                match eval_context_opt with
+                | Some eval_context -> eval_context
+                | None -> raise (InternalError
+                    "Trying to evaluate a function without `eval_context`.
+                    Only constant expression can be evaluated without context
+                    and constant expression can't contains functions calls.
+                    Some checks may failed before."
+                )
+            in
 
-    | Fun_instruction (normal_update, next_expr) ->
-        direct_update_with_context eval_context normal_update;
-        eval_fun_body_with_context eval_context next_expr
+            let value = eval_global_expression_with_context eval_context_opt expr in
+            Hashtbl.add eval_context.local_variables variable_name value;
 
-    | Fun_expr expr ->
-        eval_global_expression_with_context (Some eval_context) expr
+            eval_fun_body_with_context eval_context_opt next_expr
+
+        | Fun_instruction (normal_update, next_expr) ->
+
+            let eval_context =
+                match eval_context_opt with
+                | Some eval_context -> eval_context
+                | None -> raise (InternalError
+                    "Trying to evaluate a function without `eval_context`.
+                    Only constant expression can be evaluated without context
+                    and constant expression can't contains functions calls.
+                    Some checks may failed before."
+                )
+            in
+
+            direct_update_with_context eval_context normal_update;
+            eval_fun_body_with_context eval_context_opt next_expr
+
+        | Fun_expr expr ->
+            eval_global_expression_with_context eval_context_opt expr
+    in
+    eval_fun_body_with_context new_eval_context_opt fun_decl
+
 
 and compute_update_value_opt_with_context eval_context (update_type, expr) =
 
@@ -699,7 +719,6 @@ and delayed_update_with_context eval_context updated_discrete update =
             Hashtbl.add updated_discrete discrete_index new_value;
             Delayed_update_recorded
         )
-
 
 
 
@@ -841,9 +860,31 @@ let match_state_predicate functions_table discrete_access (locations_acceptance_
     in
     match_state_predicate
 
+let bad_arguments_message str_expr =
+    "Bad arguments on `" ^ str_expr ^ "`. Expected types or number of arguments doesn't match with actual."
 
+let eval_pow str_expr = function
+    | (Rational_value x) :: (Int_value exponent) :: _ -> Rational_value (NumConst.pow x exponent)
+    | (Int_value x) :: (Int_value exponent) :: _ -> Int_value (OCamlUtilities.pow x exponent)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
 
-(* TODO benjamin REPLACE BY A REAL EVALUATION OF CONSTANT and not this tricky function using try *)
+let eval_rational_of_int str_expr = function
+    | (Int_value i) :: _ ->
+        ImitatorUtilities.print_warning
+            "Conversion of an int expression to a rational expression
+            may cause overflow if your platform doesn't manage `int` as an exact 32 bits integer.";
+        Rational_value (NumConst.numconst_of_int (Int32.to_int i))
+
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_stack_pop str_expr = function
+    | (Stack_value stack) :: _ ->
+        let fail_message = "Use of `stack_top` on empty stack `" ^ str_expr ^ "`." in
+        try_eval_stack_pop stack fail_message
+
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+(* Tricky function to know if an expression is constant *)
 let is_global_expression_constant expr =
     try (
         let _ = try_eval_constant_global_expression expr in

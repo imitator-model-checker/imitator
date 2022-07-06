@@ -901,6 +901,7 @@ let string_of_custom_user_functions model =
 
         (* Convert a function expression into a string *)
         let rec string_of_next_expr = function
+            | Fun_builtin _ -> "" (* TODO benjamin see here, because it will write fn builtin_f () begin end on builtin function *)
             | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
                 (* TODO benjamin see with etienne (add TODO in translation ?) *)
                 print_warning ("Local declaration of `" ^ variable_name ^ "` in function `" ^ fun_def.name ^ "` are not supported by Jani and will not be translated.");
@@ -915,8 +916,8 @@ let string_of_custom_user_functions model =
                 string_of_global_expression model.variable_names expr
         in
 
-        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature in
-        let parameter_names_with_constraints = List.combine fun_def.parameters parameters_signature in
+        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
+        let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
         (* Convert parameters into a string *)
         let str_param_list = List.map (fun (param_name, type_constraint) ->
             jani_function_parameter param_name (string_of_type_constraint type_constraint)

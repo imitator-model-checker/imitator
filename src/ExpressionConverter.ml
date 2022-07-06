@@ -117,6 +117,7 @@ type typed_fun_definition = {
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
     body : typed_fun_body; (* body *)
+    side_effect : bool;
 }
 
 val string_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> string
@@ -245,6 +246,7 @@ type typed_fun_definition = {
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
     body : typed_fun_body; (* body *)
+    side_effect : bool;
 }
 
 (** Strings **)
@@ -1123,6 +1125,7 @@ let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStr
         parameters = parameter_names;
         signature = signature;
         body = typed_body;
+        side_effect = is_body_has_side_effects;
     }
     in
 
@@ -1988,18 +1991,39 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 	    raise (InternalError fail_message)
 
 and rational_expression_of_typed_function_call variable_infos argument_expressions = function
-    | "pow" ->
+    | "pow" as function_name ->
+        (*
         let arg_0 = List.nth argument_expressions 0 in
         let arg_1 = List.nth argument_expressions 1 in
+
         Rational_pow (
             rational_arithmetic_expression_of_typed_boolean_expression variable_infos arg_0,
             int_arithmetic_expression_of_typed_boolean_expression variable_infos arg_1
         )
-    | "rational_of_int" ->
+        *)
+        let fun_meta = user_function_meta variable_infos function_name in
+
+        Rational_function_call (
+            function_name,
+            fun_meta.parameter_names,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        )
+
+    | "rational_of_int" as function_name ->
+
+        let fun_meta = user_function_meta variable_infos function_name in
+
+        Rational_function_call (
+            function_name,
+            fun_meta.parameter_names,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        )
+        (*
         let arg_0 = List.nth argument_expressions 0 in
         Rational_of_int (
             int_arithmetic_expression_of_typed_boolean_expression variable_infos arg_0
         )
+        *)
 
     | "list_hd" ->
         let arg_0 = List.nth argument_expressions 0 in
@@ -2008,13 +2032,23 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
                 list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_number Var_type_discrete_rat) arg_0
             )
         )
-    | "stack_pop" ->
+    | "stack_pop" as function_name ->
+
+        let fun_meta = user_function_meta variable_infos function_name in
+
+        Rational_function_call (
+            function_name,
+            fun_meta.parameter_names,
+            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        )
+        (*
         let arg_0 = List.nth argument_expressions 0 in
         Rational_sequence_function (
             Stack_pop (
                 stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
             )
         )
+        *)
     | "stack_top" ->
         let arg_0 = List.nth argument_expressions 0 in
         Rational_sequence_function (
@@ -3360,9 +3394,10 @@ let rec fun_body_of_typed_fun_body variable_infos = function
 let fun_definition_of_typed_fun_definition variable_infos (typed_fun_definition : typed_fun_definition) : fun_definition =
     {
         name = typed_fun_definition.name;
-        parameters = typed_fun_definition.parameters;
-        signature = FunctionSig.signature_constraint_of_signature typed_fun_definition.signature;
-        body = fun_body_of_typed_fun_body variable_infos typed_fun_definition.body
+        parameter_names = typed_fun_definition.parameters;
+        signature_constraint = FunctionSig.signature_constraint_of_signature typed_fun_definition.signature;
+        body = fun_body_of_typed_fun_body variable_infos typed_fun_definition.body;
+        side_effect = typed_fun_definition.side_effect
     }
 
 end
