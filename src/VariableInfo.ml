@@ -28,7 +28,7 @@ type variable_constant_defined_state =
 (* Variable kind type represent a variable or a constant kind *)
 type variable_kind =
     | Variable_kind of int
-    | Constant_kind of DiscreteValue.discrete_value
+    | Constant_kind of DiscreteValue.parsed_value
 
 (* Get variable name given a variable index  *)
 let [@inline] variable_name_of_index variable_infos = List.nth variable_infos.variable_names

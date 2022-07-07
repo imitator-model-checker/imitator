@@ -37,16 +37,16 @@ type xxx =
     | Queue_value2 of discrete_scalar_value Queue.t
 *)
 
-type discrete_value =
+type parsed_value =
     | Number_value of NumConst.t
     | Rational_value of NumConst.t
     | Int_value of Int32.t
     | Bool_value of bool
     | Binary_word_value of BinaryWord.t
-    | Array_value of discrete_value array
-    | List_value of discrete_value list
-    | Stack_value of discrete_value Stack.t
-    | Queue_value of discrete_value Queue.t
+    | Array_value of parsed_value array
+    | List_value of parsed_value list
+    | Stack_value of parsed_value Stack.t
+    | Queue_value of parsed_value Queue.t
 
 (*
 type rational_t

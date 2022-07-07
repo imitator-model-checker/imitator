@@ -19,8 +19,8 @@ type delayed_update_result =
     | Delayed_update_already_updated of discrete_index
 
 val direct_update : functions_table option -> discrete_access -> update_type * global_expression -> unit
-val delayed_update : functions_table option -> discrete_access -> (discrete_index, DiscreteValue.discrete_value) Hashtbl.t -> update_type * global_expression -> delayed_update_result
-val eval_global_expression : functions_table option -> discrete_access option -> global_expression -> DiscreteValue.discrete_value
+val delayed_update : functions_table option -> discrete_access -> (discrete_index, DiscreteValue.parsed_value) Hashtbl.t -> update_type * global_expression -> delayed_update_result
+val eval_global_expression : functions_table option -> discrete_access option -> global_expression -> DiscreteValue.parsed_value
 val eval_boolean_expression : functions_table option -> discrete_access option -> boolean_expression -> bool
 val eval_discrete_boolean_expression : functions_table option -> discrete_access option -> discrete_boolean_expression -> bool
 
@@ -30,43 +30,43 @@ val check_nonlinear_constraint : functions_table option -> DiscreteExpressions.d
 (** Checks whether a global_location satisfies a state_predicate; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
 val match_state_predicate : functions_table option -> discrete_access -> (automaton_index -> location_index -> bool) -> Location.global_location -> AbstractProperty.state_predicate-> bool
 
-val try_eval_constant_global_expression : functions_table option -> global_expression -> DiscreteValue.discrete_value
+val try_eval_constant_global_expression : functions_table option -> global_expression -> DiscreteValue.parsed_value
 val try_eval_constant_rational_term : functions_table option -> rational_term -> NumConst.t
 val try_eval_constant_rational_factor : functions_table option -> rational_factor -> NumConst.t
 
-val eval_constant_global_expression_opt : functions_table option -> global_expression -> DiscreteValue.discrete_value option
+val eval_constant_global_expression_opt : functions_table option -> global_expression -> DiscreteValue.parsed_value option
 val eval_constant_rational_term_opt : functions_table option -> rational_term -> NumConst.t option
 val eval_constant_rational_factor_opt : functions_table option -> rational_factor -> NumConst.t option
 
-val eval_pow : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_rational_of_int : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_shift_left : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_shift_right : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_fill_left : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_fill_right : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_log_and : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_log_or : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_log_xor : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_log_not : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_array_append : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_array_mem : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_array_length : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_list_is_empty : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_list_cons : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_list_hd : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_list_tl : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_list_rev : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_list_mem : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_list_length : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_stack_push : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_stack_pop : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_stack_top : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_stack_clear : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_stack_is_empty : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
-val eval_stack_length : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_pow : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_rational_of_int : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_shift_left : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_shift_right : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_fill_left : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_fill_right : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_log_and : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_log_or : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_log_xor : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_log_not : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_array_append : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_array_mem : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_array_length : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_list_is_empty : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_list_cons : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_list_hd : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_list_tl : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_list_rev : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_list_mem : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_list_length : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_stack_push : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_stack_pop : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_stack_top : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_stack_clear : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_stack_is_empty : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
+val eval_stack_length : string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value
 
 
 val is_global_expression_constant : functions_table option -> global_expression -> bool
 
-(*val pack_value : (* (Automaton.variable_index -> string) -> *) functions_table option -> eval_context option -> DiscreteValue.discrete_value -> DiscreteValue.discrete_value -> update_type -> DiscreteValue.discrete_value*)
+(*val pack_value : (* (Automaton.variable_index -> string) -> *) functions_table option -> eval_context option -> DiscreteValue.parsed_value -> DiscreteValue.parsed_value -> update_type -> DiscreteValue.parsed_value*)
 

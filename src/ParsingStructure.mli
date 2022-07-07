@@ -92,7 +92,7 @@ and parsed_product_quotient =
 
 and parsed_discrete_factor =
 	| Parsed_DF_variable of variable_name
-	| Parsed_DF_constant of DiscreteValue.discrete_value
+	| Parsed_DF_constant of DiscreteValue.parsed_value
 	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
     | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
@@ -484,7 +484,7 @@ type parsed_property = {
 (** Useful data structure to avoid multiple parameters in functions *)
 (************************************************************)
 (************************************************************)
-type constants_table = (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t
+type constants_table = (Automaton.variable_name , DiscreteValue.parsed_value) Hashtbl.t
 
 type variable_infos = {
 	constants : constants_table;

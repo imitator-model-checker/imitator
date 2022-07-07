@@ -1125,7 +1125,7 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
 (*------------------------------------------------------------*)
 let make_constants constants =
   (* Create hash table *)
-  let constants_hashtable : (string, DiscreteValue.discrete_value) Hashtbl.t = Hashtbl.create (List.length constants) in
+  let constants_hashtable : (string, DiscreteValue.parsed_value) Hashtbl.t = Hashtbl.create (List.length constants) in
   (* Manage Boolean for checking errors *)
   let correct = ref true in
   List.iter (fun (name, value(*, discrete_type *)) ->
@@ -3220,7 +3220,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Make the array of constants *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let (constants : (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t), constants_consistent = make_constants constant_tuples in
+	let (constants : (Automaton.variable_name , DiscreteValue.parsed_value) Hashtbl.t), constants_consistent = make_constants constant_tuples in
 
 
 

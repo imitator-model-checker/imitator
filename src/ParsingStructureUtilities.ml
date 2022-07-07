@@ -21,7 +21,7 @@ open CustomModules
 (* Leaf for parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of variable_name
-    | Leaf_constant of DiscreteValue.discrete_value
+    | Leaf_constant of DiscreteValue.parsed_value
     | Leaf_fun of variable_name
 
 (* Leaf for parsed update *)

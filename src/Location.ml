@@ -36,7 +36,7 @@ type global_location_index = int
 type locations = location_index array
 
 (* Array discrete_index -> discrete_value *)
-type discrete = DiscreteValue.discrete_value array
+type discrete = DiscreteValue.parsed_value array
 
 (* Global location: location for each automaton + value of the discrete *)
 type global_location = locations * discrete

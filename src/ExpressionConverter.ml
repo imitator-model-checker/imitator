@@ -63,7 +63,7 @@ and typed_product_quotient =
 
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete * typed_variable_scope
-	| Typed_constant of DiscreteValue.discrete_value * var_type_discrete
+	| Typed_constant of DiscreteValue.parsed_value * var_type_discrete
 	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
 	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_unary_min of typed_discrete_factor * var_type_discrete_number
@@ -193,7 +193,7 @@ and typed_product_quotient =
 
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete * typed_variable_scope
-	| Typed_constant of DiscreteValue.discrete_value * var_type_discrete
+	| Typed_constant of DiscreteValue.parsed_value * var_type_discrete
     | Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
     | Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_unary_min of typed_discrete_factor * var_type_discrete_number
