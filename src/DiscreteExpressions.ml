@@ -59,6 +59,26 @@ type global_expression =
 and discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
     | Int_arithmetic_expression of int_arithmetic_expression
+    | New_rational_arithmetic_expression of NumConst.t new_arithmetic_expression
+    | New_int_arithmetic_expression of Int32.t new_arithmetic_expression
+
+and 'a new_arithmetic_expression =
+    | Sum_diff of 'a new_arithmetic_expression * 'a new_term * sum_diff
+	| Arithmetic_term of 'a new_term
+
+and 'a new_term =
+	| Product_quotient of 'a new_term * 'a new_factor * product_quotient
+	| Arithmetic_factor of 'a new_factor
+
+and 'a new_factor =
+	| Arithmetic_global_variable of Automaton.variable_index
+	| Arithmetic_global_constant of 'a
+	| Arithmetic_local_variable of variable_name
+	| Arithmetic_nested_expression of 'a new_arithmetic_expression
+	| Arithmetic_unary_min of 'a new_factor
+    | Arithmetic_pow of 'a new_arithmetic_expression * int new_arithmetic_expression
+    | Arithmetic_array_access of expression_access_type * int new_arithmetic_expression
+    | Arithmetic_function_call of variable_name * variable_name list * global_expression list
 
 (****************************************************************)
 (** Rational arithmetic expressions for discrete variables *)
@@ -225,7 +245,7 @@ and update_type =
 type 'a my_expression =
     (* A typed expression *)
     | My_arithmetic_expression of 'a my_arithmetic_expression
-    | Bool_expression of 'a my_boolean_expression
+    | My_bool_expression of 'a my_boolean_expression
     | Other_expression of 'a my_factor
 
 and 'a my_boolean_expression =
