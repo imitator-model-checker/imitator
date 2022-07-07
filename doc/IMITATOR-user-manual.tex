@@ -754,12 +754,24 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 	\begin{IMITATORmodel}
 		(* i : int *)
 		(* r : rational *)
-		when rational_of_int(i) = r goto l1;
+		when i = 2 & r = 2 & rational_of_int(i) = r goto l1;
 	\end{IMITATORmodel}
 %------------------------------------------------------------
 \end{example}
 %------------------------------------------------------------
 
+%------------------------------------------------------------
+\begin{remark}
+	Comparing natively (using a ``cast'') an integer and a rational is not allowed.
+	That is, the following code is incorrect:
+	
+	%------------------------------------------------------------
+		\begin{IMITATORmodel}
+			when i = 2 & r = 2 & i = r goto l1; (* incorrect! *)
+		\end{IMITATORmodel}
+	%------------------------------------------------------------
+\end{remark}
+%------------------------------------------------------------
 
 
 %------------------------------------------------------------
