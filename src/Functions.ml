@@ -203,7 +203,7 @@ let builtin_functions : ParsingStructure.function_metadata list =
         };
         {
             name = "lognot";
-            parameter_names = ["b1"; "b2"];
+            parameter_names = ["b1"];
             signature_constraint = unary_log_signature;
             side_effect = false
         };
@@ -284,7 +284,7 @@ let builtin_functions : ParsingStructure.function_metadata list =
         };
         {
             name = "list_mem";
-            parameter_names = ["l"];
+            parameter_names = ["e"; "l"];
             signature_constraint = [
                 Type_name_constraint "a";
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
@@ -358,7 +358,7 @@ let builtin_functions : ParsingStructure.function_metadata list =
         };
         {
             name = "queue_push";
-            parameter_names = ["q"];
+            parameter_names = ["e"; "q"];
             signature_constraint = [
                 Type_name_constraint "a";
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
@@ -435,7 +435,6 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
             body = Fun_builtin DiscreteExpressionEvaluator.eval_pow;
             side_effect = false;
         };
-
         {
             name = "rational_of_int";
             parameter_names = ["r"];
@@ -446,61 +445,60 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
             body = Fun_builtin DiscreteExpressionEvaluator.eval_rational_of_int;
             side_effect = false
         };
-        (*
         {
             name = "shift_left";
-            parameter_names = ["i"; "n"];
+            parameter_names = ["b"; "i"];
             signature_constraint = shift_signature;
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_shift_left;
             side_effect = false
         };
         {
             name = "shift_right";
-            parameter_names = ["i"; "n"];
+            parameter_names = ["b"; "i"];
             signature_constraint = shift_signature;
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_shift_right;
             side_effect = false
         };
         {
             name = "fill_left";
-            parameter_names = ["i"; "n"];
+            parameter_names = ["b"; "i"];
             signature_constraint = fill_signature;
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_fill_left;
             side_effect = false
         };
         {
             name = "fill_right";
-            parameter_names = ["i"; "n"];
+            parameter_names = ["b"; "i"];
             signature_constraint = fill_signature;
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_fill_right;
             side_effect = false
         };
         {
             name = "logand";
             parameter_names = ["b1"; "b2"];
             signature_constraint = binary_log_signature;
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_log_and;
             side_effect = false
         };
         {
             name = "logor";
             parameter_names = ["b1"; "b2"];
             signature_constraint = binary_log_signature;
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_log_or;
             side_effect = false
         };
         {
             name = "logxor";
             parameter_names = ["b1"; "b2"];
             signature_constraint = binary_log_signature;
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_log_xor;
             side_effect = false
         };
         {
             name = "lognot";
-            parameter_names = ["b1"; "b2"];
+            parameter_names = ["b1"];
             signature_constraint = unary_log_signature;
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_log_not;
             side_effect = false
         };
         {
@@ -511,28 +509,18 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l2")));
                 Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_plus_constraint ("l1", Length_constraint_expression (Length_scalar_constraint "l2")))));
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_array_append;
             side_effect = false
         };
         {
             name = "array_mem";
-            parameter_names = ["a1"; "e"];
+            parameter_names = ["a"; "e"];
             signature_constraint = [
                 Type_name_constraint "a";
                 Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l")));
                 Defined_type_constraint Bool_constraint
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
-            side_effect = false
-        };
-        {
-            name = "list_is_empty";
-            parameter_names = ["l"];
-            signature_constraint = [
-                Defined_type_constraint (List_constraint (Type_name_constraint "a"));
-                Defined_type_constraint Bool_constraint
-            ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_array_mem;
             side_effect = false
         };
         {
@@ -542,7 +530,17 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l")));
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
            ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_array_length;
+            side_effect = false
+        };
+        {
+            name = "list_is_empty";
+            parameter_names = ["l"];
+            signature_constraint = [
+                Defined_type_constraint (List_constraint (Type_name_constraint "a"));
+                Defined_type_constraint Bool_constraint
+            ];
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_list_is_empty;
             side_effect = false
         };
         {
@@ -553,7 +551,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"))
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_list_cons;
             side_effect = false
         };
         {
@@ -563,7 +561,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
                 Type_name_constraint "a";
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_list_hd;
             side_effect = false
         };
         {
@@ -573,7 +571,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_list_tl;
             side_effect = false
         };
         {
@@ -583,18 +581,18 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_list_rev;
             side_effect = false
         };
         {
             name = "list_mem";
-            parameter_names = ["l"];
+            parameter_names = ["e"; "l"];
             signature_constraint = [
                 Type_name_constraint "a";
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
                 Defined_type_constraint Bool_constraint
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_list_mem;
             side_effect = false
         };
         {
@@ -604,7 +602,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_list_length;
             side_effect = false
         };
         {
@@ -615,7 +613,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"))
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_push;
             side_effect = true
         };
         {
@@ -635,7 +633,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
                 Type_name_constraint "a"
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_top;
             side_effect = false
         };
         {
@@ -645,7 +643,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"))
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_clear;
             side_effect = true
         };
         {
@@ -655,7 +653,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
                 Defined_type_constraint Bool_constraint
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_is_empty;
             side_effect = false
         };
         {
@@ -665,18 +663,18 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_length;
             side_effect = false
         };
         {
             name = "queue_push";
-            parameter_names = ["q"];
+            parameter_names = ["e"; "q"];
             signature_constraint = [
                 Type_name_constraint "a";
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"))
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_push;
             side_effect = true
         };
         {
@@ -686,7 +684,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
                 Type_name_constraint "a"
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_pop;
             side_effect = true
         };
         {
@@ -696,7 +694,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
                 Type_name_constraint "a"
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_top;
             side_effect = false
         };
         {
@@ -706,7 +704,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"))
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_clear;
             side_effect = true
         };
         {
@@ -716,7 +714,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
                 Defined_type_constraint Bool_constraint
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_is_empty;
             side_effect = false
         };
         {
@@ -726,7 +724,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
             ];
-            body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_length;
             side_effect = false
         };
         {
@@ -739,7 +737,6 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
             body = Fun_builtin (fun _ -> raise (Exceptions.InternalError "implement function"));
             side_effect = false
         };
-        *)
     ]
 
 let builtin_functions_table =

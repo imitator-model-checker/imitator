@@ -40,7 +40,31 @@ val eval_constant_rational_factor_opt : functions_table option -> rational_facto
 
 val eval_pow : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
 val eval_rational_of_int : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_shift_left : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_shift_right : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_fill_left : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_fill_right : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_log_and : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_log_or : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_log_xor : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_log_not : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_array_append : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_array_mem : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_array_length : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_list_is_empty : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_list_cons : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_list_hd : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_list_tl : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_list_rev : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_list_mem : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_list_length : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_stack_push : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
 val eval_stack_pop : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_stack_top : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_stack_clear : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_stack_is_empty : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+val eval_stack_length : string -> DiscreteValue.discrete_value list -> DiscreteValue.discrete_value
+
 
 val is_global_expression_constant : functions_table option -> global_expression -> bool
 

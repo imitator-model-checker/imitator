@@ -1820,81 +1820,14 @@ and bool_expression_of_typed_factor variable_infos = function
 	    let fail_message = expr_type_doesnt_match_to_structure_message "Boolean" str_expr in
         raise (InternalError fail_message)
 
-and bool_expression_of_typed_function_call variable_infos argument_expressions = function
-    | "list_hd" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Bool_sequence_function (
-            List_hd (
-                list_expression_of_typed_boolean_expression variable_infos Var_type_discrete_bool arg_0
-            )
-        )
-    | "stack_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Bool_sequence_function (
-            Stack_pop (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "stack_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Bool_sequence_function (
-            Stack_top (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Bool_sequence_function (
-            Queue_pop (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Bool_sequence_function (
-            Queue_top (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "list_mem" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
-        List_mem (
-            global_expression_of_typed_boolean_expression_without_type variable_infos arg_0,
-            list_expression_of_typed_boolean_expression_with_type variable_infos arg_1
-        )
-    | "array_mem" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
-        Array_mem (
-            global_expression_of_typed_boolean_expression_without_type variable_infos arg_0,
-            array_expression_of_typed_boolean_expression_with_type variable_infos arg_1
-        )
-    | "list_is_empty" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        List_is_empty (
-            list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-        )
+and bool_expression_of_typed_function_call variable_infos argument_expressions function_name =
+    let fun_meta = user_function_meta variable_infos function_name in
 
-    | "stack_is_empty" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Stack_is_empty (
-            stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-        )
-    | "queue_is_empty" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Queue_is_empty (
-            queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-        )
-
-    | function_name ->
-        let fun_meta = user_function_meta variable_infos function_name in
-
-        Bool_function_call (
-            function_name,
-            fun_meta.parameter_names,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
-        )
+    Bool_function_call (
+        function_name,
+        fun_meta.parameter_names,
+        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+    )
 
 (* --------------------*)
 (* Rational conversion *)
@@ -1990,94 +1923,14 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 	    let fail_message = expr_type_doesnt_match_to_structure_message "rational" str_expr in
 	    raise (InternalError fail_message)
 
-and rational_expression_of_typed_function_call variable_infos argument_expressions = function
-    | "pow" as function_name ->
-        (*
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
+and rational_expression_of_typed_function_call variable_infos argument_expressions function_name =
+    let fun_meta = user_function_meta variable_infos function_name in
 
-        Rational_pow (
-            rational_arithmetic_expression_of_typed_boolean_expression variable_infos arg_0,
-            int_arithmetic_expression_of_typed_boolean_expression variable_infos arg_1
-        )
-        *)
-        let fun_meta = user_function_meta variable_infos function_name in
-
-        Rational_function_call (
-            function_name,
-            fun_meta.parameter_names,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
-        )
-
-    | "rational_of_int" as function_name ->
-
-        let fun_meta = user_function_meta variable_infos function_name in
-
-        Rational_function_call (
-            function_name,
-            fun_meta.parameter_names,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
-        )
-        (*
-        let arg_0 = List.nth argument_expressions 0 in
-        Rational_of_int (
-            int_arithmetic_expression_of_typed_boolean_expression variable_infos arg_0
-        )
-        *)
-
-    | "list_hd" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Rational_sequence_function (
-            List_hd (
-                list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_number Var_type_discrete_rat) arg_0
-            )
-        )
-    | "stack_pop" as function_name ->
-
-        let fun_meta = user_function_meta variable_infos function_name in
-
-        Rational_function_call (
-            function_name,
-            fun_meta.parameter_names,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
-        )
-        (*
-        let arg_0 = List.nth argument_expressions 0 in
-        Rational_sequence_function (
-            Stack_pop (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-        *)
-    | "stack_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Rational_sequence_function (
-            Stack_top (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Rational_sequence_function (
-            Queue_pop (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Rational_sequence_function (
-            Queue_top (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | function_name ->
-        let fun_meta = user_function_meta variable_infos function_name in
-
-        Rational_function_call (
-            function_name,
-            fun_meta.parameter_names,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
-        )
+    Rational_function_call (
+        function_name,
+        fun_meta.parameter_names,
+        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+    )
 
 (* --------------------*)
 (* Int conversion *)
@@ -2172,79 +2025,15 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
 	    let fail_message = expr_type_doesnt_match_to_structure_message "int" str_expr in
 	    raise (InternalError fail_message)
 
-and int_expression_of_typed_function_call variable_infos argument_expressions = function
-    | "pow" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
-        Int_pow (
-            int_arithmetic_expression_of_typed_boolean_expression variable_infos arg_0,
-            int_arithmetic_expression_of_typed_boolean_expression variable_infos arg_1
-        )
-    | "list_hd" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Int_sequence_function (
-            List_hd (
-                list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) arg_0
-            )
-        )
-    | "stack_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Int_sequence_function (
-            Stack_pop (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "stack_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Int_sequence_function (
-            Stack_top (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Int_sequence_function (
-            Queue_pop (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Int_sequence_function (
-            Queue_top (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "array_length" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Array_length (
-            array_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-        )
+and int_expression_of_typed_function_call variable_infos argument_expressions function_name =
 
-    | "list_length" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        List_length (
-            list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-        )
+    let fun_meta = user_function_meta variable_infos function_name in
 
-    | "stack_length" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Stack_length (
-            stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-        )
-    | "queue_length" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Queue_length (
-            queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-        )
-    | function_name ->
-        let fun_meta = user_function_meta variable_infos function_name in
-
-        Int_function_call (
-            function_name,
-            fun_meta.parameter_names,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
-        )
+    Int_function_call (
+        function_name,
+        fun_meta.parameter_names,
+        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+    )
 
 
 (* --------------------*)
@@ -2318,122 +2107,15 @@ and binary_expression_of_typed_factor variable_infos length = function
 	    let fail_message = expr_type_doesnt_match_to_structure_message "binary word" str_expr in
 	    raise (InternalError fail_message)
 
-and binary_expression_of_typed_function_call variable_infos length argument_expressions = function
-    | "shift_left" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
+and binary_expression_of_typed_function_call variable_infos length argument_expressions function_name =
 
-        Logical_shift_left (
-            binary_expression_of_typed_boolean_expression variable_infos length arg_0,
-            int_arithmetic_expression_of_typed_boolean_expression variable_infos arg_1,
-            length
-        )
-    | "shift_right" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
+    let fun_meta = user_function_meta variable_infos function_name in
 
-        Logical_shift_right (
-            binary_expression_of_typed_boolean_expression variable_infos length arg_0,
-            int_arithmetic_expression_of_typed_boolean_expression variable_infos arg_1,
-            length
-        )
-    | "fill_left" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
-
-        Logical_fill_left (
-            binary_expression_of_typed_boolean_expression variable_infos length arg_0,
-            int_arithmetic_expression_of_typed_boolean_expression variable_infos arg_1,
-            length
-        )
-    | "fill_right" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
-
-        Logical_fill_right (
-            binary_expression_of_typed_boolean_expression variable_infos length arg_0,
-            int_arithmetic_expression_of_typed_boolean_expression variable_infos arg_1,
-            length
-        )
-    | "logand" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
-
-        Logical_and (
-            binary_expression_of_typed_boolean_expression variable_infos length arg_0,
-            binary_expression_of_typed_boolean_expression variable_infos length arg_1,
-            length
-        )
-    | "logor" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
-
-        Logical_or (
-            binary_expression_of_typed_boolean_expression variable_infos length arg_0,
-            binary_expression_of_typed_boolean_expression variable_infos length arg_1,
-            length
-        )
-    | "logxor" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
-
-        Logical_xor (
-            binary_expression_of_typed_boolean_expression variable_infos length arg_0,
-            binary_expression_of_typed_boolean_expression variable_infos length arg_1,
-            length
-        )
-
-    | "lognot" ->
-        let arg_0 = List.nth argument_expressions 0 in
-
-        Logical_not (
-            binary_expression_of_typed_boolean_expression variable_infos length arg_0,
-            length
-        )
-    | "list_hd" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Binary_word_sequence_function (
-            List_hd (
-                list_expression_of_typed_boolean_expression variable_infos (Var_type_discrete_binary_word length) arg_0
-            )
-        )
-    | "stack_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Binary_word_sequence_function (
-            Stack_pop (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "stack_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Binary_word_sequence_function (
-            Stack_top (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Binary_word_sequence_function (
-            Queue_pop (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Binary_word_sequence_function (
-            Queue_top (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | function_name ->
-
-        let fun_meta = user_function_meta variable_infos function_name in
-
-        Binary_word_function_call (
-            function_name,
-            fun_meta.parameter_names,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
-        )
+    Binary_word_function_call (
+        function_name,
+        fun_meta.parameter_names,
+        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+    )
 
 (* --------------------*)
 (* Array conversion *)
@@ -2526,58 +2208,15 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
 	    let fail_message = expr_type_doesnt_match_to_structure_message "array" str_expr in
 	    raise (InternalError fail_message)
 
-and array_expression_of_typed_function_call variable_infos discrete_type argument_expressions = function
-    | "array_append" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
-        Array_concat (
-            array_expression_of_typed_boolean_expression_with_type variable_infos arg_0,
-            array_expression_of_typed_boolean_expression_with_type variable_infos arg_1
-        )
+and array_expression_of_typed_function_call variable_infos discrete_type argument_expressions function_name =
 
-    | "list_hd" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Array_sequence_function (
-            List_hd (
-                list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "stack_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Array_sequence_function (
-            Stack_pop (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "stack_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Array_sequence_function (
-            Stack_top (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Array_sequence_function (
-            Queue_pop (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Array_sequence_function (
-            Queue_top (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | function_name ->
-        let fun_meta = user_function_meta variable_infos function_name in
+    let fun_meta = user_function_meta variable_infos function_name in
 
-        Array_function_call (
-            function_name,
-            fun_meta.parameter_names,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
-        )
+    Array_function_call (
+        function_name,
+        fun_meta.parameter_names,
+        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+    )
 
 (* --------------------*)
 (* List conversion *)
@@ -2668,67 +2307,15 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
 	    let fail_message = expr_type_doesnt_match_to_structure_message "list" str_expr in
 	    raise (InternalError fail_message)
 
-and list_expression_of_typed_function_call variable_infos discrete_type argument_expressions = function
-    | "list_cons" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
-        List_cons (
-            global_expression_of_typed_boolean_expression variable_infos arg_0 discrete_type,
-            list_expression_of_typed_boolean_expression_with_type variable_infos arg_1
-        )
-    | "list_hd" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        List_sequence_function (
-            List_hd (
-                list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "stack_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        List_sequence_function (
-            Stack_pop (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "stack_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        List_sequence_function (
-            Stack_top (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        List_sequence_function (
-            Queue_pop (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        List_sequence_function (
-            Queue_top (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "list_tl" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        List_list_tl (
-            list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-        )
-    | "list_rev" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        List_rev (
-            list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-        )
-    | function_name ->
-        let fun_meta = user_function_meta variable_infos function_name in
+and list_expression_of_typed_function_call variable_infos discrete_type argument_expressions function_name =
 
-        List_function_call (
-            function_name,
-            fun_meta.parameter_names,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
-        )
+    let fun_meta = user_function_meta variable_infos function_name in
+
+    List_function_call (
+        function_name,
+        fun_meta.parameter_names,
+        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+    )
 
 and stack_expression_of_typed_boolean_expression_with_type variable_infos = function
     | Typed_discrete_bool_expr (expr, discrete_type) ->
@@ -2810,65 +2397,15 @@ and stack_expression_of_typed_factor variable_infos discrete_type = function
 	    let fail_message = expr_type_doesnt_match_to_structure_message "stack" str_expr in
 	    raise (InternalError fail_message)
 
-and stack_expression_of_typed_function_call variable_infos discrete_type argument_expressions = function
-    | "list_hd" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Stack_sequence_function (
-            List_hd (
-                list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "stack_push" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
-        Stack_push (
-            global_expression_of_typed_boolean_expression variable_infos arg_0 discrete_type,
-            stack_expression_of_typed_boolean_expression_with_type variable_infos arg_1
-        )
+and stack_expression_of_typed_function_call variable_infos discrete_type argument_expressions function_name =
 
-    | "stack_clear" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Stack_clear (
-            stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-        )
+    let fun_meta = user_function_meta variable_infos function_name in
 
-    | "stack_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Stack_sequence_function (
-            Stack_pop (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "stack_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Stack_sequence_function (
-            Stack_top (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Stack_sequence_function (
-            Queue_pop (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Stack_sequence_function (
-            Queue_top (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-
-    | function_name ->
-        let fun_meta = user_function_meta variable_infos function_name in
-
-        Stack_function_call (
-            function_name,
-            fun_meta.parameter_names,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
-        )
+    Stack_function_call (
+        function_name,
+        fun_meta.parameter_names,
+        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+    )
 
 
 and queue_expression_of_typed_boolean_expression_with_type variable_infos = function
@@ -2953,65 +2490,15 @@ and queue_expression_of_typed_factor variable_infos discrete_type = function
 	    let fail_message = expr_type_doesnt_match_to_structure_message "queue" str_expr in
 	    raise (InternalError fail_message)
 
-and queue_expression_of_typed_function_call variable_infos discrete_type argument_expressions = function
-    | "list_hd" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Queue_sequence_function (
-            List_hd (
-                list_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_push" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        let arg_1 = List.nth argument_expressions 1 in
-        Queue_push (
-            global_expression_of_typed_boolean_expression variable_infos arg_0 discrete_type,
-            queue_expression_of_typed_boolean_expression_with_type variable_infos arg_1
-        )
+and queue_expression_of_typed_function_call variable_infos discrete_type argument_expressions function_name =
 
-    | "queue_clear" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Queue_clear (
-            queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-        )
+    let fun_meta = user_function_meta variable_infos function_name in
 
-    | "stack_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Queue_sequence_function (
-            Stack_pop (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "stack_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Queue_sequence_function (
-            Stack_top (
-                stack_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_pop" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Queue_sequence_function (
-            Queue_pop (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-    | "queue_top" ->
-        let arg_0 = List.nth argument_expressions 0 in
-        Queue_sequence_function (
-            Queue_top (
-                queue_expression_of_typed_boolean_expression_with_type variable_infos arg_0
-            )
-        )
-
-    | function_name ->
-        let fun_meta = user_function_meta variable_infos function_name in
-
-        Queue_function_call (
-            function_name,
-            fun_meta.parameter_names,
-            List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
-        )
+    Queue_function_call (
+        function_name,
+        fun_meta.parameter_names,
+        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+    )
 
 (* --------------------*)
 (* Access conversion *)

@@ -875,11 +875,142 @@ let eval_rational_of_int str_expr = function
 
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
-let eval_stack_pop str_expr = function
-    | (Stack_value stack) :: _ ->
-        let fail_message = "Use of `stack_top` on empty stack `" ^ str_expr ^ "`." in
-        try_eval_stack_pop stack fail_message
+let eval_shift_left str_expr = function
+    | (Binary_word_value b) :: (Int_value i) :: _ ->
+        Binary_word_value (BinaryWord.shift_left b (Int32.to_int i))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
 
+let eval_shift_right str_expr = function
+    | (Binary_word_value b) :: (Int_value i) :: _ ->
+        Binary_word_value (BinaryWord.shift_right b (Int32.to_int i))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_fill_left str_expr = function
+    | (Binary_word_value b) :: (Int_value i) :: _ ->
+        Binary_word_value (BinaryWord.fill_left b (Int32.to_int i))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_fill_right str_expr = function
+    | (Binary_word_value b) :: (Int_value i) :: _ ->
+        Binary_word_value (BinaryWord.fill_right b (Int32.to_int i))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_log_and str_expr = function
+    | (Binary_word_value l_binary_word) :: (Binary_word_value r_binary_word) :: _ ->
+        Binary_word_value (BinaryWord.log_and l_binary_word r_binary_word)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_log_or str_expr = function
+    | (Binary_word_value l_binary_word) :: (Binary_word_value r_binary_word) :: _ ->
+        Binary_word_value (BinaryWord.log_or l_binary_word r_binary_word)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_log_xor str_expr = function
+    | (Binary_word_value l_binary_word) :: (Binary_word_value r_binary_word) :: _ ->
+        Binary_word_value (BinaryWord.log_xor l_binary_word r_binary_word)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_log_not str_expr = function
+    | (Binary_word_value binary_word) :: _ ->
+        Binary_word_value (BinaryWord.log_not binary_word)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_array_append str_expr = function
+    | (Array_value l_array) :: (Array_value r_array) :: _ ->
+        Array_value (Array.append l_array r_array)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_array_mem str_expr = function
+    | e :: (Array_value a) :: _ ->
+        Bool_value (Array.mem e a)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_array_length str_expr = function
+    | (Array_value a) :: _ ->
+        Int_value (Int32.of_int (Array.length a))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_list_is_empty str_expr = function
+    | (List_value l) :: _ ->
+        Bool_value (List.length l = 0)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_list_cons str_expr = function
+    | e :: (List_value l) :: _ ->
+        List_value (List.cons e l)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_list_hd str_expr = function
+    | (List_value l) :: _ ->
+        let fail_message = "Use of `list_hd` on empty list `" ^ str_expr ^ "`." in
+        try_eval_list_hd l fail_message
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_list_tl str_expr = function
+    | (List_value l) :: _ ->
+        let fail_message = "Use of `list_hd` on empty list `" ^ str_expr ^ "`." in
+        List_value (try_eval_list_tl l fail_message)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_list_rev str_expr = function
+    | (List_value l) :: _ ->
+        List_value (List.rev l)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_list_mem str_expr = function
+    | e :: (List_value l) :: _ ->
+        Bool_value (List.mem e l)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_list_length str_expr = function
+    | (List_value l) :: _ ->
+        Int_value (Int32.of_int (List.length l))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_stack_push str_expr = function
+    | e :: (Stack_value s) :: _ ->
+        Stack.push e s; Stack_value s
+    | e :: (Queue_value s) :: _ ->
+        Queue.push e s; Queue_value s
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_stack_pop str_expr = function
+    | (Stack_value s) :: _ ->
+        let fail_message = "Use of `stack_pop` on empty stack `" ^ str_expr ^ "`." in
+        try_eval_stack_pop s fail_message
+    | (Queue_value s) :: _ ->
+        let fail_message = "Use of `queue_pop` on empty queue `" ^ str_expr ^ "`." in
+        try_eval_queue_pop s fail_message
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_stack_top str_expr = function
+    | (Stack_value s) :: _ ->
+        let fail_message = "Use of `stack_top` on empty stack `" ^ str_expr ^ "`." in
+        try_eval_stack_top s fail_message
+    | (Queue_value s) :: _ ->
+        let fail_message = "Use of `queue_top` on empty queue `" ^ str_expr ^ "`." in
+        try_eval_queue_top s fail_message
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_stack_clear str_expr = function
+    | (Stack_value s) :: _ ->
+        Stack.clear s; Stack_value s
+    | (Queue_value s) :: _ ->
+        Queue.clear s; Queue_value s
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_stack_is_empty str_expr = function
+    | (Stack_value s) :: _ ->
+        Bool_value (Stack.is_empty s)
+    | (Queue_value s) :: _ ->
+        Bool_value (Queue.is_empty s)
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_stack_length str_expr = function
+    | (Stack_value s) :: _ ->
+        Int_value (Int32.of_int (Stack.length s))
+    | (Queue_value s) :: _ ->
+        Int_value (Int32.of_int (Queue.length s))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 (* Tricky function to know if an expression is constant *)
