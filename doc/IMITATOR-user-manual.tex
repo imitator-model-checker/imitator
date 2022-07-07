@@ -931,7 +931,7 @@ Examples of array definitions are given below:
 %------------------------------------------------------------
 
 Lists are collections of variable length.
-Contrarily to arrays, the type of a list does include its length; it is therefore possible to compare two lists of different lengths.
+Contrarily to arrays, the type of a list does not include its length; it is therefore possible to compare two lists of different lengths.
 List elements can only be accessed---not updated---using an integer-valued arithmetic expression as index.
 A list variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
 For example, it is possible to declare a list of integers, or a list of Booleans, or a list of lists of arrays of Booleans.
@@ -958,7 +958,7 @@ Examples of list definitions are given below:
 	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a} with \styleIMI{'a:any} - head element of a list \styleIMI{l}
 	\item \label{item:lbl-list_is_empty} \styleIMI{list\_is\_empty(l:'a list):bool} with \styleIMI{'a:any} - Check if the list \styleIMI{l} is empty
 	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list):int} with \styleIMI{'a:any} - length of the list \styleIMI{l}
-	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool} with \styleIMI{'a:any} - true if \styleIMI{e} belongs to the list~ˇ\styleIMI{l}
+	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool} with \styleIMI{'a:any} - true if \styleIMI{e} belongs to the list~\styleIMI{l}
 	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list} with \styleIMI{'a:any} - reverse the list~\styleIMI{l}
 	\item \label{item:lbl-list_tl} \styleIMI{list\_tl(l:'a list):'a list} with \styleIMI{'a:any} - tail of the list \styleIMI{l}
 \end{itemize}
@@ -1008,7 +1008,7 @@ Examples of stack definitions are given below:
 	my_int_stack					: int stack;
 	my_bool_stack        	: bool stack;
 	my_binary_word_stack 	: binary(4) stack;
-	my_2d_int_stack      	: int stack stack;
+	my_int_liste_stack    : int list stack;
 \end{IMITATORmodel}
 %------------------------------------------------------------
 
@@ -1086,7 +1086,7 @@ Examples of queue definitions are given below:
 	my_int_queue					: int queue;
 	my_bool_queue        	: bool queue;
 	my_binary_word_queue 	: binary(4) queue;
-	my_2d_int_queue      	: int queue queue;
+	my_int_list_queue     : int list queue;
 \end{IMITATORmodel}
 %------------------------------------------------------------
 
