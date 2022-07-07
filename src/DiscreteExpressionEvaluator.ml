@@ -169,52 +169,19 @@ and eval_rational_factor_with_context functions_table_opt eval_context_opt = fun
     | Rational_unary_min factor ->
         NumConst.neg (eval_rational_factor_with_context functions_table_opt eval_context_opt factor)
 
-    | Rational_of_int expr ->
-        ImitatorUtilities.print_warning
-            "Conversion of an int expression to a rational expression may cause overflow if your platform does not manage `int` as an exact 32-bit integer.";
-        NumConst.numconst_of_int (Int32.to_int (eval_int_expression_with_context functions_table_opt eval_context_opt expr))
     | Rational_pow (expr, exp) ->
         let x = eval_rational_expression_with_context functions_table_opt eval_context_opt expr in
         let exponent = eval_int_expression_with_context functions_table_opt eval_context_opt exp in
         NumConst.pow x exponent
 
-    | Rational_sequence_function func ->
-        let value = eval_sequence_function_with_context functions_table_opt eval_context_opt func in
+    | Rational_array_access (access_type, index_expr) ->
+        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
         numconst_value value
 
     | Rational_function_call (function_name, param_names, expr_args) ->
         let fun_def = try_eval_function function_name functions_table_opt in
         let result = eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_def.body in
         numconst_value result
-
-and eval_sequence_function_with_context functions_table_opt eval_context_opt = function
-    | Array_access (access_type, index_expr) ->
-        get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type
-
-    | List_hd list_expr ->
-        let list = eval_list_expression_with_context functions_table_opt eval_context_opt list_expr in
-        let fail_message = list_hd_fail_message list_expr in
-        try_eval_list_hd list fail_message
-
-    | Stack_pop stack_expr ->
-        let stack = eval_stack_expression_with_context functions_table_opt eval_context_opt stack_expr in
-        let fail_message = stack_pop_fail_message stack_expr in
-        try_eval_stack_pop stack fail_message
-
-    | Stack_top stack_expr ->
-        let stack = eval_stack_expression_with_context functions_table_opt eval_context_opt stack_expr in
-        let fail_message = stack_top_fail_message stack_expr in
-        try_eval_stack_top stack fail_message
-
-    | Queue_pop queue_expr ->
-        let queue = eval_queue_expression_with_context functions_table_opt eval_context_opt queue_expr in
-        let fail_message = queue_pop_fail_message queue_expr in
-        try_eval_queue_pop queue fail_message
-
-    | Queue_top queue_expr ->
-        let queue = eval_queue_expression_with_context functions_table_opt eval_context_opt queue_expr in
-        let fail_message = queue_top_fail_message queue_expr in
-        try_eval_queue_top queue fail_message
 
 and eval_int_expression_with_context functions_table_opt eval_context_opt (* expr *) =
     let rec eval_int_expression_with_context_rec = function
@@ -279,21 +246,10 @@ and eval_int_expression_with_context functions_table_opt eval_context_opt (* exp
             let exponent = eval_int_expression_with_context_rec exp in
             OCamlUtilities.pow x exponent
 
-        | Int_sequence_function func ->
-            let value = eval_sequence_function_with_context functions_table_opt eval_context_opt func in
+        | Int_array_access (access_type, index_expr) ->
+            let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
             int_value value
-        | Array_length array_expr ->
-            let array = eval_array_expression_with_context functions_table_opt eval_context_opt array_expr in
-            Int32.of_int (Array.length array)
-        | List_length list_expr ->
-            let list = eval_list_expression_with_context functions_table_opt eval_context_opt list_expr in
-            Int32.of_int (List.length list)
-        | Stack_length stack_expr ->
-            let stack = eval_stack_expression_with_context functions_table_opt eval_context_opt stack_expr in
-            Int32.of_int (Stack.length stack)
-        | Queue_length queue_expr ->
-            let queue = eval_queue_expression_with_context functions_table_opt eval_context_opt queue_expr in
-            Int32.of_int (Queue.length queue)
+
         | Int_function_call (function_name, param_names, expr_args) ->
             let fun_def = try_eval_function function_name functions_table_opt in
             let result = eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_def.body in
@@ -374,26 +330,9 @@ and eval_discrete_boolean_expression_with_context functions_table_opt eval_conte
         eval_boolean_expression_with_context functions_table_opt eval_context_opt boolean_expression
     | Not_bool b ->
         not (eval_boolean_expression_with_context functions_table_opt eval_context_opt b) (* negation *)
-    | Bool_sequence_function func ->
-        let value = eval_sequence_function_with_context functions_table_opt eval_context_opt func in
+    | Bool_array_access (access_type, index_expr) ->
+        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
         bool_value value
-    | List_mem (expr, list_expr) ->
-        let value = eval_global_expression_with_context functions_table_opt eval_context_opt expr in
-        let list = eval_list_expression_with_context functions_table_opt eval_context_opt list_expr in
-        List.mem value list
-    | Array_mem (expr, array_expr) ->
-        let value = eval_global_expression_with_context functions_table_opt eval_context_opt expr in
-        let array = eval_array_expression_with_context functions_table_opt eval_context_opt array_expr in
-        Array.mem value array
-    | List_is_empty list_expr ->
-        let list = eval_list_expression_with_context functions_table_opt eval_context_opt list_expr in
-        List.length list = 0
-    | Stack_is_empty stack_expr ->
-        let stack = eval_stack_expression_with_context functions_table_opt eval_context_opt stack_expr in
-        Stack.is_empty stack
-    | Queue_is_empty queue_expr ->
-        let queue = eval_queue_expression_with_context functions_table_opt eval_context_opt queue_expr in
-        Queue.is_empty queue
 
     | Bool_function_call (function_name, param_names, expr_args) ->
         let fun_def = try_eval_function function_name functions_table_opt in
@@ -401,38 +340,6 @@ and eval_discrete_boolean_expression_with_context functions_table_opt eval_conte
         bool_value result
 
 and eval_binary_word_expression_with_context functions_table_opt eval_context_opt = function
-    | Logical_shift_left (binary_word, expr, _) ->
-        BinaryWord.shift_left
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt binary_word)
-            (Int32.to_int (eval_int_expression_with_context functions_table_opt eval_context_opt expr))
-    | Logical_shift_right (binary_word, expr, _) ->
-        BinaryWord.shift_right
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt binary_word)
-            (Int32.to_int (eval_int_expression_with_context functions_table_opt eval_context_opt expr))
-    | Logical_fill_left (binary_word, expr, _) ->
-        BinaryWord.fill_left
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt binary_word)
-            (Int32.to_int (eval_int_expression_with_context functions_table_opt eval_context_opt expr))
-    | Logical_fill_right (binary_word, expr, _) ->
-        BinaryWord.fill_right
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt binary_word)
-            (Int32.to_int (eval_int_expression_with_context functions_table_opt eval_context_opt expr))
-    | Logical_and (l_binary_word, r_binary_word, _) ->
-        BinaryWord.log_and
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt l_binary_word)
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt r_binary_word)
-    | Logical_or (l_binary_word, r_binary_word, _) ->
-        BinaryWord.log_or
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt l_binary_word)
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt r_binary_word)
-    | Logical_xor (l_binary_word, r_binary_word, _) ->
-        BinaryWord.log_xor
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt l_binary_word)
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt r_binary_word)
-    | Logical_not (binary_word, _) ->
-        BinaryWord.log_not
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt binary_word)
-
     | Binary_word_constant value -> value
     | Binary_word_variable (variable_index, _) ->
         binary_word_value (try_eval_variable variable_index eval_context_opt)
@@ -441,8 +348,8 @@ and eval_binary_word_expression_with_context functions_table_opt eval_context_op
         let discrete_value = try_eval_local_variable variable_name eval_context_opt in
         binary_word_value discrete_value
 
-    | Binary_word_sequence_function func ->
-        let value = eval_sequence_function_with_context functions_table_opt eval_context_opt func in
+    | Binary_word_array_access (access_type, index_expr) ->
+        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
         binary_word_value value
 
     | Binary_word_function_call (function_name, param_names, expr_args) ->
@@ -462,12 +369,8 @@ and eval_array_expression_with_context functions_table_opt eval_context_opt = fu
         let discrete_value = try_eval_local_variable variable_name eval_context_opt in
         array_value discrete_value
 
-    | Array_concat (array_expr_0, array_expr_1) ->
-        let array_0 = eval_array_expression_with_context functions_table_opt eval_context_opt array_expr_0 in
-        let array_1 = eval_array_expression_with_context functions_table_opt eval_context_opt array_expr_1 in
-        Array.append array_0 array_1
-    | Array_sequence_function func ->
-        let value = eval_sequence_function_with_context functions_table_opt eval_context_opt func in
+    | Array_array_access (access_type, index_expr) ->
+        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
         array_value value
 
     | Array_function_call (function_name, param_names, expr_args) ->
@@ -486,22 +389,10 @@ and eval_list_expression_with_context functions_table_opt eval_context_opt = fun
                 (* Variable should exist as it was checked before *)
         let discrete_value = try_eval_local_variable variable_name eval_context_opt in
         list_value discrete_value
-    | List_cons (expr, list_expr) ->
-        let list = eval_list_expression_with_context functions_table_opt eval_context_opt list_expr in
-        let value = eval_global_expression_with_context functions_table_opt eval_context_opt expr in
-        value :: list
-    | List_sequence_function func ->
-        let value = eval_sequence_function_with_context functions_table_opt eval_context_opt func in
+    | List_array_access (access_type, index_expr) ->
+        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
         list_value value
 
-    | List_list_tl list_expr ->
-        let list = eval_list_expression_with_context functions_table_opt eval_context_opt list_expr in
-        let fail_message = list_tl_fail_message list_expr in
-        try_eval_list_tl list fail_message
-
-    | List_rev list_expr ->
-        let list = eval_list_expression_with_context functions_table_opt eval_context_opt list_expr in
-        List.rev list
     | List_function_call (function_name, param_names, expr_args) ->
         let fun_def = try_eval_function function_name functions_table_opt in
         let result = eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_def.body in
@@ -518,17 +409,8 @@ and eval_stack_expression_with_context functions_table_opt eval_context_opt = fu
         let discrete_value = try_eval_local_variable variable_name eval_context_opt in
         stack_value discrete_value
 
-    | Stack_push (expr, stack_expr) ->
-        let e = eval_global_expression_with_context functions_table_opt eval_context_opt expr in
-        let stack = eval_stack_expression_with_context functions_table_opt eval_context_opt stack_expr in
-        Stack.push e stack; stack
-
-    | Stack_clear stack_expr ->
-        let stack = eval_stack_expression_with_context functions_table_opt eval_context_opt stack_expr in
-        Stack.clear stack; stack
-
-    | Stack_sequence_function func ->
-        let value = eval_sequence_function_with_context functions_table_opt eval_context_opt func in
+    | Stack_array_access (access_type, index_expr) ->
+        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
         stack_value value
 
     | Stack_function_call (function_name, param_names, expr_args) ->
@@ -547,17 +429,8 @@ and eval_queue_expression_with_context functions_table_opt eval_context_opt = fu
         let discrete_value = try_eval_local_variable variable_name eval_context_opt in
         queue_value discrete_value
 
-    | Queue_push (expr, queue_expr) ->
-        let e = eval_global_expression_with_context functions_table_opt eval_context_opt expr in
-        let queue = eval_queue_expression_with_context functions_table_opt eval_context_opt queue_expr in
-        Queue.push e queue; queue
-
-    | Queue_clear queue_expr ->
-        let queue = eval_queue_expression_with_context functions_table_opt eval_context_opt queue_expr in
-        Queue.clear queue; queue
-
-    | Queue_sequence_function func ->
-        let value = eval_sequence_function_with_context functions_table_opt eval_context_opt func in
+    | Queue_array_access (access_type, index_expr) ->
+        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
         queue_value value
 
     | Queue_function_call (function_name, param_names, expr_args) ->

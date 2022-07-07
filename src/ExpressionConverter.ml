@@ -1805,11 +1805,9 @@ and bool_expression_of_typed_factor variable_infos = function
         bool_expression_of_typed_arithmetic_expression variable_infos expr
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Bool_sequence_function (
-            Array_access (
-                expression_access_type_of_typed_factor variable_infos factor discrete_type,
-                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
-            )
+        Bool_array_access (
+            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -1908,11 +1906,9 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
         )
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Rational_sequence_function (
-            Array_access (
-                expression_access_type_of_typed_factor variable_infos factor discrete_type,
-                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
-            )
+        Rational_array_access (
+            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -2010,11 +2006,9 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
         )
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Int_sequence_function (
-            Array_access (
-                expression_access_type_of_typed_factor variable_infos factor discrete_type,
-                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
-            )
+        Int_array_access (
+            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -2092,11 +2086,9 @@ and binary_expression_of_typed_factor variable_infos length = function
         binary_expression_of_typed_arithmetic_expression variable_infos length expr
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Binary_word_sequence_function (
-            Array_access (
-                expression_access_type_of_typed_factor variable_infos factor discrete_type,
-                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
-            )
+        Binary_word_array_access (
+            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -2193,11 +2185,9 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
         array_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Array_sequence_function (
-            Array_access (
-                expression_access_type_of_typed_factor variable_infos factor discrete_type,
-                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
-            )
+        Array_array_access (
+            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -2292,11 +2282,9 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
         list_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        List_sequence_function (
-            Array_access (
-                expression_access_type_of_typed_factor variable_infos factor discrete_type,
-                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
-            )
+        List_array_access (
+            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
@@ -2380,11 +2368,9 @@ and stack_expression_of_typed_factor variable_infos discrete_type = function
         stack_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Stack_sequence_function (
-            Array_access (
-                expression_access_type_of_typed_factor variable_infos factor discrete_type,
-                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
-            )
+        Stack_array_access (
+            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
     | Typed_sequence (_, _, Typed_stack) -> Literal_stack
@@ -2473,11 +2459,9 @@ and queue_expression_of_typed_factor variable_infos discrete_type = function
         queue_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Queue_sequence_function (
-            Array_access (
-                expression_access_type_of_typed_factor variable_infos factor discrete_type,
-                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
-            )
+        Queue_array_access (
+            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
     | Typed_sequence (_, _, Typed_queue) -> Literal_queue
