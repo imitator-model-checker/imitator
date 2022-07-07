@@ -516,7 +516,7 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
             ) else (
                 let str_parameters_list = List.map (fun (parameter_name, discrete_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete discrete_type) group_without_duplicates in
                 let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
-                print_error (current_duplicate_parameter_message ^ "` doesn't have consistent definitions: `" ^ str_parameters ^ "`.");
+                print_error (current_duplicate_parameter_message ^ "` does not have consistent definitions: `" ^ str_parameters ^ "`.");
             )
         ) duplicate_parameters;
 
@@ -1767,7 +1767,7 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 					raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist, although this should have been checked before."));
 				))
 			in not is_discrete
-        (* Doesn't care about discrete boolean inits for constraint initalization ! *)
+        (* Do not care about discrete boolean inits for constraint initalization ! *)
         | Parsed_discrete_predicate _ -> false
 		| _ -> true
 		) linear_predicates in

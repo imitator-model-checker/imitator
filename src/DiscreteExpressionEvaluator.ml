@@ -168,8 +168,7 @@ and eval_rational_factor_with_context eval_context_opt = function
 
     | Rational_of_int expr ->
         ImitatorUtilities.print_warning
-            "Conversion of an int expression to a rational expression
-            may cause overflow if your platform doesn't manage `int` as an exact 32 bits integer.";
+            "Conversion of an int expression to a rational expression may cause overflow if your platform does not manage `int` as an exact 32-bit integer.";
         NumConst.numconst_of_int (Int32.to_int (eval_int_expression_with_context eval_context_opt expr))
     | Rational_pow (expr, exp) ->
         let x = eval_rational_expression_with_context eval_context_opt expr in

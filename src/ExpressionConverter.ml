@@ -856,7 +856,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
                 ^ string_of_parsed_factor variable_infos func
                 ^ "`/"
                 ^ string_of_int (arguments_number)
-                ^ " call doesn't match with arity of the function : `"
+                ^ " call does not match with arity of the function: `"
                 ^ function_name
                 ^ "`/"
                 ^ string_of_int arity
@@ -1090,7 +1090,7 @@ let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStr
             ^ fun_definition.name
             ^ " : "
             ^ FunctionSig.string_of_signature signature
-            ^ "` doesn't match with implementation `"
+            ^ "` does not match with implementation `"
             ^ string_of_fun_body variable_infos typed_body
             ^ "` of type "
             ^ DiscreteType.string_of_var_type_discrete body_discrete_type
