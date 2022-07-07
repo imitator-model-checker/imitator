@@ -1418,7 +1418,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		(** Collecting the updates by evaluating the conditions, if there is any *)
         let _ (* no clock update for pre-updates *), discrete_seq_updates = get_updates source_location transition.seq_updates in
 
-        (* Make `do` sequential updates (make these updates now, only on discrete) *)
+        (* Make `seq` sequential updates (make these updates now, only on discrete) *)
         List.iter (direct_update discrete_access) (List.rev discrete_seq_updates);
 
 	) combined_transition;

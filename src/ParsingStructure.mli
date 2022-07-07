@@ -164,7 +164,7 @@ type parsed_update_type =
 
 (* Type of the batch of updates *)
 type updates_type =
-    | Parsed_seq_updates (* Sequential updates `do` *)
+    | Parsed_seq_updates (* Sequential updates `seq` *)
     | Parsed_std_updates (* Standard updates `then` *)
 
 (** basic updating *)

@@ -1530,7 +1530,7 @@ let convert_normal_updates variable_infos updates_type updates_list =
     (* Check that pre and post updates not updating clocks ! It's only for discrete variables *)
     (match updates_type with
     | Parsed_seq_updates when List.length parsed_clock_updates > 0 ->
-        print_error "`do` bloc is reserved for sequential updates on discrete variables. This bloc cannot be used for updating clock(s).";
+        print_error "`seq` bloc is reserved for sequential updates on discrete variables. This bloc cannot be used for updating clock(s).";
         raise InvalidModel
     | _ -> ()
     );

@@ -1031,13 +1031,15 @@ Examples of stack definitions are given below:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
+		loc l0: invariant True
 		when
 			& True
 			do {
-				stack_push(1, s),
-				stack_push(2, s),
-				i := stack_top(s),
-				j := stack_pop(s),
+				seq
+					stack_push(1, s);
+					stack_push(2, s);
+					i := stack_top(s);
+					j := stack_pop(s);
 			}
 		goto l1;
 
@@ -1049,7 +1051,8 @@ Examples of stack definitions are given below:
 		when
 			& True
 		do {
-			stack_clear(s)
+			seq
+				stack_clear(s);
 		}
 		goto l2;
 
@@ -1108,13 +1111,15 @@ Examples of queue definitions are given below:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
+		loc l0: invariant True
 		when
 			& True
 			do {
-				queue_push(1, q),
-				queue_push(2, q),
-				i := stack_top(q),
-				j := stack_pop(q),
+				seq
+					queue_push(1, q);
+					queue_push(2, q);
+					i := queue_top(q);
+					j := queue_pop(q);
 			}
 		goto l1;
 
@@ -1126,7 +1131,8 @@ Examples of queue definitions are given below:
 		when
 			& True
 		do {
-			queue_clear(q)
+			seq
+				queue_clear(q);
 		}
 		goto l2;
 

@@ -1378,7 +1378,7 @@ let check_update variable_infos update_types parsed_update_type expr =
         raise (TypeError (
             "`then` update bloc contain one or more expression with side effects `"
             ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
-            ^ "`. Expression with side effects are only allowed in `do` bloc."
+            ^ "`. Expression with side effects are only allowed in `seq` bloc."
         ));
 
     (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
