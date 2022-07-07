@@ -334,44 +334,6 @@ let binary_word_value = function
 let convert_to_rational_value value =
     Rational_value (to_numconst_value value)
 
-(* Convert discrete value to another discrete type *)
-(* Use for implicit conversion *)
-(*
-let rec convert_value_to_discrete_type value target_type =
-    match value, target_type with
-    (* Source and target type are identical *)
-    | Rational_value _, Var_type_discrete_number Var_type_discrete_rat
-    | Int_value _, Var_type_discrete_number Var_type_discrete_int
-    | Number_value _, Var_type_discrete_number Var_type_discrete_unknown_number -> value
-    (* Number_value to Rational_value *)
-    | Number_value _, Var_type_discrete_number Var_type_discrete_rat
-    (* Int_value to Rational_value *)
-    | Int_value _, Var_type_discrete_number Var_type_discrete_rat ->
-        Rational_value (to_numconst_value value)
-    (* Number_value to Int_value *)
-    | Number_value _, Var_type_discrete_number Var_type_discrete_int
-    (* Rational_value to Int_value *)
-    | Rational_value _, Var_type_discrete_number Var_type_discrete_int ->
-        Int_value (to_int_value value)
-    (* No Conversion *)
-    | Bool_value _, Var_type_discrete_bool
-    | Binary_word_value _, Var_type_discrete_binary_word _ -> value
-    | Array_value inner_values, Var_type_discrete_array (inner_type, _) ->
-        Array_value (Array.map (fun value -> convert_value_to_discrete_type value inner_type) inner_values)
-    | List_value inner_values, Var_type_discrete_list inner_type ->
-        List_value (List.map (fun value -> convert_value_to_discrete_type value inner_type) inner_values)
-    | Stack_value inner_values, Var_type_discrete_stack inner_type ->
-        Stack_value (List.map (fun value -> convert_value_to_discrete_type value inner_type) inner_values)
-    (* Other are not supported *)
-    | x, t -> failwith (
-        "Implicit conversion of value "
-        ^ (string_of_value x)
-        ^ " to "
-        ^ (string_of_var_type_discrete t)
-        ^ " type is not supported"
-    )
-*)
-
 (* Hash code of discrete value *)
 let rec hash = function
     | Number_value x
