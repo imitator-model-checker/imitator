@@ -121,6 +121,69 @@ and eval_discrete_arithmetic_expression_with_context functions_table_opt eval_co
         Abstract_number_value (Abstract_rat_value (eval_rational_expression_with_context functions_table_opt eval_context_opt expr))
     | Int_arithmetic_expression expr ->
         Abstract_number_value (Abstract_int_value (eval_int_expression_with_context functions_table_opt eval_context_opt expr))
+(*
+and eval_new_arithmetic_expression_with_context functions_table_opt eval_context_opt = function
+        | Sum_diff (expr, term, sum_diff) ->
+            let sum_function =
+                match sum_diff with
+                | Plus -> NumConst.add
+                | Minus -> NumConst.sub
+            in
+            sum_function
+                (eval_new_arithmetic_expression_with_context functions_table_opt eval_context_opt expr)
+                (eval_new_term_with_context functions_table_opt eval_context_opt term)
+
+        | Arithmetic_term term ->
+            eval_new_term_with_context functions_table_opt eval_context_opt term
+
+and eval_new_term_with_context functions_table_opt eval_context_opt = function
+    | Product_quotient (term, factor, product_quotient) ->
+        let a = eval_new_term_with_context functions_table_opt eval_context_opt term in
+        let b = eval_new_factor_with_context functions_table_opt eval_context_opt factor in
+        (match product_quotient with
+        | Mul -> NumConst.mul a b
+        | Div ->
+            let numerator, denominator = a, b in
+            (* Check for 0-denominator *)
+            if NumConst.equal denominator NumConst.zero then(
+                raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ NumConst.to_string numerator ^ " / " ^ NumConst.to_string denominator ^ ""))
+            );
+            (* Divide *)
+            NumConst.div numerator denominator
+        )
+
+    | Arithmetic_factor factor ->
+        eval_new_factor_with_context functions_table_opt eval_context_opt factor
+
+and eval_new_factor_with_context functions_table_opt eval_context_opt = function
+    | Arithmetic_global_variable variable_index ->
+        numconst_value (try_eval_variable variable_index eval_context_opt)
+    | Arithmetic_global_constant variable_value ->
+        variable_value
+    | Arithmetic_local_variable variable_name ->
+        (* Variable should exist as it was checked before *)
+        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        numconst_value discrete_value
+    | Arithmetic_nested_expression expr ->
+        eval_rational_expression_with_context functions_table_opt eval_context_opt expr
+    | Arithmetic_unary_min factor ->
+        NumConst.neg (eval_rational_factor_with_context functions_table_opt eval_context_opt factor)
+
+    | Arithmetic_pow (expr, exp) ->
+        let x = eval_rational_expression_with_context functions_table_opt eval_context_opt expr in
+        let exponent = eval_int_expression_with_context functions_table_opt eval_context_opt exp in
+        NumConst.pow x exponent
+
+    | Arithmetic_array_access (access_type, index_expr) ->
+        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
+        numconst_value value
+
+    | Arithmetic_function_call (function_name, param_names, expr_args) ->
+        let fun_def = try_eval_function function_name functions_table_opt in
+        let result = eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_def.body in
+        numconst_value result
+
+*)
 
 and eval_rational_expression_with_context functions_table_opt eval_context_opt = function
         | Rational_sum_diff (expr, term, sum_diff) ->

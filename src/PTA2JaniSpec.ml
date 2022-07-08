@@ -622,11 +622,15 @@ and string_of_expression_access variable_names access_type index_expr =
 and string_of_function_call variable_names function_name args_expr =
     let str_args_expr_list = List.map (string_of_global_expression variable_names) args_expr in
     let str_args_expr_array = array_of_list str_args_expr_list in
-
-    jani_function_call
-        function_name
-        str_args_expr_array
-        ~str_comment:(undeclared_function_warning function_name)
+    match function_name, str_args_expr_list with
+    (* Special case, in Jani pow is an operator *)
+    | "pow", str_l_expr :: str_r_expr :: [] ->
+        jani_binary_operator "pow" str_l_expr str_r_expr
+    | _ ->
+        jani_function_call
+            function_name
+            str_args_expr_array
+            ~str_comment:(undeclared_function_warning function_name)
 
 (* Get list of non-linear constraint inequalities with customized strings *)
 let strings_of_nonlinear_constraint variable_names (* nonlinear_constraint *) =
@@ -673,18 +677,16 @@ let string_of_custom_user_functions model =
     (* Convert a function definition into a string *)
     let string_of_fun_definition fun_def =
 
-        print_warning ("Trying to translate `" ^ fun_def.name ^ "`");
+        print_warning ("Trying to translate `" ^ fun_def.name ^ "`.");
 
         (* Convert a function expression into a string *)
         let rec string_of_next_expr = function
-            | Fun_builtin _ -> "" (* TODO benjamin see here, because it will write fn builtin_f () begin end on builtin function *)
+            | Fun_builtin _ -> ""
             | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
-                (* TODO benjamin see with etienne (add TODO in translation ?) *)
                 print_warning ("Local declaration of `" ^ variable_name ^ "` in function `" ^ fun_def.name ^ "` are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
             | Fun_instruction (discrete_update, next_expr) ->
-                (* TODO benjamin see with etienne (add TODO in translation ?) *)
                 print_warning ("Instruction found in function `" ^ fun_def.name ^ "`. Instructions are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
@@ -701,12 +703,19 @@ let string_of_custom_user_functions model =
 
         let str_param_array = array_of_list str_param_list in
 
-        (* Format function definition *)
-        jani_function_declaration
-            fun_def.name
-            (string_of_type_constraint return_type_constraint)
-            str_param_array
-            (string_of_next_expr fun_def.body)
+        let str_fun_body = string_of_next_expr fun_def.body in
+
+        if str_fun_body <> "" then (
+            (* Format function definition *)
+            jani_function_declaration
+                fun_def.name
+                (string_of_type_constraint return_type_constraint)
+                str_param_array
+                (string_of_next_expr fun_def.body)
+        )
+        else
+            ""
+
 
     in
 

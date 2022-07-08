@@ -1,3 +1,4 @@
+open DiscreteValue
 open DiscreteType
 
 type abstract_number_value =
@@ -51,4 +52,4 @@ val is_rational_value : abstract_value -> bool
 val to_int_value : abstract_value -> Int32.t
 val to_rat_value : abstract_value -> NumConst.t
 
-val of_parsed_value : DiscreteValue.parsed_value -> abstract_value
+val of_parsed_value : parsed_value -> abstract_value
