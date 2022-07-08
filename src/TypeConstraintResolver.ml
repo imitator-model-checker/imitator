@@ -84,35 +84,6 @@ let is_resolved_constraints_compatibles constraint_a constraint_b =
         length_a = length_b
     | _ -> false
 
-(*
-(* Special type of constraint, dependent type are type dependent on value *)
-(* for example fill_left : binary(l1) -> l:int -> binary(l1 + l) *)
-(* The type of the returned binary word is dependent on the value of the second argument *)
-(* As the type system of IMITATOR is static, all dependent type value must be a constant expression ! *)
-let resolve_dependent_type_constraint variable_infos signature_constraint expressions =
-
-    let signature_constraint_with_expressions = List.combine signature_constraint expressions in
-
-    let dependent_type_constraints = OCamlUtilities.rev_filter_map (fun (type_constraint, expr) ->
-        match type_constraint with
-        | Defined_type_constraint (Number_constraint (Defined_type_number_constraint Int_constraint (Int_name_constraint constraint_name))) ->
-            (* If expression is a type-dependent value, we must convert expression to an int expression *)
-
-
-            if not (ParsingStructureUtilities.is_parsed_boolean_expression_constant variable_infos expr) then (
-                raise (TypeError (""));
-            )
-            else (
-                let value = ParsingStructureUtilities.try_reduce_parsed_boolean_expression variable_infos.constants expr in
-                Some (constraint_name, Resolved_length_constraint (Int32.to_int (DiscreteValue.to_int_value value)))
-            )
-        | _ -> None
-
-    ) signature_constraint_with_expressions
-    in
-    dependent_type_constraints
-*)
-
 (* Resolve signature constraints from passed argument discrete type *)
 let resolve_constraints variable_infos signature discrete_types =
 

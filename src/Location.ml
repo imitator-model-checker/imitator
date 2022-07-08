@@ -155,36 +155,6 @@ let make_location locations_per_automaton discrete_values =
 (* as it was the same references. *)
 (* As it was possible to update content of array in IMITATOR via a[i] = x, or stack by stack_push(x, s) *)
 (* List isn't concerned because we doesn't have ability to modify it's content in IMITATOR. *)
-(*
-let rec copy_discrete = function
-    | DiscreteValue.Array_value values -> DiscreteValue.Array_value (Array.map copy_discrete values)
-    | DiscreteValue.Stack_value values ->
-        (* Copy stack values *)
-        let stack_cpy =
-            values
-            |> Stack.to_seq
-            |> List.of_seq
-            |> List.map copy_discrete
-            |> List.rev
-            |> List.to_seq
-            |> Stack.of_seq
-        in
-        DiscreteValue.Stack_value stack_cpy
-
-    | DiscreteValue.Queue_value values ->
-        (* Copy queue values *)
-        let queue_cpy =
-            values
-            |> Queue.to_seq
-            |> List.of_seq
-            |> List.map copy_discrete
-            |> List.rev
-            |> List.to_seq
-            |> Queue.of_seq
-        in
-        DiscreteValue.Queue_value queue_cpy
-    | value -> value
-*)
 let copy_discrete_at_location location =
 	(* Get discrete variables *)
 	let discretes = get_discrete location in

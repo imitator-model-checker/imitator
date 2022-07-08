@@ -144,22 +144,6 @@ let jani_array_access str_array_expr str_index_expr =
         json_property "index" str_index_expr
     |]
 
-(* Format a Jani custom datatype value *)
-let jani_binary_word_datavalue binary_word =
-    let array_value = BinaryWord.to_array (DiscreteValue.binary_word_value binary_word) in
-    let str_values = Array.map (fun x -> if x then "true" else "false") array_value in
-
-    json_struct [|
-        jani_operator_dv;
-        json_property "type" (json_quoted "binary_word");
-        json_property "values" (json_array [|
-            json_struct [|
-                json_property "member" (json_quoted "elements");
-                json_property "value" (jani_array_value str_values)
-            |]
-        |])
-    |]
-
 (* Format a Jani function call *)
 let jani_function_call ?(str_comment="") str_function_name str_args =
 
