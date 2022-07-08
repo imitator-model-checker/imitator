@@ -844,7 +844,7 @@ let string_of_new_initial_discretes ?indent_level:(i=1) model =
 		let initial_value = Location.get_discrete_value model.initial_location discrete_index in
 		(* '& var = val' *)
 		let tabulations = string_n_times i "\t" in
-		tabulations ^ (model.variable_names discrete_index) ^ " := " ^ (DiscreteValue.string_of_value initial_value)
+		tabulations ^ (model.variable_names discrete_index) ^ " := " ^ (AbstractValue.string_of_value initial_value)
 	) model.discrete
 	in string_of_list_of_string_with_sep ", \n" initial_discrete
 
@@ -894,7 +894,7 @@ let string_of_old_initial_state model =
 		(* Finding the initial value for this discrete *)
 		let initial_value = Location.get_discrete_value inital_global_location discrete_index in
 		(* '& var = val' *)
-		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (DiscreteValue.string_of_value initial_value)
+		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (AbstractValue.string_of_value initial_value)
 	) model.discrete
 	in string_of_list_of_string initial_discrete
 
@@ -1288,7 +1288,7 @@ let json_of_discrete_values model (global_location : Location.global_location) =
 			
 			(* Convert to strings *)
 			let variable_name = model.variable_names discrete_index in
-			let variable_valuation = DiscreteValue.string_of_value variable_value in
+			let variable_valuation = AbstractValue.string_of_value variable_value in
 			
 			(* Convert *)
 			"\n\t\t\t\t\t" ^ (json_of_string variable_name) ^ ": " ^ (json_of_string variable_valuation) ^ ""

@@ -370,9 +370,9 @@ let discrete_constraint_of_global_location (global_location : Location.global_lo
 
     (* TODO check with étienne, maybe can use all numeric as constraint ??? *)
     (* Get only rational discrete for constraint encoding *)
-    let only_discrete_rational_values = List.filter (fun (discrete_index, discrete_value) -> DiscreteValue.is_rational_value discrete_value) discrete_values in
+    let only_discrete_rational_values = List.filter (fun (discrete_index, discrete_value) -> AbstractValue.is_rational_value discrete_value) discrete_values in
     (* map to num const *)
-    let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, DiscreteValue.numconst_value discrete_value) only_discrete_rational_values in
+    let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, AbstractValue.numconst_value discrete_value) only_discrete_rational_values in
 
 	(* Constraint of the form D_i = d_i *)
 	LinearConstraint.pxd_constraint_of_point discrete_rational_numconst_values

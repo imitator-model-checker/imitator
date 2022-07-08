@@ -925,7 +925,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
                 )
                 else (
                     let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression None converted_expr in
-                    Some (constraint_name, Resolved_length_constraint (Int32.to_int (DiscreteValue.to_int_value value)))
+                    Some (constraint_name, Resolved_length_constraint (Int32.to_int (AbstractValue.to_int_value value)))
                 )
             | _ -> None
 
@@ -1794,7 +1794,7 @@ and bool_expression_of_typed_factor variable_infos = function
 	    | Global ->
             let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
             (match variable_kind with
-            | Constant_kind value -> Bool_constant (DiscreteValue.bool_value value)
+            | Constant_kind value -> Bool_constant (AbstractValue.bool_value value)
             | Variable_kind discrete_index -> Bool_variable discrete_index
             )
         )
@@ -1892,7 +1892,7 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 	    | Global ->
             let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
             (match variable_kind with
-            | Constant_kind value -> Rational_constant (DiscreteValue.to_numconst_value value)
+            | Constant_kind value -> Rational_constant (AbstractValue.numconst_value value)
             | Variable_kind discrete_index -> Rational_variable discrete_index
             )
         )
@@ -1992,7 +1992,7 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
 	    | Global ->
             let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
             (match variable_kind with
-            | Constant_kind value -> Int_constant (DiscreteValue.to_int_value value)
+            | Constant_kind value -> Int_constant (AbstractValue.to_int_value value)
             | Variable_kind discrete_index -> Int_variable discrete_index
             )
         )
@@ -2074,7 +2074,7 @@ and binary_expression_of_typed_factor variable_infos length = function
         | Global ->
             let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
             (match variable_kind with
-            | Constant_kind value -> Binary_word_constant (DiscreteValue.binary_word_value value)
+            | Constant_kind value -> Binary_word_constant (AbstractValue.binary_word_value value)
             | Variable_kind discrete_index -> Binary_word_variable (discrete_index, length)
             )
         )
@@ -2168,13 +2168,13 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
 	    | Global ->
             let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
             (match variable_kind with
-            | Constant_kind value -> Array_constant (DiscreteValue.array_value value)
+            | Constant_kind value -> Array_constant (AbstractValue.array_value value)
             | Variable_kind discrete_index -> Array_variable discrete_index
             )
         )
 
 	| Typed_constant (value, _) ->
-	    Array_constant (DiscreteValue.array_value value)
+	    Array_constant (Array.map AbstractValue.of_parsed_value (DiscreteValue.array_value value))
 
     | Typed_sequence (expr_list, _, Typed_array) ->
         (* Should take inner_type unbox type *)
@@ -2267,13 +2267,13 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
 	    | Global ->
             let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
             (match variable_kind with
-            | Constant_kind value -> List_constant (DiscreteValue.list_value value)
+            | Constant_kind value -> List_constant (AbstractValue.list_value value)
             | Variable_kind discrete_index -> List_variable discrete_index
             )
         )
 
 	| Typed_constant (value, _) ->
-	    List_constant (DiscreteValue.list_value value)
+	    List_constant (List.map AbstractValue.of_parsed_value (DiscreteValue.list_value value))
 
     | Typed_sequence (expr_list, _, Typed_list) ->
         Literal_list (List.map (fun expr -> global_expression_of_typed_boolean_expression variable_infos expr discrete_type) expr_list)
@@ -2569,7 +2569,7 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
         if Hashtbl.mem constants variable_name then (
           (* Retrieve the value of the global constant *)
           let value = Hashtbl.find constants variable_name in
-          let numconst_value = DiscreteValue.to_numconst_value value in
+          let numconst_value = AbstractValue.numconst_value value in
           (* Update the NumConst *)
           constant := NumConst.add !constant (NumConst.mul (NumConst.mul numconst_value coef) mul_coef);
         ) else (
@@ -2791,7 +2791,7 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 				if Hashtbl.mem constants variable_name then (
                     (* Retrieve the value of the global constant *)
                     let value = Hashtbl.find constants variable_name in
-                    let numconst_value = DiscreteValue.to_numconst_value value in
+                    let numconst_value = AbstractValue.numconst_value value in
                     (* Update the constant *)
                     constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
 				) else (

@@ -36,7 +36,7 @@ type global_location_index = int
 type locations = location_index array
 
 (* Array discrete_index -> discrete_value *)
-type discrete = DiscreteValue.parsed_value array
+type discrete = AbstractValue.abstract_value array
 
 (* Global location: location for each automaton + value of the discrete *)
 type global_location = locations * discrete
@@ -108,7 +108,7 @@ let hash_code location =
 	let locations, discrete = location in
 	let loc_hash = Array.fold_left (fun h loc -> 2*h + loc) 0 locations in
 	let discr_hash = Array.fold_left (fun h q -> 
-		2*h + (DiscreteValue.hash q)
+		2*h + (AbstractValue.hash q)
 	) 0 discrete in
 	loc_hash + 3 * discr_hash
 
@@ -140,7 +140,7 @@ let make_location locations_per_automaton discrete_values =
 	(* Create an array for locations *)
 	let locations = Array.make !nb_automata 0 in
 	(* Create an array for discrete *)
-	let discrete = Array.make !nb_discrete DiscreteValue.rational_zero in
+	let discrete = Array.make !nb_discrete AbstractValue.rational_zero in
 	(* Iterate on locations *)
 	List.iter (fun (automaton_index, location_index) -> locations.(automaton_index) <- location_index) locations_per_automaton;
 	(* Iterate on discrete *)
@@ -155,6 +155,7 @@ let make_location locations_per_automaton discrete_values =
 (* as it was the same references. *)
 (* As it was possible to update content of array in IMITATOR via a[i] = x, or stack by stack_push(x, s) *)
 (* List isn't concerned because we doesn't have ability to modify it's content in IMITATOR. *)
+(*
 let rec copy_discrete = function
     | DiscreteValue.Array_value values -> DiscreteValue.Array_value (Array.map copy_discrete values)
     | DiscreteValue.Stack_value values ->
@@ -183,12 +184,12 @@ let rec copy_discrete = function
         in
         DiscreteValue.Queue_value queue_cpy
     | value -> value
-
+*)
 let copy_discrete_at_location location =
 	(* Get discrete variables *)
 	let discretes = get_discrete location in
 	(* Copy discrete variables *)
-	let cpy_discretes = Array.map copy_discrete discretes in
+	let cpy_discretes = Array.map AbstractValue.deep_copy discretes in
 	(* Copy array of discrete variables *)
 	cpy_discretes
 
@@ -249,7 +250,7 @@ let get_discrete_value location discrete_index =
 (** Get the NumConst value associated to some discrete variable *)
 let get_discrete_rational_value location discrete_index =
     let value = get_discrete_value location discrete_index in
-    DiscreteValue.numconst_value value
+    AbstractValue.numconst_value value
 
 (** Set the value associated to some discrete variable *)
 let set_discrete_value location discrete_index value =
@@ -289,11 +290,11 @@ let string_of_location automata_names location_names discrete_names rational_dis
 	let location_string = string_of_array_of_string_with_sep ", " string_array in
 	(* Convert the discrete *)
 	let string_array = Array.mapi (fun discrete_index value ->
-		(string_of_discrete discrete_names discrete_index) ^ " = " ^ (DiscreteValue.string_of_value value) ^ (
+		(string_of_discrete discrete_names discrete_index) ^ " = " ^ (AbstractValue.string_of_value value) ^ (
 			(* Convert to float? *)
 			match rational_display with
 			| Exact_display -> ""
-			| Float_display -> " (~ " ^ (string_of_float (DiscreteValue.to_float_value value)) ^ ")"
+			| Float_display -> " (~ " ^ (string_of_float (AbstractValue.to_float_value value)) ^ ")"
 		)
 	) discrete in
 	let discrete_string = string_of_array_of_string_with_sep ", " string_array in

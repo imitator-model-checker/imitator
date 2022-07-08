@@ -3,7 +3,7 @@ open AbstractProperty
 open Location
 
 open DiscreteExpressions
-open DiscreteValue
+open AbstractValue
 open Exceptions
 
 type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
@@ -108,19 +108,19 @@ let try_eval_local_variable variable_name = function
 
 (* Evaluate an expression *)
 let rec eval_global_expression_with_context functions_table_opt eval_context_opt = function
-    | Arithmetic_expression expr -> eval_discrete_arithmetic_expression_with_context functions_table_opt eval_context_opt expr
-    | Bool_expression expr -> Bool_value (eval_boolean_expression_with_context functions_table_opt eval_context_opt expr)
-    | Binary_word_expression expr -> Binary_word_value (eval_binary_word_expression_with_context functions_table_opt eval_context_opt expr)
-    | Array_expression expr -> Array_value (eval_array_expression_with_context functions_table_opt eval_context_opt expr)
-    | List_expression expr -> List_value (eval_list_expression_with_context functions_table_opt eval_context_opt expr)
-    | Stack_expression expr -> Stack_value (eval_stack_expression_with_context functions_table_opt eval_context_opt expr)
-    | Queue_expression expr -> Queue_value (eval_queue_expression_with_context functions_table_opt eval_context_opt expr)
+    | Arithmetic_expression expr -> Abstract_scalar_value (eval_discrete_arithmetic_expression_with_context functions_table_opt eval_context_opt expr)
+    | Bool_expression expr -> Abstract_scalar_value (Abstract_bool_value (eval_boolean_expression_with_context functions_table_opt eval_context_opt expr))
+    | Binary_word_expression expr -> Abstract_scalar_value (Abstract_binary_word_value (eval_binary_word_expression_with_context functions_table_opt eval_context_opt expr))
+    | Array_expression expr -> Abstract_container_value (Abstract_array_value (eval_array_expression_with_context functions_table_opt eval_context_opt expr))
+    | List_expression expr -> Abstract_container_value (Abstract_list_value (eval_list_expression_with_context functions_table_opt eval_context_opt expr))
+    | Stack_expression expr -> Abstract_container_value (Abstract_stack_value (eval_stack_expression_with_context functions_table_opt eval_context_opt expr))
+    | Queue_expression expr -> Abstract_container_value (Abstract_queue_value (eval_queue_expression_with_context functions_table_opt eval_context_opt expr))
 
 and eval_discrete_arithmetic_expression_with_context functions_table_opt eval_context_opt = function
     | Rational_arithmetic_expression expr ->
-        Rational_value (eval_rational_expression_with_context functions_table_opt eval_context_opt expr)
+        Abstract_number_value (Abstract_rat_value (eval_rational_expression_with_context functions_table_opt eval_context_opt expr))
     | Int_arithmetic_expression expr ->
-        Int_value (eval_int_expression_with_context functions_table_opt eval_context_opt expr)
+        Abstract_number_value (Abstract_int_value (eval_int_expression_with_context functions_table_opt eval_context_opt expr))
 
 and eval_rational_expression_with_context functions_table_opt eval_context_opt = function
         | Rational_sum_diff (expr, term, sum_diff) ->
@@ -446,7 +446,7 @@ and get_array_value_at_with_context functions_table_opt eval_context_opt array_e
 
     if int_index >= Array.length values || int_index < 0 then (
         let str_index = string_of_int int_index in
-        let str_values = OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (fun value -> DiscreteValue.string_of_value value) values) in
+        let str_values = OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (fun value -> AbstractValue.string_of_value value) values) in
         raise (Out_of_bound ("Array index out of range: `" ^ str_index ^ "` for array " ^ str_values))
     );
 
@@ -460,7 +460,7 @@ and get_list_value_at_with_context functions_table_opt eval_context_opt array_ex
 
     if int_index >= List.length values || int_index < 0 then (
         let str_index = string_of_int int_index in
-        let str_values = OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (fun value -> DiscreteValue.string_of_value value) values) in
+        let str_values = OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (fun value -> AbstractValue.string_of_value value) values) in
         raise (Out_of_bound ("List index out of range: `" ^ str_index ^ "` for list " ^ str_values))
     );
 
@@ -579,7 +579,7 @@ and delayed_update_with_context functions_table_opt eval_context updated_discret
             (* Find its value *)
             let previous_new_value = Hashtbl.find updated_discrete discrete_index in
             (* Compare with the new one *)
-            if DiscreteValue.neq previous_new_value new_value then (
+            if AbstractValue.neq previous_new_value new_value then (
                 (* If different, return already update result *)
                 Delayed_update_already_updated discrete_index
             ) else
@@ -626,7 +626,7 @@ and pack_value (* variable_names *) functions_table_opt eval_context_opt old_val
 
             (* Get element at given index *)
             let unpacked_old_array = old_array.(index) in
-(*            ImitatorUtilities.print_message Verbose_standard ("unpacked old array: " ^ DiscreteValue.string_of_value unpacked_old_array);*)
+(*            ImitatorUtilities.print_message Verbose_standard ("unpacked old array: " ^ AbstractValue.string_of_value unpacked_old_array);*)
             unpacked_old_array, old_array, Some index
     in
     let pack_value_rec = function
@@ -639,7 +639,7 @@ and pack_value (* variable_names *) functions_table_opt eval_context_opt old_val
     match some_index with
     | Some index ->
         old_array.(index) <- new_value;
-(*        ImitatorUtilities.print_message Verbose_standard ("packed new value is: " ^ DiscreteValue.string_of_value old_value);*)
+(*        ImitatorUtilities.print_message Verbose_standard ("packed new value is: " ^ AbstractValue.string_of_value old_value);*)
         old_value
     | None -> new_value
 
@@ -735,155 +735,157 @@ let bad_arguments_message str_expr =
     "Bad arguments on `" ^ str_expr ^ "`. Expected types or number of arguments doesn't match with actual."
 
 let eval_pow str_expr = function
-    | (Rational_value x) :: (Int_value exponent) :: _ -> Rational_value (NumConst.pow x exponent)
-    | (Int_value x) :: (Int_value exponent) :: _ -> Int_value (OCamlUtilities.pow x exponent)
+    | (Abstract_scalar_value (Abstract_number_value (Abstract_rat_value x))) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value exponent)) :: _ ->
+        Abstract_scalar_value (Abstract_number_value (Abstract_rat_value (NumConst.pow x exponent)))
+    | Abstract_scalar_value (Abstract_number_value (Abstract_int_value x)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value exponent)) :: _ ->
+        Abstract_scalar_value (Abstract_number_value (Abstract_int_value (OCamlUtilities.pow x exponent)))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_rational_of_int str_expr = function
-    | (Int_value i) :: _ ->
+    | Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
         ImitatorUtilities.print_warning
             "Conversion of an int expression to a rational expression
             may cause overflow if your platform doesn't manage `int` as an exact 32 bits integer.";
-        Rational_value (NumConst.numconst_of_int (Int32.to_int i))
+        Abstract_scalar_value (Abstract_number_value (Abstract_rat_value (NumConst.numconst_of_int (Int32.to_int i))))
 
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_shift_left str_expr = function
-    | (Binary_word_value b) :: (Int_value i) :: _ ->
-        Binary_word_value (BinaryWord.shift_left b (Int32.to_int i))
+    | Abstract_scalar_value (Abstract_binary_word_value (b)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
+        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.shift_left b (Int32.to_int i)))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_shift_right str_expr = function
-    | (Binary_word_value b) :: (Int_value i) :: _ ->
-        Binary_word_value (BinaryWord.shift_right b (Int32.to_int i))
+    | Abstract_scalar_value (Abstract_binary_word_value (b)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
+        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.shift_right b (Int32.to_int i)))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_fill_left str_expr = function
-    | (Binary_word_value b) :: (Int_value i) :: _ ->
-        Binary_word_value (BinaryWord.fill_left b (Int32.to_int i))
+    | Abstract_scalar_value (Abstract_binary_word_value (b)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
+        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.fill_left b (Int32.to_int i)))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_fill_right str_expr = function
-    | (Binary_word_value b) :: (Int_value i) :: _ ->
-        Binary_word_value (BinaryWord.fill_right b (Int32.to_int i))
+    | Abstract_scalar_value (Abstract_binary_word_value (b)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
+        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.fill_right b (Int32.to_int i)))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_log_and str_expr = function
-    | (Binary_word_value l_binary_word) :: (Binary_word_value r_binary_word) :: _ ->
-        Binary_word_value (BinaryWord.log_and l_binary_word r_binary_word)
+    | Abstract_scalar_value (Abstract_binary_word_value (l_binary_word)) :: Abstract_scalar_value (Abstract_binary_word_value (r_binary_word)) :: _ ->
+        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.log_and l_binary_word r_binary_word))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_log_or str_expr = function
-    | (Binary_word_value l_binary_word) :: (Binary_word_value r_binary_word) :: _ ->
-        Binary_word_value (BinaryWord.log_or l_binary_word r_binary_word)
+    | Abstract_scalar_value (Abstract_binary_word_value (l_binary_word)) :: Abstract_scalar_value (Abstract_binary_word_value (r_binary_word)) :: _ ->
+        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.log_or l_binary_word r_binary_word))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_log_xor str_expr = function
-    | (Binary_word_value l_binary_word) :: (Binary_word_value r_binary_word) :: _ ->
-        Binary_word_value (BinaryWord.log_xor l_binary_word r_binary_word)
+    | Abstract_scalar_value (Abstract_binary_word_value (l_binary_word)) :: Abstract_scalar_value (Abstract_binary_word_value (r_binary_word)) :: _ ->
+        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.log_xor l_binary_word r_binary_word))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_log_not str_expr = function
-    | (Binary_word_value binary_word) :: _ ->
-        Binary_word_value (BinaryWord.log_not binary_word)
+    | Abstract_scalar_value (Abstract_binary_word_value (binary_word)) :: _ ->
+        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.log_not binary_word))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_array_append str_expr = function
-    | (Array_value l_array) :: (Array_value r_array) :: _ ->
-        Array_value (Array.append l_array r_array)
+    | Abstract_container_value (Abstract_array_value l_array) :: Abstract_container_value (Abstract_array_value r_array) :: _ ->
+        Abstract_container_value (Abstract_array_value (Array.append l_array r_array))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_array_mem str_expr = function
-    | e :: (Array_value a) :: _ ->
-        Bool_value (Array.mem e a)
+    | e :: Abstract_container_value (Abstract_array_value a) :: _ ->
+        Abstract_scalar_value (Abstract_bool_value (Array.mem e a))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_array_length str_expr = function
-    | (Array_value a) :: _ ->
-        Int_value (Int32.of_int (Array.length a))
+    | Abstract_container_value (Abstract_array_value a) :: _ ->
+        Abstract_scalar_value (Abstract_number_value (Abstract_int_value (Int32.of_int (Array.length a))))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_list_is_empty str_expr = function
-    | (List_value l) :: _ ->
-        Bool_value (List.length l = 0)
+    | Abstract_container_value (Abstract_list_value l) :: _ ->
+        Abstract_scalar_value (Abstract_bool_value (List.length l = 0))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_list_cons str_expr = function
-    | e :: (List_value l) :: _ ->
-        List_value (List.cons e l)
+    | e :: Abstract_container_value (Abstract_list_value l) :: _ ->
+        Abstract_container_value (Abstract_list_value (List.cons e l))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_list_hd str_expr = function
-    | (List_value l) :: _ ->
+    | Abstract_container_value (Abstract_list_value l) :: _ ->
         let fail_message = "Use of `list_hd` on empty list `" ^ str_expr ^ "`." in
         try_eval_list_hd l fail_message
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_list_tl str_expr = function
-    | (List_value l) :: _ ->
+    | Abstract_container_value (Abstract_list_value l) :: _ ->
         let fail_message = "Use of `list_hd` on empty list `" ^ str_expr ^ "`." in
-        List_value (try_eval_list_tl l fail_message)
+        Abstract_container_value (Abstract_list_value (try_eval_list_tl l fail_message))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_list_rev str_expr = function
-    | (List_value l) :: _ ->
-        List_value (List.rev l)
+    | Abstract_container_value (Abstract_list_value l) :: _ ->
+        Abstract_container_value (Abstract_list_value (List.rev l))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_list_mem str_expr = function
-    | e :: (List_value l) :: _ ->
-        Bool_value (List.mem e l)
+    | e :: Abstract_container_value (Abstract_list_value l) :: _ ->
+        Abstract_scalar_value (Abstract_bool_value (List.mem e l))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_list_length str_expr = function
-    | (List_value l) :: _ ->
-        Int_value (Int32.of_int (List.length l))
+    | Abstract_container_value (Abstract_list_value l) :: _ ->
+        Abstract_scalar_value (Abstract_number_value (Abstract_int_value (Int32.of_int (List.length l))))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_stack_push str_expr = function
-    | e :: (Stack_value s) :: _ ->
-        Stack.push e s; Stack_value s
-    | e :: (Queue_value s) :: _ ->
-        Queue.push e s; Queue_value s
+    | e :: Abstract_container_value (Abstract_stack_value s) :: _ ->
+        Stack.push e s; Abstract_container_value (Abstract_stack_value s)
+    | e :: Abstract_container_value (Abstract_queue_value s) :: _ ->
+        Queue.push e s; Abstract_container_value (Abstract_queue_value s)
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_stack_pop str_expr = function
-    | (Stack_value s) :: _ ->
+    | Abstract_container_value (Abstract_stack_value s) :: _ ->
         let fail_message = "Use of `stack_pop` on empty stack `" ^ str_expr ^ "`." in
         try_eval_stack_pop s fail_message
-    | (Queue_value s) :: _ ->
+    | Abstract_container_value (Abstract_queue_value s) :: _ ->
         let fail_message = "Use of `queue_pop` on empty queue `" ^ str_expr ^ "`." in
         try_eval_queue_pop s fail_message
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_stack_top str_expr = function
-    | (Stack_value s) :: _ ->
+    | Abstract_container_value (Abstract_stack_value s) :: _ ->
         let fail_message = "Use of `stack_top` on empty stack `" ^ str_expr ^ "`." in
         try_eval_stack_top s fail_message
-    | (Queue_value s) :: _ ->
+    | Abstract_container_value (Abstract_queue_value s) :: _ ->
         let fail_message = "Use of `queue_top` on empty queue `" ^ str_expr ^ "`." in
         try_eval_queue_top s fail_message
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_stack_clear str_expr = function
-    | (Stack_value s) :: _ ->
-        Stack.clear s; Stack_value s
-    | (Queue_value s) :: _ ->
-        Queue.clear s; Queue_value s
+    | Abstract_container_value (Abstract_stack_value s) :: _ ->
+        Stack.clear s; Abstract_container_value (Abstract_stack_value s)
+    | Abstract_container_value (Abstract_queue_value s) :: _ ->
+        Queue.clear s; Abstract_container_value (Abstract_queue_value s)
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_stack_is_empty str_expr = function
-    | (Stack_value s) :: _ ->
-        Bool_value (Stack.is_empty s)
-    | (Queue_value s) :: _ ->
-        Bool_value (Queue.is_empty s)
+    | Abstract_container_value (Abstract_stack_value s) :: _ ->
+        Abstract_scalar_value (Abstract_bool_value (Stack.is_empty s))
+    | Abstract_container_value (Abstract_queue_value s) :: _ ->
+        Abstract_scalar_value (Abstract_bool_value (Queue.is_empty s))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_stack_length str_expr = function
-    | (Stack_value s) :: _ ->
-        Int_value (Int32.of_int (Stack.length s))
-    | (Queue_value s) :: _ ->
-        Int_value (Int32.of_int (Queue.length s))
+    | Abstract_container_value (Abstract_stack_value s) :: _ ->
+        Abstract_scalar_value (Abstract_number_value (Abstract_int_value (Int32.of_int (Stack.length s))))
+    | Abstract_container_value (Abstract_queue_value s) :: _ ->
+        Abstract_scalar_value (Abstract_number_value (Abstract_int_value (Int32.of_int (Queue.length s))))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 (* Tricky function to know if an expression is constant *)

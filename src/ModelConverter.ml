@@ -1057,9 +1057,9 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
 		if not (Hashtbl.mem init_values_for_discrete discrete_index) then (
 		    let variable_name = variable_name_of_index variable_infos discrete_index in
 		    let variable_type = var_type_of_variable_name variable_infos variable_name in
-		    let default_value = DiscreteValue.default_value variable_type in
+		    let default_value = AbstractValue.default_value variable_type in
 
-			print_warning ("The discrete variable '" ^ variable_name ^ "' was not given an initial value in the init definition: it will be assigned to " ^ DiscreteValue.string_of_value default_value ^ ".");
+			print_warning ("The discrete variable '" ^ variable_name ^ "' was not given an initial value in the init definition: it will be assigned to " ^ AbstractValue.string_of_value default_value ^ ".");
 			Hashtbl.add init_values_for_discrete discrete_index default_value
 		);
     ) variable_infos.discrete;
@@ -1125,14 +1125,14 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
 (*------------------------------------------------------------*)
 let make_constants constants =
   (* Create hash table *)
-  let constants_hashtable : (string, DiscreteValue.parsed_value) Hashtbl.t = Hashtbl.create (List.length constants) in
+  let constants_hashtable : (string, AbstractValue.abstract_value) Hashtbl.t = Hashtbl.create (List.length constants) in
   (* Manage Boolean for checking errors *)
   let correct = ref true in
   List.iter (fun (name, value(*, discrete_type *)) ->
       if (Hashtbl.mem constants_hashtable name) then (
         let old_value = Hashtbl.find constants_hashtable name in
         (* If same: warning *)
-        if(DiscreteValue.equal old_value value) then(
+        if(AbstractValue.equal old_value value) then(
           print_warning ("Constant `" ^ name ^ "` is defined twice.");
         )else(
           (* If different: error *)
@@ -1821,9 +1821,9 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 		(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in *)
 
         (* Get only rational discrete for constraint encoding *)
-        let init_discrete_rational_pairs = List.filter (fun (discrete_index, discrete_value) -> DiscreteValue.is_rational_value discrete_value) init_discrete_pairs in
+        let init_discrete_rational_pairs = List.filter (fun (discrete_index, discrete_value) -> AbstractValue.is_rational_value discrete_value) init_discrete_pairs in
         (* map to num const *)
-        let init_discrete_rational_numconst_pairs = List.map (fun (discrete_index, discrete_value) -> discrete_index, DiscreteValue.numconst_value discrete_value) init_discrete_rational_pairs in
+        let init_discrete_rational_numconst_pairs = List.map (fun (discrete_index, discrete_value) -> discrete_index, AbstractValue.numconst_value discrete_value) init_discrete_rational_pairs in
 
 		(* Create a constraint encoding the value of the discretes *)
 		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_rational_numconst_pairs in
@@ -3220,7 +3220,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Make the array of constants *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let (constants : (Automaton.variable_name , DiscreteValue.parsed_value) Hashtbl.t), constants_consistent = make_constants constant_tuples in
+	let (constants : (Automaton.variable_name , AbstractValue.abstract_value) Hashtbl.t), constants_consistent = make_constants constant_tuples in
 
 
 
@@ -3228,7 +3228,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Constants *)
 		print_message Verbose_high ("\n*** Constants:");
 		Hashtbl.iter (fun key value ->
-			print_message Verbose_high (key ^ " = " ^ (DiscreteValue.string_of_value value) ^ "")
+			print_message Verbose_high (key ^ " = " ^ (AbstractValue.string_of_value value) ^ "")
 		) constants;
 	);
 

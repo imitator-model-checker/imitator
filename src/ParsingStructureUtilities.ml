@@ -467,7 +467,7 @@ and string_of_parsed_factor variable_infos = function
             let value = value_of_constant_name variable_infos variable_name in
             variable_name
             ^ "="
-            ^ DiscreteValue.string_of_value value
+            ^ AbstractValue.string_of_value value
         ) else
             variable_name
     | Parsed_DF_constant value -> DiscreteValue.string_of_value value

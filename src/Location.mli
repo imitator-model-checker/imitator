@@ -56,15 +56,15 @@ val initialize : int -> int -> int -> unit
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** 'make_location locations discrete_values' creates a new location. All automata should be given a location. Discrete variables may not be given a value (in which case they will be initialized to 0). *)
-val make_location : (automaton_index * location_index) list -> (discrete_index * DiscreteValue.parsed_value) list -> global_location
+val make_location : (automaton_index * location_index) list -> (discrete_index * AbstractValue.abstract_value) list -> global_location
 
 (** 'update_location locations discrete_values location' creates a new location from the original location, and update the given automata and discrete variables. *)
-(*val update_location : (automaton_index * location_index) list -> (discrete_index * DiscreteValue.parsed_value) list -> global_location -> global_location*)
+(*val update_location : (automaton_index * location_index) list -> (discrete_index * AbstractValue.abstract_value) list -> global_location -> global_location*)
 
 (* Side-effect function for updating a discrete variable given a value at given location *)
-val update_discrete_with : discrete_index * DiscreteValue.parsed_value -> global_location -> unit
+val update_discrete_with : discrete_index * AbstractValue.abstract_value -> global_location -> unit
 (** Side-effet version of update_location. *)
-val update_location_with : (automaton_index * location_index) list -> (discrete_index * DiscreteValue.parsed_value) list -> global_location -> unit
+val update_location_with : (automaton_index * location_index) list -> (discrete_index * AbstractValue.abstract_value) list -> global_location -> unit
 
 (** 'copy_location location' creates a fresh location identical to location. *)
 val copy_location : global_location -> global_location
@@ -84,14 +84,14 @@ val get_locations : global_location -> location_index array
 val get_location : global_location -> automaton_index -> location_index
 
 (** Get the value associated to some discrete variable *)
-val get_discrete_value : global_location -> discrete_index -> DiscreteValue.parsed_value
+val get_discrete_value : global_location -> discrete_index -> AbstractValue.abstract_value
 (** Get the NumConst value associated to some discrete variable *)
 val get_discrete_rational_value : global_location -> discrete_index -> NumConst.t
 (** Set the value associated to some discrete variable *)
-val set_discrete_value : global_location -> discrete_index -> DiscreteValue.parsed_value -> unit
+val set_discrete_value : global_location -> discrete_index -> AbstractValue.abstract_value -> unit
 (** Get a tuple of functions for reading / writing a global variable at a given location *)
 (* A discrete access enable to read or write a value of a variable at a given discrete index *)
-val discrete_access_of_location : global_location -> (discrete_index -> DiscreteValue.parsed_value) * (discrete_index -> DiscreteValue.parsed_value -> unit)
+val discrete_access_of_location : global_location -> (discrete_index -> AbstractValue.abstract_value) * (discrete_index -> AbstractValue.abstract_value -> unit)
 
 (** Get a hash value for a location, including discrete values *)
 val hash_code : global_location -> int

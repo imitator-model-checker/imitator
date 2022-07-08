@@ -21,7 +21,7 @@ open LinearConstraint
 open DiscreteExpressions
 open AbstractModel
 open DiscreteType
-open DiscreteValue
+open AbstractValue
 open Result
 
 
@@ -93,32 +93,39 @@ let string_of_var_type = function
 
 (* Get the UPPAAL string representation of a value according to it's IMITATOR type *)
 (* For example a literal array is translated from `[1,2,..,n]` to `{1,2,..,n}` *)
-let rec string_of_value = function
-    | Number_value x
-    | Rational_value x -> NumConst.string_of_numconst x
-    | Bool_value x -> if x then uppaal_boolean_strings.true_string else uppaal_boolean_strings.false_string
-    | Int_value x -> Int32.to_string x
-    | Binary_word_value value ->
-        let length = BinaryWord.length value in
+let string_of_number_value = function
+    | Abstract_rat_value v -> NumConst.string_of_numconst v
+    | Abstract_int_value v -> Int32.to_string v
+
+let string_of_scalar_value = function
+    | Abstract_number_value v -> string_of_number_value v
+    | Abstract_bool_value v -> if v then uppaal_boolean_strings.true_string else uppaal_boolean_strings.false_string
+    | Abstract_binary_word_value v ->
+        let length = BinaryWord.length v in
 
         if length > 31 then
             ImitatorUtilities.print_warning ("Encoding a binary word of length `" ^ string_of_int length ^ "` on an integer can leads to an overflow.");
 
-        string_of_int (BinaryWord.to_int value)
+        string_of_int (BinaryWord.to_int v)
 
-    | Array_value a ->
+let rec string_of_value = function
+    | Abstract_scalar_value v -> string_of_scalar_value v
+    | Abstract_container_value v -> string_of_container_value v
+
+and string_of_container_value = function
+    | Abstract_array_value a ->
         let string_array = Array.map string_of_value a in
         "{" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "}"
 
-    | List_value l ->
+    | Abstract_list_value l ->
         let string_list = List.map string_of_value l in
         "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
 
-    | Stack_value l ->
+    | Abstract_stack_value l ->
         let string_list = Stack.fold (fun acc x -> acc @ [string_of_value x]) [] l in
         "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
 
-    | Queue_value l ->
+    | Abstract_queue_value l ->
         let string_list = Queue.fold (fun acc x -> acc @ [string_of_value x]) [] l in
         "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
 

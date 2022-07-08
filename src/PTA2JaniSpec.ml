@@ -20,7 +20,7 @@ open ImitatorUtilities
 open LinearConstraint
 open DiscreteExpressions
 open AbstractModel
-open DiscreteValue
+open AbstractValue
 open DiscreteType
 open FunctionSig
 open Result
@@ -282,42 +282,46 @@ and string_of_type_constraint = function
     | Type_name_constraint constraint_name -> json_quoted ("'" ^ constraint_name)
     | Defined_type_constraint defined_type_constraint -> string_of_defined_type_constraint defined_type_constraint
 
-(* Get string representation of a discrete value in Jani *)
-let rec string_of_value = function
+let string_of_number_value = function
+    | Abstract_rat_value value -> NumConst.jani_string_of_numconst value
+    | Abstract_int_value value -> Int32.to_string value
 
-    | Number_value value
-    | Rational_value value ->
-        NumConst.jani_string_of_numconst value
-
-    | Int_value value ->
-        Int32.to_string value
-
-    | Bool_value value ->
+let string_of_scalar_value = function
+    | Abstract_number_value v -> string_of_number_value v
+    | Abstract_bool_value value ->
         if value then
             jani_strings.boolean_string.true_string
         else
             jani_strings.boolean_string.false_string
 
-    | Array_value value ->
-        let str_values = Array.map string_of_value value in
-        jani_array_value str_values
-
-    | List_value value ->
-        let str_values = List.map string_of_value value in
-        jani_array_value (Array.of_list str_values)
-
-    | Stack_value value ->
-        let str_values = Stack.fold (fun acc x -> acc @ [string_of_value x]) [] value in
-        jani_array_value (Array.of_list str_values)
-
-    | Queue_value value ->
-        let str_values = Queue.fold (fun acc x -> acc @ [string_of_value x]) [] value in
-        jani_array_value (Array.of_list str_values)
-
-    | Binary_word_value value ->
+    | Abstract_binary_word_value value ->
         let bool_array = BinaryWord.to_array value in
         let str_values = Array.map (fun x -> if x then "true" else "false") bool_array in
         jani_array_value str_values
+
+(* Get string representation of a discrete value in Jani *)
+let rec string_of_value = function
+    | Abstract_scalar_value v -> string_of_scalar_value v
+    | Abstract_container_value v -> string_of_container_value v
+
+and string_of_container_value = function
+    | Abstract_array_value value ->
+        let str_values = Array.map string_of_value value in
+        jani_array_value str_values
+
+    | Abstract_list_value value ->
+        let str_values = List.map string_of_value value in
+        jani_array_value (Array.of_list str_values)
+
+    | Abstract_stack_value value ->
+        let str_values = Stack.fold (fun acc x -> acc @ [string_of_value x]) [] value in
+        jani_array_value (Array.of_list str_values)
+
+    | Abstract_queue_value value ->
+        let str_values = Queue.fold (fun acc x -> acc @ [string_of_value x]) [] value in
+        jani_array_value (Array.of_list str_values)
+
+
 
 
 
@@ -541,7 +545,7 @@ and string_of_binary_word_expression variable_names binary_word_expr =
 
     (* Convert a binary word expression into a string *)
     let string_of_binary_word_expression = function
-        | Binary_word_constant value -> string_of_value (Binary_word_value value)
+        | Binary_word_constant value -> string_of_value (Abstract_scalar_value (Abstract_binary_word_value value))
         | Binary_word_variable (variable_index, _) -> json_quoted (variable_names variable_index)
         | Binary_word_local_variable variable_name -> json_quoted variable_name
 

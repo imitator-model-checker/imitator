@@ -30,10 +30,10 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (************************************************************)
 (************************************************************)
 (* TODO benjamin CLEAN declaration here ? move in evaluator ?? *)
-type discrete_valuation = Automaton.discrete_index -> DiscreteValue.parsed_value
-type discrete_setter = Automaton.discrete_index -> DiscreteValue.parsed_value -> unit
+type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
+type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
 type discrete_access = discrete_valuation * discrete_setter
-type variable_table = (variable_name, DiscreteValue.parsed_value) Hashtbl.t
+type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 
 type conj_dis =
     | And
@@ -186,7 +186,7 @@ and binary_word_expression =
 (** Array expression **)
 and array_expression =
     | Literal_array of global_expression array
-    | Array_constant of DiscreteValue.parsed_value array
+    | Array_constant of AbstractValue.abstract_value array
     | Array_variable of Automaton.variable_index
     | Array_local_variable of variable_name
     | Array_array_access of expression_access_type * int_arithmetic_expression
@@ -195,7 +195,7 @@ and array_expression =
 (** List expression **)
 and list_expression =
     | Literal_list of global_expression list
-    | List_constant of DiscreteValue.parsed_value list
+    | List_constant of AbstractValue.abstract_value list
     | List_variable of Automaton.variable_index
     | List_local_variable of variable_name
     | List_array_access of expression_access_type * int_arithmetic_expression
@@ -221,7 +221,7 @@ and expression_access_type =
 
 (* Function local declaration or expression *)
 and fun_body =
-    | Fun_builtin of (string -> DiscreteValue.parsed_value list -> DiscreteValue.parsed_value)
+    | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
     | Fun_local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * fun_body
     | Fun_instruction of (update_type * global_expression) * fun_body
     | Fun_expr of global_expression

@@ -21,7 +21,7 @@ open Exceptions
 open Result
 open AbstractModel
 open AbstractProperty
-
+open AbstractValue
 
 
 
@@ -412,7 +412,7 @@ let string_of_initial_state () =
 		(* Finding the initial value for this discrete *)
 		let initial_value = Location.get_discrete_value inital_global_location discrete_index in
 		(* '& var = val' *)
-		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (DiscreteValue.string_of_value initial_value)
+		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (AbstractValue.string_of_value initial_value)
 	) model.discrete
 	in string_of_list_of_string initial_discrete
 

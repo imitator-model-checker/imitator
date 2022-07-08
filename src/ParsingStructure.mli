@@ -484,7 +484,7 @@ type parsed_property = {
 (** Useful data structure to avoid multiple parameters in functions *)
 (************************************************************)
 (************************************************************)
-type constants_table = (Automaton.variable_name , DiscreteValue.parsed_value) Hashtbl.t
+type constants_table = (Automaton.variable_name , AbstractValue.abstract_value) Hashtbl.t
 
 type variable_infos = {
 	constants : constants_table;
