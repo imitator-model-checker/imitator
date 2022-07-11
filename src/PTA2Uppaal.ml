@@ -397,9 +397,14 @@ let string_of_fun_definitions model =
         let str_param_list = List.map (fun (param_name, type_constraint) -> FunctionSig.string_of_type_constraint type_constraint ^ " " ^ param_name) parameter_names_with_constraints in
         let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in
         (* Format function definition *)
-        FunctionSig.string_of_type_constraint return_type_constraint ^ " " ^ fun_def.name ^ "(" ^ str_params ^ ") { \n"
-        ^ string_of_next_expr fun_def.body
-        ^ "}"
+        let str_body = string_of_next_expr fun_def.body in
+        if str_body <> "" then (
+            FunctionSig.string_of_type_constraint return_type_constraint ^ " " ^ fun_def.name ^ "(" ^ str_params ^ ") { \n"
+            ^ str_body
+            ^ "}"
+        )
+        else
+            ""
 
     in
 
@@ -411,7 +416,7 @@ let string_of_fun_definitions model =
     let str_fun_definitions_list = List.map string_of_fun_definition fun_definition_list in
     (* Join all strings *)
     "/* User defined function declarations (WARNING: some user defined functions may not be well translated) */\n\n"
-    ^ OCamlUtilities.string_of_list_of_string_with_sep "\n\n" str_fun_definitions_list
+    ^ OCamlUtilities.string_of_list_of_string_with_sep_without_empty_strings "\n\n" str_fun_definitions_list
 
 (* Convert the initial variable declarations into a string *)
 let string_of_declarations model actions_and_nb_automata =
