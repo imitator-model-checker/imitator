@@ -59,8 +59,6 @@ type global_expression =
 and discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
     | Int_arithmetic_expression of int_arithmetic_expression
-    | New_rational_arithmetic_expression of NumConst.t new_arithmetic_expression
-    | New_int_arithmetic_expression of Int32.t new_arithmetic_expression
 
 and 'a new_arithmetic_expression =
     | Sum_diff of 'a new_arithmetic_expression * 'a new_term * sum_diff

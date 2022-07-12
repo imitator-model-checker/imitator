@@ -32,12 +32,8 @@ type parsed_value =
 
 (** Values and types  **)
 
-(* Get var type of a discrete value *)
-val var_type_of_value : parsed_value -> var_type
 (* Get discrete var type of a discrete value *)
 val discrete_type_of_value : parsed_value -> var_type_discrete
-(* Check if a value is compatible with given type *)
-val check_value_compatible_with_type : parsed_value -> var_type -> bool
 
 
 (************************************************************)
@@ -48,16 +44,6 @@ val check_value_compatible_with_type : parsed_value -> var_type -> bool
 val customized_string_of_value : customized_string -> parsed_value -> string
 val string_of_value : parsed_value -> string
 
-(** Check value type  **)
-
-(* Check whether the value is rational *)
-val is_rational_value : parsed_value -> bool
-(* Check whether the value is int *)
-val is_int_value : parsed_value -> bool
-(* Check whether the value is boolean *)
-val is_bool_value : parsed_value -> bool
-(* Check whether the value is binary word *)
-val is_binary_word_value : parsed_value -> bool
 
 (** Default values  **)
 
@@ -72,6 +58,7 @@ val rational_zero : parsed_value
 val bool_value_false : parsed_value
 (* Get true value of Bool_value *)
 val bool_value_true : parsed_value
+
 
 (** Get / Convert values  **)
 
@@ -92,39 +79,10 @@ val stack_value : parsed_value -> parsed_value Stack.t
 (* Get queue value of discrete value *)
 val queue_value : parsed_value -> parsed_value Queue.t
 
+
 val is_zero : parsed_value -> bool
 
 (* Convert any discrete value to NumConst.t value, if possible *)
 val to_numconst_value : parsed_value -> NumConst.t
 (* Convert any discrete value to Int32 value, if possible *)
 val to_int_value : parsed_value -> Int32.t
-(* Convert any discrete value to float value, if possible *)
-val to_float_value : parsed_value -> float
-
-val convert_to_numconst : parsed_value -> NumConst.t
-
-(* Get discrete value from NumConst.t *)
-val of_numconst : NumConst.t -> parsed_value
-(* Get discrete value from Int32.t *)
-val of_int : Int32.t -> parsed_value
-(* Get discrete value from bool *)
-val of_bool : bool -> parsed_value
-
-
-(*(* Convert discrete value to another var type *)*)
-(*val convert_value : parsed_value -> var_type -> parsed_value*)
-(* Convert discrete value to another discrete type *)
-(*val convert_value_to_discrete_type : parsed_value -> var_type_discrete -> parsed_value*)
-
-(* Convert any discrete value to a Rational_value *)
-val convert_to_rational_value : parsed_value -> parsed_value
-
-(* Hash code of discrete value *)
-val hash : parsed_value -> int
-
-(** Computing operation on values  **)
-
-(* Check if a discrete value is equal to another discrete value *)
-val equal : parsed_value -> parsed_value -> bool
-(* Check if a discrete value is not equal to another discrete value *)
-val neq : parsed_value -> parsed_value -> bool

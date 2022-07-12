@@ -106,19 +106,6 @@ let rec discrete_type_of_value = function
         else
             Var_type_discrete_queue (discrete_type_of_value (Queue.peek l))
 
-(* Get var type of a discrete value *)
-let var_type_of_value value =
-    Var_type_discrete (discrete_type_of_value value)
-
-(* Check if a value is compatible with given type *)
-let check_value_compatible_with_type value var_type =
-    (* Get discrete type of value *)
-    let value_type = discrete_type_of_value value in
-    (* Get discrete type of var type *)
-    let var_type_discrete = discrete_type_of_var_type var_type in
-    (* Check compatibility of discrete types *)
-    is_discrete_type_compatibles var_type_discrete value_type
-
 (************************************************************)
 (** Value functions  *)
 (************************************************************)
@@ -155,36 +142,6 @@ let rec customized_string_of_value customized_string = function
 
 let string_of_value = customized_string_of_value global_default_string
 
-(** Check value type  **)
-
-(* Check whether the value is rational *)
-let is_rational_value = function
-    | Rational_value _ -> true
-    | _ -> false
-
-(* Check whether the value is int *)
-let is_int_value = function
-    | Int_value _ -> true
-    | _ -> false
-
-(* Check whether the value is boolean *)
-let is_bool_value = function
-    | Bool_value _ -> true
-    | _ -> false
-
-(* Check whether the value is binary word *)
-let is_binary_word_value = function
-    | Binary_word_value _ -> true
-    | _ -> false
-
-(* Constructor functions *)
-
-(* Get discrete value from NumConst.t *)
-let of_numconst x = Rational_value x
-(* Get discrete value from Int32.t *)
-let of_int x = Int_value x
-(* Get discrete value from bool *)
-let of_bool x = Bool_value x
 
 (** Default values  **)
 
@@ -240,6 +197,7 @@ let is_zero = function
     | Int_value value -> value = Int32.zero
     | value -> false
 
+
 (** Convert values  **)
 
 (* Get NumConst.t value of rational discrete value *)
@@ -250,7 +208,7 @@ let numconst_value = function
 (* Get Int32.t value of int32 discrete value *)
 let int_value = function
     | Int_value x -> x
-    | v -> raise (InternalError ("Unable to get int value of non-int discrete value: " ^ string_of_value v ^ ":" ^ string_of_var_type (var_type_of_value v)))
+    | v -> raise (InternalError ("Unable to get int value of non-int discrete value: " ^ string_of_value v))
 
 (* Get bool value of bool discrete value *)
 let bool_value = function
@@ -286,14 +244,6 @@ let to_numconst_value = function
     | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
     | value -> raise (InternalError ("Unable to convert " ^ string_of_value value ^ " to rational NumConst.t value"))
 
-let convert_to_numconst = function
-    | Number_value x
-    | Rational_value x -> x
-    | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
-    | Bool_value x -> if x then NumConst.one else NumConst.zero
-    | Binary_word_value x -> NumConst.numconst_of_int (BinaryWord.to_int x)
-    | _ -> NumConst.zero (* Cannot convert list, array to numconst ! *)
-
 
 (* Convert any discrete value to Int32 value, if possible *)
 let to_int_value = function
@@ -309,67 +259,7 @@ let to_int_value = function
     | Stack_value _ -> raise (InternalError "Unable to convert stack to Int32.t value")
     | Queue_value _ -> raise (InternalError "Unable to convert queue to Int32.t value")
 
-(* Convert any discrete value to float value, if possible *)
-let to_float_value = function
-    | Number_value x
-    | Rational_value x -> (NumConst.to_float x)
-    | Bool_value x -> if x then 1.0 else 0.0
-    | Int_value x -> Int32.to_float x
-    | Binary_word_value x -> float_of_int (BinaryWord.hash x)
-    | Array_value _ -> raise (InternalError "Unable to convert array to float value")
-    | List_value _ -> raise (InternalError "Unable to convert list to float value")
-    | Stack_value _ -> raise (InternalError "Unable to convert stack to float value")
-    | Queue_value _ -> raise (InternalError "Unable to convert queue to float value")
-
-
 (* Get binary word value of discrete value *)
 let binary_word_value = function
     | Binary_word_value x -> x
     | _ as value -> raise (InternalError ("Unable to get binary word value of non binary word `" ^ string_of_value value ^ "`"))
-
-
-
-
-(* Convert any discrete value to a Rational_value *)
-let convert_to_rational_value value =
-    Rational_value (to_numconst_value value)
-
-(* Hash code of discrete value *)
-let rec hash = function
-    | Number_value x
-    | Rational_value x -> Gmp.Z.to_int (NumConst.get_num x)
-    | Bool_value x -> if x then 1 else 0
-    | Int_value x -> Int32.to_int x
-    | Binary_word_value b -> BinaryWord.hash b
-    (* Arbitrary *)
-    | Array_value a -> Array.fold_left (fun acc x -> acc + (hash x)) 0 a
-    | List_value l -> List.fold_left (fun acc x -> acc + (hash x)) 0 l
-    | Stack_value s -> Stack.fold (fun acc x -> acc + (hash x)) 0 s
-    | Queue_value s -> Queue.fold (fun acc x -> acc + (hash x)) 0 s
-
-(** Dynamic computing operations on values  **)
-
-(* Check if a discrete value is equal to another discrete value *)
-let equal a b =
-    match a, b with
-    | Number_value a, Number_value b
-    | Rational_value a, Rational_value b -> NumConst.equal a b
-    | Bool_value a, Bool_value b -> a = b
-    | Int_value a, Int_value b -> Int32.equal a b
-    | Binary_word_value a, Binary_word_value b -> BinaryWord.equal a b
-    | Array_value a, Array_value b -> a = b
-    | List_value a, List_value b -> a = b
-    | Stack_value a, Stack_value b -> a = b
-    | Queue_value a, Queue_value b -> a = b
-    | lt, rt -> raise (
-        InternalError ("Computing exception on `"
-            ^ string_of_var_type_discrete (discrete_type_of_value lt)
-            ^ " = "
-            ^ string_of_var_type_discrete (discrete_type_of_value rt)
-            ^ "`"
-        )
-    )
-
-(* Check if a discrete value is not equal to another discrete value *)
-let neq a b =
-    not (equal a b)

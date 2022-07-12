@@ -520,27 +520,16 @@ and string_of_int_arithmetic_expression variable_names =
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression
 
-and string_of_binary_word_expression variable_names binary_word_expr =
+and string_of_binary_word_expression variable_names = function
+    | Binary_word_constant value -> string_of_value (Abstract_scalar_value (Abstract_binary_word_value value))
+    | Binary_word_variable (variable_index, _) -> json_quoted (variable_names variable_index)
+    | Binary_word_local_variable variable_name -> json_quoted variable_name
 
-    (* Get label of expression *)
-    let label = label_of_binary_word_expression binary_word_expr in
-    (* Prepare undeclared_function_warning function with given label *)
-    let undeclared_function_warning = lazy(undeclared_function_warning label) in
+    | Binary_word_array_access (access_type, index_expr) ->
+        string_of_expression_access variable_names access_type index_expr
 
-    (* Convert a binary word expression into a string *)
-    let string_of_binary_word_expression = function
-        | Binary_word_constant value -> string_of_value (Abstract_scalar_value (Abstract_binary_word_value value))
-        | Binary_word_variable (variable_index, _) -> json_quoted (variable_names variable_index)
-        | Binary_word_local_variable variable_name -> json_quoted variable_name
-
-        | Binary_word_array_access (access_type, index_expr) ->
-            string_of_expression_access variable_names access_type index_expr
-
-        | Binary_word_function_call (function_name, _, args_expr) ->
-            string_of_function_call variable_names function_name args_expr
-
-    in
-    string_of_binary_word_expression binary_word_expr
+    | Binary_word_function_call (function_name, _, args_expr) ->
+        string_of_function_call variable_names function_name args_expr
 
 and string_of_array_expression variable_names = function
     | Literal_array expr_array ->

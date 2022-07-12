@@ -1,3 +1,17 @@
+(************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ *
+ * Module description: This module helps to log to res file
+ *
+ * File contributors : Benjamin L.
+ * Created           : 2022/07/19
+ *
+ ************************************************************)
+
+ (* Parsing structure module *)
 open DiscreteValue
 open DiscreteType
 

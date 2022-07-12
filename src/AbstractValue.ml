@@ -1,6 +1,22 @@
-open DiscreteValue
+(************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ *
+ * Module description: This module helps to log to res file
+ *
+ * File contributors : Benjamin L.
+ * Created           : 2022/07/19
+ *
+ ************************************************************)
+
+(* Utils modules *)
 open Exceptions
 open Constants
+
+ (* Parsing structure modules *)
+open DiscreteValue
 open DiscreteType
 
 type abstract_number_value =
@@ -165,6 +181,7 @@ let neq a b =
 let default_number_value = function
     | Var_type_discrete_rat -> Abstract_rat_value NumConst.zero
     | Var_type_discrete_int -> Abstract_int_value Int32.zero
+    | _ -> raise (InternalError "Unable to get number value of non number type.")
 
 let rec default_value_of_discrete_type = function
     | Var_type_discrete_number t -> Abstract_scalar_value (Abstract_number_value (default_number_value t))
