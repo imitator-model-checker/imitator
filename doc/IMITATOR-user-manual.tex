@@ -1061,6 +1061,9 @@ Examples of stack definitions are given below:
 	\end{IMITATORmodel}
 %------------------------------------------------------------
 
+The \styleIMI{seq} keyword denotes a sequential update (see \cref{section:seq_then_form_updates}).
+Side-effect functions can only be used in such sequential updates.
+
 \end{example}
 %------------------------------------------------------------
 
@@ -1305,7 +1308,7 @@ In any case, the paradigm is that discrete variables are first tested in guards,
 \subsubsection{Conflicts in updates}
 %------------------------------------------------------------
 
-Conflicts can arise from the modular nature of \NIPTA{}.
+Conflicts can arise in standard updates due to the modular nature of \NIPTA{}.
 If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i := 2} while another one performs \styleIMI{i := 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
 
 If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
@@ -1341,6 +1344,11 @@ Contrary to the \styleIMI{then} block (or to the standard updates), it is possib
 The \styleIMI{seq} block can be seen as an imperative update part that is processed before the \styleIMI{then} block.
 It is not possible to update clocks in a \styleIMI{seq} block.
 
+In a model that contains multiple synchronized \IPTA{}, given a transition, all \styleIMI{seq} blocks (all sequential updates) in all \IPTA{} are processed as follows:
+the updates are performed sequentially starting from the top-most \IPTA{} in the input model file (\ie{} following the definition order of \IPTA{}).
+That is, all the sequential updates of the first of the \IPTA{} are processed, followed by all  the sequential updates of the second \IPTA{}, and so on.
+
+
 % \paragraph{}
 Examples of a \styleIMI{seq} update expression:
 
@@ -1372,7 +1380,7 @@ Examples of a \styleIMI{seq} update expression:
 
 \paragraph{The \styleIMI{then} block}
 
-The \styleIMI{then} block can be used to update clock(s) or discrete variable(s).
+The \styleIMI{then} block can be used to update clocks or discrete variables.
 These updates are not sequential so, as described before, in case of multiple updates of the same variable, a warning is issued, and the behavior of the \NIPTA{} becomes unspecified.
 The \styleIMI{then} block is essentially the same as a standard update (see \cref{sss:standard-updates}).
 This kind of update was the only one in \imitator{} until version~3.3.
@@ -1422,10 +1430,9 @@ Below is an example of a \styleIMI{then} update expression, that is ill-formed a
 
 In one given transition, the \styleIMI{seq} block is executed \emph{before} the \styleIMI{then} block.
 
-In a model that contains multiple synchronized \IPTA{}, given a transition, all \styleIMI{seq} blocks (all sequential updates) in all \IPTA{} are processed first;
-the updates are performed sequentially starting from the top-most \IPTA{} in the input model file (\ie{} following the definition order of \IPTA{}).
-Only once all \styleIMI{seq} blocks are computed, all \styleIMI{then} block are then executed.
-Again, contrarily to the \styleIMI{seq} blocks, keep in mind that updates contained in \styleIMI{then} blocks are \emph{not} computed sequentially.
+Recall that, in a model that contains multiple synchronized \IPTA{}, given a transition, all \styleIMI{seq} blocks are performed sequentially starting from the top-most \IPTA{} in the input model file.
+Only once all \styleIMI{seq} blocks are computed (sequentially), all \styleIMI{then} blocks are then executed (at once).
+Keep in mind that, contrarily to the \styleIMI{seq} blocks, updates contained in \styleIMI{then} blocks are \emph{not} computed sequentially.
 
 The value of the variables used in the right-hand part of an update in the \styleIMI{then} block is the value computed \emph{after} executing the \styleIMI{seq} block updates.
 
