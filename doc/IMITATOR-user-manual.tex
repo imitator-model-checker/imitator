@@ -1438,6 +1438,8 @@ Keep in mind that, contrarily to the \styleIMI{seq} blocks, updates contained in
 
 The value of the variables used in the right-hand part of an update in the \styleIMI{then} block is the value computed \emph{after} executing the \styleIMI{seq} block updates.
 
+You can refer to the table \cref{table:summary:blocks-characteristics} to get an overview of what's allowed in the \styleIMI{seq} and \styleIMI{then} blocks.
+
 \begin{remark}
 Note the use of semicolon in the sequential block (\styleIMI{seq} block), in contrast to the comma in the declarative block (\styleIMI{then} block).
 \end{remark}
@@ -1551,6 +1553,26 @@ automaton pta1
 	end (* pta *)
 \end{IMITATORmodel}
 
+
+\begin{table}[h!]
+	\caption{Blocks characteristics summary}
+	{\centering
+	\small
+		\begin{tabular}{ | l | l | l | l | l | l | }
+			% Non-nested CTL
+			\hline
+			\rowHeader{} \textbf{Block} & \textbf{Sequential behavior} & \textbf{Clock update} & \textbf{Discrete update} & \textbf{Side effects} & \textbf{Variable auto remove} \\
+			\hline
+			seq & Yes & No & Yes & Yes & No        \\
+			then & No & Yes & Yes & No & Yes        \\
+			\hline
+		\end{tabular}
+
+	}
+
+	\label{table:summary:blocks-characteristics}
+\end{table}
+
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Runtime errors}\label{ss:runtime-errors}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1563,15 +1585,10 @@ When a runtime error is encountered, an exception is raised and \imitator{} term
 The possible runtime errors include:
 \begin{itemize}
 	\item division by~0;
-	\item non-integer division on integer expression
-	\item index out of range
-	\item empty collection
-	\item
-	% TODO
+	\item non-integer division on integer expression;
+	\item index out of range;
+	\item empty collection;
 \end{itemize}
-
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
