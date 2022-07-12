@@ -588,7 +588,8 @@ Let us precisely define what it means:
 \end{definition}
 %------------------------------------------------------------
 
-
+Note that an existing weaker notion of determinism allows multiple transitions from the same~$\loc_i$ labeled with the same action~$\action$, as long as guards are mutually exclusive.
+This is not the approach we choose in \imitator{}, where we impose at most one transition labeled with the same action.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -718,7 +719,7 @@ Int variables are encoded in \imitator{} using the \texttt{int} type of OCaml.
 	All arithmetic operations over the ``int'' variables are taken modulo $2^{32}$.
 	Overflow can therefore occur.
 
-	For critical models, it is highly advised to use \emph{rational} variables instead (the computation using rational variables may be significantly slower, but is always exact).
+	For critical models, it is highly advised to use \emph{rational} variables instead (the computation using rational variables may be significantly slower, but is always exact and without overflow).
 \end{becareful}
 
 Formally, the set of integer variables is $\IVar = \{ \ivar_1, \dots, \ivar_\IVarCard \} $;
@@ -827,7 +828,9 @@ A transition featuring such a guard and such updates would be written as follows
 
 %------------------------------------------------------------
 \begin{IMITATORmodel}
+(* before: bw1 = 0b1010 and bw2 = 0b1011 *)
 when logor(bw1, bw2) <> bw1 sync a do {bw1 := shift_left(bw1, 2), bw2 := logand(bw1, bw2)} goto l1;
+(* after: bw1 = 0b1000 and bw2 = 0b1010 *)
 \end{IMITATORmodel}
 %------------------------------------------------------------
 
@@ -881,7 +884,7 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 Array variables are fixed-length collections of indexed elements.
 Array elements can be accessed or updated using an integer-valued arithmetic expression as index.
 An array variable always has a fixed length and an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
-For example, it is possible to declare an array of integers, of Booleans, of arrays of arrays of Booleans---which can be seen as a multidimensional array.
+For example, it is possible to declare an array of integers, or an array of Booleans, or an array of arrays of arrays of Booleans---which can be seen as a multidimensional array.
 
 Examples of array definitions are given below:
 
@@ -1304,7 +1307,7 @@ The initial default value of composite types is as follows:
 \subsection{Updates}\label{ss:updates}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-The presence of clocks and parameters, discrete variables, and structures (such as arrays) requires a particular handling of the updates, which we describe in the following.
+The presence of clocks, parameters, discrete variables, and structures (such as arrays) requires a particular handling of the updates, which we describe in the following.
 
 In any case, the paradigm is that discrete variables are first tested in guards, then updated in updates.
 
@@ -1313,12 +1316,7 @@ In any case, the paradigm is that discrete variables are first tested in guards,
 %------------------------------------------------------------
 
 Conflicts can arise in standard updates due to the modular nature of \NIPTA{}.
-If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i := 2} while another one performs \styleIMI{i := 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
-
-If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
-
-% For more information on how the standard updates works, read the section \styleIMI{seq-then} form updates below.
-
+If two \IPTA{} in parallel update the same variable on the same synchronized action~\styleIMI{a} (\eg{} an \IPTA{} performs \styleIMI{i := 2} on a transition labeled with~\styleIMI{a}, while another one performs \styleIMI{i := 3} on a transition labeled with~\styleIMI{a}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
 
 %------------------------------------------------------------
 \subsubsection{Standard updates}\label{sss:standard-updates}
@@ -1331,7 +1329,7 @@ That is, in the following block:
 	when x = 0 & i = 1 do {i := i+1, i := 5, x := i}
 \end{IMITATORmodel}
 
-\noindent{}after the update, \styleIMI{x} is equal to~0, while the value of \styleIMI{i} is unspecified due to a non-deterministic assignment (this is an ill-formed behavior, and a warning will be triggered).
+\noindent{}after the update, \styleIMI{x} is equal to~0 (because \styleIMI{x := i} implies that the new value of \styleIMI{x} becomes the value of \styleIMI{i} \emph{before} the update), while the value of \styleIMI{i} is unspecified due to a non-deterministic assignment, \ie{} \styleIMI{i} is updated to two different values in the update (this is an ill-formed behavior, and a warning will be triggered).
 
 Since \imitator{} 3.3, we also allow for some sequential updates on the discrete variables, as explained in the following.
 
@@ -1339,7 +1337,7 @@ Since \imitator{} 3.3, we also allow for some sequential updates on the discrete
 \subsubsection{\styleIMI{seq-then} updates}\label{section:seq_then_form_updates}
 %------------------------------------------------------------
 
-\styleIMI{seq-then} updates are more complex updates, allowing first a set of sequential updates (on the discrete variables only, including side-effects functions), called the ``\styleIMI{seq} block'' , followed by ``standard updates'', called the \styleIMI{then} block.
+\styleIMI{seq-then} updates are more complex updates, allowing first a set of sequential updates (on the discrete variables only, including side-effects functions), called the ``\styleIMI{seq} block'' , followed by ``standard updates'' (non-sequential), called the \styleIMI{then} block.
 
 \paragraph{The \styleIMI{seq} block}
 
@@ -1441,7 +1439,7 @@ Keep in mind that, contrarily to the \styleIMI{seq} blocks, updates contained in
 The value of the variables used in the right-hand part of an update in the \styleIMI{then} block is the value computed \emph{after} executing the \styleIMI{seq} block updates.
 
 \begin{remark}
-Note the use of semicolon in the sequential part (\styleIMI{seq} block), in contrast to the comma in the declarative part (\styleIMI{then} block).
+Note the use of semicolon in the sequential block (\styleIMI{seq} block), in contrast to the comma in the declarative block (\styleIMI{then} block).
 \end{remark}
 
 Examples of a \styleIMI{seq-then} update expression:
@@ -1552,6 +1550,21 @@ automaton pta1
 	accepting loc lend: invariant True
 	end (* pta *)
 \end{IMITATORmodel}
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Runtime errors}\label{ss:runtime-errors}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+Runtime errors can be encountered during updates.
+For a example, during an update, a division by zero can be encountered: in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0, the result becomes undefined.
+
+When a runtime error is encountered, an exception is raised and \imitator{} terminates with an error.
+
+The possible runtime errors include:
+\begin{itemize}
+	\item division by~0;
+	% TODO
+\end{itemize}
 
 
 
