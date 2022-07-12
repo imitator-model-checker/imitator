@@ -192,7 +192,7 @@ Process~2 is identical to process~1, except that \styleIMI{x1} is replaced with 
 The observer is in charge to check that no more than one process is in critical section at the same time.\footnote{%
 	This observer is not really necessary to check the correctness of this protocol;
 	instead of adding this observer and checking \styleIMI{unreachable loc[observer] = obs\_violation}, one could just check either \styleIMI{counter > 1} or \styleIMI{loc[proc1] = CS1 \& loc[proc2] = CS2}.
-	However, this example comes from an earlier version of \imitator{} (that did not support checking global variables or more that one location in the \styleIMI{unreachable} property --- which has been fixed since version 2.7); furthermore, introducing an observer is also useful, as it is often used for the verification of more complex properties (see, \eg{} \cite{ABL98,ABBL98}).
+	However, this example comes from an earlier version of \imitator{} (that did not support checking global variables or more that one location in the \styleIMI{unreachable} property --- which has been fixed since \imitator{}~2.7); furthermore, introducing an observer is also useful, as it is often used for the verification of more complex properties (see, \eg{} \cite{ABL98,ABBL98}).
 }
 This observer will detect that this situation happens if an action \styleIMI{enter\_1} is followed by an action \styleIMI{enter\_2} without an action \styleIMI{exit\_1} in between (or symmetrically if an action \styleIMI{enter\_2} is followed by an action \styleIMI{enter\_1} without an action \styleIMI{exit\_2} in between).
 Note that the observer simply observes the system state, and synchronizes on the actions used by \styleIMI{proc1} and \styleIMI{proc2}; it does not use any clock nor variable.
@@ -471,8 +471,9 @@ Notably, rational variables can be assigned to rational arithmetic expressions o
 On the one hand, this is more restrictive than clock updates, because discrete rational variables cannot be assigned to a clock or to a parameter (in contrast to clocks, that \emph{can} be assigned to linear expressions over clocks, parameters and discrete rational variables).
 On the other hand, arithmetic expressions are richer than linear constraints, as they notably allow multiplication or division of rational variables with each other.
 
-Since version~2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
-See \cref{ss:updates} for details.
+Since \imitator{}~2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
+In addition, while by default updates are \emph{not} sequential in \imitator{}, we also allow sequential updates since \imitator{}~3.3.
+See \cref{ss:updates} for details on updates.
 
 Finally note that, by definition, parameters (that are unknown timing \emph{constants}) cannot be updated.
 
@@ -628,6 +629,9 @@ Otherwise, this transition cannot be taken (yet).
 If an \IPTA{} declares an action \styleIMI{act} that is never used in this \IPTA{}, then action \styleIMI{act} will never be executed in the entire model.\footnote{%
 	In this case, \imitator{} will detect this situation and will entirely delete this action from the model, while issuing a warning.
 }
+
+Also note that, when synchronizing transitions, the order in which the associated updates are executed is described in \cref{ss:updates}.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Global constants}
@@ -1383,7 +1387,7 @@ Examples of a \styleIMI{seq} update expression:
 The \styleIMI{then} block can be used to update clocks or discrete variables.
 These updates are not sequential so, as described before, in case of multiple updates of the same variable, a warning is issued, and the behavior of the \NIPTA{} becomes unspecified.
 The \styleIMI{then} block is essentially the same as a standard update (see \cref{sss:standard-updates}).
-This kind of update was the only one in \imitator{} until version~3.3.
+This kind of update was the only one in \imitator{} until \imitator{}~3.3.
 
 Below is an example of a \styleIMI{then} update expression:
 
@@ -2113,7 +2117,7 @@ Two options are possible in \imitator{}:
 		\item in a guard or invariant, each clock must be used at most once;
 		\item invariants should not contain discrete inequalities (\ie{} inequalities over discrete variables only);
 		\item the use of discrete variables was not tested (and may not be always working);
-		\item the conditional updates (new since version~2.12) are not supported;
+		\item the conditional updates are not supported;
 		\item the use of coefficients on parameters (different from 0 or~1) was not tested;
 		\item the use of stopwatches or multi-rate was not tested.
 	\end{itemize}
@@ -2678,7 +2682,8 @@ and \styleOption{-graphics-source} to keep the plot source.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % TODO: 2.12?
-Since version 2.11, \imitator{} supports a translation of the model to the \uppaal{} syntax~\cite{LPY97}.
+% Since \imitator{} 2.11,
+An automatic translation of the input model to the \uppaal{} syntax~\cite{LPY97} is available.
 To generate an equivalent \uppaal{} model without performing any analysis, use:
 
 %------------------------------------------------------------
@@ -2787,7 +2792,8 @@ Properties are so far not translated to \uppaal{}.
 \section{Translation to \hytech{}}\label{section:hytech}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Since version 2.8, \imitator{} supports a translation of the model to the \hytech{} syntax~\cite{HHW95} (that is quite close to that of \imitator{} anyway).
+% Since \imitator{} 2.8
+\imitator{} supports a translation of the model to the \hytech{} syntax~\cite{HHW95} (that is quite close to that of \imitator{} anyway).
 To generate an equivalent \hytech{} model without performing any analysis, use:
 
 %------------------------------------------------------------
@@ -2807,7 +2813,7 @@ In addition, the translation of properties is not supported.
 \section{Translation to \jani{}}\label{section:jani}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Since version~3.1, \imitator{} supports a translation of the model to the \href{https://jani-spec.org/}{\jani{} specification}~\cite{BDHHJT17}.
+Since \imitator{}~3.1, \imitator{} supports a translation of the model to the \href{https://jani-spec.org/}{\jani{} specification}~\cite{BDHHJT17}.
 To generate an equivalent \jani{} model without performing any analysis, use:
 
 %------------------------------------------------------------
@@ -3002,7 +3008,7 @@ No floating-point approximations (\styleIMI{float}) are used, except for the gen
 \section{Type system}\label{section:type_system}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Since version 3.1 \imitator{} supports several types of discrete variables.
+Since \imitator{}~3.1, several types of discrete variables are supported.
 Common primitive types as integer, rational and Booleans are available.
 Recall from \cref{section:discrete} that they can be declared with the following keywords:
 
@@ -5280,7 +5286,7 @@ However, \imitator{} does detect whether an input model is an L/U-PTA, in which 
 Emmanuelle~Encrenaz and Laurent~Fribourg have been great supporters of \imitator{}, on a theoretical point of view, and to find applications both from the literature and real case studies.
 Abdelrezzak~Bara provided several examples from the hardware literature.
 Jeremy~Sproston provided examples from the probabilistic community.
-Bertrand~Jeannet has been of great help on the linking with Apron~\cite{JM09} in a previous version of \imitator{}.
+Bertrand~Jeannet has been of great help on the linking with Apron~\cite{JM09} in an early version of \imitator{}.
 Ulrich~K\"uhne made several important improvements to \imitator{}, and linked the tool to PPL.
 Daphne~Dussaud implemented the graphical output of the behavioral cartography.
 Romain~Soulat implemented in part the merging technique~\cite{AFS13atva}, and brought several case studies.
