@@ -570,8 +570,8 @@ Note that parameters are not assumed to be positive; however, the behavior of \i
 
 Finally, note that the number of \IPTA{}, locations, variables and actions that can be defined in a model is bounded in \imitator{} by some very large number (most probably $2^{32}$); but, well, you don't seriously plan to build such a large model, do you?
 
-\bigskip
 
+\paragraph{Determinism}
 \imitator{} may use the determinism in (yet to come) algorithms; and the deterministic nature of an \NIPTA{} is detected by \imitator{}.
 In our setting, the strong determinism denotes at most one transition going out from a location and labeled with a given observable (\ie{} non-silent) transition.
 Let us precisely define what it means:
@@ -590,6 +590,8 @@ Let us precisely define what it means:
 
 Note that an existing weaker notion of determinism allows multiple transitions from the same~$\loc_i$ labeled with the same action~$\action$, as long as guards are mutually exclusive.
 This is not the approach we choose in \imitator{}, where we impose at most one transition labeled with the same action.
+
+Once more, the notion of strong determinism in \imitator{} is \emph{not} used in any algorithm, but its nature is ``simply'' detected (and part of the result file).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
