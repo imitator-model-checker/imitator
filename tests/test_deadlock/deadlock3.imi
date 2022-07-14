@@ -13,7 +13,7 @@ loc l1: invariant x<=1
 	
 
 loc l2: invariant x <= p
-	when True do {x := 2 } goto l2;
+	when True do {x := c } goto l2;
 
 end (* pta *)
 

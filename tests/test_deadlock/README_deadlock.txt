@@ -31,4 +31,7 @@ Final positive constraint guaranteeing deadlock-freeness:
 
 New:
 Final positive constraint guaranteeing deadlock-freeness:
-  p >= 2
+  p >= 1
+
+CORRECT answer would be: p>=2
+
