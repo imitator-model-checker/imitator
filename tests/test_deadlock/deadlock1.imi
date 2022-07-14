@@ -1,0 +1,26 @@
+(* Jaco and Laure, Paris, July 13, 2022 *)
+var
+ 	x : clock;
+	p : parameter;
+
+automaton pta
+
+synclabs: a;
+
+loc l1: invariant x <= p
+	when True sync a goto l2;
+	
+
+loc l2: invariant x <= 3
+	when True do {x := 0} goto l2;
+
+
+end (* pta *)
+
+init :=
+	& loc[pta] = l1
+	& x = 0
+	& p >= 0
+;
+
+end

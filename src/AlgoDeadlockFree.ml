@@ -123,39 +123,15 @@ class algoDeadlockFree =
 				self#print_algo_message Verbose_medium ("Considering transition from state " ^ (string_of_int state_index) ^ " via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "' to state " ^ (string_of_int state_index') ^ "…");
 			);
 			
-			(* retrieve the guard *)
-			let guard = StateSpace.get_guard state_space state_index combined_transition state_index' in
+			let direct_pre = DeadlockExtra.dl_weakest_precondition state_space state_index combined_transition state_index' in
+			let precondition = DeadlockExtra.dl_inverse_time direct_pre in
+			self#print_algo_message Verbose_medium ("Direct Precondition:\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names direct_pre));
+			self#print_algo_message Verbose_medium ("Timed  Precondition:\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names precondition));
 			
-			(* Print some information *)
-			if verbose_mode_greater Verbose_high then(
-				self#print_algo_message Verbose_high ("Guard computed via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "':\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
-			);
-			
-			(* Retrieving the constraint s'|P *)
-			let px_target = (StateSpace.get_state state_space state_index').px_constraint in
-			let p_target = LinearConstraint.px_hide_nonparameters_and_collapse px_target in
-
-			(* Intersect with the guard with s *)
-			(*** UGLY: conversion of dimensions… ***)
-			LinearConstraint.pxd_intersection_assign guard [LinearConstraint.pxd_of_px_constraint s_constraint ; LinearConstraint.pxd_of_p_constraint p_target];
-			
-			(* Print some information *)
-			if verbose_mode_greater Verbose_high then(
-				self#print_algo_message Verbose_high ("Intersection of guards:\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
-			);
-
-			(* Process past *)
-			AlgoStateBased.apply_time_past s_location guard;
-			
-			(* Print some information *)
-			if verbose_mode_greater Verbose_high then(
-				self#print_algo_message Verbose_high ("After time past:\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
-			);
-
 			(* Update the local constraint by adding the new constraint as a union *)
 			(*** WARNING: ugly (and expensive) to convert from pxd to px ***)
 			(*** NOTE: still safe since discrete values are all instantiated ***)
-			LinearConstraint.px_nnconvex_px_union_assign good_constraint_s (LinearConstraint.pxd_hide_discrete_and_collapse guard);
+			LinearConstraint.px_nnconvex_px_union_assign good_constraint_s precondition;
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
