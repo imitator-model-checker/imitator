@@ -1440,14 +1440,44 @@ Keep in mind that, contrarily to the \styleIMI{seq} blocks, updates contained in
 
 The value of the variables used in the right-hand part of an update in the \styleIMI{then} block is the value computed \emph{after} executing the \styleIMI{seq} block updates.
 
-You can refer to the table \cref{table:summary:blocks-characteristics} to get an overview of what's allowed in the \styleIMI{seq} and \styleIMI{then} blocks.
 
+
+%------------------------------------------------------------
 \begin{remark}
-Note the use of semicolon in the sequential block (\styleIMI{seq} block), in contrast to the comma in the declarative block (\styleIMI{then} block).
+	Note the use of semicolon in the sequential block (\styleIMI{seq} block), in contrast to the comma in the declarative block (\styleIMI{then} block).
 \end{remark}
+%------------------------------------------------------------
+
+\cref{table:summary:blocks-characteristics} summarizes what is allowed in the \styleIMI{seq} and \styleIMI{then} blocks.
+``Side effects'' refers to side effect functions, while ``variable auto remove'' denotes the fact that any variable used in the \styleIMI{seq} block is considered useful and will not be automatically removed (see option \styleOption{-no-var-autoremove} in \cref{chapter:options} for more explanations on \imitator{} automatic variable deletion).
+
+
+%------------------------------------------------------------
+\begin{table}[tb]
+	\caption{Blocks features summary}
+	{\centering
+	\small
+	\setlength{\tabcolsep}{2pt} % . The default value is 6pt.
+		\begin{tabular}{ | l | c | c | c | c | c | }
+			% Non-nested CTL
+			\hline
+			\rowHeader{} \textbf{Block} & \textbf{Sequential behavior} & \textbf{Clock update} & \textbf{Discrete update} & \textbf{Side effects} & \textbf{Variable auto remove} \\
+			\hline
+			\styleIMI{seq} & \cellYes{} & \cellNo{} & \cellYes{} & \cellYes{} & \cellNo{}        \\
+			\hline
+			\styleIMI{then} & \cellNo{} & \cellYes{} & \cellYes{} & \cellNo{} & \cellYes{}        \\
+			\hline
+		\end{tabular}
+
+	}
+
+	\label{table:summary:blocks-characteristics}
+\end{table}
+%------------------------------------------------------------
 
 Examples of a \styleIMI{seq-then} update expression:
 
+%------------------------------------------------------------
 \begin{IMITATORmodel}
 	do {
 
@@ -1460,7 +1490,9 @@ Examples of a \styleIMI{seq-then} update expression:
 
 	}
 \end{IMITATORmodel}
+%------------------------------------------------------------
 
+%------------------------------------------------------------
 \begin{IMITATORmodel}
 	do {
 
@@ -1489,9 +1521,11 @@ Examples of a \styleIMI{seq-then} update expression:
 
 	}
 \end{IMITATORmodel}
+%------------------------------------------------------------
 
 Examples of a \styleIMI{seq-then} update expression with multiple synchronized transitions:
 
+%------------------------------------------------------------
 \begin{IMITATORmodel}
 (************************************************************)
 automaton pta1
@@ -1554,27 +1588,8 @@ automaton pta1
 	accepting loc lend: invariant True
 	end (* pta *)
 \end{IMITATORmodel}
+%------------------------------------------------------------
 
-
-\begin{table}[h!]
-	\caption{Blocks characteristics summary}
-	{\centering
-	\small
-		\begin{tabular}{ | l | l | l | l | l | l | }
-			% Non-nested CTL
-			\hline
-			\rowHeader{} \textbf{Block} & \textbf{Sequential behavior} & \textbf{Clock update} & \textbf{Discrete update} & \textbf{Side effects} & \textbf{Variable auto remove} \\
-			\hline
-			\styleIMI{seq} & \cellYes{} & \cellNo{} & \cellYes{} & \cellYes{} & \cellNo{}        \\
-			\hline
-			\styleIMI{then} & \cellNo{} & \cellYes{} & \cellYes{} & \cellNo{} & \cellYes{}        \\
-			\hline
-		\end{tabular}
-
-	}
-
-	\label{table:summary:blocks-characteristics}
-\end{table}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Runtime errors}\label{ss:runtime-errors}
