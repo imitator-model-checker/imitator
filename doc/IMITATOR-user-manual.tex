@@ -1565,8 +1565,9 @@ automaton pta1
 			\hline
 			\rowHeader{} \textbf{Block} & \textbf{Sequential behavior} & \textbf{Clock update} & \textbf{Discrete update} & \textbf{Side effects} & \textbf{Variable auto remove} \\
 			\hline
-			seq & Yes & No & Yes & Yes & No        \\
-			then & No & Yes & Yes & No & Yes        \\
+			\styleIMI{seq} & \cellYes{} & \cellNo{} & \cellYes{} & \cellYes{} & \cellNo{}        \\
+			\hline
+			\styleIMI{then} & \cellNo{} & \cellYes{} & \cellYes{} & \cellNo{} & \cellYes{}        \\
 			\hline
 		\end{tabular}
 
@@ -1588,9 +1589,10 @@ The possible runtime errors include:
 \begin{itemize}
 	\item division by~0;
 	\item non-integer division on integer expression;
-	\item index out of range;
-	\item empty collection;
+	\item index out of range (\eg{} in an array);
+	\item operation on an empty collection (\eg{} accessing the top element of an empty stack).
 \end{itemize}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
