@@ -64,9 +64,7 @@ class algoDeadlockFree =
 		(* Find clocks and parameters *)
 		let clocks_and_parameters = list_union model.clocks model.parameters in
 		(* Constrain non-negative *)
-		(*let px_linear_constraint = *)LinearConstraint.px_constraint_of_nonnegative_variables clocks_and_parameters (*in
-		(* Convert to px_nnconvex_constraint *)
-		LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_linear_constraint*)
+		LinearConstraint.px_constraint_of_nonnegative_variables clocks_and_parameters
 
 	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is often used in the algorithm) *)
 	val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint =
@@ -134,12 +132,12 @@ class algoDeadlockFree =
 			);
 			
 			(* Retrieving the constraint s'|P *)
-			let px_destination = (StateSpace.get_state state_space state_index').px_constraint in
-			let p_destination = LinearConstraint.px_hide_nonparameters_and_collapse px_destination in
+			let px_target = (StateSpace.get_state state_space state_index').px_constraint in
+			let p_target = LinearConstraint.px_hide_nonparameters_and_collapse px_target in
 
 			(* Intersect with the guard with s *)
-			(*** UGLY: conversion of dimensions….. ***)
-			LinearConstraint.pxd_intersection_assign guard [LinearConstraint.pxd_of_px_constraint s_constraint ; LinearConstraint.pxd_of_p_constraint p_destination];
+			(*** UGLY: conversion of dimensions… ***)
+			LinearConstraint.pxd_intersection_assign guard [LinearConstraint.pxd_of_px_constraint s_constraint ; LinearConstraint.pxd_of_p_constraint p_target];
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
@@ -220,12 +218,6 @@ class algoDeadlockFree =
 		p_bad_constraint_s
 
 
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index = ()*)
-	
-	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -268,42 +260,7 @@ class algoDeadlockFree =
 		(* The end *)
 		()
 
-	
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: in that case add the entire state to the bad constraint *)
-	(*** NOTE: this step is in fact necessary only for the deadlocked states at the deepest position in the state space; for other deadlock states, they are already taken into account by process_post_n when computing n+1 ***)
-	(*** TO OPTIMIZE ***)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index =
-		
-		self#print_algo_message Verbose_standard ("Entering process_deadlock_state " ^ (string_of_int state_index) ^ "…");
-		
-		(* Get the constraint of the state *)
-		let _, s_constraint = StateSpace.get_state state_space state_index in
-		
-		(* Project onto P *)
-		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse s_constraint in
-		
-		(* Print some information *)
-		if verbose_mode_greater Verbose_low then(
-			self#print_algo_message Verbose_low ("Found a deadlock state! Adding " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint) ^ ".");
-		);
-		
-		(* Add union to bad_constraint *)
-		LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
-		
-		(* Print some information *)
-		if verbose_mode_greater Verbose_low then(
-			self#print_algo_message Verbose_low ("The global bad constraint is now: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
-		);
 
-		print_message Verbose_low ("");
-
-		(* The end *)
-		()
-		*)
-
-	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
