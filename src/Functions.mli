@@ -24,8 +24,8 @@ type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
 (* Get builtin functions meta *)
-val builtin_functions : function_metadata list
-val builtin_functions_table : (string, function_metadata) Hashtbl.t
+val builtin_functions_metadata : function_metadata list
+val builtin_functions_metadata_table : (string, function_metadata) Hashtbl.t
 
 (* Get builtin function implementations *)
 val builtin_function_bodies : AbstractModel.fun_definition list
@@ -35,7 +35,7 @@ val builtin_function_bodies_table : (string, AbstractModel.fun_definition) Hasht
 val fun_def_without_unused_local_vars : (string * int) list -> parsed_fun_definition -> parsed_fun_definition
 
 (* Compute metadata of a user function definition *)
-val metadata_of_function_definition : functions_meta_table -> parsed_functions_table-> parsed_fun_definition -> function_metadata
+val metadata_of_parsed_function_definition : functions_meta_table -> parsed_functions_table-> parsed_fun_definition -> function_metadata
 
 (* Get function metadata given it's name *)
 val function_metadata_by_name : variable_infos -> variable_name -> function_metadata

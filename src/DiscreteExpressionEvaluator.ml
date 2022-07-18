@@ -6,6 +6,7 @@ open AbstractValue
 open DiscreteExpressions
 open Exceptions
 
+type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, fun_definition) Hashtbl.t
 
 (* Record that contain context (current location, current local variables) for evaluating an expression *)
@@ -122,7 +123,7 @@ and eval_rational_term_with_context functions_table_opt eval_context_opt = funct
             let numerator, denominator = a, b in
             (* Check for 0-denominator *)
             if NumConst.equal denominator NumConst.zero then(
-                raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ NumConst.to_string numerator ^ " / " ^ NumConst.to_string denominator ^ ""))
+                raise (Division_by_0 ("Division by 0 found when trying to perform " ^ NumConst.to_string numerator ^ " / " ^ NumConst.to_string denominator ^ "."))
             );
             (* Divide *)
             NumConst.div numerator denominator
@@ -184,7 +185,7 @@ and eval_int_expression_with_context functions_table_opt eval_context_opt (* exp
 
                 (* Check for 0-denominator *)
                 if Int32.equal denominator Int32.zero then (
-                    raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (Int32.to_string numerator) ^ " / " ^ (Int32.to_string denominator) ^ ""))
+                    raise (Division_by_0 ("Division by 0 found when trying to perform " ^ (Int32.to_string numerator) ^ " / " ^ (Int32.to_string denominator) ^ "."))
                 );
 
                 (* Check for non-int division *)

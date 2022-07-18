@@ -347,7 +347,7 @@ let string_of_fun_definitions model =
         let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in
 
         (* Don't print builtin functions ! *)
-        let is_builtin = Hashtbl.mem Functions.builtin_functions_table fun_def.name in
+        let is_builtin = Hashtbl.mem Functions.builtin_functions_metadata_table fun_def.name in
 
         (* Format function definition *)
         if is_builtin then

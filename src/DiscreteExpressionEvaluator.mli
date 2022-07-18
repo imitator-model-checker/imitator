@@ -1,6 +1,7 @@
 open DiscreteExpressions
 open Automaton
 
+type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
 
 (* Record that contain context (current location, current local variables) for evaluating an expression *)
