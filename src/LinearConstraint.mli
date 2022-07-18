@@ -521,7 +521,7 @@ val pxd_time_elapse_assign_wrt_polyhedron : pxd_linear_constraint -> pxd_linear_
 
 (** `time_elapse_assign variables_elapse variables_constant linear_constraint` performs time elapsing on a set of variables variables_elapse; other variables remain constant; version with side effects; behavior is unspecified if some variables within linear_constraint do not appear in any set of variables *)
 (* val time_elapse_assign : variable list -> variable list -> linear_constraint -> unit *)
-val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constraint -> unit
+(* val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constraint -> unit *)
 
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
 (*** NOTE: elapsing variables are constrained to be non-negative ***)
