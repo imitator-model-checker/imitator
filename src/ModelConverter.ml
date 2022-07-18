@@ -3200,11 +3200,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
             raise (InvalidModel);
         );
 
-
         (* TYPE CHECKING *)
         let constant = name, expr, var_type in
         let typed_expr(*, expr_type *) = DiscreteExpressionConverter.convert_discrete_constant initialized_constants constant in
-        (* TODO benjamin IMPLEMENT replace None by functions_table *)
+
+        (* Note: If we want use functions for constant initialization, we has to replace None by the function table *)
+        (* It meant that function table should be initialized before constant, if possible. *)
         let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression None typed_expr in
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;

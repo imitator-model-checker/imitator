@@ -449,7 +449,7 @@ and string_of_rational_arithmetic_expression variable_names =
 		        "0"
                 (string_of_factor discrete_factor)
 
-		| Rational_expression expr ->
+		| Rational_nested_expression expr ->
 			string_of_arithmetic_expression expr
         | Rational_pow (expr, exp) as factor ->
             jani_binary_operator
@@ -503,7 +503,7 @@ and string_of_int_arithmetic_expression variable_names =
                 jani_strings.arithmetic_string.unary_min_string
                 (string_of_int_factor discrete_factor)
 
-		| Int_expression discrete_arithmetic_expression ->
+		| Int_nested_expression discrete_arithmetic_expression ->
 			string_of_int_arithmetic_expression discrete_arithmetic_expression
         | Int_pow (expr, exp) as factor ->
             jani_binary_operator

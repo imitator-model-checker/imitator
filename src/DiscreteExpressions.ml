@@ -93,7 +93,7 @@ and rational_factor =
 	| Rational_variable of Automaton.variable_index
 	| Rational_local_variable of variable_name
 	| Rational_constant of NumConst.t
-	| Rational_expression of rational_arithmetic_expression
+	| Rational_nested_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
     | Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
     | Rational_array_access of expression_access_type * int_arithmetic_expression
@@ -115,7 +115,7 @@ and int_factor =
 	| Int_variable of Automaton.variable_index
 	| Int_local_variable of variable_name
 	| Int_constant of Int32.t
-	| Int_expression of int_arithmetic_expression
+	| Int_nested_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_array_access of expression_access_type * int_arithmetic_expression
@@ -210,6 +210,8 @@ and queue_expression =
     | Queue_array_access of expression_access_type * int_arithmetic_expression
     | Queue_function_call of variable_name * variable_name list * global_expression list
 
+
+
 and expression_access_type =
     | Expression_array_access of array_expression
     | Expression_list_access of list_expression
@@ -299,7 +301,7 @@ and is_variable_rational_term = function
 and is_variable_rational_factor = function
     | Rational_variable _ -> true
     | Rational_unary_min factor -> is_variable_rational_factor factor
-    | Rational_expression expr -> is_variable_rational_arithmetic_expression expr
+    | Rational_nested_expression expr -> is_variable_rational_arithmetic_expression expr
     | _ -> false
 
 let rec is_linear_global_expression = function
@@ -349,7 +351,7 @@ and is_linear_rational_factor = function
     | Rational_variable _
     | Rational_constant _ -> true
     | Rational_unary_min factor -> is_linear_rational_factor factor
-    | Rational_expression expr -> is_linear_rational_arithmetic_expression expr
+    | Rational_nested_expression expr -> is_linear_rational_arithmetic_expression expr
     | _ -> false
 
 let is_linear_nonlinear_constraint = List.for_all is_linear_discrete_boolean_expression
@@ -362,12 +364,12 @@ let is_linear_nonlinear_constraint = List.for_all is_linear_discrete_boolean_exp
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_discrete_factor_has_parenthesis = function
     | Rational_unary_min _
-    | Rational_expression (Rational_sum_diff _) -> true
+    | Rational_nested_expression (Rational_sum_diff _) -> true
     | _ -> false
 
 (* Check if discrete factor is a multiplication *)
 let is_discrete_factor_is_mul = function
-    | Rational_expression (Rational_term (Rational_product_quotient (_, _, Mul))) -> true
+    | Rational_nested_expression (Rational_term (Rational_product_quotient (_, _, Mul))) -> true
     | _ -> false
 
 (* Check if a left expression should have parenthesis *)
@@ -400,7 +402,7 @@ let add_right_parenthesis str expr =
     if is_right_expr_has_parenthesis expr then "(" ^ str ^ ")" else str
 
 let add_parenthesis_to_unary_minus str = function
-    | Rational_expression _ -> "(" ^ str ^ ")"
+    | Rational_nested_expression _ -> "(" ^ str ^ ")"
     | _ -> str
 
 
@@ -411,12 +413,12 @@ let add_parenthesis_to_unary_minus str = function
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_int_factor_has_parenthesis = function
     | Int_unary_min _
-    | Int_expression(Int_sum_diff _) -> true
+    | Int_nested_expression(Int_sum_diff _) -> true
     | _ -> false
 
 (* Check if discrete factor is a multiplication *)
 let is_int_factor_is_mul = function
-    | Int_expression (Int_term (Int_product_quotient _)) -> true
+    | Int_nested_expression (Int_term (Int_product_quotient _)) -> true
     | _ -> false
 
 (* Check if a left expression should have parenthesis *)
@@ -449,7 +451,7 @@ let add_right_parenthesis_int str expr =
     if is_right_int_expr_has_parenthesis expr then "(" ^ str ^ ")" else str
 
 let add_parenthesis_to_unary_minus_int str = function
-    | Int_expression _ -> "(" ^ str ^ ")"
+    | Int_nested_expression _ -> "(" ^ str ^ ")"
     | _ -> str
 
 (* Constructors strings *)
@@ -475,7 +477,7 @@ let label_of_rational_factor = function
 	| Rational_variable _ -> "rational variable"
 	| Rational_local_variable variable_name -> variable_name
 	| Rational_constant _ -> "rational constant"
-	| Rational_expression _ -> "rational expression"
+	| Rational_nested_expression _ -> "rational expression"
 	| Rational_unary_min _ -> "rational minus"
 	| Rational_pow _ -> "pow"
 	| Rational_array_access _ -> "array_get"
@@ -485,7 +487,7 @@ let label_of_int_factor = function
 	| Int_variable _ -> "int variable"
 	| Int_local_variable variable_name -> variable_name
 	| Int_constant _ -> "int constant"
-	| Int_expression _ -> "int expression"
+	| Int_nested_expression _ -> "int expression"
 	| Int_unary_min _ -> "int minus"
 	| Int_pow _ -> "pow"
 	| Int_array_access _ -> "array_get"
@@ -613,7 +615,7 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
             string_of_expression_access customized_string variable_names access_type index_expr
 
 
-		| Rational_expression discrete_arithmetic_expression ->
+		| Rational_nested_expression discrete_arithmetic_expression ->
 			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 
         | Rational_function_call (function_name, _, args_expr) ->
@@ -661,7 +663,7 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 		    add_parenthesis_to_unary_minus_int (
 		         (string_of_int_factor customized_string factor)
 		    ) factor
-		| Int_expression expr ->
+		| Int_nested_expression expr ->
 			string_of_int_arithmetic_expression customized_string expr
         | Int_pow (expr, exp) as func ->
             print_function

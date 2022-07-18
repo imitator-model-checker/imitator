@@ -1,12 +1,12 @@
 open Automaton
-open AbstractProperty
 open Location
-
-open DiscreteExpressions
+open AbstractModel
+open AbstractProperty
 open AbstractValue
+open DiscreteExpressions
 open Exceptions
 
-type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
+type functions_table = (variable_name, fun_definition) Hashtbl.t
 
 (* Record that contain context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
@@ -43,33 +43,9 @@ let operator_of_relop = function
     | OP_GEQ -> (>=)
     | OP_G -> (>)
 
-let list_hd_fail_message list_expr =
-    let str_expr = DiscreteExpressions.string_of_list_expression (fun i -> "") list_expr in
-    "Use of `list_hd` on empty list `" ^ str_expr ^ "`."
-
-let list_tl_fail_message list_expr =
-    let str_expr = DiscreteExpressions.string_of_list_expression (fun i -> "") list_expr in
-    "Use of `list_tl` on empty list `" ^ str_expr ^ "`."
-
-let stack_pop_fail_message stack_expr =
-    let str_expr = DiscreteExpressions.string_of_stack_expression (fun i -> "") stack_expr in
-    "Use of `stack_pop` on empty stack `" ^ str_expr ^ "`."
-
-let stack_top_fail_message stack_expr =
-    let str_expr = DiscreteExpressions.string_of_stack_expression (fun i -> "") stack_expr in
-    "Use of `stack_top` on empty stack `" ^ str_expr ^ "`."
-
-let queue_pop_fail_message queue_expr =
-    let str_expr = DiscreteExpressions.string_of_queue_expression (fun i -> "") queue_expr in
-    "Use of `queue_pop` on empty queue `" ^ str_expr ^ "`."
-
-let queue_top_fail_message queue_expr =
-    let str_expr = DiscreteExpressions.string_of_queue_expression (fun i -> "") queue_expr in
-    "Use of `queue_top` on empty queue `" ^ str_expr ^ "`."
-
-let sequence_operation_fail_message seq_expr str_func function_name =
-    let str_expr = str_func (fun i -> "") seq_expr in
-    "Use of `" ^ function_name ^ "` on empty queue `" ^ str_expr ^ "`."
+(* Message when trying to perform an operation on elements of an empty sequence *)
+let empty_seq_fail_message str_expr =
+    "Use of `" ^ str_expr ^ "` on empty sequence."
 
 (* Evaluate function on a sequence, raise an exception if sequence is empty *)
 let eval_if_not_empty eval_length_function eval_function collection fail_message =
@@ -93,7 +69,7 @@ let try_eval_variable variable_index = function
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
 
-let try_eval_function function_name : functions_table option -> AbstractModel.fun_definition = function
+let try_eval_function function_name : functions_table option -> fun_definition = function
     | Some functions_table -> Hashtbl.find functions_table function_name
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate an expression containing function calls without a functions table."))
@@ -164,7 +140,7 @@ and eval_rational_factor_with_context functions_table_opt eval_context_opt = fun
         (* Variable should exist as it was checked before *)
         let discrete_value = try_eval_local_variable variable_name eval_context_opt in
         numconst_value discrete_value
-    | Rational_expression expr ->
+    | Rational_nested_expression expr ->
         eval_rational_expression_with_context functions_table_opt eval_context_opt expr
     | Rational_unary_min factor ->
         NumConst.neg (eval_rational_factor_with_context functions_table_opt eval_context_opt factor)
@@ -179,8 +155,7 @@ and eval_rational_factor_with_context functions_table_opt eval_context_opt = fun
         numconst_value value
 
     | Rational_function_call (function_name, param_names, expr_args) ->
-        let fun_def = try_eval_function function_name functions_table_opt in
-        let result = eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_def.body in
+        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
         numconst_value result
 
 and eval_int_expression_with_context functions_table_opt eval_context_opt (* expr *) =
@@ -237,7 +212,7 @@ and eval_int_expression_with_context functions_table_opt eval_context_opt (* exp
             let discrete_value = try_eval_local_variable variable_name eval_context_opt in
             int_value discrete_value
 
-        | Int_expression expr ->
+        | Int_nested_expression expr ->
             eval_int_expression_with_context_rec expr
         | Int_unary_min factor ->
             Int32.neg (eval_int_factor_with_context factor)
@@ -251,8 +226,7 @@ and eval_int_expression_with_context functions_table_opt eval_context_opt (* exp
             int_value value
 
         | Int_function_call (function_name, param_names, expr_args) ->
-            let fun_def = try_eval_function function_name functions_table_opt in
-            let result = eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_def.body in
+            let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
             int_value result
 
     in
@@ -335,8 +309,7 @@ and eval_discrete_boolean_expression_with_context functions_table_opt eval_conte
         bool_value value
 
     | Bool_function_call (function_name, param_names, expr_args) ->
-        let fun_def = try_eval_function function_name functions_table_opt in
-        let result = eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_def.body in
+        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
         bool_value result
 
 and eval_binary_word_expression_with_context functions_table_opt eval_context_opt = function
@@ -353,8 +326,7 @@ and eval_binary_word_expression_with_context functions_table_opt eval_context_op
         binary_word_value value
 
     | Binary_word_function_call (function_name, param_names, expr_args) ->
-        let fun_def = try_eval_function function_name functions_table_opt in
-        let result = eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_def.body in
+        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
         binary_word_value result
 
 and eval_array_expression_with_context functions_table_opt eval_context_opt = function
@@ -374,8 +346,7 @@ and eval_array_expression_with_context functions_table_opt eval_context_opt = fu
         array_value value
 
     | Array_function_call (function_name, param_names, expr_args) ->
-        let fun_def = try_eval_function function_name functions_table_opt in
-        let result = eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_def.body in
+        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
         array_value result
 
 and eval_list_expression_with_context functions_table_opt eval_context_opt = function
@@ -394,8 +365,7 @@ and eval_list_expression_with_context functions_table_opt eval_context_opt = fun
         list_value value
 
     | List_function_call (function_name, param_names, expr_args) ->
-        let fun_def = try_eval_function function_name functions_table_opt in
-        let result = eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_def.body in
+        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
         list_value result
 
 and eval_stack_expression_with_context functions_table_opt eval_context_opt = function
@@ -414,8 +384,7 @@ and eval_stack_expression_with_context functions_table_opt eval_context_opt = fu
         stack_value value
 
     | Stack_function_call (function_name, param_names, expr_args) ->
-        let fun_def = try_eval_function function_name functions_table_opt in
-        let result = eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_def.body in
+        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
         stack_value result
 
 and eval_queue_expression_with_context functions_table_opt eval_context_opt = function
@@ -434,8 +403,7 @@ and eval_queue_expression_with_context functions_table_opt eval_context_opt = fu
         queue_value value
 
     | Queue_function_call (function_name, param_names, expr_args) ->
-        let fun_def = try_eval_function function_name functions_table_opt in
-        let result = eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_def.body in
+        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
         queue_value result
 
 and get_array_value_at_with_context functions_table_opt eval_context_opt array_expr index_expr =
@@ -447,7 +415,7 @@ and get_array_value_at_with_context functions_table_opt eval_context_opt array_e
     if int_index >= Array.length values || int_index < 0 then (
         let str_index = string_of_int int_index in
         let str_values = OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (fun value -> AbstractValue.string_of_value value) values) in
-        raise (Out_of_bound ("Array index out of range: `" ^ str_index ^ "` for array " ^ str_values))
+        raise (Out_of_range ("Array index out of range: `" ^ str_index ^ "` for array " ^ str_values))
     );
 
     Array.get values int_index
@@ -461,7 +429,7 @@ and get_list_value_at_with_context functions_table_opt eval_context_opt array_ex
     if int_index >= List.length values || int_index < 0 then (
         let str_index = string_of_int int_index in
         let str_values = OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (fun value -> AbstractValue.string_of_value value) values) in
-        raise (Out_of_bound ("List index out of range: `" ^ str_index ^ "` for list " ^ str_values))
+        raise (Out_of_range ("List index out of range: `" ^ str_index ^ "` for list " ^ str_values))
     );
 
     List.nth values int_index
@@ -472,8 +440,10 @@ and get_expression_access_value_with_context functions_table_opt eval_context_op
     | Expression_list_access list_expr ->
         get_list_value_at_with_context functions_table_opt eval_context_opt list_expr index_expr
 
-and eval_inline_function_with_context functions_table_opt eval_context_opt param_names expr_args fun_decl =
+and eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args =
 
+    (* Get function definition *)
+    let fun_def = try_eval_function function_name functions_table_opt in
     (* Compute arguments values *)
     let arg_values = List.map (eval_global_expression_with_context functions_table_opt eval_context_opt) expr_args in
     (* Associate each parameter with their value *)
@@ -492,8 +462,9 @@ and eval_inline_function_with_context functions_table_opt eval_context_opt param
     let rec eval_fun_body_with_context eval_context_opt = function
         | Fun_builtin builtin_f ->
             (* Execute built-in function given argument values *)
-            (* TODO benjamin IMPLEMENT here str_expr *)
-            builtin_f "TODO benjamin fill here" arg_values
+            let l_del, r_del = Constants.default_paren_delimiter in
+            let str_fun_call = function_name ^ l_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " param_names ^ r_del in
+            builtin_f str_fun_call arg_values
 
         | Fun_local_decl (variable_name, _, expr, next_expr) ->
 
@@ -533,7 +504,7 @@ and eval_inline_function_with_context functions_table_opt eval_context_opt param
         | Fun_expr expr ->
             eval_global_expression_with_context functions_table_opt eval_context_opt expr
     in
-    eval_fun_body_with_context new_eval_context_opt fun_decl
+    eval_fun_body_with_context new_eval_context_opt fun_def.body
 
 
 and compute_update_value_opt_with_context functions_table_opt eval_context (update_type, expr) =
@@ -621,7 +592,7 @@ and pack_value (* variable_names *) functions_table_opt eval_context_opt old_val
                 (* TODO benjamin IMPLEMENT repair that *)
                 let str_parsed_update_type = "" in
 (*                let str_parsed_update_type = DiscreteExpressions.string_of_update_type variable_names parsed_update_type in*)
-                raise (Out_of_bound ("Array index out of range: `" ^ str_parsed_update_type ^ "`"))
+                raise (Out_of_range ("Array index out of range: `" ^ str_parsed_update_type ^ "`"))
             );
 
             (* Get element at given index *)
@@ -817,13 +788,13 @@ let eval_list_cons str_expr = function
 
 let eval_list_hd str_expr = function
     | Abstract_container_value (Abstract_list_value l) :: _ ->
-        let fail_message = "Use of `list_hd` on empty list `" ^ str_expr ^ "`." in
+        let fail_message = empty_seq_fail_message str_expr in
         try_eval_list_hd l fail_message
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_list_tl str_expr = function
     | Abstract_container_value (Abstract_list_value l) :: _ ->
-        let fail_message = "Use of `list_hd` on empty list `" ^ str_expr ^ "`." in
+        let fail_message = empty_seq_fail_message str_expr in
         Abstract_container_value (Abstract_list_value (try_eval_list_tl l fail_message))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
@@ -851,19 +822,19 @@ let eval_stack_push str_expr = function
 
 let eval_stack_pop str_expr = function
     | Abstract_container_value (Abstract_stack_value s) :: _ ->
-        let fail_message = "Use of `stack_pop` on empty stack `" ^ str_expr ^ "`." in
+        let fail_message = empty_seq_fail_message str_expr in
         try_eval_stack_pop s fail_message
     | Abstract_container_value (Abstract_queue_value s) :: _ ->
-        let fail_message = "Use of `queue_pop` on empty queue `" ^ str_expr ^ "`." in
+        let fail_message = empty_seq_fail_message str_expr in
         try_eval_queue_pop s fail_message
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_stack_top str_expr = function
     | Abstract_container_value (Abstract_stack_value s) :: _ ->
-        let fail_message = "Use of `stack_top` on empty stack `" ^ str_expr ^ "`." in
+        let fail_message = empty_seq_fail_message str_expr in
         try_eval_stack_top s fail_message
     | Abstract_container_value (Abstract_queue_value s) :: _ ->
-        let fail_message = "Use of `queue_top` on empty queue `" ^ str_expr ^ "`." in
+        let fail_message = empty_seq_fail_message str_expr in
         try_eval_queue_top s fail_message
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 

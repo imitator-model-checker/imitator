@@ -1901,7 +1901,7 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 	    Rational_constant (DiscreteValue.to_numconst_value value)
 
 	| Typed_expr (expr, _) ->
-	    Rational_expression (
+	    Rational_nested_expression (
 	        rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr
         )
 
@@ -2001,7 +2001,7 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
 	    Int_constant (DiscreteValue.to_int_value value)
 
 	| Typed_expr (expr, _) ->
-	    Int_expression (
+	    Int_nested_expression (
 	        int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr
         )
 

@@ -19,7 +19,7 @@
 (************************************************************)
 type error_type =
 	| Division_by_zero				of string
-	| Out_of_bound
+	| Out_of_range
 	| Empty_collection
 
 	| ModelFileNotFound_error

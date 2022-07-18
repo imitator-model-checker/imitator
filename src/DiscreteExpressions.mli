@@ -97,7 +97,7 @@ and rational_factor =
 	| Rational_variable of Automaton.variable_index
 	| Rational_local_variable of variable_name
 	| Rational_constant of NumConst.t
-	| Rational_expression of rational_arithmetic_expression
+	| Rational_nested_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
 	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
     | Rational_array_access of expression_access_type * int_arithmetic_expression
@@ -119,7 +119,7 @@ and int_factor =
 	| Int_variable of Automaton.variable_index
 	| Int_local_variable of variable_name
 	| Int_constant of Int32.t
-	| Int_expression of int_arithmetic_expression
+	| Int_nested_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_array_access of expression_access_type * int_arithmetic_expression
