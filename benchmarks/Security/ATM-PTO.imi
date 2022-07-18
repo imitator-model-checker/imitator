@@ -76,7 +76,7 @@ loc waitingPassword: invariant x_1 <= 10 (* & t_total <= p_total *)
 	(* User didn't their password in time *)
 	when x_1 = 10 goto cancelling;
 	(* Correct password *)
-	when True sync correctPassword_1 goto waitChoice;
+	when True sync correctPassword_1 do {x_1 := 0} goto waitChoice;
 	(* Incorrect password *)
 	when nbFailedPassword_1 < MAXnbFailedPassword sync incorrectPassword_1 do {x_1 := 0, nbFailedPassword_1 := nbFailedPassword_1 + 1} goto waitingPassword;
 	when nbFailedPassword_1 = MAXnbFailedPassword sync incorrectPassword_1 do {nbFailedPassword_1 := nbFailedPassword_1 + 1} goto cancelling;
@@ -104,7 +104,7 @@ loc choosingAmount: invariant x_1 <= 12 (* & t_total <= p_total *)
 	(* User didn't choose the amount in time *)
 	when x_1 = 12 goto cancelling;
 	(* Correct amount (i.e., valid + consistent with the available notes + larger than the available money) *)
-	when True sync correctAmount_1 goto preparingWithdrawalNormal;
+	when True sync correctAmount_1 do {x_1 := 0} goto preparingWithdrawalNormal;
 	(* Incorrect password *)
 	when nbFailedAmount_1 < MAXnbFailedPassword sync incorrectAmount_1 do {x_1 := 0, nbFailedAmount_1 := nbFailedAmount_1 + 1} goto choosingAmount;
 	when nbFailedAmount_1 = MAXnbFailedPassword sync incorrectAmount_1 do {nbFailedAmount_1 := nbFailedAmount_1 + 1} goto cancelling;
@@ -114,7 +114,7 @@ loc preparingWithdrawalNormal: invariant x_1 <= 15 (* & t_total <= p_total *)
 
 loc moneyAvailableNormal: invariant x_1 <= 20 (* & t_total <= p_total *)
 	(* User can take the money any time *)
-	when True do {cash_spotted_1 := True} sync take_cash_1 goto otherOperation;
+	when True do {cash_spotted_1 := True, x_1 := 0} sync take_cash_1 goto otherOperation;
 	(* User did not take the money on time *)
 	when x_1 = 20 goto cancelling;
 
@@ -131,7 +131,7 @@ loc displayingBalance: invariant x_1 <= 10 (* & t_total <= p_total *)
 	(* User can press OK and terminate *)
 	when t_total = p_total sync press_OK_1 goto the_end;
 	(* Time out *)
-	when x_1 = 10 goto otherOperation;
+	when x_1 = 10 do {x_1 := 0} goto otherOperation;
 
 loc terminating: invariant y_1 <= p_total & t_total <= p_total
 	when y_1 = p_total & t_total = p_total sync finish goto the_end;
@@ -166,7 +166,7 @@ loc waitingPassword: invariant x_2 <= 10 (* & t_total <= p_total *)
 	(* User didn't their password in time *)
 	when x_2 = 10 goto cancelling;
 	(* Correct password *)
-	when True sync correctPassword_2 goto waitChoice;
+	when True sync correctPassword_2 do {x_2 := 0} goto waitChoice;
 	(* Incorrect password *)
 	when nbFailedPassword_2 < MAXnbFailedPassword sync incorrectPassword_2 do {x_2 := 0, nbFailedPassword_2 := nbFailedPassword_2 + 1} goto waitingPassword;
 	when nbFailedPassword_2 = MAXnbFailedPassword sync incorrectPassword_2 do {nbFailedPassword_2 := nbFailedPassword_2 + 1} goto cancelling;
@@ -194,7 +194,7 @@ loc choosingAmount: invariant x_2 <= 12 (* & t_total <= p_total *)
 	(* User didn't choose the amount in time *)
 	when x_2 = 12 goto cancelling;
 	(* Correct amount (i.e., valid + consistent with the available notes + larger than the available money) *)
-	when True sync correctAmount_2 goto preparingWithdrawalNormal;
+	when True sync correctAmount_2 do {x_2 := 0} goto preparingWithdrawalNormal;
 	(* Incorrect password *)
 	when nbFailedAmount_2 < MAXnbFailedPassword sync incorrectAmount_2 do {x_2 := 0, nbFailedAmount_2 := nbFailedAmount_2 + 1} goto choosingAmount;
 	when nbFailedAmount_2 = MAXnbFailedPassword sync incorrectAmount_2 do {nbFailedAmount_2 := nbFailedAmount_2 + 1} goto cancelling;
@@ -204,7 +204,7 @@ loc preparingWithdrawalNormal: invariant x_2 <= 15 (* & t_total <= p_total *)
 
 loc moneyAvailableNormal: invariant x_2 <= 20 (* & t_total <= p_total *)
 	(* User can take the money any time *)
-	when True do {cash_spotted_2 := True} sync take_cash_2 goto otherOperation;
+	when True do {cash_spotted_2 := True, x_2 := 0} sync take_cash_2 goto otherOperation;
 	(* User did not take the money on time *)
 	when x_2 = 20 goto cancelling;
 
@@ -221,7 +221,7 @@ loc displayingBalance: invariant x_2 <= 10 (* & t_total <= p_total *)
 	(* User can press OK and terminate *)
 	when t_total = p_total sync press_OK_2 goto the_end;
 	(* Time out *)
-	when x_2 = 10 goto otherOperation;
+	when x_2 = 10 do {x_2 := 0} goto otherOperation;
 
 loc terminating: invariant y_2 <= p_total & t_total <= p_total
 	when y_2 = p_total & t_total = p_total sync finish goto the_end;
