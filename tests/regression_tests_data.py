@@ -4893,6 +4893,40 @@ pta1: lend, pta2: lend, pta3: lend, i = 3, j = 2, k = 6, l = 2, m = 2, w2 = 2, r
 	#------------------------------------------------------------
 	{
         ## Test version             : 1
+        ## Test since               : 2022/07/18
+        ## Last modified            : 2022/07/18
+        ## Test for IMITATOR version: 3.3
+        'author': 'lbinria',
+        'purpose'    : 'Toy model to test the discrete/continuous updates',
+        'input_files': ['updates/compound-updates-toy.imi'],
+		'tags': 'behavior, update',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'compound-updates-toy-statespace.states' , 'content' : """
+  INITIAL
+  STATE 0:
+  pta1: l1, pta2: l1, pta3: l1, i = 0, r3 = 0, r2 = 0, r1 = 0, s = stack() ==>
+& x = 0
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  pta1: lend, pta2: lend, pta3: lend, i = 2, r3 = 1, r2 = 1, r1 = 1, s = stack([1, 0]) ==>
+& x >= 2
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1
         ## Test since               : 2022/07/19
         ## Last modified            : 2022/07/19
         ## Test for IMITATOR version: 3.3
