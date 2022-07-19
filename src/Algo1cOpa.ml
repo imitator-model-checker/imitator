@@ -702,6 +702,9 @@ let state_elimination (dfa : arc list) (loc : int) : arc list =
 	(* Return the dfa *)
 	!dfa
 	
+(************************************************************)
+(* Main function *)
+(************************************************************)
 	
 (* Returns either a regular expression or an empty set by generating a DFA and performing a state elimination procedure on it *)
 let compute_reg_exp (sub_list : (int * int) list) (l0 : int) (lf : int) (nb_locations : int) : reg_exp = 
@@ -724,6 +727,34 @@ let compute_reg_exp (sub_list : (int * int) list) (l0 : int) (lf : int) (nb_loca
 	List.iter (fun e -> global_exp := Union(!global_exp,e.expression)) !dfa;
 	!global_exp
 	
+(************************************************************)
+(* Returns a string from a reg_exp *)
+(************************************************************)
+
+let rec reg_exp_to_string (e : reg_exp) : string = 
+	match e with
+	| Union(r1,r2) -> "("^(reg_exp_to_string r1)^"+"^(reg_exp_to_string r2)^")"
+	| Concatenation(r1,r2) -> (reg_exp_to_string r1)^"."^(reg_exp_to_string r2)
+	| Star(r1) -> "("^(reg_exp_to_string r1)^")*"
+	| Element(i1,i2) -> (string_of_int i1)^","^(string_of_int i2)
+	| Epsilon -> "Epsilon"
+	| EmptySet -> "EmptySet"
+	
+(************************************************************)
+(* Returns a string from a reg_exp while matching nodes with locations of of model *)
+(**WARNING: This can fail, should only be used localy **)
+(************************************************************)
+
+let rec reg_exp_and_model_to_string (e : reg_exp) (model : AbstractModel.abstract_model) : string = 
+	match e with
+	| Union(r1,r2) -> "("^(reg_exp_and_model_to_string r1 model)^"+"^(reg_exp_and_model_to_string r2 model)^")"
+	| Concatenation(r1,r2) -> (reg_exp_and_model_to_string r1 model)^"."^(reg_exp_and_model_to_string r2 model)
+	| Star(r1) -> "("^(reg_exp_and_model_to_string r1 model)^")*"
+	| Element(i1,i2) -> (model.location_names (List.hd model.automata) i1)^","^(model.location_names (List.hd model.automata) i2)
+	| Epsilon -> "Epsilon"
+	| EmptySet -> "EmptySet"
+
+
 
 (************************************************************)
 (************************************************************)
@@ -790,6 +821,8 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 	(* Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
+		(* Initialize the string that will be printed as output of the algorithm *)
+		let result = ref "Alphabet of the regular expression: \n\n" in
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		(* Check if the model is 1cPTA*)
@@ -800,16 +833,21 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 		let lf = get_lf state_predicate in
 		(* Compute the set of Pairs of localitions (cf paper, Definition 8 *)
 		let sub_list = Array.of_list (compute_sub_list model lf) in
-		print_message Verbose_low ("List of sub_automata : ");
-		Array.iter (fun (i,j) -> print_message Verbose_low (String.concat "" ["(";(model.location_names (List.hd model.automata) i);",";(model.location_names (List.hd model.automata) j);")"])) sub_list;
+		(* Print some information *)
+		if verbose_mode_greater Verbose_low then(
+			self#print_algo_message Verbose_low ("List of sub_automata:");
+			Array.iter (fun (i,j) -> self#print_algo_message Verbose_low (String.concat "" ["(";(model.location_names (List.hd model.automata) i);",";(model.location_names (List.hd model.automata) j);")"])) sub_list;
+		);
 		(* Compute the set of reset-free automata (cf paper, Definition 9 *)
-		let sub_automata = Array.map (fun e -> (generate_sub_automaton model lf e)) sub_list in
-		(* Prepare the array that will stores the PETS of each sub_automaton *)
-		(*let sub_PETS = Array.make (Array.length sub_automata) (*TODO: set as empty p_nnconvex_constraint*) in*)
-		
+		let sub_automata = Array.map (fun e -> (generate_sub_automaton model lf e)) sub_list in	
 		(* Perform EF synth on each sub-automaton *)
 		for s=0 to (Array.length sub_automata)-1 do  
 			let sub_abstract_model = sub_automata.(s) in
+			(* Print some information *)
+			if verbose_mode_greater Verbose_low then(
+				self#print_algo_message Verbose_low ("Content of the sub-model:");
+				self#print_algo_message Verbose_low (ModelPrinter.string_of_model sub_abstract_model);
+			);
 			(* Set lj as the state predicate *)
 			let (li,lj) = sub_list.(s) in
 			let state_predicate = set_predicate lj in
@@ -827,22 +865,16 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 				p_constraint
 			| _ -> raise (InternalError "A Single_synthesis_result was expected after calling EF")
 			in
-			
-		
-			(* Print some information *)
-			if verbose_mode_greater Verbose_low then(
-				self#print_algo_message Verbose_low ("Content of the sub-model :");
-				self#print_algo_message Verbose_low (ModelPrinter.string_of_model sub_abstract_model);
-				self#print_algo_message Verbose_low ("Result from EF:");
-				self#print_algo_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_constraint);
-			);
+			(* Add the constraint to the result *)
+			result := !result^(model.location_names (List.hd model.automata) li)^","^(model.location_names (List.hd model.automata) lj)^" =\n"^(LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_constraint)^"\n\n";
 		done;
 		
 		(* Compute the regular expression describing the language of the PTA *)
 		let expression = compute_reg_exp (Array.to_list sub_list) l0 lf model.nb_locations in
-		
-		(* TODO : evaluate the regular expression with the "bar" operators (cf paper, after Definition 10)  *)
-		
+		(* Add the expression to the result *)
+		result := !result^"Regular expression of the PETS:\n"^(reg_exp_and_model_to_string expression model);
+		(* Print the result *)
+		print_message Verbose_low (!result);
 		raise (NotImplemented "1cOpa.run")
 		
 
