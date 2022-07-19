@@ -3013,7 +3013,7 @@ let rec scalar_or_index_update_type_of_typed_scalar_or_index_update_type variabl
     | Typed_scalar_update variable_name ->
         let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
         (match variable_kind with
-        | Constant_kind value -> raise (InternalError "Unable to set a constant expression")
+        | Constant_kind value -> raise (InternalError "Unable to set a constant expression. This should be checked before.")
         | Variable_kind discrete_index -> Scalar_update discrete_index
         )
 

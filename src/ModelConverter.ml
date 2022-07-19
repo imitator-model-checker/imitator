@@ -253,7 +253,7 @@ let check_normal_update variable_infos automaton_name normal_update =
 
     let updated_variable_name = match updated_variable_name_opt with Some updated_variable_name -> updated_variable_name | None -> "_" in
 
-    if updated_variable_name <> "_" && is_variable_is_defined variable_infos updated_variable_name then
+    if updated_variable_name <> "_" && is_variable_or_constant_defined variable_infos updated_variable_name then
         (* Get kind (variable or constant ?) of updated variable *)
         let variable_kind = variable_kind_of_variable_name variable_infos updated_variable_name in
         (* Get var type of updated variable *)
