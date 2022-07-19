@@ -4893,6 +4893,29 @@ pta1: lend, pta2: lend, pta3: lend, i = 3, j = 2, k = 6, l = 2, m = 2, w2 = 2, r
 	#------------------------------------------------------------
 	{
         ## Test version             : 1
+        ## Test since               : 2022/07/19
+        ## Last modified            : 2022/07/19
+        ## Test for IMITATOR version: 3.3
+        'author': 'lbinria',
+        'purpose'    : 'Test that constant update is forbidden',
+        'input_files': ['updates/constant-update.imi'],
+		'tags': 'behavior, update',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'constant-update.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1
         ## Test since               : 2022/06/23
         ## Last modified            : 2022/06/23
         ## Test for IMITATOR version: 3.3
