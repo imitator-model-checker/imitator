@@ -8,6 +8,7 @@ open Exceptions
 
 type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, fun_definition) Hashtbl.t
+type variable_name_table = variable_index -> variable_name
 
 (* Record that contain context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
@@ -84,22 +85,22 @@ let try_eval_local_variable variable_name = function
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
 
 (* Evaluate an expression *)
-let rec eval_global_expression_with_context functions_table_opt eval_context_opt = function
-    | Arithmetic_expression expr -> Abstract_scalar_value (eval_discrete_arithmetic_expression_with_context functions_table_opt eval_context_opt expr)
-    | Bool_expression expr -> Abstract_scalar_value (Abstract_bool_value (eval_boolean_expression_with_context functions_table_opt eval_context_opt expr))
-    | Binary_word_expression expr -> Abstract_scalar_value (Abstract_binary_word_value (eval_binary_word_expression_with_context functions_table_opt eval_context_opt expr))
-    | Array_expression expr -> Abstract_container_value (Abstract_array_value (eval_array_expression_with_context functions_table_opt eval_context_opt expr))
-    | List_expression expr -> Abstract_container_value (Abstract_list_value (eval_list_expression_with_context functions_table_opt eval_context_opt expr))
-    | Stack_expression expr -> Abstract_container_value (Abstract_stack_value (eval_stack_expression_with_context functions_table_opt eval_context_opt expr))
-    | Queue_expression expr -> Abstract_container_value (Abstract_queue_value (eval_queue_expression_with_context functions_table_opt eval_context_opt expr))
+let rec eval_global_expression_with_context variable_names functions_table_opt eval_context_opt = function
+    | Arithmetic_expression expr -> Abstract_scalar_value (eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt expr)
+    | Bool_expression expr -> Abstract_scalar_value (Abstract_bool_value (eval_boolean_expression_with_context variable_names functions_table_opt eval_context_opt expr))
+    | Binary_word_expression expr -> Abstract_scalar_value (Abstract_binary_word_value (eval_binary_word_expression_with_context variable_names functions_table_opt eval_context_opt expr))
+    | Array_expression expr -> Abstract_container_value (Abstract_array_value (eval_array_expression_with_context variable_names functions_table_opt eval_context_opt expr))
+    | List_expression expr -> Abstract_container_value (Abstract_list_value (eval_list_expression_with_context variable_names functions_table_opt eval_context_opt expr))
+    | Stack_expression expr -> Abstract_container_value (Abstract_stack_value (eval_stack_expression_with_context variable_names functions_table_opt eval_context_opt expr))
+    | Queue_expression expr -> Abstract_container_value (Abstract_queue_value (eval_queue_expression_with_context variable_names functions_table_opt eval_context_opt expr))
 
-and eval_discrete_arithmetic_expression_with_context functions_table_opt eval_context_opt = function
+and eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Rational_arithmetic_expression expr ->
-        Abstract_number_value (Abstract_rat_value (eval_rational_expression_with_context functions_table_opt eval_context_opt expr))
+        Abstract_number_value (Abstract_rat_value (eval_rational_expression_with_context variable_names functions_table_opt eval_context_opt expr))
     | Int_arithmetic_expression expr ->
-        Abstract_number_value (Abstract_int_value (eval_int_expression_with_context functions_table_opt eval_context_opt expr))
+        Abstract_number_value (Abstract_int_value (eval_int_expression_with_context variable_names functions_table_opt eval_context_opt expr))
 
-and eval_rational_expression_with_context functions_table_opt eval_context_opt = function
+and eval_rational_expression_with_context variable_names functions_table_opt eval_context_opt = function
         | Rational_sum_diff (expr, term, sum_diff) ->
             let sum_function =
                 match sum_diff with
@@ -107,16 +108,16 @@ and eval_rational_expression_with_context functions_table_opt eval_context_opt =
                 | Minus -> NumConst.sub
             in
             sum_function
-                (eval_rational_expression_with_context functions_table_opt eval_context_opt expr)
-                (eval_rational_term_with_context functions_table_opt eval_context_opt term)
+                (eval_rational_expression_with_context variable_names functions_table_opt eval_context_opt expr)
+                (eval_rational_term_with_context variable_names functions_table_opt eval_context_opt term)
 
         | Rational_term term ->
-            eval_rational_term_with_context functions_table_opt eval_context_opt term
+            eval_rational_term_with_context variable_names functions_table_opt eval_context_opt term
 
-and eval_rational_term_with_context functions_table_opt eval_context_opt = function
+and eval_rational_term_with_context variable_names functions_table_opt eval_context_opt = function
     | Rational_product_quotient (term, factor, product_quotient) ->
-        let a = eval_rational_term_with_context functions_table_opt eval_context_opt term in
-        let b = eval_rational_factor_with_context functions_table_opt eval_context_opt factor in
+        let a = eval_rational_term_with_context variable_names functions_table_opt eval_context_opt term in
+        let b = eval_rational_factor_with_context variable_names functions_table_opt eval_context_opt factor in
         (match product_quotient with
         | Mul -> NumConst.mul a b
         | Div ->
@@ -130,9 +131,9 @@ and eval_rational_term_with_context functions_table_opt eval_context_opt = funct
         )
 
     | Rational_factor factor ->
-        eval_rational_factor_with_context functions_table_opt eval_context_opt factor
+        eval_rational_factor_with_context variable_names functions_table_opt eval_context_opt factor
 
-and eval_rational_factor_with_context functions_table_opt eval_context_opt = function
+and eval_rational_factor_with_context variable_names functions_table_opt eval_context_opt = function
     | Rational_variable variable_index ->
         numconst_value (try_eval_variable variable_index eval_context_opt)
     | Rational_constant variable_value ->
@@ -142,24 +143,24 @@ and eval_rational_factor_with_context functions_table_opt eval_context_opt = fun
         let discrete_value = try_eval_local_variable variable_name eval_context_opt in
         numconst_value discrete_value
     | Rational_nested_expression expr ->
-        eval_rational_expression_with_context functions_table_opt eval_context_opt expr
+        eval_rational_expression_with_context variable_names functions_table_opt eval_context_opt expr
     | Rational_unary_min factor ->
-        NumConst.neg (eval_rational_factor_with_context functions_table_opt eval_context_opt factor)
+        NumConst.neg (eval_rational_factor_with_context variable_names functions_table_opt eval_context_opt factor)
 
     | Rational_pow (expr, exp) ->
-        let x = eval_rational_expression_with_context functions_table_opt eval_context_opt expr in
-        let exponent = eval_int_expression_with_context functions_table_opt eval_context_opt exp in
+        let x = eval_rational_expression_with_context variable_names functions_table_opt eval_context_opt expr in
+        let exponent = eval_int_expression_with_context variable_names functions_table_opt eval_context_opt exp in
         NumConst.pow x exponent
 
     | Rational_array_access (access_type, index_expr) ->
-        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
+        let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         numconst_value value
 
     | Rational_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
         numconst_value result
 
-and eval_int_expression_with_context functions_table_opt eval_context_opt (* expr *) =
+and eval_int_expression_with_context variable_names functions_table_opt eval_context_opt (* expr *) =
     let rec eval_int_expression_with_context_rec = function
         | Int_sum_diff (expr, term, sum_diff) ->
             let sum_function =
@@ -223,18 +224,18 @@ and eval_int_expression_with_context functions_table_opt eval_context_opt (* exp
             OCamlUtilities.pow x exponent
 
         | Int_array_access (access_type, index_expr) ->
-            let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
+            let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
             int_value value
 
         | Int_function_call (function_name, param_names, expr_args) ->
-            let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
+            let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
             int_value result
 
     in
     eval_int_expression_with_context_rec
 
 (** Check if a boolean expression is satisfied *)
-and eval_boolean_expression_with_context functions_table_opt eval_context_opt = function
+and eval_boolean_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | True_bool -> true
     | False_bool -> false
     | Conj_dis (l_expr, r_expr, conj_dis) ->
@@ -244,13 +245,13 @@ and eval_boolean_expression_with_context functions_table_opt eval_context_opt = 
             | Or -> (||)
         in
         conj_dis_function
-            (eval_boolean_expression_with_context functions_table_opt eval_context_opt l_expr)
-            (eval_boolean_expression_with_context functions_table_opt eval_context_opt r_expr)
+            (eval_boolean_expression_with_context variable_names functions_table_opt eval_context_opt l_expr)
+            (eval_boolean_expression_with_context variable_names functions_table_opt eval_context_opt r_expr)
 
-    | Discrete_boolean_expression dbe -> eval_discrete_boolean_expression_with_context functions_table_opt eval_context_opt dbe
+    | Discrete_boolean_expression dbe -> eval_discrete_boolean_expression_with_context variable_names functions_table_opt eval_context_opt dbe
 
 (** Check if a discrete boolean expression is satisfied *)
-and eval_discrete_boolean_expression_with_context functions_table_opt eval_context_opt = function
+and eval_discrete_boolean_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Bool_variable variable_index ->
         bool_value (try_eval_variable variable_index eval_context_opt)
     | Bool_constant value ->
@@ -263,57 +264,57 @@ and eval_discrete_boolean_expression_with_context functions_table_opt eval_conte
     (* We just have to create a Rational_comparison and a Int_comparison to solve this *)
     | Arithmetic_comparison (l_expr, relop, r_expr) ->
         (operator_of_relop relop)
-            (eval_discrete_arithmetic_expression_with_context functions_table_opt eval_context_opt l_expr)
-            (eval_discrete_arithmetic_expression_with_context functions_table_opt eval_context_opt r_expr)
+            (eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt l_expr)
+            (eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt r_expr)
     | Boolean_comparison (l_expr, relop, r_expr) ->
          (operator_of_relop relop)
-             (eval_discrete_boolean_expression_with_context functions_table_opt eval_context_opt l_expr)
-             (eval_discrete_boolean_expression_with_context functions_table_opt eval_context_opt r_expr)
+             (eval_discrete_boolean_expression_with_context variable_names functions_table_opt eval_context_opt l_expr)
+             (eval_discrete_boolean_expression_with_context variable_names functions_table_opt eval_context_opt r_expr)
     | Binary_comparison (l_expr, relop, r_expr) ->
         (operator_of_relop relop)
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt l_expr)
-            (eval_binary_word_expression_with_context functions_table_opt eval_context_opt r_expr)
+            (eval_binary_word_expression_with_context variable_names functions_table_opt eval_context_opt l_expr)
+            (eval_binary_word_expression_with_context variable_names functions_table_opt eval_context_opt r_expr)
     | Array_comparison (l_expr, relop, r_expr) ->
         (operator_of_relop relop)
-            (eval_array_expression_with_context functions_table_opt eval_context_opt l_expr)
-            (eval_array_expression_with_context functions_table_opt eval_context_opt r_expr)
+            (eval_array_expression_with_context variable_names functions_table_opt eval_context_opt l_expr)
+            (eval_array_expression_with_context variable_names functions_table_opt eval_context_opt r_expr)
     | List_comparison (l_expr, relop, r_expr) ->
         (operator_of_relop relop)
-            (eval_list_expression_with_context functions_table_opt eval_context_opt l_expr)
-            (eval_list_expression_with_context functions_table_opt eval_context_opt r_expr)
+            (eval_list_expression_with_context variable_names functions_table_opt eval_context_opt l_expr)
+            (eval_list_expression_with_context variable_names functions_table_opt eval_context_opt r_expr)
     | Stack_comparison (l_expr, relop, r_expr) ->
         (operator_of_relop relop)
-            (eval_stack_expression_with_context functions_table_opt eval_context_opt l_expr)
-            (eval_stack_expression_with_context functions_table_opt eval_context_opt r_expr)
+            (eval_stack_expression_with_context variable_names functions_table_opt eval_context_opt l_expr)
+            (eval_stack_expression_with_context variable_names functions_table_opt eval_context_opt r_expr)
     | Queue_comparison (l_expr, relop, r_expr) ->
         (operator_of_relop relop)
-            (eval_queue_expression_with_context functions_table_opt eval_context_opt l_expr)
-            (eval_queue_expression_with_context functions_table_opt eval_context_opt r_expr)
+            (eval_queue_expression_with_context variable_names functions_table_opt eval_context_opt l_expr)
+            (eval_queue_expression_with_context variable_names functions_table_opt eval_context_opt r_expr)
 
     (** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
     | Expression_in (discrete_arithmetic_expression_1, discrete_arithmetic_expression_2, discrete_arithmetic_expression_3) ->
         (* Compute the first one to avoid redundancy *)
-        let expr1_evaluated = eval_discrete_arithmetic_expression_with_context functions_table_opt eval_context_opt  discrete_arithmetic_expression_1 in
-            (eval_discrete_arithmetic_expression_with_context functions_table_opt eval_context_opt discrete_arithmetic_expression_2)
+        let expr1_evaluated = eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt  discrete_arithmetic_expression_1 in
+            (eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt discrete_arithmetic_expression_2)
             <=
             expr1_evaluated
             &&
             expr1_evaluated
             <=
-            (eval_discrete_arithmetic_expression_with_context functions_table_opt eval_context_opt discrete_arithmetic_expression_3)
+            (eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt discrete_arithmetic_expression_3)
     | Boolean_expression boolean_expression ->
-        eval_boolean_expression_with_context functions_table_opt eval_context_opt boolean_expression
+        eval_boolean_expression_with_context variable_names functions_table_opt eval_context_opt boolean_expression
     | Not_bool b ->
-        not (eval_boolean_expression_with_context functions_table_opt eval_context_opt b) (* negation *)
+        not (eval_boolean_expression_with_context variable_names functions_table_opt eval_context_opt b) (* negation *)
     | Bool_array_access (access_type, index_expr) ->
-        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
+        let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         bool_value value
 
     | Bool_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
         bool_value result
 
-and eval_binary_word_expression_with_context functions_table_opt eval_context_opt = function
+and eval_binary_word_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Binary_word_constant value -> value
     | Binary_word_variable (variable_index, _) ->
         binary_word_value (try_eval_variable variable_index eval_context_opt)
@@ -323,16 +324,16 @@ and eval_binary_word_expression_with_context functions_table_opt eval_context_op
         binary_word_value discrete_value
 
     | Binary_word_array_access (access_type, index_expr) ->
-        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
+        let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         binary_word_value value
 
     | Binary_word_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
         binary_word_value result
 
-and eval_array_expression_with_context functions_table_opt eval_context_opt = function
+and eval_array_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Literal_array array ->
-        Array.map (fun expr -> eval_global_expression_with_context functions_table_opt eval_context_opt expr) array
+        Array.map (fun expr -> eval_global_expression_with_context variable_names functions_table_opt eval_context_opt expr) array
     | Array_variable variable_index ->
         array_value (try_eval_variable variable_index eval_context_opt)
     | Array_constant values ->
@@ -343,16 +344,16 @@ and eval_array_expression_with_context functions_table_opt eval_context_opt = fu
         array_value discrete_value
 
     | Array_array_access (access_type, index_expr) ->
-        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
+        let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         array_value value
 
     | Array_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
         array_value result
 
-and eval_list_expression_with_context functions_table_opt eval_context_opt = function
+and eval_list_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Literal_list list ->
-        List.map (fun expr -> eval_global_expression_with_context functions_table_opt eval_context_opt expr) list
+        List.map (fun expr -> eval_global_expression_with_context variable_names functions_table_opt eval_context_opt expr) list
     | List_variable variable_index ->
         list_value (try_eval_variable variable_index eval_context_opt)
     | List_constant values ->
@@ -362,14 +363,14 @@ and eval_list_expression_with_context functions_table_opt eval_context_opt = fun
         let discrete_value = try_eval_local_variable variable_name eval_context_opt in
         list_value discrete_value
     | List_array_access (access_type, index_expr) ->
-        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
+        let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         list_value value
 
     | List_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
         list_value result
 
-and eval_stack_expression_with_context functions_table_opt eval_context_opt = function
+and eval_stack_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Literal_stack -> Stack.create ()
 
     | Stack_variable variable_index ->
@@ -381,14 +382,14 @@ and eval_stack_expression_with_context functions_table_opt eval_context_opt = fu
         stack_value discrete_value
 
     | Stack_array_access (access_type, index_expr) ->
-        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
+        let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         stack_value value
 
     | Stack_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
         stack_value result
 
-and eval_queue_expression_with_context functions_table_opt eval_context_opt = function
+and eval_queue_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Literal_queue -> Queue.create ()
 
     | Queue_variable variable_index ->
@@ -400,53 +401,55 @@ and eval_queue_expression_with_context functions_table_opt eval_context_opt = fu
         queue_value discrete_value
 
     | Queue_array_access (access_type, index_expr) ->
-        let value = get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr access_type in
+        let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         queue_value value
 
     | Queue_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args in
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
         queue_value result
 
-and get_array_value_at_with_context functions_table_opt eval_context_opt array_expr index_expr =
+and get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr =
 
-    let values = eval_array_expression_with_context functions_table_opt eval_context_opt array_expr in
-    let index = eval_int_expression_with_context functions_table_opt eval_context_opt index_expr in
-    let int_index = Int32.to_int index in
+        let index = eval_int_expression_with_context variable_names functions_table_opt eval_context_opt index_expr in
+        let int_index = Int32.to_int index in
 
-    if int_index >= Array.length values || int_index < 0 then (
-        let str_index = string_of_int int_index in
-        let str_values = OCamlUtilities.string_of_array_of_string_with_sep ", " (Array.map (fun value -> AbstractValue.string_of_value value) values) in
-        raise (Out_of_range ("Array index out of range: `" ^ str_index ^ "` for array " ^ str_values))
-    );
+        (* Create out of range fail message *)
+        let str_expr =
+            match variable_names with
+            | Some variable_names -> lazy (DiscreteExpressions.string_of_expression_access variable_names access_type index_expr)
+            | None -> lazy ""
+        in
 
-    Array.get values int_index
+        match access_type with
+        | Expression_array_access array_expr ->
+            let values = eval_array_expression_with_context variable_names functions_table_opt eval_context_opt array_expr in
 
-and get_list_value_at_with_context functions_table_opt eval_context_opt array_expr index_expr =
+            if int_index >= Array.length values || int_index < 0 then (
+                raise (Out_of_range ("Index out of range at `" ^ Lazy.force str_expr ^ "`."))
+            );
 
-    let values = eval_list_expression_with_context functions_table_opt eval_context_opt array_expr in
-    let index = eval_int_expression_with_context functions_table_opt eval_context_opt index_expr in
-    let int_index = Int32.to_int index in
+            (* Get element at index *)
+            Array.get values int_index
 
-    if int_index >= List.length values || int_index < 0 then (
-        let str_index = string_of_int int_index in
-        let str_values = OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (fun value -> AbstractValue.string_of_value value) values) in
-        raise (Out_of_range ("List index out of range: `" ^ str_index ^ "` for list " ^ str_values))
-    );
+        | Expression_list_access list_expr ->
+            let values = eval_list_expression_with_context variable_names functions_table_opt eval_context_opt list_expr in
 
-    List.nth values int_index
+            if int_index >= List.length values || int_index < 0 then (
+                raise (Out_of_range ("Index out of range at `" ^ Lazy.force str_expr ^ "`."))
+            );
 
-and get_expression_access_value_with_context functions_table_opt eval_context_opt index_expr = function
-    | Expression_array_access array_expr ->
-        get_array_value_at_with_context functions_table_opt eval_context_opt array_expr index_expr
-    | Expression_list_access list_expr ->
-        get_list_value_at_with_context functions_table_opt eval_context_opt list_expr index_expr
+            (* Get element at index *)
+            List.nth values int_index
 
-and eval_user_function_with_context functions_table_opt eval_context_opt function_name param_names expr_args =
+
+
+
+and eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args =
 
     (* Get function definition *)
     let fun_def = try_eval_function function_name functions_table_opt in
     (* Compute arguments values *)
-    let arg_values = List.map (eval_global_expression_with_context functions_table_opt eval_context_opt) expr_args in
+    let arg_values = List.map (eval_global_expression_with_context variable_names functions_table_opt eval_context_opt) expr_args in
     (* Associate each parameter with their value *)
     let param_names_with_arg_values = List.combine param_names arg_values in
     (* Get or create local variables table *)
@@ -481,7 +484,7 @@ and eval_user_function_with_context functions_table_opt eval_context_opt functio
                 )
             in
 
-            let value = eval_global_expression_with_context functions_table_opt eval_context_opt expr in
+            let value = eval_global_expression_with_context variable_names functions_table_opt eval_context_opt expr in
             Hashtbl.add eval_context.local_variables variable_name value;
 
             eval_fun_body_with_context eval_context_opt next_expr
@@ -499,16 +502,16 @@ and eval_user_function_with_context functions_table_opt eval_context_opt functio
                 )
             in
 
-            direct_update_with_context functions_table_opt eval_context normal_update;
+            direct_update_with_context variable_names functions_table_opt eval_context normal_update;
             eval_fun_body_with_context eval_context_opt next_expr
 
         | Fun_expr expr ->
-            eval_global_expression_with_context functions_table_opt eval_context_opt expr
+            eval_global_expression_with_context variable_names functions_table_opt eval_context_opt expr
     in
     eval_fun_body_with_context new_eval_context_opt fun_def.body
 
 
-and compute_update_value_opt_with_context functions_table_opt eval_context (update_type, expr) =
+and compute_update_value_opt_with_context variable_names functions_table_opt eval_context (update_type, expr) =
 
     let rec discrete_index_of_parsed_scalar_or_index_update_type = function
         | Scalar_update discrete_index -> discrete_index
@@ -523,25 +526,25 @@ and compute_update_value_opt_with_context functions_table_opt eval_context (upda
         let old_value = eval_context.discrete_valuation discrete_index in
 
         (* Compute its new value *)
-        let new_value = eval_global_expression_with_context functions_table_opt (Some eval_context) expr in
-        let new_value = pack_value functions_table_opt (Some eval_context) old_value new_value update_type in
+        let new_value = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in
+        let new_value = pack_value variable_names functions_table_opt (Some eval_context) old_value new_value update_type in
 
         Some (discrete_index, new_value)
     | Void_update ->
-        let _ = eval_global_expression_with_context functions_table_opt (Some eval_context) expr in None
+        let _ = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in None
 
-and direct_update_with_context functions_table_opt eval_context update =
+and direct_update_with_context variable_names functions_table_opt eval_context update =
 
-    let discrete_index_new_value_pair_opt = compute_update_value_opt_with_context functions_table_opt eval_context update in
+    let discrete_index_new_value_pair_opt = compute_update_value_opt_with_context variable_names functions_table_opt eval_context update in
     match discrete_index_new_value_pair_opt with
     | None -> ()
     | Some (discrete_index, new_value) ->
         (* Direct update ! *)
         eval_context.discrete_setter discrete_index new_value
 
-and delayed_update_with_context functions_table_opt eval_context updated_discrete update =
+and delayed_update_with_context variable_names functions_table_opt eval_context updated_discrete update =
 
-    let discrete_index_new_value_pair_opt = compute_update_value_opt_with_context functions_table_opt eval_context update in
+    let discrete_index_new_value_pair_opt = compute_update_value_opt_with_context variable_names functions_table_opt eval_context update in
     match discrete_index_new_value_pair_opt with
     | None ->
         Delayed_update_recorded (* update ok *)
@@ -574,7 +577,7 @@ and delayed_update_with_context functions_table_opt eval_context updated_discret
 (* a[1] = [[5, 6], [7, 8]] *)
 (* a[1][1] = [7, 8] *)
 (* a[1][1][0] = 7 *)
-and pack_value (* variable_names *) functions_table_opt eval_context_opt old_value new_value parsed_update_type =
+and pack_value variable_names functions_table_opt eval_context_opt old_value new_value update_type =
 
     let rec pack_value_scalar_or_index_update_type = function
         | Scalar_update discrete_index -> old_value, [||], None
@@ -583,17 +586,22 @@ and pack_value (* variable_names *) functions_table_opt eval_context_opt old_val
             let old_value, _, _ = pack_value_scalar_or_index_update_type inner_scalar_or_index_update_type in
 
             (* Compute index *)
-            let index = Int32.to_int (eval_int_expression_with_context functions_table_opt eval_context_opt index_expr) in
+            let index = Int32.to_int (eval_int_expression_with_context variable_names functions_table_opt eval_context_opt index_expr) in
 (*            ImitatorUtilities.print_message Verbose_standard ("access index: " ^ string_of_int index ^ "for " ^ string_of_value old_value);*)
             (* Get inner array of discrete value of old value *)
             let old_array = array_value old_value in
 
             (* Check bounds *)
             if index >= Array.length old_array || index < 0 then (
-                (* TODO benjamin IMPLEMENT repair that *)
-                let str_parsed_update_type = "" in
-(*                let str_parsed_update_type = DiscreteExpressions.string_of_update_type variable_names parsed_update_type in*)
-                raise (Out_of_range ("Array index out of range: `" ^ str_parsed_update_type ^ "`"))
+
+                (* Create out of range fail message *)
+                let str_update_type =
+                    match variable_names with
+                    | Some variable_names -> DiscreteExpressions.string_of_update_type variable_names update_type
+                    | None -> ""
+                in
+
+                raise (Out_of_range ("Index out of range at `" ^ str_update_type ^ "`."))
             );
 
             (* Get element at given index *)
@@ -607,7 +615,7 @@ and pack_value (* variable_names *) functions_table_opt eval_context_opt old_val
         | Void_update -> old_value, [||], None
     in
 
-    let unpacked_old_array, old_array, some_index = pack_value_rec parsed_update_type in
+    let unpacked_old_array, old_array, some_index = pack_value_rec update_type in
     match some_index with
     | Some index ->
         old_array.(index) <- new_value;
@@ -617,14 +625,14 @@ and pack_value (* variable_names *) functions_table_opt eval_context_opt old_val
 
 
 (* Try to evaluate a constant global expression, if expression isn't constant, it raise an error *)
-let try_eval_constant_global_expression functions_table_opt = eval_global_expression_with_context functions_table_opt None
+let try_eval_constant_global_expression functions_table_opt = eval_global_expression_with_context None functions_table_opt None
 (* Try to evaluate a constant rational term, if expression isn't constant, it raise an error *)
-let try_eval_constant_rational_term functions_table_opt = eval_rational_term_with_context functions_table_opt None
+let try_eval_constant_rational_term functions_table_opt = eval_rational_term_with_context None functions_table_opt None
 (* Try to evaluate a constant rational factor, if expression isn't constant, it raise an error *)
-let try_eval_constant_rational_factor functions_table_opt = eval_rational_factor_with_context functions_table_opt None
+let try_eval_constant_rational_factor functions_table_opt = eval_rational_factor_with_context None functions_table_opt None
 
-let direct_update functions_table_opt discrete_access = direct_update_with_context functions_table_opt (create_eval_context discrete_access)
-let delayed_update functions_table_opt discrete_access = delayed_update_with_context functions_table_opt (create_eval_context discrete_access)
+let direct_update variable_names functions_table_opt discrete_access = direct_update_with_context variable_names functions_table_opt (create_eval_context discrete_access)
+let delayed_update variable_names functions_table_opt discrete_access = delayed_update_with_context variable_names functions_table_opt (create_eval_context discrete_access)
 
 (* Try to evaluate a constant global expression, if expression isn't constant, it return None *)
 let eval_constant_global_expression_opt functions_table_opt expr = try Some (try_eval_constant_global_expression functions_table_opt expr) with _ -> None
@@ -634,22 +642,22 @@ let eval_constant_rational_term_opt functions_table_opt expr = try Some (try_eva
 let eval_constant_rational_factor_opt functions_table_opt expr = try Some (try_eval_constant_rational_factor functions_table_opt expr) with _ -> None
 
 (**)
-let eval_global_expression functions_table_opt discrete_access_opt = eval_global_expression_with_context functions_table_opt (create_eval_context_opt discrete_access_opt)
+let eval_global_expression variable_names functions_table_opt discrete_access_opt = eval_global_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
 (**)
-let eval_boolean_expression functions_table_opt discrete_access_opt = eval_boolean_expression_with_context functions_table_opt (create_eval_context_opt discrete_access_opt)
+let eval_boolean_expression variable_names functions_table_opt discrete_access_opt = eval_boolean_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
 (**)
-let eval_discrete_boolean_expression functions_table_opt discrete_access_opt = eval_discrete_boolean_expression_with_context functions_table_opt (create_eval_context_opt discrete_access_opt)
+let eval_discrete_boolean_expression variable_names functions_table_opt discrete_access_opt = eval_discrete_boolean_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
 
 (* Check if a nonlinear constraint is satisfied *)
-let check_nonlinear_constraint functions_table_opt discrete_access =
-  List.for_all (eval_discrete_boolean_expression functions_table_opt (Some discrete_access))
+let check_nonlinear_constraint variable_names functions_table_opt discrete_access =
+  List.for_all (eval_discrete_boolean_expression variable_names functions_table_opt (Some discrete_access))
 
 (************************************************************)
 (** Matching state predicates with a global location *)
 (************************************************************)
 
 (***TODO/NOTE: Might have been nicer to convert the acceptance condition during the ModelConverter phase :-/ ***)
-let match_state_predicate functions_table_opt discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location =
+let match_state_predicate variable_names functions_table_opt discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location =
 
     (* Match loc predicate *)
     let match_loc_predicate = function
@@ -662,7 +670,7 @@ let match_state_predicate functions_table_opt discrete_access (locations_accepta
     (* Match simple predicate *)
     let match_simple_predicate = function
         | State_predicate_discrete_boolean_expression expr ->
-            eval_discrete_boolean_expression functions_table_opt (Some discrete_access) expr
+            eval_discrete_boolean_expression variable_names functions_table_opt (Some discrete_access) expr
 
         | Loc_predicate loc_predicate ->
             match_loc_predicate loc_predicate

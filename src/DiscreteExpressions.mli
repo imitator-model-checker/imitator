@@ -12,7 +12,7 @@
  ************************************************************)
 
 type variable_name = string
-
+type variable_name_table = Automaton.variable_index -> variable_name
 (************************************************************)
 (************************************************************)
 (** Operators *)
@@ -269,30 +269,32 @@ val customized_string_of_boolean_operations : Constants.customized_boolean_strin
 
 (* Expressions strings *)
 
-val customized_string_of_global_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> global_expression -> string
-val string_of_global_expression : (Automaton.variable_index -> string) -> global_expression -> string
+val customized_string_of_global_expression : Constants.customized_string -> variable_name_table -> global_expression -> string
+val string_of_global_expression : variable_name_table -> global_expression -> string
 
-val customized_string_of_arithmetic_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string
-val string_of_arithmetic_expression : (Automaton.variable_index -> string) -> discrete_arithmetic_expression -> string
+val customized_string_of_arithmetic_expression : Constants.customized_string -> variable_name_table -> discrete_arithmetic_expression -> string
+val string_of_arithmetic_expression : variable_name_table -> discrete_arithmetic_expression -> string
 
-val customized_string_of_int_arithmetic_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> int_arithmetic_expression -> string
-val string_of_int_arithmetic_expression : (Automaton.variable_index -> string) -> int_arithmetic_expression -> string
+val customized_string_of_int_arithmetic_expression : Constants.customized_string -> variable_name_table -> int_arithmetic_expression -> string
+val string_of_int_arithmetic_expression : variable_name_table -> int_arithmetic_expression -> string
 
-val customized_string_of_boolean_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> boolean_expression -> string
-val string_of_boolean_expression : (Automaton.variable_index -> string) -> boolean_expression -> string
+val customized_string_of_boolean_expression : Constants.customized_string -> variable_name_table -> boolean_expression -> string
+val string_of_boolean_expression : variable_name_table -> boolean_expression -> string
 
-val customized_string_of_discrete_boolean_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
-val string_of_discrete_boolean_expression : (Automaton.variable_index -> string) -> discrete_boolean_expression -> string
+val customized_string_of_discrete_boolean_expression : Constants.customized_string -> variable_name_table -> discrete_boolean_expression -> string
+val string_of_discrete_boolean_expression : variable_name_table -> discrete_boolean_expression -> string
 
-val customized_string_of_array_expression : Constants.customized_string -> (Automaton.variable_index -> string) -> array_expression -> string
-val string_of_array_expression : (Automaton.variable_index -> string) -> array_expression -> string
+val customized_string_of_array_expression : Constants.customized_string -> variable_name_table -> array_expression -> string
+val string_of_array_expression : variable_name_table -> array_expression -> string
 
-val string_of_list_expression : (Automaton.variable_index -> string) -> list_expression -> string
-val string_of_stack_expression : (Automaton.variable_index -> string) -> stack_expression -> string
-val string_of_queue_expression : (Automaton.variable_index -> string) -> queue_expression -> string
+val string_of_list_expression : variable_name_table -> list_expression -> string
+val string_of_stack_expression : variable_name_table -> stack_expression -> string
+val string_of_queue_expression : variable_name_table -> queue_expression -> string
 
-val string_of_update_type : (Automaton.variable_index -> string) -> update_type -> string
-val string_of_discrete_update : (Automaton.variable_index -> string) -> discrete_update -> string
+val string_of_update_type : variable_name_table -> update_type -> string
+val string_of_discrete_update : variable_name_table -> discrete_update -> string
 
-val customized_string_of_nonlinear_constraint : Constants.customized_string -> (Automaton.variable_index -> string) -> nonlinear_constraint -> string
-val string_of_nonlinear_constraint : (Automaton.variable_index -> string) -> nonlinear_constraint -> string
+val string_of_expression_access : variable_name_table -> expression_access_type -> int_arithmetic_expression -> string
+
+val customized_string_of_nonlinear_constraint : Constants.customized_string -> variable_name_table -> nonlinear_constraint -> string
+val string_of_nonlinear_constraint : variable_name_table -> nonlinear_constraint -> string

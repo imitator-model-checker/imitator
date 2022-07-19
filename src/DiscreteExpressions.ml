@@ -14,6 +14,7 @@
 open Constants
 
 type variable_name = string
+type variable_name_table = Automaton.variable_index -> variable_name
 
 (****************************************************************)
 (** Operators *)
@@ -611,7 +612,7 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
                 ]
 
         | Rational_array_access (access_type, index_expr) ->
-            string_of_expression_access customized_string variable_names access_type index_expr
+            customized_string_of_expression_access customized_string variable_names access_type index_expr
 
 
 		| Rational_nested_expression discrete_arithmetic_expression ->
@@ -672,7 +673,7 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
                     string_of_int_arithmetic_expression customized_string exp
                 ]
         | Int_array_access (access_type, index_expr) ->
-            string_of_expression_access customized_string variable_names access_type index_expr
+            customized_string_of_expression_access customized_string variable_names access_type index_expr
         | Int_function_call (function_name, _, args_expr) ->
             customized_string_of_function_call customized_string variable_names function_name args_expr
 
@@ -738,7 +739,7 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
     | Bool_local_variable variable_name -> variable_name
     | Bool_constant value -> customized_string_of_bool_value customized_string.boolean_string value
     | Bool_array_access (access_type, index_expr) ->
-        string_of_expression_access customized_string variable_names access_type index_expr
+        customized_string_of_expression_access customized_string variable_names access_type index_expr
 
     | Bool_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
@@ -772,7 +773,7 @@ and customized_string_of_binary_word_expression customized_string variable_names
     | Binary_word_local_variable variable_name ->
         variable_name
     | Binary_word_array_access (access_type, index_expr) ->
-        string_of_expression_access customized_string variable_names access_type index_expr
+        customized_string_of_expression_access customized_string variable_names access_type index_expr
     | Binary_word_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
@@ -789,7 +790,7 @@ and customized_string_of_array_expression customized_string variable_names = fun
     | Array_local_variable variable_name -> variable_name
 
     | Array_array_access (access_type, index_expr) ->
-        string_of_expression_access customized_string variable_names access_type index_expr
+        customized_string_of_expression_access customized_string variable_names access_type index_expr
 
     | Array_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
@@ -809,7 +810,7 @@ and customized_string_of_list_expression customized_string variable_names = func
     | List_local_variable variable_name -> variable_name
 
     | List_array_access (access_type, index_expr) ->
-        string_of_expression_access customized_string variable_names access_type index_expr
+        customized_string_of_expression_access customized_string variable_names access_type index_expr
 
     | List_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
@@ -820,7 +821,7 @@ and customized_string_of_stack_expression customized_string variable_names = fun
     | Stack_local_variable variable_name -> variable_name
 
     | Stack_array_access (access_type, index_expr) ->
-        string_of_expression_access customized_string variable_names access_type index_expr
+        customized_string_of_expression_access customized_string variable_names access_type index_expr
 
     | Stack_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
@@ -831,7 +832,7 @@ and customized_string_of_queue_expression customized_string variable_names = fun
     | Queue_local_variable variable_name -> variable_name
 
     | Queue_array_access (access_type, index_expr) ->
-        string_of_expression_access customized_string variable_names access_type index_expr
+        customized_string_of_expression_access customized_string variable_names access_type index_expr
 
     | Queue_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
@@ -843,7 +844,7 @@ and string_of_expression_of_access customized_string variable_names = function
     | Expression_list_access list_expr ->
         customized_string_of_list_expression customized_string variable_names list_expr
 
-and string_of_expression_access customized_string variable_names access_type index_expr =
+and customized_string_of_expression_access customized_string variable_names access_type index_expr =
     string_of_expression_of_access customized_string variable_names access_type ^ "[" ^ customized_string_of_int_arithmetic_expression customized_string variable_names index_expr ^ "]"
 
 (* String representation of a function call *)
@@ -862,6 +863,7 @@ let string_of_array_expression = customized_string_of_array_expression Constants
 let string_of_list_expression = customized_string_of_list_expression Constants.global_default_string
 let string_of_stack_expression = customized_string_of_stack_expression Constants.global_default_string
 let string_of_queue_expression = customized_string_of_queue_expression Constants.global_default_string
+let string_of_expression_access = customized_string_of_expression_access Constants.global_default_string
 
 let rec string_of_scalar_or_index_update_type variable_names = function
     | Scalar_update discrete_index ->

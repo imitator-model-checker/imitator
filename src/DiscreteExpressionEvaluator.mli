@@ -3,6 +3,7 @@ open Automaton
 
 type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
+type variable_name_table = variable_index -> variable_name
 
 (* Record that contain context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
@@ -19,17 +20,17 @@ type delayed_update_result =
     | Delayed_update_recorded
     | Delayed_update_already_updated of discrete_index
 
-val direct_update : functions_table option -> discrete_access -> update_type * global_expression -> unit
-val delayed_update : functions_table option -> discrete_access -> (discrete_index, AbstractValue.abstract_value) Hashtbl.t -> update_type * global_expression -> delayed_update_result
-val eval_global_expression : functions_table option -> discrete_access option -> global_expression -> AbstractValue.abstract_value
-val eval_boolean_expression : functions_table option -> discrete_access option -> boolean_expression -> bool
-val eval_discrete_boolean_expression : functions_table option -> discrete_access option -> discrete_boolean_expression -> bool
+val direct_update : variable_name_table option -> functions_table option -> discrete_access -> update_type * global_expression -> unit
+val delayed_update : variable_name_table option -> functions_table option -> discrete_access -> (discrete_index, AbstractValue.abstract_value) Hashtbl.t -> update_type * global_expression -> delayed_update_result
+val eval_global_expression : variable_name_table option -> functions_table option -> discrete_access option -> global_expression -> AbstractValue.abstract_value
+val eval_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> boolean_expression -> bool
+val eval_discrete_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> discrete_boolean_expression -> bool
 
 (* Check if a nonlinear constraint is satisfied *)
-val check_nonlinear_constraint : functions_table option -> DiscreteExpressions.discrete_access -> nonlinear_constraint -> bool
+val check_nonlinear_constraint : variable_name_table option -> functions_table option -> DiscreteExpressions.discrete_access -> nonlinear_constraint -> bool
 
 (** Checks whether a global_location satisfies a state_predicate; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
-val match_state_predicate : functions_table option -> discrete_access -> (automaton_index -> location_index -> bool) -> Location.global_location -> AbstractProperty.state_predicate-> bool
+val match_state_predicate : variable_name_table option -> functions_table option -> discrete_access -> (automaton_index -> location_index -> bool) -> Location.global_location -> AbstractProperty.state_predicate-> bool
 
 val try_eval_constant_global_expression : functions_table option -> global_expression -> AbstractValue.abstract_value
 val try_eval_constant_rational_term : functions_table option -> rational_term -> NumConst.t

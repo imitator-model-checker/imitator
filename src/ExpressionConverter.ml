@@ -924,7 +924,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
                     ));
                 )
                 else (
-                    let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression None converted_expr in
+                    let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression None (* function table *) converted_expr in
                     Some (constraint_name, Resolved_length_constraint (Int32.to_int (AbstractValue.to_int_value value)))
                 )
             | _ -> None
@@ -2732,8 +2732,8 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
             let converted_factor = rational_arithmetic_expression_of_typed_factor variable_infos parsed_update_factor in
 
             (* Try to evaluate the term and the factor *)
-            let numconst_valued_term_opt = DiscreteExpressionEvaluator.eval_constant_rational_term_opt None converted_term in
-            let numconst_valued_factor_opt = DiscreteExpressionEvaluator.eval_constant_rational_factor_opt None converted_factor in
+            let numconst_valued_term_opt = DiscreteExpressionEvaluator.eval_constant_rational_term_opt None (* function table *) converted_term in
+            let numconst_valued_factor_opt = DiscreteExpressionEvaluator.eval_constant_rational_factor_opt None (* function table *) converted_factor in
 
             (* Update coefficients *)
             (match numconst_valued_term_opt, numconst_valued_factor_opt with
@@ -2762,7 +2762,7 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
             (* Convert to abstract tree *)
             let converted_factor = rational_arithmetic_expression_of_typed_factor variable_infos parsed_update_factor in
             (* Try to evaluate the factor *)
-            let numconst_valued_factor_opt = DiscreteExpressionEvaluator.eval_constant_rational_factor_opt None converted_factor in
+            let numconst_valued_factor_opt = DiscreteExpressionEvaluator.eval_constant_rational_factor_opt None (* function table *) converted_factor in
 
             (* Update coefficients *)
             (match numconst_valued_factor_opt with
