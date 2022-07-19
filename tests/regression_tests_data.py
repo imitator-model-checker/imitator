@@ -4729,11 +4729,11 @@ END CONSTRAINT
       ## Test version             : 1
       ## Test since               : 2022/03/16
       ## Last modified            : 2022/03/16
-      ## Test for IMITATOR version: 3.4
       'author': 'lbinria',
       'purpose'    : 'Test some behaviors on user functions',
       'input_files': ['functions/user-function-1.imi'],
       'tags': 'behavior, function',
+      'imitator-version': '3.4',
       'options'    : '-mode statespace -states-description -no-var-autoremove',
       'expectations' : [
         {'file': 'user-function-1-statespace.states' , 'content' : """
@@ -4763,11 +4763,11 @@ END CONSTRAINT
       ## Test version             : 1
       ## Test since               : 2022/06/23
       ## Last modified            : 2022/06/23
-      ## Test for IMITATOR version: 3.4
       'author': 'lbinria',
       'purpose'    : 'Test side effects detection on user defined functions',
       'input_files': ['functions/function-side-effects-detect.imi'],
       'tags': 'behavior, function',
+      'imitator-version': '3.4',
       'options'    : '-no-var-autoremove',
       'expectations' : [
         {'file': 'function-side-effects-detect.res' , 'content' : """
@@ -4792,6 +4792,75 @@ END CONSTRAINT
       "name": "f5",
       "side-effects": false
     }
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/06/29
+      ## Last modified            : 2022/06/29
+      'author': 'lbinria',
+      'purpose'    : 'Simple cycle detection',
+      'input_files': ['functions/simple-cycle-detection.imi'],
+      'tags': 'behavior, function, cycle',
+        'imitator-version': '3.4',
+      'options'    : '',
+      'expectations' : [
+        {'file': 'simple-cycle-detection.res' , 'content' : """
+  "cycles": [
+    "P -> f -> f"
+  ]
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/06/29
+      ## Last modified            : 2022/06/29
+      'author': 'lbinria',
+      'purpose'    : 'Complex cycle detection',
+      'input_files': ['functions/complex-cycle-detection.imi'],
+      'tags': 'behavior, function, cycle',
+      'imitator-version': '3.4',
+      'options'    : '',
+      'expectations' : [
+        {'file': 'complex-cycle-detection.res' , 'content' : """
+  "cycles": [
+    "P -> f1 -> x -> f2 -> x -> f1",
+    "P -> f1 -> x -> f2 -> x -> f1",
+    "P -> f1 -> x -> f2 -> x -> f1",
+    "P -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1"
+  ]
       """
          } # end result file
         ,

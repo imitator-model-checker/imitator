@@ -33,6 +33,8 @@ open ParsingStructureUtilities
 open ParsedModelMetadata
 open DiscreteType
 open CustomModules
+open JsonFormatter
+open Logger
 
 (************************************************************)
 (************************************************************)
@@ -3667,8 +3669,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         )
     ) cycle_paths;
 
-    if model_has_cycle then
-        raise InvalidModel;
+    if model_has_cycle then (
+        (* Prepare json for res results *)
+        let json_cycle_paths = Json_array (List.map (fun cycle_path -> Json_string cycle_path) cycle_paths) in
+        (* Add cycle section *)
+        Logger.add_custom_detail_property "cycles" json_cycle_paths;
+        (* Raise error *)
+        raise InvalidModel
+    );
 
     (* Function that remove unused local variable from function definitions *)
     let fun_def_without_unused_local_vars =
@@ -3722,9 +3730,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Function metas to json *)
     let json_function_metas = List.map ParsingStructureUtilities.json_of_function_metadata all_functions_metadata in
     (* Create json array *)
-    let json_array_function_metas = JsonFormatter.Json_array json_function_metas in
+    let json_array_function_metas = Json_array json_function_metas in
     (* Add new property to details *)
-    ResultProcessor.add_custom_detail_property "function_metas" json_array_function_metas;
+    Logger.add_custom_detail_property "function_metas" json_array_function_metas;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)
@@ -3764,14 +3772,16 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	print_message Verbose_high ("*** Checking user functions definitions…");
 
+    (*
     (* Check that (only used) user functions are well formed *)
 	let well_formed_user_functions_list = List.map (check_fun_definition variable_infos) used_function_definitions in
 	let well_formed_user_functions = List.for_all identity well_formed_user_functions_list in
 
     if not well_formed_user_functions then
         raise InvalidModel;
+    *)
 
-    (* Convert (only used) function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
+    (* Try to convert (only used) function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
     let user_functions_list = List.map (fun (parsed_fun_def : parsed_fun_definition) ->
         (* Convert fun def from parsing structure to abstract model *)
         let fun_def = DiscreteExpressionConverter.convert_fun_definition variable_infos parsed_fun_def in

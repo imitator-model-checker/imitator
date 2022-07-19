@@ -1,0 +1,62 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Complex cycle detection
+ * Description      : Test complex cycle detection
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/06/29
+ * Last modified    : 2022/06/29
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.4
+ ************************************************************)
+
+var
+
+fn f2() : bool
+begin
+  let x : bool = f1() in
+  x
+end
+
+fn f1() : bool
+begin
+  let x : bool = f2() in
+  x
+end
+
+fn f3() : bool
+begin
+  let x : bool = f1() in
+  let y : bool = x & True in
+  let z : bool = y & True in
+  z
+end
+
+
+automaton P
+
+  loc s0: invariant True
+  when f1() & f3() goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+
+init := {
+  discrete =
+    loc[P]:=s0
+  ;
+
+}
