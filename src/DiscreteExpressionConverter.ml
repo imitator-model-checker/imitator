@@ -29,7 +29,6 @@ open AbstractModel
 open DiscreteExpressions
 open ExpressionConverter.Convert
 
-
 let convert_discrete_init variable_infos variable_name expr =
     (* Get typed expression *)
     let typed_expr = ExpressionConverter.TypeChecker.check_discrete_init variable_infos variable_name expr in
