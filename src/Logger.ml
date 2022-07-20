@@ -4,16 +4,18 @@
  *
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
- * Module description: This module helps to log to res file
+ * Module description: This module helps to log custom details as JSON format to res file
  *
  * File contributors : Benjamin L.
  * Created           : 2022/07/19
  *
  ************************************************************)
 
+(* Utils modules *)
 open Exceptions
 open JsonFormatter
 
+(* All custom details stored here *)
 let custom_details = Hashtbl.create 0
 
 (* Add a property to custom details json struct *)
@@ -34,12 +36,13 @@ let add_custom_detail_array key json_element =
     (* Update or create the entry with updated json array *)
     Hashtbl.replace custom_details key updated_json_array
 
-
+(* Get json structure of all custom details *)
 let json_struct_of_details _ =
     (* Custom details from hashtbl to list *)
     let custom_details_list = custom_details |> Hashtbl.to_seq |> List.of_seq in
     (* Create JSON struct with each custom detail *)
     Json_struct custom_details_list
 
+(* Get json string of all custom details *)
 let json_string_of_details _ =
     JsonFormatter.to_string ~pretty:true (json_struct_of_details ())

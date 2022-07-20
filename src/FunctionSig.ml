@@ -122,7 +122,7 @@ let string_of_signature signature =
 let rec is_discrete_type_compatible_with_length_constraint length = function
     | Length_constraint length_value -> length = length_value
     (* In theory a length constraint expression can be incompatible with some length *)
-    (* but may be compatible too, so we consider as compatible anyway *)
+    (* but may be compatible too, eg : 1 + 1 with 2, so we consider as compatible anyway *)
     | Length_constraint_expression _ -> true
 
 let is_discrete_type_compatible_with_defined_type_number_constraint discrete_number_type defined_type_number_constraint =

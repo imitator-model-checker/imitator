@@ -322,7 +322,6 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                         let all_refs = variables_used_refs @ functions_used_refs in
                         let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
-                        (* TODO benjamin IMPROVE, an instruction that use global variable that is not used elsewhere should be removed *)
                         (* Here for sake of simplicity, we consider that all global variables modified in function are used (it's not always the case) *)
 
                         (* Create relation between current function and assigned variable *)

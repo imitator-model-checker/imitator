@@ -14,9 +14,12 @@
  *
  ************************************************************)
 
+(* Parsing structure modules *)
 open ParsingStructure
 open DiscreteType
 open DiscreteValue
+
+(* Abstract modules *)
 open FunctionSig
 
 (* Shortcuts to hash table types *)
@@ -29,6 +32,7 @@ val builtin_functions_metadata_table : (string, function_metadata) Hashtbl.t
 
 (* Get builtin function implementations *)
 val builtin_function_bodies : AbstractModel.fun_definition list
+(* Get builtin function implementations as a table *)
 val builtin_function_bodies_table : (string, AbstractModel.fun_definition) Hashtbl.t
 
 (* Remove the declarations of unused local variables from function body *)

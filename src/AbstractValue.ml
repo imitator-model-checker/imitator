@@ -85,31 +85,31 @@ let numconst_value = function
 
 let int_value = function
     | Abstract_scalar_value (Abstract_number_value (Abstract_int_value v)) -> v
-    | v -> raise (InternalError ("Unable to get rational value of non-rational value: " ^ string_of_value v))
+    | v -> raise (InternalError ("Unable to get int value of non-int value: " ^ string_of_value v))
 
 let bool_value = function
     | Abstract_scalar_value (Abstract_bool_value v) -> v
-    | v -> raise (InternalError ("Unable to get rational value of non-rational value: " ^ string_of_value v))
+    | v -> raise (InternalError ("Unable to get bool value of non-bool value: " ^ string_of_value v))
 
 let binary_word_value = function
     | Abstract_scalar_value (Abstract_binary_word_value v) -> v
-    | v -> raise (InternalError ("Unable to get rational value of non-rational value: " ^ string_of_value v))
+    | v -> raise (InternalError ("Unable to get binary word value of non-binary word value: " ^ string_of_value v))
 
 let array_value = function
     | Abstract_container_value (Abstract_array_value v) -> v
-    | v -> raise (InternalError ("Unable to get rational value of non-rational value: " ^ string_of_value v))
+    | v -> raise (InternalError ("Unable to get array value of non-array value: " ^ string_of_value v))
 
 let list_value = function
     | Abstract_container_value (Abstract_list_value v) -> v
-    | v -> raise (InternalError ("Unable to get rational value of non-rational value: " ^ string_of_value v))
+    | v -> raise (InternalError ("Unable to get list value of non-list value: " ^ string_of_value v))
 
 let stack_value = function
     | Abstract_container_value (Abstract_stack_value v) -> v
-    | v -> raise (InternalError ("Unable to get rational value of non-rational value: " ^ string_of_value v))
+    | v -> raise (InternalError ("Unable to get stack value of non-stack value: " ^ string_of_value v))
 
 let queue_value = function
     | Abstract_container_value (Abstract_queue_value v) -> v
-    | v -> raise (InternalError ("Unable to get rational value of non-rational value: " ^ string_of_value v))
+    | v -> raise (InternalError ("Unable to get queue value of non-queue value: " ^ string_of_value v))
 
 let hash_number_value = function
     | Abstract_rat_value x -> Gmp.Z.to_int (NumConst.get_num x)

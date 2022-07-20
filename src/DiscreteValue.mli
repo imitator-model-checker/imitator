@@ -6,14 +6,17 @@
  * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
- * Module description: Contain all types and functions for operations onto discrete value
+ * Module description: Contain all types and functions for operations onto parsed discrete value
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/01
  *
  ************************************************************)
 
+(* Utils modules *)
 open Constants
+
+(* Parsing structure modules *)
 open DiscreteType
 
 
@@ -35,7 +38,6 @@ type parsed_value =
 (* Get discrete var type of a discrete value *)
 val discrete_type_of_value : parsed_value -> var_type_discrete
 
-
 (************************************************************)
 (** Value functions  *)
 (************************************************************)
@@ -43,22 +45,6 @@ val discrete_type_of_value : parsed_value -> var_type_discrete
 (** String of values  **)
 val customized_string_of_value : customized_string -> parsed_value -> string
 val string_of_value : parsed_value -> string
-
-
-(** Default values  **)
-
-(* Get default discrete value of discrete type *)
-val default_discrete_value : var_type_discrete -> parsed_value
-(* Get default discrete value of var type *)
-val default_value : var_type -> parsed_value
-
-(* Get zero value of Rational_value *)
-val rational_zero : parsed_value
-(* Get false value of Bool_value *)
-val bool_value_false : parsed_value
-(* Get true value of Bool_value *)
-val bool_value_true : parsed_value
-
 
 (** Get / Convert values  **)
 

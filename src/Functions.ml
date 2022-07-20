@@ -14,14 +14,21 @@
  *
  ************************************************************)
 
+(* Utils modules *)
 open Exceptions
+open OCamlUtilities
+
+(* Parsing structure modules *)
 open DiscreteType
 open DiscreteValue
-open DiscreteExpressions
-open FunctionSig
 open ParsingStructure
 open ParsingStructureUtilities
-open OCamlUtilities
+
+(* Abstract model modules *)
+open DiscreteExpressions
+open FunctionSig
+
+
 
 (* Shortcuts to hash table types *)
 type functions_meta_table = (string, function_metadata) Hashtbl.t
@@ -137,6 +144,7 @@ let binary_log_signature =
         Defined_type_constraint (Binary_constraint (Length_constraint_expression (Length_scalar_constraint "a")))
     ]
 
+(* Extract metadata from abstract model function definition *)
 let metadata_of_function_definition (fun_def : AbstractModel.fun_definition) : ParsingStructure.function_metadata =
     {
         name = fun_def.name;
@@ -145,6 +153,7 @@ let metadata_of_function_definition (fun_def : AbstractModel.fun_definition) : P
         side_effect = fun_def.side_effect;
     }
 
+(* Get builtin function implementations *)
 let builtin_function_bodies : AbstractModel.fun_definition list =
     [
         {
@@ -466,11 +475,13 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
 let builtin_functions_metadata : ParsingStructure.function_metadata list =
     List.map metadata_of_function_definition builtin_function_bodies
 
+(* Get builtin function metadata as a table *)
 let builtin_functions_metadata_table =
     builtin_functions_metadata
     |> List.map (fun (fun_def : function_metadata) -> fun_def.name, fun_def)
     |> OCamlUtilities.hashtbl_of_tuples
 
+(* Get builtin function implementations as a table *)
 let builtin_function_bodies_table =
     builtin_function_bodies
     |> List.map (fun (fun_def : AbstractModel.fun_definition) -> fun_def.name, fun_def)
