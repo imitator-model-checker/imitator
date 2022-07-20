@@ -384,7 +384,7 @@ let iterate_in_parsed_function_definition = apply_evaluate_unit_with_base fold_p
 let label_of_parsed_sequence_type = function
     | Parsed_array -> "array"
     | Parsed_list -> "list"
-    | Parsed_stack -> "stack"
+    | Parsed_stack -> Constants.stack_string
     | Parsed_queue -> "queue"
 
 let label_of_parsed_factor_constructor = function

@@ -229,13 +229,12 @@ let declared_components_of_model parsed_model =
 
     all_declared_variables_in_model @ all_declared_functions_in_model @ all_declared_local_variables_in_model @ all_declared_params_in_model
 
-(* TODO benjamin CLEAN refact and rename dependency to relations *)
 (* Get a dependency graph as a list of relations between variables and functions *)
 (* Each relation is a pair representing a ref to a variable / function using another variable / function *)
 let dependency_graph ?(no_var_autoremove=false) parsed_model =
 
-    (* Function that return dependency graph of a given function definition *)
-    let dependency_graph_of_function fun_def =
+    (* Function that return all component relations of a given function definition *)
+    let function_relations fun_def =
 
         (* Get parameter names *)
         let parameter_names = List.map first_of_tuple fun_def.parameters in
@@ -244,14 +243,14 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
         (* Ref to function *)
         let fun_ref = Fun_ref fun_def.name in
 
-        (**)
+        (* Functions that return ref of a variable, if variable is found in local variable table *)
+        (* It return a Local_variable_ref, else a Global_variable_ref *)
         let get_variable_ref local_variables used_variable_name =
             let used_variable_ref_opt = StringMap.find_opt used_variable_name local_variables in
             match used_variable_ref_opt with
             | Some used_variable_ref -> used_variable_ref
             | None -> Global_variable_ref used_variable_name
         in
-
 
         (* Create relations between a set of variables used by another variable reference *)
         let variable_to_variable_relations local_variables variable_ref variables_used =
@@ -261,7 +260,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
             ) variables_used []
         in
 
-        (* TODO benjamin comment *)
+        (* Function that return component reference found in a parsed global expression *)
         let get_variable_and_function_refs_in_parsed_global_expression local_variables expr =
             (* Get variables used in the local init expression of the variable *)
             let variables_used = string_set_to_list (get_variables_in_parsed_global_expression expr) in
@@ -273,8 +272,8 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
             variables_used_refs, functions_used_refs
         in
 
-        (* Function that return dependency graph of a given function expression *)
-        let rec dependency_graph_of_function_in_parsed_next_expr_rec local_variables = function
+        (* Function that return all component relations of a given function expression *)
+        let rec function_relations_in_parsed_next_expr_rec local_variables = function
             | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, id) ->
 
                 (* Create local variable ref representing a unique variable ref *)
@@ -302,7 +301,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 *)
 
                 (* Get list of relations for the next expression / declaration *)
-                let next_declaration_relations = dependency_graph_of_function_in_parsed_next_expr_rec local_variables next_expr in
+                let next_declaration_relations = function_relations_in_parsed_next_expr_rec local_variables next_expr in
                 (* Concat current relations with next relations *)
                 next_declaration_relations @ relations
 
@@ -377,7 +376,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 let relations = relations_of_update_type parsed_update_type in
 
                 (* Get list of relations for the next expression / declaration *)
-                let next_declaration_relations = dependency_graph_of_function_in_parsed_next_expr_rec local_variables next_expr in
+                let next_declaration_relations = function_relations_in_parsed_next_expr_rec local_variables next_expr in
                 (* Concat current relations with next relations *)
                 relations @ next_declaration_relations
 
@@ -387,20 +386,20 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 let all_refs = variables_used_refs @ functions_used_refs in
                 List.map (fun _ref -> (fun_ref, _ref)) all_refs
         in
-        (* Get dependency graph of current function body *)
-        dependency_graph_of_function_in_parsed_next_expr_rec local_variables fun_def.body
+        (* Get all component relations of current function body *)
+        function_relations_in_parsed_next_expr_rec local_variables fun_def.body
     in
     (* Get variables and functions used by automatons *)
-    let dependency_graph_of_automatons =
+    let automatons_relations =
         all_components_used_in_automatons parsed_model
     in
     (* Get variables and functions used in all declared functions *)
-    let dependency_graph_of_system_functions =
-        List.fold_left (fun acc fun_def -> dependency_graph_of_function fun_def @ acc) [] parsed_model.fun_definitions
+    let system_functions_relations =
+        List.fold_left (fun acc fun_def -> function_relations fun_def @ acc) [] parsed_model.fun_definitions
     in
 
     (* Get variables and functions dependencies in init *)
-    let dependency_graph_of_init =
+    let init_relations =
         List.fold_left (fun acc init ->
             match init with
             (* `loc[automaton] = location`: no variable => nothing to do *)
@@ -425,7 +424,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
         ) [] parsed_model.init_definition
     in
     (* Concat all relations, to get overall relations of the model *)
-    let all_model_relations = dependency_graph_of_automatons @ dependency_graph_of_system_functions @ dependency_graph_of_init in
+    let all_model_relations = automatons_relations @ system_functions_relations @ init_relations in
     (* Remove variable to variable relations when it's an auto reference *)
     let all_model_relations_without_variable_autoref = List.filter (function
         | (Global_variable_ref _ as a, (Global_variable_ref _ as b)) -> a <> b
@@ -581,6 +580,7 @@ let string_of_dependency_graph (components, component_relations) =
     (* Dependency graph as dot format *)
     "digraph dependency_graph {" ^ str_components ^ ";" ^ str_component_relations ^ "}"
 
+(* Utils function for traversing a parsed_fun_definition *)
 let traverse_function operator f (fun_def : parsed_fun_definition) =
     (* Add parameters as local variables *)
     let parameter_refs = List.map (fun (param_name, _) -> Param_ref (param_name, fun_def.name)) fun_def.parameters in

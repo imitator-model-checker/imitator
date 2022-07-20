@@ -257,7 +257,7 @@ let rec string_of_defined_type_constraint = function
     | List_constraint type_constraint ->
         jani_compound_datatype_ref "list" (string_of_type_constraint type_constraint)
     | Stack_constraint type_constraint ->
-        jani_compound_datatype_ref "stack" (string_of_type_constraint type_constraint)
+        jani_compound_datatype_ref Constants.stack_string (string_of_type_constraint type_constraint)
     | Queue_constraint type_constraint ->
         jani_compound_datatype_ref "queue" (string_of_type_constraint type_constraint)
 

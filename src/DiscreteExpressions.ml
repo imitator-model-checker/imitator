@@ -518,8 +518,8 @@ let label_of_list_expression = function
 	| List_function_call (function_name, _, _) -> function_name
 
 let label_of_stack_expression = function
-    | Literal_stack -> "stack"
-    | Stack_variable _ -> "stack"
+    | Literal_stack -> Constants.stack_string
+    | Stack_variable _ -> Constants.stack_string
     | Stack_local_variable variable_name -> variable_name
 	| Stack_array_access _ -> "array_get"
 	| Stack_function_call (function_name, _, _) -> function_name

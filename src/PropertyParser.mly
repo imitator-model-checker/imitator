@@ -405,8 +405,6 @@ literal_scalar_constant:
   | binary_word { $1 }
 ;
 
-/* TODO benjamin see if possible to encapsulate array / list to Parsed_DF_constant */
-/* in this case, move these elements of that rule to `literal_scalar_constant` */
 literal_non_scalar_constant:
   | literal_array { Parsed_sequence ($1, Parsed_array) }
   | CT_LIST LPAREN literal_array RPAREN { Parsed_sequence ($3, Parsed_list) }

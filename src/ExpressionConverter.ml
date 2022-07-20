@@ -1529,7 +1529,7 @@ type discrete_index = int
 let label_of_typed_sequence_type = function
 	| Typed_array -> "array"
 	| Typed_list -> "list"
-	| Typed_stack -> "stack"
+	| Typed_stack -> Constants.stack_string
 	| Typed_queue -> "queue"
 
 let label_of_typed_factor_constructor = function
@@ -2316,7 +2316,7 @@ and stack_expression_of_typed_boolean_expression_with_type variable_infos = func
         stack_expression_of_typed_discrete_boolean_expression variable_infos inner_type expr
     | _ as expr ->
 	    let str_expr = string_of_typed_boolean_expression variable_infos expr in
-	    let fail_message = expr_type_doesnt_match_to_structure_message "stack" str_expr in
+	    let fail_message = expr_type_doesnt_match_to_structure_message Constants.stack_string str_expr in
 	    raise (InternalError fail_message)
 
 
@@ -2325,7 +2325,7 @@ and stack_expression_of_typed_boolean_expression variable_infos discrete_type = 
         stack_expression_of_typed_discrete_boolean_expression variable_infos discrete_type expr
     | _ as expr ->
 	    let str_expr = string_of_typed_boolean_expression variable_infos expr in
-	    let fail_message = expr_type_doesnt_match_to_structure_message "stack" str_expr in
+	    let fail_message = expr_type_doesnt_match_to_structure_message Constants.stack_string str_expr in
 	    raise (InternalError fail_message)
 
 and stack_expression_of_typed_discrete_boolean_expression variable_infos discrete_type = function
@@ -2333,7 +2333,7 @@ and stack_expression_of_typed_discrete_boolean_expression variable_infos discret
         stack_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
     | _ as expr ->
 	    let str_expr = string_of_typed_discrete_boolean_expression variable_infos expr in
-	    let fail_message = expr_type_doesnt_match_to_structure_message "stack" str_expr in
+	    let fail_message = expr_type_doesnt_match_to_structure_message Constants.stack_string str_expr in
 	    raise (InternalError fail_message)
 
 and stack_expression_of_typed_arithmetic_expression variable_infos discrete_type = function
@@ -2341,7 +2341,7 @@ and stack_expression_of_typed_arithmetic_expression variable_infos discrete_type
         stack_expression_of_typed_term variable_infos discrete_type term
 	| _ as expr ->
 	    let str_expr = string_of_typed_discrete_arithmetic_expression variable_infos Var_type_weak expr in
-	    let fail_message = expr_type_doesnt_match_to_structure_message "stack" str_expr in
+	    let fail_message = expr_type_doesnt_match_to_structure_message Constants.stack_string str_expr in
 	    raise (InternalError fail_message)
 
 and stack_expression_of_typed_term variable_infos discrete_type = function
@@ -2349,7 +2349,7 @@ and stack_expression_of_typed_term variable_infos discrete_type = function
         stack_expression_of_typed_factor variable_infos discrete_type factor
     | _ as expr ->
 	    let str_expr = string_of_typed_discrete_term variable_infos Var_type_weak expr in
-	    let fail_message = expr_type_doesnt_match_to_structure_message "stack" str_expr in
+	    let fail_message = expr_type_doesnt_match_to_structure_message Constants.stack_string str_expr in
         raise (InternalError fail_message)
 
 and stack_expression_of_typed_factor variable_infos discrete_type = function
@@ -2380,7 +2380,7 @@ and stack_expression_of_typed_factor variable_infos discrete_type = function
 
 	| _ as expr ->
 	    let str_expr = string_of_typed_discrete_factor variable_infos Var_type_weak expr in
-	    let fail_message = expr_type_doesnt_match_to_structure_message "stack" str_expr in
+	    let fail_message = expr_type_doesnt_match_to_structure_message Constants.stack_string str_expr in
 	    raise (InternalError fail_message)
 
 and stack_expression_of_typed_function_call variable_infos discrete_type argument_expressions function_name =

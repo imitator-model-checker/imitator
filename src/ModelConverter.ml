@@ -709,21 +709,7 @@ let is_inequality_has_left_hand_removed_variable removed_variable_names = functi
 let partition_discrete_continuous variable_infos filtered_init_inequalities =
     List.partition (function
 		(* Check if the left part is only a variable name *)
-		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
-			let is_discrete =
-			(* TODO benjamin REFACTOR, can refactor with VariableInfo *)
-			(* Try to get the variable index *)
-			if (is_variable_is_defined variable_infos variable_name) then (
-				let variable_index = index_of_variable_name variable_infos variable_name in
-				(* Keep if this is a discrete *)
-				DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
-			) else if (is_constant_is_defined variable_infos variable_name) then
-			    false
-            else (
-                (* Otherwise: problem! *)
-                raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
-            )
-			in is_discrete
+		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) -> is_discrete_variable variable_infos variable_name
 	    (* All parsed boolean predicate are for discrete variables *)
         | Parsed_discrete_predicate _ -> true
 		(* Otherwise false *)

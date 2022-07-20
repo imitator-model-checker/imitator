@@ -125,3 +125,17 @@ let variable_kind_of_variable_name variable_infos variable_name =
     (* Otherwise: a variable *)
     else
         Variable_kind (index_of_variable_name variable_infos variable_name)
+
+(* Check if variable is a discrete variable given it's name *)
+let is_discrete_variable variable_infos variable_name =
+    (* Get defined state of variable *)
+     let defined_state = variable_constant_defined_state_of variable_infos variable_name in
+
+     match defined_state with
+     | Variable_defined ->
+        let variable_index = index_of_variable_name variable_infos variable_name in
+        (* Keep if this is a discrete *)
+        DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
+    | Constant_defined -> false
+    | _ ->
+        raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));

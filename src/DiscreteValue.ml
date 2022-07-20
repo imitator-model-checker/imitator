@@ -64,34 +64,37 @@ let rec discrete_type_of_value = function
 (************************************************************)
 
 (** String of values  **)
-let rec customized_string_of_value customized_string = function
-    | Number_value x
-    | Rational_value x -> NumConst.string_of_numconst x
-    | Bool_value x -> if x then customized_string.boolean_string.true_string else customized_string.boolean_string.false_string
-    | Int_value x -> Int32.to_string x
-    | Binary_word_value b -> BinaryWord.string_of_binaryword b
-    | Array_value a ->
-        let str_values = Array.map (fun x -> customized_string_of_value customized_string x) a in
-        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        l_delimiter ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ r_delimiter
-    | List_value l ->
-        let str_values = List.map (fun x -> customized_string_of_value customized_string x) l in
-        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        (* TODO benjamin remove hardcoded "list([a,b,c])" *)
-        "list(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_delimiter ^ ")"
-    | Stack_value s ->
-        let str_values_with_extra_comma = Stack.fold (fun acc x -> acc ^ customized_string_of_value customized_string x ^ ", ") "" s in
-        let str_values = if Stack.length s > 0 then String.sub str_values_with_extra_comma 0 ((String.length str_values_with_extra_comma) - 2) else str_values_with_extra_comma in
-        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        (* TODO benjamin CLEAN remove hardcoded "stack([a,b,c])" *)
-        if str_values = "" then "stack()" else "stack(" ^ l_delimiter ^ str_values ^ r_delimiter ^ ")"
+let customized_string_of_value customized_string =
 
-    | Queue_value q ->
-        let str_values_with_extra_comma = Queue.fold (fun acc x -> acc ^ customized_string_of_value customized_string x ^ ", ") "" q in
-        let str_values = if Queue.length q > 0 then String.sub str_values_with_extra_comma 0 ((String.length str_values_with_extra_comma) - 2) else str_values_with_extra_comma in
-        let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
-        (* TODO benjamin CLEAN remove hardcoded "queue([a,b,c])" *)
-        if str_values = "" then "queue()" else "queue(" ^ l_delimiter ^ str_values ^ r_delimiter ^ ")"
+    (* Get delimiters of brackets and parenthesis *)
+    let l_bra_del, r_bra_del = customized_string.array_string.array_literal_delimiter in
+    let l_par_del, r_par_del = Constants.default_paren_delimiter in
+
+    let rec customized_string_of_value_rec = function
+        | Number_value x
+        | Rational_value x -> NumConst.string_of_numconst x
+        | Bool_value x -> if x then customized_string.boolean_string.true_string else customized_string.boolean_string.false_string
+        | Int_value x -> Int32.to_string x
+        | Binary_word_value b -> BinaryWord.string_of_binaryword b
+        | Array_value a ->
+            let str_values = Array.map (fun x -> customized_string_of_value_rec x) a in
+            l_bra_del ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ r_bra_del
+
+        | List_value l ->
+            let str_values = List.map (fun x -> customized_string_of_value_rec x) l in
+            Constants.list_string ^ l_par_del ^ l_bra_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_bra_del ^ r_par_del
+
+        | Stack_value s ->
+            let str_values_with_extra_comma = Stack.fold (fun acc x -> acc ^ customized_string_of_value_rec x ^ ", ") "" s in
+            let str_values = if Stack.length s > 0 then String.sub str_values_with_extra_comma 0 ((String.length str_values_with_extra_comma) - 2) else str_values_with_extra_comma in
+            if str_values = "" then Constants.stack_string ^ l_par_del ^ r_par_del else Constants.stack_string ^ l_par_del ^ l_bra_del ^ str_values ^ r_bra_del ^ r_par_del
+
+        | Queue_value q ->
+            let str_values_with_extra_comma = Queue.fold (fun acc x -> acc ^ customized_string_of_value_rec x ^ ", ") "" q in
+            let str_values = if Queue.length q > 0 then String.sub str_values_with_extra_comma 0 ((String.length str_values_with_extra_comma) - 2) else str_values_with_extra_comma in
+            if str_values = "" then Constants.queue_string ^ l_par_del ^ r_par_del  else Constants.queue_string ^ l_par_del ^ l_bra_del ^ str_values ^ r_bra_del ^ r_par_del
+    in 
+    customized_string_of_value_rec
 
 let string_of_value = customized_string_of_value global_default_string
 
