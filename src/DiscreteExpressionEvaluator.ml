@@ -623,9 +623,24 @@ and pack_value variable_names functions_table_opt eval_context_opt old_value new
         old_value
     | None -> new_value
 
+(* Check if a nonlinear constraint is satisfied *)
+let check_nonlinear_constraint_with_context variable_names functions_table_opt eval_context_opt =
+  List.for_all (eval_discrete_boolean_expression_with_context variable_names functions_table_opt eval_context_opt)
+
+(**)
+let eval_global_expression variable_names functions_table_opt discrete_access_opt = eval_global_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
+(**)
+let eval_boolean_expression variable_names functions_table_opt discrete_access_opt = eval_boolean_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
+(**)
+let eval_discrete_boolean_expression variable_names functions_table_opt discrete_access_opt = eval_discrete_boolean_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
+(* Check if a nonlinear constraint is satisfied *)
+let check_nonlinear_constraint variable_names functions_table_opt discrete_access =
+  List.for_all (eval_discrete_boolean_expression variable_names functions_table_opt (Some discrete_access))
 
 (* Try to evaluate a constant global expression, if expression isn't constant, it raise an error *)
 let try_eval_constant_global_expression functions_table_opt = eval_global_expression_with_context None functions_table_opt None
+(* Try to evaluate a constant global non linear constraint, if expression isn't constant, it raise an error *)
+let try_eval_nonlinear_constraint functions_table_opt = check_nonlinear_constraint_with_context None functions_table_opt None
 (* Try to evaluate a constant rational term, if expression isn't constant, it raise an error *)
 let try_eval_constant_rational_term functions_table_opt = eval_rational_term_with_context None functions_table_opt None
 (* Try to evaluate a constant rational factor, if expression isn't constant, it raise an error *)
@@ -636,21 +651,14 @@ let delayed_update variable_names functions_table_opt discrete_access = delayed_
 
 (* Try to evaluate a constant global expression, if expression isn't constant, it return None *)
 let eval_constant_global_expression_opt functions_table_opt expr = try Some (try_eval_constant_global_expression functions_table_opt expr) with _ -> None
+(* Try to evaluate a constant non linear constraint, if expression isn't constant, it return None *)
+let eval_nonlinear_constraint_opt functions_table_opt expr = try Some (try_eval_nonlinear_constraint functions_table_opt expr) with _ -> None
 (* Try to evaluate a constant rational term, if expression isn't constant, it return None *)
 let eval_constant_rational_term_opt functions_table_opt expr = try Some (try_eval_constant_rational_term functions_table_opt expr) with _ -> None
 (* Try to evaluate a constant rational factor, if expression isn't constant, it return None *)
 let eval_constant_rational_factor_opt functions_table_opt expr = try Some (try_eval_constant_rational_factor functions_table_opt expr) with _ -> None
 
-(**)
-let eval_global_expression variable_names functions_table_opt discrete_access_opt = eval_global_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
-(**)
-let eval_boolean_expression variable_names functions_table_opt discrete_access_opt = eval_boolean_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
-(**)
-let eval_discrete_boolean_expression variable_names functions_table_opt discrete_access_opt = eval_discrete_boolean_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
 
-(* Check if a nonlinear constraint is satisfied *)
-let check_nonlinear_constraint variable_names functions_table_opt discrete_access =
-  List.for_all (eval_discrete_boolean_expression variable_names functions_table_opt (Some discrete_access))
 
 (************************************************************)
 (** Matching state predicates with a global location *)

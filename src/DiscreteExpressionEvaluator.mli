@@ -37,6 +37,7 @@ val try_eval_constant_rational_term : functions_table option -> rational_term ->
 val try_eval_constant_rational_factor : functions_table option -> rational_factor -> NumConst.t
 
 val eval_constant_global_expression_opt : functions_table option -> global_expression -> AbstractValue.abstract_value option
+val eval_nonlinear_constraint_opt : functions_table option -> nonlinear_constraint -> bool option
 val eval_constant_rational_term_opt : functions_table option -> rational_term -> NumConst.t option
 val eval_constant_rational_factor_opt : functions_table option -> rational_factor -> NumConst.t option
 

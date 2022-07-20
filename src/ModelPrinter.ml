@@ -159,8 +159,8 @@ let string_of_accepting	= "accepting"
 (** JSON *)
 (************************************************************)
 let json_NULL	= "null" (*** NOTE: no quotes ***)
-let json_TRUE	= "true"
-let json_FALSE	= "false"
+let json_TRUE	= "True"
+let json_FALSE	= "False"
 
 let json_of_string s = "\"" ^ s ^ "\""
 

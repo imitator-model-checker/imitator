@@ -62,25 +62,8 @@ let convert_discrete_constant initialized_constants (name, expr, var_type) =
 let nonlinear_constraint_of_convex_predicate variable_infos guard =
     (* Type check guard *)
     let typed_guard = ExpressionConverter.TypeChecker.check_guard variable_infos guard in
-
-(*    let str_typed_nonlinear_constraints = List.map (string_of_typed_discrete_boolean_expression variable_infos) typed_guard in*)
-(*    let str = OCamlUtilities.string_of_list_of_string_with_sep "\n & " str_typed_nonlinear_constraints in*)
-(*    ImitatorUtilities.print_message Verbose_standard str;*)
-
     (* Convert *)
-    let converted_nonlinear_constraints = List.rev_map (ExpressionConverter.Convert.nonlinear_constraint_of_typed_nonlinear_constraint variable_infos) typed_guard in
-
-    (* Try reduce *)
-    converted_nonlinear_constraints
-    (* TODO benjamin IMPORTANT here add reducing with Some *)
-    (*
-    let reduced_nonlinear_constraints = converted_nonlinear_constraints in
-    (match reduced_nonlinear_constraints with
-    | Some true -> True_guard
-    | Some false -> False_guard
-    | None -> Discrete_guard (reduced_nonlinear_constraints)
-    )
-    *)
+    List.rev_map (ExpressionConverter.Convert.nonlinear_constraint_of_typed_nonlinear_constraint variable_infos) typed_guard
 
 (* Split convex_predicate into two lists *)
 (* One only contain discrete expression to nonlinear_constraint *)
@@ -113,8 +96,19 @@ let convert_guard variable_infos guard_convex_predicate =
         | [] , [] -> True_guard
         (* Only discrete inequalities: discrete *)
         | discrete_guard_convex_predicate , [] ->
-            Discrete_guard (
-                nonlinear_constraint_of_convex_predicate variable_infos discrete_guard_convex_predicate
+
+            (* Get the converted non-linear constraint *)
+            let converted_nonlinear_constraint = nonlinear_constraint_of_convex_predicate variable_infos discrete_guard_convex_predicate in
+
+            (* Try to eval without context, if it fails return None *)
+            let reduced_nonlinear_constraint_opt = DiscreteExpressionEvaluator.eval_nonlinear_constraint_opt None converted_nonlinear_constraint in
+
+            (* Little optimization here, it's not mandatory to work properly *)
+            (* We can directly convert to Discrete_guard converted_nonlinear_constraint *)
+            (match reduced_nonlinear_constraint_opt with
+            | Some true -> True_guard
+            | Some false -> False_guard
+            | None -> Discrete_guard converted_nonlinear_constraint
             )
 
         (* Only continuous inequalities: continuous *)

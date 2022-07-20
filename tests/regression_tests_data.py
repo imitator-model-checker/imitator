@@ -21127,14 +21127,14 @@ broadcast chan c;
 		<source ref="id_pta1_loc0"/>
 		<target ref="id_pta1_loc0"/>
 		<label kind="synchronisation" x="0" y="80">a?</label>
-		<label kind="guard" x="0" y="40">true</label>
+		<label kind="guard" x="0" y="40"></label>
 		<label kind="assignment" x="0" y="-40">x = 0, nb__a = nb__a + 1</label>
 	</transition>
 	<transition>
 		<source ref="id_pta1_loc0"/>
 		<target ref="id_pta1_loc1"/>
 		<label kind="synchronisation" x="100" y="80">b?</label>
-		<label kind="guard" x="100" y="40">true</label>
+		<label kind="guard" x="100" y="40"></label>
 		
 	</transition>
  </template>
@@ -21167,7 +21167,7 @@ broadcast chan c;
 		<source ref="id_pta2_loc1"/>
 		<target ref="id_pta2_loc2"/>
 		<label kind="synchronisation" x="300" y="80">a?</label>
-		<label kind="guard" x="300" y="40">true</label>
+		<label kind="guard" x="300" y="40"></label>
 		<label kind="assignment" x="300" y="-40">x = 0, nb__a = nb__a + 1</label>
 	</transition>
  </template>
