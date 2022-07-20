@@ -794,8 +794,11 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 		(* Save the verbose mode as it may be modified *)
 		let global_verbose_mode = get_verbose_mode() in
 		
-		(* Backup the "old" model *)
+		(* Backup the original model *)
 		let old_model = Input.get_model() in
+		
+		(* Load the sub_automaton *)
+		Input.set_model model;
 
 		(* Prevent the verbose messages (except in verbose medium, high or total) *)
 		(*------------------------------------------------------------*)
@@ -809,7 +812,7 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 		(* Get the verbose mode back *)
 		set_verbose_mode global_verbose_mode;
 
-		(* Get the "old" model back *)
+		(* Get the original model back *)
 		Input.set_model old_model;
 		(*------------------------------------------------------------*)
 		
