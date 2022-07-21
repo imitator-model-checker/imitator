@@ -26,6 +26,8 @@ open DiscreteType
 open FunctionSig
 open Result
 
+(* TODO benjamin REFACTOR ALL TO USE the new JsonFormatter module *)
+
 (************************************************************)
 (** Customized values for constraint conversion *)
 (************************************************************)

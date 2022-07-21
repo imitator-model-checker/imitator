@@ -187,7 +187,7 @@ let get_length_resolved_constraint resolved_constraints_table constraint_name =
 let get_discrete_type_resolved_constraint resolved_constraints_table constraint_name =
 
     if not (Hashtbl.mem resolved_constraints_table constraint_name) then
-        ImitatorUtilities.print_warning (constraint_name ^ " doesn't found");
+        ImitatorUtilities.print_warning (constraint_name ^ " not found");
 
     let resolved_constraint = Hashtbl.find resolved_constraints_table constraint_name in
     match resolved_constraint with

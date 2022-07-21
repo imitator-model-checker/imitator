@@ -253,7 +253,7 @@ let check_normal_update variable_infos automaton_name normal_update =
 
     let updated_variable_name = match updated_variable_name_opt with Some updated_variable_name -> updated_variable_name | None -> "_" in
 
-    if updated_variable_name <> "_" && is_variable_is_defined variable_infos updated_variable_name then
+    if updated_variable_name <> "_" && is_variable_or_constant_defined variable_infos updated_variable_name then
         (* Get kind (variable or constant ?) of updated variable *)
         let variable_kind = variable_kind_of_variable_name variable_infos updated_variable_name in
         (* Get var type of updated variable *)
@@ -270,13 +270,20 @@ let check_normal_update variable_infos automaton_name normal_update =
         if is_constant then print_update_constant_error updated_variable_name;
         if is_parameter then print_update_parameter_error updated_variable_name;
 
-        if is_discrete then (
-            let is_only_discrete = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos None update_expr in
-            if not is_only_discrete then
-                print_error ("Trying to update variable `" ^ updated_variable_name ^ "` with clock(s) or parameter(s) in `" ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos normal_update ^ "`.");
-        );
+        let is_trying_to_assign_a_clock_or_param =
+            if is_discrete then (
+                let is_only_discrete = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos None update_expr in
+                if not is_only_discrete then (
+                    print_error ("Trying to update variable `" ^ updated_variable_name ^ "` with clock(s) or parameter(s) in `" ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos normal_update ^ "`.");
+                    true
+                )
+                else
+                    false
+            ) else
+                false
+        in
 
-        all_variables_declared && not (is_constant || is_parameter)
+        all_variables_declared && not (is_constant || is_parameter || is_trying_to_assign_a_clock_or_param)
     else (
         all_variables_declared
     )
@@ -509,7 +516,7 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
             ) else (
                 let str_parameters_list = List.map (fun (parameter_name, discrete_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete discrete_type) group_without_duplicates in
                 let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
-                print_error (current_duplicate_parameter_message ^ "` doesn't have consistent definitions: `" ^ str_parameters ^ "`.");
+                print_error (current_duplicate_parameter_message ^ "` does not have consistent definitions: `" ^ str_parameters ^ "`.");
             )
         ) duplicate_parameters;
 
@@ -1523,7 +1530,7 @@ let convert_normal_updates variable_infos updates_type updates_list =
     (* Check that pre and post updates not updating clocks ! It's only for discrete variables *)
     (match updates_type with
     | Parsed_seq_updates when List.length parsed_clock_updates > 0 ->
-        print_error "`do` bloc is reserved for sequential updates on discrete variables. This bloc cannot be used for updating clock(s).";
+        print_error "`seq` bloc is reserved for sequential updates on discrete variables. This bloc cannot be used for updating clock(s).";
         raise InvalidModel
     | _ -> ()
     );
@@ -1760,7 +1767,7 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 					raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist, although this should have been checked before."));
 				))
 			in not is_discrete
-        (* Doesn't care about discrete boolean inits for constraint initalization ! *)
+        (* Do not care about discrete boolean inits for constraint initalization ! *)
         | Parsed_discrete_predicate _ -> false
 		| _ -> true
 		) linear_predicates in
@@ -3658,13 +3665,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     ) in
 
     print_message_lazy Verbose_high str_fun_side_effects;
-    (*
-    List.iter (fun (fm : function_metadata) ->
-        let str_info = "fun `" ^ fm.name ^ "` has side effects :" ^ string_of_bool fm.side_effect in
-        (* ResultProcessor.add_custom_details str_info; *)
-        print_message Verbose_high str_info;
-    ) all_functions_metadata;
-    *)
+
+    (* Function metas to json *)
+    let json_function_metas = List.map ParsingStructureUtilities.json_of_function_metadata all_functions_metadata in
+    (* Create json array *)
+    let json_array_function_metas = JsonFormatter.Json_array json_function_metas in
+    (* Add new property to details *)
+    ResultProcessor.add_custom_detail_property "function_metas" json_array_function_metas;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)

@@ -74,6 +74,7 @@ let unzip l = List.fold_left
 	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY
   CT_INSIDE
   CT_DO
+  CT_SEQ
   CT_LET CT_IN
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
@@ -511,11 +512,11 @@ update_synchronization:
 /************************************************************/
 
 updates:
-  | CT_DO LBRACE do_then_updates RBRACE { $3 }
+  | CT_DO LBRACE seq_then_updates RBRACE { $3 }
 ;
 
-do_then_updates:
-  | CT_DO update_seq_nonempty_list then_updates { $2, $3 }
+seq_then_updates:
+  | CT_SEQ update_seq_nonempty_list then_updates { $2, $3 }
   | update_list { [], $1 }
 ;
 

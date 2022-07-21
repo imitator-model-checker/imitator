@@ -137,7 +137,7 @@ let string_of_declarations model stopwatches clocks =
 let string_of_fun_definitions model =
     (* Print warning *)
     if Hashtbl.length model.fun_definitions > 0 then
-        print_warning "Model contains user defined functions. HyTech doesn't support user defined functions.";
+        print_warning "Model contains user defined functions. HyTech does not support user-defined functions.";
     (* Get function definitions string as IMITATOR format *)
     ModelPrinter.string_of_fun_definitions model
 
@@ -185,7 +185,7 @@ let string_of_invariant model automaton_index location_index stopwatches clocks 
     let str_invariant = ModelPrinter.string_of_guard model.variable_names invariant in
 
     if not (is_linear_guard invariant) then
-        print_warning ("Invariant `" ^ str_invariant ^ "` contains non-linear expression(s) or are not rational-valued, HyTech doesn't support such expressions.");
+        print_warning ("Invariant `" ^ str_invariant ^ "` contains non-linear expression(s) or are not rational-valued, HyTech does not support such expressions.");
 
 	(* Invariant *)
 	"while "
@@ -275,7 +275,7 @@ let string_of_transition model automaton_index transition =
     let str_guard = ModelPrinter.string_of_guard model.variable_names transition.guard in
 
     if not (is_linear_guard transition.guard) then
-        print_warning ("Guard `" ^ str_guard ^ "` contains non-linear expression(s) or are not rational-valued, HyTech doesn't support such expressions.");
+        print_warning ("Guard `" ^ str_guard ^ "` contains non-linear expression(s) or are not rational-valued, HyTech does not support such expressions.");
 
 	(if conditional_updates <> [] then print_warning "Conditional updates are not supported by HyTech. Ignoring…" );
 	"\n\t" ^ "when "

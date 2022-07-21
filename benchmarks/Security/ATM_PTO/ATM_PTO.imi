@@ -1,0 +1,281 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Toy example of an ATM to evaluate parametric timed opacity
+ * Description      : Toy example of an ATM to evaluate parametric timed opacity; the model works by the self-composition of two copies of the PTA, with a Boolean "cash_spotted" encoding the secret action (getting cash), following the method in [ALMS22]
+ * Correctness      : Timed opacity, i.e., valuation of the (unique) timing parameter `p_total` for which the system is timed-opaque  for the execution time also denoted by `p_total`
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Education, Security, Toy
+ * Source           : Own work
+ * bibkey           : [ABLM2x]
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/07/15
+ * Last modified    : 2022/07/18
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.3
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x_1, (* used for local actions such as timeouts *)
+ 	y_1, (* used for constant-time opaque behavior *)
+ 	x_2, (* used for local actions such as timeouts *)
+ 	y_2, (* used for constant-time opaque behavior *)
+ 	
+ 	t_total,
+		: clock;
+
+(* Discrete *)
+	nbFailedPassword_1,
+	nbFailedAmount_1,
+	nbRestart_1,
+
+	nbFailedPassword_2,
+	nbFailedAmount_2,
+	nbRestart_2,
+
+	MAXnbFailedPassword = 2,
+	MAXnbFailedAmount   = 2,
+	MAXnbRestart        = 1,
+		: int;
+	
+	cash_spotted_1,
+	cash_spotted_2,
+		: bool;
+
+(* Parameters *)
+	p_total : parameter;
+
+
+(************************************************************)
+  automaton ATM_1
+(************************************************************)
+synclabs:
+	(* Controllable: system *)
+	askPassword_1, finish, start_1,
+	(* Controllable: user (i.e., that can be disabled by removing the choice in the system) *)
+	displayBalance_1, press_OK_1, quickWithdrawal_1, restart_1,
+	(* Uncontrollable *)
+	correctAmount_1, correctPassword_1, press_finish_1, incorrectAmount_1, incorrectPassword_1, normalWithdrawal_1, take_cash_1,
+;
+
+urgent loc initial: invariant True (* & t_total <= p_total *)
+	when True sync start_1 do {x_1 := 0, y_1 := 0} goto welcome;
+
+loc welcome: invariant x_1 <= 3
+	when x_1 = 3 sync askPassword_1 do {x_1 := 0} goto waitingPassword;
+
+loc waitingPassword: invariant x_1 <= 10 (* & t_total <= p_total *)
+	(* User didn't their password in time *)
+	when x_1 = 10 goto cancelling;
+	(* Correct password *)
+	when True sync correctPassword_1 do {x_1 := 0} goto waitChoice;
+	(* Incorrect password *)
+	when nbFailedPassword_1 < MAXnbFailedPassword sync incorrectPassword_1 do {x_1 := 0, nbFailedPassword_1 := nbFailedPassword_1 + 1} goto waitingPassword;
+	when nbFailedPassword_1 = MAXnbFailedPassword sync incorrectPassword_1 do {nbFailedPassword_1 := nbFailedPassword_1 + 1} goto cancelling;
+
+loc waitChoice: invariant x_1 <= 10 (* & t_total <= p_total *)
+	(* User didn't choose in due time *)
+	when x_1 = 10 goto cancelling;
+	(* Quick withdrawal *)
+	when True sync quickWithdrawal_1 do {x_1 := 0} goto preparingWithdrawalQuick;
+	(* Normal withdrawal *)
+	when True sync normalWithdrawal_1 do {x_1 := 0} goto choosingAmount;
+	(* Balance request *)
+	when True sync displayBalance_1 do {x_1 := 0} goto displayingBalance;
+
+loc preparingWithdrawalQuick: invariant x_1 <= 15
+	when x_1 = 15 do {x_1 := 0} goto moneyAvailableQuick;
+
+loc moneyAvailableQuick: invariant x_1 <= 20 (* & t_total <= p_total *)
+	(* User can take the money any time *)
+	when t_total = p_total & (cash_spotted_1 | not(cash_spotted_1)) (*** HACK to avoid automatic variable elimination ***) do {cash_spotted_1 := True} sync take_cash_1 goto the_end;
+	(* User did not take the money on time *)
+	when x_1 = 20 goto cancelling;
+
+loc choosingAmount: invariant x_1 <= 12 (* & t_total <= p_total *)
+	(* User didn't choose the amount in time *)
+	when x_1 = 12 goto cancelling;
+	(* Correct amount (i.e., valid + consistent with the available notes + larger than the available money) *)
+	when True sync correctAmount_1 do {x_1 := 0} goto preparingWithdrawalNormal;
+	(* Incorrect password *)
+	when nbFailedAmount_1 < MAXnbFailedPassword sync incorrectAmount_1 do {x_1 := 0, nbFailedAmount_1 := nbFailedAmount_1 + 1} goto choosingAmount;
+	when nbFailedAmount_1 = MAXnbFailedPassword sync incorrectAmount_1 do {nbFailedAmount_1 := nbFailedAmount_1 + 1} goto cancelling;
+
+loc preparingWithdrawalNormal: invariant x_1 <= 15 (* & t_total <= p_total *)
+	when x_1 = 15 do {x_1 := 0} goto moneyAvailableNormal;
+
+loc moneyAvailableNormal: invariant x_1 <= 20 (* & t_total <= p_total *)
+	(* User can take the money any time *)
+	when True do {cash_spotted_1 := True, x_1 := 0} sync take_cash_1 goto otherOperation;
+	(* User did not take the money on time *)
+	when x_1 = 20 goto cancelling;
+
+(* Choosing potentially another operation *)
+loc otherOperation: invariant x_1 <= 10 (* & t_total <= p_total *)
+	(* User chooses to terminate *)
+	when True sync press_finish_1 goto terminating;
+	(* User chooses to perform another operation *)
+	when nbRestart_1 < MAXnbRestart sync restart_1 do {x_1 := 0, y_1 := 0, nbRestart_1 := nbRestart_1 + 1} goto waitChoice;
+	(* When no choice on time *)
+	when x_1 = 10 goto terminating;
+
+loc displayingBalance: invariant x_1 <= 10 (* & t_total <= p_total *)
+	(* User can press OK and terminate *)
+	when t_total = p_total sync press_OK_1 goto the_end;
+	(* Time out *)
+	when x_1 = 10 do {x_1 := 0} goto otherOperation;
+
+loc terminating: invariant y_1 <= p_total & t_total <= p_total
+	when y_1 = p_total & t_total = p_total sync finish goto the_end;
+	
+loc cancelling: invariant y_1 <= p_total & t_total <= p_total
+	when y_1 = p_total & t_total = p_total sync finish goto the_end;
+	
+loc the_end: invariant True
+
+end (* ATM *)
+
+
+(************************************************************)
+  automaton ATM_2
+(************************************************************)
+synclabs:
+	(* Controllable: system *)
+	askPassword_2, finish, start_2,
+	(* Controllable: user (i.e., that can be disabled by removing the choice in the system) *)
+	displayBalance_2, press_OK_2, quickWithdrawal_2, restart_2,
+	(* Uncontrollable *)
+	correctAmount_2, correctPassword_2, press_finish_2, incorrectAmount_2, incorrectPassword_2, normalWithdrawal_2, take_cash_2,
+;
+
+urgent loc initial: invariant True (* & t_total <= p_total *)
+	when True sync start_2 do {x_2 := 0, y_2 := 0} goto welcome;
+
+loc welcome: invariant x_2 <= 3 (* & t_total <= p_total *)
+	when x_2 = 3 sync askPassword_2 do {x_2 := 0} goto waitingPassword;
+
+loc waitingPassword: invariant x_2 <= 10 (* & t_total <= p_total *)
+	(* User didn't their password in time *)
+	when x_2 = 10 goto cancelling;
+	(* Correct password *)
+	when True sync correctPassword_2 do {x_2 := 0} goto waitChoice;
+	(* Incorrect password *)
+	when nbFailedPassword_2 < MAXnbFailedPassword sync incorrectPassword_2 do {x_2 := 0, nbFailedPassword_2 := nbFailedPassword_2 + 1} goto waitingPassword;
+	when nbFailedPassword_2 = MAXnbFailedPassword sync incorrectPassword_2 do {nbFailedPassword_2 := nbFailedPassword_2 + 1} goto cancelling;
+
+loc waitChoice: invariant x_2 <= 10 (* & t_total <= p_total *)
+	(* User didn't choose in due time *)
+	when x_2 = 10 goto cancelling;
+	(* Quick withdrawal *)
+	when True sync quickWithdrawal_2 do {x_2 := 0} goto preparingWithdrawalQuick;
+	(* Normal withdrawal *)
+	when True sync normalWithdrawal_2 do {x_2 := 0} goto choosingAmount;
+	(* Balance request *)
+	when True sync displayBalance_2 do {x_2 := 0} goto displayingBalance;
+
+loc preparingWithdrawalQuick: invariant x_2 <= 15 (* & t_total <= p_total *)
+	when x_2 = 15 do {x_2 := 0} goto moneyAvailableQuick;
+
+loc moneyAvailableQuick: invariant x_2 <= 20 (* & t_total <= p_total *)
+	(* User can take the money any time *)
+	when t_total = p_total & (cash_spotted_2 | not(cash_spotted_2)) (*** HACK to avoid automatic variable elimination ***) do {cash_spotted_2 := True} sync take_cash_2 goto the_end;
+	(* User did not take the money on time *)
+	when x_2 = 20 goto cancelling;
+
+loc choosingAmount: invariant x_2 <= 12 (* & t_total <= p_total *)
+	(* User didn't choose the amount in time *)
+	when x_2 = 12 goto cancelling;
+	(* Correct amount (i.e., valid + consistent with the available notes + larger than the available money) *)
+	when True sync correctAmount_2 do {x_2 := 0} goto preparingWithdrawalNormal;
+	(* Incorrect password *)
+	when nbFailedAmount_2 < MAXnbFailedPassword sync incorrectAmount_2 do {x_2 := 0, nbFailedAmount_2 := nbFailedAmount_2 + 1} goto choosingAmount;
+	when nbFailedAmount_2 = MAXnbFailedPassword sync incorrectAmount_2 do {nbFailedAmount_2 := nbFailedAmount_2 + 1} goto cancelling;
+
+loc preparingWithdrawalNormal: invariant x_2 <= 15 (* & t_total <= p_total *)
+	when x_2 = 15 do {x_2 := 0} goto moneyAvailableNormal;
+
+loc moneyAvailableNormal: invariant x_2 <= 20 (* & t_total <= p_total *)
+	(* User can take the money any time *)
+	when True do {cash_spotted_2 := True, x_2 := 0} sync take_cash_2 goto otherOperation;
+	(* User did not take the money on time *)
+	when x_2 = 20 goto cancelling;
+
+(* Choosing potentially another operation *)
+loc otherOperation: invariant x_2 <= 10 (* & t_total <= p_total *)
+	(* User chooses to terminate *)
+	when True sync press_finish_2 goto terminating;
+	(* User chooses to perform another operation *)
+	when nbRestart_2 < MAXnbRestart sync restart_2 do {x_2 := 0, y_2 := 0, nbRestart_2 := nbRestart_2 + 1} goto waitChoice;
+	(* When no choice on time *)
+	when x_2 = 10 goto terminating;
+
+loc displayingBalance: invariant x_2 <= 10 (* & t_total <= p_total *)
+	(* User can press OK and terminate *)
+	when t_total = p_total sync press_OK_2 goto the_end;
+	(* Time out *)
+	when x_2 = 10 do {x_2 := 0} goto otherOperation;
+
+loc terminating: invariant y_2 <= p_total & t_total <= p_total
+	when y_2 = p_total & t_total = p_total sync finish goto the_end;
+	
+loc cancelling: invariant y_2 <= p_total & t_total <= p_total
+	when y_2 = p_total & t_total = p_total sync finish goto the_end;
+	
+loc the_end: invariant True
+
+end (* ATM *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[ATM_1]              := initial,
+		loc[ATM_2]              := initial,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		nbFailedAmount_1   := 0,
+		nbFailedPassword_1 := 0,
+		nbRestart_1        := 0,
+		
+		nbFailedAmount_2   := 0,
+		nbFailedPassword_2 := 0,
+		nbRestart_2        := 0,
+		
+		cash_spotted_1     := False,
+		cash_spotted_2     := False,
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x_1     = 0
+		& y_1     = 0
+		& t_total = 0
+		
+		& p_total >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

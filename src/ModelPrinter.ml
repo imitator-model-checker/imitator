@@ -601,7 +601,7 @@ let string_of_transition model automaton_index (transition : transition) =
 	let conditional_updates = transition.updates.conditional in
 	let first_separator, second_separator = separator_comma transition.updates in
 
-    let str_do_or_empty, str_do_final_semi_colon = if List.length seq_updates > 0 then " do ", ";" else "", "" in
+    let str_seq_or_empty, str_seq_final_semi_colon = if List.length seq_updates > 0 then " seq ", ";" else "", "" in
     let str_then_or_empty = if List.length seq_updates > 0 && List.length discrete_updates > 0 then " then " else "" in
 
 	(* Print some information *)
@@ -613,9 +613,9 @@ let string_of_transition model automaton_index (transition : transition) =
 
 	(* Convert the updates *)
 	^ " do {"
-	^ str_do_or_empty
+	^ str_seq_or_empty
 	^ string_of_discrete_updates ~sep:";" model seq_updates
-	^ str_do_final_semi_colon
+	^ str_seq_final_semi_colon
 	^ str_then_or_empty
 	(* Clock updates *)
 	^ (string_of_clock_updates model clock_updates)

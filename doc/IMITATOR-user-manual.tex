@@ -192,7 +192,7 @@ Process~2 is identical to process~1, except that \styleIMI{x1} is replaced with 
 The observer is in charge to check that no more than one process is in critical section at the same time.\footnote{%
 	This observer is not really necessary to check the correctness of this protocol;
 	instead of adding this observer and checking \styleIMI{unreachable loc[observer] = obs\_violation}, one could just check either \styleIMI{counter > 1} or \styleIMI{loc[proc1] = CS1 \& loc[proc2] = CS2}.
-	However, this example comes from an earlier version of \imitator{} (that did not support checking global variables or more that one location in the \styleIMI{unreachable} property --- which has been fixed since version 2.7); furthermore, introducing an observer is also useful, as it is often used for the verification of more complex properties (see, \eg{} \cite{ABL98,ABBL98}).
+	However, this example comes from an earlier version of \imitator{} (that did not support checking global variables or more that one location in the \styleIMI{unreachable} property --- which has been fixed since \imitator{}~2.7); furthermore, introducing an observer is also useful, as it is often used for the verification of more complex properties (see, \eg{} \cite{ABL98,ABBL98}).
 }
 This observer will detect that this situation happens if an action \styleIMI{enter\_1} is followed by an action \styleIMI{enter\_2} without an action \styleIMI{exit\_1} in between (or symmetrically if an action \styleIMI{enter\_2} is followed by an action \styleIMI{enter\_1} without an action \styleIMI{exit\_2} in between).
 Note that the observer simply observes the system state, and synchronizes on the actions used by \styleIMI{proc1} and \styleIMI{proc2}; it does not use any clock nor variable.
@@ -471,8 +471,9 @@ Notably, rational variables can be assigned to rational arithmetic expressions o
 On the one hand, this is more restrictive than clock updates, because discrete rational variables cannot be assigned to a clock or to a parameter (in contrast to clocks, that \emph{can} be assigned to linear expressions over clocks, parameters and discrete rational variables).
 On the other hand, arithmetic expressions are richer than linear constraints, as they notably allow multiplication or division of rational variables with each other.
 
-Since version~2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
-See \cref{ss:updates} for details.
+Since \imitator{}~2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
+In addition, while by default updates are \emph{not} sequential in \imitator{}, we also allow sequential updates since \imitator{}~3.3.
+See \cref{ss:updates} for details on updates.
 
 Finally note that, by definition, parameters (that are unknown timing \emph{constants}) cannot be updated.
 
@@ -569,8 +570,8 @@ Note that parameters are not assumed to be positive; however, the behavior of \i
 
 Finally, note that the number of \IPTA{}, locations, variables and actions that can be defined in a model is bounded in \imitator{} by some very large number (most probably $2^{32}$); but, well, you don't seriously plan to build such a large model, do you?
 
-\bigskip
 
+\paragraph{Determinism}
 \imitator{} may use the determinism in (yet to come) algorithms; and the deterministic nature of an \NIPTA{} is detected by \imitator{}.
 In our setting, the strong determinism denotes at most one transition going out from a location and labeled with a given observable (\ie{} non-silent) transition.
 Let us precisely define what it means:
@@ -587,7 +588,10 @@ Let us precisely define what it means:
 \end{definition}
 %------------------------------------------------------------
 
+Note that an existing weaker notion of determinism allows multiple transitions from the same~$\loc_i$ labeled with the same action~$\action$, as long as guards are mutually exclusive.
+This is not the approach we choose in \imitator{}, where we impose at most one transition labeled with the same action.
 
+Once more, the notion of strong determinism in \imitator{} is \emph{not} used in any algorithm, but its nature is ``simply'' detected (and part of the result file).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -628,6 +632,9 @@ Otherwise, this transition cannot be taken (yet).
 If an \IPTA{} declares an action \styleIMI{act} that is never used in this \IPTA{}, then action \styleIMI{act} will never be executed in the entire model.\footnote{%
 	In this case, \imitator{} will detect this situation and will entirely delete this action from the model, while issuing a warning.
 }
+
+Also note that, when synchronizing transitions, the order in which the associated updates are executed is described in \cref{ss:updates}.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Global constants}
@@ -714,7 +721,7 @@ Int variables are encoded in \imitator{} using the \texttt{int} type of OCaml.
 	All arithmetic operations over the ``int'' variables are taken modulo $2^{32}$.
 	Overflow can therefore occur.
 
-	For critical models, it is highly advised to use \emph{rational} variables instead (the computation using rational variables may be significantly slower, but is always exact).
+	For critical models, it is highly advised to use \emph{rational} variables instead (the computation using rational variables may be significantly slower, but is always exact and without overflow).
 \end{becareful}
 
 Formally, the set of integer variables is $\IVar = \{ \ivar_1, \dots, \ivar_\IVarCard \} $;
@@ -754,12 +761,24 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 	\begin{IMITATORmodel}
 		(* i : int *)
 		(* r : rational *)
-		when rational_of_int(i) = r goto l1;
+		when i = 2 & r = 2 & rational_of_int(i) = r goto l1;
 	\end{IMITATORmodel}
 %------------------------------------------------------------
 \end{example}
 %------------------------------------------------------------
 
+%------------------------------------------------------------
+\begin{remark}
+	Comparing natively (using a ``cast'') an integer and a rational is not allowed.
+	That is, the following code is incorrect:
+	
+	%------------------------------------------------------------
+		\begin{IMITATORmodel}
+			when i = 2 & r = 2 & i = r goto l1; (* incorrect! *)
+		\end{IMITATORmodel}
+	%------------------------------------------------------------
+\end{remark}
+%------------------------------------------------------------
 
 
 %------------------------------------------------------------
@@ -811,7 +830,9 @@ A transition featuring such a guard and such updates would be written as follows
 
 %------------------------------------------------------------
 \begin{IMITATORmodel}
+(* before: bw1 = 0b1010 and bw2 = 0b1011 *)
 when logor(bw1, bw2) <> bw1 sync a do {bw1 := shift_left(bw1, 2), bw2 := logand(bw1, bw2)} goto l1;
+(* after: bw1 = 0b1000 and bw2 = 0b1010 *)
 \end{IMITATORmodel}
 %------------------------------------------------------------
 
@@ -865,7 +886,7 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 Array variables are fixed-length collections of indexed elements.
 Array elements can be accessed or updated using an integer-valued arithmetic expression as index.
 An array variable always has a fixed length and an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
-For example, it is possible to declare an array of integers, of Booleans, of arrays of arrays of Booleans---which can be seen as a multidimensional array.
+For example, it is possible to declare an array of integers, or an array of Booleans, or an array of arrays of arrays of Booleans---which can be seen as a multidimensional array.
 
 Examples of array definitions are given below:
 
@@ -919,7 +940,7 @@ Examples of array definitions are given below:
 %------------------------------------------------------------
 
 Lists are collections of variable length.
-Contrarily to arrays, the type of a list does include its length; it is therefore possible to compare two lists of different lengths.
+Contrarily to arrays, the type of a list does not include its length; it is therefore possible to compare two lists of different lengths.
 List elements can only be accessed---not updated---using an integer-valued arithmetic expression as index.
 A list variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
 For example, it is possible to declare a list of integers, or a list of Booleans, or a list of lists of arrays of Booleans.
@@ -946,7 +967,7 @@ Examples of list definitions are given below:
 	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a} with \styleIMI{'a:any} - head element of a list \styleIMI{l}
 	\item \label{item:lbl-list_is_empty} \styleIMI{list\_is\_empty(l:'a list):bool} with \styleIMI{'a:any} - Check if the list \styleIMI{l} is empty
 	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list):int} with \styleIMI{'a:any} - length of the list \styleIMI{l}
-	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool} with \styleIMI{'a:any} - true if \styleIMI{e} belongs to the list~ˇ\styleIMI{l}
+	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool} with \styleIMI{'a:any} - true if \styleIMI{e} belongs to the list~\styleIMI{l}
 	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list} with \styleIMI{'a:any} - reverse the list~\styleIMI{l}
 	\item \label{item:lbl-list_tl} \styleIMI{list\_tl(l:'a list):'a list} with \styleIMI{'a:any} - tail of the list \styleIMI{l}
 \end{itemize}
@@ -996,7 +1017,7 @@ Examples of stack definitions are given below:
 	my_int_stack					: int stack;
 	my_bool_stack        	: bool stack;
 	my_binary_word_stack 	: binary(4) stack;
-	my_2d_int_stack      	: int stack stack;
+	my_int_liste_stack    : int list stack;
 \end{IMITATORmodel}
 %------------------------------------------------------------
 
@@ -1019,13 +1040,15 @@ Examples of stack definitions are given below:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
+		loc l0: invariant True
 		when
 			& True
 			do {
-				stack_push(1, s),
-				stack_push(2, s),
-				i := stack_top(s),
-				j := stack_pop(s),
+				seq
+					stack_push(1, s);
+					stack_push(2, s);
+					i := stack_top(s);
+					j := stack_pop(s);
 			}
 		goto l1;
 
@@ -1037,7 +1060,8 @@ Examples of stack definitions are given below:
 		when
 			& True
 		do {
-			stack_clear(s)
+			seq
+				stack_clear(s);
 		}
 		goto l2;
 
@@ -1045,6 +1069,9 @@ Examples of stack definitions are given below:
 
 	\end{IMITATORmodel}
 %------------------------------------------------------------
+
+The \styleIMI{seq} keyword denotes a sequential update (see \cref{section:seq_then_form_updates}).
+Side-effect functions can only be used in such sequential updates.
 
 \end{example}
 %------------------------------------------------------------
@@ -1074,7 +1101,7 @@ Examples of queue definitions are given below:
 	my_int_queue					: int queue;
 	my_bool_queue        	: bool queue;
 	my_binary_word_queue 	: binary(4) queue;
-	my_2d_int_queue      	: int queue queue;
+	my_int_list_queue     : int list queue;
 \end{IMITATORmodel}
 %------------------------------------------------------------
 
@@ -1096,13 +1123,15 @@ Examples of queue definitions are given below:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
+		loc l0: invariant True
 		when
 			& True
 			do {
-				queue_push(1, q),
-				queue_push(2, q),
-				i := stack_top(q),
-				j := stack_pop(q),
+				seq
+					queue_push(1, q);
+					queue_push(2, q);
+					i := queue_top(q);
+					j := queue_pop(q);
 			}
 		goto l1;
 
@@ -1114,7 +1143,8 @@ Examples of queue definitions are given below:
 		when
 			& True
 		do {
-			queue_clear(q)
+			seq
+				queue_clear(q);
 		}
 		goto l2;
 
@@ -1244,7 +1274,7 @@ The parameters of a function are evaluated from left to right.
 
 \begin{remark}
 	Some functions, called ``Side-effects functions'' can modify the value of some input variables and therefore are subject to side-effects.
-	Side-effects functions can only be used in updates, more precisely in the body of the \styleIMI{do} block of an update (see \cref{ss:updates}).
+	Side-effects functions can only be used in updates, more precisely in the body of the \styleIMI{seq} block of an update (see \cref{ss:updates}).
 \end{remark}
 
 
@@ -1279,7 +1309,7 @@ The initial default value of composite types is as follows:
 \subsection{Updates}\label{ss:updates}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-The presence of clocks and parameters, discrete variables, and structures (such as arrays) requires a particular handling of the updates, which we describe in the following.
+The presence of clocks, parameters, discrete variables, and structures (such as arrays) requires a particular handling of the updates, which we describe in the following.
 
 In any case, the paradigm is that discrete variables are first tested in guards, then updated in updates.
 
@@ -1287,13 +1317,8 @@ In any case, the paradigm is that discrete variables are first tested in guards,
 \subsubsection{Conflicts in updates}
 %------------------------------------------------------------
 
-Conflicts can arise from the modular nature of \NIPTA{}.
-If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i := 2} while another one performs \styleIMI{i := 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
-
-If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
-
-% For more information on how the standard updates works, read the section \styleIMI{do-then} form updates below.
-
+Conflicts can arise in standard updates due to the modular nature of \NIPTA{}.
+If two \IPTA{} in parallel update the same variable on the same synchronized action~\styleIMI{a} (\eg{} an \IPTA{} performs \styleIMI{i := 2} on a transition labeled with~\styleIMI{a}, while another one performs \styleIMI{i := 3} on a transition labeled with~\styleIMI{a}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
 
 %------------------------------------------------------------
 \subsubsection{Standard updates}\label{sss:standard-updates}
@@ -1306,31 +1331,36 @@ That is, in the following block:
 	when x = 0 & i = 1 do {i := i+1, i := 5, x := i}
 \end{IMITATORmodel}
 
-\noindent{}after the update, \styleIMI{x} is equal to~0, while the value of \styleIMI{i} is unspecified due to a non-deterministic assignment (this is an ill-formed behavior, and a warning will be triggered).
+\noindent{}after the update, \styleIMI{x} is equal to~0 (because \styleIMI{x := i} implies that the new value of \styleIMI{x} becomes the value of \styleIMI{i} \emph{before} the update), while the value of \styleIMI{i} is unspecified due to a non-deterministic assignment, \ie{} \styleIMI{i} is updated to two different values in the update (this is an ill-formed behavior, and a warning will be triggered).
 
 Since \imitator{} 3.3, we also allow for some sequential updates on the discrete variables, as explained in the following.
 
 %------------------------------------------------------------
-\subsubsection{\styleIMI{do-then} updates}\label{section:do_then_form_updates}
+\subsubsection{\styleIMI{seq-then} updates}\label{section:seq_then_form_updates}
 %------------------------------------------------------------
 
-\styleIMI{do-then} updates are more complex updates, allowing first a set of sequential updates (on the discrete variables only, including side-effects functions), called the ``\styleIMI{do} block'' , followed by ``standard updates'', called the \styleIMI{then} block.
+\styleIMI{seq-then} updates are more complex updates, allowing first a set of sequential updates (on the discrete variables only, including side-effects functions), called the ``\styleIMI{seq} block'' , followed by ``standard updates'' (non-sequential), called the \styleIMI{then} block.
 
-\paragraph{The \styleIMI{do} block}
+\paragraph{The \styleIMI{seq} block}
 
-A \styleIMI{do} block can be used to define sequential updates on any discrete variable of any type.
+A \styleIMI{seq} block can be used to define sequential updates on any discrete variable of any type.
 Contrary to the \styleIMI{then} block (or to the standard updates), it is possible to make modifications of data structures (such as stacks and queues) using side-effects functions.
-The \styleIMI{do} block can be seen as an imperative update part that is processed before the \styleIMI{then} block.
-It is not possible to update clocks in a \styleIMI{do} block.
+The \styleIMI{seq} block can be seen as an imperative update part that is processed before the \styleIMI{then} block.
+It is not possible to update clocks in a \styleIMI{seq} block.
+
+In a model that contains multiple synchronized \IPTA{}, given a transition, all \styleIMI{seq} blocks (all sequential updates) in all \IPTA{} are processed as follows:
+the updates are performed sequentially starting from the top-most \IPTA{} in the input model file (\ie{} following the definition order of \IPTA{}).
+That is, all the sequential updates of the first of the \IPTA{} are processed, followed by all  the sequential updates of the second \IPTA{}, and so on.
+
 
 % \paragraph{}
-Examples of a \styleIMI{do} update expression:
+Examples of a \styleIMI{seq} update expression:
 
 \begin{IMITATORmodel}
 	do {
 
 		(* only do expression *)
-		do
+		seq
 			i := 1; (* after this update: i = 1 *)
 			i := i + 1; (* after this update: i = 2 *)
 		end
@@ -1342,7 +1372,7 @@ Examples of a \styleIMI{do} update expression:
 	do {
 
 		(* only do expression *)
-		do
+		seq
 			(* modification of stack s (with side-effet) *)
 			stack_push(1, s);
 			(* modification of stack s (with side-effet) *)
@@ -1354,10 +1384,10 @@ Examples of a \styleIMI{do} update expression:
 
 \paragraph{The \styleIMI{then} block}
 
-The \styleIMI{then} block can be used to update clock(s) or discrete variable(s).
+The \styleIMI{then} block can be used to update clocks or discrete variables.
 These updates are not sequential so, as described before, in case of multiple updates of the same variable, a warning is issued, and the behavior of the \NIPTA{} becomes unspecified.
 The \styleIMI{then} block is essentially the same as a standard update (see \cref{sss:standard-updates}).
-This kind of update was the only one in \imitator{} until version~3.3.
+This kind of update was the only one in \imitator{} until \imitator{}~3.3.
 
 Below is an example of a \styleIMI{then} update expression:
 
@@ -1400,27 +1430,58 @@ Below is an example of a \styleIMI{then} update expression, that is ill-formed a
 % 		j := i
 % END OLD EXAMPLE
 
-\paragraph{The \styleIMI{do-then} block}
+\paragraph{The \styleIMI{seq-then} block}
 
-In one given transition, the \styleIMI{do} block is executed \emph{before} the \styleIMI{then} block.
+In one given transition, the \styleIMI{seq} block is executed \emph{before} the \styleIMI{then} block.
 
-In a model that contains multiple synchronized \IPTA{}, given a transition, all \styleIMI{do} blocks (all sequential updates) in all \IPTA{} are processed first;
-the updates are performed sequentially starting from the top-most \IPTA{} in the input model file (\ie{} following the definition order of \IPTA{}).
-Only once all \styleIMI{do} blocks are computed, all \styleIMI{then} block are then executed.
-Again, contrarily to the \styleIMI{do} blocks, keep in mind that updates contained in \styleIMI{then} blocks are \emph{not} computed sequentially.
+Recall that, in a model that contains multiple synchronized \IPTA{}, given a transition, all \styleIMI{seq} blocks are performed sequentially starting from the top-most \IPTA{} in the input model file.
+Only once all \styleIMI{seq} blocks are computed (sequentially), all \styleIMI{then} blocks are then executed (at once).
+Keep in mind that, contrarily to the \styleIMI{seq} blocks, updates contained in \styleIMI{then} blocks are \emph{not} computed sequentially.
 
-The value of the variables used in the right-hand part of an update in the \styleIMI{then} block is the value computed \emph{after} executing the \styleIMI{do} block updates.
+The value of the variables used in the right-hand part of an update in the \styleIMI{then} block is the value computed \emph{after} executing the \styleIMI{seq} block updates.
 
+
+
+%------------------------------------------------------------
 \begin{remark}
-Note the use of semicolon in the sequential part (\styleIMI{do} block), in contrast to the comma in the declarative part (\styleIMI{then} block).
+	Note the use of semicolon in the sequential block (\styleIMI{seq} block), in contrast to the comma in the declarative block (\styleIMI{then} block).
 \end{remark}
+%------------------------------------------------------------
 
-Examples of a \styleIMI{do-then} update expression:
+\cref{table:summary:blocks-characteristics} summarizes what is allowed in the \styleIMI{seq} and \styleIMI{then} blocks.
+``Side effects'' refers to side effect functions, while ``variable auto remove'' denotes the fact that any variable used in the \styleIMI{seq} block is considered useful and will not be automatically removed (see option \styleOption{-no-var-autoremove} in \cref{chapter:options} for more explanations on \imitator{} automatic variable deletion).
 
+
+%------------------------------------------------------------
+\begin{table}[tb]
+	\caption{Blocks features summary}
+	{\centering
+	\small
+	\setlength{\tabcolsep}{2pt} % . The default value is 6pt.
+		\begin{tabular}{ | l | c | c | c | c | c | }
+			% Non-nested CTL
+			\hline
+			\rowHeader{} \textbf{Block} & \textbf{Sequential behavior} & \textbf{Clock update} & \textbf{Discrete update} & \textbf{Side effects} & \textbf{Variable auto remove} \\
+			\hline
+			\styleIMI{seq} & \cellYes{} & \cellNo{} & \cellYes{} & \cellYes{} & \cellNo{}        \\
+			\hline
+			\styleIMI{then} & \cellNo{} & \cellYes{} & \cellYes{} & \cellNo{} & \cellYes{}        \\
+			\hline
+		\end{tabular}
+
+	}
+
+	\label{table:summary:blocks-characteristics}
+\end{table}
+%------------------------------------------------------------
+
+Examples of a \styleIMI{seq-then} update expression:
+
+%------------------------------------------------------------
 \begin{IMITATORmodel}
 	do {
 
-		do
+		seq
 			i := 0; (* i = 0 *)
 			i := i + 1; (* now, i = 1 *)
 		then
@@ -1429,11 +1490,13 @@ Examples of a \styleIMI{do-then} update expression:
 
 	}
 \end{IMITATORmodel}
+%------------------------------------------------------------
 
+%------------------------------------------------------------
 \begin{IMITATORmodel}
 	do {
 
-		do
+		seq
 			(* modification of stack s using side-effects *)
 			stack_push(1, s);
 			(* modification of stack s using side-effects *)
@@ -1458,9 +1521,92 @@ Examples of a \styleIMI{do-then} update expression:
 
 	}
 \end{IMITATORmodel}
+%------------------------------------------------------------
+
+Examples of a \styleIMI{seq-then} update expression with multiple synchronized transitions:
+
+%------------------------------------------------------------
+\begin{IMITATORmodel}
+(************************************************************)
+automaton pta1
+(************************************************************)
+	synclabs : a;
+
+	loc l1: invariant x <= 0
+	when True
+	do {
+		seq
+			stack_push(0, s);
+			i := 1;
+		then
+			(* r1 = 1 and x = 2, because all seq updates in all IPTA are made before *)
+			r1 := stack_top(s),
+			x := i
+		end
+	}
+	sync a goto lend;
+
+	accepting loc lend: invariant True
+	end (* pta *)
+	(************************************************************)
+
+	(************************************************************)
+	automaton pta2
+	(************************************************************)
+	synclabs : a;
+	loc l1: invariant True
+	when
+	& True
+	do {
+		seq
+			i := 2;
+			stack_push(1, s);
+		then
+			(* r2 = 1, because all seq updates in all IPTA are made before *)
+			r2 := stack_top(s)
+		end
+	}
+	sync a goto lend;
+
+	accepting loc lend: invariant True
+	end (* pta *)
+	(************************************************************)
+
+	(************************************************************)
+	automaton pta3
+	(************************************************************)
+	synclabs : a;
+	loc l1: invariant True
+	when
+	& True
+	do {
+		(* r3 = 1, because all seq updates in all IPTA are made before *)
+		r3 := stack_top(s)
+	}
+	sync a goto lend;
+
+	accepting loc lend: invariant True
+	end (* pta *)
+\end{IMITATORmodel}
+%------------------------------------------------------------
 
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Runtime errors}\label{ss:runtime-errors}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
+Runtime errors can be encountered during updates.
+For a example, during an update, a division by zero can be encountered: in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0, the result becomes undefined.
+
+When a runtime error is encountered, an exception is raised and \imitator{} terminates with an error.
+
+The possible runtime errors include:
+\begin{itemize}
+	\item division by~0;
+	\item non-integer division on integer expression;
+	\item index out of range (\eg{} in an array);
+	\item operation on an empty collection (\eg{} accessing the top element of an empty stack).
+\end{itemize}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1662,6 +1808,26 @@ Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using prede
 \begin{becareful}
 	These properties assume \emph{time-progress}, \ie{} if the model is stuck in a \emph{time-lock}, these properties may give incorrect results.
 \end{becareful}
+
+% TODO: add example illustrating the issue with livelocks e.g. by Adrien Jaillet (2022/07/01):
+% loc l0: invariant True
+% 	when True sync a do {x := 0} goto l1;
+% 
+% loc l1: invariant x < 1 + v
+% 	when True goto l10;
+% 
+% loc l10: invariant x < 1 + u
+% 	when True goto l11;
+% 
+% loc l11: invariant x < 2 + p
+% 	when True sync b goto l2;
+% 
+% loc l2: invariant True
+% 	when True goto l2;
+% 
+% PROP:
+% property := #synth pattern(everytime a then eventually b within 10);
+
 
 
 If using a predefined property pattern, the property pattern must be specified as follows:
@@ -2004,7 +2170,7 @@ Two options are possible in \imitator{}:
 		\item in a guard or invariant, each clock must be used at most once;
 		\item invariants should not contain discrete inequalities (\ie{} inequalities over discrete variables only);
 		\item the use of discrete variables was not tested (and may not be always working);
-		\item the conditional updates (new since version~2.12) are not supported;
+		\item the conditional updates are not supported;
 		\item the use of coefficients on parameters (different from 0 or~1) was not tested;
 		\item the use of stopwatches or multi-rate was not tested.
 	\end{itemize}
@@ -2569,7 +2735,8 @@ and \styleOption{-graphics-source} to keep the plot source.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % TODO: 2.12?
-Since version 2.11, \imitator{} supports a translation of the model to the \uppaal{} syntax~\cite{LPY97}.
+% Since \imitator{} 2.11,
+An automatic translation of the input model to the \uppaal{} syntax~\cite{LPY97} is available.
 To generate an equivalent \uppaal{} model without performing any analysis, use:
 
 %------------------------------------------------------------
@@ -2678,7 +2845,8 @@ Properties are so far not translated to \uppaal{}.
 \section{Translation to \hytech{}}\label{section:hytech}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Since version 2.8, \imitator{} supports a translation of the model to the \hytech{} syntax~\cite{HHW95} (that is quite close to that of \imitator{} anyway).
+% Since \imitator{} 2.8
+\imitator{} supports a translation of the model to the \hytech{} syntax~\cite{HHW95} (that is quite close to that of \imitator{} anyway).
 To generate an equivalent \hytech{} model without performing any analysis, use:
 
 %------------------------------------------------------------
@@ -2698,7 +2866,7 @@ In addition, the translation of properties is not supported.
 \section{Translation to \jani{}}\label{section:jani}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Since version~3.1, \imitator{} supports a translation of the model to the \href{https://jani-spec.org/}{\jani{} specification}~\cite{BDHHJT17}.
+Since \imitator{}~3.1, \imitator{} supports a translation of the model to the \href{https://jani-spec.org/}{\jani{} specification}~\cite{BDHHJT17}.
 To generate an equivalent \jani{} model without performing any analysis, use:
 
 %------------------------------------------------------------
@@ -2893,7 +3061,7 @@ No floating-point approximations (\styleIMI{float}) are used, except for the gen
 \section{Type system}\label{section:type_system}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Since version 3.1 \imitator{} supports several types of discrete variables.
+Since \imitator{}~3.1, several types of discrete variables are supported.
 Common primitive types as integer, rational and Booleans are available.
 Recall from \cref{section:discrete} that they can be declared with the following keywords:
 
@@ -3978,14 +4146,14 @@ We define each of those two components below.
 \regleGrammaire{updates}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{do} \styleIMI{ \{ } \nt{do\_then\_updates} \styleIMI{ \} } \\
+	\  & \styleIMI{do} \styleIMI{ \{ } \nt{seq\_then\_updates} \styleIMI{ \} } \\
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{do\_then\_updates}
+\regleGrammaire{seq\_then\_updates}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{do} \nt{update\_seq\_nonempty\_list} \nt{then\_updates} \\
+	\  & \styleIMI{seq} \nt{update\_seq\_nonempty\_list} \nt{then\_updates} \\
 	$|$  & \nt{update\_list} \\
 \end{tabular}
 
@@ -5034,6 +5202,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{queue\_push} \\
 	\styleIMI{queue\_top} \\
 	\styleIMI{rational\_of\_int} \\
+    \styleIMI{seq} \\
 	\styleIMI{sequence} \\
 	\styleIMI{shift\_left} \\
 	\styleIMI{shift\_right} \\
@@ -5170,7 +5339,7 @@ However, \imitator{} does detect whether an input model is an L/U-PTA, in which 
 Emmanuelle~Encrenaz and Laurent~Fribourg have been great supporters of \imitator{}, on a theoretical point of view, and to find applications both from the literature and real case studies.
 Abdelrezzak~Bara provided several examples from the hardware literature.
 Jeremy~Sproston provided examples from the probabilistic community.
-Bertrand~Jeannet has been of great help on the linking with Apron~\cite{JM09} in a previous version of \imitator{}.
+Bertrand~Jeannet has been of great help on the linking with Apron~\cite{JM09} in an early version of \imitator{}.
 Ulrich~K\"uhne made several important improvements to \imitator{}, and linked the tool to PPL.
 Daphne~Dussaud implemented the graphical output of the behavioral cartography.
 Romain~Soulat implemented in part the merging technique~\cite{AFS13atva}, and brought several case studies.

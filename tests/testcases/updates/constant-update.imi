@@ -1,9 +1,9 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Does the model have complex updates ?
- * Description      : Check if resolution of complex update is correct
- * Correctness      : N/A
+ * Title            : Test that constant update is forbidden
+ * Description      : Test that constant update is forbidden
+ * Correctness      : Error when trying to update a constant
  * Scalable         : no
  * Generated        : no
  * Categories       : TBD
@@ -14,8 +14,8 @@
  * Input by         : B.L
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created          : 2022/06/23
- * Last modified    : 2022/06/23
+ * Created          : 2022/07/19
+ * Last modified    : 2022/07/19
  * Model version    : 1.0
  *
  * IMITATOR version : 3.3
@@ -23,22 +23,14 @@
 
 var
 
-  b : bool;
-  x, y : clock;
+ k = 0 : rat;
 
 automaton P
 
-  loc s0: invariant True
+  loc l0: invariant True
   when True
-
   do {
-    seq
-      b := False;
-    then
-      x :=0,
-      y :=0,
-      b := True
-
+    k := 1
   }
   goto lend;
 
@@ -46,11 +38,8 @@ automaton P
 
 end
 
-
 init := {
-  discrete =
-    loc[P]:=s0,
-    b := True
-  ;
-
+    discrete =
+      loc[P] := l0
+    ;
 }

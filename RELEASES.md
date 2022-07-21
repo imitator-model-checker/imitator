@@ -1,14 +1,14 @@
 # Releases
 
 *******************************************************
-## release 3.3 (2022-xx-xx) Cheese Caramel au beurre salé
+## release 3.3 (2022-07-21) Cheese Caramel au beurre salé
 
 ### Syntax improvement
 * New complex types for discrete global variables: lists, arrays, stacks, queues, and associated functions
 
 ### Major features
 * New: extrapolation for parametric zones [[AA22](https://www.doi.org/10.1007/978-3-031-06773-0_24)]
-* Refactoring of merging functions, with more efficient heuristics [AMPP2x]
+* Refactoring of merging functions, with more efficient heuristics [AMPP22]
 * Exemplification algorithm: given a parametric timed specification, exhibit concrete parameter valuations, and concrete positive and negative runs, with a graphical representation of the evolution over time of the clock and discrete variables [[AWUH22](https://www.doi.org/10.1007/978-3-031-06773-0_25)] (slightly experimental)
 
 

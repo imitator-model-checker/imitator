@@ -856,7 +856,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
                 ^ string_of_parsed_factor variable_infos func
                 ^ "`/"
                 ^ string_of_int (arguments_number)
-                ^ " call doesn't match with arity of the function : `"
+                ^ " call does not match with arity of the function: `"
                 ^ function_name
                 ^ "`/"
                 ^ string_of_int arity
@@ -951,8 +951,22 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
             ))
         );
 
+        (* If an infer type is given, infer `number` constraints to infer type *)
+        let infer_resolved_constraints =
+            List.map (fun (constraint_name, resolved_constraint) ->
+
+                let infer_resolved_constraint =
+                    match infer_type_opt, resolved_constraint with
+                    | Some ((Var_type_discrete_number _) as infer_type), Resolved_type_constraint (Var_type_discrete_number Var_type_discrete_unknown_number) -> Resolved_type_constraint infer_type
+                    | _ -> resolved_constraint
+                in
+                constraint_name, infer_resolved_constraint
+
+            ) resolved_constraints
+        in
+
         (* Resolve signature from resolved constraints *)
-        let resolved_constraints_table = OCamlUtilities.hashtbl_of_tuples resolved_constraints in
+        let resolved_constraints_table = OCamlUtilities.hashtbl_of_tuples infer_resolved_constraints in
 
         let resolved_signature = TypeConstraintResolver.signature_of_signature_constraint resolved_constraints_table function_signature_constraint in
 
@@ -960,7 +974,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         print_message Verbose_high ("\tInfer signature constraint of `" ^ function_name ^ "`: " ^ FunctionSig.string_of_signature_constraint function_signature_constraint);
 
         (* Print resolved constraints *)
-        let str_resolved_constraints = TypeConstraintResolver.string_of_resolved_constraints resolved_constraints in
+        let str_resolved_constraints = TypeConstraintResolver.string_of_resolved_constraints infer_resolved_constraints in
         if str_resolved_constraints <> "" then print_message Verbose_high ("\tInfer resolved constraints: {" ^ str_resolved_constraints ^ "} for call `" ^ string_of_parsed_factor variable_infos func ^ "`.");
 
         print_message Verbose_high ("\tInfer signature of `" ^ string_of_parsed_factor variable_infos func ^ "` resolved as: " ^ FunctionSig.string_of_signature resolved_signature);
@@ -969,7 +983,14 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 
         (* Now we had resolved discrete type of arguments, we can infer arguments to these types *)
         let combine = List.combine argument_expressions resolved_signature_without_return_type in
-        let type_checks = List.map (fun (argument_exp, discrete_type) -> type_check_parsed_boolean_expression local_variables_opt variable_infos (Some discrete_type) (* inference to type deduced from signature *) argument_exp) combine in
+
+        let type_checks =
+            List.map (fun (argument_exp, discrete_type) ->
+                let variable_number_type_opt = Some (DiscreteType.extract_inner_type discrete_type) in
+                type_check_parsed_boolean_expression local_variables_opt variable_infos variable_number_type_opt (* inference to type deduced from signature *) argument_exp
+            ) combine
+        in
+
         (* Get typed arguments expressions *)
         let typed_expressions = List.map (fun (typed_expr, _, _) -> typed_expr) type_checks in
 
@@ -1090,7 +1111,7 @@ let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStr
             ^ fun_definition.name
             ^ " : "
             ^ FunctionSig.string_of_signature signature
-            ^ "` doesn't match with implementation `"
+            ^ "` does not match with implementation `"
             ^ string_of_fun_body variable_infos typed_body
             ^ "` of type "
             ^ DiscreteType.string_of_var_type_discrete body_discrete_type
@@ -1378,7 +1399,7 @@ let check_update variable_infos update_types parsed_update_type expr =
         raise (TypeError (
             "`then` update bloc contain one or more expression with side effects `"
             ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
-            ^ "`. Expression with side effects are only allowed in `do` bloc."
+            ^ "`. Expression with side effects are only allowed in `seq` bloc."
         ));
 
     (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
@@ -2992,7 +3013,7 @@ let rec scalar_or_index_update_type_of_typed_scalar_or_index_update_type variabl
     | Typed_scalar_update variable_name ->
         let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
         (match variable_kind with
-        | Constant_kind value -> raise (InternalError "Unable to set a constant expression")
+        | Constant_kind value -> raise (InternalError "Unable to set a constant expression. This should be checked before.")
         | Variable_kind discrete_index -> Scalar_update discrete_index
         )
 

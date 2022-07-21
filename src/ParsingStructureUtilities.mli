@@ -154,6 +154,7 @@ val string_of_parsed_state_predicate_factor : variable_infos -> parsed_state_pre
 val string_of_parsed_state_predicate_term : variable_infos -> parsed_state_predicate_term -> string
 val string_of_parsed_state_predicate : variable_infos -> parsed_state_predicate -> string
 
+val json_of_function_metadata : function_metadata -> JsonFormatter.json_element
 (** Utils **)
 
 val is_parsed_global_expression_constant : variable_infos -> parsed_global_expression -> bool

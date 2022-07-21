@@ -1,0 +1,1 @@
+property := #synth EF(loc[ATM_1] = the_end & cash_spotted_1 & loc[ATM_2] = the_end & not cash_spotted_2);
