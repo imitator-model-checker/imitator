@@ -62,6 +62,14 @@ type signature_constraint = type_constraint list
 type signature = var_type_discrete list
 
 (** -------------------- **)
+(** Utils **)
+(** -------------------- **)
+
+(* Split signature into signature of parameters and signature of return type *)
+let split_signature =
+    OCamlUtilities.list_split_last
+
+(** -------------------- **)
 (** Strings **)
 (** -------------------- **)
 
@@ -108,12 +116,16 @@ and string_of_type_constraint = function
 (* String representation of a signature constraint *)
 let string_of_signature_constraint signature_constraint =
     let str_type_constraints = List.map string_of_type_constraint signature_constraint in
-    OCamlUtilities.string_of_list_of_string_with_sep " -> " str_type_constraints
+    let str_param_type_constraints, str_return_type_constraint = split_signature str_type_constraints in
+    let l_par_del, r_par_del = Constants.default_paren_delimiter in
+    l_par_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_type_constraints ^ r_par_del ^ " : " ^ str_return_type_constraint
 
 (* String representation of a signature *)
 let string_of_signature signature =
     let str_signature_types_list = List.map (DiscreteType.string_of_var_type_discrete) signature in
-    OCamlUtilities.string_of_list_of_string_with_sep " -> " str_signature_types_list
+    let str_param_types, str_return_type = split_signature str_signature_types_list in
+    let l_par_del, r_par_del = Constants.default_paren_delimiter in
+    l_par_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_types ^ r_par_del ^ " : " ^ str_return_type
 
 (** -------------------- **)
 (** Compatibility **)
@@ -200,10 +212,3 @@ let type_constraint_of_discrete_type discrete_type =
 (* Get signature constraint of signature *)
 let signature_constraint_of_signature = List.map type_constraint_of_discrete_type
 
-(** -------------------- **)
-(** Utils **)
-(** -------------------- **)
-
-(* Split signature into signature of parameters and signature of return type *)
-let split_signature =
-    OCamlUtilities.list_split_last

@@ -886,17 +886,22 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 
         (* If signature and signature constraint are not compatibles raise a type error *)
         if not is_compatibles then
+        (
+            (* Call signature with return type *)
+            let complete_call_signature = call_signature @ [Var_type_weak] in
+
             raise (TypeError (
-                "`"
+                "Function call `"
                 ^ string_of_parsed_factor variable_infos func
-                ^ " : "
-                ^ FunctionSig.string_of_signature call_signature
-                ^ " -> _` is not compatible with `"
+                ^ " has signature `"
+                ^ function_name
+                ^ FunctionSig.string_of_signature complete_call_signature
+                ^ "` which isn't compatible with definition `"
                 ^ label_of_parsed_factor_constructor func
-                ^ " : "
                 ^ FunctionSig.string_of_signature_constraint function_signature_constraint
                 ^ "`."
-            ));
+            ))
+        );
 
         (* Combine each typed expression argument with their parameter constraint *)
         let signature_constraint_with_expressions = List.combine function_parameter_signature_constraint typed_expressions in
@@ -1111,7 +1116,6 @@ let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStr
         raise (TypeError (
             "Function signature `"
             ^ fun_definition.name
-            ^ " : "
             ^ FunctionSig.string_of_signature signature
             ^ "` does not match with implementation `"
             ^ string_of_fun_body variable_infos typed_body
