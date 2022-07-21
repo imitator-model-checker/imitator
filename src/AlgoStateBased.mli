@@ -130,6 +130,9 @@ val compute_new_location_guards_updates : Location.global_location -> StateSpace
 val apply_time_past : Location.global_location -> LinearConstraint.pxd_linear_constraint -> unit
 
 
+(* Exported JvdP *)
+val discrete_constraint_of_global_location: Location.global_location -> LinearConstraint.pxd_linear_constraint
+
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)

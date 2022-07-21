@@ -127,7 +127,9 @@ class algoDeadlockFree =
 			self#print_algo_message Verbose_medium ("Direct Precondition:\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names precondition));
 			DeadlockExtra.dl_inverse_time state_space state_index precondition;
 			self#print_algo_message Verbose_medium ("Timed  Precondition:\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names precondition));
-			let precondition_px = LinearConstraint.pxd_hide_discrete_and_collapse precondition in
+			let precondition_px = DeadlockExtra.dl_instantiate_discrete state_space state_index precondition in
+			self#print_algo_message Verbose_medium ("Hidden Precondition:\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names precondition_px));
+
 			(* Update the local constraint by adding the new constraint as a union *)
 			(*** WARNING: ugly (and expensive) to convert from pxd to px ***)
 			(*** NOTE: still safe since discrete values are all instantiated ***)

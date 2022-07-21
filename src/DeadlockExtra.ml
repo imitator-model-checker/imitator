@@ -3,9 +3,17 @@
 type clock_updates = (Automaton.clock_index * LinearConstraint.pxd_linear_term) list
 
 open LinearConstraint
+open StateSpace
+
+(* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
+let dl_instantiate_discrete state_space state_index constr = 
+	let glob_location = get_location state_space (get_global_location_index state_space state_index) in
+    let discrete = AlgoStateBased.discrete_constraint_of_global_location glob_location in
+    pxd_intersection_assign discrete [constr];
+    pxd_hide_discrete_and_collapse discrete
 
 (* note: we "undo" the effect of updates on zone z (by computing the weakest precondition) *)
-let dl_inverse_update z updates = 
+let dl_inverse_update state_space state_index z updates = 
     let model = Input.get_model () in (* only for printing *)
     let constr = px_copy z in
     let equality update = (* create an equlity x-lt=0 *)
@@ -15,12 +23,11 @@ let dl_inverse_update z updates =
         let eq = make_pxd_linear_inequality diff Op_eq in
         ImitatorUtilities.print_message Verbose_medium  
            ("JvdP: \027[32mNew inverse update:\027[0m = \n" ^ 
-             LinearConstraint.string_of_pxd_linear_inequality model.variable_names eq);
+             string_of_pxd_linear_inequality model.variable_names eq);
         eq in
     let updates_eqs = List.map equality updates in
     let updates_pxd = make_pxd_constraint updates_eqs in
-    let updates_px = pxd_hide_discrete_and_collapse updates_pxd in
-        (* TODO: shouldn't we substitute the discrete variables from the "current" state? *)
+    let updates_px = dl_instantiate_discrete state_space state_index updates_pxd in
 
     px_intersection_assign constr [updates_px];
     px_hide_assign (List.map fst updates) constr;
@@ -29,28 +36,23 @@ let dl_inverse_update z updates =
 (* note: we don't add positive constraints for clocks here. *)
 (* TODO: does this handle flows correctly? *)
 let dl_inverse_time state_space state_index z =
-	let glob_location = StateSpace.get_location state_space (StateSpace.get_global_location_index state_space state_index) in
+	let glob_location = get_location state_space (get_global_location_index state_space state_index) in
     AlgoStateBased.apply_time_past glob_location z
 
 
 (* compute direct predecessor of z2 in z1, linked by (guard,updates) *)
 (* copied the handling of pxd_constraint in guard, double check? *)
-let dl_predecessor z1 guard updates z2 =
+let dl_predecessor state_space state_index z1 guard updates z2 =
     let model = Input.get_model () in (* only for printing *)
-    let constr = dl_inverse_update z2 updates in
+    let constr = dl_inverse_update state_space state_index z2 updates in
     px_intersection_assign constr [z1];
-    let constr_pxd = LinearConstraint.pxd_of_px_constraint constr in
+    let constr_pxd = pxd_of_px_constraint constr in
     pxd_intersection_assign constr_pxd [guard];
-    (* let result = LinearConstraint.pxd_hide_discrete_and_collapse constr_pxd in *)
-    (* TODO: Why can we just hide the discrete variables??? *)
 
-    ImitatorUtilities.print_message Verbose_medium  ("JvdP: \027[32mInverse_update\027[0m = \n" ^ LinearConstraint.string_of_px_linear_constraint model.variable_names constr);
-    ImitatorUtilities.print_message Verbose_medium  ("JvdP: \027[32mWith guard\027[0m = \n" ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr_pxd);
+    ImitatorUtilities.print_message Verbose_medium  ("JvdP: \027[32mInverse_update\027[0m = \n" ^ string_of_px_linear_constraint model.variable_names constr);
+    ImitatorUtilities.print_message Verbose_medium  ("JvdP: \027[32mWith guard\027[0m = \n" ^ string_of_pxd_linear_constraint model.variable_names constr_pxd);
     constr_pxd
     (* result *)
-
-
-open StateSpace
 
 (* this extends get_resets: we return (x,0) for resets and (x,lt) for updates *)
 let dl_get_clock_updates state_space combined_transition =
@@ -83,8 +85,6 @@ let dl_weakest_precondition state_space s1_index transition s2_index =
   
 
     let updates = dl_get_clock_updates state_space transition in
-    (* TODO: are there other updates than resets??? *)
     let guard = get_guard state_space s1_index transition s2_index in
-    (* TODO: We are hiding d from pxd to get the type correct. What is the effect? *)
  
-    dl_predecessor z1 guard updates z2
+    dl_predecessor state_space s1_index z1 guard updates z2
