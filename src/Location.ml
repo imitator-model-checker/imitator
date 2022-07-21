@@ -35,7 +35,7 @@ type global_location_index = int
 (* Array automaton_index -> location_index *)
 type locations = location_index array
 
-(* Array discrete_index -> NumConst.t *)
+(* Array discrete_index -> discrete_value *)
 type discrete = DiscreteValue.discrete_value array
 
 (* Global location: location for each automaton + value of the discrete *)
@@ -148,9 +148,40 @@ let make_location locations_per_automaton discrete_values =
 	(* Return the new location *)
 	locations, discrete
 
-
+(* We have to copy discrete values of arrays and stacks *)
+(* Because of array and stack are references in OCaml, if we don't copy their content *)
+(* discrete values stay the same between previous location and new location leading to a misbehavior. *)
+(* This is due to the fact that the update in-place of their values or their content will update old and new location *)
+(* as it was the same references. *)
+(* As it was possible to update content of array in IMITATOR via a[i] = x, or stack by stack_push(x, s) *)
+(* List isn't concerned because we doesn't have ability to modify it's content in IMITATOR. *)
 let rec copy_discrete = function
     | DiscreteValue.Array_value values -> DiscreteValue.Array_value (Array.map copy_discrete values)
+    | DiscreteValue.Stack_value values ->
+        (* Copy stack values *)
+        let stack_cpy =
+            values
+            |> Stack.to_seq
+            |> List.of_seq
+            |> List.map copy_discrete
+            |> List.rev
+            |> List.to_seq
+            |> Stack.of_seq
+        in
+        DiscreteValue.Stack_value stack_cpy
+
+    | DiscreteValue.Queue_value values ->
+        (* Copy queue values *)
+        let queue_cpy =
+            values
+            |> Queue.to_seq
+            |> List.of_seq
+            |> List.map copy_discrete
+            |> List.rev
+            |> List.to_seq
+            |> Queue.of_seq
+        in
+        DiscreteValue.Queue_value queue_cpy
     | value -> value
 
 let copy_discrete_at_location location =
@@ -170,7 +201,7 @@ let copy_location location =
 	(* Return the new location *)
 	locations, discrete
 
-(* TODO benjamin CLEAN, this function below, not seems to be used anymore *)
+(*
 (** 'update_location locations discrete_values location' creates a new location from the original location, and update the given automata and discrete variables. *)
 let update_location locations_per_automaton discrete_values location =
 	(* Create an array for locations *)
@@ -183,9 +214,13 @@ let update_location locations_per_automaton discrete_values location =
 	List.iter (fun (discrete_index, value) -> discrete.(discrete_index - !min_discrete_index) <- value) discrete_values;
 	(* Return the new location *)
 	locations, discrete
+*)
 
+(* Side-effect function for updating a discrete variable given a value at given location *)
+let update_discrete_with (discrete_index, value) (_, discrete) =
+    discrete.(discrete_index - !min_discrete_index) <- value
 
-(** Side-effet version of 'update_location'. *)
+(** Side-effect version of 'update_location'. *)
 let update_location_with locations_per_automaton discrete_values (locations, discrete) =
 	(* Iterate on locations *)
 	List.iter (fun (automaton_index, location_index) -> locations.(automaton_index) <- location_index) locations_per_automaton;
@@ -211,9 +246,22 @@ let get_discrete_value location discrete_index =
 	(* Do not forget the offset *)
 	discrete.(discrete_index - !min_discrete_index)
 
+(** Get the NumConst value associated to some discrete variable *)
 let get_discrete_rational_value location discrete_index =
     let value = get_discrete_value location discrete_index in
     DiscreteValue.numconst_value value
+
+(** Set the value associated to some discrete variable *)
+let set_discrete_value location discrete_index value =
+    let discrete = get_discrete location in
+	(* Do not forget the offset *)
+    discrete.(discrete_index - !min_discrete_index) <- value
+
+(** Get a tuple of functions for reading / writing a global variable at a given location *)
+(* A discrete access enable to read or write a value of a variable at a given discrete index *)
+let discrete_access_of_location location =
+    get_discrete_value location, set_discrete_value location
+
 
 (************************************************************)
 (* Check whether the global location is accepting *)
@@ -221,84 +269,8 @@ let get_discrete_rational_value location discrete_index =
 
 (** Check whether a global location is accepting according to the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
 let is_accepting (locations_acceptance_condition : automaton_index -> location_index -> bool) (global_location : global_location) =
-	
-	let result = ref false in
 	(* Check whether a local location is accepting *)
-	
-	(*** TODO: rewrite using Array.exists! ***)
-	
-	Array.iteri (fun automaton_index location_index ->
-		result := !result || locations_acceptance_condition automaton_index location_index) (get_locations global_location);
-	
-	(* Return result *)
-	!result
-
-
-
-(************************************************************)
-(** Matching state predicates with a global location *)
-(************************************************************)
-
-(*------------------------------------------------------------*)
-(* Matching global_location predicates with a given global_location *)
-(*------------------------------------------------------------*)
-
-let match_loc_predicate loc_predicate global_location =
-	match loc_predicate with
-	| Loc_predicate_EQ (automaton_index, location_index) ->
-		get_location global_location automaton_index = location_index
-	| Loc_predicate_NEQ (automaton_index, location_index) ->
-		get_location global_location automaton_index <> location_index
-
-(*------------------------------------------------------------*)
-(* Matching simple predicates with a given global_location *)
-(*------------------------------------------------------------*)
-
-let match_simple_predicate (locations_acceptance_condition : automaton_index -> location_index -> bool) simple_predicate global_location =
-	match simple_predicate with
-
-	(* Here convert the global_location to a variable valuation *)
-	| Discrete_boolean_expression discrete_boolean_expression -> DiscreteExpressionEvaluator.check_discrete_boolean_expression (get_discrete_value global_location) discrete_boolean_expression
-	
-	| Loc_predicate loc_predicate -> match_loc_predicate loc_predicate global_location
-
-	| State_predicate_true -> true
-	
-	| State_predicate_false -> false
-	
-	| State_predicate_accepting -> is_accepting locations_acceptance_condition global_location
-
-
-(*------------------------------------------------------------*)
-(* Matching state predicates with a given global_location *)
-(*------------------------------------------------------------*)
-
-(***TODO/NOTE: Might have been nicer to convert the acceptance condition during the ModelConverter phase :-/ ***)
-
-let rec match_state_predicate_factor (locations_acceptance_condition : automaton_index -> location_index -> bool) state_predicate_factor global_location : bool =
-	match state_predicate_factor with
-	| State_predicate_factor_NOT state_predicate_factor_neg -> not (match_state_predicate_factor locations_acceptance_condition state_predicate_factor_neg global_location)
-	| Simple_predicate simple_predicate -> match_simple_predicate locations_acceptance_condition simple_predicate global_location
-	| State_predicate state_predicate -> match_state_predicate locations_acceptance_condition state_predicate global_location
-
-and match_state_predicate_term (locations_acceptance_condition : automaton_index -> location_index -> bool) state_predicate_term global_location : bool =
-	match state_predicate_term with
-	| State_predicate_term_AND (state_predicate_term_1, state_predicate_term_2) ->
-		match_state_predicate_term locations_acceptance_condition state_predicate_term_1 global_location
-		&&
-		match_state_predicate_term locations_acceptance_condition state_predicate_term_2 global_location
-	| State_predicate_factor state_predicate_factor -> match_state_predicate_factor locations_acceptance_condition state_predicate_factor global_location
-
-and match_state_predicate (locations_acceptance_condition : automaton_index -> location_index -> bool) state_predicate global_location : bool =
-	match state_predicate with
-	| State_predicate_OR (state_predicate_1, state_predicate_2) ->
-		match_state_predicate locations_acceptance_condition state_predicate_1 global_location
-		||
-		match_state_predicate locations_acceptance_condition state_predicate_2 global_location
-	| State_predicate_term state_predicate_term -> match_state_predicate_term locations_acceptance_condition state_predicate_term global_location
-
-
-
+	get_locations global_location |> Array.mapi locations_acceptance_condition |> Array.exists identity
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)

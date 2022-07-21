@@ -10,7 +10,6 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2021/02/05
  *
  ************************************************************)
 
@@ -19,11 +18,17 @@
 (** Exceptions *)
 (****************************************************************)
 
+(* For constraint conversion *)
+exception False_exception
+
 (** Exception raised when a division by 0 is found *)
 exception Division_by_0 of string
 
-(** Exception raised when trying an out of bound access to an array *)
+(** Exception raised when trying an out of bound access to an array or list *)
 exception Out_of_bound of string
+
+(** Exception raised when trying to access an element on an empty collection *)
+exception Empty_collection of string
 
 exception Found
 
@@ -33,7 +38,12 @@ exception IncludeFileNotFound of string
 (** Exception when interfacing with another program *)
 exception InterfacingError of string
 
+exception InvalidModel
+
 exception InternalError of string
+
+(** When the model syntax is too large to apply extrapolation *)
+exception Model_not_compatible_for_extrapolation
 
 (** When a constraint contains no integer point *)
 exception NoIPPTA
@@ -66,3 +76,6 @@ exception InvalidExpression of string
 
 (* Used when an expression is ill-typed formed or when computing on not compatible types *)
 exception TypeError of string
+
+(* Used when a function isn't found *)
+exception UndefinedFunction of string

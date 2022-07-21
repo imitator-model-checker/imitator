@@ -8,7 +8,6 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2017/10/03
- * Last modified     : 2021/03/19
  *
  ************************************************************)
 

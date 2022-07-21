@@ -9,7 +9,6 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010 (?)
- * Last modified     : 2016/06/03
  *
  ************************************************************)
 

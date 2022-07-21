@@ -10,7 +10,6 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2021/11/02
  *
  ************************************************************)
 
@@ -22,7 +21,7 @@ open DiscreteExpressions
 (** Local printings *)
 (****************************************************************)
 (* Convert a var_type into a string *)
-val string_of_var_type : DiscreteValue.var_type -> string
+val string_of_var_type : DiscreteType.var_type -> string
 
 (************************************************************)
 (** Arithmetic expression *)
@@ -59,9 +58,11 @@ val customized_string_of_guard : Constants.customized_string -> (Automaton.varia
 (** Debug-print for symbolic run *)
 (************************************************************)
 
-val debug_string_of_symbolic_run : AbstractModel.abstract_model -> StateSpace.state_space -> StateSpace.symbolic_run -> string
-val string_of_concrete_run : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
-val string_of_impossible_concrete_run : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
+val debug_string_of_symbolic_run            : AbstractModel.abstract_model -> StateSpace.state_space -> StateSpace.symbolic_run -> string
+val debug_string_of_concrete_run            : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
+val json_of_concrete_run                    : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
+val debug_string_of_impossible_concrete_run : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
+val json_of_impossible_concrete_run         : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
 
 
 (************************************************************)
@@ -72,6 +73,12 @@ val string_of_impossible_concrete_run : AbstractModel.abstract_model -> StateSpa
 (** Returns when add comma separators between clock and discrete updates and
 between discrete and conditional updates *)
 val separator_comma : updates -> bool * bool
+
+(* Convert the function definitions into a string *)
+val string_of_fun_definitions : AbstractModel.abstract_model -> string
+
+(** Convert the discrete update into a string *)
+val string_of_discrete_update : AbstractModel.abstract_model -> discrete_update -> string
 
 (** Convert the discrete updates into a string *)
 val string_of_discrete_updates : ?sep:string -> AbstractModel.abstract_model -> discrete_update list -> string
@@ -94,8 +101,8 @@ val string_of_conditional_updates_template : AbstractModel.abstract_model -> con
 (** Convert conditional updates into a string *)
 val string_of_conditional_updates : AbstractModel.abstract_model -> conditional_update list -> string
 
-val customized_string_of_variable_access : Constants.customized_string -> AbstractModel.abstract_model -> discrete_variable_access -> string
-val string_of_variable_access : AbstractModel.abstract_model -> discrete_variable_access -> string
+val customized_string_of_parsed_update_type : Constants.customized_string -> AbstractModel.abstract_model -> update_type -> string
+val string_of_parsed_update_type : AbstractModel.abstract_model -> update_type -> string
 
 (************************************************************)
 (** Points and hyperrectangles *)
@@ -131,4 +138,5 @@ val string_of_abstract_property : AbstractModel.abstract_model -> AbstractProper
 
 (*** BADPROG: very, very bad programming: this function should be in AlgoStateBased BUT ModelPrinter doesn't have access to AlgoStateBased (but the other way is possible); and it is called from both modules, so defined here (ÉA, 2021/11/02) ***)
 
-val compute_flows : Location.global_location -> (Automaton.clock_index * NumConst.t) list
+val compute_flows_list : Location.global_location -> ((Automaton.clock_index * NumConst.t) list)
+val compute_flows_fun  : Location.global_location -> (Automaton.clock_index -> NumConst.t)

@@ -9,7 +9,6 @@
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/10/08
- * Last modified     : 2020/04/16
  *
  ************************************************************)
 

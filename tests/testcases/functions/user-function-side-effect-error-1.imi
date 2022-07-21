@@ -1,0 +1,60 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Error for side-effect user function in guard / invariant
+ * Description      : Test that an error is raised when side-effect user function is used in guard / invariant
+ * Correctness      : Error raised
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/06/14
+ * Last modified    : 2022/06/14
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.3
+ ************************************************************)
+
+var
+
+  i : int;
+
+
+(* Modifying global var may introduce side-effects *)
+fn modify_global_var() : bool
+begin
+  i := 1;
+  True
+end
+
+(* We deduce that this function had side effects, but local var s is isolated... *)
+fn use_side_effect_builtin() : bool
+begin
+  let s : int stack = stack() in
+  stack_push(0, s);
+  True
+end
+
+automaton P
+
+  loc l0: invariant True
+  when
+    True & use_side_effect_builtin() & modify_global_var()
+
+  goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+init := {
+    discrete =
+      loc[P] := l0
+    ;
+}

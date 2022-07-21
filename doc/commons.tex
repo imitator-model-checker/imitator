@@ -8,6 +8,9 @@
 \usepackage[utf8]{inputenc}
 
 \usepackage[english]{babel} % francais,
+\usepackage{csquotes}
+
+\usepackage{multicol}
 
 \usepackage{fourier}
 % \usepackage{eulervm}
@@ -72,7 +75,7 @@
 \fancyhead[r]{%
 	\includegraphics[height=1em]{../logos/imitator-500.png}
 	\includegraphics[height=1em]{../logos/logo-3-300.png}
-	\includegraphics[height=1em]{../logos/logo-3-2-300.png}
+	\includegraphics[height=1em]{../logos/logo-3-3-300.png}
 }
 
 \renewcommand{\headrulewidth}{.1pt}
@@ -150,6 +153,7 @@
 \newcommand{\ArithExprI}{\ArithExpr(\IVar)}
 \newcommand{\ArithExprB}{\ArithExpr(\BVar)}
 \newcommand{\ArithExprW}{\ArithExpr(\WVar)}
+% \newcommand{\ArithExprA}{\ArithExpr(\AVar)}
 \newcommand{\C}{C}
 \newcommand{\Cinit}{\C_\init} % initial constraint
 \newcommand{\Clock}{X} % set of clocks
@@ -178,6 +182,13 @@
 \newcommand{\WVar}{W} % set of binary word variables
 \newcommand{\wvar}{w} % binary word variable % TODO: conflict
 % \newcommand{\WVarCard}{M} % cardinality of binary word variables  % TODO: conflict
+
+% \newcommand{\aval}{\ensuremath{\alpha}} % array variable
+% \newcommand{\AVar}{A} % set of array variables
+% \newcommand{\ElVar}{El} % set of element of array variables
+% \newcommand{\avar}{t} % array variable
+% \newcommand{\AVarCard}{N} % cardinality of array variables
+
 % \newcommand{\DVarinit}{\DVar_\init} % discrete variable
 \newcommand{\edge}{e}
 \newcommand{\flow}{\ensuremath{\mathit{flow}}}
@@ -208,6 +219,7 @@
 \newcommand{\VarCard}{N} % cardinality of variables % TODO: conflict
 
 % Sets
+\newcommand{\setA}{\ensuremath{\mathbb A}}
 \newcommand{\setB}{\ensuremath{\mathbb B}}
 % \newcommand{\setW}{\ensuremath{\mathbb W}}
 \newcommand{\setN}{\ensuremath{\mathbb N}}
@@ -275,8 +287,8 @@
 
 
 % Current version
-\newcommand{\imitatorversion}{3.2}
-\newcommand{\imitatorversionname}{Cheese Blueberries}
+\newcommand{\imitatorversion}{3.3}
+\newcommand{\imitatorversionname}{Cheese Caramel au beurre salé}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -511,7 +523,7 @@
 	language=caml,                 % the language of the code
 	deletekeywords={done},            % if you want to delete keywords from the given language; WARNING! must be set AFTER the `language=…`
 	morekeywords={
-		accepting, and, automaton, binary, clock, constant, continuous, discrete, do, end, False, fill_left, fill_right, flow, forward, from, goto, if, in, init, int, initially, invariant, loc, logand, lognot, logor, logxor, not, or, parameter, projectresult, rational, shift_left, shift_right, stop, sync, sync, synclabs, True, urgent, var, when, while
+		accepting, and, array, automaton, binary, bool, clock, constant, continuous, discrete, do, seq, end, False, fill_left, fill_right, flow, forward, from, goto, if, in, init, int, initially, invariant, loc, logand, lognot, logor, logxor, not, or, parameter, projectresult, rational, shift_left, shift_right, stop, sync, sync, synclabs, True, urgent, var, when, while
 	},
 	numbers=right,                    % where to put the line-numbers; possible values are (none, left, right)
 	numbersep=5pt,                   % how far the line-numbers are from the code

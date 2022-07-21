@@ -5,12 +5,11 @@
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
- * 
+ *
  * Module description: Common definitions for linear terms and constraints (interface to PPL)
  * 
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2010/03/04
- * Last modified     : 2021/06/11
  *
  ************************************************************)
 
@@ -21,8 +20,17 @@
 (* Exceptions *)
 (************************************************************)
 (************************************************************)
+
 (* Raised when a linear_inequality is not a clock guard, i.e., of the form `x ~ plterm` *)
-exception Not_a_clock_guard
+
+(* We found multiple clocks, e.g., x > y *)
+exception Not_a_clock_guard_multiple_clocks_found
+(* We found a discrete, e.g., x + d > 0 *)
+exception Not_a_clock_guard_discrete_found
+(* We found no clock, e.g., p + d > 0 *)
+exception Not_a_clock_guard_no_clock_found
+(* Temporary exception (TODO) for other cases *)
+exception Not_a_clock_guard_non_1_coefficient
 
 (* Raised when a linear_inequality is an equality, i.e., `pxd_linear_term = pxd_linear_term` *)
 exception Not_an_inequality
@@ -81,6 +89,21 @@ val make_pxd_linear_term : (coef * variable) list -> coef -> pxd_linear_term
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Access functions} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(*------------------------------------------------------------*)
+(* Get the constant coefficient of a p_linear_term *)
+(*------------------------------------------------------------*)
+val p_get_coefficient_in_linear_term : p_linear_term -> coef
+
+(*------------------------------------------------------------*)
+(* Get the coefficient of one particular variable in a p_linear_term *)
+(*------------------------------------------------------------*)
+val p_get_variable_coefficient_in_internal_linear_term : variable -> p_linear_term -> coef
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
@@ -90,8 +113,6 @@ val add_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
 
 
 (** Perform linear_term1 - linear_term2 *)
-(* val sub_linear_terms : linear_term -> linear_term -> linear_term *)
-
 val sub_p_linear_terms : p_linear_term -> p_linear_term -> p_linear_term
 (*val sub_px_linear_terms : px_linear_term -> px_linear_term -> px_linear_term*)
 val sub_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
@@ -289,6 +310,13 @@ val pxd_constraint_of_nonnegative_variables : variable list -> pxd_linear_constr
 (** {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+(* Get the list of dimensions of a constraint *)
+(*** WARNING: to enhance the speed, we do NOT use the PPL function but directly the ad-hoc dimensions encoding! ***)
+val p_get_dimensions_list : p_linear_constraint -> variable list
+val px_get_dimensions_list : px_linear_constraint -> variable list
+val pxd_get_dimensions_list : pxd_linear_constraint -> variable list
+
+
 (** Get the number of inequalities of a constraint *)
 val p_nb_inequalities : p_linear_constraint -> int
 
@@ -441,12 +469,14 @@ val px_hide_allclocks_and_someparameters_and_collapse : variable list -> px_line
 (** Eliminate (using existential quantification) the discrete variables in a pxd_linear constraint, and remove the corresponding dimensions *)
 val pxd_hide_discrete_and_collapse : pxd_linear_constraint -> px_linear_constraint
 
+(** Eliminate (using existential quantification) the discrete variables and the parameters in a pxd_linear constraint, and remove the corresponding dimensions *)
+val pxd_hide_discrete_and_parameters_and_collapse : pxd_linear_constraint -> x_linear_constraint
+
 (** Eliminate (using existential quantification) the non-parameters in a pxd_linear constraint, and remove the corresponding dimensions *)
 (* val pxd_hide_nonparameters_and_collapse : pxd_linear_constraint -> p_linear_constraint *)
 
 (** Valuate the parameters in a px_linear_constraint and obtain a x_linear_constraint *)
 val px_valuate_parameters : p_valuation -> px_linear_constraint -> x_linear_constraint
-
 
 (*------------------------------------------------------------*)
 (* Convex negation *)
@@ -476,11 +506,7 @@ val pxd_add_dimensions : int -> pxd_linear_constraint -> unit
 (* val remove_dimensions : int -> linear_constraint -> unit *)
 val pxd_remove_dimensions : int -> pxd_linear_constraint -> unit
 
-(** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
-(* val rename_variables : (variable * variable) list -> linear_constraint -> linear_constraint *)
-(* val rename_variables : (variable * variable) list -> pxd_linear_constraint -> pxd_linear_constraint *)
-
-(** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new), with side effects *)
+(** `rename_variables renaming_couples c` renames all variables according to the couples of the form (old, new), with side effects *)
 (* val rename_variables_assign : (variable * variable) list -> linear_constraint -> unit *)
 val pxd_rename_variables_assign : (variable * variable) list -> pxd_linear_constraint -> unit
 
@@ -493,9 +519,9 @@ val px_time_elapse_assign_wrt_polyhedron : px_linear_constraint -> px_linear_con
 val pxd_time_elapse_assign_wrt_polyhedron : pxd_linear_constraint -> pxd_linear_constraint -> unit
 
 
-(** 'time_elapse_assign variables_elapse variables_constant linear_constraint' performs time elapsing on a set of variables variables_elapse; other variables remain constant; version with side effects; behavior is unspecified if some variables within linear_constraint do not appear in any set of variables *)
+(** `time_elapse_assign variables_elapse variables_constant linear_constraint` performs time elapsing on a set of variables variables_elapse; other variables remain constant; version with side effects; behavior is unspecified if some variables within linear_constraint do not appear in any set of variables *)
 (* val time_elapse_assign : variable list -> variable list -> linear_constraint -> unit *)
-val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constraint -> unit
+(* val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constraint -> unit *)
 
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
 (*** NOTE: elapsing variables are constrained to be non-negative ***)
@@ -506,11 +532,13 @@ val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constr
 (*** WARNING: this function is certainly not optimized at all! ***)
 (*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
 val p_grow_to_infinity_assign : variable list -> variable list -> p_linear_constraint -> unit
+val px_grow_to_infinity_assign : variable list -> variable list -> px_linear_constraint -> unit
 
 (** Remove all lower bounds on the first variable list; the second list will remain constant *)
 (** WARNING: this function is certainly not optimized at all! *)
 (*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
 val p_grow_to_zero_assign : variable list -> variable list -> p_linear_constraint -> unit
+val px_grow_to_zero_assign : variable list -> variable list -> px_linear_constraint -> unit
 
 
 (** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
@@ -538,9 +566,10 @@ val partition_pi0_compatible : p_valuation -> p_linear_constraint -> (p_linear_i
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
-val px_of_p_constraint : p_linear_constraint -> px_linear_constraint
-val pxd_of_p_constraint : p_linear_constraint -> pxd_linear_constraint
+val px_of_p_constraint   : p_linear_constraint  -> px_linear_constraint
+val pxd_of_p_constraint  : p_linear_constraint  -> pxd_linear_constraint
 val pxd_of_px_constraint : px_linear_constraint -> pxd_linear_constraint
+val pxd_of_x_constraint  : x_linear_constraint  -> pxd_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -581,18 +610,6 @@ val string_of_true : string
 
 (** String for the intersection symbol *)
 val string_of_and : string
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion to GrML} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(*(** Convert a linear term into a string for GML *)
-val grml_of_pxd_linear_term : (variable -> string) -> int -> pxd_linear_term -> string
-
-(** Convert a linear constraint into a string for GML *)
-val grml_of_px_linear_constraint : (variable -> string) -> int -> px_linear_constraint -> string
-val grml_of_pxd_linear_constraint : (variable -> string) -> int -> pxd_linear_constraint -> string*)
-
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -751,20 +768,11 @@ val string_of_p_convex_or_nonconvex_constraint : (variable -> string) -> p_conve
 val serialize_variable : variable -> string
 val unserialize_variable : string -> variable
 
-(*val serialize_p_linear_constraint : p_linear_constraint -> string
-val unserialize_p_linear_constraint : string -> p_linear_constraint*)
-
 val serialize_p_nnconvex_constraint : p_nnconvex_constraint -> string
 val unserialize_p_nnconvex_constraint : string -> p_nnconvex_constraint
 
 val serialize_p_convex_or_nonconvex_constraint : p_convex_or_nonconvex_constraint -> string
 val unserialize_p_convex_or_nonconvex_constraint : string -> p_convex_or_nonconvex_constraint
-
-
-(************************************************************)
-(** {2 Statistics on performances} *)
-(************************************************************)
-(* val get_statistics : float -> string *)
 
 
 (************************************************************)

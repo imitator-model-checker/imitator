@@ -10,16 +10,18 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/03/01
- * Last modified     : 2021/10/07
  *
  ************************************************************)
 
+open Exceptions
 open Constants
 open OCamlUtilities
 open ImitatorUtilities
 open LinearConstraint
 open DiscreteExpressions
 open AbstractModel
+open DiscreteType
+open DiscreteValue
 open Result
 
 
@@ -61,34 +63,42 @@ let scaling_factor = 200
 
 (* Customized string of discrete number type *)
 let string_of_var_type_discrete_number = function
-    | DiscreteValue.Var_type_discrete_unknown_number
-    | DiscreteValue.Var_type_discrete_rational -> "int"
-    | DiscreteValue.Var_type_discrete_int -> "int"
+    | Var_type_discrete_unknown_number
+    | Var_type_discrete_rat -> "int"
+    | Var_type_discrete_int -> "int"
 
 (* Customized string of discrete var type *)
 let rec string_of_var_type_discrete = function
-    | DiscreteValue.Var_type_discrete_number x -> string_of_var_type_discrete_number x
-    | DiscreteValue.Var_type_discrete_bool -> "bool"
-    | DiscreteValue.Var_type_discrete_binary_word length ->
+    | Var_type_discrete_number x -> string_of_var_type_discrete_number x
+    | Var_type_discrete_bool -> "bool"
+    | Var_type_discrete_binary_word length ->
         let warning_in_comment = if length > 31 then ", WARNING: length > 31 can lead to overflow !" else "" in
         let comment = "/* binary(" ^ string_of_int length ^ ")" ^ warning_in_comment ^ " */" in
         "int " ^ comment
-    | DiscreteValue.Var_type_discrete_array (discrete_type, length) -> string_of_var_type_discrete discrete_type
+    | Var_type_discrete_array (inner_type, _)
+    | Var_type_discrete_list inner_type
+    | Var_type_discrete_stack inner_type
+    | Var_type_discrete_queue inner_type ->
+        string_of_var_type_discrete inner_type
+    | Var_type_weak ->
+        raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
+
+
 
 (* Customized string of var_type *)
 let string_of_var_type = function
-	| DiscreteValue.Var_type_clock -> "clock"
-	| DiscreteValue.Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
-	| DiscreteValue.Var_type_parameter -> "parameter"
+	| Var_type_clock -> "clock"
+	| Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
+	| Var_type_parameter -> "parameter"
 
 (* Get the UPPAAL string representation of a value according to it's IMITATOR type *)
 (* For example a literal array is translated from `[1,2,..,n]` to `{1,2,..,n}` *)
 let rec string_of_value = function
-    | DiscreteValue.Number_value x
-    | DiscreteValue.Rational_value x -> NumConst.string_of_numconst x
-    | DiscreteValue.Bool_value x -> if x then uppaal_boolean_strings.true_string else uppaal_boolean_strings.false_string
-    | DiscreteValue.Int_value x -> Int32.to_string x
-    | DiscreteValue.Binary_word_value value ->
+    | Number_value x
+    | Rational_value x -> NumConst.string_of_numconst x
+    | Bool_value x -> if x then uppaal_boolean_strings.true_string else uppaal_boolean_strings.false_string
+    | Int_value x -> Int32.to_string x
+    | Binary_word_value value ->
         let length = BinaryWord.length value in
 
         if length > 31 then
@@ -96,20 +106,32 @@ let rec string_of_value = function
 
         string_of_int (BinaryWord.to_int value)
 
-    | DiscreteValue.Array_value a ->
-        let string_array = Array.map (fun x -> string_of_value x) a in
+    | Array_value a ->
+        let string_array = Array.map string_of_value a in
         "{" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "}"
+
+    | List_value l ->
+        let string_list = List.map string_of_value l in
+        "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
+
+    | Stack_value l ->
+        let string_list = Stack.fold (fun acc x -> acc @ [string_of_value x]) [] l in
+        "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
+
+    | Queue_value l ->
+        let string_list = Queue.fold (fun acc x -> acc @ [string_of_value x]) [] l in
+        "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
 
 (* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
 (* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
 let rec string_of_discrete_name_from_var_type discrete_name = function
-    | DiscreteValue.Var_type_discrete discrete_type -> string_of_discrete_name_from_var_type_discrete discrete_name discrete_type
+    | Var_type_discrete discrete_type -> string_of_discrete_name_from_var_type_discrete discrete_name discrete_type
     | _ -> discrete_name
 
 (* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
 (* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
 and string_of_discrete_name_from_var_type_discrete discrete_name = function
-    | DiscreteValue.Var_type_discrete_array (inner_type, length) ->
+    | Var_type_discrete_array (inner_type, length) ->
         string_of_discrete_name_from_var_type_discrete discrete_name inner_type
         ^ "["
         ^ string_of_int length
@@ -340,6 +362,48 @@ let string_of_builtin_functions model =
     ^ string_of_logxor_function
     ^ string_of_lognot_function
 
+(* Convert the function definitions into a string *)
+let string_of_fun_definitions model =
+
+    (* Convert a function definition into a string *)
+    let string_of_fun_definition fun_def =
+
+        (* Convert a function expression into a string *)
+        let rec string_of_next_expr = function
+            | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
+                string_of_var_type_discrete discrete_type ^ " " ^ variable_name ^ " = "
+                ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names init_expr ^ ";\n"
+                ^ string_of_next_expr next_expr
+
+            | Fun_instruction (discrete_update, next_expr) ->
+                DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
+                ^ string_of_next_expr next_expr
+
+            | Fun_expr expr ->
+                "return " ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names expr ^ ";\n"
+        in
+
+        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature in
+        let parameter_names_with_constraints = List.combine fun_def.parameters parameters_signature in
+        (* Convert parameters into a string *)
+        let str_param_list = List.map (fun (param_name, type_constraint) -> FunctionSig.string_of_type_constraint type_constraint ^ " " ^ param_name) parameter_names_with_constraints in
+        let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in
+        (* Format function definition *)
+        FunctionSig.string_of_type_constraint return_type_constraint ^ " " ^ fun_def.name ^ "(" ^ str_params ^ ") { \n"
+        ^ string_of_next_expr fun_def.body
+        ^ "}"
+
+    in
+
+    print_warning "Some user defined functions may not be well translated to UPPAAL.";
+
+    (* Convert hashtbl values to list *)
+    let fun_definition_list = model.fun_definitions |> Hashtbl.to_seq_values |> List.of_seq in
+    (* Map each definition to it's string representation *)
+    let str_fun_definitions_list = List.map string_of_fun_definition fun_definition_list in
+    (* Join all strings *)
+    "/* User defined function declarations (WARNING: some user defined functions may not be well translated) */\n\n"
+    ^ OCamlUtilities.string_of_list_of_string_with_sep "\n\n" str_fun_definitions_list
 
 (* Convert the initial variable declarations into a string *)
 let string_of_declarations model actions_and_nb_automata =
@@ -359,6 +423,9 @@ let string_of_declarations model actions_and_nb_automata =
     (* Declare built-in functions *)
 
     ^ string_of_builtin_functions model
+
+    (* Declare custom user functions *)
+    ^ string_of_fun_definitions model
 
 	(* Declare clocks *)
 	^ (string_of_clocks model)
@@ -388,8 +455,6 @@ let string_of_declarations model actions_and_nb_automata =
 
 	(* Footer *)
 	^ "\n</declaration>"
-
-
 
 (************************************************************)
 (** Guard / Invariant *)
@@ -520,10 +585,11 @@ let string_of_clock_updates model = function
 
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_access, global_expression) ->
+	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (parsed_update_type, global_expression) ->
         (* Convert the variable access to string *)
-		ModelPrinter.string_of_variable_access model variable_access
-		^ uppaal_assignment
+		let variable_name = ModelPrinter.string_of_parsed_update_type model parsed_update_type in
+		variable_name
+		^ (if variable_name <> "" then uppaal_assignment else "")
 		(* Convert the arithmetic_expression *)
 		^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names global_expression
 	) updates)
@@ -631,7 +697,10 @@ let string_of_sync model automaton_index action_index =
 (** TODO: Add conditions to the translation *)
 let string_of_transition model actions_and_nb_automata automaton_index source_location transition =
 	let clock_updates = transition.updates.clock in
+	let seq_updates = transition.seq_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
+	let all_updates = seq_updates @ discrete_updates in
+
 	(* Arbitrary positioning: x = between source_location and target_location *)
 	(*** NOTE: integer division here, so first multiplication, then division (otherwise result can be 0) ***)
 	let x_coord_str = (string_of_int ((source_location + transition.target) * scaling_factor / 2)) in
@@ -663,7 +732,7 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 	^ (
 		(* Quite arbitrary positioning *)
 		let y_coord_str = (string_of_int (- scaling_factor / 5)) in
-		"\n\t\t" ^ (string_of_updates model automaton_index transition.action x_coord_str y_coord_str clock_updates discrete_updates)
+		"\n\t\t" ^ (string_of_updates model automaton_index transition.action x_coord_str y_coord_str clock_updates all_updates)
 	)
 
 	(* Footer *)
@@ -814,13 +883,13 @@ let string_of_model model =
 	string_of_header model
 
 	(* The variable declarations *)
-	^  "\n" ^ (string_of_declarations model encoding_needed)
+	^  "\n" ^ string_of_declarations model encoding_needed
 
 	(* All automata *)
-	^  "\n" ^ (string_of_automata model encoding_needed)
+	^  "\n" ^ string_of_automata model encoding_needed
 
 	(* The system definition *)
-	^  "\n" ^ (string_of_system model)
+	^  "\n" ^ string_of_system model
 
 	(*** TODO ***)
 	(* The property *)

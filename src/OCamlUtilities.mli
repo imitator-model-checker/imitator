@@ -9,7 +9,6 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -38,6 +37,16 @@ val round3_float : float -> string
 (** Get the value of an 'a option that is assumed to be different from None, or raise NoneException otherwise *)
 val a_of_a_option : 'a option -> 'a
 
+(************************************************************)
+(** Useful lambda functions *)
+(************************************************************)
+val identity : 'a -> 'a
+
+(************************************************************)
+(** Useful functions on tuples *)
+(************************************************************)
+val first_of_tuple : 'a * 'b -> 'a
+val second_of_tuple : 'a * 'b -> 'b
 
 (************************************************************)
 (** Useful functions on lists *)
@@ -92,6 +101,9 @@ val list_set_nth : int -> 'a -> 'a list -> 'a list
 (** Get combination of two list **)
 val list_combination : 'a list -> 'a list -> ('a * 'a) list
 
+(* Check if predicate is true for all arrangement of list *)
+val for_all_in_arrangement : ('a -> 'a -> bool) -> 'a list -> bool
+
 (** Select the sublist of a list from position i to position j *)
 val sublist : int -> int -> 'a list -> 'a list
 
@@ -102,8 +114,18 @@ val group_by : ('a -> 'b) -> 'a list -> ('b * 'a list) list
 (* and map values associated by keys according to valueSelector function *)
 val group_by_and_map : ('a -> 'b) -> ('a -> 'c) -> 'a list -> ('b * 'c list) list
 
+(* Type used for partition map *)
+type ('a, 'b) my_either = My_left of 'a | My_right of 'b
+
+(* Partition and map list *)
+val partition_map : ('a -> ('b, 'c) my_either) -> 'a list -> ('b list * 'c list)
+
 (* Partition list by grouping elements by keys in a hashtable *)
 val hashtbl_group_by : ('a -> 'b) -> 'a list -> ('b, 'a list) Hashtbl.t
+
+(* Create an hashtbl from a list of tuples *)
+(* Raise an error if two pairs have the same key *)
+val hashtbl_of_tuples : ('a * 'b) list -> ('a, 'b) Hashtbl.t
 
 (************************************************************)
 (** Useful functions on arrays *)
@@ -127,6 +149,8 @@ val array_exists : ('a -> bool) -> 'a array -> bool
 (** Shuffles the values of an array *)
 val array_shuffle : 'a array -> unit
 
+(** Perform the substraction of 2 NumConst array of same size **)
+val sub_array : NumConst.t array -> NumConst.t array -> NumConst.t array
 
 (************************************************************)
 (** Useful functions on dynamic arrays *)
@@ -164,8 +188,14 @@ val string_of_list_of_string : string list -> string
 (* Convert an array of string into a string with separators *)
 val string_of_array_of_string_with_sep : string -> string array -> string
 
+(* Convert an array of string into a string with separators removing empty strings *)
+val string_of_array_of_string_with_sep_without_empty_strings : string -> string array -> string
+
 (** Convert a list of string into a string with separators (uses an internal conversion to array) *)
 val string_of_list_of_string_with_sep : string -> string list -> string
+
+(** Convert a list of string into a string with separators removing empty strings *)
+val string_of_list_of_string_with_sep_without_empty_strings : string -> string list -> string
 
 (* Add \t identation of string according to the given level *)
 val indent_paragraph : int -> string -> string
@@ -238,3 +268,11 @@ val prettify_json : string -> string
 
 (* equivalent to List.filter_map of OCaml 4.08, but reverse the list *)
 val rev_filter_map : ('a -> 'b option) -> 'a list -> 'b list
+
+val list_to_string_set : string list -> CustomModules.StringSet.t
+val string_set_to_list : CustomModules.StringSet.t -> string list
+
+(* Convert list to array *)
+val array_of_list : 'a list -> 'a array
+(* Convert array to list *)
+val list_of_array : 'a array -> 'a list

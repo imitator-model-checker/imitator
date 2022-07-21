@@ -1,15 +1,14 @@
 (************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
- * 
+ *
  * Module description: main virtual class to explore the state space: only defines post-related function, i.e., to compute the successor states of ONE state
- * 
+ *
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2021/09/23
  *
  ************************************************************)
 
@@ -35,7 +34,7 @@ type unexplored_successors =
 	| UnexSucc_undef
 	(* A list of states with unexplored successors *)
 	| UnexSucc_some of state_index list
-	
+
 
 (*** NOTE: made public only because used in AlgoEFOptQueue ***)
 type bfs_limit_reached =
@@ -44,10 +43,10 @@ type bfs_limit_reached =
 
 	(* Termination due to time limit reached *)
 	| Time_limit_reached
-	
+
 	(* Termination due to state space depth limit reached *)
 	| Depth_limit_reached
-	
+
 	(* Termination due to a number of explored states reached *)
 	| States_limit_reached
 
@@ -84,7 +83,7 @@ val compute_valuated_invariant : Location.global_location -> LinearConstraint.px
 (* Compute the list of stopped and elapsing clocks in a location *)
 (* Returns a pair (stopped clocks, elapsing clocks)           *)
 (*------------------------------------------------------------*)
-val compute_stopwatches : Location.global_location -> (Automaton.clock_index list * Automaton.clock_index list)
+(* val compute_stopwatches : Location.global_location -> (Automaton.clock_index list * Automaton.clock_index list) *)
 
 
 (*------------------------------------------------------------------*)
@@ -95,7 +94,7 @@ val compute_stopwatches : Location.global_location -> (Automaton.clock_index lis
 (*------------------------------------------------------------------*)
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
-val get_updates : Location.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (AbstractModel.discrete_update list)
+val get_updates : Location.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)
 
 
 
@@ -107,7 +106,7 @@ val get_updates : Location.global_location -> AbstractModel.updates -> AbstractM
 (*------------------------------------------------------------------*)
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
-val get_updates_in_combined_transition : Location.global_location -> StateSpace.combined_transition -> AbstractModel.clock_updates * (AbstractModel.discrete_update list)
+val get_updates_in_combined_transition : Location.global_location -> StateSpace.combined_transition -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)
 
 
 (*------------------------------------------------------------------*)
@@ -206,13 +205,13 @@ class virtual algoStateBased :
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
-		
+
 		(*** TODO: make private (while accessible to subclasses ***)
 		val mutable state_space : StateSpace.state_space
 
 		(* Nature of the state space according to a property *)
 		val mutable statespace_nature : StateSpace.statespace_nature
-		
+
 		(* Function to be called from the distributed IMITATOR *)
 		(*** TODO: make private (while accessible to subclasses ***)
 		val mutable patator_termination_function : (unit -> unit) option
@@ -224,31 +223,31 @@ class virtual algoStateBased :
 
 		(* Constraint of the initial state (used by some algorithms to initialize their variables) *)
 		val mutable initial_constraint : LinearConstraint.px_linear_constraint option
-		
+
 		(* List of state_index that have unexplored successors in case of premature termination *)
 		val mutable unexplored_successors : unexplored_successors
-		
+
 		(* Variable to denote whether the analysis may continue, or whether the analysis should terminate; useful to terminate, e.g., when a witness is found (at least for BFS algorithms) *)
 		val mutable algorithm_keep_going : bool
-		
+
 		(* The current new state indexes *)
 		val mutable new_states_indexes : state_index list
-		
+
 		(* Variable to remain of the termination *)
 		(*** NOTE: public only for AlgoEFoptQueue ***)
 		val mutable limit_reached : bfs_limit_reached
-		
+
 		(* Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
 		val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint
 
 		(*** NOTE: only used for exemplification purpose ***)
 		(* Positive examples spotted (positive examples: concrete runs to the target state) *)
 		val mutable positive_examples : Result.valuation_and_concrete_run list
-		
+
 		(*** NOTE: only used for exemplification purpose ***)
 		(* Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
 		val mutable negative_examples : Result.valuation_and_concrete_run list
-		
+
 		(*** NOTE: only used for exemplification purpose ***)
 		val nb_POSITIVE_EXAMPLES_MAX : int
 		val nb_NEGATIVE_EXAMPLES_MAX : int
@@ -256,27 +255,27 @@ class virtual algoStateBased :
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Write a message preceeded by "[algorithm_name]" *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method print_algo_message : verbose_mode -> string -> unit
-		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Write a message preceeded by "\n[algorithm_name]" *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method print_algo_message_newline : verbose_mode -> string -> unit
-		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Variable initialization (to be defined in subclasses) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method initialize_variables : unit
-		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Set the PaTATOR termination function *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method set_patator_termination_function : (unit -> unit) -> unit
-	
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Compute the p-constraint only if it is not cached using the mini-cache system *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -291,14 +290,14 @@ class virtual algoStateBased :
 		(** Check whether the projection of a PX-constraint is included into the `synthesized_constraint` *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method check_whether_px_included_into_synthesized_constraint : LinearConstraint.px_linear_constraint -> bool
-		
+
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Update the nature of the trace set *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method update_statespace_nature : State.state -> unit
-		
-		
+
+
 		(*------------------------------------------------------------*)
 		(* Add a new state to the state space (if indeed needed) *)
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
@@ -306,33 +305,33 @@ class virtual algoStateBased :
 		(*------------------------------------------------------------*)
 		(*** TODO: return the list of actually added states ***)
 		method virtual add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
-		
-		
 
-			
+
+
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(*** NOTE: made public only for EFoptQueue ***)
 		method post_from_one_state : state_index -> state_index list
-	
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Add a transition to the state space *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method add_transition_to_state_space : (state_index * StateSpace.combined_transition * state_index) -> StateSpace.addition_result -> unit
 
-		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual process_initial_state : State.state -> bool
-		
-		
+
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Generate counter-example(s) if required by the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method construct_counterexamples : state_index -> unit
-		
+
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Create 1 positive and (up to) 2 negative examples (of type `option` in case could not be exhibited) *)
@@ -344,32 +343,32 @@ class virtual algoStateBased :
 		(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual process_deadlock_state : state_index -> unit
-		
-		
+
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed) *)
 		(*** NOTE: this is in fact a BFS function ***)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual process_post_n : state_index list -> unit
 
-		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
 		(*** NOTE: this is in fact a BFS function ***)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual check_termination_at_post_n : bool
-		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Check whether the property is a #witness mode; if so, raise TerminateAnalysis *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method terminate_if_witness : unit
-		
-		
+
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Main method to run the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method run : unit -> Result.imitator_result
-		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -10,7 +10,6 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2021/06/08
  *
  ************************************************************)
 
@@ -77,9 +76,7 @@ type clock_updates =
 
 
 
-(** update: variable_index := linear_term *)
-(*** TO OPTIMIZE (in terms of dimensions!) ***)
-type discrete_update = DiscreteExpressions.discrete_variable_access * DiscreteExpressions.global_expression
+
 
 
 
@@ -108,7 +105,7 @@ type invariant = guard
 (** Updates *)
 type updates = {
   clock      : clock_updates;           (** Clock updates *)
-  discrete   : discrete_update list;    (** List of discrete updates *)
+  discrete   : DiscreteExpressions.discrete_update list;    (** List of discrete updates *)
   conditional: conditional_update list; (** List of conditional updates *)
 }
 (** Conditional updates *)
@@ -116,15 +113,25 @@ and conditional_update = DiscreteExpressions.boolean_expression * updates * upda
 
 (** Transition: guard, action, list of updates, destination location *)
 type transition = {
-	guard		: guard;
-	action		: action_index;
-	updates		: updates;
-	target		: location_index;
+    guard : guard;
+    action : action_index;
+    seq_updates : updates;
+    updates : updates;
+    target : location_index;
 }
 
 type transition_index = int
 
+(************************************************************)
+(** Declared functions *)
+(************************************************************)
 
+type fun_definition = {
+    name : variable_name;
+    parameters : variable_name list;
+    signature : FunctionSig.signature_constraint;
+    body : DiscreteExpressions.fun_body;
+}
 
 (************************************************************)
 (** Bounds for the parameters *)
@@ -176,6 +183,8 @@ type abstract_model = {
 	has_invariants : bool;
 	(* Is there any clock going at a rate <> 1 in the model? *)
 	has_non_1rate_clocks : bool;
+	(* Is there any clock reset of another form than x := 0? *)
+	has_complex_updates : bool;
 	(* Is the model an L/U-PTA? *)
 	lu_status : lu_status;
 	(* Is the model a strongly deterministic PTA? *)
@@ -218,9 +227,9 @@ type abstract_model = {
 	(* The function : variable_index -> variable name *)
 	variable_names : variable_index -> variable_name;
 	(* All discrete variable names group by types *)
-    discrete_names_by_type_group : (DiscreteValue.var_type * (variable_name list)) list;
+    discrete_names_by_type_group : (DiscreteType.var_type * (variable_name list)) list;
 	(* The type of variables *)
-	type_of_variables : variable_index -> DiscreteValue.var_type;
+	type_of_variables : variable_index -> DiscreteType.var_type;
 
 	(* The automata *)
 	automata : automaton_index list;
@@ -265,6 +274,9 @@ type abstract_model = {
 	transitions_description : transition_index -> transition;
 	(* An array transition_index -> automaton_index *)
 	automaton_of_transition : transition_index -> automaton_index;
+
+    (* The list of declared functions *)
+    fun_definitions : (variable_name, fun_definition) Hashtbl.t;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative: LinearConstraint.px_linear_constraint;

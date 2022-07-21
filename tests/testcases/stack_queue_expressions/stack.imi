@@ -1,0 +1,104 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test general behavior of stack expressions
+ * Description      : Test general behavior of stack, stack functions
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/03/17
+ * Last modified    : 2021/03/17
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.3
+ ************************************************************)
+var
+
+  c_s = stack() : rat stack;
+  s1 : rat stack;
+  s2 : rat stack;
+  s3 : int stack;
+  r : rat;
+  i : int;
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+
+loc l1: invariant True
+	when
+
+    (* Test inequalities *)
+    & s1 = s2
+    & c_s = stack()
+
+    (* Test stack functions *)
+    & stack_is_empty(s1)
+
+  do {
+
+    seq
+
+      (* Test stack functions *)
+
+      stack_push(1, s1);
+      r := stack_top(s1);
+      stack_push(2, s1);
+
+      stack_push(1, s2);
+      stack_push(2, s2);
+      stack_clear(s2);
+
+      stack_push(2, s3);
+      stack_push(3, s3);
+      i := stack_top(s3);
+
+  }
+  goto l2;
+
+loc l2: invariant True
+  when
+
+    (* Test inequalities *)
+    & s1 <> s2
+    (* Test stack functions *)
+    & stack_is_empty(s2)
+    & stack_length(s1) = 2
+    & stack_length(s2) = 0
+
+  goto lend;
+
+accepting loc lend: invariant True
+
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete =
+      loc[pta] := l1
+    ;
+    continuous =
+        & True
+    ;
+
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

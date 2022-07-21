@@ -10,7 +10,6 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2021/06/01
  *
  ************************************************************)
  
@@ -51,7 +50,18 @@ let a_of_a_option = function
 	| Some thing -> thing
 	| None -> raise Exceptions.NoneException
 
+(************************************************************)
+(** Useful lambda functions *)
+(************************************************************)
+let identity x = x
 
+(************************************************************)
+(** Useful functions on tuples *)
+(************************************************************)
+let first_of_tuple (x, _) = x
+let second_of_tuple (_, x) = x
+
+let map_first_of_tuple f (x, y) = f x, y
 
 (************************************************************)
 (** Useful functions on lists *)
@@ -223,9 +233,11 @@ let list_combination l1 l2 =
     let l = ref acc in
     for i = 0 to (List.length l1) - 1 do
         for j = 0 to (List.length l2) - 1 do
-            if i <> j then
-                l := (List.nth l1 i, List.nth l2 j)::!l;
-        done
+            let e1 = List.nth l1 i in
+            let e2 = List.nth l2 j in
+            if e1 <> e2 then
+                l := (e1, e2)::!l;
+        done;
     done;
     !l
 
@@ -257,6 +269,17 @@ let group_by_and_map keySelector valueSelector l =
     let group_by_keys = List.map (fun key -> (key, List.map valueSelector (List.filter (fun x -> keySelector x = key) l))) uniq_keys in
     group_by_keys
 
+(* Type used for partition map *)
+type ('a, 'b) my_either = My_left of 'a | My_right of 'b
+
+(* Partition and map list *)
+let partition_map f l =
+    let lm = List.map f l in
+    let a, b = List.partition (function My_left _ -> true | My_right _ -> false) lm in
+    List.map (function My_left x -> x | My_right _ -> raise (Exceptions.InternalError "impossible")) a,
+    List.map (function My_left _ ->  raise (Exceptions.InternalError "impossible") | My_right x -> x) b
+
+
 (* Partition list by grouping elements by keys in a hashtable *)
 let hashtbl_group_by keySelector l =
     let group_by_keys = group_by keySelector l in
@@ -267,6 +290,16 @@ let hashtbl_group_by keySelector l =
         Hashtbl.add table key group
     done;
     table
+
+(* Check if predicate is true for all arrangement of list *)
+let for_all_in_arrangement predicate l =
+    let result = ref true in
+    for i = 0 to (List.length l) - 1 do
+        for j = i to (List.length l) - 1 do
+            result := !result && predicate (List.nth l i) (List.nth l j)
+        done
+    done;
+    !result
 
 (************************************************************)
 (** Useful functions on arrays *)
@@ -319,6 +352,17 @@ let array_exists p a =
 (*** WARNING: not a real shuffle! the first element is always at the end... ***)
 let array_shuffle a = Array.sort (fun _ _ -> (Random.int 3) - 1) a
 
+(** Perform the substraction of 2 NumConst array of same size **)
+let sub_array array1 array2 =
+  (* Create the result *)
+  let result = Array.make (Array.length array1) NumConst.zero in
+  (* Iterate on both arrays *)
+  for i = 0 to (Array.length array1) - 1 do
+    (* Perform array1 - array2 *)
+    result.(i) <- NumConst.sub array1.(i) array2.(i);
+  done;
+  (* Return the result *)
+  result
 
 
 (************************************************************)
@@ -357,6 +401,13 @@ let hashtbl_get_or_default hashtbl key default_value =
 let hashtbl_filter pred =
 	Hashtbl.filter_map_inplace (fun k v -> if pred k then Some v else None)
 
+let hashtbl_of_tuples tuples =
+    let table = Hashtbl.create (List.length tuples) in
+    List.iter (fun (a, b) ->
+        Hashtbl.add table a b
+    ) tuples;
+    table
+
 (************************************************************)
 (** Useful functions on string *)
 (************************************************************)
@@ -383,12 +434,28 @@ let string_of_array_of_string_with_sep sep a =
 		!the_string ^ a.(length - 1)
 	)
 
+(* Convert an array of string into a string with separators removing empty strings *)
+let string_of_array_of_string_with_sep_without_empty_strings sep a =
+	let length = Array.length a in
+	if length = 0 then "" else (
+		let the_string = ref "" in
+		for i = 0 to length - 2 do
+		    let s = a.(i) in
+		    if s <> "" then
+			    the_string := (!the_string) ^ s ^ sep;
+		done;
+		!the_string ^ a.(length - 1)
+	)
+
 (** Convert a list of string into a string with separators *)
 let rec string_of_list_of_string_with_sep sep = function
 	| [] -> ""
 	| [elem] -> elem
 	| head :: tail -> head ^ sep ^ (string_of_list_of_string_with_sep sep tail)
 
+(** Convert a list of string into a string with separators removing empty strings *)
+let string_of_list_of_string_with_sep_without_empty_strings sep list =
+    string_of_list_of_string_with_sep sep (List.filter (fun string -> string<>"") list)
 
 (** Convert a list of int into a string with , separator *)
 let string_of_list_of_int l =
@@ -641,3 +708,11 @@ let rev_filter_map f l =
     List.map f l |>
     List.filter (fun x -> match x with | None -> false | Some _ -> true) |>
     List.fold_left (fun acc x -> match x with | None -> acc | Some x -> x :: acc) []
+
+let list_to_string_set x = x |> List.to_seq |> CustomModules.StringSet.of_seq
+let string_set_to_list x = x |> CustomModules.StringSet.to_seq |> List.of_seq
+
+(* Convert list to array *)
+let array_of_list x = x |> List.to_seq |> Array.of_seq
+(* Convert array to list *)
+let list_of_array x = x |> Array.to_seq |> List.of_seq

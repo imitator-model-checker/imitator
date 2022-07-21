@@ -10,7 +10,6 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2010
- * Last modified     : 2021/10/01
  *
  ************************************************************)
 
@@ -83,9 +82,6 @@ class imitator_options =
 
 		(* OUTPUT OPTIONS *)
 
-		(* only plot cartography *)
-		val mutable cartonly						= false
-
 		(* Plot cartography; in cartography mode, this option means ANY tile will output a cartography (activated if both `-draw-cart` and `-tiles-files` are true) *)
 		val mutable draw_cart						= false
 
@@ -146,6 +142,9 @@ class imitator_options =
 		(* Best worst-case clock value for EFsynthminpq *)
 (* 		val mutable best_worst_case = ref false *)
 
+		(* M-extrapolation *)
+		val mutable extrapolation : extrapolation = No_extrapolation
+
 
 		(* ANALYSIS OPTIONS *)
 
@@ -185,26 +184,26 @@ class imitator_options =
 		(* For distributed version: kill IM heuristics *)
 		val mutable distributedKillIM				= false
 
-		(* On-the-fly intersection (DEPRECATED) *)
-(* 		val mutable dynamic = ref false *)
-
 		(* Remove useless clocks (slightly experimental) *)
 		val mutable dynamic_clock_elimination		= false
-		
+
 		(* Remove global time clock when comparing states (expensive!) *)
 		val mutable no_global_time_in_comparison	= false
 
 		(* Layered NDFS *)
 		val mutable layer : bool option				= None
 
-		(* Merging states on the fly *)
-		val mutable merge : bool option				= None
-		val mutable mergeq : bool option			= None
-		(* Merging states on the fly (after pi0-compatibility check) *)
-(* 		val mutable merge_before = false *)
+		(* Merge heuristics for reachability analysis: try to jump some merge attemps (approx 2021) *)
+		val mutable merge_jump_algorithm : AbstractAlgorithm.merge_jump_algorithm = Merge_jump_none
 
-		(* Merging heuristic *)
-		val mutable merge_heuristic					= Merge_iter10
+		(* Merging heuristic for EFsynthminpq *)
+		val mutable merge_EFsynthminpq_heuristic					= Merge_EFsynthminpq_iter10
+
+        (* New merge options from IMITATOR 3.3 *)
+        val mutable merge_algorithm  : AbstractAlgorithm.merge_algorithm option = None
+        val mutable merge_candidates : AbstractAlgorithm.merge_candidates option = None
+        val mutable merge_update     : AbstractAlgorithm.merge_update option = None
+        val mutable merge_restart    : bool option = None
 
 		(* Method for NZ algorithms *)
 		val mutable nz_method : AbstractAlgorithm.nz_method option = None
@@ -215,17 +214,11 @@ class imitator_options =
 		(* do not use green colour in NDFS *)
 		val mutable no_green						= false
 
-		(* do not use pruning of initial zone in NDFS *)
-(* 		val mutable no_initprune = false *)
-
 		(* No leq test of the new states wrt the computed constraint in EFsynth *)
 		val mutable no_leq_test_in_ef				= false
 
 		(* do not use lookahead in NDFS *)
 		val mutable no_lookahead					= false
-
-		(* do not order the pending list with bigger zones first in NDFS synthesis *)
-		val mutable no_pending_ordered				= false
 
 		(* do not use random values *)
 		val mutable no_random						= false
@@ -273,8 +266,6 @@ class imitator_options =
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 		method acyclic								= acyclic
-(* 		method best_worst_case = best_worst_case *)
-(* 		method branch_and_bound = branch_and_bound *)
 		method carto_tiles_limit					= carto_tiles_limit
 		method carto_time_limit						= carto_time_limit
 		method check_ippta							= check_ippta
@@ -294,13 +285,14 @@ class imitator_options =
 		method distribution_mode					= distribution_mode
 		method distributedKillIM					= distributedKillIM
 		method draw_cart							= draw_cart
-		(* method dynamic = dynamic *)
 		method dynamic_clock_elimination			= dynamic_clock_elimination
 		method no_global_time_in_comparison			= no_global_time_in_comparison
 
 		method exploration_order					= value_of_option "exploration_order" exploration_order
 		method is_set_exploration_order				= exploration_order <> None
 		method set_exploration_order new_exploration_order = exploration_order <- Some new_exploration_order
+
+		method extrapolation						= extrapolation
 
 		method files_prefix							= files_prefix
 		method imitator_mode						= imitator_mode
@@ -309,16 +301,29 @@ class imitator_options =
 		method is_set_layer							= layer <> None
 		method set_layer b							= layer <- Some b
 
-		method merge								= value_of_option "merge" merge
-		method is_set_merge							= merge <> None
-		method set_merge b							= merge <- Some b
+		method merge_jump_algorithm					= merge_jump_algorithm
 
-		method mergeq								= value_of_option "mergeq" mergeq
-		method is_set_mergeq						= mergeq <> None
-		method set_mergeq b							= mergeq <- Some b
+		
+		(* Merging heuristic for EFsynthminpq *)
+		method merge_EFsynthminpq_heuristic			= merge_EFsynthminpq_heuristic
 
-(* 		method merge_before = merge_before *)
-		method merge_heuristic						= merge_heuristic
+        (* New merge options from IMITATOR 3.3 *)
+        method merge_algorithm						= value_of_option "merge_algorithm"  merge_algorithm
+		method is_set_merge_algorithm				= merge_algorithm <> None
+		method set_merge_algorithm new_merge_algorithm = merge_algorithm <- Some new_merge_algorithm
+        
+        method merge_candidates						= value_of_option "merge_candidates" merge_candidates
+		method is_set_merge_candidates				= merge_candidates <> None
+		method set_merge_candidates new_merge_candidates = merge_candidates <- Some new_merge_candidates
+
+		method merge_update     					= value_of_option "merge_update" merge_update
+        method is_set_merge_update  				= merge_update <> None
+        method set_merge_update new_merge_update    = merge_update <- Some new_merge_update
+
+		method merge_restart 						= value_of_option "merge_restart"    merge_restart
+		method is_set_merge_restart					= merge_restart <> None
+		method set_merge_restart new_merge_restart	= merge_restart <- Some new_merge_restart
+
 		method model_file_name						= model_file_name
 		method model_local_file_name				= model_local_file_name
 		method nb_args								= nb_args
@@ -326,7 +331,6 @@ class imitator_options =
 		method no_green								= no_green
 		method no_leq_test_in_ef					= no_leq_test_in_ef
 		method no_lookahead							= no_lookahead
-		method no_pending_ordered					= no_pending_ordered
 		method no_time_elapsing						= no_time_elapsing
 		method no_random							= no_random
 		method no_variable_autoremove				= no_variable_autoremove
@@ -468,7 +472,7 @@ class imitator_options =
 					distribution_mode <- Distributed_ms_subpart
 				(* Case: distributed master-slave random generation with a bounded number of attempts *)
 				else try (
-					(* Find the 'random' string *)
+					(* Find the `random` string *)
 					if not (String.sub mode 0 6 = "random") then raise (Failure "this string is never used");
 					(* Find the number *)
 					let number = String.sub mode 6 (String.length mode - 6) in
@@ -481,7 +485,7 @@ class imitator_options =
 				)
 
 			and set_exploration_order order =
-				(*  *)
+				(* Switch input string *)
 				if order = "layerBFS" then
 					exploration_order <- Some Exploration_layer_BFS
 				else if order = "queueBFS" then
@@ -492,6 +496,26 @@ class imitator_options =
 					exploration_order <- Some Exploration_queue_BFS_PRIOR
 				else(
 					print_error ("The exploration order `" ^ order ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
+
+			and set_extrapolation extrapolation_str =
+				(* Switch input string *)
+				if extrapolation_str = "none" then
+					extrapolation <- No_extrapolation
+				else if extrapolation_str = "M" then
+					extrapolation <- M
+				else if extrapolation_str = "Mglobal" then
+					extrapolation <- Mglobal
+				else if extrapolation_str = "LU" then
+					extrapolation <- LU
+				else if extrapolation_str = "LUglobal" then
+					extrapolation <- LUglobal
+				else(
+					print_error ("The exploration `" ^ extrapolation_str ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
@@ -538,7 +562,6 @@ class imitator_options =
 
 
 			and set_pending_order order =
-				(*  *)
 				if order = "none" then
 					pending_order <- Pending_none
 				else if order = "param" then
@@ -554,22 +577,125 @@ class imitator_options =
 					exit(1);
 				)
 
-			and set_merge_heuristic heuristic =
-				(*  *)
-				if heuristic = "always" then
-					merge_heuristic <- Merge_always
-				else if heuristic = "targetseen" then
-					merge_heuristic <- Merge_targetseen
-				else if heuristic = "pq10" then
-					merge_heuristic <- Merge_pq10
-				else if heuristic = "pq100" then
-					merge_heuristic <- Merge_pq100
-				else if heuristic = "iter10" then
-					merge_heuristic <- Merge_iter10
-				else if heuristic = "iter100" then
-					merge_heuristic <- Merge_iter100
+				(*** BEGIN TODO! unfinished ***)
+			and set_merge_jump_algorithm merge_jump_algorithm_str =
+				if merge_jump_algorithm_str = "none" then
+					merge_jump_algorithm <- Merge_jump_none
+				else try (
+					(* Find the `staticl` string *)
+					if (String.sub merge_jump_algorithm_str 0 7 = "staticl") then
+						let n1 = String.sub merge_jump_algorithm_str 7 (String.length merge_jump_algorithm_str - 7) in
+						merge_jump_algorithm <- Merge_jump_static ((int_of_string n1), 0)  (*** TODO: n2 is not present here! ***)
+				) with Failure _ | Invalid_argument _-> (
+					print_error ("The merge jump algorithm `" ^ merge_jump_algorithm_str ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+(*				if merge_algorithm_str = "static" then
+					merge_jump_algorithm <- Merge_jump_static (n1, n2)
+				else if merge_algorithm_str = "staticl" then
+                    merge_jump_algorithm <- Merge_jump_static_per_location (n1, n2)
+				else if merge_algorithm_str = "expback" then
+					merge_jump_algorithm <- Merge_jump_exponentialbackoff (n1, n2)
 				else(
-					print_error ("The merge heuristic `" ^ heuristic ^ "` is not valid.");
+					print_error ("The merge jump algorithm `" ^ merge_algorithm_str ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)*)
+				(*** END TODO! unfinished ***)
+
+				
+			and set_merge_EFsynthminpq_heuristic merge_EFsynthminpq_heuristic_src =
+				if merge_EFsynthminpq_heuristic_src = "always" then
+					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_always
+				else if merge_EFsynthminpq_heuristic_src = "targetseen" then
+					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_targetseen
+				else if merge_EFsynthminpq_heuristic_src = "pq10" then
+					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_pq10
+				else if merge_EFsynthminpq_heuristic_src = "pq100" then
+					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_pq100
+				else if merge_EFsynthminpq_heuristic_src = "iter10" then
+					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_iter10
+				else if merge_EFsynthminpq_heuristic_src = "iter100" then
+					merge_EFsynthminpq_heuristic <- Merge_EFsynthminpq_iter100
+				else(
+					print_error ("The EFsynthminpq merge heuristic `" ^ merge_EFsynthminpq_heuristic_src ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
+			(* Merge heuristics as of 3.3 *)
+			and set_merge_algorithm algorithm_str =
+				if algorithm_str = "none" then
+					merge_algorithm <- Some Merge_none
+					
+				else if algorithm_str = "reconstruct" then
+					merge_algorithm <- Some Merge_reconstruct
+					
+				else if algorithm_str = "onthefly" then
+					merge_algorithm <- Some Merge_onthefly
+					
+				else if algorithm_str = "yes" then
+					merge_algorithm <- Some AbstractAlgorithm.default_merge_algorithm
+					
+				else if algorithm_str = "2.12" then
+					merge_algorithm <- Some 	Merge_212
+					
+				else(
+					print_error ("The merge heuristic `" ^ algorithm_str ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
+			and set_merge_candidates candidates_str =
+				if candidates_str = "ordered" then
+					merge_candidates <- Some Merge_candidates_ordered
+					
+				else if candidates_str = "queue" then
+					merge_candidates <- Some Merge_candidates_queue
+					
+				else if candidates_str = "visited" then
+					merge_candidates <- Some Merge_candidates_visited
+					
+				else(
+					print_error ("The merge candidates option `" ^ candidates_str ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
+		    and set_merge_update update_str =
+                if update_str = "merge" then
+                    merge_update <- Some Merge_update_merge
+
+                else if update_str = "candidates" then
+                    merge_update <- Some Merge_update_candidates
+
+                (*
+                else if update_str = "level" then
+                    merge_update <- Some Merge_update_level
+                *)
+
+                else(
+                    print_error ("The merge update option `" ^ update_str ^ "` is not valid.");
+                    Arg.usage speclist usage_msg;
+                    abort_program ();
+                    exit(1);
+                )
+
+			and set_merge_restart restart_str =
+				if restart_str = "on" then
+					merge_restart <- Some true
+					
+				else if restart_str = "off" then
+					merge_restart <- Some false
+					
+				else(
+					print_error ("The merge restart option `" ^ restart_str ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
@@ -652,18 +778,11 @@ class imitator_options =
 				("-acyclic", Unit (fun () -> acyclic <- true), " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: disabled.
 				");
 
-(* 				("-best-worst-case", (fun () -> best_worst_case <- true), " Instead of the minimum global time, compute the best worst-case time bound in the EFsynthminpq mode. Default: false."); *)
-
-(* 				Temporarily disabled (March 2014) *)
-(* 				("-bab", (fun () -> branch_and_bound <- true), " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: disabled"); *)
-
 				("-cart-tiles-limit", Int (fun i -> carto_tiles_limit <- Some i), " Set a maximum number of tiles computed for the cartography. Default: no limit.
 				");
 
 				("-cart-time-limit", Int (fun i -> carto_time_limit <- Some i), " Set a global time limit (in seconds) for the cartography (in which case the -time-limit option only applies to each call to IM). Default: no limit.
 				");
-
-				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Default: disabled"); *)
 
 				("-check-ippta", Unit (fun () -> check_ippta <- true), " Check that every new symbolic state contains an integer point; raises an exception if not. Default: disabled.
 				");
@@ -741,6 +860,16 @@ class imitator_options =
         Default: layerBFS.
 				");
 
+
+				("-extrapolation", String set_extrapolation, " Extrapolation [AA22].
+        Use `M`             for M-extrapolation.
+        Use `Mglobal`       for a single bound M-extrapolation.
+        Use `LU`            for LU-extrapolation.
+        Use `LUglobal`      for a single bound LU-extrapolation.
+        Default: none.
+				");
+
+
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
 				");
 
@@ -785,17 +914,29 @@ class imitator_options =
 				("-no-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some false), " No layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled (i.e., no layer).
 				");
 
-				("-merge", Unit (fun () -> warn_if_set merge "merge"; merge <- Some true), " Use the merging technique of [AFS13]. Default: depending on the algorithm");
-				("-no-merge", Unit (fun () -> warn_if_set merge "merge"; merge <- Some false), " Do not use the merging technique of [AFS13]. Default: depending on the algorithm.
+				(*** NOTE: New merge as of 3.3 ***)
+				("-merge", String set_merge_algorithm, " Merge algorithm [AMPP22]. Possible values are `none`, `yes`, `reconstruct`, `onthefly`, `2.12`. Default: depends on the property.
 				");
 
-(*				("-merge-before", Unit (fun () -> merge_before <- true) , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: disabled (disable)");*)
-
-				("-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some true; merge <- Some true), "Use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
-				("-no-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm.
+				(*** NOTE: New merge as of 3.3 ***)
+				("-merge-candidates", String set_merge_candidates, " Merge candidates [AMPP22]. Possible values are `queue`, `visited`, `ordered`. Default: depends on the property.
 				");
 
-				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Possible values are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.
+                (*** NOTE: New merge as of 3.3 ***)
+                ("-merge-update", String set_merge_update, " Merge update [AMPP22]. Possible values are `merge`, `candidates`. Default: depends on the property.
+                ");(*remove 'level' possible value as not implemented*)
+
+				(*** NOTE: merge for EFsynthminpq, presumably by Vincent Bloemen ***)
+				("-merge-EFsynthminpq-heuristic", String set_merge_EFsynthminpq_heuristic, " Merge heuristic for EFsynthminpq [ABPP19]. Possible values are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.
+				");
+
+				(*** NOTE: experimental heuristics to jump merge, dating from 2021 ***)
+				("-merge-jump-algorithm", String set_merge_jump_algorithm, "");
+				(*** NOTE: hidden! ***)
+(* 				" Experimental heuristics for jumping merges. Possible values are `none`, `static`, `staticl`, `expback`. Default: `none`." *)
+
+				(*** NOTE: New merge as of 3.3 ***)
+				("-merge-restart", String set_merge_restart, " Restart merging after successful merging until fixpoint? [AMPP22]. Possible values are `on`, `off`. Default: `off`.
 				");
 
 				("-mode", String set_mode, " Special mode for " ^ Constants.program_name ^ ".
@@ -812,12 +953,8 @@ class imitator_options =
 				("-no-green", Unit (fun () -> no_green <- true), " In NDFS, Do not use green colour in NDFS. Default: enabled (i.e., green).
 				");
 
-(* 				("-no-initprune", Unit (fun () -> no_initprune <- true), " In collecting NDFS, no pruning if the initial constraint is included in the collected zone. Default: disabled."); *)
-
 				("-no-lookahead", Unit (fun () -> no_lookahead <- true), " In NDFS, no lookahead for finding successors closing an accepting cycle. Default: enabled (i.e., lookahead).
 				");
-
-(* 				("-no-pending-ordered", Unit (fun () -> no_pending_ordered <- true), " In NDFS synthesis, do not order the pending queue with larger zones first. Default: enabled."); *)
 
 				("-no-random", Unit (fun () -> no_random <- true), " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: enabled (i.e., random).
 				");
@@ -967,7 +1104,7 @@ class imitator_options =
 			(*------------------------------------------------------------*)
 			if property_file_name <> None then(
 				match imitator_mode with
-				| Syntax_check 
+				| Syntax_check
 				| State_space_computation
 				| Translation _
 				->
@@ -1000,7 +1137,7 @@ class imitator_options =
 			print_message Verbose_low ("Command: `" ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv) ^ "`" );
 
 
-			
+
 			(*------------------------------------------------------------*)
 			(* Print mode or property *)
 			(*------------------------------------------------------------*)
@@ -1051,21 +1188,11 @@ class imitator_options =
 			end;
 
 
-			(*------------------------------------------------------------*)
-			(* Merging *)
-			(*------------------------------------------------------------*)
 
-			if merge = Some true then(
-				match property_option with
-				| None ->
-					print_warning ("The `-merge` option may not preserve the correctness of this analysis. Result may be incorrect.");
-				| Some property ->
-					if not (AlgorithmOptions.merge_needed property) then(
-						print_warning ("The `-merge` option may not preserve the correctness of this algorithm. Result may be incorrect.");
-					);
-			);
-
-
+			
+			
+			
+			(** TODO: check compatibility between merge algorithms ***)
 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options: ignoring some options *)
@@ -1081,7 +1208,7 @@ class imitator_options =
 				| None -> false
 				| Some property -> AlgorithmOptions.is_cartography property
 			in
-			
+
 
 			(*------------------------------------------------------------*)
 			(* Check if #witness is supported for this algorithm *)
@@ -1202,10 +1329,10 @@ class imitator_options =
 						begin
 						match cycle_algorithm with
 						| Some BFS -> () (* fine *)
-						| Some NDFS -> 
+						| Some NDFS ->
 							print_error ("The only implemented algorithm for generalized acceptance conditions in cycle synthesis is BFS. NDFS is ignored.");
 							cycle_algorithm <- Some BFS
-						| None -> 
+						| None ->
 							print_warning ("No algorithm specified for generalized acceptance conditions in cycle synthesis. Default chosen (BFS).");
 							cycle_algorithm <- Some BFS;
 						end;
@@ -1240,16 +1367,53 @@ class imitator_options =
 				| None -> print_message Verbose_low ("No exploration order set.")
 			end;
 
-            (* Merge heuristic *)
-            begin
-			match merge_heuristic with
-				| Merge_always -> print_message Verbose_experiments ("Merge heuristic: always.")
-				| Merge_targetseen -> print_message Verbose_experiments ("Merge heuristic: targetseen.")
-				| Merge_pq10 -> print_message Verbose_experiments ("Merge heuristic: pq10.")
-				| Merge_pq100 -> print_message Verbose_experiments ("Merge heuristic: pq100.")
-				| Merge_iter10 -> print_message Verbose_experiments ("Merge heuristic: iter10.")
-				| Merge_iter100 -> print_message Verbose_experiments ("Merge heuristic: iter100.")
+			(* Extrapolation *)
+			begin
+			match extrapolation with
+				| No_extrapolation	-> print_message Verbose_experiments ("No extrapolation")
+				| M					-> print_message Verbose_standard ("Extrapolation: M-extrapolation")
+				| Mglobal			-> print_message Verbose_standard ("Extrapolation: global bound M-extrapolation")
+				| LU				-> print_message Verbose_standard ("Extrapolation: L/U-extrapolation")
+				| LUglobal			-> print_message Verbose_standard ("Extrapolation: global bound L/U-extrapolation")
 			end;
+
+      (* Merge heuristic for EFsynthminpq *)
+      print_message Verbose_experiments ("EFsynthminpq merge heuristic: " ^ (AbstractAlgorithm.string_of_merge_EFsynthminpq_heuristic merge_EFsynthminpq_heuristic) ^ ".");
+
+            (* Main merge algorithm *)
+            begin
+            match self#merge_algorithm with
+            | Merge_none ->
+				print_message Verbose_low ("No merge algorithm");
+			| Merge_reconstruct ->
+				print_message Verbose_standard ("Merge algorithm enabled (reconstruct [AMPP22])");
+			| Merge_onthefly ->
+				print_message Verbose_standard ("Merge algorithm enabled (on-the-fly [AMPP22])");
+			| Merge_212 ->
+				print_message Verbose_standard ("Merge algorithm enabled (v2.12)");
+			end;
+			
+			(* Additional details on merging heuristics *)
+			if merge_algorithm <> None && merge_algorithm <> Some Merge_none then(
+
+				(* Print restart *)
+				if self#merge_restart then(
+					print_message Verbose_standard ("Merge restart enabled.");
+				)else(
+					print_message Verbose_low ("No merge restart.");
+				);
+				
+				(* Print merge candidates heuristics *)
+				print_message Verbose_standard ("Merge candidates heuristics: " ^ (AbstractAlgorithm.string_of_merge_candidates self#merge_candidates));
+
+				(* Print jump algorithm *)
+				if merge_jump_algorithm = Merge_jump_none then(
+					print_message Verbose_medium ("No merge jump.");
+				)else(
+					print_message Verbose_standard ("Merge jump algorithm: " ^ (AbstractAlgorithm.string_of_merge_jump_algorithm merge_jump_algorithm));
+				);
+				
+            );
 
 
 			if no_time_elapsing then
@@ -1325,41 +1489,8 @@ class imitator_options =
 				print_message Verbose_medium ("Compute the next pi0 on-demand, in distributed mode (default).")
 			;
 
-
-(*			if branch_and_bound then
-				print_message Verbose_standard ("Considering branch and bound (work in progress!!).")
-			else
-				print_message Verbose_medium ("No branch and bound mode (default).");*)
-
-
-			(* OPTIONS *)
-			begin match mergeq with
-			| Some true ->
-				print_message Verbose_standard ("Merging technique of [AFS13] enabled on queue only.");
-			| Some false ->
-				begin match merge with
-				| Some true ->
-					print_message Verbose_standard ("Merging technique of [AFS13] enabled.");
-				| Some false ->
-					print_message Verbose_standard ("Merging technique of [AFS13] disabled.")
-				| None ->
-					print_message Verbose_medium ("Merging technique of [AFS13] enabled if requested by the algorithm.")
-				end;
-			| None ->
-				print_message Verbose_medium ("Merging technique of [AFS13] enabled if requested by the algorithm.")
-			end;
-
-(*			if !merge_before then
-				print_message Verbose_standard ("Variant of the merging technique of [AFS13] enabled. States will be merged before pi0-compatibility test (EXPERIMENTAL).")
-			else
-				print_message Verbose_medium ("Variant of the merging technique of [AFS13] disabled.")
-			;*)
-
-			(*if !dynamic then
-				print_message Verbose_standard ("Dynamic mode (optimization by RS).")
-			else
-				print_message Verbose_medium ("No dynamic mode (default).");*)
-
+			
+			(* Auto-detection of synclabs *)
 			if sync_auto_detection then
 				print_message Verbose_standard ("Auto-detection mode for sync actions.")
 			else
@@ -1370,11 +1501,6 @@ class imitator_options =
 				print_message Verbose_standard ("Not reordering successors (accepting states first) in NDFS search.")
 			else
 				print_message Verbose_medium ("Reordering successors (accepting states first) in NDFS (default).");
-
-(* 			if !no_initprune then
-				print_message Verbose_standard ("No initial zone prune in collecting NDFS.")
-			else
-				print_message Verbose_medium ("Pruning of initial constraint in NDFS (default)."); *)
 
 			begin
 			match layer with
@@ -1405,10 +1531,6 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("No reprocessing of green states in NDFS (default).");
 
-(* 			if !no_pending_ordered then
-				print_message Verbose_standard ("No ordering of pending list with larger zones first in NDFS synthesis.")
-			else
-				print_message Verbose_medium ("Ordering pending list with larger zones first in NDFS synthesis (default)."); *)
 			begin
 			match pending_order with
 			| Pending_accept ->

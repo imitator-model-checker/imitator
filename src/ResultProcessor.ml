@@ -10,7 +10,6 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2021/11/02
  *
  ************************************************************)
 
@@ -26,7 +25,11 @@ open Statistics
 open AbstractModel
 open Result
 
+let custom_details = Hashtbl.create 0
 
+(* Add a property to custom details json struct *)
+let add_custom_detail_property key details =
+    Hashtbl.add custom_details key details
 
 (************************************************************)
 (* Statistics *)
@@ -236,7 +239,7 @@ let verbose_string_soundness_of_good_or_bad_constraint = function
 let add_constraints_delimiters constraint_str =
 	(* begin delimiter *)
 	"\n\nBEGIN CONSTRAINT\n"
-	^ constraint_str ^ ""
+	^ constraint_str
 	(* end delimiter *)
 	^ "\nEND CONSTRAINT\n"
 
@@ -244,10 +247,17 @@ let add_constraints_delimiters constraint_str =
 let add_result_delimiters constraint_str =
 	(* begin delimiter *)
 	"\n\nBEGIN RESULT\n"
-	^ constraint_str ^ ""
+	^ constraint_str
 	(* end delimiter *)
 	^ "\nEND RESULT\n"
 
+(** Add standardised delimiters to results (e.g. runs) *)
+let add_custom_details_delimiters str =
+	(* begin delimiter *)
+	"\n\nBEGIN DETAILS\n"
+	^ str
+	(* end delimiter *)
+	^ "\nEND DETAILS\n"
 
 (************************************************************)
 (* I/O functions *)
@@ -277,6 +287,7 @@ let model_statistics () =
 	^ "\nNumber of clocks                        : " ^ (string_of_int model.nb_clocks)
 	^ "\nHas invariants?                         : " ^ (string_of_bool model.has_invariants)
 	^ "\nHas clocks with rate <>1?               : " ^ (string_of_bool model.has_non_1rate_clocks)
+	^ "\nHas complex updates?                    : " ^ (string_of_bool model.has_complex_updates)
 	^ "\nL/U subclass                            : " ^ (string_of_lu_status model.lu_status)
 	^ "\nBounded parameters?                     : " ^ (string_of_bool model.bounded_parameters)
 	^ "\nHas silent actions?                     : " ^ (string_of_bool model.has_silent_actions)
@@ -346,6 +357,7 @@ let export_to_file_errorresult error_type file_name =
 	let error_message = match error_type with
 		| Division_by_zero msg			-> "division by 0 (" ^ msg ^ ")"
 		| Out_of_bound                  -> "index out of range"
+        | Empty_collection          -> "collection empty"
 		| ModelFileNotFound_error		-> "model file not found"
 		| PropertyFileNotFound_error	-> "property file not found"
 		| InvalidModel_error			-> "invalid model"
@@ -393,9 +405,15 @@ let export_to_file_noresult file_name =
 
 	(* Prepare the string to write *)
 	let file_content =
+
+        (* Custom details from hashtbl to list *)
+        let custom_details_list = custom_details |> Hashtbl.to_seq |> List.of_seq in
+        (* Create JSON struct with each custom detail *)
+        let custom_details_json_struct = JsonFormatter.Json_struct custom_details_list in
+
 		(* 1) Header *)
 		file_header ()
-		
+
 		(* 2) Statistics about model *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (model_statistics ())
@@ -404,6 +422,10 @@ let export_to_file_noresult file_name =
 		(* 3) General statistics *)
 		^ "\n" ^ (Statistics.string_of_all_counters())
 		^ "\n------------------------------------------------------------"
+
+        (*  4) More info about the model *)
+        ^ add_custom_details_delimiters (JsonFormatter.to_string ~pretty:true custom_details_json_struct)
+
 	in
 	
 	(* Write to file *)
@@ -755,8 +777,8 @@ let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibi
 			^ "\n\n Run nature: " ^ (match run with Impossible_concrete_run _ -> "impossible run" | Concrete_run _ -> "valid run")
 			^ "\n\n Run:"
 			^ "\n" ^ (let str = match run with
-				| Concrete_run concrete_run -> ModelPrinter.string_of_concrete_run model concrete_run
-				| Impossible_concrete_run impossible_concrete_run -> ModelPrinter.string_of_impossible_concrete_run model impossible_concrete_run
+				| Concrete_run concrete_run -> ModelPrinter.json_of_concrete_run model concrete_run
+				| Impossible_concrete_run impossible_concrete_run -> ModelPrinter.json_of_impossible_concrete_run model impossible_concrete_run
 				in str
 			)
 			^ "\n(************************************************************)\n"

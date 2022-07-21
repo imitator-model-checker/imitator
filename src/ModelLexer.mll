@@ -10,7 +10,6 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2021/07/19
 *****************************************************************)
 
 {
@@ -73,13 +72,19 @@ rule token = parse
 	| "constant"       { CT_CONSTANT }
 	| "discrete"       { CT_DISCRETE }
 	| "rational"       { CT_DISCRETE }
+  | "rat"            { CT_DISCRETE }
 	| "int"            { CT_INT }
 	| "bool"           { CT_BOOL }
 	| "binary"         { CT_BINARY_WORD }
   | "array"          { CT_ARRAY }
 	| "do"             { CT_DO }
+  | "seq"            { CT_SEQ }
+  | "let"            { CT_LET }
+  | "begin"          { CT_BEGIN }
+  | "in"             { CT_IN }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
+  | "inside"         { CT_INSIDE }
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
 	| "False"          { CT_FALSE }
@@ -112,6 +117,7 @@ rule token = parse
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
 	| "within"         { CT_WITHIN }
+  (*
   | "rational_of_int"{ CT_BUILTIN_FUNC_RATIONAL_OF_INT }
   | "pow"            { CT_POW }
   | "shift_left"     { CT_SHIFT_LEFT }
@@ -122,7 +128,15 @@ rule token = parse
   | "logor"          { CT_LOG_OR }
   | "logxor"         { CT_LOG_XOR }
   | "lognot"         { CT_LOG_NOT }
-  | "array_concat"   { CT_ARRAY_CONCAT }
+  | "array_append"   { CT_ARRAY_CONCAT }
+
+  | "list_cons"      { CT_LIST_CONS }
+  *)
+  | "list"           { CT_LIST }
+  | "stack"          { CT_STACK }
+  | "queue"          { CT_QUEUE }
+  | "fn"             { CT_FUN   }
+  | "->"             { CT_ARROW }
 
 
 

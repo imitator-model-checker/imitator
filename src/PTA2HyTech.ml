@@ -12,7 +12,6 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2021/06/17
  *
  ************************************************************)
 
@@ -104,10 +103,10 @@ let check_declaration_compatibility model =
 	List.iter (fun i ->
 	    let variable_name = model.variable_names i in
 	    match model.type_of_variables i with
-	    | DiscreteValue.Var_type_discrete (DiscreteValue.Var_type_discrete_number DiscreteValue.Var_type_discrete_rational)
-	    | DiscreteValue.Var_type_clock
-	    | DiscreteValue.Var_type_parameter -> ()
-	    | var_type -> print_warning ("Variable `" ^ variable_name ^ " : " ^ DiscreteValue.string_of_var_type var_type ^ "` is not a rational, HyTech only support rational-valued variable.")
+	    | DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rat)
+	    | DiscreteType.Var_type_clock
+	    | DiscreteType.Var_type_parameter -> ()
+	    | var_type -> print_warning ("Variable `" ^ variable_name ^ " : " ^ DiscreteType.string_of_var_type var_type ^ "` is not a rational, HyTech only support rational-valued variable.")
 	) model.discrete
 
 (* Convert the initial variable declarations into a string *)
@@ -134,6 +133,13 @@ let string_of_declarations model stopwatches clocks =
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
+(* Convert function definitions into a string *)
+let string_of_fun_definitions model =
+    (* Print warning *)
+    if Hashtbl.length model.fun_definitions > 0 then
+        print_warning "Model contains user defined functions. HyTech does not support user-defined functions.";
+    (* Get function definitions string as IMITATOR format *)
+    ModelPrinter.string_of_fun_definitions model
 
 (************************************************************)
 (** Automata *)
@@ -179,7 +185,7 @@ let string_of_invariant model automaton_index location_index stopwatches clocks 
     let str_invariant = ModelPrinter.string_of_guard model.variable_names invariant in
 
     if not (is_linear_guard invariant) then
-        print_warning ("Invariant `" ^ str_invariant ^ "` contains non-linear expression(s) or are not rational-valued, HyTech doesn't support such expressions.");
+        print_warning ("Invariant `" ^ str_invariant ^ "` contains non-linear expression(s) or are not rational-valued, HyTech does not support such expressions.");
 
 	(* Invariant *)
 	"while "
@@ -235,17 +241,25 @@ let string_of_clock_updates model = function
 
 
 (* Convert a list of updates into a string *)
-(*** WARNING: calling string_of_arithmetic_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
-(*** TODO: fix or print warning ***)
+(*** WARNING: calling string_of_global_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
 let string_of_discrete_updates model updates =
 
-	string_of_list_of_string_with_sep ", " (List.map (fun (variable_access, global_expression) ->
+    print_warning ("Some update expressions may not be well translated to HyTech.");
+
+	string_of_list_of_string_with_sep ", " (List.map (fun (parsed_update_type, global_expression) ->
 	    (* Convert the variable access to string *)
-	    let variable_name = ModelPrinter.string_of_variable_access model variable_access in
+	    let variable_name = ModelPrinter.string_of_parsed_update_type model parsed_update_type in
+		(* Convert the global_expression *)
+        let str_update_expr = ModelPrinter.string_of_global_expression model.variable_names global_expression in
+
+	    (* If update is a void update *)
+	    if variable_name = "" then
+	        print_warning ("Side effect update expression `" ^ str_update_expr ^ "` are not supported by HyTech.");
+
 		variable_name
 		^ "' = "
-		(* Convert the global_expression *)
-		^ ModelPrinter.string_of_global_expression model.variable_names global_expression
+		^ str_update_expr
+
 	) updates)
 
 
@@ -253,13 +267,15 @@ let string_of_discrete_updates model updates =
 (** NOTE: currently HyTech does not support conditional *)
 let string_of_transition model automaton_index transition =
 	let clock_updates = transition.updates.clock in
+	let seq_updates = transition.seq_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
+	let all_updates = seq_updates @ discrete_updates in
 	let conditional_updates = transition.updates.conditional in
 
     let str_guard = ModelPrinter.string_of_guard model.variable_names transition.guard in
 
     if not (is_linear_guard transition.guard) then
-        print_warning ("Guard `" ^ str_guard ^ "` contains non-linear expression(s) or are not rational-valued, HyTech doesn't such expressions.");
+        print_warning ("Guard `" ^ str_guard ^ "` contains non-linear expression(s) or are not rational-valued, HyTech does not support such expressions.");
 
 	(if conditional_updates <> [] then print_warning "Conditional updates are not supported by HyTech. Ignoring…" );
 	"\n\t" ^ "when "
@@ -272,7 +288,7 @@ let string_of_transition model automaton_index transition =
 	(* Add a coma in case of both clocks and discrete *)
 	^ (if clock_updates <> No_update && discrete_updates <> [] then ", " else "")
 	(* Discrete updates *)
-	^ (string_of_discrete_updates model discrete_updates)
+	^ (string_of_discrete_updates model all_updates)
 	^ "} "
 
 	(* Convert the sync *)
@@ -560,7 +576,8 @@ let string_of_model model =
 	string_of_header model
 	(* The variable declarations *)
 	^  "\n" ^ string_of_declarations model stopwatches clocks
-
+	(* The function declarations *)
+	^  "\n" ^ string_of_fun_definitions model
 	(* All automata *)
 	^  "\n" ^ string_of_automata model stopwatches clocks
 

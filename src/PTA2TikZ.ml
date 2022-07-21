@@ -9,7 +9,6 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2021/03/19
  *
  ****************************************************************)
 
@@ -53,9 +52,9 @@ let variable_names_with_style variable_index =
 	let model = Input.get_model() in
 	let name = escape_latex (model.variable_names variable_index) in
 	match model.type_of_variables variable_index with
-	| DiscreteValue.Var_type_clock -> "\\styleclock{" ^ name ^ "}"
-	| DiscreteValue.Var_type_discrete _ -> "\\styledisc{" ^ name ^ "}"
-	| DiscreteValue.Var_type_parameter -> "\\styleparam{" ^ name ^ "}"
+	| DiscreteType.Var_type_clock -> "\\styleclock{" ^ name ^ "}"
+	| DiscreteType.Var_type_discrete _ -> "\\styledisc{" ^ name ^ "}"
+	| DiscreteType.Var_type_parameter -> "\\styleparam{" ^ name ^ "}"
 
 
 (** Proper form for constraints *)
@@ -116,10 +115,10 @@ let string_of_clock_updates model clock_updates =
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_access, global_expression) ->
+	string_of_list_of_string_with_sep "\\n" (List.map (fun (parsed_update_type, global_expression) ->
 			"\n\t\t & $"
 			(* Convert the variable access to string *)
-			^ ModelPrinter.string_of_variable_access model variable_access
+			^ ModelPrinter.string_of_parsed_update_type model parsed_update_type
 			^ ":="
 			(* Convert the arithmetic_expression *)
 			^ ModelPrinter.string_of_global_expression variable_names_with_style global_expression

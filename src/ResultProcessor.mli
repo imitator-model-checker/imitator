@@ -10,9 +10,11 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2021/01/22
  *
  ************************************************************)
+
+(* Add a property to custom details json struct *)
+val add_custom_detail_property : string -> JsonFormatter.json_element -> unit
 
 (** Convert a Result.good_or_bad_constraint into a string *)
 val string_of_good_or_bad_constraint : (int -> string) -> Result.good_or_bad_constraint -> string

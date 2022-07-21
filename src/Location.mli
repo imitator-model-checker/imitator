@@ -59,8 +59,10 @@ val initialize : int -> int -> int -> unit
 val make_location : (automaton_index * location_index) list -> (discrete_index * DiscreteValue.discrete_value) list -> global_location
 
 (** 'update_location locations discrete_values location' creates a new location from the original location, and update the given automata and discrete variables. *)
-val update_location : (automaton_index * location_index) list -> (discrete_index * DiscreteValue.discrete_value) list -> global_location -> global_location
+(*val update_location : (automaton_index * location_index) list -> (discrete_index * DiscreteValue.discrete_value) list -> global_location -> global_location*)
 
+(* Side-effect function for updating a discrete variable given a value at given location *)
+val update_discrete_with : discrete_index * DiscreteValue.discrete_value -> global_location -> unit
 (** Side-effet version of update_location. *)
 val update_location_with : (automaton_index * location_index) list -> (discrete_index * DiscreteValue.discrete_value) list -> global_location -> unit
 
@@ -83,16 +85,19 @@ val get_location : global_location -> automaton_index -> location_index
 
 (** Get the value associated to some discrete variable *)
 val get_discrete_value : global_location -> discrete_index -> DiscreteValue.discrete_value
+(** Get the NumConst value associated to some discrete variable *)
 val get_discrete_rational_value : global_location -> discrete_index -> NumConst.t
+(** Set the value associated to some discrete variable *)
+val set_discrete_value : global_location -> discrete_index -> DiscreteValue.discrete_value -> unit
+(** Get a tuple of functions for reading / writing a global variable at a given location *)
+(* A discrete access enable to read or write a value of a variable at a given discrete index *)
+val discrete_access_of_location : global_location -> (discrete_index -> DiscreteValue.discrete_value) * (discrete_index -> DiscreteValue.discrete_value -> unit)
 
 (** Get a hash value for a location, including discrete values *)
 val hash_code : global_location -> int
 
 (** Check whether a global location is accepting according to the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
 val is_accepting : (automaton_index -> location_index -> bool) -> global_location -> bool
-
-(** Checks whether a global_location satisfies a state_predicate; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
-val match_state_predicate : (automaton_index -> location_index -> bool) -> AbstractProperty.state_predicate -> global_location -> bool
 
 
 

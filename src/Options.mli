@@ -10,7 +10,6 @@
  *
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2021/10/01
  *
  ************************************************************)
 
@@ -31,13 +30,11 @@ class imitator_options :
 
 		method acyclic						: bool
 (* 		method best_worst_case : bool *)
-(* 		method branch_and_bound : bool *)
-(* 		method branch_and_bound_unset : unit *)
 		method carto_tiles_limit			: int option
 		method carto_time_limit				: int option
 		method check_ippta					: bool
 		method check_point					: bool
-		
+
 		method comparison_operator			: AbstractAlgorithm.state_comparison_operator
 		method is_set_comparison_operator	: bool
 		method set_comparison_operator		: AbstractAlgorithm.state_comparison_operator -> unit
@@ -52,14 +49,15 @@ class imitator_options :
 		method distribution_mode			: distribution_mode
 		method distributedKillIM			: bool
 		method draw_cart					: bool
-(* 		method dynamic : bool *)
 		method dynamic_clock_elimination	: bool
 		method no_global_time_in_comparison	: bool
-		
+
 		method exploration_order			: AbstractAlgorithm.exploration_order
 		method is_set_exploration_order		: bool
 		method set_exploration_order		: AbstractAlgorithm.exploration_order -> unit
-		
+
+		method extrapolation				: extrapolation
+
 		method files_prefix					: string
 		method imitator_mode				: AbstractAlgorithm.imitator_mode
 
@@ -67,34 +65,44 @@ class imitator_options :
 		method is_set_layer					: bool
 		method set_layer					: bool -> unit
 
-		method merge						: bool
-		method is_set_merge					: bool
-		method set_merge					: bool -> unit
+		method merge_jump_algorithm			: AbstractAlgorithm.merge_jump_algorithm
 
-		(* 		method merge_before : bool *)
-		method mergeq						: bool
-		method is_set_mergeq				: bool
-		method set_mergeq					: bool -> unit
+		(* Merging heuristic for EFsynthminpq *)
+		method merge_EFsynthminpq_heuristic	: AbstractAlgorithm.merge_EFsynthminpq_heuristic
 
-		(* 		method merge_before : bool *)
-		method merge_heuristic				: merge_heuristic
-		method model_file_name				: string
+        (* New merge options from IMITATOR 3.3 *)
+        method merge_algorithm				: AbstractAlgorithm.merge_algorithm
+		method is_set_merge_algorithm		: bool
+		method set_merge_algorithm			: AbstractAlgorithm.merge_algorithm -> unit
+		
+        method merge_candidates				: AbstractAlgorithm.merge_candidates
+		method is_set_merge_candidates		: bool
+		method set_merge_candidates			: AbstractAlgorithm.merge_candidates -> unit
+
+        method merge_update     			: AbstractAlgorithm.merge_update
+		method is_set_merge_update  		: bool
+		method set_merge_update 			: AbstractAlgorithm.merge_update -> unit
+
+        method merge_restart 				: bool
+		method is_set_merge_restart			: bool
+		method set_merge_restart			: bool -> unit
+
+        method model_file_name				: string
 		method model_local_file_name		: string
 		method no_acceptfirst				: bool
 		method nb_args						: int
 		method no_green						: bool
 		method no_leq_test_in_ef			: bool
 		method no_lookahead					: bool
-		method no_pending_ordered			: bool
 		method no_random					: bool
 		method no_time_elapsing				: bool
 		method no_variable_autoremove		: bool
-		
+
 		(* Method used for infinite-run (cycle) with non-Zeno assumption *)
 		method nz_method					: AbstractAlgorithm.nz_method
 		method is_set_nz_method				: bool
 		method set_nz_method				: AbstractAlgorithm.nz_method -> unit
-		
+
 		method output_bc_cart				: bool
 		method output_bc_result				: bool
 		method output_cart_x_min			: int option
@@ -113,7 +121,7 @@ class imitator_options :
 		method property_file_name			: string option
 		method states_limit					: int option
 		method statistics					: bool
-		
+
 		method subsumption					: bool
 		method is_set_subsumption			: bool
 		method set_subsumption				: bool -> unit

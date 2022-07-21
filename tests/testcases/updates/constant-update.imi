@@ -1,0 +1,45 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that constant update is forbidden
+ * Description      : Test that constant update is forbidden
+ * Correctness      : Error when trying to update a constant
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/07/19
+ * Last modified    : 2022/07/19
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.3
+ ************************************************************)
+
+var
+
+ k = 0 : rat;
+
+automaton P
+
+  loc l0: invariant True
+  when True
+  do {
+    k := 1
+  }
+  goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+init := {
+    discrete =
+      loc[P] := l0
+    ;
+}

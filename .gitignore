@@ -34,13 +34,20 @@ myocamlbuild.ml
 src/BuildInfo.ml*
 src/PaTATOR.ml
 
-iamadeveloper
+# generated files
 
-# testing logs
+/*jpg
+/*png
+
+*.pdf
+*.ps
 
 *-regenerated.imi
 *.res
 *.states
+*_cart.png
+*_cart_bounds.txt
+*_cart_points_*.txt
 
 benchmarks/**/*-regenerated.imi
 benchmarks/**/*.res
@@ -51,9 +58,6 @@ benchmarks/**/*.pdf
 benchmarks/**/*.xml
 benchmarks/**/*.jani
 
-*_cart.png
-*_cart_bounds.txt
-*_cart_points_*.txt
 
 tests/**/*-regenerated.imi
 tests/**/*.log
@@ -68,8 +72,6 @@ tests/**/*.ps
 tests/**/*.xml
 tests/**/*.jani
 tests/**/*.hy
-*.pdf
-*.ps
 
 # binaries
 *.native
@@ -97,3 +99,4 @@ doc/classDiagramSimplified.png
 
 # IDE
 .vscode
+*kate-swp

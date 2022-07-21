@@ -1,0 +1,70 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Evaluation order of function parameters
+ * Description      : Test that evaluation order of function parameters is left to right
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/03/16
+ * Last modified    : 2022/03/16
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.3
+ ************************************************************)
+var
+
+  s : int stack;
+  result : int;
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+
+loc l1: invariant True
+	when
+    & True
+  do {
+    seq
+      stack_push(2, s);
+      stack_push(3, s);
+      result := pow(stack_pop(s) (* 3 *), stack_pop(s) (* 2 *)) (* should give pow(3, 2) = 9 *)
+  }
+  goto lend;
+
+
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete =
+      loc[pta] := l1,
+      s := stack(),
+      result := 0
+    ;
+    continuous =
+        & True
+    ;
+
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

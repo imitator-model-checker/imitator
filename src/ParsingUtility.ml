@@ -10,7 +10,6 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2021/01/22
  *
  ************************************************************)
 
@@ -272,7 +271,7 @@ let compile_model_and_property (options : Options.imitator_options) =
 	try (
 		ModelConverter.abstract_structures_of_parsing_structures options parsed_model parsed_property_option
 	) with
-		| ModelConverter.InvalidModel ->
+		| InvalidModel ->
 			(* Abort properly *)
 			let failure_message = "The input model contains errors. Please check it again." in
 			print_error_and_abort options failure_message (Result.InvalidModel_error)
@@ -290,6 +289,10 @@ let compile_model_and_property (options : Options.imitator_options) =
         | TypeError message	->
             (* Abort properly *)
             let failure_message =  "Type error: " ^ message in
+            print_error_and_abort options failure_message (Result.InvalidModel_error)
+        | UndefinedFunction function_name ->
+            (* Abort properly *)
+            let failure_message =  "Function `" ^ function_name ^ "` is undefined." in
             print_error_and_abort options failure_message (Result.InvalidModel_error)
 		| InternalError e ->
 			(print_error ("Internal error while parsing the input model and the property: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)

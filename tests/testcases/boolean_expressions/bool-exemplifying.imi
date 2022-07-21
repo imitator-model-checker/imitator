@@ -1,0 +1,107 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Toy example for exemplifying specifications over Booleans only
+ * Description      : Toy example for exemplifying specifications over Booleans only
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Toy
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/12/17
+ * Last modified    : 2021/12/17
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.2
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, global_time,
+		: clock;
+
+(* Variables *)
+ 	p1, p2,
+		: bool;
+
+
+
+
+(************************************************************)
+  automaton plma
+(************************************************************)
+synclabs: a1, a2, check;
+
+loc l1: invariant True
+	when True sync a1 do {x := 0} goto l2;
+
+loc l2: invariant True
+	when p1 & x > 0 sync check do {x := 0} goto l3;
+
+loc l3: invariant x <= 3
+	when x = 3 & not(p2) sync a2 goto l4;
+
+loc l4: invariant True
+
+end (* plma *)
+
+
+(************************************************************)
+  automaton SBA
+(************************************************************)
+synclabs: p1down, p1up, p2down, p2up;
+
+loc l1: invariant True
+	when p1 do {p1 := False} sync p1down goto l1;
+	when not(p1) do {p1 := True} sync p1up goto l1;
+	when p2 do {p2 := False} sync p2down goto l1;
+	when not(p2) do {p2 := True} sync p2up goto l1;
+
+end (* SBA *)
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[plma] := l1,
+		loc[SBA]  := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		p1 := False,
+		p2 := False,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+		& global_time = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

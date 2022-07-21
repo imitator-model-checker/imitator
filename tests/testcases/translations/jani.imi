@@ -1,0 +1,67 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test for Jani translation
+ * Description      : Test Jani translation is correct
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/02/04
+ * Last modified    : 2021/02/04
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.3
+ ************************************************************)
+var
+
+  i, r : rat;
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+
+loc l1: invariant True
+	when
+
+    & (i + 1 - 2) / 2 = (r * 2 + 1) / 2
+
+  do {
+    i := 5 * 3 + pow(r, 2)
+  }
+  goto lend;
+
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete =
+      loc[pta] := l1,
+      r := 2,
+      i := 6
+    ;
+    continuous =
+        & True
+    ;
+
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

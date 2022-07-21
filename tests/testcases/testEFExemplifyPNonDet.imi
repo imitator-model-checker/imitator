@@ -1,0 +1,106 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : PTA-like (timed) specification
+ * Description      : PTA-like (timed) specification with some non-determinism in the deadlock found. Version with non-1 flows, other locations, automata (non-)synchronization.
+ * Correctness      : 
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : toy
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/03/10
+ * Last modified    : 2022/03/15
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.3-alpha
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y, z,
+ 	global_time,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+(************************************************************)
+  automaton spec1
+(************************************************************)
+synclabs: a1, a3;
+
+loc l1: invariant x <= 8 stop{z}
+	when 4 <= x & x <= p sync a1 goto l2;
+
+loc l2: invariant True stop{z}
+	when True sync a3 goto lT;
+
+loc lT: invariant True
+
+end (* spec1 *)
+
+(************************************************************)
+  automaton spec2
+(************************************************************)
+synclabs: a2, a3;
+
+loc l1: invariant True flow{x' = 1, y' = -0.25}
+	when x >= 10 sync a2 goto l2;
+
+loc l2: invariant True flow{x' = -1, y' = 1}
+	when True sync a3 goto l3;
+
+loc l3: invariant True flow{x' = -1, y' = 1}
+	when True sync a2 goto lT;
+
+loc lT: invariant True
+
+end (* spec2 *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[spec1] := l1,
+		loc[spec2] := l1,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock and signal constraints *)
+		(*------------------------------------------------------------*)
+		& global_time	= 0
+		& x				= 0
+		& y				= 1
+		& 1 < z	& z < 2
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+		& p <= 4
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -10,7 +10,6 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2021/09/16
  *
  ************************************************************)
  
@@ -804,10 +803,9 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 			);
 			(* Get value *)
 			let zero_value = match model.type_of_variables variable_index with
-				| DiscreteValue.Var_type_discrete _ ->
-				    (* TODO check with étienne, seems to be variable that control the clock flow ? *)
-					Location.get_discrete_value initial_state.global_location variable_index (* TODO benjamin : not sure about Var_type_discrete _*)
-				| DiscreteValue.Var_type_clock ->
+				| DiscreteType.Var_type_discrete _ ->
+					Location.get_discrete_value initial_state.global_location variable_index
+				| DiscreteType.Var_type_clock ->
 					DiscreteValue.Rational_value (initial_state.px_valuation variable_index)
 				| _ -> raise (InternalError "Clock or discrete variable expected in draw_concrete_run")
 			in
@@ -828,7 +826,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				);
 
 				(* Convert to the plotutils format *)
-				(draw_x_y NumConst.zero (DiscreteValue.to_numconst_value zero_value))
+				(draw_x_y NumConst.zero (DiscreteValue.convert_to_numconst zero_value))
 			)
 			
 			::
@@ -853,7 +851,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 					match model.type_of_variables variable_index with
 					
 				(* If discrete: the previous value is still valid right before the current transition *)
-					| DiscreteValue.Var_type_discrete _ ->
+					| DiscreteType.Var_type_discrete _ ->
 					
 						(* Get the discrete value *)
 						let value = Location.get_discrete_value step_target.global_location variable_index in
@@ -882,14 +880,14 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 							
 							(* Same value, current time *)
 							(* Convert to the plotutils format *)
-							(draw_x_y !absolute_time (DiscreteValue.to_numconst_value !previous_value))
+							(draw_x_y !absolute_time (DiscreteValue.convert_to_numconst !previous_value))
 							(* Separator for next point *)
 							^ "\n"
 							,value
 						)
 
 				(* If clock: the previous value must be incremented by the timed elapsed since the last point *)
-					| DiscreteValue.Var_type_clock ->
+					| DiscreteType.Var_type_clock ->
 						
 						(* Get the clock value *)
 						let value = step_target.px_valuation variable_index in
@@ -914,7 +912,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 							
 							(* Update the value of the clock using the flow *)
 							(* Clock can only be updated by rationals so we use the numconst value of discrete variable *)
-							let previous_numconst_value = DiscreteValue.to_numconst_value !previous_value in
+							let previous_numconst_value = DiscreteValue.convert_to_numconst !previous_value in
 							let clock_value_after_elapsing = NumConst.add previous_numconst_value (NumConst.mul time_elapsed flow) in
 							
 							(* Same value, current time *)
@@ -945,7 +943,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				previous_point_str
 				
 				(* Then add the current point (easy) in the plotutils format *)
-				^ (draw_x_y !absolute_time (DiscreteValue.to_numconst_value value))
+				^ (draw_x_y !absolute_time (DiscreteValue.convert_to_numconst value))
 			) abstract_steps
 			)
 		) in

@@ -9,7 +9,6 @@
  * 
  * File contributors : Étienne André, Camille Coti
  * Created           : 2014/03/24
- * Last modified     : 2016/08/15
  *
  ************************************************************)
 

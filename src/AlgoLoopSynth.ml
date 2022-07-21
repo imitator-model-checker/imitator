@@ -9,7 +9,6 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2021/10/07
  *
  ************************************************************)
 
@@ -402,16 +401,16 @@ class virtual algoLoopSynth =
 				if dangerous_inclusion then(
 					self#print_algo_message Verbose_high "A dangerous inclusion was used: result will be at least an overapproximation (or invalid)";
 				);
-				if options#merge then(
+				if options#merge_algorithm <> Merge_none then(
 					self#print_algo_message Verbose_high "Merging was used: result will be at least an overapproximation (or invalid)";
 				);
 				
 				(* EXACT if termination is normal and no inclusion nor merge *)
-				if termination_status = Regular_termination && (not dangerous_inclusion) && not options#merge then Constraint_exact
+				if termination_status = Regular_termination && (not dangerous_inclusion) && options#merge_algorithm = Merge_none then Constraint_exact
 				(* UNDER-APPROXIMATED if termination is NOT normal AND neither merging nor state inclusion was used *)
-				else if termination_status <> Regular_termination && (not dangerous_inclusion) && not options#merge then Constraint_maybe_under
+				else if termination_status <> Regular_termination && (not dangerous_inclusion) && options#merge_algorithm = Merge_none then Constraint_maybe_under
 				(* OVER-APPROXIMATED if termination is normal AND merging or state inclusion was used *)
-				else if termination_status = Regular_termination && (dangerous_inclusion || options#merge) then Constraint_maybe_over
+				else if termination_status = Regular_termination && (dangerous_inclusion || (options#merge_algorithm <> Merge_none)) then Constraint_maybe_over
 				(* UNKNOWN otherwise *)
 				else Constraint_maybe_invalid
 			in

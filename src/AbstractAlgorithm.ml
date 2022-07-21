@@ -8,7 +8,6 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/18
- * Last modified     : 2021/02/24
  *
  ************************************************************)
 
@@ -111,20 +110,69 @@ type pending_order =
 	(* biggest zone first *)
 	| Pending_zone
 
-type merge_heuristic =
+(* Merging heuristic for EFsynthminpq *)
+type merge_EFsynthminpq_heuristic =
 	(** Merge_always: merge after every processed state *)
-	| Merge_always
+	| Merge_EFsynthminpq_always
 	(** Merge_always: merge after every processed state for which the target state is a successor of the current state *)
-	| Merge_targetseen
+	| Merge_EFsynthminpq_targetseen
 	(** Merge_always: merge after every processed state, for every 10th added state to PQ *)
-	| Merge_pq10
+	| Merge_EFsynthminpq_pq10
 	(** Merge_always: merge after every processed state, for every 100th added state to PQ *)
-	| Merge_pq100
+	| Merge_EFsynthminpq_pq100
 	(** Merge_always: merge after every 10th processed state *)
-	| Merge_iter10
+	| Merge_EFsynthminpq_iter10
 	(** Merge_always: merge after every 100th processed state *)
-	| Merge_iter100
+	| Merge_EFsynthminpq_iter100
 
+(* Undefined value for n1/n2 merge heuristics *)
+let undefined_merge_n = -1
+
+(* Merge heuristics for reachability analysis: try to jump some merge attemps (approx 2021) *)
+type merge_jump_algorithm =
+	(** None *)
+	| Merge_jump_none
+	(** TODO: description *)
+	| Merge_jump_static of int * int
+	(** TODO: description *)
+	| Merge_jump_static_per_location of int * int
+    (** TODO: description *)
+	| Merge_jump_exponentialbackoff of int * int
+
+				(*** DISCONTINUED as of 3.3 ***)
+(*type merge_dev =
+	(** merge(queue,visited) *)
+	| Merge_visited
+	(** merge(queue,queue) *)
+	| Merge_queue
+    (** merge(queue,queue);merge(queue,visited) *)
+	| Merge_ordered*)
+
+(* Main merge algorithms from IMITATOR 3.3 *)
+type merge_algorithm =
+	(* No merge *)
+	| Merge_none
+	(* Reconstruct state space *)
+	| Merge_reconstruct
+	(* On-the-fly modification *)
+	| Merge_onthefly
+	(* (reimplemented) version of IMITATOR 2.12 merge *)
+	| Merge_212
+
+let default_merge_algorithm = Merge_onthefly
+
+
+(* Main merge algorithms from IMITATOR 3.3 *)
+type merge_candidates =
+	| Merge_candidates_ordered
+	| Merge_candidates_queue
+	| Merge_candidates_visited
+
+(* Main merge algorithms from IMITATOR 3.3 *)
+type merge_update =
+	| Merge_update_merge
+    | Merge_update_candidates
+    (*| Merge_update_level*)
 
 (** Style of graphical state space to output *)
 type graphical_state_space =
@@ -155,6 +203,15 @@ type nz_method =
 
 	(** Method assuming the PTA is already a CUB-PTA *)
 	| NZ_already
+
+
+(* Type of extrapolation *)
+type extrapolation =
+	| No_extrapolation
+	| M
+	| Mglobal
+	| LU
+	| LUglobal
 
 
 (************************************************************)
@@ -272,3 +329,30 @@ let string_of_state_comparison_operator (state_comparison_operator : state_compa
 	| Including_check -> "including check"
 	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
 	| Double_inclusion_check -> "double inclusion check"
+
+
+
+let string_of_merge_candidates (merge_candidates : merge_candidates) : string = match merge_candidates with
+	| Merge_candidates_ordered	-> "ordered"
+	| Merge_candidates_queue	-> "queue"
+	| Merge_candidates_visited	-> "visited"
+
+let string_of_merge_update (merge_update : merge_update) : string = match merge_update with
+		| Merge_update_merge        -> "merge"
+        | Merge_update_candidates   -> "candidates"
+        (* | Merge_update_level        -> "level"*)
+
+let string_of_merge_EFsynthminpq_heuristic (merge_EFsynthminpq_heuristic : merge_EFsynthminpq_heuristic) : string = match merge_EFsynthminpq_heuristic with
+	| Merge_EFsynthminpq_always		-> "always"
+	| Merge_EFsynthminpq_targetseen	-> "targetseen"
+	| Merge_EFsynthminpq_pq10		-> "pq10"
+	| Merge_EFsynthminpq_pq100		-> "pq100"
+	| Merge_EFsynthminpq_iter10		-> "iter10"
+	| Merge_EFsynthminpq_iter100	-> "iter100"
+
+
+let string_of_merge_jump_algorithm (merge_jump_algorithm : merge_jump_algorithm) : string = match merge_jump_algorithm with
+	| Merge_jump_none							-> "no jump"
+	| Merge_jump_static (n1, n2)				-> "static (n1=" ^ (string_of_int n1) ^ ", n2=" ^ (string_of_int n2) ^ ")"
+	| Merge_jump_static_per_location (n1, n2)	-> "staticl (n1=" ^ (string_of_int n1) ^ ", n2=" ^ (string_of_int n2) ^ ")"
+	| Merge_jump_exponentialbackoff (n1, n2)	-> "exponential backoff (n1=" ^ (string_of_int n1) ^ ", n2=" ^ (string_of_int n2) ^ ")"

@@ -1,0 +1,130 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Evaluation order of discrete sequential and constraint updates
+ * Description      : Test that sequential update is evaluated sequentially following the declaration order of PTAs, and finally all the constraints are updated at the same time
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/03/17
+ * Last modified    : 2022/06/17
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.3
+ ************************************************************)
+var
+
+  s : rat stack;
+  r1, r2, r3 : rat;
+
+  i, j, k, l, m, w2 : discrete;
+  x, y, z, w, v : clock;
+
+(************************************************************)
+ automaton pta1
+(************************************************************)
+synclabs : a;
+
+loc l1: invariant x <= 0
+	when
+    & True
+  do {
+    seq
+    	  i := 1; (* i = 1 *)
+        i := i + 1; (* i = 2 *)
+        j := i; (* j = i = 2 *)
+        l := 1; (* l = 1 *)
+        m := 1;
+        stack_push(0, s);
+    then
+        v := m, (* m = 1 in pta1, then m = 2 in pta2, so v = 2 *)
+        x := j, (* x = j = i = 2*)
+        w := l, (* l = 1 in pta1, then l = 2 in pta2, so w = 2 *)
+        w2 := l,
+        (* m := 1 *)
+        r1 := stack_top(s)
+    end
+  }
+  sync a
+  goto lend;
+
+
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+(************************************************************)
+ automaton pta2
+(************************************************************)
+synclabs : a;
+loc l1: invariant True
+	when
+    & True
+  do {
+    seq
+        i := i+1;
+        k := 2*i; (* k = 2 * i = 2 * 3 = 6 *)
+        l := 2;
+        m := 2;
+        stack_push(1, s);
+    then
+        y := k, (* y = 6 *)
+        z := x, (* z = x = 0, because x is initialized to 0 *)
+        (* m := 2 *)
+        r2 := stack_top(s)
+    end
+  }
+  sync a
+  goto lend;
+
+
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+(************************************************************)
+ automaton pta3
+(************************************************************)
+synclabs : a;
+loc l1: invariant True
+	when
+    & True
+  do {
+    r3 := stack_top(s)
+  }
+  sync a
+  goto lend;
+
+
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+      loc[pta1] = l1
+      & loc[pta2] = l1
+      & loc[pta3] = l1
+      & x >= 0
+      & y >= 0
+      & z >= 0
+      & w >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

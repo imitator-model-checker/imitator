@@ -33,7 +33,7 @@ var
 (************************************************************)
  
 loc l1: invariant True 
-	when 0 in [j, i] goto lend;
+	when 0 inside [j, i] goto lend;
 	
 accepting loc lend: invariant True
  end (* pta *)

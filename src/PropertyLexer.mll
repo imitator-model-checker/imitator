@@ -8,7 +8,6 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2021/09/16
 *****************************************************************)
 
 {
@@ -102,6 +101,9 @@ rule token = parse
  	| "then"           { CT_THEN }
 	| "True"           { CT_TRUE }
 	| "within"         { CT_WITHIN }
+  | "list"           { CT_LIST }
+  | "stack"          { CT_STACK }
+  | "queue"          { CT_QUEUE }
 
 
 

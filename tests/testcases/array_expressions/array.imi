@@ -1,8 +1,8 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Quick test for array general behavior
- * Description      : Quick test for array, array function, array access behaviors
+ * Title            : Test general behavior of array expressions
+ * Description      : Test general behavior of arrays, array functions, array accesses
  * Correctness      : N/A
  * Scalable         : no
  * Generated        : no
@@ -37,6 +37,11 @@ var
   uninitialized_nested : int array(3) array(2);
   super_nested : rational array(2) array(2) array(2);
 
+  (* nested of nested data structure *)
+  array_of_list : rational list array(1);
+  array_of_stack : rational stack array(1);
+  array_of_queue : rational queue array(1);
+
   my_int_array_to_update : int array(2);
 
   i : int;
@@ -58,7 +63,10 @@ automaton P
     & nested = [[1, 2], [3, 4]]
     & [2, 1] > [1, 2]
 
-    (* Check array access equality *)
+    (* --- Check array access equality --- *)
+    (* ----------------------------------- *)
+
+    (* Check some equality *)
     & my_int_array_to_update[1] = 0
     & my_int_array_to_update[nested[0][0]] = 0
     & nested[0][0] = 1
@@ -66,8 +74,36 @@ automaton P
     & my_rat_array[0] = 0
     & super_nested[1][1][0] = 7
 
+    (* Check array access equality of nested of nested data structures *)
+    & array_of_list[0][1] = 2
+    & array_of_stack[0] = stack()
+    & array_of_queue[0] = queue()
+
+    (* ----------------------------------- *)
+    (* ----------------------------------- *)
+
     (* Check function call on array element access *)
+    (* ----------------------------------- *)
+
     & logxor(my_bin_array[0], my_bin_array[1]) = 0b1100
+
+    (* Test complex function calls *)
+    & array_append([list([2])], [list([1])]) = [list([2]), list([1])]
+    & array_append([[1,2]],[[3,4]]) = [[1,2],[3,4]]
+    & array_length([1, 2, 3]) = 3
+    & array_mem(4, [1, 6, 4])
+
+    (* ----------------------------------- *)
+
+    (* ----------------------------------- *)
+    (* Check weak typed array *)
+
+    & [] = []
+    & array_length([]) = 0
+    & not(array_mem(1, []))
+
+    (* ----------------------------------- *)
+    (* ----------------------------------- *)
 
   do {
 
@@ -79,7 +115,9 @@ automaton P
     (* Update array elements *)
     my_rat_array[0] := 1,
     super_nested[1][1] := [0, 0],
-    super_nested[0][1][1] := 0
+    super_nested[0][1][1] := 0,
+    array_of_list[0] := list([0, 0])
+
   }
   goto lend;
 
@@ -95,7 +133,10 @@ init := {
     nested := [[1, 2], [3, 4]],
     my_int_array_to_update := [1, 0],
     super_nested := [[[1, 2], [3, 4]], [[5, 6], [7, 8]]],
-    my_bin_array := [0b1001, 0b0101]
+    my_bin_array := [0b1001, 0b0101],
+    array_of_list := [list([1, 2])],
+    array_of_stack := [stack()],
+    array_of_queue := [queue()]
   ;
 
 }

@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/11/02
+# Last modified     : 2022/02/09
 #************************************************************
 
 
@@ -1052,6 +1052,98 @@ Error                                   : model parsing error
 		'expectations' : [
 			{'file': 'example-include-nonexisting-4a.res' , 'content' : """
 Error                                   : model parsing error
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/06/09
+		# Last modified            : 2022/06/09
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test include: functions',
+		'author': 'lbinria',
+		'tags':'include, function',
+		'input_files': ['tests_include_model/example-include-functions-1a.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'example-include-functions-1a-regenerated.imi' , 'content' : """
+var
+	res, j, i
+		: int;
+
+fn f() : int begin
+let i1 : int = i + 1 in
+let i2 : int = (i + 1) * 2 in
+i1 + i2
+end
+
+(************************************************************)
+ automaton P1
+(************************************************************)
+ synclabs: ;
+
+loc s0: invariant True
+	when True do {}  (* sync nosync_1*)  goto lend;
+
+accepting loc lend: invariant True
+ end (* P1 *)
+(************************************************************)
+
+
+(************************************************************)
+ automaton P2
+(************************************************************)
+ synclabs: ;
+
+loc s0: invariant True
+	when f() + j = 4 do {res := f()}  (* sync nosync_2*)  goto lend;
+
+accepting loc lend: invariant res = 3
+ end (* P2 *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[P1] := s0,
+		loc[P2] := s0,
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		res := 0,
+		j := 1,
+		i := 0
+	;
+
+	(*------------------------------------------------------------*)
+	(* Initial continuous constraint *)
+	(*------------------------------------------------------------*)
+	continuous =
+		& True
+	;
+
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
 		"""
 			} # end result file
 			,
@@ -2137,6 +2229,33 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2022/05/02
+		# Last modified            : 2022/05/02
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test that a linear expression multiplying variable and coef (k*v or v*k) work correctly',
+		'author': 'lbinria',
+		'tags':'linear, expression, behavior',
+		'input_files': ['linear_expressions/linear_expr_coef_variable.imi'],
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'linear_expr_coef_variable-statespace.states' , 'content' : """
+  STATE 1:
+  P: lend, i1 = 19, i2 = 7, i3 = 7, i4 = 7, r = 3 ==>
+&True
+
+  Projection onto the parameters:
+  True
+		"""
+			} # end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		## Test version             : 1
 		## Test since               : 2021/02/10
 		## Last modified            : 2021/02/10
@@ -2863,7 +2982,7 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test that a Boolean variable is initialized with consistant type',
+		'purpose'    : 'Test that a Boolean variable is initialized with consistent type',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'acceptingReachable.imiprop'],
 		'options'    : '',
@@ -2910,7 +3029,7 @@ Error                                   : invalid model
         ## Last modified            : 2021/05/31
         ## Test for IMITATOR version: 3.1.0
         ## Author 					: lbinria
-        'purpose'    : 'Test that "not" Boolean operator is effective and correct (computing)',
+        'purpose'    : 'Test that "not" Boolean operator is effective and correct',
 		'tags':'boolean, computing, semantic',
         'input_files': ['boolean_expressions/not-operator.imi'],
         'options'    : '-mode statespace -states-description',
@@ -2942,7 +3061,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test a complex Boolean comparison (computing)',
+		'purpose'    : 'Test a complex Boolean comparison',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/complex-bool-comparison.imi'],
 		'options'    : '-mode statespace -states-description',
@@ -2982,7 +3101,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test logical operator priority (computing)',
+		'purpose'    : 'Test logical operator priority',
 		'tags':'boolean, computing, semantic',
 		'input_files': ['boolean_expressions/logical-operator-priority.imi'],
 		'options'    : '-mode statespace -states-description',
@@ -3010,6 +3129,364 @@ Error                                   : invalid model
 	,
 
 	#------------------------------------------------------------
+	{
+		'purpose'    : 'Toy example for exemplifying specifications over Booleans only',
+		'author':'lbinria',
+		'tags':'boolean, computing, toy',
+		'input_files': ['boolean_expressions/bool-exemplifying.imi', 'boolean_expressions/bool-exemplifying.imiprop'],
+		'options'    : '-merge none -comparison equality',
+		'expectations' : [
+			{'file': 'bool-exemplifying.res' , 'content' : """
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"plma": "l1",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "False",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "p1up",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": " not  (p1)",
+						"updates": {"p1": "True"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l1",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "p2up",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": " not  (p2)",
+						"updates": {"p2": "True"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l1",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "True"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "p1down",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": "p1",
+						"updates": {"p1": "False"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l1",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "False",
+					"p2": "True"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a1",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "plma",
+						"guard": "True",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l2",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "False",
+					"p2": "True"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/4",
+				"action": "p2down",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": "p2",
+						"updates": {"p2": "False"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l2",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "False",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "1/4",
+					"global_time": "1/4"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/4",
+				"action": "p1up",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "SBA",
+						"guard": " not  (p1)",
+						"updates": {"p1": "True"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l2",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "1/2",
+					"global_time": "1/2"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/2",
+				"action": "check",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "plma",
+						"guard": "p1 AND  x > 0",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l3",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "3",
+				"action": "a2",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "plma",
+						"guard": " not  (p2) AND  x = 3",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"plma": "l4",
+					"SBA": "l1"
+				},
+				"discrete_variables": {
+					"p1": "True",
+					"p2": "False"
+				},
+				"continuous_variables": {
+					"x": "3",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1",
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
 	# END : Test Boolean expressions
 	#------------------------------------------------------------
 
@@ -3020,8 +3497,8 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 	{
 		'author': 'lbinria',
-		'purpose'    : 'Test general behavior of array expressions (computing)',
-		'tags':'array, computing, semantic',
+		'purpose'    : 'Test general behavior of array expressions',
+		'tags':'array, computing, function, semantic',
 		'input_files': ['array_expressions/array.imi', 'acceptingReachable.imiprop'],
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
@@ -3029,7 +3506,7 @@ Error                                   : invalid model
   /************************************************************/
   INITIAL
   STATE 0:
-  P: s0, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [0, 0, 0], my_bool_array = [False, False] ==> 
+  P: s0, i = 0, my_int_array_to_update = [1, 0], array_of_queue = [queue()], array_of_stack = [stack()], array_of_list = [list([1, 2])], super_nested = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [0, 0, 0], my_bool_array = [False, False] ==>
 &True
 
   Projection onto the parameters:
@@ -3037,7 +3514,7 @@ Error                                   : invalid model
 
   /************************************************************/
   STATE 1:
-  P: lend, i = 0, my_int_array_to_update = [1, 0], super_nested = [[[1, 2], [3, 0]], [[5, 6], [0, 0]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [1, 0, 0], my_bool_array = [False, True] ==> 
+  P: lend, i = 0, my_int_array_to_update = [1, 0], array_of_queue = [queue()], array_of_stack = [stack()], array_of_list = [list([0, 0])], super_nested = [[[1, 2], [3, 0]], [[5, 6], [0, 0]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [1, 0, 0], my_bool_array = [False, True] ==>
 &True
 
   Projection onto the parameters:
@@ -3076,6 +3553,114 @@ Error                                   : index out of range
 
 	#------------------------------------------------------------
 	# END : Test array expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test list expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		'author': 'lbinria',
+		'purpose'    : 'Test general behavior of list expressions',
+		'tags':'list, computing, function, semantic',
+		'input_files': ['list_expressions/list.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'list-statespace.states' , 'content' : """
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1, list_of_queue = list([queue()]), list_of_stack = list([stack()]), list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([1]), rational_list = list([1]) ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  pta: lend, list_of_queue = list([queue()]), list_of_stack = list([stack()]), list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([2, 1]), rational_list = list([1]) ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test list expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test stack expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		'author': 'lbinria',
+		'purpose'    : 'Test general behavior of stack expressions',
+		'tags':'stack, computing, function, semantic',
+		'input_files': ['stack_queue_expressions/stack.imi'],
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'stack-statespace.states' , 'content' : """
+  pta: lend, i = 3, r = 1, s3 = stack([3, 2]), s2 = stack(), s1 = stack([2, 1]) ==>
+&True
+
+  Projection onto the parameters:
+  True
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test stack expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test queue expressions
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		'author': 'lbinria',
+		'purpose'    : 'Test general behavior of queue expressions',
+		'tags':'queue, computing, function, semantic',
+		'input_files': ['stack_queue_expressions/queue.imi'],
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'queue-statespace.states' , 'content' : """
+  pta: lend, i = 2, r = 1, s3 = queue([3, 2]), s2 = queue(), s1 = queue([2, 1]) ==>
+&True
+
+  Projection onto the parameters:
+  True
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test queue expressions
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
@@ -3902,7 +4487,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
-	# BEGIN : Test custom function
+	# BEGIN : Test user defined function
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
@@ -3911,7 +4496,6 @@ END CONSTRAINT
 		## Test since               : 2021/06/07
 		## Last modified            : 2021/06/07
 		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test that behavior of pow function is correct',
 		'input_files': ['functions/pow.imi'],
@@ -4022,7 +4606,6 @@ END CONSTRAINT
 		## Test since               : 2021/06/30
 		## Last modified            : 2021/06/30
 		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test that behaviors of all possible functions on binary word are correct ',
 		'input_files': ['functions/binary-word.imi'],
@@ -4113,8 +4696,113 @@ END CONSTRAINT
 
 	,
 
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/03/16
+      ## Last modified            : 2022/03/16
+      ## Test for IMITATOR version: 3.3
+      'author': 'lbinria',
+      'purpose'    : 'Test that evaluation order of function parameters is left to right',
+      'input_files': ['functions/function_argument_eval_order.imi'],
+      'tags': 'behavior, function',
+      'options'    : '-mode statespace -states-description -no-var-autoremove',
+      'expectations' : [
+        {'file': 'function_argument_eval_order-statespace.states' , 'content' : """
+    STATE 1:
+    pta: lend, result = 9, s = stack() ==>
+    &True
+
+    Projection onto the parameters:
+    True
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/03/16
+      ## Last modified            : 2022/03/16
+      ## Test for IMITATOR version: 3.4
+      'author': 'lbinria',
+      'purpose'    : 'Test some behaviors on user functions',
+      'input_files': ['functions/user-function-1.imi'],
+      'tags': 'behavior, function',
+      'options'    : '-mode statespace -states-description -no-var-autoremove',
+      'expectations' : [
+        {'file': 'user-function-1-statespace.states' , 'content' : """
+  INITIAL
+  STATE 0:
+  P: l0, top_stack = 0, top_queue = 0, r_result = 0, lerp_result = 0, i_result = 0, i_result_2 = 0, a_global = [0, 0], r_global = 0, i_global = 0, bin = 0b1011, q = queue(), s = stack(), r1 = 1, i1 = 1 ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  P: lend, top_stack = 2, top_queue = 0, r_result = 4, lerp_result = 1583/200, i_result = 3, i_result_2 = 3, a_global = [0, 1], r_global = 15, i_global = 10, bin = 0b0011, q = queue([0, 1, 2]), s = stack([2, 1, 0]), r1 = 1, i1 = 1 ==>
+&True
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/06/23
+      ## Last modified            : 2022/06/23
+      ## Test for IMITATOR version: 3.4
+      'author': 'lbinria',
+      'purpose'    : 'Test side effects detection on user defined functions',
+      'input_files': ['functions/function-side-effects-detect.imi'],
+      'tags': 'behavior, function',
+      'options'    : '',
+      'expectations' : [
+        {'file': 'function-side-effects-detect.res' , 'content' : """
+  "function_metas": [
+    {
+      "name": "f1",
+      "side-effects": true
+    },
+    {
+      "name": "f2",
+      "side-effects": true
+    },
+    {
+      "name": "f3",
+      "side-effects": false
+    },
+    {
+      "name": "f4",
+      "side-effects": true
+    },
+    {
+      "name": "f5",
+      "side-effects": false
+    }
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
 	#------------------------------------------------------------
-	# END : Test custom function
+	# END : Test user defined function
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
@@ -4176,6 +4864,103 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+        ## Test version             : 1
+        ## Test since               : 2022/03/17
+        ## Last modified            : 2022/06/23
+        ## Test for IMITATOR version: 3.3
+        'author': 'lbinria',
+        'purpose'    : 'Evaluation order of discrete sequential and constraint updates',
+        'input_files': ['updates/compound-updates-order.imi'],
+		'tags': 'behavior, update',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'compound-updates-order-statespace.states' , 'content' : """
+pta1: lend, pta2: lend, pta3: lend, i = 3, j = 2, k = 6, l = 2, m = 2, w2 = 2, r1 = 1, r2 = 1, r3 = 1, s = stack([1, 0]) ==>
+& x >= 2
+& x = 2 + z
+& x + 4 = y
+& x = w
+& x = v
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1
+        ## Test since               : 2022/07/19
+        ## Last modified            : 2022/07/19
+        ## Test for IMITATOR version: 3.3
+        'author': 'lbinria',
+        'purpose'    : 'Test that constant update is forbidden',
+        'input_files': ['updates/constant-update.imi'],
+		'tags': 'behavior, update',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'constant-update.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1
+        ## Test since               : 2022/06/23
+        ## Last modified            : 2022/06/23
+        ## Test for IMITATOR version: 3.3
+        'author': 'lbinria',
+        'purpose'    : 'Does the model have complex updates ?',
+        'input_files': ['updates/has-complex-updates-1.imi'],
+		'tags': 'behavior, update',
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'has-complex-updates-1.res' , 'content' : """
+Has complex updates?                    : false
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1
+        ## Test since               : 2022/06/23
+        ## Last modified            : 2022/06/23
+        ## Test for IMITATOR version: 3.3
+        'author': 'lbinria',
+        'purpose'    : 'Does the model have complex updates ?',
+        'input_files': ['updates/has-complex-updates-2.imi'],
+		'tags': 'behavior, update',
+		'options'    : '-no-var-autoremove',
+		'expectations' : [
+			{'file': 'has-complex-updates-2.res' , 'content' : """
+Has complex updates?                    : true
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test since               : 2020/09/14
 		# Last modified            : 2020/09/14
@@ -4210,6 +4995,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/17
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test flows',
+        'tags':'flow, behavior',
 		'input_files': ['testFlows.imi', 'testFlows.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -4226,6 +5012,50 @@ Constraint nature                       : good
 		"""
 			} # end result file
 			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/05/02
+		# Last modified            : 2022/05/02
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test that undefined stopwatchs raise errors in flow update',
+		'author': 'lbinria',
+		'tags':'clock, stopwatch, flow, error, semantic',
+		'input_files': ['flow_error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'flow_error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/05/02
+		# Last modified            : 2022/05/02
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test that undefined stopwatchs raise errors in stop',
+		'author': 'lbinria',
+		'tags':'clock, stopwatch, stop, error, semantic',
+		'input_files': ['stopwatch_error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'stopwatch_error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
@@ -4554,9 +5384,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test EF on toy example: synthesis (explicit -merge -comparison inclusion)',
+		'purpose'    : 'Test EF on toy example: synthesis (explicit -merge yes -comparison inclusion)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-merge -comparison inclusion',
+		'options'    : '-merge yes -comparison inclusion',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4585,9 +5415,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test EF on toy example: synthesis (-no-merge)',
+		'purpose'    : 'Test EF on toy example: synthesis (-merge none)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-no-merge',
+		'options'    : '-merge none',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4616,9 +5446,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -comparison equality)',
+		'purpose'    : 'Test EF on toy example: synthesis (-merge none -comparison equality)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-no-merge -comparison equality',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4648,9 +5478,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -comparison equality -no-cumulative-pruning)',
+		'purpose'    : 'Test EF on toy example: synthesis (-merge none -comparison equality -no-cumulative-pruning)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-no-merge -comparison equality -no-cumulative-pruning',
+		'options'    : '-merge none -comparison equality -no-cumulative-pruning',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4702,7 +5532,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EF with basic safety property for Fischer:3 (double-directional inclusion)',
 		'input_files': ['F3.imi', 'F3.imiprop'],
-		'options'    : '-merge -comparison doubleinclusion',
+		'options'    : '-merge yes -comparison doubleinclusion',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5152,9 +5982,9 @@ Number of computed states               : 14
 		# Test since               : 2021/09/01
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3.1
-		'purpose'    : 'Test EF with depth-limit to check the quick reachability (-no-merge)',
+		'purpose'    : 'Test EF with depth-limit to check the quick reachability (-merge none)',
 		'input_files': ['quick-reach.imi', 'EFaccepting.imiprop'],
-		'options'    : '-no-merge -depth-limit 3',
+		'options'    : '-merge none -depth-limit 3',
 		'expectations' : [
 			{'file': 'quick-reach.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -6239,11 +7069,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/11/02
+		# Last modified            : 2022/02/09
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only discrete',
 		'input_files': ['testEFexemplify-discrete.imi', 'testEFexemplify-discrete.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFexemplify-discrete.res' , 'content' : """
 BEGIN RESULT
@@ -6260,24 +7090,96 @@ True
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  
-
-pta: l1, i = 0 ==> 
-global_time = 0 flows[global_time' = 1]
- | 
- | via d = 1/2
- | followed by combined transition [PTA pta: guard{True} updates{i := 3}  (* sync nosync_1*)  Target l2] 
- | 
- v  pta: l2, i = 3 ==> 
-global_time = 1/2 flows[global_time' = 1]
-
- | 
- | via d = 1/2
- | followed by combined transition [PTA pta: guard{True} updates{i := i + 1}  (* sync nosync_2*)  Target lTarget] 
- | 
- v  pta: lTarget, i = 4 ==> 
-global_time = 1 flows[global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+					"i": "0"
+				},
+				"continuous_variables": {
+					"global_time": "0"
+				},
+				"flows": {
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/2",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {"i": "3"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+					"i": "3"
+				},
+				"continuous_variables": {
+					"global_time": "1/2"
+				},
+				"flows": {
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/2",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {"i": "i + 1"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "lTarget"
+				},
+				"discrete_variables": {
+					"i": "4"
+				},
+				"continuous_variables": {
+					"global_time": "1"
+				},
+				"flows": {
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 END RESULT
@@ -6296,11 +7198,11 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/11/02
+		# Last modified            : 2022/02/09
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock',
 		'input_files': ['testEFexemplify-1clock.imi', 'testEFexemplify-1clock.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFexemplify-1clock.res' , 'content' : """
 BEGIN RESULT
@@ -6317,24 +7219,101 @@ True
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  
-
-pta: l1 ==> 
-x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 2
- | followed by combined transition [PTA pta: guard{ x = 2} updates{x := 0}  (* sync nosync_1*)  Target l2] 
- | 
- v  pta: l2 ==> 
-x = 0 & global_time = 2 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 3
- | followed by combined transition [PTA pta: guard{ x = 3} updates{x := x}  (* sync nosync_2*)  Target lTarget] 
- | 
- v  pta: lTarget ==> 
-x = 3 & global_time = 5 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "2",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 2",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "2"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "3",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 3",
+						"updates": {
+							"x": "x"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "lTarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "3",
+					"global_time": "5"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 END RESULT
@@ -6353,11 +7332,11 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/11/02
+		# Last modified            : 2022/02/09
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock (+ non-1 flows, non-0 resets)',
 		'input_files': ['testEFexemplify-1complexclock.imi', 'testEFexemplify-1complexclock.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFexemplify-1complexclock.res' , 'content' : """
 BEGIN RESULT
@@ -6374,31 +7353,136 @@ True
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  
-
-pta: l1 ==> 
-x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 2
- | followed by combined transition [PTA pta: guard{ x = 2} updates{x := 5}  (* sync nosync_1*)  Target l2] 
- | 
- v  pta: l2 ==> 
-x = 5 & global_time = 2 flows[x' = 3, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 8} updates{x := 2*x}  (* sync nosync_2*)  Target l3] 
- | 
- v  pta: l3 ==> 
-x = 16 & global_time = 3 flows[x' = -1, global_time' = 1]
-
- | 
- | via d = 10
- | followed by combined transition [PTA pta: guard{ x = 6} updates{x := x + -3}  (* sync nosync_3*)  Target lTarget] 
- | 
- v  pta: lTarget ==> 
-x = 3 & global_time = 13 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "2",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 2",
+						"updates": {
+							"x": "5"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "5",
+					"global_time": "2"
+				},
+				"flows": {
+					"x": "3", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 8",
+						"updates": {
+							"x": "2*x"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "16",
+					"global_time": "3"
+				},
+				"flows": {
+					"x": "-1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "10",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 6",
+						"updates": {
+							"x": "x + -3"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "lTarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "3",
+					"global_time": "13"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 END RESULT
@@ -6417,11 +7501,11 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/11/02
+		# Last modified            : 2022/02/09
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with 2 clocks (+ non-1 flows, non-0 resets)',
 		'input_files': ['testEFexemplify-2complexclocks.imi', 'testEFexemplify-2complexclocks.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFexemplify-2complexclocks.res' , 'content' : """
 BEGIN RESULT
@@ -6438,31 +7522,145 @@ True
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  
-
-pta: l1 ==> 
-x = 0 & y = 0 & global_time = 0 flows[x' = 1, y' = 0, global_time' = 1]
- | 
- | via d = 2
- | followed by combined transition [PTA pta: guard{ x = 2} updates{y := 5}  (* sync nosync_1*)  Target l2] 
- | 
- v  pta: l2 ==> 
-x = 2 & y = 5 & global_time = 2 flows[x' = 3, y' = 2, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 5} updates{x := y, y := x}  (* sync nosync_2*)  Target l3] 
- | 
- v  pta: l3 ==> 
-x = 7 & y = 5 & global_time = 3 flows[x' = -12, y' = 1, global_time' = 1]
-
- | 
- | via d = 1/2
- | followed by combined transition [PTA pta: guard{ x = 1} updates{y := -1*x + y}  (* sync nosync_3*)  Target lTarget] 
- | 
- v  pta: lTarget ==> 
-x = 1 & y = 9/2 & global_time = 7/2 flows[x' = 1, y' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"y": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "2",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 2",
+						"updates": {
+							"y": "5"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "2",
+					"y": "5",
+					"global_time": "2"
+				},
+				"flows": {
+					"x": "3", 
+					"y": "2", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 5",
+						"updates": {
+							"x": "y",
+							"y": "x"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "7",
+					"y": "5",
+					"global_time": "3"
+				},
+				"flows": {
+					"x": "-12", 
+					"y": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/2",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 1",
+						"updates": {
+							"y": "-1*x + y"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "lTarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "1",
+					"y": "9/2",
+					"global_time": "7/2"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 END RESULT
@@ -6481,13 +7679,14 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2021/11/02
-		# Test for IMITATOR version: 3.2
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example with 1 clock and 2 bounded signals',
 		'input_files': ['testEFexemplify-2signals.imi', 'testEFexemplify-2signals.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			# WARNING: there is a lot of non-determinism, so a failure on this test does not necessarily mean the algorithm is wrong! It should then be manually inspected
+			# NOTE: only quickly checked it (2022/03/31)
 			{'file': 'testEFexemplify-2signals.res' , 'content' : """
 (************************************************************)
  Run #1
@@ -6501,42 +7700,1023 @@ True
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1", 
+					"signal_1": "increasing_slow", 
+					"signal_2": "increasing_slow"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"s_1": "29/4",
+					"s_2": "29/8",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"s_1": "1", 
+					"s_2": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "2",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " s_1 > s_2 AND x = 2",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2", 
+					"signal_1": "increasing_slow", 
+					"signal_2": "increasing_slow"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"s_1": "37/4",
+					"s_2": "45/8",
+					"global_time": "2"
+				},
+				"flows": {
+					"x": "1", 
+					"s_1": "1", 
+					"s_2": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "stabilize_1",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "signal_1",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2", 
+					"signal_1": "stabilized", 
+					"signal_2": "increasing_slow"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "1",
+					"s_1": "41/4",
+					"s_2": "53/8",
+					"global_time": "3"
+				},
+				"flows": {
+					"x": "1", 
+					"s_1": "0", 
+					"s_2": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "13/4",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x > 4 AND 10 > s_2",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3", 
+					"signal_1": "stabilized", 
+					"signal_2": "increasing_slow"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "17/4",
+					"s_1": "41/4",
+					"s_2": "79/8",
+					"global_time": "25/4"
+				},
+				"flows": {
+					"x": "2", 
+					"s_1": "0", 
+					"s_2": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "83/8",
+				"action": "(silent)",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x > 20 AND s_1 > 10 AND s_1 + 10 = s_2",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "lTarget", 
+					"signal_1": "stabilized", 
+					"signal_2": "increasing_slow"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "25",
+					"s_1": "41/4",
+					"s_2": "81/4",
+					"global_time": "133/8"
+				},
+				"flows": {
+					"x": "1", 
+					"s_1": "0", 
+					"s_2": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/03/02
+		# Last modified            : 2022/03/02
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify without parameters: unique negative run',
+		'input_files': ['testEFExemplify1neg.imi', 'testEFExemplify1neg.imiprop'],
+		'options'    : '-merge none -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplify1neg.res' , 'content' : """
+(************************************************************)
+ Run #2
+
+ Valuation:
   
 
-pta: l1, signal_1: increasing_slow, signal_2: increasing_slow ==> 
-x = 0 & s_1 = 37/4 & s_2 = 29/8 & global_time = 0 flows[x' = 1, s_1' = 1, s_2' = 1, global_time' = 1]
- | 
- | via d = 1
- | followed by combined transition [PTA signal_1: guard{True} updates{}  sync stabilize_1 Target stabilized] 
- | 
- v  pta: l1, signal_1: stabilized, signal_2: increasing_slow ==> 
-x = 1 & s_1 = 41/4 & s_2 = 37/8 & global_time = 1 flows[x' = 1, s_1' = 0, s_2' = 1, global_time' = 1]
+ Other valuations with equivalent (discrete) run:
+True
 
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ s_1 > s_2
-& x = 2} updates{x := 0}  (* sync nosync_1*)  Target l2] 
- | 
- v  pta: l2, signal_1: stabilized, signal_2: increasing_slow ==> 
-x = 0 & s_1 = 41/4 & s_2 = 45/8 & global_time = 2 flows[x' = 1, s_1' = 0, s_2' = 1, global_time' = 1]
+ Run nature: impossible run
 
- | 
- | via d = 17/4
- | followed by combined transition [PTA pta: guard{ x > 4
-& 10 > s_2} updates{}  (* sync nosync_2*)  Target l3] 
- | 
- v  pta: l3, signal_1: stabilized, signal_2: increasing_slow ==> 
-x = 17/4 & s_1 = 41/4 & s_2 = 79/8 & global_time = 25/4 flows[x' = 2, s_1' = 0, s_2' = 1, global_time' = 1]
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"specification": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "a1",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "specification",
+						"guard": " 2 >= x",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "1",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "3",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "4",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
 
- | 
- | via d = 83/8
- | followed by combined transition [PTA pta: guard{ x > 20
-& s_1 > 10
-& s_1 + 10 = s_2} updates{}  (* sync nosync_3*)  Target lTarget] 
- | 
- v  pta: lTarget, signal_1: stabilized, signal_2: increasing_slow ==> 
-x = 25 & s_1 = 41/4 & s_2 = 81/4 & global_time = 133/8 flows[x' = 1, s_1' = 0, s_2' = 1, global_time' = 1]
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/03/02
+		# Last modified            : 2022/03/02
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify without parameters: unique negative run (in initial location)',
+		'input_files': ['testEFExemplify1neg-b.imi', 'testEFExemplify1neg.imiprop'],
+		'options'    : '-merge none -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplify1neg-b.res' , 'content' : """
+(************************************************************)
+ Run #2
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"specification": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "4",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "4",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/03/02
+		# Last modified            : 2022/03/02
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify without parameters: unique negative run + flows',
+		'input_files': ['testEFExemplify1neg-c.imi', 'testEFExemplify1neg.imiprop'],
+		'options'    : '-merge none -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplify1neg-c.res' , 'content' : """
+(************************************************************)
+ Run #2
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"specification": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"y": "1",
+					"z": "2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/8", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "4",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "4",
+					"y": "1/2",
+					"z": "2",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/03/02
+		# Last modified            : 2022/03/02
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify without parameters: unique negative run + flows + negative variable',
+		'input_files': ['testEFExemplify1neg-d.imi', 'testEFExemplify1neg.imiprop'],
+		'options'    : '-merge none -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplify1neg-d.res' , 'content' : """
+(************************************************************)
+ Run #2
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"specification": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"y": "1",
+					"z": "2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "4",
+				"action": "a1"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "4",
+					"y": "0",
+					"z": "2",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "5",
+					"y": "-1/4",
+					"z": "2",
+					"global_time": "5"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a1"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "6",
+					"y": "-1/2",
+					"z": "2",
+					"global_time": "6"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/03/10
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify without parameters: non-determinism + flows + negative variable + 2 PTAs',
+		'input_files': ['testEFExemplifyNonDet.imi', 'testEFExemplifyNonDet.imiprop'],
+		'options'    : '-merge none -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplifyNonDet.res' , 'content' : """
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"spec1": "l1", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"y": "1",
+					"z": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "a1",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "spec1",
+						"guard": " 4 >= x",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "1",
+					"y": "3/4",
+					"z": "3/2",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "9",
+				"action": "a2",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "spec2",
+						"guard": " x >= 10",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "10",
+					"y": "-3/2",
+					"z": "3/2",
+					"global_time": "10"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "9/2",
+				"action": "a3",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "spec1",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}, 
+					{
+					"transition": {
+						"PTA": "spec2",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "11/2",
+					"y": "3",
+					"z": "3/2",
+					"global_time": "29/2"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "9/2",
+				"action": "a2",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "spec2",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "1",
+					"y": "15/2",
+					"z": "6",
+					"global_time": "19"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"spec1": "l1", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "0",
+					"y": "1",
+					"z": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "6",
+				"action": "a1"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "6",
+					"y": "-1/2",
+					"z": "3/2",
+					"global_time": "6"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "7",
+					"y": "-3/4",
+					"z": "3/2",
+					"global_time": "7"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a3"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "6",
+					"y": "1/4",
+					"z": "3/2",
+					"global_time": "8"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"x": "5",
+					"y": "5/4",
+					"z": "5/2",
+					"global_time": "9"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 """
@@ -6547,13 +8727,712 @@ x = 25 & s_1 = 41/4 & s_2 = 81/4 & global_time = 133/8 flows[x' = 1, s_1' = 0, s
 	#------------------------------------------------------------
 
 	,
-
-
+	
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2022/03/15
+		# Last modified            : 2022/03/15
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify with one parameter: unique negative parameter valuation',
+		'input_files': ['testEFExemplify1Pneg.imi', 'testEFExemplify1Pneg.imiprop'],
+		'options'    : '-merge none -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplify1Pneg.res' , 'content' : """
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 4
+
+ Other valuations with equivalent (discrete) run:
+ p = 4
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "4"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"specification": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "a1",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "specification",
+						"guard": " 2 >= x",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "1",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"specification": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "2",
+					"global_time": "2"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/03/15
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify with one parameter: non-determinism + flows + negative variable + 2 PTAs',
+		'input_files': ['testEFExemplifyPNonDet.imi', 'testEFExemplifyPNonDet.imiprop'],
+		'options'    : '-merge none -comparison equality',
+		'expectations' : [
+			{'file': 'testEFExemplifyPNonDet.res' , 'content' : """
+(************************************************************)
+ Run #1
+
+ Valuation:
+  p = 4
+
+ Other valuations with equivalent (discrete) run:
+ p = 4
+
+ Run nature: valid run
+
+ Run:
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": {
+			"p": "4"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"spec1": "l1", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "0",
+					"y": "1",
+					"z": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "4",
+				"action": "a1",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "spec1",
+						"guard": " p >= x AND x >= 4",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "4",
+					"y": "0",
+					"z": "3/2",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "6",
+				"action": "a2",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "spec2",
+						"guard": " x >= 10",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "10",
+					"y": "-3/2",
+					"z": "3/2",
+					"global_time": "10"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "9/2",
+				"action": "a3",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "spec1",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}, 
+					{
+					"transition": {
+						"PTA": "spec2",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "11/2",
+					"y": "3",
+					"z": "3/2",
+					"global_time": "29/2"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "9/2",
+				"action": "a2",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "spec2",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "1",
+					"y": "15/2",
+					"z": "6",
+					"global_time": "19"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ p >= 0
+& 4 > p
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "0"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"spec1": "l1", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "0",
+					"y": "1",
+					"z": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "1",
+				"action": "a1"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "1",
+					"y": "3/4",
+					"z": "3/2",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "2",
+					"y": "1/2",
+					"z": "3/2",
+					"global_time": "2"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a3"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "1",
+					"y": "3/2",
+					"z": "3/2",
+					"global_time": "3"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "0",
+					"y": "5/2",
+					"z": "5/2",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 4
+
+ Other valuations with equivalent (discrete) run:
+ p = 4
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "4"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"spec1": "l1", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "0",
+					"y": "1",
+					"z": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "6",
+				"action": "a1"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "6",
+					"y": "-1/2",
+					"z": "3/2",
+					"global_time": "6"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "-1/4", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "l2", 
+					"spec2": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "7",
+					"y": "-3/4",
+					"z": "3/2",
+					"global_time": "7"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "0", 
+					"global_time": "1"
+				}
+			}
+			}
+
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a3"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "6",
+					"y": "1/4",
+					"z": "3/2",
+					"global_time": "8"
+				},
+				"flows": {
+					"x": "-1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a2"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"spec1": "lT", 
+					"spec2": "lT"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4",
+					"x": "5",
+					"y": "5/4",
+					"z": "5/2",
+					"global_time": "9"
+				},
+				"flows": {
+					"x": "1", 
+					"y": "1", 
+					"z": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/?
+		# Last modified            : 2022/02/09
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example',
 		'input_files': ['testCounterExSimple-3.imi', 'testCounterExSimple-3.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-3.res' , 'content' : """
 BEGIN RESULT
@@ -6570,18 +9449,70 @@ BEGIN RESULT
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  p = 1/2
-
-pta: l1 ==> 
-p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 3
- | followed by combined transition [PTA pta: guard{ 2*p = 1
-& x = 3} updates{x := 0}  sync a Target ltarget] 
- | 
- v  pta: ltarget ==> 
-p = 1/2 & x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": {
+			"p": "1/2"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1/2",
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "3",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " 2*p = 1 AND x = 3",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1/2",
+					"x": "0",
+					"global_time": "3"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 
@@ -6600,43 +9531,59 @@ OR
  Run nature: impossible run
 
  Run:
-Impossible concrete run for parameter valuation:
-  p = 0
-
-pta: l1 ==> 
-p = 0 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l1 ==> 
-p = 0 & x = 1 & global_time = 1 flows[x' = 1, global_time' = 1]
-(************************************************************)
-
-
-(************************************************************)
- Run #3
-
- Valuation:
-  p = 1/2
-
- Other valuations with equivalent (discrete) run:
- 2*p = 1
-
- Run nature: impossible run
-
- Run:
-Impossible concrete run for parameter valuation:
-  p = 1/2
-
-pta: l1 ==> 
-p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by impossible transition labeled with a
- | 
- v  pta: ltarget ==> 
-p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "0"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "1",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "1",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 END RESULT
 """
@@ -6651,9 +9598,99 @@ END RESULT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2022/03/31
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.3
+		'purpose'    : 'Test EFexemplify on a toy example (variant without invariant)',
+		'input_files': ['testCounterExSimple-3b.imi', 'testCounterExSimple-3.imiprop'],
+		'options'    : '-merge none -comparison equality',
+		'expectations' : [
+			{'file': 'testCounterExSimple-3b.res' , 'content' : """
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 1/2
+
+ Other valuations with equivalent (discrete) run:
+ 2*p = 1
+
+ Run nature: impossible run
+
+ Run:
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "1/2"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1/2",
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "4",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1/2",
+					"x": "4",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
+(************************************************************)
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/?
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example (clock initially non-zero, strict constraints)',
 		'input_files': ['testCounterExSimple-4.imi', 'testCounterExSimple-4.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-4.res' , 'content' : """
 BEGIN RESULT
@@ -6671,18 +9708,69 @@ BEGIN RESULT
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  p = 4095/2
-
-pta: l1 ==> 
-p = 4095/2 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 1/2
- | followed by combined transition [PTA pta: guard{True
-&  p = 2046 + x} updates{}  sync a Target ltarget] 
- | 
- v  pta: ltarget ==> 
-p = 4095/2 & x = 3/2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": {
+			"p": "4095/2"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4095/2",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/2",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True AND  p = 2046 + x",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4095/2",
+					"x": "3/2",
+					"global_time": "1/2"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 
@@ -6701,17 +9789,59 @@ OR
  Run nature: impossible run
 
  Run:
-Impossible concrete run for parameter valuation:
-  p = 0
-
-pta: l1 ==> 
-p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l1 ==> 
-p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "0"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "1",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "2",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 
@@ -6728,17 +9858,59 @@ p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
  Run nature: impossible run
 
  Run:
-Impossible concrete run for parameter valuation:
-  p = 4095/2
-
-pta: l1 ==> 
-p = 4095/2 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by impossible transition labeled with a
- | 
- v  pta: ltarget ==> 
-p = 4095/2 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "4095/2"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4095/2",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "5/4",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "4095/2",
+					"x": "9/4",
+					"global_time": "5/4"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 END RESULT
 
@@ -6753,9 +9925,13 @@ END RESULT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2021/?
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only in the initial state)',
 		'input_files': ['testCounterExSimple-5.imi', 'testCounterExSimple-5.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5.res' , 'content' : """
 BEGIN RESULT
@@ -6771,31 +9947,139 @@ BEGIN RESULT
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  p = 1
-
-pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 1/4
- | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p = 1 & x = 5/4 & global_time = 1/4 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1/4
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
- | 
- v  pta: l3 ==> 
-p = 1 & x = 3/2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1/2
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
- | 
- v  pta: ltarget ==> 
-p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": {
+			"p": "1"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/4",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " p > 0",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "5/4",
+					"global_time": "1/4"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/4",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "3/2",
+					"global_time": "1/2"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/2",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "2",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 
@@ -6811,71 +10095,110 @@ p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
  Run nature: impossible run
 
  Run:
-Impossible concrete run for parameter valuation:
-  p = 0
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "0"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "1",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "2",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "3",
+					"global_time": "2"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
 
-pta: l1 ==> 
-p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l1 ==> 
-p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l2 ==> 
-p = 0 & x = 3 & global_time = 2 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l3 ==> 
-p = 0 & x = 4 & global_time = 3 flows[x' = 1, global_time' = 1]
-(************************************************************)
-
-
-(************************************************************)
- Run #3
-
- Valuation:
-  p = 1
-
- Other valuations with equivalent (discrete) run:
- p > 0
-
- Run nature: impossible run
-
- Run:
-Impossible concrete run for parameter valuation:
-  p = 1
-
-pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by impossible transition labeled with a
- | 
- v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l2 ==> 
-p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l3 ==> 
-p = 1 & x = 3 & global_time = 2 flows[x' = 1, global_time' = 1]
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "4",
+					"global_time": "3"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 END RESULT
 
@@ -6890,9 +10213,13 @@ END RESULT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2021/?
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at position 2)',
 		'input_files': ['testCounterExSimple-5b.imi', 'testCounterExSimple-5b.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5b.res' , 'content' : """
 BEGIN RESULT
@@ -6908,31 +10235,139 @@ BEGIN RESULT
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  p = 1
-
-pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1/2
- | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l3] 
- | 
- v  pta: l3 ==> 
-p = 1 & x = 3/2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1/2
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
- | 
- v  pta: ltarget ==> 
-p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": {
+			"p": "1"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/2",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " p > 0",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "3/2",
+					"global_time": "1/2"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/2",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "2",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 
@@ -6948,69 +10383,119 @@ p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
  Run nature: impossible run
 
  Run:
-Impossible concrete run for parameter valuation:
-  p = 0
-
-pta: l1 ==> 
-p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l2 ==> 
-p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l3 ==> 
-p = 0 & x = 3 & global_time = 2 flows[x' = 1, global_time' = 1]
-(************************************************************)
-
-
-(************************************************************)
- Run #3
-
- Valuation:
-  p = 1
-
- Other valuations with equivalent (discrete) run:
- p > 0
-
- Run nature: impossible run
-
- Run:
-Impossible concrete run for parameter valuation:
-  p = 1
-
-pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by impossible transition labeled with a
- | 
- v  pta: l3 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l3 ==> 
-p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "0"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "1",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "2",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "3",
+					"global_time": "2"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 END RESULT
 
@@ -7025,9 +10510,13 @@ END RESULT
 	
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2021/?
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at last position)',
 		'input_files': ['testCounterExSimple-5c.imi', 'testCounterExSimple-5c.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5c.res' , 'content' : """
 BEGIN RESULT
@@ -7043,31 +10532,139 @@ BEGIN RESULT
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  p = 1
-
-pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
- | 
- v  pta: l3 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target ltarget] 
- | 
- v  pta: ltarget ==> 
-p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": {
+			"p": "1"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " p > 0",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "2",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 
@@ -7083,69 +10680,129 @@ p = 1 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
  Run nature: impossible run
 
  Run:
-Impossible concrete run for parameter valuation:
-  p = 0
-
-pta: l1 ==> 
-p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
- | 
- v  pta: l3 ==> 
-p = 0 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l3 ==> 
-p = 0 & x = 2 & global_time = 1 flows[x' = 1, global_time' = 1]
-(************************************************************)
-
-
-(************************************************************)
- Run #3
-
- Valuation:
-  p = 1
-
- Other valuations with equivalent (discrete) run:
- p > 0
-
- Run nature: impossible run
-
- Run:
-Impossible concrete run for parameter valuation:
-  p = 1
-
-pta: l1 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
- | 
- v  pta: l3 ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by impossible transition labeled with a
- | 
- v  pta: ltarget ==> 
-p = 1 & x = 1 & global_time = 0 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "0"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "1",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "1",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "0",
+					"x": "2",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 END RESULT
 """
@@ -7159,9 +10816,13 @@ END RESULT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2021/?
+		# Last modified            : 2022/02/09
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter valuation derived)',
 		'input_files': ['testCounterExSimple-6.imi', 'testCounterExSimple-6.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 				# NOTE / TODO: the NEGATIVE run is disabled so far! due to a BUG …
 			{'file': 'testCounterExSimple-6.res' , 'content' : """
@@ -7179,31 +10840,140 @@ BEGIN RESULT
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  p = 2
-
-pta: l1 ==> 
-p = 2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p = 2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
- | 
- v  pta: l3 ==> 
-p = 2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target ltarget] 
- | 
- v  pta: ltarget ==> 
-p = 2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": {
+			"p": "2"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "2",
+					"x": "2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " p > 0",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "2",
+					"x": "2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "2",
+					"x": "2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "2",
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 """
 			} # end result file
@@ -7216,9 +10986,13 @@ p = 2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2021/?
+		# Last modified            : 2022/02/09
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
 		'input_files': ['testCounterExSimple-7.imi', 'testCounterExSimple-7.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-7.res' , 'content' : """
 
@@ -7236,31 +11010,139 @@ BEGIN RESULT
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  p = 2
-
-pta: l1 ==> 
-p = 2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p = 2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
- | 
- v  pta: l3 ==> 
-p = 2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1/2
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
- | 
- v  pta: ltarget ==> 
-p = 2 & x = 2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": {
+			"p": "2"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "2",
+					"x": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " p > 0",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "2",
+					"x": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "2",
+					"x": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/2",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "2",
+					"x": "2",
+					"global_time": "1/2"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 END RESULT
@@ -7276,9 +11158,13 @@ END RESULT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2021/?
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
 		'input_files': ['testCounterExSimple-8.imi', 'testCounterExSimple-8.imiprop'],
-		'options'    : '-no-merge -comparison none -draw-cart',
+		'options'    : '-merge none -comparison equality -draw-cart',
 		'expectations' : [
 			{'file': 'testCounterExSimple-8.res' , 'content' : """
 
@@ -7299,33 +11185,144 @@ BEGIN RESULT
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  p1 = 1
-& p2 = 1/2
-
-pta: l1 ==> 
-p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
- | 
- v  pta: l3 ==> 
-p1 = 1 & p2 = 1/2 & x = 2 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ p1 > p2
-& p2 + x > p1} updates{}  sync a Target ltarget] 
- | 
- v  pta: ltarget ==> 
-p1 = 1 & p2 = 1/2 & x = 3 & global_time = 1 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": {
+			"p1": "1",
+			"p2": "1/2"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p1": "1",
+					"p2": "1/2",
+					"x": "2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " p2 > 0",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p1": "1",
+					"p2": "1/2",
+					"x": "2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p1": "1",
+					"p2": "1/2",
+					"x": "2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " p1 > p2 AND p2 + x > p1",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p1": "1",
+					"p2": "1/2",
+					"x": "3",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 
 
@@ -7344,74 +11341,134 @@ p1 = 1 & p2 = 1/2 & x = 3 & global_time = 1 flows[x' = 1, global_time' = 1]
  Run nature: impossible run
 
  Run:
-Impossible concrete run for parameter valuation:
-  p1 = 3
-& p2 = 3
-
-pta: l1 ==> 
-p1 = 3 & p2 = 3 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p1 = 3 & p2 = 3 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1/2
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
- | 
- v  pta: l3 ==> 
-p1 = 3 & p2 = 3 & x = 2 & global_time = 1/2 flows[x' = 1, global_time' = 1]
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l3 ==> 
-p1 = 3 & p2 = 3 & x = 3 & global_time = 3/2 flows[x' = 1, global_time' = 1]
-(************************************************************)
-
-
-(************************************************************)
- Run #3
-
- Valuation:
-  p1 = 1
-& p2 = 1/2
-
- Other valuations with equivalent (discrete) run:
- p1 > p2
-& p2 > 0
-& 6 > p2
-
- Run nature: impossible run
-
- Run:
-Impossible concrete run for parameter valuation:
-  p1 = 1
-& p2 = 1/2
-
-pta: l1 ==> 
-p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
- | 
- v  pta: l3 ==> 
-p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by impossible transition labeled with a
- | 
- v  pta: ltarget ==> 
-p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p1": "3",
+			"p2": "3"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p1": "3",
+					"p2": "3",
+					"x": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " p2 > 0",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p1": "3",
+					"p2": "3",
+					"x": "3/2",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1/2",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p1": "3",
+					"p2": "3",
+					"x": "2",
+					"global_time": "1/2"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "1",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p1": "3",
+					"p2": "3",
+					"x": "3",
+					"global_time": "3/2"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 END RESULT
 
@@ -7419,7 +11476,7 @@ END RESULT
 			} # end result file
 			,
 			# NOTE: Just check its existence
-			{'file': 'testCounterExSimple-8_ex_3_neg.png' , 'content' : ""
+			{'file': 'testCounterExSimple-8_ex_2_neg.png' , 'content' : ""
 			} # end result file
 			,
 		] # end expectations
@@ -7430,9 +11487,13 @@ END RESULT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2021/?
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy monitoring-style example',
 		'input_files': ['testCounterExSimple-9.imi', 'testCounterExSimple-9.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-9.res' , 'content' : """
 
@@ -7450,70 +11511,141 @@ BEGIN RESULT
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  p = 1
-
-pta: l1 ==> 
-p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ p = x} updates{x := 0}  sync b Target l3] 
- | 
- v  pta: l3 ==> 
-p = 1 & x = 0 & global_time = 1 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ p = x} updates{}  sync b Target ltarget] 
- | 
- v  pta: ltarget ==> 
-p = 1 & x = 1 & global_time = 2 flows[x' = 1, global_time' = 1]
-(************************************************************)
-
-
-(************************************************************)
- Run #2
-
- Valuation:
-  p = 1
-
- Other valuations with equivalent (discrete) run:
- p >= 0
-
- Run nature: impossible run
-
- Run:
-Impossible concrete run for parameter valuation:
-  p = 1
-
-pta: l1 ==> 
-p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target l2] 
- | 
- v  pta: l2 ==> 
-p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ p = x} updates{x := 0}  sync b Target l3] 
- | 
- v  pta: l3 ==> 
-p = 1 & x = 0 & global_time = 1 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by impossible transition labeled with b
- | 
- v  pta: ltarget ==> 
-p = 1 & x = 0 & global_time = 1 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": {
+			"p": "1"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "0",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": "True",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "b",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " p = x",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "0",
+					"global_time": "1"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "b",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " p = x",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "ltarget"
+				},
+				"discrete_variables": {
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "1",
+					"global_time": "2"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 END RESULT
 
@@ -7527,9 +11659,13 @@ END RESULT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2021/?
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example without parameter',
 		'input_files': ['testCounterExSimple.imi', 'testCounterExSimple.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple.res' , 'content' : """
 
@@ -7547,86 +11683,180 @@ True
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  
-
-pta: l1, d1 = 1/2, d2 = 50 ==> 
-x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 3
- | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
- | 
- v  pta: l2, d1 = 1/2, d2 = 50 ==> 
-x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
- | 
- v  pta: l3, d1 = 5/2, d2 = 50 ==> 
-x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := d2 / 2}  sync a Target l4] 
- | 
- v  pta: l4, d1 = 5/2, d2 = 25 ==> 
-x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 7
- | followed by combined transition [PTA pta: guard{ x = 8} updates{}  sync a Target lbad] 
- | 
- v  pta: lbad, d1 = 5/2, d2 = 25 ==> 
-x = 8 & global_time = 12 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": null,
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+					"d1": "1/2", 
+					"d2": "50"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "3",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 3",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+					"d1": "1/2", 
+					"d2": "50"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "3"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 1",
+						"updates": {
+							"x": "0""d1": "d1 + 2"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+					"d1": "5/2", 
+					"d2": "50"
+				},
+				"continuous_variables": {
+					"x": "0",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 1",
+						"updates": {"d2": "d2 / 2"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l4"
+				},
+				"discrete_variables": {
+					"d1": "5/2", 
+					"d2": "25"
+				},
+				"continuous_variables": {
+					"x": "1",
+					"global_time": "5"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "7",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 8",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "lbad"
+				},
+				"discrete_variables": {
+					"d1": "5/2", 
+					"d2": "25"
+				},
+				"continuous_variables": {
+					"x": "8",
+					"global_time": "12"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
-
-
-(************************************************************)
- Run #2
-
- Valuation:
-  
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: impossible run
-
- Run:
-Impossible concrete run for parameter valuation:
-  
-
-pta: l1, d1 = 1/2, d2 = 50 ==> 
-x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 3
- | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
- | 
- v  pta: l2, d1 = 1/2, d2 = 50 ==> 
-x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
- | 
- v  pta: l3, d1 = 5/2, d2 = 50 ==> 
-x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := d2 / 2}  sync a Target l4] 
- | 
- v  pta: l4, d1 = 5/2, d2 = 25 ==> 
-x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by impossible transition labeled with a
- | 
- v  pta: lbad, d1 = 5/2, d2 = 25 ==> 
-x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
-(************************************************************)
-
 END RESULT
 
 """
@@ -7640,14 +11870,17 @@ END RESULT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2021/?
+		# Last modified            : 2022/03/31
+		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example with parameters and discrete variables',
 		'input_files': ['testCounterExSimple-2.imi', 'testCounterExSimple-2.imiprop'],
-		'options'    : '-no-merge -comparison none',
+		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-2.res' , 'content' : """
 
 BEGIN RESULT
-
 (************************************************************)
  Run #1
 
@@ -7661,41 +11894,182 @@ BEGIN RESULT
  Run nature: valid run
 
  Run:
-Concrete run for parameter valuation:
-  p = 1/2
-
-pta: l1, d1 = 1/2 ==> 
-p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 3
- | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
- | 
- v  pta: l2, d1 = 1/2 ==> 
-p = 1/2 & x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
- | 
- v  pta: l3, d1 = 5/2 ==> 
-p = 1/2 & x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ 1 > p
-& x = 1} updates{d1 := d1 / 2}  sync a Target l4] 
- | 
- v  pta: l4, d1 = 5/4 ==> 
-p = 1/2 & x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 7
- | followed by combined transition [PTA pta: guard{ x = 8} updates{}  sync a Target lbad] 
- | 
- v  pta: lbad, d1 = 5/4 ==> 
-p = 1/2 & x = 8 & global_time = 12 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "concrete",
+		"valuation": {
+			"p": "1/2"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+					"d1": "1/2"
+				},
+				"continuous_variables": {
+					"p": "1/2",
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "3",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 3",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+					"d1": "1/2"
+				},
+				"continuous_variables": {
+					"p": "1/2",
+					"x": "0",
+					"global_time": "3"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 1",
+						"updates": {
+							"x": "0""d1": "d1 + 2"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+					"d1": "5/2"
+				},
+				"continuous_variables": {
+					"p": "1/2",
+					"x": "0",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " 1 > p AND x = 1",
+						"updates": {"d1": "d1 / 2"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l4"
+				},
+				"discrete_variables": {
+					"d1": "5/4"
+				},
+				"continuous_variables": {
+					"p": "1/2",
+					"x": "1",
+					"global_time": "5"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "7",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 8",
+						"updates": {
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "lbad"
+				},
+				"discrete_variables": {
+					"d1": "5/4"
+				},
+				"continuous_variables": {
+					"p": "1/2",
+					"x": "8",
+					"global_time": "12"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
-
 
 (************************************************************)
  Run #2
@@ -7709,85 +12083,161 @@ p = 1/2 & x = 8 & global_time = 12 flows[x' = 1, global_time' = 1]
  Run nature: impossible run
 
  Run:
-Impossible concrete run for parameter valuation:
-  p = 1
-
-pta: l1, d1 = 1/2 ==> 
-p = 1 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 3
- | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
- | 
- v  pta: l2, d1 = 1/2 ==> 
-p = 1 & x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
- | 
- v  pta: l3, d1 = 5/2 ==> 
-p = 1 & x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l3, d1 = 5/2 ==> 
-p = 1 & x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by impossible transition labeled with a
- | 
- v  pta: l4, d1 = 5/4 ==> 
-p = 1 & x = 2 & global_time = 6 flows[x' = 1, global_time' = 1]
-(************************************************************)
-
-
-(************************************************************)
- Run #3
-
- Valuation:
-  p = 1/2
-
- Other valuations with equivalent (discrete) run:
- 1 > p
-& p >= 0
-
- Run nature: impossible run
-
- Run:
-Impossible concrete run for parameter valuation:
-  p = 1/2
-
-pta: l1, d1 = 1/2 ==> 
-p = 1/2 & x = 0 & global_time = 0 flows[x' = 1, global_time' = 1]
- | 
- | via d = 3
- | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
- | 
- v  pta: l2, d1 = 1/2 ==> 
-p = 1/2 & x = 0 & global_time = 3 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
- | 
- v  pta: l3, d1 = 5/2 ==> 
-p = 1/2 & x = 0 & global_time = 4 flows[x' = 1, global_time' = 1]
-
- | 
- | via d = 1
- | followed by combined transition [PTA pta: guard{ 1 > p
-& x = 1} updates{d1 := d1 / 2}  sync a Target l4] 
- | 
- v  pta: l4, d1 = 5/4 ==> 
-p = 1/2 & x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
- | 
- | via d = 0
- | followed by impossible transition labeled with a
- | 
- v  pta: lbad, d1 = 5/4 ==> 
-p = 1/2 & x = 1 & global_time = 5 flows[x' = 1, global_time' = 1]
+{
+	"run": {
+		"nature": "negative",
+		"valuation": {
+			"p": "1"
+			},
+		"steps": [
+			{
+			"state": {
+				"location": {
+					"pta": "l1"
+				},
+				"discrete_variables": {
+					"d1": "1/2"
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "0",
+					"global_time": "0"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			},
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "3",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 3",
+						"updates": {
+							"x": "0"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l2"
+				},
+				"discrete_variables": {
+					"d1": "1/2"
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "0",
+					"global_time": "3"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}, 
+			{
+			"transition": {
+				"nature": "concrete",
+				"duration": "1",
+				"action": "a",
+				"transitions": [
+					{
+					"transition": {
+						"PTA": "pta",
+						"guard": " x = 1",
+						"updates": {
+							"x": "0""d1": "d1 + 2"
+						}
+					}
+					}
+				]
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l3"
+				},
+				"discrete_variables": {
+					"d1": "5/2"
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "0",
+					"global_time": "4"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "impossible",
+				"duration": "1",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "l4"
+				},
+				"discrete_variables": {
+					"d1": "5/4"
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "1",
+					"global_time": "5"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+			{
+			"transition": {
+				"nature": "arbitrary",
+				"duration": "1",
+				"action": "a"
+			}
+			},
+			{
+			"state": {
+				"location": {
+					"pta": "lbad"
+				},
+				"discrete_variables": {
+					"d1": "5/4"
+				},
+				"continuous_variables": {
+					"p": "1",
+					"x": "2",
+					"global_time": "6"
+				},
+				"flows": {
+					"x": "1", 
+					"global_time": "1"
+				}
+			}
+			}
+		]
+	}
+}
 (************************************************************)
 END RESULT
 """
@@ -8250,7 +12700,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -comparison inclusion -merge)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-cycle-algo BFS -comparison inclusion -merge',
+		'options'    : '-cycle-algo BFS -comparison inclusion -merge yes',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8599,7 +13049,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -comparison inclusion -merge)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-cycle-algo BFS -comparison inclusion -merge',
+		'options'    : '-cycle-algo BFS -comparison inclusion -merge yes',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10590,7 +15040,7 @@ END CONSTRAINT
 	{
 		'purpose'    : 'Test the convex inverse method (SIMOP)',
 		'input_files': ['simop.imi', 'simop.pi0'],
-		'options'    : '-merge -no-random -comparison inclusion',
+		'options'    : '-merge yes -no-random -comparison inclusion',
 		'expectations' : [
 			{'file': 'simop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -14633,9 +19083,9 @@ Constraint nature                       : good/bad
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Testing state space + merging on a trivial example: -no-merge',
+		'purpose'    : 'Testing state space + merging on a trivial example: -merge none',
 		'input_files': ['exActionsNonPreserved.imi'],
-		'options'    : '-mode statespace -states-description -no-merge',
+		'options'    : '-mode statespace -states-description -merge none',
 		'expectations' : [
 			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
 		*/
@@ -14690,11 +19140,9 @@ Constraint nature                       : good/bad
 	{
 		'purpose'    : 'Testing state space + merging on a trivial example: -merge',
 		'input_files': ['exActionsNonPreserved.imi'],
-		'options'    : '-mode statespace -states-description -merge',
+		'options'    : '-mode statespace -states-description -merge yes',
 		'expectations' : [
 			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
-		*/
-
   DESCRIPTION OF THE STATES
 
   /************************************************************/
@@ -14719,8 +19167,8 @@ Constraint nature                       : good/bad
 
   /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_2 via "b"
   s_0 -> s_2 via "a"
+  s_0 -> s_2 via "b"
   """ 
 			} # end result file
 			,
@@ -14732,7 +19180,7 @@ Constraint nature                       : good/bad
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Testing state space + merging on a trivial example: testing no option = -no-merge',
+		'purpose'    : 'Testing state space + merging on a trivial example: testing no option = -merge none',
 		'input_files': ['exActionsNonPreserved.imi'],
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
@@ -16602,6 +21050,202 @@ broadcast chan c;
 system pta1, pta2, pta3;
 </system></nta>
 	"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2022/02/04
+		# Last modified            : 2022/02/04
+		# Test for IMITATOR version: 3.1
+		'purpose'    : 'Test translation to Jani',
+		'author': 'lbinria',
+		'tags' : 'translation, jani',
+		'input_files': ['translations/jani.imi'],
+		'options'    : '-imi2Jani',
+		'expectations' : [
+			{'file': 'jani.jani' , 'content' : """
+	"functions":
+	[
+
+	]
+	,
+	"actions":
+	[
+
+	]
+	,
+	"variables":
+	[
+
+		{
+			"name":"i",
+			"type":"real",
+			"initial-value":6
+		}
+		,
+
+		{
+			"name":"r",
+			"type":"real",
+			"initial-value":2
+		}
+
+	]
+	,
+	"properties":
+	[
+
+	]
+	,
+	"automata":
+	[
+
+		{
+			"name": "pta",
+			"locations":
+			[
+
+				{
+					"name": "l1"
+				}
+				,
+
+				{
+					"name": "lend"
+				}
+
+			]
+			,
+			"initial-locations":
+			[
+				"l1"
+			]
+			,
+			"edges":
+			[
+
+				{
+					"location":"l1",
+					"action":"nosync_1",
+					"guard":
+					{
+						"exp":
+						{
+							"op":"=",
+							"left":
+							{
+								"op":"/",
+								"left":
+								{
+									"op":"-",
+									"left":
+									{
+										"op":"+",
+										"left":"i",
+										"right":1
+									}
+									,
+									"right":2
+								}
+								,
+								"right":2
+							}
+							,
+							"right":
+							{
+								"op":"/",
+								"left":
+								{
+									"op":"+",
+									"left":
+									{
+										"op":"*",
+										"left":"r",
+										"right":2
+									}
+									,
+									"right":1
+								}
+								,
+								"right":2
+							}
+
+						}
+
+					}
+					,
+					"destinations":
+					[
+
+						{
+							"location":"lend",
+							"assignments":
+							[
+
+								{
+									"ref":"i",
+									"value":
+									{
+										"op":"+",
+										"left":
+										{
+											"op":"*",
+											"left":5,
+											"right":3
+										}
+										,
+										"right":
+										{
+											"op":"pow",
+											"left":"r",
+											"right":2
+										}
+
+									}
+
+								}
+
+							]
+
+						}
+
+					]
+
+				}
+
+			]
+
+		}
+
+	]
+	,
+	"system":
+	{
+		"elements":
+		[
+
+			{
+				"automaton": "pta"
+			}
+
+		]
+		,
+		"syncs":
+		[
+
+		]
+
+	}
+
+}
+"""
 			} # end result file
 			,
 		] # end expectations

@@ -9,7 +9,6 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2021/06/08
  *
  ************************************************************)
 
@@ -3173,10 +3172,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* type transition = guard * clock_updates * discrete_update list * location_index *)
 
 		(*** WARNING: other updates than clock updates not considered so far ***)
-		
+
 		let new_transition = {
 			guard		= Continuous_guard guard;
 			action		= action_index;
+			seq_updates = {clock = No_update; discrete=[]; conditional=[]};
 			updates		= {
 				clock      = Resets clock_updates; (** Clock updates *)
 				discrete   = discrete_update; (** List of discrete updates *)
@@ -3591,8 +3591,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Is there any invariant in the model? *)
 		(*** HACK: to check! ***)
 		has_invariants = model.has_invariants;
-		(* Is there any stopwatch in the model? *)
+		(* Is there any clock going at a rate <> 1 in the model? *)
 		has_non_1rate_clocks = model.has_non_1rate_clocks;
+		(* Is there any clock reset of another form than x := 0? *)
+		has_complex_updates = model.has_complex_updates;
 		(* Is the model an L/U-PTA? *)
 		(*** TODO (for now, we just assume that after transformation the model is not an L/U PTA anymore ***)
 		lu_status = PTA_notLU;
@@ -3676,6 +3678,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		transitions_description = new_transitions_description;
 		(* An array transition_index -> automaton_index *)
 		automaton_of_transition = new_automaton_of_transition;
+
+        (* The list of declared functions *)
+        fun_definitions = Hashtbl.create 0;
 
 		(* The cost for each automaton and each location *)
 		(*** TODO ***)

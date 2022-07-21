@@ -8,7 +8,6 @@
  *
  * File contributors : Étienne André, Dylan Marinho
  * Created           : 2019/12/18
- * Last modified     : 2021/02/24
  *
  ************************************************************)
 
@@ -107,20 +106,70 @@ type pending_order =
 	| Pending_zone
 
 
-type merge_heuristic =
+(* Merging heuristic for EFsynthminpq *)
+type merge_EFsynthminpq_heuristic =
 	(** Merge_always: merge after every processed state *)
-	| Merge_always
+	| Merge_EFsynthminpq_always
 	(** Merge_always: merge after every processed state for which the target state is a successor of the current state *)
-	| Merge_targetseen
+	| Merge_EFsynthminpq_targetseen
 	(** Merge_always: merge after every processed state, for every 10th added state to PQ *)
-	| Merge_pq10
+	| Merge_EFsynthminpq_pq10
 	(** Merge_always: merge after every processed state, for every 100th added state to PQ *)
-	| Merge_pq100
+	| Merge_EFsynthminpq_pq100
 	(** Merge_always: merge after every 10th processed state *)
-	| Merge_iter10
+	| Merge_EFsynthminpq_iter10
 	(** Merge_always: merge after every 100th processed state *)
-	| Merge_iter100
+	| Merge_EFsynthminpq_iter100
 
+(* Undefined value for n1/n2 merge heuristics *)
+val undefined_merge_n : int
+
+(* Merge heuristics for reachability analysis: try to jump some merge attemps (approx 2021) *)
+type merge_jump_algorithm =
+	(** None *)
+	| Merge_jump_none
+	(** TODO: description *)
+	| Merge_jump_static of int * int
+	(** TODO: description *)
+	| Merge_jump_static_per_location of int * int
+    (** TODO: description *)
+	| Merge_jump_exponentialbackoff of int * int
+
+				(*** DISCONTINUED as of 3.3 ***)
+(*type merge_dev =
+	(** merge(queue,visited) *)
+	| Merge_visited
+	(** merge(queue,queue) *)
+	| Merge_queue
+    (** merge(queue,queue);merge(queue,visited) *)
+	| Merge_ordered*)
+
+
+(* Main merge algorithms from IMITATOR 3.3 *)
+type merge_algorithm =
+	(* No merge *)
+	| Merge_none
+	(* Reconstruct state space *)
+	| Merge_reconstruct
+	(* On-the-fly modification *)
+	| Merge_onthefly
+	(* (reimplemented) version of IMITATOR 2.12 merge *)
+	| Merge_212
+
+val default_merge_algorithm : merge_algorithm
+
+
+(* Main merge algorithms from IMITATOR 3.3 *)
+type merge_candidates =
+	| Merge_candidates_ordered
+	| Merge_candidates_queue
+	| Merge_candidates_visited
+
+(* Main merge algorithms from IMITATOR 3.3 *)
+type merge_update =
+	| Merge_update_merge
+    | Merge_update_candidates
+    (*| Merge_update_level*)
 
 (** Style of graphical state space to output *)
 type graphical_state_space =
@@ -152,6 +201,15 @@ type nz_method =
 	(** Method assuming the PTA is already a CUB-PTA *)
 	| NZ_already
 
+
+
+(* Type of extrapolation *)
+type extrapolation =
+	| No_extrapolation
+	| M
+	| Mglobal
+	| LU
+	| LUglobal
 
 
 (************************************************************)
@@ -189,8 +247,13 @@ val cartography_drawing_possible : imitator_mode -> bool
 (** Conversions of modes to string *)
 (************************************************************)
 
-val string_of_mode						: imitator_mode				-> string
-val string_of_translation				: translation				-> string
-val string_of_exploration_order			: exploration_order			-> string
-val string_of_cycle_algorithm			: cycle_algorithm			-> string
-val string_of_state_comparison_operator	: state_comparison_operator	-> string
+val string_of_mode						: imitator_mode						-> string
+val string_of_translation				: translation						-> string
+val string_of_exploration_order			: exploration_order					-> string
+val string_of_cycle_algorithm			: cycle_algorithm					-> string
+val string_of_state_comparison_operator	: state_comparison_operator			-> string
+
+val string_of_merge_candidates			: merge_candidates					-> string
+val string_of_merge_update			    : merge_update					-> string
+val string_of_merge_EFsynthminpq_heuristic	: merge_EFsynthminpq_heuristic	-> string
+val string_of_merge_jump_algorithm		: merge_jump_algorithm				-> string

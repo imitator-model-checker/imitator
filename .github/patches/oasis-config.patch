@@ -1,0 +1,11 @@
+--- oasis-config.orig	2022-05-12 18:47:31.000000000 +0200
++++ oasis-config	2022-05-12 18:47:48.000000000 +0200
+@@ -34,7 +34,7 @@
+   MainIs:         src/IMITATOR.ml
+   BuildDepends:   gmp, extlib, ppl, str, unix, threads, fileutils
+ # CCLib:          -lstdc++
+-  CCLib:          -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
++  CCLib:          '-lppl -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
+ 
+ # -static to have a static compiling (+ ' ' around)
+ # I removed -lcamlrun because I wrote "best" instead of "byte"

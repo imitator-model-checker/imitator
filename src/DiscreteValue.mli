@@ -10,95 +10,26 @@
  *
  * File contributors : Benjamin L.
  * Created           : 2021/03/01
- * Last modified     : 2021/03/01
  *
  ************************************************************)
 
 open Constants
+open DiscreteType
 
-(************************************************************)
-(** Types  *)
-(************************************************************)
-
-(* Specific type of number *)
-type var_type_discrete_number =
-    | Var_type_discrete_rational
-    | Var_type_discrete_int
-    | Var_type_discrete_unknown_number
-
-(* Specific type of discrete variables *)
-type var_type_discrete =
-    | Var_type_discrete_bool
-    | Var_type_discrete_number of var_type_discrete_number
-    | Var_type_discrete_binary_word of int
-    | Var_type_discrete_array of var_type_discrete * int
-
-(* Type of variable in declarations *)
-type var_type =
-	| Var_type_clock
-	| Var_type_discrete of var_type_discrete
-	| Var_type_parameter
-
-(* Shortcuts to types *)
-val var_type_rational : var_type
-val var_type_int : var_type
-val var_type_unknown_number : var_type
-val var_type_bool : var_type
 
 (* Discrete value of different specific types *)
+
 type discrete_value =
     | Number_value of NumConst.t
     | Rational_value of NumConst.t
     | Int_value of Int32.t
     | Bool_value of bool
     | Binary_word_value of BinaryWord.t
+    (* TODO benjamin REFACTOR maybe Collection_value *)
     | Array_value of discrete_value array
-
-(************************************************************)
-(** Type functions  *)
-(************************************************************)
-
-(** String of types  **)
-
-(* String of var type *)
-val string_of_var_type : var_type -> string
-(* String of discrete var type *)
-val string_of_var_type_discrete : var_type_discrete -> string
-(* String of number var type *)
-val string_of_var_type_discrete_number : var_type_discrete_number -> string
-
-val string_of_var_type_constructor : var_type -> string
-
-(** Check types **)
-
-val is_discrete_type : var_type -> bool
-(* Check if a Var_type is a Var_type_number *)
-val is_discrete_type_number_type : var_type_discrete -> bool
-
-(* Check if discrete type is a Var_type_unknown_number *)
-val is_discrete_type_unknown_number_type : var_type_discrete -> bool
-(* Check if discrete type is not a Var_type_unknown_number *)
-val is_discrete_type_known_number_type : var_type_discrete -> bool
-
-val is_discrete_type_holding_number_type : var_type_discrete -> bool
-val is_discrete_type_holding_unknown_number_type : var_type_discrete -> bool
-val is_discrete_type_holding_known_number_type : var_type_discrete -> bool
-
-val extract_inner_type : var_type_discrete -> var_type_discrete
-
-(* Check if discrete type is a Var_type_discrete_rational *)
-val is_discrete_type_rational_type : var_type_discrete -> bool
-(* Check if discrete type is a Var_type_discrete_int *)
-val is_discrete_type_int_type : var_type_discrete -> bool
-(* Check if discrete type is a Var_type_discrete_bool *)
-val is_discrete_type_bool_type : var_type_discrete -> bool
-(* Check if discrete type is a Var_type_discrete_binary_word *)
-val is_discrete_type_binary_word_type : var_type_discrete -> bool
-
-(* Check if two discrete types are compatible *)
-val is_discrete_type_compatibles : var_type_discrete -> var_type_discrete -> bool
-(* Check if a value is compatible with given type *)
-val check_value_compatible_with_type : discrete_value -> var_type -> bool
+    | List_value of discrete_value list
+    | Stack_value of discrete_value Stack.t
+    | Queue_value of discrete_value Queue.t
 
 (** Values and types  **)
 
@@ -106,17 +37,8 @@ val check_value_compatible_with_type : discrete_value -> var_type -> bool
 val var_type_of_value : discrete_value -> var_type
 (* Get discrete var type of a discrete value *)
 val discrete_type_of_value : discrete_value -> var_type_discrete
-(* Get discrete type of a var type *)
-(* Note : clocks / parameter are of rational type *)
-val discrete_type_of_var_type : var_type -> var_type_discrete
-
-
-
-
-
-
-
-
+(* Check if a value is compatible with given type *)
+val check_value_compatible_with_type : discrete_value -> var_type -> bool
 
 
 (************************************************************)
@@ -140,15 +62,9 @@ val is_binary_word_value : discrete_value -> bool
 
 (** Default values  **)
 
-(* Get default NumConst.t value *)
-val numconst_default_value : NumConst.t
-(* Get default Int32.t value *)
-val int_default_value : Int32.t
-(* Get default bool value *)
-val bool_default_value : bool
-(* Get default binary word value *)
-val binary_word_default_value : int -> BinaryWord.t
-(* Get default discrete value *)
+(* Get default discrete value of discrete type *)
+val default_discrete_value : var_type_discrete -> discrete_value
+(* Get default discrete value of var type *)
 val default_value : var_type -> discrete_value
 
 (* Get zero value of Rational_value *)
@@ -157,11 +73,6 @@ val rational_zero : discrete_value
 val bool_value_false : discrete_value
 (* Get true value of Bool_value *)
 val bool_value_true : discrete_value
-
-(* Get a zero discrete value according to given discrete value type *)
-val zero_of : discrete_value -> discrete_value
-(* Get a one discrete value according to given discrete value type *)
-val one_of : discrete_value -> discrete_value
 
 (** Get / Convert values  **)
 
@@ -175,6 +86,14 @@ val bool_value : discrete_value -> bool
 val binary_word_value : discrete_value -> BinaryWord.t
 (* Get array value of discrete value *)
 val array_value : discrete_value -> discrete_value array
+(* Get list value of discrete value *)
+val list_value : discrete_value -> discrete_value list
+(* Get stack value of discrete value *)
+val stack_value : discrete_value -> discrete_value Stack.t
+(* Get queue value of discrete value *)
+val queue_value : discrete_value -> discrete_value Queue.t
+
+val is_zero : discrete_value -> bool
 
 (* Convert any discrete value to NumConst.t value, if possible *)
 val to_numconst_value : discrete_value -> NumConst.t
@@ -183,6 +102,7 @@ val to_int_value : discrete_value -> Int32.t
 (* Convert any discrete value to float value, if possible *)
 val to_float_value : discrete_value -> float
 
+val convert_to_numconst : discrete_value -> NumConst.t
 
 (* Get discrete value from NumConst.t *)
 val of_numconst : NumConst.t -> discrete_value
@@ -195,7 +115,7 @@ val of_bool : bool -> discrete_value
 (*(* Convert discrete value to another var type *)*)
 (*val convert_value : discrete_value -> var_type -> discrete_value*)
 (* Convert discrete value to another discrete type *)
-val convert_value_to_discrete_type : discrete_value -> var_type_discrete -> discrete_value
+(*val convert_value_to_discrete_type : discrete_value -> var_type_discrete -> discrete_value*)
 
 (* Convert any discrete value to a Rational_value *)
 val convert_to_rational_value : discrete_value -> discrete_value
@@ -209,46 +129,3 @@ val hash : discrete_value -> int
 val equal : discrete_value -> discrete_value -> bool
 (* Check if a discrete value is not equal to another discrete value *)
 val neq : discrete_value -> discrete_value -> bool
-
-(* Add two discrete value *)
-val add : discrete_value -> discrete_value -> discrete_value
-(* Subtract two discrete value *)
-val sub : discrete_value -> discrete_value -> discrete_value
-(* Multiply two discrete value *)
-val mul : discrete_value -> discrete_value -> discrete_value
-(* Divide two discrete value *)
-val div : discrete_value -> discrete_value -> discrete_value
-(* Negate a discrete value *)
-val neg : discrete_value -> discrete_value
-
-(* Logical and on two discrete value *)
-val _and : discrete_value -> discrete_value -> discrete_value
-(* Logical or on two discrete value *)
-val _or : discrete_value -> discrete_value -> discrete_value
-(* Logical not on a discrete value *)
-val not : discrete_value -> discrete_value
-(* Logical equality on two discrete value *)
-val bool_equal : discrete_value -> discrete_value -> discrete_value
-(* Logical equality inverse on two discrete value *)
-val bool_neq : discrete_value -> discrete_value -> discrete_value
-
-(* Comparison, less between two discrete value *)
-val l : discrete_value -> discrete_value -> discrete_value
-(* Comparison, less or equal between two discrete value *)
-val leq : discrete_value -> discrete_value -> discrete_value
-(* Comparison, greater between two discrete value *)
-val g : discrete_value -> discrete_value -> discrete_value
-(* Comparison, greater or equal between two discrete value *)
-val geq : discrete_value -> discrete_value -> discrete_value
-
-val access : int -> discrete_value -> discrete_value
-
-val shift_left : int -> discrete_value -> discrete_value
-val shift_right : int -> discrete_value -> discrete_value
-val fill_left : int -> discrete_value -> discrete_value
-val fill_right : int -> discrete_value -> discrete_value
-val log_and : discrete_value -> discrete_value -> discrete_value
-val log_or : discrete_value -> discrete_value -> discrete_value
-val log_xor : discrete_value -> discrete_value -> discrete_value
-val log_not : discrete_value -> discrete_value
-val array_concat : discrete_value -> discrete_value -> discrete_value

@@ -8,7 +8,6 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -18,7 +17,7 @@
 (* Modules *)
 (************************************************************)
 open Automaton
-
+open DiscreteExpressions
 
 (****************************************************************)
 (** Predicates for properties *)
@@ -30,7 +29,7 @@ type loc_predicate =
 
 
 type simple_predicate =
-	| Discrete_boolean_expression of DiscreteExpressions.discrete_boolean_expression
+	| State_predicate_discrete_boolean_expression of discrete_boolean_expression
 	| Loc_predicate of loc_predicate
 	| State_predicate_true
 	| State_predicate_false

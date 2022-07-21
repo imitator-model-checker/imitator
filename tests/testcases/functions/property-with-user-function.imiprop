@@ -1,0 +1,1 @@
+property := #synth EF (accepting && zero_left(bin, 3) = 0b0001);

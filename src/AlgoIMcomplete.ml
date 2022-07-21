@@ -9,7 +9,6 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/03/21
- * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -170,9 +169,9 @@ class algoIMcomplete (pval : PVal.pval) =
 			let dangerous_inclusion = options#comparison_operator = AbstractAlgorithm.Inclusion_check || options#comparison_operator = AbstractAlgorithm.Including_check || options#comparison_operator = AbstractAlgorithm.Double_inclusion_check in
 
 			(* EXACT if termination is normal and no incl and no merge were performed *)
-			if termination_status = Regular_termination && not dangerous_inclusion && not options#merge then Constraint_exact
+			if termination_status = Regular_termination && not dangerous_inclusion && (options#merge_algorithm = Merge_none) then Constraint_exact
 			(* OVER-APPROXIMATED if no random selections were performed and either termination is not normal or merging was used or state inclusion was used *)
-			else if termination_status <> Regular_termination || dangerous_inclusion || options#merge then Constraint_maybe_over
+			else if termination_status <> Regular_termination || dangerous_inclusion || (options#merge_algorithm <> Merge_none) then Constraint_maybe_over
 			(* UNKNOWN otherwise *)
 			else Constraint_maybe_invalid
 		in

@@ -10,7 +10,6 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2021/11/03
  *
  ************************************************************)
 
@@ -21,6 +20,7 @@
 type error_type =
 	| Division_by_zero				of string
 	| Out_of_bound
+	| Empty_collection
 
 	| ModelFileNotFound_error
 	| PropertyFileNotFound_error

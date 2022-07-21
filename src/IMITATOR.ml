@@ -10,7 +10,6 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci, Dylan Marinho
  * Created           : 2009/09/07
- * Last modified     : 2021/09/16
  *
  ************************************************************)
 
@@ -192,41 +191,106 @@ if not options#is_set_output_result then(
 (* Get value depending on the algorithm *)
 begin match property_option, options#imitator_mode with
 	| Some property, _ ->
+		
+		(* New merge options as of 3.3 *)
+		
 		(* Update if not yet set *)
-		if not options#is_set_mergeq then (
+        if not options#is_set_merge_algorithm then (
 			let merge_needed = AlgorithmOptions.merge_needed property in
 
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-algorithm` not set");
+
 			(* Print some information *)
-			print_message Verbose_high ("Case option `-mergeq` not set");
+			print_message Verbose_high ("Set option `-merge-algorithm` to its default value: `" ^ (string_of_bool merge_needed) ^ "`");
 
-			options#set_mergeq(false);
-
-			if not options#is_set_merge then(
-				(* Print some information *)
-				print_message Verbose_high ("Set option `-merge` to its default value: `" ^ (string_of_bool merge_needed) ^ "`");
-
-				options#set_merge (merge_needed);
+			if(merge_needed) then(
+				options#set_merge_algorithm AbstractAlgorithm.default_merge_algorithm;
+			)else(
+				options#set_merge_algorithm Merge_none;
 			);
-		);
+        );
+        
+		(* Update if not yet set AND if merge is enabled *)
+        if options#merge_algorithm <> Merge_none && not options#is_set_merge_candidates then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-candidates` not set");
+
+			(* Print some information *)
+			print_message Verbose_high ("Set option `-merge-candidates` to its default value");
+
+			(*** TODO! default merge heuristics: to move somewhere! ***)
+			options#set_merge_candidates Merge_candidates_queue;
+        );
+
+        (* Update if not yet set AND if merge is enabled *)
+        if options#merge_algorithm <> Merge_none && not options#is_set_merge_update then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-update` not set");
+
+            (* Print some information *)
+            print_message Verbose_high ("Set option `-merge-update` to its default value");
+
+            (*** TODO! default merge heuristics: to move somewhere! ***)
+            (*** TODO DYLAN: match with merge-algo! ***)
+            options#set_merge_update Merge_update_merge;
+        );
+
+		(* Update if not yet set AND if merge is enabled *)
+        if options#merge_algorithm <> Merge_none && not options#is_set_merge_restart then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-restart` not set: set to false");
+
+            options#set_merge_restart(false);
+        );
+		
+
 
 	| _, State_space_computation
+	| None, _
 		->
+		(* New merge options as of 3.3 *)
+		
 		(* Update if not yet set *)
-		if not options#is_set_mergeq then (
+        if not options#is_set_merge_algorithm then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-algorithm` not set: set to none");
+
+            options#set_merge_algorithm(Merge_none);
+        );
+        
+		(* Update if not yet set AND if merge is enabled *)
+        if options#merge_algorithm <> Merge_none && not options#is_set_merge_candidates then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-candidates` not set");
+
 			(* Print some information *)
-			print_message Verbose_high ("Case option `-mergeq` not set");
+			print_message Verbose_high ("Set option `-merge-candidates` to its default value");
 
-			options#set_mergeq(false);
+			(*** TODO! default merge heuristics: to move somewhere! ***)
+			options#set_merge_candidates Merge_candidates_queue;
+        );
 
-			if not options#is_set_merge then(
-				(* Print some information *)
-				print_message Verbose_high ("Set option `-merge` to its default value: `false`");
+        (* Update if not yet set AND if merge is enabled *)
+        if options#merge_algorithm <> Merge_none && not options#is_set_merge_update then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-update` not set");
 
-				(*** BADPROG: this default option value should not be hard-coded here ***)
-				options#set_merge(false);
-			);
-		);
-	| None, _ -> ()
+            (* Print some information *)
+            print_message Verbose_high ("Set option `-merge-update` to its default value");
+
+            (*** TODO! default merge heuristics: to move somewhere! ***)
+            (*** TODO DYLAN: match with merge-algo! ***)
+            options#set_merge_update Merge_update_merge;
+        );
+
+        (* Update if not yet set AND if merge is enabled *)
+        if options#merge_algorithm <> Merge_none && not options#is_set_merge_restart then (
+            (* Print some information *)
+            print_message Verbose_high ("Case option `-merge-restart` not set: set to false");
+
+            options#set_merge_restart(false);
+        );
 end;
 
 
@@ -503,6 +567,18 @@ if options#dynamic_clock_elimination then (
 	ClocksElimination.prepare_clocks_elimination ()
 );
 
+(************************************************************)
+(* Extrapolation *)
+(************************************************************)
+if options#extrapolation <> No_extrapolation then (
+	print_message Verbose_low "Preparing clock extrapolation…";
+	try(
+		Extrapolation.prepare_extrapolation ();
+	) with
+	| Model_not_compatible_for_extrapolation ->
+		print_error ("The input model is too expressive for applying extrapolation.");
+		abort_program();
+);
 
 
 (************************************************************)
@@ -1164,6 +1240,7 @@ end;
 
 		| Division_by_0 msg -> abort_with_good_exception (Result.Division_by_zero msg) msg
         | Out_of_bound msg -> abort_with_good_exception (Result.Out_of_bound) msg
+        | Empty_collection msg -> abort_with_good_exception (Result.Empty_collection) msg
 		| UnsatisfiableInitialState -> abort_with_good_exception (Result.Unsatisfiable_initial_state) "Unsatisfiable initial state"
 
 

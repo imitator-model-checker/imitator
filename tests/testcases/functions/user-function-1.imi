@@ -1,0 +1,152 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test some behaviors on user functions
+ * Description      : Test some behaviors on user functions
+ * Correctness      : No error
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/06/13
+ * Last modified    : 2022/06/13
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.3
+ ************************************************************)
+
+var
+
+  i1 : int;
+  r1 : rat;
+  s : int stack;
+  q : int queue;
+  bin : binary(4);
+
+  (* Some global variables *)
+  i_global : int;
+  r_global : rat;
+  a_global : int array(2);
+
+  (* Some result variables *)
+  i_result, i_result_2 : int;
+  r_result, lerp_result : rat;
+  top_stack, top_queue : int;
+
+(* Last index of an array *)
+fn last_idx_fun(a : int array(2)) : int
+begin
+  array_length(a) - 1
+end
+
+(* Linear interpolation *)
+fn lerp(a : rat, b : rat, x : rat) : rat
+begin
+  a + (b - a) * x
+end
+
+(* Add global variable i with x *)
+fn int_f(x : int) : int
+begin
+  x + i1
+end
+
+(* Add global variable i with x *)
+fn rat_f(r : rat) : rat
+begin
+  r + r1
+end
+
+(* my own not using not *)
+fn my_not(b : bool) : bool
+begin
+  not(b)
+end
+
+(* Replace n bit by zeros from left to right *)
+fn zero_left(bin : binary(4), n : int) : binary(4)
+begin
+  let l_bin : binary(4) = shift_left(bin, n) in
+  let r_bin : binary(4) = shift_right(l_bin, n) in
+  r_bin
+end
+
+(* Push 0,1,2 to a stack (side effect function) *)
+fn push_on_stack(my_stack : int stack) : int stack
+begin
+  stack_push(0, my_stack);
+  stack_push(1, my_stack);
+  stack_push(2, my_stack);
+  my_stack
+end
+
+(* Push 0,1,2 to a queue (side effect function) *)
+fn push_on_queue(my_queue : int queue) : int queue
+begin
+  queue_push(0, my_queue);
+  queue_push(1, my_queue);
+  queue_push(2, my_queue);
+  my_queue
+end
+
+(* Setting value to some global variables (side effect function) *)
+fn set_globals(a : int) : int
+begin
+  (* Modify some global variables *)
+  a_global[last_idx_fun(a_global)] := 1;
+  i_global := a * 2;
+  (* Shadow parameter a *)
+  let a : int = 5 in
+  r_global := rational_of_int(i_global + a);
+  (* Shadow local variable a *)
+  let a : int = 1 in
+  (* Shadow global variable i1 *)
+  let i1 : int = 2 in
+  a + i1 (* Should give 3 *)
+end
+
+automaton P
+
+  loc l0: invariant True
+  when
+    True
+    & my_not(False)
+    & not(my_not(True))
+    & zero_left(bin, 2) = 0b0011
+
+  do {
+    seq
+      push_on_stack(s);
+      push_on_queue(q);
+      top_stack = stack_top(s);
+      top_queue = queue_top(q);
+      i_result_2 := set_globals(5);
+      lerp_result := lerp(4.98, 10.85, 0.5);
+
+    then
+      i_result := int_f(2),
+      r_result := rat_f(3),
+      bin := zero_left(bin, 2)
+  }
+  goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+init := {
+    discrete =
+      loc[P] := l0,
+      i1 := 1,
+      r1 := 1,
+      s := stack(),
+      q := queue(),
+      bin := 0b1011
+    ;
+}

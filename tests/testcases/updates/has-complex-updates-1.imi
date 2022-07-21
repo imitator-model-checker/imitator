@@ -1,0 +1,56 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Does the model have complex updates ?
+ * Description      : Check if resolution of complex update is correct
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/06/23
+ * Last modified    : 2022/06/23
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.3
+ ************************************************************)
+
+var
+
+  b : bool;
+  x, y : clock;
+
+automaton P
+
+  loc s0: invariant True
+  when True
+
+  do {
+    seq
+      b := False;
+    then
+      x :=0,
+      y :=0,
+      b := True
+
+  }
+  goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+
+init := {
+  discrete =
+    loc[P]:=s0,
+    b := True
+  ;
+
+}
