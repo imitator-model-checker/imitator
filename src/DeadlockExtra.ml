@@ -12,7 +12,8 @@ let dl_instantiate_discrete state_space state_index constr =
     pxd_intersection_assign discrete [constr];
     pxd_hide_discrete_and_collapse discrete
 
-(* note: we "undo" the effect of updates on zone z (by computing the weakest precondition) *)
+(* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
+(* This is probably incomplete, if there was also a discrete update *) 
 let dl_inverse_update state_space state_index z updates = 
     let model = Input.get_model () in (* only for printing *)
     let constr = px_copy z in
@@ -33,15 +34,13 @@ let dl_inverse_update state_space state_index z updates =
     px_hide_assign (List.map fst updates) constr;
     constr
 
-(* note: we don't add positive constraints for clocks here. *)
-(* TODO: does this handle flows correctly? *)
+(* Apply past time operator *)
 let dl_inverse_time state_space state_index z =
 	let glob_location = get_location state_space (get_global_location_index state_space state_index) in
     AlgoStateBased.apply_time_past glob_location z
 
 
 (* compute direct predecessor of z2 in z1, linked by (guard,updates) *)
-(* copied the handling of pxd_constraint in guard, double check? *)
 let dl_predecessor state_space state_index z1 guard updates z2 =
     let model = Input.get_model () in (* only for printing *)
     let constr = dl_inverse_update state_space state_index z2 updates in
