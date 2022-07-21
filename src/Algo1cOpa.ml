@@ -702,6 +702,35 @@ let state_elimination (dfa : arc list) (loc : int) : arc list =
 	(* Return the dfa *)
 	!dfa
 	
+(* Simplfies a reg_exp by replacing Stars of Epsilon or EmptySet by Epsilon *)	
+let rec clean_star (e : reg_exp) : reg_exp = 
+	match e with
+	| Union(r1,r2) -> Union((clean_star r1),(clean_star r2))
+	| Concatenation(r1,r2) -> Concatenation((clean_star r1),(clean_star r2))
+	| Star(r1) when (r1 = EmptySet || r1 = Epsilon) -> Epsilon
+	| Star(r1) -> Star(clean_star r1)
+	| Element(i1,i2) -> e
+	| Epsilon -> e
+	| EmptySet -> e
+	
+(* Simplfies a reg_exp by removing Epsilon in Concatenations and EmptySet in Unions *)	
+let rec clean_union_conc (e : reg_exp) : reg_exp = 
+	match e with
+	| Union(r1,r2) when (r1 = EmptySet) -> clean_union_conc r2
+	| Union(r1,r2) when (r2 = EmptySet) -> clean_union_conc r1
+	| Union(r1,r2) -> Union((clean_union_conc r1),(clean_union_conc r2))
+	| Concatenation(r1,r2) when (r1 = Epsilon) -> clean_union_conc r2
+	| Concatenation(r1,r2) when (r2 = Epsilon) -> clean_union_conc r1
+	| Concatenation(r1,r2) -> Concatenation((clean_union_conc r1),(clean_union_conc r2))
+	| Star(r1) -> Star(clean_union_conc r1)
+	| Element(i1,i2) -> e
+	| Epsilon -> e
+	| EmptySet -> e
+	
+(* Simplfies a reg_exp by removing useless Epsilon and EmptySet (typically introduced during the computation of the reg_exp) *)
+let rec clean_reg_exp (e : reg_exp) : reg_exp = 
+	clean_union_conc (clean_star e)
+	
 (************************************************************)
 (* Main function *)
 (************************************************************)
@@ -875,7 +904,7 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 		(* Compute the regular expression describing the language of the PTA *)
 		let expression = compute_reg_exp (Array.to_list sub_list) l0 lf model.nb_locations in
 		(* Add the expression to the result *)
-		result := !result^"Regular expression of the PETS:\n"^(reg_exp_and_model_to_string expression model);
+		result := !result^"Regular expression of the PETS:\n"^(reg_exp_and_model_to_string (clean_reg_exp expression) model);
 		(* Print the result *)
 		print_message Verbose_low (!result);
 		raise (NotImplemented "1cOpa.run")
