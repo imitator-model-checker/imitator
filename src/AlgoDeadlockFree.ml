@@ -123,15 +123,15 @@ class algoDeadlockFree =
 				self#print_algo_message Verbose_medium ("Considering transition from state " ^ (string_of_int state_index) ^ " via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "' to state " ^ (string_of_int state_index') ^ "…");
 			);
 			
-			let direct_pre = DeadlockExtra.dl_weakest_precondition state_space state_index combined_transition state_index' in
-			let precondition = DeadlockExtra.dl_inverse_time direct_pre in
-			self#print_algo_message Verbose_medium ("Direct Precondition:\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names direct_pre));
-			self#print_algo_message Verbose_medium ("Timed  Precondition:\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names precondition));
-			
+			let precondition = DeadlockExtra.dl_weakest_precondition state_space state_index combined_transition state_index' in
+			self#print_algo_message Verbose_medium ("Direct Precondition:\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names precondition));
+			DeadlockExtra.dl_inverse_time state_space state_index precondition;
+			self#print_algo_message Verbose_medium ("Timed  Precondition:\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names precondition));
+			let precondition_px = LinearConstraint.pxd_hide_discrete_and_collapse precondition in
 			(* Update the local constraint by adding the new constraint as a union *)
 			(*** WARNING: ugly (and expensive) to convert from pxd to px ***)
 			(*** NOTE: still safe since discrete values are all instantiated ***)
-			LinearConstraint.px_nnconvex_px_union_assign good_constraint_s precondition;
+			LinearConstraint.px_nnconvex_px_union_assign good_constraint_s precondition_px;
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(

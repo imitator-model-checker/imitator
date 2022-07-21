@@ -28,10 +28,10 @@ let dl_inverse_update z updates =
 
 (* note: we don't add positive constraints for clocks here. *)
 (* TODO: does this handle flows correctly? *)
-let dl_inverse_time z =
-    let constr = px_copy z in
-    px_time_past_assign (clocks ()) (parameters ()) constr;
-    constr
+let dl_inverse_time state_space state_index z =
+	let glob_location = StateSpace.get_location state_space (StateSpace.get_global_location_index state_space state_index) in
+    AlgoStateBased.apply_time_past glob_location z
+
 
 (* compute direct predecessor of z2 in z1, linked by (guard,updates) *)
 (* copied the handling of pxd_constraint in guard, double check? *)
@@ -41,13 +41,13 @@ let dl_predecessor z1 guard updates z2 =
     px_intersection_assign constr [z1];
     let constr_pxd = LinearConstraint.pxd_of_px_constraint constr in
     pxd_intersection_assign constr_pxd [guard];
-    let result = LinearConstraint.pxd_hide_discrete_and_collapse constr_pxd in
+    (* let result = LinearConstraint.pxd_hide_discrete_and_collapse constr_pxd in *)
     (* TODO: Why can we just hide the discrete variables??? *)
 
     ImitatorUtilities.print_message Verbose_medium  ("JvdP: \027[32mInverse_update\027[0m = \n" ^ LinearConstraint.string_of_px_linear_constraint model.variable_names constr);
     ImitatorUtilities.print_message Verbose_medium  ("JvdP: \027[32mWith guard\027[0m = \n" ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr_pxd);
-    ImitatorUtilities.print_message Verbose_medium  ("JvdP: \027[32mAfter hiding\027[0m = \n" ^ LinearConstraint.string_of_px_linear_constraint model.variable_names result);
-    result
+    constr_pxd
+    (* result *)
 
 
 open StateSpace
