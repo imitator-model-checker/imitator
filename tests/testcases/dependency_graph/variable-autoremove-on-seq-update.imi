@@ -1,0 +1,65 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test auto-remove management on sequential updates and user defined functions
+ * Description      : Test that variables and instructions used in sequential updates are not removed, test that instructions of user defined functions are not removed
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/07/21
+ * Last modified    : 2022/07/21
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.4
+ ************************************************************)
+
+var
+
+  i, j : int;
+  s : int stack;
+
+fn f() : int
+begin
+  let x : int = stack_pop(s) in
+  0
+end
+
+
+automaton P
+
+  loc s0: invariant True
+  when True
+
+  do {
+
+    (* i, j are not used elsewhere in model, but they aren't removed *)
+    (* because they were used in seq (where there are potential side-effect functions used) *)
+    seq
+      stack_push(0, s); (* s = [0] *)
+      stack_push(1, s); (* s = [0, 1] *)
+      stack_push(2, s); (* s = [0, 1, 2] *)
+      i := stack_pop(s); (* s = [0, 1], i = 2 *)
+      j := f(); (* s = [0], j = 0 *)
+
+  }
+  goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+
+init := {
+  discrete =
+    loc[P]:=s0
+  ;
+
+}

@@ -4790,7 +4790,7 @@ STATE 1:
       'author': 'lbinria',
       'purpose'    : 'Test side effects detection on user defined functions',
       'input_files': ['functions/function-side-effects-detect.imi'],
-      'tags': 'behavior, function',
+      'tags': 'function, inference',
       'imitator-version': '3.4',
       'options'    : '-no-var-autoremove',
       'expectations' : [
@@ -4825,6 +4825,14 @@ STATE 1:
 
     ,
 
+	#------------------------------------------------------------
+	# END : Test user defined function
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test dependency graph
+	#------------------------------------------------------------
+
     #------------------------------------------------------------
     {
       ## Test version             : 1
@@ -4832,8 +4840,8 @@ STATE 1:
       ## Last modified            : 2022/06/29
       'author': 'lbinria',
       'purpose'    : 'Simple cycle detection',
-      'input_files': ['functions/simple-cycle-detection.imi'],
-      'tags': 'behavior, function, cycle',
+      'input_files': ['dependency_graph/simple-cycle-detection.imi'],
+      'tags': 'behavior, function, cycle, dependency',
         'imitator-version': '3.4',
       'options'    : '',
       'expectations' : [
@@ -4857,8 +4865,8 @@ STATE 1:
       ## Last modified            : 2022/06/29
       'author': 'lbinria',
       'purpose'    : 'Complex cycle detection',
-      'input_files': ['functions/complex-cycle-detection.imi'],
-      'tags': 'behavior, function, cycle',
+      'input_files': ['dependency_graph/complex-cycle-detection.imi'],
+      'tags': 'behavior, function, cycle, dependency',
       'imitator-version': '3.4',
       'options'    : '',
       'expectations' : [
@@ -4894,8 +4902,31 @@ STATE 1:
 
     ,
 
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/07/21
+      ## Last modified            : 2022/07/21
+      'author': 'lbinria',
+      'purpose'    : 'Test auto-remove management on sequential updates and user defined functions',
+      'input_files': ['dependency_graph/variable-autoremove-on-seq-update.imi'],
+      'tags': 'variable, function, auto-remove, dependency',
+      'imitator-version': '3.4',
+      'options'    : '-mode statespace -states-description',
+      'expectations' : [
+        {'file': 'variable-autoremove-on-seq-update-statespace.states' , 'content' : """
+P: lend, s = stack([0]), i = 2, j = 0
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
 	#------------------------------------------------------------
-	# END : Test user defined function
+	# END : Test dependency graph
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
