@@ -27,9 +27,6 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (****************************************************************)
 (** Valuation *)
 (****************************************************************)
-type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
-type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
-type discrete_access = discrete_valuation * discrete_setter
 
 type conj_dis =
     | And

@@ -72,11 +72,14 @@ let split_convex_predicate_into_discrete_and_continuous variable_infos convex_pr
   (* Compute a list of inequalities *)
   let partitions = List.partition
     (fun nonlinear_inequality ->
-       match nonlinear_inequality with
-       (* TODO benjamin REFACTOR, in ParsingStructureUtilities create a function that check if a nonlinear constraint is true or false *)
-       | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = true -> true
-       | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = false -> raise False_exception
-       | nonlinear_constraint -> ParsingStructureUtilities.only_discrete_in_nonlinear_expression variable_infos nonlinear_constraint
+        (* Try to get value if it's a simple value (True / False) *)
+        let value_opt = ParsingStructureUtilities.discrete_boolean_expression_constant_value_opt nonlinear_inequality in
+
+        match value_opt with
+        | Some true -> true
+        | Some false -> raise False_exception
+        | None -> ParsingStructureUtilities.only_discrete_in_nonlinear_expression variable_infos nonlinear_inequality
+
     ) convex_predicate
     in
     (* Get discrete part as a nonlinear constraint but convert back continuous part to a linear constraint *)

@@ -5,6 +5,10 @@ type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
 type variable_name_table = variable_index -> variable_name
 
+type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
+type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
+type discrete_access = discrete_valuation * discrete_setter
+
 (* Record that contain context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
     (* Valuation of global variables at the context (current location) *)
@@ -27,7 +31,7 @@ val eval_boolean_expression : variable_name_table option -> functions_table opti
 val eval_discrete_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> discrete_boolean_expression -> bool
 
 (* Check if a nonlinear constraint is satisfied *)
-val check_nonlinear_constraint : variable_name_table option -> functions_table option -> DiscreteExpressions.discrete_access -> nonlinear_constraint -> bool
+val check_nonlinear_constraint : variable_name_table option -> functions_table option -> discrete_access -> nonlinear_constraint -> bool
 
 (** Checks whether a global_location satisfies a state_predicate; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
 val match_state_predicate : variable_name_table option -> functions_table option -> discrete_access -> (automaton_index -> location_index -> bool) -> Location.global_location -> AbstractProperty.state_predicate-> bool

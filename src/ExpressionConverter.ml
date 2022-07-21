@@ -338,15 +338,17 @@ and string_of_typed_discrete_factor variable_infos discrete_type = function
 
     | Typed_sequence (list_expr, _, seq_type) ->
 	    let l_del, r_del = Constants.default_array_string.array_literal_delimiter in
+	    let l_par_del, r_par_del = Constants.default_paren_delimiter in
+
 	    let str_elements = List.map (string_of_typed_boolean_expression variable_infos) list_expr in
 	    let str_array = l_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_elements ^ r_del in
-	    (* TODO benjamin REFACTOR hard-coded list / stack / queue *)
+
 	    let str_node =
 	        match seq_type with
 	        | Typed_array -> str_array
-	        | Typed_list -> "list(" ^ str_array ^ ")"
-	        | Typed_stack -> "stack(" ^ str_array ^ ")"
-	        | Typed_queue -> "queue(" ^ str_array ^ ")"
+	        | Typed_list -> Constants.list_string ^ l_par_del ^ str_array ^ r_par_del
+	        | Typed_stack -> Constants.stack_string ^ l_par_del ^ str_array ^ r_par_del
+	        | Typed_queue -> Constants.queue_string ^ l_par_del ^ str_array ^ r_par_del
         in
 
 	    string_format_typed_node str_node discrete_type

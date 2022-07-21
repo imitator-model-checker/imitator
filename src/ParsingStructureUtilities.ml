@@ -122,16 +122,17 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
 	| Parsed_DF_unary_min factor ->
 	    fold_parsed_discrete_factor operator base leaf_fun factor
 
-and fold_map_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun = function
-    | Parsed_scalar_update variable_name -> [leaf_update_fun (Leaf_update_updated_variable variable_name)]
+and fold_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun = function
+    | Parsed_scalar_update variable_name -> leaf_update_fun (Leaf_update_updated_variable variable_name)
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) ->
-            (fold_map_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun parsed_scalar_or_index_update_type) @
-            [fold_parsed_discrete_arithmetic_expression operator base leaf_fun index_expr]
+        operator
+            (fold_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun parsed_scalar_or_index_update_type)
+            (fold_parsed_discrete_arithmetic_expression operator base leaf_fun index_expr)
 
-and fold_map_parsed_update_type operator base leaf_fun leaf_update_fun = function
+and fold_parsed_update_type operator base leaf_fun leaf_update_fun = function
     | Parsed_variable_update parsed_scalar_or_index_update_type ->
-        fold_map_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun parsed_scalar_or_index_update_type
-    | Parsed_void_update -> []
+        fold_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun parsed_scalar_or_index_update_type
+    | Parsed_void_update -> base
 
 and fold_parsed_next_expr operator base leaf_fun leaf_update_fun = function
     | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, _) ->
@@ -150,34 +151,22 @@ and fold_parsed_next_expr operator base leaf_fun leaf_update_fun = function
     | Parsed_fun_expr expr ->
         fold_parsed_global_expression operator base leaf_fun expr
 
-
-and fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun (update_type, expr) =
-    (fold_map_parsed_update_type operator base leaf_fun leaf_update_fun update_type) @
-    [fold_parsed_global_expression operator base leaf_fun expr]
+and fold_parsed_normal_update operator base leaf_fun leaf_update_fun (update_type, expr) =
+    operator
+        (fold_parsed_update_type operator base leaf_fun leaf_update_fun update_type)
+        (fold_parsed_global_expression operator base leaf_fun expr)
 
 (** Fold a parsed update expression using operator applying custom function on leaves **)
-(** As update expression contain list of leaf, it return list of result from function applications **)
-(* TODO benjamin operator seems useless here because it's fold map and not a fold, rename to flat_map *)
-and fold_map_parsed_update operator base leaf_fun leaf_update_fun = function
+and fold_parsed_update operator base leaf_fun leaf_update_fun = function
 	| Normal normal_update ->
-	    fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update
+	    fold_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update
 	| Condition (bool_expr, update_list_if, update_list_else) ->
-	        let all_updates = update_list_if@update_list_else in
-	        let maps = List.fold_left (fun acc normal_update ->
-	            acc @ (fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update)
-	        ) [] all_updates
-	        in
-	        (fold_parsed_boolean_expression operator base leaf_fun bool_expr) :: maps
-
-and fold_parsed_normal_update operator base leaf_fun leaf_update_fun expr =
-    let elements = fold_map_parsed_normal_update operator base leaf_fun leaf_update_fun expr in
-    List.fold_left operator base elements
-
-(** Fold a parsed update expression using operator applying custom function on leaves **)
-(** And fold the list of leaf using base **)
-and fold_parsed_update operator base leaf_fun leaf_update_fun expr =
-    let elements = fold_map_parsed_update operator base leaf_fun leaf_update_fun expr in
-    List.fold_left operator base elements
+        let all_updates = update_list_if@update_list_else in
+        let fold_updates = List.fold_left (fun acc normal_update ->
+            operator acc (fold_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update)
+        ) base all_updates
+        in
+        operator fold_updates (fold_parsed_boolean_expression operator base leaf_fun bool_expr)
 
 let rec fold_parsed_linear_constraint operator leaf_fun linear_constraint_leaf_fun = function
     | Parsed_true_constraint -> linear_constraint_leaf_fun Leaf_true_linear_constraint
@@ -669,6 +658,12 @@ let json_of_function_metadata (fm : function_metadata) =
     ]
 
 (** Utils **)
+
+(* Try to get value of a discrete boolean expression, if directly a constant equals to false or true *)
+(* If the expression is more complex, return None *)
+let discrete_boolean_expression_constant_value_opt = function
+    | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant (Bool_value v)))) -> Some v
+    | _ -> None
 
 (* Check if leaf is a constant *)
 let is_constant variable_infos = function
@@ -1249,7 +1244,6 @@ let variable_name_of_parsed_update_type parsed_update_type =
 (* Try to convert parsed discrete term to a linear term *)
 (* If it's not possible, we raise an InvalidExpression exception *)
 let rec try_convert_linear_term_of_parsed_discrete_term = function
-    (* TODO benjamin reduction should be made before *)
     | Parsed_product_quotient (term, factor, Parsed_mul) ->
         (* Check consistency of multiplication, if it keep constant we can convert to a linear term *)
         let linear_term, linear_factor =

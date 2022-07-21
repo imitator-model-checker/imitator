@@ -10,6 +10,10 @@ type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, fun_definition) Hashtbl.t
 type variable_name_table = variable_index -> variable_name
 
+type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
+type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
+type discrete_access = discrete_valuation * discrete_setter
+
 (* Record that contain context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
     (* Valuation of global variables at the context (current location) *)

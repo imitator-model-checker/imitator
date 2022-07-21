@@ -250,8 +250,8 @@ let check_normal_update variable_infos automaton_name normal_update =
 
     (* Check that all variables in update are declared, and call print function if it's not the case *)
     let all_variables_declared = ParsingStructureUtilities.all_variables_defined_in_parsed_normal_update variable_infos print_variable_in_update_not_declared_opt print_variable_in_update_not_declared_opt normal_update in
-    (* Get all updated variables (can have many updated variables for one update, in conditional update for example) *)
-    let updated_variable_name_opt = (ParsingStructureUtilities.fold_map_parsed_normal_update (^) "" (function _ -> "") (function Leaf_update_updated_variable variable_name -> variable_name) normal_update |> List.filter (fun x -> x <> "") |> List.nth_opt) 0 in
+    (* Get (maybe) an updated variable in normal update *)
+    let updated_variable_name_opt = (ParsingStructureUtilities.fold_parsed_normal_update (@) [] (function _ -> []) (function Leaf_update_updated_variable variable_name -> [variable_name]) normal_update |> List.filter (fun x -> x <> "") |> List.nth_opt) 0 in
 
     let updated_variable_name = match updated_variable_name_opt with Some updated_variable_name -> updated_variable_name | None -> "_" in
 
@@ -716,6 +716,7 @@ let partition_discrete_continuous variable_infos filtered_init_inequalities =
 		| _ -> false
     ) filtered_init_inequalities
 
+(* TODO benjamin NOW return a tuple variable_name * parsed_global_expression *)
 (* Convert discrete linear constraint predicate to discrete predicate, more simple *)
 let discrete_predicate_of_discrete_linear_predicate = function
     | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, discrete_name)), op , expression)) ->
@@ -769,18 +770,18 @@ let discrete_predicate_of_discrete_linear_predicate = function
 let check_discrete_predicate_and_init functions_table variable_infos init_values_for_discrete = function
     | Parsed_discrete_predicate (variable_name, expr) ->
 
-        (* TODO benjamin REFACTOR with kind_of *)
-        (* Check that initialized variable of name 'variable_name' is not a constant *)
-        if is_constant_is_defined variable_infos variable_name then (
+        (* Get kind of variable *)
+        let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_name in
+
+        (match variable_kind with
+        | Constant_kind _ ->
             print_error ("Initialize '" ^ variable_name ^ "' constant is forbidden");
             false
-        )
-        else (
-
+        | Variable_kind _ ->
 
             (* Get the variable index *)
             let discrete_index = index_of_variable_name variable_infos variable_name in
-            (* TYPE CHECKING *)
+            (* Convert init to abstract model *)
             let converted_expr = DiscreteExpressionConverter.convert_discrete_init variable_infos variable_name expr in
 
             (* Check if it was already declared *)
@@ -808,7 +809,6 @@ let check_discrete_predicate_and_init functions_table variable_infos init_values
                 Hashtbl.add init_values_for_discrete discrete_index value;
                 true
             )
-
         )
 
     | _ -> raise (InternalError ("Must have this form since it was checked before."))
@@ -1482,12 +1482,6 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* Convert the guard *)
               let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
 
-              (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
-              (* Filter the updates that should assign some variable name to be removed to any expression *)
-              (* let filtered_updates = List.filter (fun (variable_name, (*linear_expression*)_) ->
-                 					not (List.mem variable_name removed_variable_names)
-                 				) updates
-                 				in *)
               let seq_updates, updates = update_section in
 
               let filtered_seq_updates = filter_updates removed_variable_names seq_updates in
