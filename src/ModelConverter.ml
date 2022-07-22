@@ -157,7 +157,6 @@ let get_declared_synclabs_names =
 (*------------------------------------------------------------*)
 (* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
 (*------------------------------------------------------------*)
-(* TODO benjamin refactor because of new types ! *)
 let check_variable_names clock_names discrete_names parameters_names constants =
 	(* Warn if a variable is defined twice as the same type *)
 	let warn_for_multiply_defined_variables list_of_variables =
@@ -564,26 +563,6 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 
 (* CHECK INIT *)
 
-(* Partition between initial localisations and initial inequalities *)
-let partition_loc_init_and_variable_inits init_definition =
-	(* Get all the Parsed_loc_assignment *)
-	let loc_assignments, init_inequalities = List.partition (function
-		| Parsed_loc_assignment _ -> true
-		| Parsed_linear_predicate _
-		| Parsed_discrete_predicate _ -> false
-    ) init_definition
-    in
-
-	(* Make pairs (automaton_name, location_name) *)
-	let initial_locations = List.map (function
-		| Parsed_loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
-		| _ -> raise (InternalError "Something else than a Parsed_loc_assignment was found in a Parsed_loc_assignment list")
-    ) loc_assignments
-    in
-
-    (* Return initial locations, initial inequalities *)
-    initial_locations, init_inequalities
-
 (* Check whether an automaton has exactly one initial location *)
 let has_one_loc_per_automaton initial_locations parsed_model observer_automaton_index_option =
 
@@ -706,25 +685,17 @@ let is_inequality_has_left_hand_removed_variable removed_variable_names = functi
     | _ ->
         false
 
-let partition_discrete_continuous variable_infos filtered_init_inequalities =
-    List.partition (function
-		(* Check if the left part is only a variable name *)
-		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) -> is_discrete_variable variable_infos variable_name
-	    (* All parsed boolean predicate are for discrete variables *)
-        | Parsed_discrete_predicate _ -> true
-		(* Otherwise false *)
-		| _ -> false
-    ) filtered_init_inequalities
 
-(* TODO benjamin NOW return a tuple variable_name * parsed_global_expression *)
-(* Convert discrete linear constraint predicate to discrete predicate, more simple *)
-let discrete_predicate_of_discrete_linear_predicate = function
-    | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, discrete_name)), op , expression)) ->
+
+(* Convert discrete linear constraint predicate to a discrete init (tuple variable_name * parsed_global_expression) *)
+let discrete_init_of_discrete_linear_predicate variable_infos = function
+    | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, updated_variable_name)), op , expression))
+    when is_discrete_variable variable_infos updated_variable_name ->
 
         (* Check *)
         if NumConst.neq coeff NumConst.one then (
-            print_error ("The discrete variable `" ^ discrete_name ^ "` must have a coeff 1 in the init definition.");
-            None
+            print_error ("The discrete variable `" ^ updated_variable_name ^ "` must have a coeff 1 in the init definition.");
+            raise InvalidModel;
         )
         else (
 
@@ -732,8 +703,8 @@ let discrete_predicate_of_discrete_linear_predicate = function
             (* Simple constant: OK *)
             | (PARSED_OP_EQ, Linear_term (Constant c)) ->
                 let rational_value = DiscreteValue.Number_value c in
-                let discrete_predicate = Parsed_discrete_predicate (
-                    discrete_name,
+                My_left (
+                    updated_variable_name,
                     Parsed_global_expression (
                     Parsed_Discrete_boolean_expression (
                     Parsed_arithmetic_expression (
@@ -741,13 +712,11 @@ let discrete_predicate_of_discrete_linear_predicate = function
                     Parsed_DT_factor (
                     Parsed_DF_constant rational_value)))))
                 )
-                in
-                Some discrete_predicate
             (* Constant: OK *)
             | (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
                 let coef_rational_value = DiscreteValue.Number_value coef in
-                let discrete_predicate = Parsed_discrete_predicate (
-                    discrete_name,
+                My_left (
+                    updated_variable_name,
                     Parsed_global_expression (
                     Parsed_Discrete_boolean_expression (
                     Parsed_arithmetic_expression (
@@ -757,18 +726,17 @@ let discrete_predicate_of_discrete_linear_predicate = function
                     Parsed_DF_variable variable_name,
                     Parsed_mul)))))
                 )
-                in
-                Some discrete_predicate
-            | _ ->
-                print_error ("The initial value for discrete variable `" ^ discrete_name ^ "` must be given in the form `" ^ discrete_name ^ " = c`, where `c` is an integer, a rational or a constant.");
-                None
-        )
-    | Parsed_discrete_predicate _ as discrete_predicate -> Some discrete_predicate
-    | _ ->
-        raise (InternalError "Trying to convert a non discrete linear constraint to discrete predicate")
 
-let check_discrete_predicate_and_init functions_table variable_infos init_values_for_discrete = function
-    | Parsed_discrete_predicate (variable_name, expr) ->
+            | _ ->
+                print_error ("The initial value for discrete variable `" ^ updated_variable_name ^ "` must be given in the form `" ^ updated_variable_name ^ " = c`, where `c` is an integer, a rational or a constant.");
+                raise InvalidModel;
+        )
+    | Parsed_discrete_predicate (updated_variable_name, expr) -> My_left (updated_variable_name, expr)
+    | Parsed_loc_assignment _ -> raise (InternalError "Trying to partition between discrete and continuous inits in list containing location inits.")
+    | continous_init_predicate -> My_right continous_init_predicate
+
+
+let check_discrete_inits functions_table variable_infos init_values_for_discrete (variable_name, expr) =
 
         (* Get kind of variable *)
         let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_name in
@@ -811,20 +779,23 @@ let check_discrete_predicate_and_init functions_table variable_infos init_values
             )
         )
 
-    | _ -> raise (InternalError ("Must have this form since it was checked before."))
-
 
 (*------------------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
 (*------------------------------------------------------------*)
 let check_init functions_table (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
 
+    let partition_and_map_loc_init_and_variable_inits = function
+        (* Make pairs (automaton_name, location_name) *)
+        | Parsed_loc_assignment (automaton_name, location_name) -> My_left (automaton_name, location_name)
+        | Parsed_linear_predicate _
+        | Parsed_discrete_predicate _ as predicate -> My_right predicate
+    in
+
     let variable_infos = useful_parsing_model_information.variable_infos in
 
-	let well_formed = ref true in
-
     (* Partition init predicates between initial location and inequalities *)
-    let initial_locations, init_inequalities = partition_loc_init_and_variable_inits init_definition in
+    let initial_locations, init_inequalities = OCamlUtilities.partition_map partition_and_map_loc_init_and_variable_inits init_definition in
 
     (* For all definitions : *)
     (* Check that automaton names and location names exist *)
@@ -838,30 +809,21 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
 	(* Remove the inequalities of which the left-hand term is a removed variable *)
 	let filtered_init_inequalities = List.filter (fun x -> not (is_inequality_has_left_hand_removed_variable variable_infos.removed_variable_names x)) init_inequalities in
 
-	(* Partition the init inequalities between the discrete init assignments, and other inequalities *)
-	let discrete_init, other_inequalities = partition_discrete_continuous variable_infos filtered_init_inequalities in
+	(* Partition and map the init inequalities between the discrete init assignments, and other inequalities *)
+    let discrete_inits, other_inequalities = OCamlUtilities.partition_map (discrete_init_of_discrete_linear_predicate variable_infos) filtered_init_inequalities in
 
-    (* Convert discrete linear constraint to discrete predicate *)
-    let some_discrete_predicates = List.map discrete_predicate_of_discrete_linear_predicate discrete_init in
-
-    let discrete_predicate_well_formed = List.for_all (function | None -> false | _ -> true) some_discrete_predicates in
-
-    well_formed := definitions_well_formed && one_loc_per_automaton && discrete_predicate_well_formed;
+    let well_formed = definitions_well_formed && one_loc_per_automaton in
 
     (* Here if not well formed we can raise an error *)
-    if not (!well_formed) then
+    if not well_formed then
         raise InvalidModel;
-
-    let discrete_predicates = List.map OCamlUtilities.a_of_a_option some_discrete_predicates in
 
     (* Check init discrete section : discrete *)
 	(* Check that every discrete variable is given only one (rational) initial value *)
 	let init_values_for_discrete = Hashtbl.create (List.length variable_infos.discrete) in
 
     (* Compute discrete init values and add to init hash table *)
-    let discrete_initialization_well_formed = List.for_all (check_discrete_predicate_and_init functions_table variable_infos init_values_for_discrete) discrete_predicates in
-    (* If some value is None, there is errors *)
-    well_formed := !well_formed && discrete_initialization_well_formed;
+    let discrete_initialization_well_formed = List.for_all (check_discrete_inits functions_table variable_infos init_values_for_discrete) discrete_inits in
 
 	(* Check that every discrete variable is given at least one initial value (if not: warns) *)
 	List.iter (fun discrete_index ->
@@ -881,8 +843,6 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
 			discrete_index, Hashtbl.find init_values_for_discrete discrete_index
 		) variable_infos.discrete
 	in
-
-(*    let other_inequalities = List.map (replace_unused_discrete_variable_by_constant variable_infos init_values_for_discrete) other_inequalities in*)
 
     (* Check init constraints section : continuous *)
 
@@ -923,7 +883,7 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
         raise (InvalidExpression ("There are errors in the continuous init section"));
 
 	(* Return whether the init declaration passed the tests *)
-	discrete_values_pairs, !well_formed
+	discrete_values_pairs, discrete_initialization_well_formed
 
 
 
