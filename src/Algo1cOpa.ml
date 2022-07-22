@@ -800,7 +800,7 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "1cOpa"
+	method algorithm_name = "1cPETSOpa"
 
 	
 	(************************************************************)
@@ -907,8 +907,21 @@ class algo1cOpa (state_predicate : AbstractProperty.state_predicate) =
 		result := !result^"Regular expression of the PETS:\n"^(reg_exp_and_model_to_string (clean_reg_exp expression) model);
 		(* Print the result *)
 		print_message Verbose_low (!result);
-		raise (NotImplemented "1cOpa.run")
 		
+		
+		(*------------------------------------------------------------*)
+		(* Processing the result *)
+		(*------------------------------------------------------------*)
+		
+		(* Return the result *)
+		PETS_result
+		{
+			(* So far, string representation *)
+			pets				= !result;
+			
+			(* Total computation time of the algorithm *)
+			computation_time	= time_from start_time;
+		}
 
 	
 (************************************************************)

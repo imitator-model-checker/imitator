@@ -349,7 +349,7 @@ let result_nature_statistics_bc (soundness_str : string) termination (statespace
 (*** TODO: would be smarter to have a generic function export_to_file_result : imitator_result -> unit () ***)
 
 (* Write an `error_result` result to the result file *)
-let export_to_file_errorresult error_type file_name =
+let export_to_file_errorresult error_type (file_name : string) =
 	(* Start counter *)
 	counter#start;
 	
@@ -396,7 +396,7 @@ let export_to_file_errorresult error_type file_name =
 
 
 	(* Write a `no_result` result to the result file *)
-let export_to_file_noresult file_name =
+let export_to_file_noresult (file_name : string) =
 	(* Start counter *)
 	counter#start;
 	
@@ -441,7 +441,7 @@ let export_to_file_noresult file_name =
 
 
 (* Write a single_synthesis_result to the result file *)
-let export_to_file_single_synthesis_result file_name (single_synthesis_result : Result.single_synthesis_result) =
+let export_to_file_single_synthesis_result (file_name : string) (single_synthesis_result : Result.single_synthesis_result) =
 	(* Start counter *)
 	counter#start;
 
@@ -498,7 +498,7 @@ let export_to_file_single_synthesis_result file_name (single_synthesis_result : 
 
 
 (* Write a multiple_synthesis_result to the result file *)
-let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_result : Result.multiple_synthesis_result) =
+let export_to_file_multiple_synthesis_result (file_name : string) (multiple_synthesis_result : Result.multiple_synthesis_result) =
 	(* Start counter *)
 	counter#start;
 
@@ -537,7 +537,7 @@ let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_resul
 	in
 	
 	(* Write to file *)
-	write_to_file file_name file_content;
+	write_to_file (file_name : string) file_content;
 	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
@@ -549,7 +549,7 @@ let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_resul
 
 
 (* Write an ef_synth result to the result file *)
-let export_to_file_point_based_result file_name (point_based_result : Result.point_based_result) =
+let export_to_file_point_based_result (file_name : string) (point_based_result : Result.point_based_result) =
 	(* Start counter *)
 	counter#start;
 
@@ -651,7 +651,7 @@ let general_bc_statistics (cartography_result : Result.cartography_result) =
 
 		
 (* Write result of BC to file *)
-let export_to_file_cartography_result file_name (cartography_result : Result.cartography_result) =
+let export_to_file_cartography_result (file_name : string) (cartography_result : Result.cartography_result) =
 	(* Start counter *)
 	counter#start;
 
@@ -745,7 +745,7 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 
 
 (* Export result of type 'Runs_exhibition_result' *)
-let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibition_result) =
+let export_to_file_runs_exhibition_result (file_name : string) (result : Result.runs_exhibition_result) =
 	(* Start counter *)
 	counter#start;
 
@@ -820,6 +820,49 @@ let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibi
 	(* The end *)
 	()
 
+
+let export_to_file_runs_pets_result (file_name : string) (pets_result : Result.pets_result) =
+	(* Start counter *)
+	counter#start;
+
+	(* Prepare the string to write *)
+	let file_content =
+		(* 1) Header *)
+		file_header ()
+		
+		(* 2) Statistics about model *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (model_statistics ())
+		^ "\n------------------------------------------------------------"
+
+		(* 3) The actual result with delimiters *)
+		(*** TODO: change delimiters ***)
+		^ (add_constraints_delimiters pets_result.pets)
+		
+		(* 4) Statistics about result *)
+(* 		^ "\n------------------------------------------------------------" *)
+(* 		^ "\n" ^ (result_nature_statistics soundness_str pets_result.termination statespace_nature_str) *)
+		
+		(* 5) Statistics about state space *)
+(* 		^ "\n------------------------------------------------------------" *)
+(* 		^ "\n" ^ (statespace_statistics pets_result.state_space pets_result.computation_time) *)
+(* 		^ "\n------------------------------------------------------------" *)
+		(*** TODO: add back at least the computation time? ***)
+		
+		(* 6) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
+		^ "\n------------------------------------------------------------"
+	in
+	
+	(* Write to file *)
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
+	
+	(* Stop counter *)
+	counter#stop;
+	
+	(* The end *)
+	()
 
 
 (*------------------------------------------------------------*)
@@ -965,6 +1008,7 @@ let process_single_synthesis_or_point_based_result file_prefix algorithm_name re
 	
 	(* The end *)
 	()
+
 
 
 (************************************************************)
@@ -1206,6 +1250,21 @@ let process_result result algorithm_name prefix_option =
 			);
 		
 		) result.runs;
+		
+		(* The end *)
+		()
+
+	(* Result for PETS computation (work by Johan Arcile) *)
+	| PETS_result result ->
+		(* Write to file *)
+		let file_name = file_prefix ^ Constants.result_file_extension in
+		export_to_file_runs_pets_result file_name result;
+		
+		(* Print statistics *)
+		print_memory_statistics ();
+
+		(* Draw state space *)
+(* 		draw_statespace_if_requested result.state_space; *)
 		
 		(* The end *)
 		()

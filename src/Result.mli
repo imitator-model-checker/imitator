@@ -342,7 +342,18 @@ type runs_exhibition_result = {
 	termination			: bfs_algorithm_termination;
 }
 
+(*------------------------------------------------------------*)
+(* PETS creation for opacity (work by Johan Arcile) *)
+(*------------------------------------------------------------*)
 
+(** Result for PETS computation (work by Johan Arcile) *)
+type pets_result = {
+	(* So far, string representation *)
+	pets				: string;
+	
+	(* Total computation time of the algorithm *)
+	computation_time	: float;
+}
 
 (************************************************************)
 (** A unified type for all results *)
@@ -379,3 +390,5 @@ type imitator_result =
 	(* Result for runs exhibition *)
 	| Runs_exhibition_result of runs_exhibition_result
 
+	(* Result for PETS computation (work by Johan Arcile) *)
+	| PETS_result of pets_result
