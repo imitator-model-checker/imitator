@@ -4,7 +4,7 @@
  * 
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
- * Module description: algorithm for 1-clock opacity (EXPERIMENTAL)
+ * Module description: algorithm for computing PETS for 1-clock opacity (EXPERIMENTAL)
  * 
  * File contributors : Étienne André, Johan Arcile
  * Created           : 2022/06/10
@@ -47,14 +47,14 @@ let xabs_present (model : AbstractModel.abstract_model) : bool =
 
 let check_1cPTA (model : AbstractModel.abstract_model) : unit = (
 	(* The PTA has only 1 automaton *)
-	if model.nb_automata != 1 then raise (Invalid_argument "Not a 1-clock PTA: exactly one automaton is requiered");
+	if model.nb_automata != 1 then raise (Invalid_argument "Not a 1-clock PTA: exactly one automaton is required");
 	(* The PTA has only 1 clock *)
-	if model.nb_clocks != 1 then raise (Invalid_argument "Not a 1-clock PTA: exactly one clock is requiered");	
+	if model.nb_clocks != 1 then raise (Invalid_argument "Not a 1-clock PTA: exactly one clock is required");	
 	(* The clock is a 1rate clock *)
-	if model.has_non_1rate_clocks then raise (Invalid_argument "Not a 1-clock PTA: the clock must be a 1rate clock");
+	if model.has_non_1rate_clocks then raise (Invalid_argument "Not a 1-clock PTA: the clock must be a clock with rate 1");
 	(* The clock does not have complex updates *)
 	if model.has_complex_updates then raise (Invalid_argument "Not a 1-clock PTA: clock updates different to 0 are not authorized");
-	if not (xabs_present model) then raise (Invalid_argument "Temporary hack for global time value : a parameter named \"xabs\" must be present in the model");
+	if not (xabs_present model) then raise (Invalid_argument "Temporary hack for global time value : a parameter named `xabs` must be present in the model");
 	(**WARNING: If xabs is constrainted in the model by anything not included in 'xabs >= 0', the result may be INCORRECT **)
 	)
 
