@@ -28,6 +28,7 @@ type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
 (* Get builtin functions meta *)
 val builtin_functions_metadata : function_metadata list
+(* Get builtin function metadata as a table *)
 val builtin_functions_metadata_table : (string, function_metadata) Hashtbl.t
 
 (* Get builtin function implementations *)

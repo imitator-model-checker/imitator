@@ -11,11 +11,18 @@
  *
  ************************************************************)
 
+(* Utils modules *)
 open Exceptions
-open DiscreteType
-open FunctionSig
-open ParsingStructureUtilities
 
+(* Parsing structure modules *)
+open ParsingStructureUtilities
+open DiscreteType
+
+(**)
+open FunctionSig
+
+(* Represent a resolved constraint *)
+(* Resolved constraint can be a type or a length value (in case of array, binary word lengths) *)
 type resolved_constraint =
     | Resolved_type_constraint of var_type_discrete
     | Resolved_length_constraint of int
@@ -38,7 +45,7 @@ let string_of_resolved_constraints resolved_constraints =
 (** Constraints resolution **)
 (** -------------------- **)
 
-(* Given a discrete type, resolve constraint type / length of a signature type *)
+(* Given a discrete type, resolve the constraint type or the constraint length of a type constraint *)
 let rec resolve_constraint defined_type_constraint discrete_type =
     match defined_type_constraint, discrete_type with
     | Number_constraint type_number_constraint, Var_type_discrete_number type_number ->
@@ -100,13 +107,13 @@ let resolve_constraints variable_infos signature discrete_types =
         else (
             let resolved_discrete_types = List.map (function | Resolved_type_constraint discrete_type -> discrete_type | Resolved_length_constraint _ -> Var_type_weak) type_constraint_resolutions in
             (* Reduce discrete types to get the stronger type !  *)
-            let stronger_type = List.fold_left (fun acc discrete_type -> DiscreteType.stronger_discrete_type_of acc discrete_type) Var_type_weak resolved_discrete_types in
+            let stronger_type = List.fold_left stronger_discrete_type_of Var_type_weak resolved_discrete_types in
             Resolved_type_constraint stronger_type
         )
 
     in
 
-    (* Zip lists: signature types / discrete types *)
+    (* group each signature type constraint with discrete types *)
     let type_constraint_discrete_type = List.combine signature discrete_types in
 
     (* Resolve classical constraint *)
@@ -158,7 +165,7 @@ let get_length_resolved_constraint resolved_constraints_table constraint_name =
 let get_discrete_type_resolved_constraint resolved_constraints_table constraint_name =
 
     if not (Hashtbl.mem resolved_constraints_table constraint_name) then
-        ImitatorUtilities.print_warning (constraint_name ^ " not found");
+        ImitatorUtilities.print_warning (constraint_name ^ " not found.");
 
     let resolved_constraint = Hashtbl.find resolved_constraints_table constraint_name in
     match resolved_constraint with

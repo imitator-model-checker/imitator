@@ -16,37 +16,50 @@
  *
  ************************************************************)
 
+(* Utils modules *)
 open Exceptions
+
+(* Parsing structure modules *)
 open DiscreteType
 open DiscreteValue
+
+(* Abstract modules *)
 open DiscreteExpressions
 
+(* Name of constraint *)
 type constraint_name = string
 
+(* Length constraint, like array length, binary word length *)
 type length_constraint =
     | Length_constraint of int
     | Length_constraint_expression of length_constraint_expression
 
+(* Length constraint expression *)
 and length_constraint_expression =
     | Length_scalar_constraint of constraint_name
     | Length_plus_constraint of constraint_name * length_constraint
 
+(* Constraint on int type *)
 type int_type_constraint =
     | Int_type_constraint
     | Int_name_constraint of constraint_name (* Dependent type *)
 
+(* Constraint on concrete number type *)
 type defined_type_number_constraint =
     | Int_constraint of int_type_constraint
     | Rat_constraint
 
+(* Constraint on number type *)
 type type_number_constraint =
     | Defined_type_number_constraint of defined_type_number_constraint
     | Number_type_name_constraint of constraint_name
 
+(* Constraint on any type *)
 type type_constraint =
     | Defined_type_constraint of defined_type_constraint
     | Type_name_constraint of constraint_name
 
+(* Constraint on concrete type *)
 and defined_type_constraint =
     | Number_constraint of type_number_constraint
     | Bool_constraint

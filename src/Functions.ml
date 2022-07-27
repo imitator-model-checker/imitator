@@ -93,6 +93,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
 (* Remove the declarations of unused local variables from function body *)
 let fun_def_without_unused_local_vars unused_local_vars (fun_def : parsed_fun_definition) =
 
+    (* Return body of function without unused expression *)
     let rec next_expr_without_unused = function
         | Parsed_fun_local_decl (variable_name, discrete_type, init_expr, next_expr, id) ->
             (* If current declaration is found in unused local variable, just remove by skipping *)
