@@ -159,8 +159,8 @@ let string_of_accepting	= "accepting"
 (** JSON *)
 (************************************************************)
 let json_NULL	= "null" (*** NOTE: no quotes ***)
-let json_TRUE	= "true"
-let json_FALSE	= "false"
+let json_TRUE	= "True"
+let json_FALSE	= "False"
 
 let json_of_string s = "\"" ^ s ^ "\""
 
@@ -323,6 +323,7 @@ let string_of_fun_definitions model =
 
         (* Convert a function expression into a string *)
         let rec string_of_next_expr = function
+            | Fun_builtin _ -> "" (* TODO benjamin see here, because it will write fn builtin_f () begin end on builtin function *)
             | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
                 "let " ^ variable_name ^ " : "
                 ^ DiscreteType.string_of_var_type_discrete discrete_type
@@ -339,20 +340,28 @@ let string_of_fun_definitions model =
                 DiscreteExpressions.string_of_global_expression model.variable_names expr ^ "\n"
         in
 
-        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature in
-        let parameter_names_with_constraints = List.combine fun_def.parameters parameters_signature in
+        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
+        let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
         (* Convert parameters into a string *)
         let str_param_list = List.map (fun (param_name, type_constraint) -> param_name ^ " : " ^ FunctionSig.string_of_type_constraint type_constraint) parameter_names_with_constraints in
         let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in
+
+        (* Don't print builtin functions ! *)
+        let is_builtin = Hashtbl.mem Functions.builtin_functions_metadata_table fun_def.name in
+
         (* Format function definition *)
-        "fn " ^ fun_def.name ^ "(" ^ str_params ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin \n"
-        ^ string_of_next_expr fun_def.body
-        ^ "end"
+        if is_builtin then
+            ""
+        else (
+            "fn " ^ fun_def.name ^ "(" ^ str_params ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin \n"
+            ^ string_of_next_expr fun_def.body
+            ^ "end"
+        )
 
     in
 
     (* Convert hashtbl values to list *)
-    let fun_definition_list = model.fun_definitions |> Hashtbl.to_seq_values |> List.of_seq |> List.rev in
+    let fun_definition_list = model.functions_table |> Hashtbl.to_seq_values |> List.of_seq |> List.rev in
     (* Map each definition to it's string representation *)
     let str_fun_definitions_list = List.map string_of_fun_definition fun_definition_list in
     (* Join all strings *)
@@ -377,10 +386,10 @@ let string_of_discrete_boolean_expression = DiscreteExpressions.string_of_discre
 let customized_string_of_guard customized_boolean_string variable_names = function
 	| True_guard -> LinearConstraint.string_of_true
 	| False_guard -> LinearConstraint.string_of_false
-	| Discrete_guard discrete_guard -> NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard
+	| Discrete_guard discrete_guard -> DiscreteExpressions.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard
 	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard ->
-		(NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard)
+		(DiscreteExpressions.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard)
 		^ LinearConstraint.string_of_and ^
 		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
 
@@ -393,11 +402,11 @@ let json_of_guard variable_names guard =
 	match guard with
 	| True_guard -> json_TRUE
 	| False_guard -> json_FALSE
-	| Discrete_guard discrete_guard -> json_escape_ampersand (NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard)
+	| Discrete_guard discrete_guard -> json_escape_ampersand (DiscreteExpressions.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard)
 	| Continuous_guard continuous_guard -> json_escape_ampersand (LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard)
 	| Discrete_continuous_guard discrete_continuous_guard ->
 		(*** HACK for now (2021/12/09): just replace the " & " with some suited string ***)
-		(json_escape_ampersand (NonlinearConstraint.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard))
+		(json_escape_ampersand (DiscreteExpressions.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard))
 		^ " AND " ^
 		(json_escape_ampersand (LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard))
 
@@ -835,7 +844,7 @@ let string_of_new_initial_discretes ?indent_level:(i=1) model =
 		let initial_value = Location.get_discrete_value model.initial_location discrete_index in
 		(* '& var = val' *)
 		let tabulations = string_n_times i "\t" in
-		tabulations ^ (model.variable_names discrete_index) ^ " := " ^ (DiscreteValue.string_of_value initial_value)
+		tabulations ^ (model.variable_names discrete_index) ^ " := " ^ (AbstractValue.string_of_value initial_value)
 	) model.discrete
 	in string_of_list_of_string_with_sep ", \n" initial_discrete
 
@@ -885,7 +894,7 @@ let string_of_old_initial_state model =
 		(* Finding the initial value for this discrete *)
 		let initial_value = Location.get_discrete_value inital_global_location discrete_index in
 		(* '& var = val' *)
-		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (DiscreteValue.string_of_value initial_value)
+		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (AbstractValue.string_of_value initial_value)
 	) model.discrete
 	in string_of_list_of_string initial_discrete
 
@@ -1279,7 +1288,7 @@ let json_of_discrete_values model (global_location : Location.global_location) =
 			
 			(* Convert to strings *)
 			let variable_name = model.variable_names discrete_index in
-			let variable_valuation = DiscreteValue.string_of_value variable_value in
+			let variable_valuation = AbstractValue.string_of_value variable_value in
 			
 			(* Convert *)
 			"\n\t\t\t\t\t" ^ (json_of_string variable_name) ^ ": " ^ (json_of_string variable_valuation) ^ ""

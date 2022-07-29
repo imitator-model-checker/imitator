@@ -14,6 +14,7 @@
 open Constants
 
 type variable_name = string
+type variable_name_table = Automaton.variable_index -> variable_name
 
 (****************************************************************)
 (** Operators *)
@@ -26,14 +27,18 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (****************************************************************)
 (** Valuation *)
 (****************************************************************)
-type discrete_valuation = Automaton.discrete_index -> DiscreteValue.discrete_value
-type discrete_setter = Automaton.discrete_index -> DiscreteValue.discrete_value -> unit
-type discrete_access = discrete_valuation * discrete_setter
-type variable_table = (variable_name, DiscreteValue.discrete_value) Hashtbl.t
 
 type conj_dis =
     | And
     | Or
+
+type sum_diff =
+    | Plus
+    | Minus
+
+type product_quotient =
+    | Mul
+    | Div
 
 (****************************************************************)
 (** Global expression *)
@@ -52,6 +57,24 @@ and discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
     | Int_arithmetic_expression of int_arithmetic_expression
 
+and 'a new_arithmetic_expression =
+    | Sum_diff of 'a new_arithmetic_expression * 'a new_term * sum_diff
+	| Arithmetic_term of 'a new_term
+
+and 'a new_term =
+	| Product_quotient of 'a new_term * 'a new_factor * product_quotient
+	| Arithmetic_factor of 'a new_factor
+
+and 'a new_factor =
+	| Arithmetic_global_variable of Automaton.variable_index
+	| Arithmetic_global_constant of 'a
+	| Arithmetic_local_variable of variable_name
+	| Arithmetic_nested_expression of 'a new_arithmetic_expression
+	| Arithmetic_unary_min of 'a new_factor
+    | Arithmetic_pow of 'a new_arithmetic_expression * int new_arithmetic_expression
+    | Arithmetic_array_access of expression_access_type * int new_arithmetic_expression
+    | Arithmetic_function_call of variable_name * variable_name list * global_expression list
+
 (****************************************************************)
 (** Rational arithmetic expressions for discrete variables *)
 (****************************************************************)
@@ -59,37 +82,19 @@ and rational_arithmetic_expression =
     | Rational_sum_diff of rational_arithmetic_expression * rational_term * sum_diff
 	| Rational_term of rational_term
 
-and sum_diff =
-    | Plus
-    | Minus
-
 and rational_term =
 	| Rational_product_quotient of rational_term * rational_factor * product_quotient
 	| Rational_factor of rational_factor
-
-and product_quotient =
-    | Mul
-    | Div
 
 and rational_factor =
 	| Rational_variable of Automaton.variable_index
 	| Rational_local_variable of variable_name
 	| Rational_constant of NumConst.t
-	| Rational_expression of rational_arithmetic_expression
+	| Rational_nested_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
-    | Rational_of_int of int_arithmetic_expression
     | Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
-    | Rational_sequence_function of sequence_function
-    | Rational_inline_function of variable_name * variable_name list * global_expression list * fun_body
-(*    | Rational_function_call of string * global_expression list*)
-
-and sequence_function =
-    | Array_access of expression_access_type * int_arithmetic_expression
-    | List_hd of list_expression
-    | Stack_pop of stack_expression
-    | Stack_top of stack_expression
-    | Queue_pop of queue_expression
-    | Queue_top of queue_expression
+    | Rational_array_access of expression_access_type * int_arithmetic_expression
+    | Rational_function_call of variable_name * variable_name list * global_expression list
 
 (************************************************************)
 (** Int arithmetic expressions for discrete variables *)
@@ -107,16 +112,11 @@ and int_factor =
 	| Int_variable of Automaton.variable_index
 	| Int_local_variable of variable_name
 	| Int_constant of Int32.t
-	| Int_expression of int_arithmetic_expression
+	| Int_nested_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
-    | Int_sequence_function of sequence_function
-    | Array_length of array_expression
-    | List_length of list_expression
-    | Stack_length of stack_expression
-    | Queue_length of queue_expression
-    (* | Int_function_call of variable_name * global_expression list *)
-    | Int_inline_function of variable_name * variable_name list * global_expression list * fun_body
+    | Int_array_access of expression_access_type * int_arithmetic_expression
+    | Int_function_call of variable_name * variable_name list * global_expression list
 
 
 (****************************************************************)
@@ -150,16 +150,8 @@ and discrete_boolean_expression =
     | Bool_local_variable of variable_name
 	(** Discrete boolean constant *)
 	| Bool_constant of bool
-    | Bool_sequence_function of sequence_function
-    (* Function list_mem *)
-    | List_mem of global_expression * list_expression
-    (* Function array_mem *)
-    | Array_mem of global_expression * array_expression
-    | List_is_empty of list_expression
-    | Stack_is_empty of stack_expression
-    | Queue_is_empty of queue_expression
-    | Bool_inline_function of variable_name * variable_name list * global_expression list * fun_body
-(*    | Bool_function_call of string * global_expression list*)
+    | Bool_array_access of expression_access_type * int_arithmetic_expression
+    | Bool_function_call of variable_name * variable_name list * global_expression list
 
 (************************************************************)
 (************************************************************)
@@ -170,21 +162,11 @@ and discrete_boolean_expression =
 
 (** Binary word expression *)
 and binary_word_expression =
-    | Logical_shift_left of binary_word_expression * int_arithmetic_expression * int
-    | Logical_shift_right of binary_word_expression * int_arithmetic_expression * int
-    | Logical_fill_left of binary_word_expression * int_arithmetic_expression * int
-    | Logical_fill_right of binary_word_expression * int_arithmetic_expression * int
-    | Logical_and of binary_word_expression * binary_word_expression * int
-    | Logical_or of binary_word_expression * binary_word_expression * int
-    | Logical_xor of binary_word_expression * binary_word_expression * int
-    | Logical_not of binary_word_expression * int
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
     | Binary_word_local_variable of variable_name
-    (* Add here some functions *)
-    | Binary_word_sequence_function of sequence_function
-    | Binary_word_inline_function of variable_name * variable_name list * global_expression list * fun_body
-(*    | Binary_word_function_call of string * global_expression list*)
+    | Binary_word_array_access of expression_access_type * int_arithmetic_expression
+    | Binary_word_function_call of variable_name * variable_name list * global_expression list
 
 (************************************************************)
 (************************************************************)
@@ -196,45 +178,36 @@ and binary_word_expression =
 (** Array expression *)
 and array_expression =
     | Literal_array of global_expression array
-    | Array_constant of DiscreteValue.discrete_value array
+    | Array_constant of AbstractValue.abstract_value array
     | Array_variable of Automaton.variable_index
     | Array_local_variable of variable_name
-    (* Add here some function on array *)
-    | Array_concat of array_expression * array_expression
-    | Array_sequence_function of sequence_function
-    | Array_inline_function of variable_name * variable_name list * global_expression list * fun_body
-(*    | Array_function_call of string * global_expression list*)
+    | Array_array_access of expression_access_type * int_arithmetic_expression
+    | Array_function_call of variable_name * variable_name list * global_expression list
 
 (** List expression **)
 and list_expression =
     | Literal_list of global_expression list
-    | List_constant of DiscreteValue.discrete_value list
+    | List_constant of AbstractValue.abstract_value list
     | List_variable of Automaton.variable_index
     | List_local_variable of variable_name
-    | List_cons of global_expression * list_expression
-    | List_sequence_function of sequence_function
-	| List_list_tl of list_expression
-	| List_rev of list_expression
-    | List_inline_function of variable_name * variable_name list * global_expression list * fun_body
-(*    | List_function_call of string * global_expression list*)
+    | List_array_access of expression_access_type * int_arithmetic_expression
+    | List_function_call of variable_name * variable_name list * global_expression list
 
 and stack_expression =
     | Literal_stack
     | Stack_variable of Automaton.variable_index
     | Stack_local_variable of variable_name
-    | Stack_push of global_expression * stack_expression
-    | Stack_clear of stack_expression
-    | Stack_sequence_function of sequence_function
-    | Stack_inline_function of variable_name * variable_name list * global_expression list * fun_body
+    | Stack_array_access of expression_access_type * int_arithmetic_expression
+    | Stack_function_call of variable_name * variable_name list * global_expression list
 
 and queue_expression =
     | Literal_queue
     | Queue_variable of Automaton.variable_index
     | Queue_local_variable of variable_name
-    | Queue_push of global_expression * queue_expression
-    | Queue_clear of queue_expression
-    | Queue_sequence_function of sequence_function
-    | Queue_inline_function of variable_name * variable_name list * global_expression list * fun_body
+    | Queue_array_access of expression_access_type * int_arithmetic_expression
+    | Queue_function_call of variable_name * variable_name list * global_expression list
+
+
 
 and expression_access_type =
     | Expression_array_access of array_expression
@@ -242,9 +215,15 @@ and expression_access_type =
 
 (* Function local declaration or expression *)
 and fun_body =
+    | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
+    (* TODO benjamin IMPLEMENT here add Fun_user_defined and move the three variant into new type *)
     | Fun_local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * fun_body
     | Fun_instruction of (update_type * global_expression) * fun_body
     | Fun_expr of global_expression
+
+(* Different function shapes *)
+and fun_shape =
+    | Fun_shape_int_int_int of (Int32.t -> Int32.t -> Int32.t)
 
 (* Update type *)
 and scalar_or_index_update_type =
@@ -258,6 +237,48 @@ and update_type =
     | Variable_update of scalar_or_index_update_type
     (* Unit expression, side effect expression without assignment, ie: stack_pop(s) *)
     | Void_update
+
+
+type 'a my_expression =
+    (* A typed expression *)
+    | My_arithmetic_expression of 'a my_arithmetic_expression
+    | My_bool_expression of 'a my_boolean_expression
+    | Other_expression of 'a my_factor
+
+and 'a my_boolean_expression =
+	| My_true_bool
+	| My_false_bool
+	(** Conjunction / Disjunction *)
+	| My_conj_dis of 'a my_boolean_expression * 'a my_boolean_expression * conj_dis
+	| My_discrete_boolean_expression of 'a my_discrete_boolean_expression
+
+and 'a my_discrete_boolean_expression =
+	(** Discrete expression of the form Expr ~ Expr *)
+	| My_comparison of 'a my_expression * relop * 'a my_expression
+	(** Discrete expression of the form 'Expr in [Expr, Expr ]' *)
+	| My_comparison_in of 'a my_arithmetic_expression * 'a my_arithmetic_expression * 'a my_arithmetic_expression
+	| My_not_bool of 'a my_boolean_expression
+	| Bool_factor of bool my_factor
+
+and 'a my_arithmetic_expression =
+    | Sum_diff of 'a my_arithmetic_expression * 'a my_term * sum_diff
+	| My_term of 'a my_term
+
+and 'a my_term =
+	| Product_quotient of 'a my_term * 'a my_factor * product_quotient
+	| My_factor of 'a my_factor
+
+and 'a my_factor =
+	| My_global_variable of Automaton.variable_index
+	| My_global_constant of 'a
+	| My_local_variable of variable_name
+	| My_expression of 'a my_arithmetic_expression
+	| My_unary_min of 'a my_factor
+    | My_rat_of of 'a my_arithmetic_expression
+    | My_pow of 'a my_arithmetic_expression * int my_arithmetic_expression
+    | My_function_call of variable_name * variable_name list * 'a my_expression list
+
+type nonlinear_constraint = discrete_boolean_expression list
 
 (** update: variable_index := linear_term *)
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
@@ -277,7 +298,7 @@ and is_variable_rational_term = function
 and is_variable_rational_factor = function
     | Rational_variable _ -> true
     | Rational_unary_min factor -> is_variable_rational_factor factor
-    | Rational_expression expr -> is_variable_rational_arithmetic_expression expr
+    | Rational_nested_expression expr -> is_variable_rational_arithmetic_expression expr
     | _ -> false
 
 let rec is_linear_global_expression = function
@@ -327,8 +348,11 @@ and is_linear_rational_factor = function
     | Rational_variable _
     | Rational_constant _ -> true
     | Rational_unary_min factor -> is_linear_rational_factor factor
-    | Rational_expression expr -> is_linear_rational_arithmetic_expression expr
+    | Rational_nested_expression expr -> is_linear_rational_arithmetic_expression expr
     | _ -> false
+
+let is_linear_nonlinear_constraint = List.for_all is_linear_discrete_boolean_expression
+
 
 (****************************************************************)
 (** Strings *)
@@ -337,12 +361,12 @@ and is_linear_rational_factor = function
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_discrete_factor_has_parenthesis = function
     | Rational_unary_min _
-    | Rational_expression (Rational_sum_diff _) -> true
+    | Rational_nested_expression (Rational_sum_diff _) -> true
     | _ -> false
 
 (* Check if discrete factor is a multiplication *)
 let is_discrete_factor_is_mul = function
-    | Rational_expression (Rational_term (Rational_product_quotient (_, _, Mul))) -> true
+    | Rational_nested_expression (Rational_term (Rational_product_quotient (_, _, Mul))) -> true
     | _ -> false
 
 (* Check if a left expression should have parenthesis *)
@@ -375,7 +399,7 @@ let add_right_parenthesis str expr =
     if is_right_expr_has_parenthesis expr then "(" ^ str ^ ")" else str
 
 let add_parenthesis_to_unary_minus str = function
-    | Rational_expression _ -> "(" ^ str ^ ")"
+    | Rational_nested_expression _ -> "(" ^ str ^ ")"
     | _ -> str
 
 
@@ -386,12 +410,12 @@ let add_parenthesis_to_unary_minus str = function
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_int_factor_has_parenthesis = function
     | Int_unary_min _
-    | Int_expression(Int_sum_diff _) -> true
+    | Int_nested_expression(Int_sum_diff _) -> true
     | _ -> false
 
 (* Check if discrete factor is a multiplication *)
 let is_int_factor_is_mul = function
-    | Int_expression (Int_term (Int_product_quotient _)) -> true
+    | Int_nested_expression (Int_term (Int_product_quotient _)) -> true
     | _ -> false
 
 (* Check if a left expression should have parenthesis *)
@@ -424,17 +448,10 @@ let add_right_parenthesis_int str expr =
     if is_right_int_expr_has_parenthesis expr then "(" ^ str ^ ")" else str
 
 let add_parenthesis_to_unary_minus_int str = function
-    | Int_expression _ -> "(" ^ str ^ ")"
+    | Int_nested_expression _ -> "(" ^ str ^ ")"
     | _ -> str
 
 (* Constructors strings *)
-let label_of_sequence_function = function
-    | Array_access _ -> "array_get"
-    | List_hd _ -> "list_hd"
-    | Stack_top _ -> "stack_top"
-    | Stack_pop _ -> "stack_pop"
-    | Queue_top _ -> "queue_top"
-    | Queue_pop _ -> "queue_pop"
 
 let label_of_bool_factor = function
 	| Arithmetic_comparison _
@@ -450,92 +467,66 @@ let label_of_bool_factor = function
 	| Bool_variable _ -> "bool variable"
 	| Bool_local_variable variable_name -> variable_name
 	| Bool_constant _ -> "bool constant"
-    | List_mem _ -> "list_mem"
-    | Array_mem _ -> "array_mem"
-    | List_is_empty _ -> "list_is_empty"
-    | Stack_is_empty _ -> "stack_is_empty"
-    | Queue_is_empty _ -> "queue_is_empty"
-	| Bool_sequence_function func -> label_of_sequence_function func
-	| Bool_inline_function (function_name, _, _, _) -> function_name
+	| Bool_array_access _ -> "array_get"
+    | Bool_function_call (function_name, _, _) -> function_name
 
 let label_of_rational_factor = function
 	| Rational_variable _ -> "rational variable"
 	| Rational_local_variable variable_name -> variable_name
 	| Rational_constant _ -> "rational constant"
-	| Rational_expression _ -> "rational expression"
+	| Rational_nested_expression _ -> "rational expression"
 	| Rational_unary_min _ -> "rational minus"
-	| Rational_of_int _ -> "rational_of_int"
 	| Rational_pow _ -> "pow"
-	| Rational_sequence_function func -> label_of_sequence_function func
-    | Rational_inline_function (function_name, _, _, _) -> function_name
+	| Rational_array_access _ -> "array_get"
+	| Rational_function_call (function_name, _, _) -> function_name
 
 let label_of_int_factor = function
 	| Int_variable _ -> "int variable"
 	| Int_local_variable variable_name -> variable_name
 	| Int_constant _ -> "int constant"
-	| Int_expression _ -> "int expression"
+	| Int_nested_expression _ -> "int expression"
 	| Int_unary_min _ -> "int minus"
 	| Int_pow _ -> "pow"
-	| Array_length _ -> "array_length"
-	| List_length _ -> "list_length"
-	| Stack_length _ -> "stack_length"
-	| Queue_length _ -> "queue_length"
-	| Int_sequence_function func -> label_of_sequence_function func
-	| Int_inline_function (function_name, _, _, _) -> function_name
+	| Int_array_access _ -> "array_get"
+	| Int_function_call (function_name, _, _) -> function_name
 
 
 let label_of_binary_word_expression = function
-    | Logical_shift_left _ -> "shift_left"
-    | Logical_shift_right _ -> "shift_right"
-    | Logical_fill_left _ -> "fill_left"
-    | Logical_fill_right _ -> "fill_right"
-    | Logical_and _ -> "logand"
-    | Logical_or _ -> "logor"
-    | Logical_xor _ -> "logxor"
-    | Logical_not _ -> "lognot"
     | Binary_word_constant _ -> "binary word constant"
     | Binary_word_variable _ -> "binary word variable"
     | Binary_word_local_variable variable_name -> variable_name
-	| Binary_word_sequence_function func -> label_of_sequence_function func
-    | Binary_word_inline_function (function_name, _, _, _) -> function_name
+	| Binary_word_array_access _ -> "array_get"
+    | Binary_word_function_call (function_name, _, _) -> function_name
 
 let label_of_array_expression = function
     | Literal_array _ -> "array"
     | Array_constant _ -> "array"
     | Array_variable _ -> "array"
     | Array_local_variable variable_name -> variable_name
-    | Array_concat _ -> "array_append"
-	| Array_sequence_function func -> label_of_sequence_function func
-    | Array_inline_function (function_name, _, _, _) -> function_name
+	| Array_array_access _ -> "array_get"
+	| Array_function_call (function_name, _, _) -> function_name
 
 let label_of_list_expression = function
     | Literal_list _ -> "list"
     | List_constant _ -> "list"
     | List_variable _ -> "list"
     | List_local_variable variable_name -> variable_name
-    | List_cons _ -> "list_cons"
-    | List_list_tl _ -> "list_tl"
-    | List_rev _ -> "list_rev"
-	| List_sequence_function func -> label_of_sequence_function func
-    | List_inline_function (function_name, _, _, _) -> function_name
+	| List_array_access _ -> "array_get"
+	| List_function_call (function_name, _, _) -> function_name
 
 let label_of_stack_expression = function
-    | Literal_stack -> "stack"
-    | Stack_variable _ -> "stack"
+    | Literal_stack -> Constants.stack_string
+    | Stack_variable _ -> Constants.stack_string
     | Stack_local_variable variable_name -> variable_name
-    | Stack_push _ -> "stack_push"
-    | Stack_clear _ -> "stack_clear"
-	| Stack_sequence_function func -> label_of_sequence_function func
-    | Stack_inline_function (function_name, _, _, _) -> function_name
+	| Stack_array_access _ -> "array_get"
+	| Stack_function_call (function_name, _, _) -> function_name
 
 let label_of_queue_expression = function
     | Literal_queue -> "queue"
     | Queue_variable _ -> "queue"
     | Queue_local_variable variable_name -> variable_name
-    | Queue_push _ -> "queue_push"
-    | Queue_clear _ -> "queue_clear"
-	| Queue_sequence_function func -> label_of_sequence_function func
-    | Queue_inline_function (function_name, _, _, _) -> function_name
+	| Queue_array_access _ -> "array_get"
+	| Queue_function_call (function_name, _, _) -> function_name
 
 (* Check if a binary word encoded on an integer have length greater than 31 bits *)
 (* If it's the case, print a warning *)
@@ -609,10 +600,6 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 		    add_parenthesis_to_unary_minus (
 		         (string_of_factor customized_string discrete_factor)
 		    ) discrete_factor
-		| Rational_of_int discrete_arithmetic_expression as factor ->
-            print_function
-                (label_of_rational_factor factor)
-                [customized_string_of_int_arithmetic_expression customized_string variable_names discrete_arithmetic_expression]
         | Rational_pow (expr, exp) as factor ->
             print_function
                 (label_of_rational_factor factor)
@@ -621,12 +608,14 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
                     customized_string_of_int_arithmetic_expression customized_string variable_names exp
                 ]
 
-        | Rational_sequence_function func ->
-            customized_string_of_sequence_function customized_string variable_names func
+        | Rational_array_access (access_type, index_expr) ->
+            customized_string_of_expression_access customized_string variable_names access_type index_expr
 
-		| Rational_expression discrete_arithmetic_expression ->
+
+		| Rational_nested_expression discrete_arithmetic_expression ->
 			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
-        | Rational_inline_function (function_name, _, args_expr, _) ->
+
+        | Rational_function_call (function_name, _, args_expr) ->
             customized_string_of_function_call customized_string variable_names function_name args_expr
 
 	(* Call top-level *)
@@ -671,7 +660,7 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 		    add_parenthesis_to_unary_minus_int (
 		         (string_of_int_factor customized_string factor)
 		    ) factor
-		| Int_expression expr ->
+		| Int_nested_expression expr ->
 			string_of_int_arithmetic_expression customized_string expr
         | Int_pow (expr, exp) as func ->
             print_function
@@ -680,25 +669,9 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
                     string_of_int_arithmetic_expression customized_string expr;
                     string_of_int_arithmetic_expression customized_string exp
                 ]
-        | Int_sequence_function func ->
-            customized_string_of_sequence_function customized_string variable_names func
-        | Array_length array_expr as func ->
-            print_function
-                (label_of_int_factor func)
-                [customized_string_of_array_expression customized_string variable_names array_expr]
-        | List_length list_expr as func ->
-            print_function
-                (label_of_int_factor func)
-                [customized_string_of_list_expression customized_string variable_names list_expr]
-        | Stack_length stack_expr as func ->
-            print_function
-                (label_of_int_factor func)
-                [customized_string_of_stack_expression customized_string variable_names stack_expr]
-        | Queue_length queue_expr as func ->
-            print_function
-                (label_of_int_factor func)
-                [customized_string_of_queue_expression customized_string variable_names queue_expr]
-        | Int_inline_function (function_name, _, args_expr, _) ->
+        | Int_array_access (access_type, index_expr) ->
+            customized_string_of_expression_access customized_string variable_names access_type index_expr
+        | Int_function_call (function_name, _, args_expr) ->
             customized_string_of_function_call customized_string variable_names function_name args_expr
 
 	(* Call top-level *)
@@ -762,40 +735,10 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
     | Bool_variable discrete_index -> variable_names discrete_index
     | Bool_local_variable variable_name -> variable_name
     | Bool_constant value -> customized_string_of_bool_value customized_string.boolean_string value
-    | Bool_sequence_function func ->
-        customized_string_of_sequence_function customized_string variable_names func
+    | Bool_array_access (access_type, index_expr) ->
+        customized_string_of_expression_access customized_string variable_names access_type index_expr
 
-    | List_mem (expr, list_expr) as func ->
-        print_function
-            (label_of_bool_factor func)
-            [
-                customized_string_of_global_expression customized_string variable_names expr;
-                customized_string_of_list_expression customized_string variable_names list_expr
-            ]
-    | Array_mem (expr, array_expr) as func ->
-        print_function
-            (label_of_bool_factor func)
-            [
-                customized_string_of_global_expression customized_string variable_names expr;
-                customized_string_of_array_expression customized_string variable_names array_expr
-            ]
-
-    | List_is_empty list_expr as func ->
-        print_function
-            (label_of_bool_factor func)
-            [customized_string_of_list_expression customized_string variable_names list_expr]
-
-    | Stack_is_empty stack_expr as func ->
-        print_function
-            (label_of_bool_factor func)
-            [customized_string_of_stack_expression customized_string variable_names stack_expr]
-
-    | Queue_is_empty queue_expr as func ->
-        print_function
-            (label_of_bool_factor func)
-            [customized_string_of_queue_expression customized_string variable_names queue_expr]
-
-    | Bool_inline_function (function_name, _, args_expr, _) ->
+    | Bool_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and customized_string_of_boolean_operations customized_string = function
@@ -811,59 +754,6 @@ and customized_string_of_bool_value customized_string = function
     | false -> customized_string.false_string
 
 and customized_string_of_binary_word_expression customized_string variable_names = function
-    | Logical_shift_left (binary_word, expr, length) as binary_word_expression ->
-        print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
-
-        let length_arg =
-            match customized_string.binary_word_representation with
-            | Binary_word_representation_standard -> ""
-            | Binary_word_representation_int -> ", " ^ string_of_int length
-        in
-        label_of_binary_word_expression binary_word_expression
-        ^ "("
-        ^ customized_string_of_binary_word_expression customized_string variable_names binary_word
-        ^ ", "
-        ^ customized_string_of_int_arithmetic_expression customized_string variable_names expr
-        ^ length_arg
-        ^ ")"
-
-    | Logical_shift_right (binary_word, expr, length)
-    | Logical_fill_left (binary_word, expr, length)
-    | Logical_fill_right (binary_word, expr, length) as binary_word_expression ->
-        print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
-
-        print_function
-            (label_of_binary_word_expression binary_word_expression)
-            [
-                customized_string_of_binary_word_expression customized_string variable_names binary_word;
-                customized_string_of_int_arithmetic_expression customized_string variable_names expr
-            ]
-
-    | Logical_and (l_binary_word, r_binary_word, length)
-    | Logical_or (l_binary_word, r_binary_word, length)
-    | Logical_xor (l_binary_word, r_binary_word, length) as binary_word_expression ->
-        print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
-
-        print_function
-            (label_of_binary_word_expression binary_word_expression)
-            [
-                customized_string_of_binary_word_expression customized_string variable_names l_binary_word;
-                customized_string_of_binary_word_expression customized_string variable_names r_binary_word
-            ]
-
-    | Logical_not (binary_word, length) as binary_word_expression ->
-        print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
-
-        let length_arg =
-            match customized_string.binary_word_representation with
-            | Binary_word_representation_standard -> ""
-            | Binary_word_representation_int -> ", " ^ string_of_int length
-        in
-        label_of_binary_word_expression binary_word_expression
-        ^ "("
-        ^ customized_string_of_binary_word_expression customized_string variable_names binary_word
-        ^ length_arg
-        ^ ")"
     | Binary_word_constant value as binary_word_expression ->
 
         let length = BinaryWord.length value in
@@ -879,10 +769,9 @@ and customized_string_of_binary_word_expression customized_string variable_names
         variable_names variable_index
     | Binary_word_local_variable variable_name ->
         variable_name
-    | Binary_word_sequence_function func ->
-        customized_string_of_sequence_function customized_string variable_names func
-
-    | Binary_word_inline_function (function_name, _, args_expr, _) ->
+    | Binary_word_array_access (access_type, index_expr) ->
+        customized_string_of_expression_access customized_string variable_names access_type index_expr
+    | Binary_word_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and customized_string_of_array_expression customized_string variable_names = function
@@ -891,23 +780,16 @@ and customized_string_of_array_expression customized_string variable_names = fun
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
         l_delimiter ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_expr ^ r_delimiter
     | Array_constant values ->
-        let str_values = Array.map DiscreteValue.string_of_value values in
+        let str_values = Array.map AbstractValue.string_of_value values in
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
         l_delimiter ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ r_delimiter
     | Array_variable variable_index -> variable_names variable_index
     | Array_local_variable variable_name -> variable_name
-    | Array_concat (array_expr_0, array_expr_1) as func ->
-        print_function
-            (label_of_array_expression func)
-            [
-                customized_string_of_array_expression customized_string variable_names array_expr_0;
-                customized_string_of_array_expression customized_string variable_names array_expr_1
-            ]
 
-    | Array_sequence_function func ->
-        customized_string_of_sequence_function customized_string variable_names func
+    | Array_array_access (access_type, index_expr) ->
+        customized_string_of_expression_access customized_string variable_names access_type index_expr
 
-    | Array_inline_function (function_name, _, args_expr, _) ->
+    | Array_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and customized_string_of_list_expression customized_string variable_names = function
@@ -917,96 +799,40 @@ and customized_string_of_list_expression customized_string variable_names = func
         label_of_list_expression list_expr
         ^ "(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_expr ^ r_delimiter ^ ")"
     | List_constant values as list_expr ->
-        let str_values = List.map DiscreteValue.string_of_value values in
+        let str_values = List.map AbstractValue.string_of_value values in
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
         label_of_list_expression list_expr
         ^ "(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_delimiter ^ ")"
     | List_variable variable_index -> variable_names variable_index
     | List_local_variable variable_name -> variable_name
-    | List_cons (global_expression, list_expr) as func ->
-        print_function
-            (label_of_list_expression func)
-            [
-                customized_string_of_global_expression customized_string variable_names global_expression;
-                customized_string_of_list_expression customized_string variable_names list_expr
-            ]
 
-    | List_list_tl list_expr
-    | List_rev list_expr as func ->
-        print_function
-            (label_of_list_expression func)
-            [customized_string_of_list_expression customized_string variable_names list_expr]
+    | List_array_access (access_type, index_expr) ->
+        customized_string_of_expression_access customized_string variable_names access_type index_expr
 
-    | List_sequence_function func ->
-        customized_string_of_sequence_function customized_string variable_names func
-
-    | List_inline_function (function_name, _, args_expr, _) ->
+    | List_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and customized_string_of_stack_expression customized_string variable_names = function
     | Literal_stack -> "stack()"
     | Stack_variable variable_index -> variable_names variable_index
     | Stack_local_variable variable_name -> variable_name
-    | Stack_push (expr, stack_expr) as func ->
-        print_function
-            (label_of_stack_expression func)
-            [
-                customized_string_of_global_expression customized_string variable_names expr;
-                customized_string_of_stack_expression customized_string variable_names stack_expr
-            ]
-    | Stack_clear stack_expr as func ->
-        print_function
-            (label_of_stack_expression func)
-            [customized_string_of_stack_expression customized_string variable_names stack_expr]
 
-    | Stack_sequence_function func ->
-        customized_string_of_sequence_function customized_string variable_names func
+    | Stack_array_access (access_type, index_expr) ->
+        customized_string_of_expression_access customized_string variable_names access_type index_expr
 
-    | Stack_inline_function (function_name, _, args_expr, _) ->
+    | Stack_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and customized_string_of_queue_expression customized_string variable_names = function
     | Literal_queue -> "queue()"
     | Queue_variable variable_index -> variable_names variable_index
     | Queue_local_variable variable_name -> variable_name
-    | Queue_push (expr, queue_expr) as func ->
-        print_function
-            (label_of_queue_expression func)
-            [
-                customized_string_of_global_expression customized_string variable_names expr;
-                customized_string_of_queue_expression customized_string variable_names queue_expr
-            ]
-    | Queue_clear queue_expr as func ->
-        print_function
-            (label_of_queue_expression func)
-            [customized_string_of_queue_expression customized_string variable_names queue_expr]
 
-    | Queue_sequence_function func ->
-        customized_string_of_sequence_function customized_string variable_names func
+    | Queue_array_access (access_type, index_expr) ->
+        customized_string_of_expression_access customized_string variable_names access_type index_expr
 
-    | Queue_inline_function (function_name, _, args_expr, _) ->
+    | Queue_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
-
-and customized_string_of_sequence_function customized_string variable_names = function
-    | Array_access (access_type, index_expr) ->
-        string_of_expression_access customized_string variable_names access_type index_expr
-
-    | List_hd list_expr as func ->
-        print_function
-            (label_of_sequence_function func)
-            [customized_string_of_list_expression customized_string variable_names list_expr]
-
-    | Stack_pop stack_expr
-    | Stack_top stack_expr as func ->
-        print_function
-            (label_of_sequence_function func)
-            [customized_string_of_stack_expression customized_string variable_names stack_expr]
-
-    | Queue_pop queue_expr
-    | Queue_top queue_expr as func ->
-        print_function
-            (label_of_sequence_function func)
-            [customized_string_of_queue_expression customized_string variable_names queue_expr]
 
 
 and string_of_expression_of_access customized_string variable_names = function
@@ -1015,7 +841,7 @@ and string_of_expression_of_access customized_string variable_names = function
     | Expression_list_access list_expr ->
         customized_string_of_list_expression customized_string variable_names list_expr
 
-and string_of_expression_access customized_string variable_names access_type index_expr =
+and customized_string_of_expression_access customized_string variable_names access_type index_expr =
     string_of_expression_of_access customized_string variable_names access_type ^ "[" ^ customized_string_of_int_arithmetic_expression customized_string variable_names index_expr ^ "]"
 
 (* String representation of a function call *)
@@ -1034,6 +860,7 @@ let string_of_array_expression = customized_string_of_array_expression Constants
 let string_of_list_expression = customized_string_of_list_expression Constants.global_default_string
 let string_of_stack_expression = customized_string_of_stack_expression Constants.global_default_string
 let string_of_queue_expression = customized_string_of_queue_expression Constants.global_default_string
+let string_of_expression_access = customized_string_of_expression_access Constants.global_default_string
 
 let rec string_of_scalar_or_index_update_type variable_names = function
     | Scalar_update discrete_index ->
@@ -1055,14 +882,11 @@ let string_of_discrete_update variable_names (update_type, expr) =
     ^ (if str_left_member <> "" then " := " else "")
     ^ string_of_global_expression variable_names expr
 
-(* Type *)
-(*
-let rec discrete_type_of_global_expression = function
-    | Arithmetic_expression expr ->
-    | Bool_expression -> DiscreteType.Var_type_discrete_bool
-    | Binary_word_expression -> DiscreteType.Var_type_discrete_binary_word 0
-    | Array_expression expr -> DiscreteType.Var_type_discrete_array (discrete_type_of_global_expression expr, 0)
-    | List_expression expr -> DiscreteType.
-    | Stack_expression expr ->
-    | Queue_expression expr ->
-*)
+(* Get string of non-linear constraint inequalities with customized strings *)
+let customized_string_of_nonlinear_constraint customized_string variable_names nonlinear_constraint =
+	    OCamlUtilities.string_of_list_of_string_with_sep
+            (" " ^ customized_string.boolean_string.and_operator)
+            (List.rev_map (customized_string_of_discrete_boolean_expression customized_string variable_names) nonlinear_constraint)
+
+(* Get string of non-linear constraint inequalities with default strings *)
+let string_of_nonlinear_constraint = customized_string_of_nonlinear_constraint global_default_string

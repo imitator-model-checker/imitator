@@ -16,37 +16,50 @@
  *
  ************************************************************)
 
+(* Utils modules *)
 open Exceptions
+
+(* Parsing structure modules *)
 open DiscreteType
 open DiscreteValue
+
+(* Abstract modules *)
 open DiscreteExpressions
 
+(* Name of constraint *)
 type constraint_name = string
 
+(* Length constraint, like array length, binary word length *)
 type length_constraint =
     | Length_constraint of int
     | Length_constraint_expression of length_constraint_expression
 
+(* Length constraint expression *)
 and length_constraint_expression =
     | Length_scalar_constraint of constraint_name
     | Length_plus_constraint of constraint_name * length_constraint
 
+(* Constraint on int type *)
 type int_type_constraint =
     | Int_type_constraint
     | Int_name_constraint of constraint_name (* Dependent type *)
 
+(* Constraint on concrete number type *)
 type defined_type_number_constraint =
     | Int_constraint of int_type_constraint
     | Rat_constraint
 
+(* Constraint on number type *)
 type type_number_constraint =
     | Defined_type_number_constraint of defined_type_number_constraint
     | Number_type_name_constraint of constraint_name
 
+(* Constraint on any type *)
 type type_constraint =
     | Defined_type_constraint of defined_type_constraint
     | Type_name_constraint of constraint_name
 
+(* Constraint on concrete type *)
 and defined_type_constraint =
     | Number_constraint of type_number_constraint
     | Bool_constraint
@@ -60,6 +73,14 @@ and defined_type_constraint =
 type signature_constraint = type_constraint list
 (* Signature is a list of discrete type *)
 type signature = var_type_discrete list
+
+(** -------------------- **)
+(** Utils **)
+(** -------------------- **)
+
+(* Split signature into signature of parameters and signature of return type *)
+let split_signature =
+    OCamlUtilities.list_split_last
 
 (** -------------------- **)
 (** Strings **)
@@ -108,12 +129,16 @@ and string_of_type_constraint = function
 (* String representation of a signature constraint *)
 let string_of_signature_constraint signature_constraint =
     let str_type_constraints = List.map string_of_type_constraint signature_constraint in
-    OCamlUtilities.string_of_list_of_string_with_sep " -> " str_type_constraints
+    let str_param_type_constraints, str_return_type_constraint = split_signature str_type_constraints in
+    let l_par_del, r_par_del = Constants.default_paren_delimiter in
+    l_par_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_type_constraints ^ r_par_del ^ " : " ^ str_return_type_constraint
 
 (* String representation of a signature *)
 let string_of_signature signature =
     let str_signature_types_list = List.map (DiscreteType.string_of_var_type_discrete) signature in
-    OCamlUtilities.string_of_list_of_string_with_sep " -> " str_signature_types_list
+    let str_param_types, str_return_type = split_signature str_signature_types_list in
+    let l_par_del, r_par_del = Constants.default_paren_delimiter in
+    l_par_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_types ^ r_par_del ^ " : " ^ str_return_type
 
 (** -------------------- **)
 (** Compatibility **)
@@ -122,7 +147,7 @@ let string_of_signature signature =
 let rec is_discrete_type_compatible_with_length_constraint length = function
     | Length_constraint length_value -> length = length_value
     (* In theory a length constraint expression can be incompatible with some length *)
-    (* but may be compatible too, so we consider as compatible anyway *)
+    (* but may be compatible too, eg : 1 + 1 with 2, so we consider as compatible anyway *)
     | Length_constraint_expression _ -> true
 
 let is_discrete_type_compatible_with_defined_type_number_constraint discrete_number_type defined_type_number_constraint =
@@ -200,10 +225,3 @@ let type_constraint_of_discrete_type discrete_type =
 (* Get signature constraint of signature *)
 let signature_constraint_of_signature = List.map type_constraint_of_discrete_type
 
-(** -------------------- **)
-(** Utils **)
-(** -------------------- **)
-
-(* Split signature into signature of parameters and signature of return type *)
-let split_signature =
-    OCamlUtilities.list_split_last

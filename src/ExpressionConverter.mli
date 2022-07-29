@@ -51,7 +51,7 @@ and typed_product_quotient =
 
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete * typed_variable_scope
-	| Typed_constant of DiscreteValue.discrete_value * var_type_discrete
+	| Typed_constant of DiscreteValue.parsed_value * var_type_discrete
 	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
 	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_unary_min of typed_discrete_factor * var_type_discrete_number
@@ -104,6 +104,7 @@ type typed_fun_definition = {
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
     body : typed_fun_body; (* body *)
+    side_effect : bool;
 }
 
 val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string

@@ -82,7 +82,7 @@ type clock_updates =
 
 (** Guard: a non-linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
 
-type discrete_guard = NonlinearConstraint.nonlinear_constraint
+type discrete_guard = DiscreteExpressions.nonlinear_constraint
 type continuous_guard = LinearConstraint.pxd_linear_constraint
 
 type discrete_continuous_guard = {
@@ -128,9 +128,10 @@ type transition_index = int
 
 type fun_definition = {
     name : variable_name;
-    parameters : variable_name list;
-    signature : FunctionSig.signature_constraint;
+    parameter_names : variable_name list;
+    signature_constraint : FunctionSig.signature_constraint;
     body : DiscreteExpressions.fun_body;
+    side_effect : bool;
 }
 
 (************************************************************)
@@ -276,7 +277,7 @@ type abstract_model = {
 	automaton_of_transition : transition_index -> automaton_index;
 
     (* The list of declared functions *)
-    fun_definitions : (variable_name, fun_definition) Hashtbl.t;
+    functions_table : (variable_name, fun_definition) Hashtbl.t;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative: LinearConstraint.px_linear_constraint;

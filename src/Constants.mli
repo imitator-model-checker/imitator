@@ -185,3 +185,8 @@ val default_paren_delimiter : string * string
 
 (** Default string of symbols *)
 val global_default_string : customized_string
+
+val array_string : string
+val list_string : string
+val stack_string : string
+val queue_string : string

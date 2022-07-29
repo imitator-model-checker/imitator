@@ -12,12 +12,21 @@
  * Created           : 2021/11/20
  *
  ************************************************************)
+
+(* Utils modules *)
 open Constants
 open Exceptions
+open OCamlUtilities
+open ImitatorUtilities
+
+(* Parsing structure modules *)
 open ParsingStructure
+open ParsedModelMetadata
+open DiscreteType
+
+(* Abstract model modules *)
 open AbstractModel
 open DiscreteExpressions
-open DiscreteType
 open ExpressionConverter.Convert
 
 let convert_discrete_init variable_infos variable_name expr =
@@ -53,25 +62,8 @@ let convert_discrete_constant initialized_constants (name, expr, var_type) =
 let nonlinear_constraint_of_convex_predicate variable_infos guard =
     (* Type check guard *)
     let typed_guard = ExpressionConverter.TypeChecker.check_guard variable_infos guard in
-
-(*    let str_typed_nonlinear_constraints = List.map (string_of_typed_discrete_boolean_expression variable_infos) typed_guard in*)
-(*    let str = OCamlUtilities.string_of_list_of_string_with_sep "\n & " str_typed_nonlinear_constraints in*)
-(*    ImitatorUtilities.print_message Verbose_standard str;*)
-
     (* Convert *)
-    let converted_nonlinear_constraints = List.rev_map (ExpressionConverter.Convert.nonlinear_constraint_of_typed_nonlinear_constraint variable_infos) typed_guard in
-
-    (* Try reduce *)
-    converted_nonlinear_constraints
-    (* TODO benjamin IMPORTANT here add reducing with Some *)
-    (*
-    let reduced_nonlinear_constraints = converted_nonlinear_constraints in
-    (match reduced_nonlinear_constraints with
-    | Some true -> True_guard
-    | Some false -> False_guard
-    | None -> Discrete_guard (reduced_nonlinear_constraints)
-    )
-    *)
+    List.rev_map (ExpressionConverter.Convert.nonlinear_constraint_of_typed_nonlinear_constraint variable_infos) typed_guard
 
 (* Split convex_predicate into two lists *)
 (* One only contain discrete expression to nonlinear_constraint *)
@@ -80,11 +72,14 @@ let split_convex_predicate_into_discrete_and_continuous variable_infos convex_pr
   (* Compute a list of inequalities *)
   let partitions = List.partition
     (fun nonlinear_inequality ->
-       match nonlinear_inequality with
-       (* TODO benjamin REFACTOR, in ParsingStructureUtilities create a function that check if a nonlinear constraint is true or false *)
-       | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = true -> true
-       | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant v))) when DiscreteValue.bool_value v = false -> raise False_exception
-       | nonlinear_constraint -> ParsingStructureUtilities.only_discrete_in_nonlinear_expression variable_infos nonlinear_constraint
+        (* Try to get value if it's a simple value (True / False) *)
+        let value_opt = ParsingStructureUtilities.discrete_boolean_expression_constant_value_opt nonlinear_inequality in
+
+        match value_opt with
+        | Some true -> true
+        | Some false -> raise False_exception
+        | None -> ParsingStructureUtilities.only_discrete_in_nonlinear_expression variable_infos nonlinear_inequality
+
     ) convex_predicate
     in
     (* Get discrete part as a nonlinear constraint but convert back continuous part to a linear constraint *)
@@ -104,8 +99,19 @@ let convert_guard variable_infos guard_convex_predicate =
         | [] , [] -> True_guard
         (* Only discrete inequalities: discrete *)
         | discrete_guard_convex_predicate , [] ->
-            Discrete_guard (
-                nonlinear_constraint_of_convex_predicate variable_infos discrete_guard_convex_predicate
+
+            (* Get the converted non-linear constraint *)
+            let converted_nonlinear_constraint = nonlinear_constraint_of_convex_predicate variable_infos discrete_guard_convex_predicate in
+
+            (* Try to eval without context, if it fails return None *)
+            let reduced_nonlinear_constraint_opt = DiscreteExpressionEvaluator.eval_nonlinear_constraint_opt None converted_nonlinear_constraint in
+
+            (* Little optimization here, it's not mandatory to work properly *)
+            (* We can directly convert to Discrete_guard converted_nonlinear_constraint *)
+            (match reduced_nonlinear_constraint_opt with
+            | Some true -> True_guard
+            | Some false -> False_guard
+            | None -> Discrete_guard converted_nonlinear_constraint
             )
 
         (* Only continuous inequalities: continuous *)
@@ -157,8 +163,193 @@ let convert_conditional variable_infos expr =
     (* Convert *)
     ExpressionConverter.Convert.bool_expression_of_typed_boolean_expression variable_infos typed_expr
 
+(* Check if user function definition is well formed *)
+let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
+
+    (* Check if there isn't duplicate parameter with inconsistent types *)
+    let is_consistent_duplicate_parameters =
+
+        (* Message to display when duplicate parameters found *)
+        let duplicate_parameter_message parameter_name =
+            "Duplicate parameter `"
+            ^ parameter_name
+            ^ "` in function `"
+            ^ fun_def.name
+            ^ "`"
+        in
+
+        (* Check that each parameter have different name *)
+        (* Group parameters by their names *)
+        let parameters_by_names = OCamlUtilities.group_by first_of_tuple fun_def.parameters in
+        (* If for one parameter name, their is more than one parameter, there is duplicates *)
+        let duplicate_parameters = List.filter (fun (parameter_name, group) -> List.length group > 1) parameters_by_names in
+
+        (* For each parameter get if duplicate definitions are consistent or not *)
+        (* Ex: for fn f (a : int, a : rat), duplicate definition of `a` isn't consistent *)
+        List.iter (fun (parameter_name, group) ->
+            (* Remove parameter duplicates *)
+            let group_without_duplicates = OCamlUtilities.list_only_once group in
+            (* Prepare message *)
+            let current_duplicate_parameter_message = duplicate_parameter_message parameter_name in
+            (* If duplicates remain greater than 1, there is inconsistent definitions *)
+            if List.length group_without_duplicates = 1 then (
+                print_error (current_duplicate_parameter_message ^ ".");
+            ) else (
+                let str_parameters_list = List.map (fun (parameter_name, discrete_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete discrete_type) group_without_duplicates in
+                let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
+                print_error (current_duplicate_parameter_message ^ "` does not have consistent definitions: `" ^ str_parameters ^ "`.");
+            )
+        ) duplicate_parameters;
+
+        (* Check if it exist duplicate parameters *)
+        List.length duplicate_parameters = 0
+    in
+
+    (* Check if all variables in function definition are defined *)
+    let is_all_variables_defined =
+
+        (* Prepare callback function that print error message when undeclared variable is found *)
+        let print_variable_in_fun_not_declared variable_name =
+            print_error (
+                "Variable `"
+                ^ variable_name
+                ^ "` used in function `"
+                ^ fun_def.name
+                ^ "` was not declared."
+            )
+        in
+
+        let print_variable_in_fun_not_declared_opt = Some print_variable_in_fun_not_declared in
+        ParsingStructureUtilities.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt print_variable_in_fun_not_declared_opt fun_def
+    in
+
+    (* Check if assignments found in function body are allowed *)
+    let is_assignments_are_allowed =
+
+        (* Check for assigned variables (local and global) in a function implementation *)
+        let left_variable_refs = ParsedModelMetadata.left_variables_of_assignments_in fun_def |> ComponentSet.elements in
+        (* Check for variables (local and global) at the right side of an assignment in a function implementation *)
+        let right_variable_refs = ParsedModelMetadata.right_variables_of_assignments_in fun_def |> ComponentSet.elements in
+
+        (* Check that no local variable are updated *)
+        let assigned_local_variable_names = List.filter_map (function
+            | Local_variable_ref (variable_name, _, _) -> Some variable_name
+            | _ -> None
+        ) left_variable_refs in
+
+        (* Check that no parameter are updated *)
+        let assigned_parameter_names = List.filter_map (function
+            | Param_ref (param_name, _) -> Some param_name
+            | _ -> None
+        ) left_variable_refs in
+
+        (* Check that no clocks are updated *)
+        (* Get only clock update and map to a clock names list *)
+        let assigned_clock_type_names = List.filter_map (function
+            | Global_variable_ref variable_name ->
+                (* Get eventual var type (or none if variable was not declared or removed) *)
+                let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+                (match var_type_opt with
+                | Some (Var_type_clock as var_type)
+                | Some (Var_type_parameter as var_type) -> Some (var_type, variable_name)
+                | _ -> None
+                )
+            | _ -> None
+
+        ) left_variable_refs in
+
+        let right_variable_clock_type_names = List.filter_map (function
+            | Global_variable_ref variable_name ->
+                (* Get eventual var type (or none if variable was not declared or removed) *)
+                let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+                (match var_type_opt with
+                | Some (Var_type_clock as var_type)
+                | Some (Var_type_parameter as var_type) -> Some (var_type, variable_name)
+                | _ -> None
+                )
+            | _ -> None
+        ) right_variable_refs in
+
+        (* Is any local variable modifications in user function ? *)
+        let has_parameter_modifications = List.length assigned_parameter_names > 0 in
+        (* Is any local variable modifications in user function ? *)
+        let has_local_variable_modifications = List.length assigned_local_variable_names > 0 in
+        (* Is any clock modifications in user function ? *)
+        let has_clock_param_modifications = List.length assigned_clock_type_names > 0 in
+        (* Is any discrete is updated by a clock or parameter ? *)
+        let was_updated_by_clock_param = List.length right_variable_clock_type_names > 0 in
+
+        (* Print possible errors *)
+        List.iter (fun param_name ->
+            print_error (
+                "Trying to update function parameter `"
+                ^ param_name
+                ^ "` in `"
+                ^ fun_def.name ^
+                "`. Parameters are immutables."
+            );
+        ) assigned_parameter_names;
+
+        List.iter (fun variable_name ->
+            print_error (
+                "Trying to update local variable `"
+                ^ variable_name
+                ^ "` in `"
+                ^ fun_def.name ^
+                "`. Local variables are immutables."
+            );
+        ) assigned_local_variable_names;
+
+        List.iter (fun (var_type, variable_name) ->
+            let str_var_type = string_of_var_type var_type in
+            let capitalized_str_var_type = String.capitalize_ascii str_var_type in
+            print_error (
+                "Trying to update "
+                ^ str_var_type
+                ^ " `"
+                ^ variable_name
+                ^ "` in `"
+                ^ fun_def.name
+                ^ "`. "
+                ^ capitalized_str_var_type
+                ^ " cannot be updated in user defined functions."
+            );
+        ) assigned_clock_type_names;
+
+        List.iter (fun (var_type, variable_name) ->
+            let str_var_type = string_of_var_type var_type in
+            let capitalized_str_var_type = String.capitalize_ascii str_var_type in
+            print_error (
+                "Trying to update a discrete variable with "
+                ^ str_var_type
+                ^ " `"
+                ^ variable_name
+                ^ "` in `"
+                ^ fun_def.name
+                ^ "`. "
+                ^ capitalized_str_var_type
+                ^ " cannot be used for updating discrete variable."
+            );
+        ) right_variable_clock_type_names;
+
+        not (has_parameter_modifications || has_local_variable_modifications || has_clock_param_modifications || was_updated_by_clock_param)
+    in
+
+    (* Return *)
+    is_consistent_duplicate_parameters
+    && is_assignments_are_allowed
+    && is_all_variables_defined
+
 let convert_fun_definition variable_infos (fun_definition : parsed_fun_definition) =
-    (* Check *)
+
+    (* Some checks *)
+    let well_formed_user_function = check_fun_definition variable_infos fun_definition in
+
+    (* Not well formed, raise an error *)
+    if not well_formed_user_function then
+        raise InvalidModel;
+
+    (* Type check *)
     let typed_fun_definition = ExpressionConverter.TypeChecker.check_fun_definition variable_infos fun_definition in
     (* Convert *)
     ExpressionConverter.Convert.fun_definition_of_typed_fun_definition variable_infos typed_fun_definition

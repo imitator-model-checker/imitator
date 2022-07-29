@@ -246,3 +246,8 @@ let global_default_string = {
     array_string = default_array_string;
     binary_word_representation = Binary_word_representation_standard;
 }
+
+let array_string = "array"
+let list_string = "list"
+let stack_string = "stack"
+let queue_string = "queue"

@@ -26,6 +26,7 @@ open Statistics
 open AbstractAlgorithm
 open AbstractModel
 open AbstractProperty
+open AbstractValue
 open StateSpace
 open Result
 open State
@@ -806,7 +807,8 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				| DiscreteType.Var_type_discrete _ ->
 					Location.get_discrete_value initial_state.global_location variable_index
 				| DiscreteType.Var_type_clock ->
-					DiscreteValue.Rational_value (initial_state.px_valuation variable_index)
+				    let rational_value = initial_state.px_valuation variable_index in
+				    Abstract_scalar_value (Abstract_number_value (Abstract_rat_value rational_value))
 				| _ -> raise (InternalError "Clock or discrete variable expected in draw_concrete_run")
 			in
 
@@ -822,11 +824,11 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time zero with value '" ^ (DiscreteValue.string_of_value zero_value) ^  "'…");
+					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time zero with value '" ^ (AbstractValue.string_of_value zero_value) ^  "'…");
 				);
 
 				(* Convert to the plotutils format *)
-				(draw_x_y NumConst.zero (DiscreteValue.convert_to_numconst zero_value))
+				(draw_x_y NumConst.zero (AbstractValue.to_rat_value zero_value))
 			)
 			
 			::
@@ -859,12 +861,12 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 						(* Print some information *)
 						if verbose_mode_greater Verbose_total then(
 							print_message Verbose_total ("About to perform comparison…");
-							print_message Verbose_total ("Previous value = " ^ (DiscreteValue.string_of_value !previous_value ) ^ "");
-							print_message Verbose_total ("Current value = " ^ (DiscreteValue.string_of_value value) ^ "");
+							print_message Verbose_total ("Previous value = " ^ (AbstractValue.string_of_value !previous_value ) ^ "");
+							print_message Verbose_total ("Current value = " ^ (AbstractValue.string_of_value value) ^ "");
 						);
 						
 						(* If same value as before, no need to add a new point *)
-						if DiscreteValue.equal !previous_value value then(
+						if AbstractValue.equal !previous_value value then(
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
 								print_message Verbose_total ("Discrete `" ^ (model.variable_names variable_index) ^  "` did not evolve: skip");
@@ -880,7 +882,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 							
 							(* Same value, current time *)
 							(* Convert to the plotutils format *)
-							(draw_x_y !absolute_time (DiscreteValue.convert_to_numconst !previous_value))
+							(draw_x_y !absolute_time (AbstractValue.to_rat_value !previous_value))
 							(* Separator for next point *)
 							^ "\n"
 							,value
@@ -897,7 +899,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 						(* If no time elapsed: no need to add a point *)
 						if NumConst.equal time_elapsed NumConst.zero then(
 							""
-							, DiscreteValue.Rational_value value
+							, Abstract_scalar_value (Abstract_number_value (Abstract_rat_value value))
 						)else(
 							(* Increment the value of the clock by the elapsed time *)
 							
@@ -912,7 +914,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 							
 							(* Update the value of the clock using the flow *)
 							(* Clock can only be updated by rationals so we use the numconst value of discrete variable *)
-							let previous_numconst_value = DiscreteValue.convert_to_numconst !previous_value in
+							let previous_numconst_value = AbstractValue.to_rat_value !previous_value in
 							let clock_value_after_elapsing = NumConst.add previous_numconst_value (NumConst.mul time_elapsed flow) in
 							
 							(* Same value, current time *)
@@ -920,7 +922,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 							(draw_x_y !absolute_time clock_value_after_elapsing)
 							(* Separator for next point *)
 							^ "\n"
-							, DiscreteValue.Rational_value value
+							, Abstract_scalar_value (Abstract_number_value (Abstract_rat_value value))
 						)
 					
 				(* Else error *)
@@ -936,14 +938,14 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (DiscreteValue.string_of_value value) ^  "'…");
+					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (AbstractValue.string_of_value value) ^  "'…");
 				);
 
 				(* First add "previous" point *)
 				previous_point_str
 				
 				(* Then add the current point (easy) in the plotutils format *)
-				^ (draw_x_y !absolute_time (DiscreteValue.convert_to_numconst value))
+				^ (draw_x_y !absolute_time (AbstractValue.to_rat_value value))
 			) abstract_steps
 			)
 		) in
@@ -1649,7 +1651,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 								(* Equal *)
 								^ ")="
 								(* Variable value *)
-								^ (DiscreteValue.string_of_value (Location.get_discrete_value global_location discrete_index))
+								^ (AbstractValue.string_of_value (Location.get_discrete_value global_location discrete_index))
 							) model.discrete
 						))
 					) else ""

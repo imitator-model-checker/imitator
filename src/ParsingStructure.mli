@@ -92,7 +92,7 @@ and parsed_product_quotient =
 
 and parsed_discrete_factor =
 	| Parsed_DF_variable of variable_name
-	| Parsed_DF_constant of DiscreteValue.discrete_value
+	| Parsed_DF_constant of DiscreteValue.parsed_value
 	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
     | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
@@ -191,6 +191,7 @@ type parsed_next_expr =
 (* Metadata of a function *)
 type function_metadata = {
     name : variable_name;
+    parameter_names : variable_name list;
     signature_constraint : FunctionSig.signature_constraint;
     side_effect : bool;
 }
@@ -246,7 +247,7 @@ type parsed_automaton = automaton_name * sync_name list * parsed_location list
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
 	| Parsed_linear_predicate of linear_constraint
-	| Parsed_discrete_predicate of string * parsed_global_expression
+	| Parsed_discrete_predicate of variable_name * parsed_global_expression
 
 type init_definition = parsed_init_state_predicate list
 
@@ -483,7 +484,7 @@ type parsed_property = {
 (** Useful data structure to avoid multiple parameters in functions *)
 (************************************************************)
 (************************************************************)
-type constants_table = (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t
+type constants_table = (Automaton.variable_name , AbstractValue.abstract_value) Hashtbl.t
 
 type variable_infos = {
 	constants : constants_table;

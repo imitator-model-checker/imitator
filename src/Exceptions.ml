@@ -25,7 +25,7 @@ exception False_exception
 exception Division_by_0 of string
 
 (** Exception raised when trying an out of bound access to an array or list *)
-exception Out_of_bound of string
+exception Out_of_range of string
 
 (** Exception raised when trying to access an element on an empty collection *)
 exception Empty_collection of string

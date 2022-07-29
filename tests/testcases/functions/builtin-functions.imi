@@ -1,0 +1,136 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test all builtin functions
+ * Description      : Test all builtin functions
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/06/29
+ * Last modified    : 2022/06/29
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.3
+ ************************************************************)
+
+var
+
+  r, r_pow, r2 : rat;
+  i = 5, i_pow : int;
+  b, bsl, bsr, bla, blo, blxo, bln : binary(4);
+  bfl, bfr : binary(6);
+  aa : int array(4);
+  array_mem : bool;
+  a_length : int;
+
+  l : int list;
+  list_is_empty : bool;
+  list_hd : int;
+  list_tl : int list;
+  list_cons : int list;
+  list_rev : int list;
+  list_mem : bool;
+  list_length : int;
+
+  s : int stack;
+  stack_pop, stack_top : int;
+  stack_is_empty : bool;
+  stack_length : int;
+
+  q : int queue;
+  queue_pop, queue_top : int;
+  queue_is_empty : bool;
+  queue_length : int;
+
+automaton P
+
+  loc s0: invariant True
+  when True
+  do {
+    seq
+
+    (* rationals *)
+
+    r := rational_of_int(i); (*r = 5 *)
+    r_pow := pow(r, 2); (* r_pow = 25 *)
+
+    (* int *)
+
+    i_pow := pow(i, 2); (* i_pow = 25 *)
+
+    (* binary words *)
+
+    bsl := shift_left(b, 2); (* bsl = 0b1100 *)
+    bsr := shift_right(b, 2); (* bsr = 0b0010 *)
+    bfl := fill_left(b, 2); (* bfl = 0b101100 *)
+    bfr := fill_right(b, 2); (* bfr = 0b001011 *)
+    bla := logand(b, 0b0011); (* bla = 0b0011 *)
+    blo := logor(b, 0b0100); (* blo = 0b1111 *)
+    blxo := logxor(b, 0b0111); (* blxo = 0b1100 *)
+    bln := lognot(b); (* bln = 0b0100 *)
+
+    (* arrays *)
+
+    aa := array_append([1,2], [3, 4]); (* aa = [1,2,3,4] *)
+    array_mem := array_mem(1, aa); (* array_mem = True *)
+    a_length := array_length(aa); (* array_length = 4 *)
+
+    (* lists *)
+
+    list_is_empty := list_is_empty(l); (* list_is_empty = False *)
+    list_hd := list_hd(l); (* list_hd = 1 *)
+    list_tl := list_tl(l); (* list_tl = [2,3,4,5]*)
+
+    list_cons := list_cons(0, l); (* list_cons = [0,1,2,3,4,5] *)
+
+    list_rev := list_rev(l); (* list_rev = [5,4,3,2,1] *)
+    list_length := list_length(l); (* list_length = 5 *)
+    list_mem := list_mem(1, l); (* list_mem = True *)
+
+    (* stacks *)
+
+    stack_push(10, s); (* s = [10] *)
+    stack_push(11, s); (* s = [10,11]*)
+    stack_pop := stack_pop(s); (* s = [10], stack_pop = 11 *)
+    stack_top := stack_top(s); (* stack_top = 10 *)
+    stack_push(1, s); (* s = [10,1]*)
+    stack_length := stack_length(s); (* stack_length = 2 *)
+    stack_clear(s); (* s = [] *)
+    stack_is_empty := stack_is_empty(s); (* stack_is_empty = True *)
+
+    (* queues *)
+
+    queue_push(10, q); (* q = [10] *)
+    queue_push(11, q); (* q = [10,11] *)
+    queue_pop := queue_pop(q); (* q = [11], queue_pop = 10 *)
+    queue_top := queue_top(q); (* queue_top = 11 *)
+    queue_push(1, q); (* q = [11,1] *)
+    queue_length := queue_length(q); (* queue_length = 2 *)
+    queue_clear(q); (* q = [] *)
+    queue_is_empty := queue_is_empty(q); (* queue_is_empty = True *)
+
+  }
+  goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+
+init := {
+  discrete =
+    loc[P]:=s0,
+    r := 3,
+    b := 0b1011,
+    l := list([1,2,3,4,5])
+  ;
+
+}

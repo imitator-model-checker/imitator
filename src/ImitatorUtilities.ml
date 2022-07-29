@@ -322,6 +322,8 @@ let print_error message =
 	let spaces = " " in
 	(* Add new lines and blanks everywhere *)
 	let formatted_message = spaces ^ (shell_code_of_shell_highlighting_type Shell_error) ^ "*** ERROR: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) ^ (shell_code_of_shell_highlighting_type Shell_normal) in
+	(* Add to custom details in results (res file) *)
+    Logger.add_custom_detail_array "error_messages" (JsonFormatter.Json_string message);
 	(* Print *)
 	print_message_generic prerr_string stderr formatted_message
 

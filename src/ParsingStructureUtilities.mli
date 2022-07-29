@@ -18,7 +18,7 @@ open CustomModules
 (* Leaf of parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of string
-    | Leaf_constant of DiscreteValue.discrete_value
+    | Leaf_constant of DiscreteValue.parsed_value
     | Leaf_fun of variable_name
 
 (* Leaf for parsed update *)
@@ -40,9 +40,7 @@ type nonlinear_constraint_leaf =
     | Leaf_true_nonlinear_constraint
     | Leaf_false_nonlinear_constraint
 
-
-val fold_map_parsed_normal_update : ('a -> 'a -> 'a) -> 'a -> (parsing_structure_leaf -> 'a) -> (parsed_update_leaf -> 'a) -> normal_update -> 'a list
-val fold_map_parsed_update : ('a -> 'a -> 'a) -> 'a -> (parsing_structure_leaf -> 'a) -> (parsed_update_leaf -> 'a) -> update -> 'a list
+val fold_parsed_normal_update : ('a -> 'a -> 'a) -> 'a -> (parsing_structure_leaf -> 'a) -> (parsed_update_leaf -> 'a) -> normal_update -> 'a
 
 
 (** Check if all leaf of a parsing structure satisfy the predicate **)
@@ -155,7 +153,12 @@ val string_of_parsed_state_predicate_term : variable_infos -> parsed_state_predi
 val string_of_parsed_state_predicate : variable_infos -> parsed_state_predicate -> string
 
 val json_of_function_metadata : function_metadata -> JsonFormatter.json_element
+
 (** Utils **)
+
+(* Try to get value of a discrete boolean expression, if directly a constant equals to false or true *)
+(* If the expression is more complex, return None *)
+val discrete_boolean_expression_constant_value_opt : parsed_discrete_boolean_expression -> bool option
 
 val is_parsed_global_expression_constant : variable_infos -> parsed_global_expression -> bool
 val is_parsed_boolean_expression_constant : variable_infos -> parsed_boolean_expression -> bool
@@ -168,9 +171,7 @@ val is_linear_parsed_arithmetic_expression : variable_infos -> parsed_discrete_a
 val is_linear_parsed_term : variable_infos -> parsed_discrete_term -> bool
 val is_linear_parsed_factor : variable_infos -> parsed_discrete_factor -> bool
 
-(* --- *)
-(* --- *)
-(* TODO benjamin REFACTOR rename to declared instead of defined *)
+
 val all_variables_defined_in_parsed_global_expression : variable_infos -> (variable_name -> unit) option -> parsed_global_expression -> bool
 val all_variables_defined_in_parsed_global_expression_without_callback : variable_infos -> parsed_global_expression -> bool
 val all_variables_defined_in_parsed_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_boolean_expression -> bool

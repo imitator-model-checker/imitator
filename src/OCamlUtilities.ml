@@ -58,9 +58,14 @@ let identity x = x
 (************************************************************)
 (** Useful functions on tuples *)
 (************************************************************)
-let first_of_tuple (x, _) = x
-let second_of_tuple (_, x) = x
 
+(* Get first element of tuple *)
+let first_of_tuple (x, _) = x
+(* Get second element of tuple *)
+let second_of_tuple (_, x) = x
+(* Apply a tuple as argument to a function *)
+let apply_tuple f (a, b) = f a b
+(* Map first element of tuple *)
 let map_first_of_tuple f (x, y) = f x, y
 
 (************************************************************)
@@ -716,3 +721,6 @@ let string_set_to_list x = x |> CustomModules.StringSet.to_seq |> List.of_seq
 let array_of_list x = x |> List.to_seq |> Array.of_seq
 (* Convert array to list *)
 let list_of_array x = x |> Array.to_seq |> List.of_seq
+
+(* Unit as binary operator *)
+let bin_unit (a : unit) (b : unit) = a; b; ()

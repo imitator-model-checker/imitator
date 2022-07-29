@@ -1607,6 +1607,25 @@ The possible runtime errors include:
 	\item index out of range (\eg{} in an array);
 	\item operation on an empty collection (\eg{} accessing the top element of an empty stack).
 \end{itemize}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{User defined functions}\label{section:user_defined_functions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Declaration}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+Users have the ability to declare their own functions, called user defined functions.
+User defined functions have zero or many parameters and can return one value.
+All function parameters are passed by value.
+
+A user defined function can be compound of declarations, imperative instructions, and one return expression.
+
+
+\begin{IMITATORmodel}
+	fn my_custom_function() :
+\end{IMITATORmodel}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

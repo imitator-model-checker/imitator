@@ -4546,6 +4546,30 @@ END CONSTRAINT
 
 	,
 
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2022/07/19
+		## Last modified            : 2022/07/19
+		'author': 'lbinria',
+		'purpose'    : 'Test all builtin functions',
+		'input_files': ['functions/builtin-functions.imi'],
+		'tags': 'semantic, behavior, function',
+		'imitator-version': '3.3',
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'builtin-functions-statespace.states' , 'content' : """
+STATE 1:
+  P: lend, queue_length = 2, queue_is_empty = True, queue_pop = 10, queue_top = 11, q = queue(), stack_length = 2, stack_is_empty = True, stack_pop = 11, stack_top = 10, s = stack(), list_length = 5, list_mem = True, list_rev = list([5, 4, 3, 2, 1]), list_cons = list([0, 1, 2, 3, 4, 5]), list_tl = list([2, 3, 4, 5]), list_hd = 1, list_is_empty = False, l = list([1, 2, 3, 4, 5]), a_length = 4, array_mem = True, aa = [1, 2, 3, 4], bfl = 0b101100, bfr = 0b001011, b = 0b1011, bsl = 0b1100, bsr = 0b0010, bla = 0b0011, blo = 0b1111, blxo = 0b1100, bln = 0b0100, i_pow = 25, r = 5, r_pow = 25 ==>
+&True
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 
 	#------------------------------------------------------------
@@ -4729,11 +4753,11 @@ END CONSTRAINT
       ## Test version             : 1
       ## Test since               : 2022/03/16
       ## Last modified            : 2022/03/16
-      ## Test for IMITATOR version: 3.4
       'author': 'lbinria',
       'purpose'    : 'Test some behaviors on user functions',
       'input_files': ['functions/user-function-1.imi'],
       'tags': 'behavior, function',
+      'imitator-version': '3.4',
       'options'    : '-mode statespace -states-description -no-var-autoremove',
       'expectations' : [
         {'file': 'user-function-1-statespace.states' , 'content' : """
@@ -4763,12 +4787,12 @@ END CONSTRAINT
       ## Test version             : 1
       ## Test since               : 2022/06/23
       ## Last modified            : 2022/06/23
-      ## Test for IMITATOR version: 3.4
       'author': 'lbinria',
       'purpose'    : 'Test side effects detection on user defined functions',
       'input_files': ['functions/function-side-effects-detect.imi'],
-      'tags': 'behavior, function',
-      'options'    : '',
+      'tags': 'function, inference',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
       'expectations' : [
         {'file': 'function-side-effects-detect.res' , 'content' : """
   "function_metas": [
@@ -4803,6 +4827,106 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	# END : Test user defined function
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test dependency graph
+	#------------------------------------------------------------
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/06/29
+      ## Last modified            : 2022/06/29
+      'author': 'lbinria',
+      'purpose'    : 'Simple cycle detection',
+      'input_files': ['dependency_graph/simple-cycle-detection.imi'],
+      'tags': 'behavior, function, cycle, dependency',
+        'imitator-version': '3.4',
+      'options'    : '',
+      'expectations' : [
+        {'file': 'simple-cycle-detection.res' , 'content' : """
+  "cycles": [
+    "P -> f -> f"
+  ]
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/06/29
+      ## Last modified            : 2022/06/29
+      'author': 'lbinria',
+      'purpose'    : 'Complex cycle detection',
+      'input_files': ['dependency_graph/complex-cycle-detection.imi'],
+      'tags': 'behavior, function, cycle, dependency',
+      'imitator-version': '3.4',
+      'options'    : '',
+      'expectations' : [
+        {'file': 'complex-cycle-detection.res' , 'content' : """
+  "cycles": [
+    "P -> f1 -> x -> f2 -> x -> f1",
+    "P -> f1 -> x -> f2 -> x -> f1",
+    "P -> f1 -> x -> f2 -> x -> f1",
+    "P -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1"
+  ]
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/07/21
+      ## Last modified            : 2022/07/21
+      'author': 'lbinria',
+      'purpose'    : 'Test auto-remove management on sequential updates and user defined functions',
+      'input_files': ['dependency_graph/variable-autoremove-on-seq-update.imi'],
+      'tags': 'variable, function, auto-remove, dependency',
+      'imitator-version': '3.4',
+      'options'    : '-mode statespace -states-description',
+      'expectations' : [
+        {'file': 'variable-autoremove-on-seq-update-statespace.states' , 'content' : """
+P: lend, s = stack([0]), i = 2, j = 0
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+	#------------------------------------------------------------
+	# END : Test dependency graph
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
@@ -4881,6 +5005,40 @@ pta1: lend, pta2: lend, pta3: lend, i = 3, j = 2, k = 6, l = 2, m = 2, w2 = 2, r
 & x + 4 = y
 & x = w
 & x = v
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1
+        ## Test since               : 2022/07/18
+        ## Last modified            : 2022/07/18
+        ## Test for IMITATOR version: 3.3
+        'author': 'lbinria',
+        'purpose'    : 'Toy model to test the discrete/continuous updates',
+        'input_files': ['updates/compound-updates-toy.imi'],
+		'tags': 'behavior, update',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'compound-updates-toy-statespace.states' , 'content' : """
+  INITIAL
+  STATE 0:
+  pta1: l1, pta2: l1, pta3: l1, i = 0, r3 = 0, r2 = 0, r1 = 0, s = stack() ==>
+& x = 0
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  pta1: lend, pta2: lend, pta3: lend, i = 2, r3 = 1, r2 = 1, r1 = 1, s = stack([1, 0]) ==>
+& x >= 2
 		"""
 			} # end result file
 			,
@@ -21000,14 +21158,14 @@ broadcast chan c;
 		<source ref="id_pta1_loc0"/>
 		<target ref="id_pta1_loc0"/>
 		<label kind="synchronisation" x="0" y="80">a?</label>
-		<label kind="guard" x="0" y="40">true</label>
+		<label kind="guard" x="0" y="40"></label>
 		<label kind="assignment" x="0" y="-40">x = 0, nb__a = nb__a + 1</label>
 	</transition>
 	<transition>
 		<source ref="id_pta1_loc0"/>
 		<target ref="id_pta1_loc1"/>
 		<label kind="synchronisation" x="100" y="80">b?</label>
-		<label kind="guard" x="100" y="40">true</label>
+		<label kind="guard" x="100" y="40"></label>
 		
 	</transition>
  </template>
@@ -21040,7 +21198,7 @@ broadcast chan c;
 		<source ref="id_pta2_loc1"/>
 		<target ref="id_pta2_loc2"/>
 		<label kind="synchronisation" x="300" y="80">a?</label>
-		<label kind="guard" x="300" y="40">true</label>
+		<label kind="guard" x="300" y="40"></label>
 		<label kind="assignment" x="300" y="-40">x = 0, nb__a = nb__a + 1</label>
 	</transition>
  </template>

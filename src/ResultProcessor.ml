@@ -18,18 +18,15 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
+open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
-open Exceptions
+
+open JsonFormatter
+
 open Statistics
 open AbstractModel
 open Result
-
-let custom_details = Hashtbl.create 0
-
-(* Add a property to custom details json struct *)
-let add_custom_detail_property key details =
-    Hashtbl.add custom_details key details
 
 (************************************************************)
 (* Statistics *)
@@ -356,7 +353,7 @@ let export_to_file_errorresult error_type file_name =
 	(* Error message *)
 	let error_message = match error_type with
 		| Division_by_zero msg			-> "division by 0 (" ^ msg ^ ")"
-		| Out_of_bound                  -> "index out of range"
+		| Out_of_range                  -> "index out of range"
         | Empty_collection          -> "collection empty"
 		| ModelFileNotFound_error		-> "model file not found"
 		| PropertyFileNotFound_error	-> "property file not found"
@@ -370,6 +367,7 @@ let export_to_file_errorresult error_type file_name =
 	
 	(* Prepare the string to write *)
 	let file_content =
+
 		(* 1) Header *)
 		file_header ()
 		
@@ -381,6 +379,9 @@ let export_to_file_errorresult error_type file_name =
 		(* 3) General statistics *)
 		^ "\n" ^ (Statistics.string_of_all_counters())
 		^ "\n------------------------------------------------------------"
+
+        (*  4) More info about the model *)
+        ^ add_custom_details_delimiters (Logger.json_string_of_details ())
 	in
 	
 	(* Write to file *)
@@ -406,11 +407,6 @@ let export_to_file_noresult file_name =
 	(* Prepare the string to write *)
 	let file_content =
 
-        (* Custom details from hashtbl to list *)
-        let custom_details_list = custom_details |> Hashtbl.to_seq |> List.of_seq in
-        (* Create JSON struct with each custom detail *)
-        let custom_details_json_struct = JsonFormatter.Json_struct custom_details_list in
-
 		(* 1) Header *)
 		file_header ()
 
@@ -424,7 +420,7 @@ let export_to_file_noresult file_name =
 		^ "\n------------------------------------------------------------"
 
         (*  4) More info about the model *)
-        ^ add_custom_details_delimiters (JsonFormatter.to_string ~pretty:true custom_details_json_struct)
+        ^ add_custom_details_delimiters (Logger.json_string_of_details ())
 
 	in
 	

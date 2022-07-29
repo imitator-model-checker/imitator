@@ -21,7 +21,7 @@ open LinearConstraint
 open DiscreteExpressions
 open AbstractModel
 open DiscreteType
-open DiscreteValue
+open AbstractValue
 open Result
 
 
@@ -93,32 +93,39 @@ let string_of_var_type = function
 
 (* Get the UPPAAL string representation of a value according to it's IMITATOR type *)
 (* For example a literal array is translated from `[1,2,..,n]` to `{1,2,..,n}` *)
-let rec string_of_value = function
-    | Number_value x
-    | Rational_value x -> NumConst.string_of_numconst x
-    | Bool_value x -> if x then uppaal_boolean_strings.true_string else uppaal_boolean_strings.false_string
-    | Int_value x -> Int32.to_string x
-    | Binary_word_value value ->
-        let length = BinaryWord.length value in
+let string_of_number_value = function
+    | Abstract_rat_value v -> NumConst.string_of_numconst v
+    | Abstract_int_value v -> Int32.to_string v
+
+let string_of_scalar_value = function
+    | Abstract_number_value v -> string_of_number_value v
+    | Abstract_bool_value v -> if v then uppaal_boolean_strings.true_string else uppaal_boolean_strings.false_string
+    | Abstract_binary_word_value v ->
+        let length = BinaryWord.length v in
 
         if length > 31 then
             ImitatorUtilities.print_warning ("Encoding a binary word of length `" ^ string_of_int length ^ "` on an integer can leads to an overflow.");
 
-        string_of_int (BinaryWord.to_int value)
+        string_of_int (BinaryWord.to_int v)
 
-    | Array_value a ->
+let rec string_of_value = function
+    | Abstract_scalar_value v -> string_of_scalar_value v
+    | Abstract_container_value v -> string_of_container_value v
+
+and string_of_container_value = function
+    | Abstract_array_value a ->
         let string_array = Array.map string_of_value a in
         "{" ^ OCamlUtilities.string_of_array_of_string_with_sep ", " string_array ^ "}"
 
-    | List_value l ->
+    | Abstract_list_value l ->
         let string_list = List.map string_of_value l in
         "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
 
-    | Stack_value l ->
+    | Abstract_stack_value l ->
         let string_list = Stack.fold (fun acc x -> acc @ [string_of_value x]) [] l in
         "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
 
-    | Queue_value l ->
+    | Abstract_queue_value l ->
         let string_list = Queue.fold (fun acc x -> acc @ [string_of_value x]) [] l in
         "{" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " string_list ^ "}"
 
@@ -370,6 +377,7 @@ let string_of_fun_definitions model =
 
         (* Convert a function expression into a string *)
         let rec string_of_next_expr = function
+            | Fun_builtin _ -> "" (* TODO benjamin see here, because it will write fn builtin_f () begin end on builtin function *)
             | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
                 string_of_var_type_discrete discrete_type ^ " " ^ variable_name ^ " = "
                 ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names init_expr ^ ";\n"
@@ -383,27 +391,32 @@ let string_of_fun_definitions model =
                 "return " ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names expr ^ ";\n"
         in
 
-        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature in
-        let parameter_names_with_constraints = List.combine fun_def.parameters parameters_signature in
+        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
+        let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
         (* Convert parameters into a string *)
         let str_param_list = List.map (fun (param_name, type_constraint) -> FunctionSig.string_of_type_constraint type_constraint ^ " " ^ param_name) parameter_names_with_constraints in
         let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in
         (* Format function definition *)
-        FunctionSig.string_of_type_constraint return_type_constraint ^ " " ^ fun_def.name ^ "(" ^ str_params ^ ") { \n"
-        ^ string_of_next_expr fun_def.body
-        ^ "}"
+        let str_body = string_of_next_expr fun_def.body in
+        if str_body <> "" then (
+            FunctionSig.string_of_type_constraint return_type_constraint ^ " " ^ fun_def.name ^ "(" ^ str_params ^ ") { \n"
+            ^ str_body
+            ^ "}"
+        )
+        else
+            ""
 
     in
 
     print_warning "Some user defined functions may not be well translated to UPPAAL.";
 
     (* Convert hashtbl values to list *)
-    let fun_definition_list = model.fun_definitions |> Hashtbl.to_seq_values |> List.of_seq in
+    let fun_definition_list = model.functions_table |> Hashtbl.to_seq_values |> List.of_seq in
     (* Map each definition to it's string representation *)
     let str_fun_definitions_list = List.map string_of_fun_definition fun_definition_list in
     (* Join all strings *)
     "/* User defined function declarations (WARNING: some user defined functions may not be well translated) */\n\n"
-    ^ OCamlUtilities.string_of_list_of_string_with_sep "\n\n" str_fun_definitions_list
+    ^ OCamlUtilities.string_of_list_of_string_with_sep_without_empty_strings "\n\n" str_fun_definitions_list
 
 (* Convert the initial variable declarations into a string *)
 let string_of_declarations model actions_and_nb_automata =
@@ -479,7 +492,7 @@ let string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_c
 
 	| Discrete_guard discrete_guard ->
 
-        let str_discrete_guard = NonlinearConstraint.customized_string_of_nonlinear_constraint all_uppaal_strings variable_names discrete_guard in
+        let str_discrete_guard = DiscreteExpressions.customized_string_of_nonlinear_constraint all_uppaal_strings variable_names discrete_guard in
         let str_discrete_guard_without_true = if kind = "invariant" && str_discrete_guard = "true" then "" else str_discrete_guard in
         str_discrete_guard_without_true
 
@@ -490,7 +503,7 @@ let string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_c
 
 	| Discrete_continuous_guard discrete_continuous_guard ->
 	    let content = (
-            (NonlinearConstraint.customized_string_of_nonlinear_constraint all_uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
+            (DiscreteExpressions.customized_string_of_nonlinear_constraint all_uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
             ^
             (
                 (* Remove true guard *)

@@ -290,7 +290,8 @@ let evaluate_d_linear_constraint_in_location location =
 (** Check whether a discrete non-linear constraint is satisfied by the discrete values in a location **)
 let evaluate_d_nonlinear_constraint_in_location location =
     let discrete_access = Location.discrete_access_of_location location in
-    NonlinearConstraint.check_nonlinear_constraint discrete_access
+    let model = Input.get_model () in
+    DiscreteExpressionEvaluator.check_nonlinear_constraint (Some model.variable_names) (Some model.functions_table) discrete_access
 
 (** Check whether the discrete part of a guard is satisfied by the discrete values in a location *)
 let is_discrete_guard_satisfied location (guard : AbstractModel.guard) : bool =
@@ -369,9 +370,9 @@ let discrete_constraint_of_global_location (global_location : Location.global_lo
 
     (* TODO check with étienne, maybe can use all numeric as constraint ??? *)
     (* Get only rational discrete for constraint encoding *)
-    let only_discrete_rational_values = List.filter (fun (discrete_index, discrete_value) -> DiscreteValue.is_rational_value discrete_value) discrete_values in
+    let only_discrete_rational_values = List.filter (fun (discrete_index, discrete_value) -> AbstractValue.is_rational_value discrete_value) discrete_values in
     (* map to num const *)
-    let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, DiscreteValue.numconst_value discrete_value) only_discrete_rational_values in
+    let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, AbstractValue.numconst_value discrete_value) only_discrete_rational_values in
 
 	(* Constraint of the form D_i = d_i *)
 	LinearConstraint.pxd_constraint_of_point discrete_rational_numconst_values
@@ -1349,12 +1350,12 @@ let merge_clock_updates first_update second_update : clock_updates =
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
 (** Collecting the updates by evaluating the conditions, if there is any *)
-let get_updates (source_location : Location.global_location) (updates : AbstractModel.updates) =
+let get_updates variable_names_opt functions_table_opt (source_location : Location.global_location) (updates : AbstractModel.updates) =
 	List.fold_left (
 	fun (acc_clock, acc_discrete) (conditional_update : AbstractModel.conditional_update) ->
 		let boolean_expr, if_updates, else_updates = conditional_update in
 		let discrete_access = Location.discrete_access_of_location source_location in
-		let filter_updates = if (eval_boolean_expression (Some discrete_access) boolean_expr) then if_updates else else_updates in
+		let filter_updates = if (eval_boolean_expression variable_names_opt functions_table_opt (Some discrete_access) boolean_expr) then if_updates else else_updates in
 		(merge_clock_updates acc_clock filter_updates.clock, list_append acc_discrete filter_updates.discrete)
 	) (updates.clock, updates.discrete) updates.conditional
 
@@ -1368,6 +1369,8 @@ let get_updates (source_location : Location.global_location) (updates : Abstract
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
 (** Collecting the updates by evaluating the conditions, if there is any *)
+(* Note seems obsolete *)
+(*
 let get_updates_in_combined_transition (source_location : Location.global_location) (combined_transition : StateSpace.combined_transition) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
@@ -1382,7 +1385,7 @@ let get_updates_in_combined_transition (source_location : Location.global_locati
 		(* Append and merge *)
 		(merge_clock_updates current_clock_updates new_clock_updates) , (list_append current_discrete_updates new_discrete_updates)
 	) (No_update, []) combined_transition
-
+*)
 
 (*------------------------------------------------------------------*)
 (* Compute a new location for a combined_transition                 *)
@@ -1391,7 +1394,7 @@ let get_updates_in_combined_transition (source_location : Location.global_locati
 (*------------------------------------------------------------------*)
 (* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
 (*------------------------------------------------------------------*)
-let compute_new_location_guards_updates (source_location: Location.global_location) (combined_transition : StateSpace.combined_transition) : (Location.global_location * NonlinearConstraint.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list) =
+let compute_new_location_guards_updates (source_location: Location.global_location) (combined_transition : StateSpace.combined_transition) : (Location.global_location * DiscreteExpressions.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -1416,10 +1419,10 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		(* Access the transition and get the components *)
 		let automaton_index, transition = automaton_and_transition_of_transition_index transition_index in
 		(** Collecting the updates by evaluating the conditions, if there is any *)
-        let _ (* no clock update for pre-updates *), discrete_seq_updates = get_updates source_location transition.seq_updates in
+        let _ (* no clock update for seq updates *), discrete_seq_updates = get_updates (Some model.variable_names) (Some model.functions_table) source_location transition.seq_updates in
 
         (* Make `seq` sequential updates (make these updates now, only on discrete) *)
-        List.iter (direct_update discrete_access) (List.rev discrete_seq_updates);
+        List.iter (direct_update (Some model.variable_names) (Some model.functions_table) discrete_access) (List.rev discrete_seq_updates);
 
 	) combined_transition;
 
@@ -1432,10 +1435,10 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		let guard, updates, target_index = transition.guard, transition.updates, transition.target in
 
 		(** Collecting the updates by evaluating the conditions, if there is any *)
-		let clock_updates, discrete_updates = get_updates source_location updates in
+		let clock_updates, discrete_updates = get_updates (Some model.variable_names) (Some model.functions_table) source_location updates in
 
         (* Make `then` standard discrete non-sequential updates (make updates (on discrete) after all recorded in a table *)
-        let delayed_update_results = List.map (delayed_update discrete_access updated_discrete) (List.rev discrete_updates) in
+        let delayed_update_results = List.map (delayed_update (Some model.variable_names) (Some model.functions_table) discrete_access updated_discrete) (List.rev discrete_updates) in
 
         (* Print warnings if discrete variable updated several times with different value for the same sync *)
         List.iter (function
@@ -1793,7 +1796,7 @@ let compute_transitions location constr action_index automata involved_automata_
 let post_from_one_state_via_one_transition (source_location : Location.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
 
 	(* Compute the new location for the current combination of transitions *)
-	let target_location, (discrete_guards : NonlinearConstraint.nonlinear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
+	let target_location, (discrete_guards : DiscreteExpressions.nonlinear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
 
 	(* Statistics *)
 	tcounter_compute_location_guards_discrete#stop;
@@ -2463,7 +2466,8 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			match model.type_of_variables variable_index with
 			| DiscreteType.Var_type_clock
 			| DiscreteType.Var_type_parameter -> valuation_n variable_index
-			| DiscreteType.Var_type_discrete _ -> Location.get_discrete_rational_value location_n variable_index (* TODO benjamin : check with étienne, what is it ? is it computing of linear part ? *)
+			(* Here we should have only rational discrete value, so we don't make any check as they were made before *)
+			| DiscreteType.Var_type_discrete _ -> Location.get_discrete_rational_value location_n variable_index
 		in
 
 		(* Add the valuation to the list, and replace n+1 with n *)

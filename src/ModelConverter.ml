@@ -33,6 +33,8 @@ open ParsingStructureUtilities
 open ParsedModelMetadata
 open DiscreteType
 open CustomModules
+open JsonFormatter
+open Logger
 
 (************************************************************)
 (************************************************************)
@@ -155,7 +157,6 @@ let get_declared_synclabs_names =
 (*------------------------------------------------------------*)
 (* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
 (*------------------------------------------------------------*)
-(* TODO benjamin refactor because of new types ! *)
 let check_variable_names clock_names discrete_names parameters_names constants =
 	(* Warn if a variable is defined twice as the same type *)
 	let warn_for_multiply_defined_variables list_of_variables =
@@ -248,8 +249,8 @@ let check_normal_update variable_infos automaton_name normal_update =
 
     (* Check that all variables in update are declared, and call print function if it's not the case *)
     let all_variables_declared = ParsingStructureUtilities.all_variables_defined_in_parsed_normal_update variable_infos print_variable_in_update_not_declared_opt print_variable_in_update_not_declared_opt normal_update in
-    (* Get all updated variables (can have many updated variables for one update, in conditional update for example) *)
-    let updated_variable_name_opt = (ParsingStructureUtilities.fold_map_parsed_normal_update (^) "" (function _ -> "") (function Leaf_update_updated_variable variable_name -> variable_name) normal_update |> List.filter (fun x -> x <> "") |> List.nth_opt) 0 in
+    (* Get (maybe) an updated variable in normal update *)
+    let updated_variable_name_opt = (ParsingStructureUtilities.fold_parsed_normal_update (@) [] (function _ -> []) (function Leaf_update_updated_variable variable_name -> [variable_name]) normal_update |> List.filter (fun x -> x <> "") |> List.nth_opt) 0 in
 
     let updated_variable_name = match updated_variable_name_opt with Some updated_variable_name -> updated_variable_name | None -> "_" in
 
@@ -482,145 +483,6 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 		) flows;
 	!ok
 
-(* Check if user function definition is well formed *)
-let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
-
-    (* Check if there isn't duplicate parameter with inconsistent types *)
-    let is_consistent_duplicate_parameters =
-
-        (* Message to display when duplicate parameters found *)
-        let duplicate_parameter_message parameter_name =
-            "Duplicate parameter `"
-            ^ parameter_name
-            ^ "` in function `"
-            ^ fun_def.name
-            ^ "`"
-        in
-
-        (* Check that each parameter have different name *)
-        (* Group parameters by their names *)
-        let parameters_by_names = OCamlUtilities.group_by first_of_tuple fun_def.parameters in
-        (* If for one parameter name, their is more than one parameter, there is duplicates *)
-        let duplicate_parameters = List.filter (fun (parameter_name, group) -> List.length group > 1) parameters_by_names in
-
-        (* For each parameter get if duplicate definitions are consistent or not *)
-        (* Ex: for fn f (a : int, a : rat), duplicate definition of `a` isn't consistent *)
-        List.iter (fun (parameter_name, group) ->
-            (* Remove parameter duplicates *)
-            let group_without_duplicates = OCamlUtilities.list_only_once group in
-            (* Prepare message *)
-            let current_duplicate_parameter_message = duplicate_parameter_message parameter_name in
-            (* If duplicates remain greater than 1, there is inconsistent definitions *)
-            if List.length group_without_duplicates = 1 then (
-                print_error (current_duplicate_parameter_message ^ ".");
-            ) else (
-                let str_parameters_list = List.map (fun (parameter_name, discrete_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete discrete_type) group_without_duplicates in
-                let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
-                print_error (current_duplicate_parameter_message ^ "` does not have consistent definitions: `" ^ str_parameters ^ "`.");
-            )
-        ) duplicate_parameters;
-
-        (* Check if it exist duplicate parameters *)
-        List.length duplicate_parameters = 0
-    in
-
-    (* Check if all variables in function definition are defined *)
-    let is_all_variables_defined =
-
-        (* Prepare callback function that print error message when undeclared variable is found *)
-        let print_variable_in_fun_not_declared variable_name =
-            print_error (
-                "Variable `"
-                ^ variable_name
-                ^ "` used in function `"
-                ^ fun_def.name
-                ^ "` was not declared."
-            )
-        in
-
-        let print_variable_in_fun_not_declared_opt = Some print_variable_in_fun_not_declared in
-        ParsingStructureUtilities.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt print_variable_in_fun_not_declared_opt fun_def
-    in
-
-    (* Check if assignments found in function body are allowed *)
-    let is_assignments_are_allowed =
-
-        (* Check for assigned variables (local and global) in function implementation *)
-        let variable_components = ParsedModelMetadata.assigned_variables_of_fun_def fun_def in
-        let variable_components_list = ComponentSet.elements variable_components in
-
-        (* Check that no local variable are updated *)
-        let assigned_local_variable_names = List.filter_map (function
-            | Local_variable_ref (variable_name, _, _) -> Some variable_name
-            | _ -> None
-        ) variable_components_list in
-
-        (* Check that no parameter are updated *)
-        let assigned_parameter_names = List.filter_map (function
-            | Param_ref (param_name, _) -> Some param_name
-            | _ -> None
-        ) variable_components_list in
-
-        (* Check that no clocks are updated *)
-        (* Get only clock update and map to a clock names list *)
-        let assigned_clock_names = List.filter_map (function
-            | Global_variable_ref variable_name ->
-                (* Get eventual var type (or none if variable was not declared or removed) *)
-                let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
-                (match var_type_opt with
-                | Some Var_type_clock -> Some variable_name
-                | _ -> None
-                )
-            | _ -> None
-
-        ) variable_components_list in
-
-        (* Is any local variable modifications in user function ? *)
-        let has_parameter_modifications = List.length assigned_parameter_names > 0 in
-        (* Is any local variable modifications in user function ? *)
-        let has_local_variable_modifications = List.length assigned_local_variable_names > 0 in
-        (* Is any clock modifications in user function ? *)
-        let has_clock_modifications = List.length assigned_clock_names > 0 in
-
-        (* Print possible errors *)
-        List.iter (fun param_name ->
-            print_error (
-                "Modification of parameter `"
-                ^ param_name
-                ^ "` found in `"
-                ^ fun_def.name ^
-                "`. Parameters are immutables."
-            );
-        ) assigned_parameter_names;
-
-        List.iter (fun variable_name ->
-            print_error (
-                "Modification of local variable `"
-                ^ variable_name
-                ^ "` found in `"
-                ^ fun_def.name ^
-                "`. Local variables are immutables."
-            );
-        ) assigned_local_variable_names;
-
-        List.iter (fun variable_name ->
-            print_error (
-                "Modification of clock `"
-                ^ variable_name
-                ^ "` found in `"
-                ^ fun_def.name ^
-                "`. Clock cannot be modified in user functions."
-            );
-        ) assigned_clock_names;
-
-        not (has_parameter_modifications || has_local_variable_modifications || has_clock_modifications)
-    in
-
-    (* Return *)
-    is_consistent_duplicate_parameters
-    && is_assignments_are_allowed
-    && is_all_variables_defined
-
 (*------------------------------------------------------------*)
 (* Check that the automata are well-formed *)
 (*------------------------------------------------------------*)
@@ -700,26 +562,6 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 	!well_formed
 
 (* CHECK INIT *)
-
-(* Partition between initial localisations and initial inequalities *)
-let partition_loc_init_and_variable_inits init_definition =
-	(* Get all the Parsed_loc_assignment *)
-	let loc_assignments, init_inequalities = List.partition (function
-		| Parsed_loc_assignment _ -> true
-		| Parsed_linear_predicate _
-		| Parsed_discrete_predicate _ -> false
-    ) init_definition
-    in
-
-	(* Make pairs (automaton_name, location_name) *)
-	let initial_locations = List.map (function
-		| Parsed_loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
-		| _ -> raise (InternalError "Something else than a Parsed_loc_assignment was found in a Parsed_loc_assignment list")
-    ) loc_assignments
-    in
-
-    (* Return initial locations, initial inequalities *)
-    initial_locations, init_inequalities
 
 (* Check whether an automaton has exactly one initial location *)
 let has_one_loc_per_automaton initial_locations parsed_model observer_automaton_index_option =
@@ -843,38 +685,17 @@ let is_inequality_has_left_hand_removed_variable removed_variable_names = functi
     | _ ->
         false
 
-let partition_discrete_continuous variable_infos filtered_init_inequalities =
-    List.partition (function
-		(* Check if the left part is only a variable name *)
-		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
-			let is_discrete =
-			(* TODO benjamin REFACTOR, can refactor with VariableInfo *)
-			(* Try to get the variable index *)
-			if (is_variable_is_defined variable_infos variable_name) then (
-				let variable_index = index_of_variable_name variable_infos variable_name in
-				(* Keep if this is a discrete *)
-				DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
-			) else if (is_constant_is_defined variable_infos variable_name) then
-			    false
-            else (
-                (* Otherwise: problem! *)
-                raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
-            )
-			in is_discrete
-	    (* All parsed boolean predicate are for discrete variables *)
-        | Parsed_discrete_predicate _ -> true
-		(* Otherwise false *)
-		| _ -> false
-    ) filtered_init_inequalities
 
-(* Convert discrete linear constraint predicate to discrete predicate, more simple *)
-let discrete_predicate_of_discrete_linear_predicate = function
-    | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, discrete_name)), op , expression)) ->
+
+(* Convert discrete linear constraint predicate to a discrete init (tuple variable_name * parsed_global_expression) *)
+let discrete_init_of_discrete_linear_predicate variable_infos = function
+    | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, updated_variable_name)), op , expression))
+    when is_discrete_variable variable_infos updated_variable_name ->
 
         (* Check *)
         if NumConst.neq coeff NumConst.one then (
-            print_error ("The discrete variable `" ^ discrete_name ^ "` must have a coeff 1 in the init definition.");
-            None
+            print_error ("The discrete variable `" ^ updated_variable_name ^ "` must have a coeff 1 in the init definition.");
+            raise InvalidModel;
         )
         else (
 
@@ -882,8 +703,8 @@ let discrete_predicate_of_discrete_linear_predicate = function
             (* Simple constant: OK *)
             | (PARSED_OP_EQ, Linear_term (Constant c)) ->
                 let rational_value = DiscreteValue.Number_value c in
-                let discrete_predicate = Parsed_discrete_predicate (
-                    discrete_name,
+                My_left (
+                    updated_variable_name,
                     Parsed_global_expression (
                     Parsed_Discrete_boolean_expression (
                     Parsed_arithmetic_expression (
@@ -891,13 +712,11 @@ let discrete_predicate_of_discrete_linear_predicate = function
                     Parsed_DT_factor (
                     Parsed_DF_constant rational_value)))))
                 )
-                in
-                Some discrete_predicate
             (* Constant: OK *)
             | (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
                 let coef_rational_value = DiscreteValue.Number_value coef in
-                let discrete_predicate = Parsed_discrete_predicate (
-                    discrete_name,
+                My_left (
+                    updated_variable_name,
                     Parsed_global_expression (
                     Parsed_Discrete_boolean_expression (
                     Parsed_arithmetic_expression (
@@ -907,31 +726,30 @@ let discrete_predicate_of_discrete_linear_predicate = function
                     Parsed_DF_variable variable_name,
                     Parsed_mul)))))
                 )
-                in
-                Some discrete_predicate
+
             | _ ->
-                print_error ("The initial value for discrete variable `" ^ discrete_name ^ "` must be given in the form `" ^ discrete_name ^ " = c`, where `c` is an integer, a rational or a constant.");
-                None
+                print_error ("The initial value for discrete variable `" ^ updated_variable_name ^ "` must be given in the form `" ^ updated_variable_name ^ " = c`, where `c` is an integer, a rational or a constant.");
+                raise InvalidModel;
         )
-    | Parsed_discrete_predicate _ as discrete_predicate -> Some discrete_predicate
-    | _ ->
-        raise (InternalError "Trying to convert a non discrete linear constraint to discrete predicate")
+    | Parsed_discrete_predicate (updated_variable_name, expr) -> My_left (updated_variable_name, expr)
+    | Parsed_loc_assignment _ -> raise (InternalError "Trying to partition between discrete and continuous inits in list containing location inits.")
+    | continous_init_predicate -> My_right continous_init_predicate
 
-let check_discrete_predicate_and_init variable_infos init_values_for_discrete = function
-    | Parsed_discrete_predicate (variable_name, expr) ->
 
-        (* TODO benjamin REFACTOR with kind_of *)
-        (* Check that initialized variable of name 'variable_name' is not a constant *)
-        if is_constant_is_defined variable_infos variable_name then (
+let check_discrete_inits functions_table variable_infos init_values_for_discrete (variable_name, expr) =
+
+        (* Get kind of variable *)
+        let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_name in
+
+        (match variable_kind with
+        | Constant_kind _ ->
             print_error ("Initialize '" ^ variable_name ^ "' constant is forbidden");
             false
-        )
-        else (
-
+        | Variable_kind _ ->
 
             (* Get the variable index *)
             let discrete_index = index_of_variable_name variable_infos variable_name in
-            (* TYPE CHECKING *)
+            (* Convert init to abstract model *)
             let converted_expr = DiscreteExpressionConverter.convert_discrete_init variable_infos variable_name expr in
 
             (* Check if it was already declared *)
@@ -944,7 +762,7 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
                 false
             )
             (* Try to reduce expression to a value *)
-            else if not (DiscreteExpressionEvaluator.is_global_expression_constant converted_expr) then (
+            else if not (DiscreteExpressionEvaluator.is_global_expression_constant (Some functions_table) converted_expr) then (
 
                 print_error (
                     "Init variable \""
@@ -955,27 +773,29 @@ let check_discrete_predicate_and_init variable_infos init_values_for_discrete = 
                 );
                 false
             ) else (
-                let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression converted_expr in
+                let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression (Some functions_table) converted_expr in
                 Hashtbl.add init_values_for_discrete discrete_index value;
                 true
             )
-
         )
-
-    | _ -> raise (InternalError ("Must have this form since it was checked before."))
 
 
 (*------------------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
 (*------------------------------------------------------------*)
-let check_init (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
+let check_init functions_table (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
+
+    let partition_and_map_loc_init_and_variable_inits = function
+        (* Make pairs (automaton_name, location_name) *)
+        | Parsed_loc_assignment (automaton_name, location_name) -> My_left (automaton_name, location_name)
+        | Parsed_linear_predicate _
+        | Parsed_discrete_predicate _ as predicate -> My_right predicate
+    in
 
     let variable_infos = useful_parsing_model_information.variable_infos in
 
-	let well_formed = ref true in
-
     (* Partition init predicates between initial location and inequalities *)
-    let initial_locations, init_inequalities = partition_loc_init_and_variable_inits init_definition in
+    let initial_locations, init_inequalities = OCamlUtilities.partition_map partition_and_map_loc_init_and_variable_inits init_definition in
 
     (* For all definitions : *)
     (* Check that automaton names and location names exist *)
@@ -989,39 +809,30 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 	(* Remove the inequalities of which the left-hand term is a removed variable *)
 	let filtered_init_inequalities = List.filter (fun x -> not (is_inequality_has_left_hand_removed_variable variable_infos.removed_variable_names x)) init_inequalities in
 
-	(* Partition the init inequalities between the discrete init assignments, and other inequalities *)
-	let discrete_init, other_inequalities = partition_discrete_continuous variable_infos filtered_init_inequalities in
+	(* Partition and map the init inequalities between the discrete init assignments, and other inequalities *)
+    let discrete_inits, other_inequalities = OCamlUtilities.partition_map (discrete_init_of_discrete_linear_predicate variable_infos) filtered_init_inequalities in
 
-    (* Convert discrete linear constraint to discrete predicate *)
-    let some_discrete_predicates = List.map discrete_predicate_of_discrete_linear_predicate discrete_init in
-
-    let discrete_predicate_well_formed = List.for_all (function | None -> false | _ -> true) some_discrete_predicates in
-
-    well_formed := definitions_well_formed && one_loc_per_automaton && discrete_predicate_well_formed;
+    let well_formed = definitions_well_formed && one_loc_per_automaton in
 
     (* Here if not well formed we can raise an error *)
-    if not (!well_formed) then
+    if not well_formed then
         raise InvalidModel;
-
-    let discrete_predicates = List.map OCamlUtilities.a_of_a_option some_discrete_predicates in
 
     (* Check init discrete section : discrete *)
 	(* Check that every discrete variable is given only one (rational) initial value *)
 	let init_values_for_discrete = Hashtbl.create (List.length variable_infos.discrete) in
 
     (* Compute discrete init values and add to init hash table *)
-    let discrete_initialization_well_formed = List.for_all (check_discrete_predicate_and_init variable_infos init_values_for_discrete) discrete_predicates in
-    (* If some value is None, there is errors *)
-    well_formed := !well_formed && discrete_initialization_well_formed;
+    let discrete_initialization_well_formed = List.for_all (check_discrete_inits functions_table variable_infos init_values_for_discrete) discrete_inits in
 
 	(* Check that every discrete variable is given at least one initial value (if not: warns) *)
 	List.iter (fun discrete_index ->
 		if not (Hashtbl.mem init_values_for_discrete discrete_index) then (
 		    let variable_name = variable_name_of_index variable_infos discrete_index in
 		    let variable_type = var_type_of_variable_name variable_infos variable_name in
-		    let default_value = DiscreteValue.default_value variable_type in
+		    let default_value = AbstractValue.default_value variable_type in
 
-			print_warning ("The discrete variable '" ^ variable_name ^ "' was not given an initial value in the init definition: it will be assigned to " ^ DiscreteValue.string_of_value default_value ^ ".");
+			print_warning ("The discrete variable '" ^ variable_name ^ "' was not given an initial value in the init definition: it will be assigned to " ^ AbstractValue.string_of_value default_value ^ ".");
 			Hashtbl.add init_values_for_discrete discrete_index default_value
 		);
     ) variable_infos.discrete;
@@ -1032,8 +843,6 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 			discrete_index, Hashtbl.find init_values_for_discrete discrete_index
 		) variable_infos.discrete
 	in
-
-(*    let other_inequalities = List.map (replace_unused_discrete_variable_by_constant variable_infos init_values_for_discrete) other_inequalities in*)
 
     (* Check init constraints section : continuous *)
 
@@ -1074,7 +883,7 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
         raise (InvalidExpression ("There are errors in the continuous init section"));
 
 	(* Return whether the init declaration passed the tests *)
-	discrete_values_pairs, !well_formed
+	discrete_values_pairs, discrete_initialization_well_formed
 
 
 
@@ -1087,14 +896,14 @@ let check_init (useful_parsing_model_information : useful_parsing_model_informat
 (*------------------------------------------------------------*)
 let make_constants constants =
   (* Create hash table *)
-  let constants_hashtable : (string, DiscreteValue.discrete_value) Hashtbl.t = Hashtbl.create (List.length constants) in
+  let constants_hashtable : (string, AbstractValue.abstract_value) Hashtbl.t = Hashtbl.create (List.length constants) in
   (* Manage Boolean for checking errors *)
   let correct = ref true in
   List.iter (fun (name, value(*, discrete_type *)) ->
       if (Hashtbl.mem constants_hashtable name) then (
         let old_value = Hashtbl.find constants_hashtable name in
         (* If same: warning *)
-        if(DiscreteValue.equal old_value value) then(
+        if(AbstractValue.equal old_value value) then(
           print_warning ("Constant `" ^ name ^ "` is defined twice.");
         )else(
           (* If different: error *)
@@ -1633,12 +1442,6 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* Convert the guard *)
               let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
 
-              (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
-              (* Filter the updates that should assign some variable name to be removed to any expression *)
-              (* let filtered_updates = List.filter (fun (variable_name, (*linear_expression*)_) ->
-                 					not (List.mem variable_name removed_variable_names)
-                 				) updates
-                 				in *)
               let seq_updates, updates = update_section in
 
               let filtered_seq_updates = filter_updates removed_variable_names seq_updates in
@@ -1783,9 +1586,9 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 		(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in *)
 
         (* Get only rational discrete for constraint encoding *)
-        let init_discrete_rational_pairs = List.filter (fun (discrete_index, discrete_value) -> DiscreteValue.is_rational_value discrete_value) init_discrete_pairs in
+        let init_discrete_rational_pairs = List.filter (fun (discrete_index, discrete_value) -> AbstractValue.is_rational_value discrete_value) init_discrete_pairs in
         (* map to num const *)
-        let init_discrete_rational_numconst_pairs = List.map (fun (discrete_index, discrete_value) -> discrete_index, DiscreteValue.numconst_value discrete_value) init_discrete_rational_pairs in
+        let init_discrete_rational_numconst_pairs = List.map (fun (discrete_index, discrete_value) -> discrete_index, AbstractValue.numconst_value discrete_value) init_discrete_rational_pairs in
 
 		(* Create a constraint encoding the value of the discretes *)
 		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_rational_numconst_pairs in
@@ -3162,12 +2965,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
             raise (InvalidModel);
         );
 
-
         (* TYPE CHECKING *)
         let constant = name, expr, var_type in
-
         let typed_expr(*, expr_type *) = DiscreteExpressionConverter.convert_discrete_constant initialized_constants constant in
-        let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression typed_expr in
+
+        (* Note: If we want use functions for constant initialization, we has to replace None by the function table *)
+        (* It meant that function table should be initialized before constant, if possible. *)
+        let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression None (* function table *) typed_expr in
         (* Add evaluated constant to hash table *)
         Hashtbl.add initialized_constants name value;
         (* Return *)
@@ -3182,7 +2986,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Make the array of constants *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let (constants : (Automaton.variable_name , DiscreteValue.discrete_value) Hashtbl.t), constants_consistent = make_constants constant_tuples in
+	let (constants : (Automaton.variable_name , AbstractValue.abstract_value) Hashtbl.t), constants_consistent = make_constants constant_tuples in
 
 
 
@@ -3190,7 +2994,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Constants *)
 		print_message Verbose_high ("\n*** Constants:");
 		Hashtbl.iter (fun key value ->
-			print_message Verbose_high (key ^ " = " ^ (DiscreteValue.string_of_value value) ^ "")
+			print_message Verbose_high (key ^ " = " ^ (AbstractValue.string_of_value value) ^ "")
 		) constants;
 	);
 
@@ -3283,7 +3087,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 
     (* Resolve dependency graph of the model *)
-    let dependency_graph = ParsedModelMetadata.dependency_graph parsed_model in
+    let dependency_graph = ParsedModelMetadata.dependency_graph ~no_var_autoremove:options#no_variable_autoremove parsed_model in
     (* Get dependency graph as dot format *)
     let str_dependency_graph = lazy (ParsedModelMetadata.string_of_dependency_graph dependency_graph) in
     (* Print dependency graph *)
@@ -3295,9 +3099,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Iter on unused components and print warnings *)
     ParsedModelMetadata.ComponentSet.iter (function
         | Fun_ref function_name ->
-            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model.")
+            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")
         | Local_variable_ref (variable_name, function_name, _) ->
-            print_warning ("Local variable `" ^ variable_name ^ "` in `" ^ function_name ^ "` is declared but never used.")
+            print_warning ("Local variable `" ^ variable_name ^ "` in `" ^ function_name ^ "` is declared but never used; it is therefore removed from the model. Use option -no-var-autoremove to keep it.")
         | Param_ref (param_name, function_name) ->
             print_warning ("Parameter `" ^ param_name ^ "` in `" ^ function_name ^ "` is declared but never used.")
         | _ -> ()
@@ -3609,26 +3413,70 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     (* Gather all functions metadata in a table *)
 
-    (* Get builtin functions metadata *)
-    let builtin_functions_metadata = Functions.builtin_functions in
-    (* Create table of builtin function metadata *)
-    let builtin_functions_metadata_table = List.map (fun (fun_def : function_metadata) -> fun_def.name, fun_def) builtin_functions_metadata |> List.to_seq |> Hashtbl.of_seq in
-
     (* Get user functions metadata from parsed functions *)
     let used_function_names = ParsedModelMetadata.used_functions_of_model dependency_graph in
     (* Get only used user functions definition *)
     let used_function_definitions = List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions in
 
+    (* Check for function cycles *)
+
+    let cycle_infos = model_cycle_infos dependency_graph in
+    let model_has_cycle = List.exists first_of_tuple cycle_infos in
+    let cycle_paths = List.filter_map (fun (has_cycle, path) -> if has_cycle then Some path else None) cycle_infos in
+
+    List.iter (fun cycle_path ->
+        print_error (
+            "Cycle found: `"
+            ^ cycle_path
+            ^ "`. Cycle dependencies are forbidden."
+        )
+    ) cycle_paths;
+
+    if model_has_cycle then (
+        (* Prepare json for res results *)
+        let json_cycle_paths = Json_array (List.map (fun cycle_path -> Json_string cycle_path) cycle_paths) in
+        (* Add cycle section *)
+        Logger.add_custom_detail_property "cycles" json_cycle_paths;
+        (* Raise error *)
+        raise InvalidModel
+    );
+
+    (* Function that remove unused local variable from function definitions *)
+    let fun_def_without_unused_local_vars =
+        (* Get unused components as a list *)
+        let unused_components_list = unused_components |> ComponentSet.to_seq |> List.of_seq in
+
+        (* For each used user defined function remove unused local vars declaration *)
+        List.map (fun (fun_def : parsed_fun_definition) ->
+            (* Get unused local vars for current function *)
+            let unused_local_vars = List.filter_map (function
+                | Local_variable_ref (variable_name, function_name, id) when function_name = fun_def.name ->
+                    Some (variable_name, id)
+                | _ -> None
+            ) unused_components_list in
+            (* Get function definition without unused local vars *)
+            Functions.fun_def_without_unused_local_vars unused_local_vars fun_def
+        ) used_function_definitions
+    in
+
+    (* Eventually remove unused local variables *)
+    let used_function_definitions =
+        if options#no_variable_autoremove then
+            used_function_definitions
+        else
+            fun_def_without_unused_local_vars
+    in
+
     (* Create table of user function definitions *)
-    let user_function_definitions_table = List.map (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def) used_function_definitions |> List.to_seq |> Hashtbl.of_seq in
+    let user_function_definitions_table = List.map (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def) used_function_definitions |> OCamlUtilities.hashtbl_of_tuples in
 
     (* Get metadata of these functions *)
-    let metadata_of_function_definition = Functions.metadata_of_function_definition builtin_functions_metadata_table user_function_definitions_table in
-    let user_functions_metadata = List.map metadata_of_function_definition used_function_definitions in
+    let metadata_of_parsed_function_definition = Functions.metadata_of_parsed_function_definition Functions.builtin_functions_metadata_table user_function_definitions_table in
+    let user_functions_metadata = List.map metadata_of_parsed_function_definition used_function_definitions in
     (* Concat builtin & user functions *)
-    let all_functions_metadata = user_functions_metadata @ builtin_functions_metadata in
+    let all_functions_metadata = user_functions_metadata @ Functions.builtin_functions_metadata in
     (* Create function table that associate function name to function metadata *)
-    let functions_metadata_table = (List.map (fun (fun_def : ParsingStructure.function_metadata) -> fun_def.name, fun_def) all_functions_metadata) |> List.to_seq |> Hashtbl.of_seq in
+    let functions_metadata_table = (List.map (fun (fun_def : ParsingStructure.function_metadata) -> fun_def.name, fun_def) all_functions_metadata) |> OCamlUtilities.hashtbl_of_tuples in
 
     (* Print some info on side effects resolution *)
     let str_fun_side_effects = lazy (
@@ -3645,9 +3493,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Function metas to json *)
     let json_function_metas = List.map ParsingStructureUtilities.json_of_function_metadata all_functions_metadata in
     (* Create json array *)
-    let json_array_function_metas = JsonFormatter.Json_array json_function_metas in
+    let json_array_function_metas = Json_array json_function_metas in
     (* Add new property to details *)
-    ResultProcessor.add_custom_detail_property "function_metas" json_array_function_metas;
+    Logger.add_custom_detail_property "function_metas" json_array_function_metas;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)
@@ -3687,20 +3535,19 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	print_message Verbose_high ("*** Checking user functions definitions…");
 
-    (* Check that (only used) user functions are well formed *)
-	let well_formed_user_functions_list = List.map (check_fun_definition variable_infos) used_function_definitions in
-	let well_formed_user_functions = List.for_all identity well_formed_user_functions_list in
-
-    if not well_formed_user_functions then
-        raise InvalidModel;
-
-    (* Convert (only used) function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
-    List.iter (fun (parsed_fun_def : parsed_fun_definition) ->
+    (* Try to convert (only used) function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
+    let user_functions_list = List.map (fun (parsed_fun_def : parsed_fun_definition) ->
         (* Convert fun def from parsing structure to abstract model *)
         let fun_def = DiscreteExpressionConverter.convert_fun_definition variable_infos parsed_fun_def in
-        (* Add converted fun def to functions table *)
-        Hashtbl.add Functions.fun_definitions_table fun_def.name fun_def
-    ) used_function_definitions;
+        fun_def.name, fun_def
+    ) used_function_definitions
+    in
+    (* Get builtin functions implementations as associative list *)
+    let builtin_functions_list = List.map (fun (fun_def : fun_definition) -> fun_def.name, fun_def) Functions.builtin_function_bodies in
+    (* Concat all functions *)
+    let functions_list = user_functions_list @ builtin_functions_list in
+    (* Convert to table *)
+    let functions_table = OCamlUtilities.hashtbl_of_tuples functions_list in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)
@@ -3723,7 +3570,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Checking init definition…");
 	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
 
-	let init_discrete_pairs, well_formed_init = check_init useful_parsing_model_information parsed_model.init_definition observer_automaton_index_option in
+	let init_discrete_pairs, well_formed_init = check_init functions_table useful_parsing_model_information parsed_model.init_definition observer_automaton_index_option in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the constants inits *)
@@ -4636,7 +4483,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	automaton_of_transition = automaton_of_transition;
 
     (* The list of declared functions *)
-    fun_definitions = Functions.fun_definitions_table;
+    functions_table = functions_table;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;

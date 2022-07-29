@@ -22,11 +22,11 @@ open OCamlUtilities
 (* Variable kind type represent a variable or a constant kind *)
 type variable_kind =
     | Variable_kind of int
-    | Constant_kind of DiscreteValue.discrete_value
+    | Constant_kind of AbstractValue.abstract_value
 
 val variable_name_of_index : variable_infos -> variable_index -> variable_name
 val index_of_variable_name : variable_infos -> variable_name -> variable_index
-val value_of_constant_name : variable_infos -> variable_name -> discrete_value
+val value_of_constant_name : variable_infos -> variable_name -> AbstractValue.abstract_value
 
 val is_variable_is_defined : variable_infos -> variable_name -> bool
 val is_variable_removed : variable_infos -> variable_name -> bool
@@ -43,3 +43,6 @@ val discrete_type_of_variable_or_constant : variable_infos -> variable_name -> v
 val discrete_type_of_variable_or_constant_opt : variable_infos -> variable_name -> var_type_discrete option
 
 val variable_kind_of_variable_name : variable_infos -> variable_name -> variable_kind
+
+(* Check if variable is a discrete variable given it's name *)
+val is_discrete_variable : variable_infos -> variable_name -> bool

@@ -21,7 +21,7 @@ open Exceptions
 open Result
 open AbstractModel
 open AbstractProperty
-
+open AbstractValue
 
 
 
@@ -136,8 +136,8 @@ let string_of_declarations model stopwatches clocks =
 (* Convert function definitions into a string *)
 let string_of_fun_definitions model =
     (* Print warning *)
-    if Hashtbl.length model.fun_definitions > 0 then
-        print_warning "Model contains user defined functions. HyTech does not support user-defined functions.";
+    if Hashtbl.length model.functions_table > 0 then
+        print_warning "Model contains user defined functions. HyTech doesn't support user defined functions.";
     (* Get function definitions string as IMITATOR format *)
     ModelPrinter.string_of_fun_definitions model
 
@@ -175,8 +175,8 @@ let is_linear_guard = function
 	| True_guard
 	| False_guard
 	| Continuous_guard _ -> true
-	| Discrete_guard guard -> NonlinearConstraint.is_linear_nonlinear_constraint guard
-	| Discrete_continuous_guard guard -> NonlinearConstraint.is_linear_nonlinear_constraint guard.discrete_guard
+	| Discrete_guard guard -> DiscreteExpressions.is_linear_nonlinear_constraint guard
+	| Discrete_continuous_guard guard -> DiscreteExpressions.is_linear_nonlinear_constraint guard.discrete_guard
 
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model automaton_index location_index stopwatches clocks =
@@ -412,7 +412,7 @@ let string_of_initial_state () =
 		(* Finding the initial value for this discrete *)
 		let initial_value = Location.get_discrete_value inital_global_location discrete_index in
 		(* '& var = val' *)
-		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (DiscreteValue.string_of_value initial_value)
+		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (AbstractValue.string_of_value initial_value)
 	) model.discrete
 	in string_of_list_of_string initial_discrete
 

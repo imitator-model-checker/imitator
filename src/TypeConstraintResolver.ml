@@ -11,11 +11,18 @@
  *
  ************************************************************)
 
+(* Utils modules *)
 open Exceptions
-open DiscreteType
-open FunctionSig
-open ParsingStructureUtilities
 
+(* Parsing structure modules *)
+open ParsingStructureUtilities
+open DiscreteType
+
+(**)
+open FunctionSig
+
+(* Represent a resolved constraint *)
+(* Resolved constraint can be a type or a length value (in case of array, binary word lengths) *)
 type resolved_constraint =
     | Resolved_type_constraint of var_type_discrete
     | Resolved_length_constraint of int
@@ -38,7 +45,7 @@ let string_of_resolved_constraints resolved_constraints =
 (** Constraints resolution **)
 (** -------------------- **)
 
-(* Given a discrete type, resolve constraint type / length of a signature type *)
+(* Given a discrete type, resolve the constraint type or the constraint length of a type constraint *)
 let rec resolve_constraint defined_type_constraint discrete_type =
     match defined_type_constraint, discrete_type with
     | Number_constraint type_number_constraint, Var_type_discrete_number type_number ->
@@ -84,35 +91,6 @@ let is_resolved_constraints_compatibles constraint_a constraint_b =
         length_a = length_b
     | _ -> false
 
-(*
-(* Special type of constraint, dependent type are type dependent on value *)
-(* for example fill_left : binary(l1) -> l:int -> binary(l1 + l) *)
-(* The type of the returned binary word is dependent on the value of the second argument *)
-(* As the type system of IMITATOR is static, all dependent type value must be a constant expression ! *)
-let resolve_dependent_type_constraint variable_infos signature_constraint expressions =
-
-    let signature_constraint_with_expressions = List.combine signature_constraint expressions in
-
-    let dependent_type_constraints = OCamlUtilities.rev_filter_map (fun (type_constraint, expr) ->
-        match type_constraint with
-        | Defined_type_constraint (Number_constraint (Defined_type_number_constraint Int_constraint (Int_name_constraint constraint_name))) ->
-            (* If expression is a type-dependent value, we must convert expression to an int expression *)
-
-
-            if not (ParsingStructureUtilities.is_parsed_boolean_expression_constant variable_infos expr) then (
-                raise (TypeError (""));
-            )
-            else (
-                let value = ParsingStructureUtilities.try_reduce_parsed_boolean_expression variable_infos.constants expr in
-                Some (constraint_name, Resolved_length_constraint (Int32.to_int (DiscreteValue.to_int_value value)))
-            )
-        | _ -> None
-
-    ) signature_constraint_with_expressions
-    in
-    dependent_type_constraints
-*)
-
 (* Resolve signature constraints from passed argument discrete type *)
 let resolve_constraints variable_infos signature discrete_types =
 
@@ -129,13 +107,13 @@ let resolve_constraints variable_infos signature discrete_types =
         else (
             let resolved_discrete_types = List.map (function | Resolved_type_constraint discrete_type -> discrete_type | Resolved_length_constraint _ -> Var_type_weak) type_constraint_resolutions in
             (* Reduce discrete types to get the stronger type !  *)
-            let stronger_type = List.fold_left (fun acc discrete_type -> DiscreteType.stronger_discrete_type_of acc discrete_type) Var_type_weak resolved_discrete_types in
+            let stronger_type = List.fold_left stronger_discrete_type_of Var_type_weak resolved_discrete_types in
             Resolved_type_constraint stronger_type
         )
 
     in
 
-    (* Zip lists: signature types / discrete types *)
+    (* group each signature type constraint with discrete types *)
     let type_constraint_discrete_type = List.combine signature discrete_types in
 
     (* Resolve classical constraint *)
@@ -187,7 +165,7 @@ let get_length_resolved_constraint resolved_constraints_table constraint_name =
 let get_discrete_type_resolved_constraint resolved_constraints_table constraint_name =
 
     if not (Hashtbl.mem resolved_constraints_table constraint_name) then
-        ImitatorUtilities.print_warning (constraint_name ^ " not found");
+        ImitatorUtilities.print_warning (constraint_name ^ " not found.");
 
     let resolved_constraint = Hashtbl.find resolved_constraints_table constraint_name in
     match resolved_constraint with

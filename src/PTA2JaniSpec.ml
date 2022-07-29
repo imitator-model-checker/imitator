@@ -19,9 +19,8 @@ open OCamlUtilities
 open ImitatorUtilities
 open LinearConstraint
 open DiscreteExpressions
-open NonlinearConstraint
 open AbstractModel
-open DiscreteValue
+open AbstractValue
 open DiscreteType
 open FunctionSig
 open Result
@@ -145,22 +144,6 @@ let jani_array_access str_array_expr str_index_expr =
         json_property "index" str_index_expr
     |]
 
-(* Format a Jani custom datatype value *)
-let jani_binary_word_datavalue binary_word =
-    let array_value = BinaryWord.to_array (DiscreteValue.binary_word_value binary_word) in
-    let str_values = Array.map (fun x -> if x then "true" else "false") array_value in
-
-    json_struct [|
-        jani_operator_dv;
-        json_property "type" (json_quoted "binary_word");
-        json_property "values" (json_array [|
-            json_struct [|
-                json_property "member" (json_quoted "elements");
-                json_property "value" (jani_array_value str_values)
-            |]
-        |])
-    |]
-
 (* Format a Jani function call *)
 let jani_function_call ?(str_comment="") str_function_name str_args =
 
@@ -274,7 +257,7 @@ let rec string_of_defined_type_constraint = function
     | List_constraint type_constraint ->
         jani_compound_datatype_ref "list" (string_of_type_constraint type_constraint)
     | Stack_constraint type_constraint ->
-        jani_compound_datatype_ref "stack" (string_of_type_constraint type_constraint)
+        jani_compound_datatype_ref Constants.stack_string (string_of_type_constraint type_constraint)
     | Queue_constraint type_constraint ->
         jani_compound_datatype_ref "queue" (string_of_type_constraint type_constraint)
 
@@ -283,42 +266,46 @@ and string_of_type_constraint = function
     | Type_name_constraint constraint_name -> json_quoted ("'" ^ constraint_name)
     | Defined_type_constraint defined_type_constraint -> string_of_defined_type_constraint defined_type_constraint
 
-(* Get string representation of a discrete value in Jani *)
-let rec string_of_value = function
+let string_of_number_value = function
+    | Abstract_rat_value value -> NumConst.jani_string_of_numconst value
+    | Abstract_int_value value -> Int32.to_string value
 
-    | Number_value value
-    | Rational_value value ->
-        NumConst.jani_string_of_numconst value
-
-    | Int_value value ->
-        Int32.to_string value
-
-    | Bool_value value ->
+let string_of_scalar_value = function
+    | Abstract_number_value v -> string_of_number_value v
+    | Abstract_bool_value value ->
         if value then
             jani_strings.boolean_string.true_string
         else
             jani_strings.boolean_string.false_string
 
-    | Array_value value ->
-        let str_values = Array.map string_of_value value in
-        jani_array_value str_values
-
-    | List_value value ->
-        let str_values = List.map string_of_value value in
-        jani_array_value (Array.of_list str_values)
-
-    | Stack_value value ->
-        let str_values = Stack.fold (fun acc x -> acc @ [string_of_value x]) [] value in
-        jani_array_value (Array.of_list str_values)
-
-    | Queue_value value ->
-        let str_values = Queue.fold (fun acc x -> acc @ [string_of_value x]) [] value in
-        jani_array_value (Array.of_list str_values)
-
-    | Binary_word_value value ->
+    | Abstract_binary_word_value value ->
         let bool_array = BinaryWord.to_array value in
         let str_values = Array.map (fun x -> if x then "true" else "false") bool_array in
         jani_array_value str_values
+
+(* Get string representation of a discrete value in Jani *)
+let rec string_of_value = function
+    | Abstract_scalar_value v -> string_of_scalar_value v
+    | Abstract_container_value v -> string_of_container_value v
+
+and string_of_container_value = function
+    | Abstract_array_value value ->
+        let str_values = Array.map string_of_value value in
+        jani_array_value str_values
+
+    | Abstract_list_value value ->
+        let str_values = List.map string_of_value value in
+        jani_array_value (Array.of_list str_values)
+
+    | Abstract_stack_value value ->
+        let str_values = Stack.fold (fun acc x -> acc @ [string_of_value x]) [] value in
+        jani_array_value (Array.of_list str_values)
+
+    | Abstract_queue_value value ->
+        let str_values = Queue.fold (fun acc x -> acc @ [string_of_value x]) [] value in
+        jani_array_value (Array.of_list str_values)
+
+
 
 
 
@@ -412,51 +399,10 @@ and string_of_discrete_boolean_expression variable_names = function
 
     | Bool_constant value -> DiscreteExpressions.customized_string_of_bool_value jani_strings.boolean_string value
 
-    | Bool_sequence_function func ->
-        string_of_sequence_function variable_names func
+    | Bool_array_access (access_type, index_expr) ->
+        string_of_expression_access variable_names access_type index_expr
 
-    | List_mem (expr, list_expr) as func ->
-        let label = label_of_bool_factor func in
-        jani_function_call
-            label
-            [|
-                string_of_global_expression variable_names expr;
-                string_of_list_expression variable_names list_expr
-            |]
-            ~str_comment:(undeclared_function_warning label)
-
-    | Array_mem (expr, array_expr) as func ->
-        let label = label_of_bool_factor func in
-        jani_function_call
-            label
-            [|
-                string_of_global_expression variable_names expr;
-                string_of_array_expression variable_names array_expr
-            |]
-            ~str_comment:(undeclared_function_warning label)
-
-    | List_is_empty list_expr as func ->
-        let label = label_of_bool_factor func in
-        jani_function_call
-            label
-            [|string_of_list_expression variable_names list_expr|]
-            ~str_comment:(undeclared_function_warning label)
-
-    | Stack_is_empty stack_expr as func ->
-        let label = label_of_bool_factor func in
-        jani_function_call
-            label
-            [|string_of_stack_expression variable_names stack_expr|]
-            ~str_comment:(undeclared_function_warning label)
-
-    | Queue_is_empty queue_expr as func ->
-        let label = label_of_bool_factor func in
-        jani_function_call
-            label
-            [|string_of_queue_expression variable_names queue_expr|]
-            ~str_comment:(undeclared_function_warning label)
-
-    | Bool_inline_function (function_name, _, args_expr, _) ->
+    | Bool_function_call (function_name, _, args_expr) ->
         string_of_function_call variable_names function_name args_expr
 
 and string_of_arithmetic_expression variable_names = function
@@ -503,20 +449,18 @@ and string_of_rational_arithmetic_expression variable_names =
 		        "0"
                 (string_of_factor discrete_factor)
 
-		| Rational_expression expr ->
+		| Rational_nested_expression expr ->
 			string_of_arithmetic_expression expr
-		| Rational_of_int expr ->
-		    string_of_int_arithmetic_expression variable_names expr
         | Rational_pow (expr, exp) as factor ->
             jani_binary_operator
                 (label_of_rational_factor factor)
                 (string_of_arithmetic_expression expr)
                 (string_of_int_arithmetic_expression variable_names exp)
 
-        | Rational_sequence_function func ->
-            string_of_sequence_function variable_names func
+        | Rational_array_access (access_type, index_expr) ->
+            string_of_expression_access variable_names access_type index_expr
 
-        | Rational_inline_function (function_name, _, args_expr, _) ->
+        | Rational_function_call (function_name, _, args_expr) ->
             string_of_function_call variable_names function_name args_expr
 
 	(* Call top-level *)
@@ -559,105 +503,33 @@ and string_of_int_arithmetic_expression variable_names =
                 jani_strings.arithmetic_string.unary_min_string
                 (string_of_int_factor discrete_factor)
 
-		| Int_expression discrete_arithmetic_expression ->
+		| Int_nested_expression discrete_arithmetic_expression ->
 			string_of_int_arithmetic_expression discrete_arithmetic_expression
-        | Int_pow (expr, exp) as func ->
-            jani_function_call
-                (label_of_int_factor func)
-                [|
-                    string_of_int_arithmetic_expression expr;
-                    string_of_int_arithmetic_expression exp
-                |]
+        | Int_pow (expr, exp) as factor ->
+            jani_binary_operator
+                (label_of_int_factor factor)
+                (string_of_int_arithmetic_expression expr)
+                (string_of_int_arithmetic_expression exp)
 
-        | Int_sequence_function func ->
-            string_of_sequence_function variable_names func
+        | Int_array_access (access_type, index_expr) ->
+            string_of_expression_access variable_names access_type index_expr
 
-        | Array_length array_expr as func ->
-            let label = label_of_int_factor func in
-            jani_function_call
-                label
-                [|string_of_array_expression variable_names array_expr|]
-                ~str_comment:(undeclared_function_warning label)
-        | List_length list_expr as func ->
-            let label = label_of_int_factor func in
-            jani_function_call
-                label
-                [|string_of_list_expression variable_names list_expr|]
-                ~str_comment:(undeclared_function_warning label)
-
-        | Stack_length stack_expr as func ->
-            let label = label_of_int_factor func in
-            jani_function_call
-                label
-                [|string_of_stack_expression variable_names stack_expr|]
-                ~str_comment:(undeclared_function_warning label)
-
-        | Queue_length queue_expr as func ->
-            let label = label_of_int_factor func in
-            jani_function_call
-                label
-                [|string_of_queue_expression variable_names queue_expr|]
-                ~str_comment:(undeclared_function_warning label)
-
-        | Int_inline_function (function_name, _, args_expr, _) ->
+        | Int_function_call (function_name, _, args_expr) ->
             string_of_function_call variable_names function_name args_expr
 
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression
 
-and string_of_binary_word_expression variable_names binary_word_expr =
+and string_of_binary_word_expression variable_names = function
+    | Binary_word_constant value -> string_of_value (Abstract_scalar_value (Abstract_binary_word_value value))
+    | Binary_word_variable (variable_index, _) -> json_quoted (variable_names variable_index)
+    | Binary_word_local_variable variable_name -> json_quoted variable_name
 
-    (* Get label of expression *)
-    let label = label_of_binary_word_expression binary_word_expr in
-    (* Prepare undeclared_function_warning function with given label *)
-    let undeclared_function_warning = lazy(undeclared_function_warning label) in
+    | Binary_word_array_access (access_type, index_expr) ->
+        string_of_expression_access variable_names access_type index_expr
 
-    (* Convert a binary word expression into a string *)
-    let string_of_binary_word_expression = function
-        | Logical_fill_left (binary_word, expr, _)
-        | Logical_fill_right (binary_word, expr, _)
-        | Logical_shift_left (binary_word, expr, _)
-        | Logical_shift_right (binary_word, expr, _) ->
-            jani_function_call
-                label
-                [|
-                    string_of_binary_word_expression variable_names binary_word;
-                    string_of_int_arithmetic_expression variable_names expr
-                |]
-                ~str_comment:(Lazy.force undeclared_function_warning)
-
-        | Logical_and (l_binary_word, r_binary_word, _)
-        | Logical_or (l_binary_word, r_binary_word, _)
-        | Logical_xor (l_binary_word, r_binary_word, _) ->
-            jani_function_call
-                label
-                [|
-                    string_of_binary_word_expression variable_names l_binary_word;
-                    string_of_binary_word_expression variable_names r_binary_word
-                |]
-                ~str_comment:(Lazy.force undeclared_function_warning)
-
-        | Logical_not (binary_word, length) ->
-            jani_function_call
-                label
-                [|
-                    string_of_binary_word_expression variable_names binary_word;
-                    (string_of_int length)
-                |]
-                ~str_comment:(Lazy.force undeclared_function_warning)
-
-        | Binary_word_constant value -> string_of_value (Binary_word_value value)
-        | Binary_word_variable (variable_index, _) -> json_quoted (variable_names variable_index)
-        | Binary_word_local_variable variable_name -> json_quoted variable_name
-
-        | Binary_word_sequence_function func ->
-            string_of_sequence_function variable_names func
-
-        | Binary_word_inline_function (function_name, _, args_expr, _) ->
-            string_of_function_call variable_names function_name args_expr
-
-    in
-    string_of_binary_word_expression binary_word_expr
+    | Binary_word_function_call (function_name, _, args_expr) ->
+        string_of_function_call variable_names function_name args_expr
 
 and string_of_array_expression variable_names = function
     | Literal_array expr_array ->
@@ -671,20 +543,10 @@ and string_of_array_expression variable_names = function
     | Array_variable variable_index -> json_quoted (variable_names variable_index)
     | Array_local_variable variable_name -> json_quoted variable_name
 
-    | Array_concat (array_expr_0, array_expr_1) as func ->
-        (* Get label of expression *)
-        let label = label_of_array_expression func in
-        jani_function_call label
-            [|
-                string_of_array_expression variable_names array_expr_0;
-                string_of_array_expression variable_names array_expr_1
-            |]
-            ~str_comment:(undeclared_function_warning label)
+    | Array_array_access (access_type, index_expr) ->
+        string_of_expression_access variable_names access_type index_expr
 
-    | Array_sequence_function func ->
-        string_of_sequence_function variable_names func
-
-    | Array_inline_function (function_name, _, args_expr, _) ->
+    | Array_function_call (function_name, _, args_expr) ->
         string_of_function_call variable_names function_name args_expr
 
 and string_of_list_expression variable_names = function
@@ -698,32 +560,10 @@ and string_of_list_expression variable_names = function
 
     | List_variable variable_index -> json_quoted (variable_names variable_index)
     | List_local_variable variable_name -> json_quoted variable_name
+    | List_array_access (access_type, index_expr) ->
+        string_of_expression_access variable_names access_type index_expr
 
-    | List_cons (expr, list_expr) as func ->
-        (* Get label of expression *)
-        let label = label_of_list_expression func in
-
-        jani_function_call
-            label
-            [|
-                string_of_global_expression variable_names expr;
-                string_of_list_expression variable_names list_expr
-            |]
-            ~str_comment:(undeclared_function_warning label)
-
-    | List_list_tl list_expr
-    | List_rev list_expr as func ->
-        (* Get label of expression *)
-        let label = label_of_list_expression func in
-        jani_function_call
-            label
-            [| string_of_list_expression variable_names list_expr |]
-            ~str_comment:(undeclared_function_warning label)
-
-    | List_sequence_function func ->
-        string_of_sequence_function variable_names func
-
-    | List_inline_function (function_name, _, args_expr, _) ->
+    | List_function_call (function_name, _, args_expr) ->
         string_of_function_call variable_names function_name args_expr
 
 and string_of_stack_expression variable_names = function
@@ -735,29 +575,10 @@ and string_of_stack_expression variable_names = function
     | Stack_variable variable_index -> json_quoted (variable_names variable_index)
     | Stack_local_variable variable_name -> json_quoted variable_name
 
-    | Stack_push (expr, stack_expr) as func ->
-        (* Get label of expression *)
-        let label = label_of_stack_expression func in
-        jani_function_call
-            label
-            [|
-                string_of_global_expression variable_names expr;
-                string_of_stack_expression variable_names stack_expr
-            |]
-            ~str_comment:(undeclared_function_warning label)
+    | Stack_array_access (access_type, index_expr) ->
+        string_of_expression_access variable_names access_type index_expr
 
-    | Stack_clear stack_expr as func ->
-        (* Get label of expression *)
-        let label = label_of_stack_expression func in
-        jani_function_call
-            label
-            [|string_of_stack_expression variable_names stack_expr|]
-            ~str_comment:(undeclared_function_warning label)
-
-    | Stack_sequence_function func ->
-        string_of_sequence_function variable_names func
-
-    | Stack_inline_function (function_name, _, args_expr, _) ->
+    | Stack_function_call (function_name, _, args_expr) ->
         string_of_function_call variable_names function_name args_expr
 
 and string_of_queue_expression variable_names = function
@@ -769,69 +590,11 @@ and string_of_queue_expression variable_names = function
     | Queue_variable variable_index -> json_quoted (variable_names variable_index)
     | Queue_local_variable variable_name -> json_quoted variable_name
 
-    | Queue_push (expr, queue_expr) as func ->
-        (* Get label of expression *)
-        let label = label_of_queue_expression func in
-        jani_function_call
-            label
-            [|
-                string_of_global_expression variable_names expr;
-                string_of_queue_expression variable_names queue_expr
-            |]
-            ~str_comment:(undeclared_function_warning label)
-
-    | Queue_clear queue_expr as func ->
-        (* Get label of expression *)
-        let label = label_of_queue_expression func in
-        jani_function_call
-            label
-            [|string_of_queue_expression variable_names queue_expr|]
-            ~str_comment:(undeclared_function_warning label)
-
-    | Queue_sequence_function func ->
-        string_of_sequence_function variable_names func
-
-    | Queue_inline_function (function_name, _, args_expr, _) ->
-        string_of_function_call variable_names function_name args_expr
-
-and string_of_sequence_function variable_names = function
-    | Array_access (access_type, index_expr) ->
+    | Queue_array_access (access_type, index_expr) ->
         string_of_expression_access variable_names access_type index_expr
-        
-    | List_hd list_expr as func ->
-        let label = label_of_sequence_function func in
-        jani_function_call
-            label
-            [|string_of_list_expression variable_names list_expr|]
-            ~str_comment:(undeclared_function_warning label)
 
-    | Stack_pop stack_expr as func ->
-        let label = label_of_sequence_function func in
-        jani_function_call
-            label
-            [|string_of_stack_expression variable_names stack_expr|]
-            ~str_comment:(undeclared_function_warning label)
-
-    | Stack_top stack_expr as func ->
-        let label = label_of_sequence_function func in
-        jani_function_call
-            label
-            [|string_of_stack_expression variable_names stack_expr|]
-            ~str_comment:(undeclared_function_warning label)
-
-    | Queue_pop queue_expr as func ->
-        let label = label_of_sequence_function func in
-        jani_function_call
-            label
-            [|string_of_queue_expression variable_names queue_expr|]
-            ~str_comment:(undeclared_function_warning label)
-
-    | Queue_top queue_expr as func ->
-        let label = label_of_sequence_function func in
-        jani_function_call
-            label
-            [|string_of_queue_expression variable_names queue_expr|]
-            ~str_comment:(undeclared_function_warning label)
+    | Queue_function_call (function_name, _, args_expr) ->
+        string_of_function_call variable_names function_name args_expr
 
 and string_of_expression_of_access_for_jani variable_names = function
     | Expression_array_access array_expr ->
@@ -848,10 +611,15 @@ and string_of_expression_access variable_names access_type index_expr =
 and string_of_function_call variable_names function_name args_expr =
     let str_args_expr_list = List.map (string_of_global_expression variable_names) args_expr in
     let str_args_expr_array = array_of_list str_args_expr_list in
-
-    jani_function_call
-        function_name
-        str_args_expr_array
+    match function_name, str_args_expr_list with
+    (* Special case, in Jani pow is an operator *)
+    | "pow", str_l_expr :: str_r_expr :: [] ->
+        jani_binary_operator "pow" str_l_expr str_r_expr
+    | _ ->
+        jani_function_call
+            function_name
+            str_args_expr_array
+            ~str_comment:(undeclared_function_warning function_name)
 
 (* Get list of non-linear constraint inequalities with customized strings *)
 let strings_of_nonlinear_constraint variable_names (* nonlinear_constraint *) =
@@ -898,17 +666,16 @@ let string_of_custom_user_functions model =
     (* Convert a function definition into a string *)
     let string_of_fun_definition fun_def =
 
-        print_warning ("Trying to translate `" ^ fun_def.name ^ "`");
+        print_warning ("Trying to translate `" ^ fun_def.name ^ "`.");
 
         (* Convert a function expression into a string *)
         let rec string_of_next_expr = function
+            | Fun_builtin _ -> ""
             | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
-                (* TODO benjamin see with etienne (add TODO in translation ?) *)
                 print_warning ("Local declaration of `" ^ variable_name ^ "` in function `" ^ fun_def.name ^ "` are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
             | Fun_instruction (discrete_update, next_expr) ->
-                (* TODO benjamin see with etienne (add TODO in translation ?) *)
                 print_warning ("Instruction found in function `" ^ fun_def.name ^ "`. Instructions are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
@@ -916,8 +683,8 @@ let string_of_custom_user_functions model =
                 string_of_global_expression model.variable_names expr
         in
 
-        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature in
-        let parameter_names_with_constraints = List.combine fun_def.parameters parameters_signature in
+        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
+        let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
         (* Convert parameters into a string *)
         let str_param_list = List.map (fun (param_name, type_constraint) ->
             jani_function_parameter param_name (string_of_type_constraint type_constraint)
@@ -925,19 +692,26 @@ let string_of_custom_user_functions model =
 
         let str_param_array = array_of_list str_param_list in
 
-        (* Format function definition *)
-        jani_function_declaration
-            fun_def.name
-            (string_of_type_constraint return_type_constraint)
-            str_param_array
-            (string_of_next_expr fun_def.body)
+        let str_fun_body = string_of_next_expr fun_def.body in
+
+        if str_fun_body <> "" then (
+            (* Format function definition *)
+            jani_function_declaration
+                fun_def.name
+                (string_of_type_constraint return_type_constraint)
+                str_param_array
+                (string_of_next_expr fun_def.body)
+        )
+        else
+            ""
+
 
     in
 
     print_warning "User defined functions are usually not well translated to Jani formalism.";
 
     (* Convert hashtbl values to list *)
-    let fun_definition_list = model.fun_definitions |> Hashtbl.to_seq_values |> List.of_seq in
+    let fun_definition_list = model.functions_table |> Hashtbl.to_seq_values |> List.of_seq in
     (* Map each definition to it's string representation *)
     let str_fun_definitions_list = List.map string_of_fun_definition fun_definition_list in
     let str_fun_definition_array = array_of_list str_fun_definitions_list in
