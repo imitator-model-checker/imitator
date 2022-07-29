@@ -31,13 +31,247 @@ let is_parsed_boolean_expression_constant variable_infos =
     for_all_in_parsed_boolean_expression (is_constant variable_infos)
 ```
 
-# Type inference
+____________
 
-TODO
+# Type checking / type inference
 
-# Function signature resolver
+ - Module: `ExpressionConverter`
+ - Functions: `type_check_{variant_type}`
 
-TODO
+Type checking is the process that check the type consistency of expressions and eventually infer the type of some literal values.
+
+__Type checking functions helps to:__
+
+ - Traverse the expression tree
+ - Deduce the types of the factors and sub-expressions of the tree
+ - Eventually infer the type of the factors of an expression
+ - Check that all sub-expressions are type compatibles
+ - Return a __typed tree__
+
+Factors can be a variable, a literal value, a function call. 
+
+Type check functions produce a __typed tree__ from __parsing tree__. The __typed tree__ is exactly the same as the __parsing tree__ but hold extra information that is the type of the expression.
+
+Then the produced __typed tree__ can be converted to the __abstract tree__ which is the target for executing IMITATOR algorithms.
+
+__Below a model example with some expressions that can be type checked:__
+
+```ocaml
+var
+
+  i1, i2 : int;
+  r1, r2 : rat;
+
+
+automaton P
+
+  loc s0: invariant True
+  (* type error because expression mix int and rat *)
+  when i1 + r1 = 10 goto lend;
+  (* type error because a guard should be a bool expression *)
+  when i1 goto lend;
+  (* expression below is ok, because 5 is inferred to rat *) 
+  when r1 * r2 = 5 goto lend; 
+  (* expression below is ok, because 5 is inferred to int *)
+  when i1 * i2 = 5 goto lend;
+  (* expression below is ok, as all literals are numbers *)
+  (* expression will be converted as a rat expression *)
+  when 2 * 2 = 4 goto lend;
+  do {
+    seq
+      (* ok *)
+      i1 := 8 * 2 + i2;
+      (* ok as i1 is converted to rat *)
+      r1 := rational_of_int(i1);
+      (* type error, because 4 is inferred to int because i1 is int *)
+      r2 := 4 * i1;
+  }
+  accepting loc lend : invariant True
+
+end
+```
+
+## Literal values
+
+The type of literal values can generally be inferred directly, when this isn't the case, __weak types__ are associated to these values.
+
+| Literal value form | Type |
+|-------------|---|
+| `True` | boolean |
+| `False` | boolean |
+| `['0'-'9']*'.'['0'-'9']+` | rational |
+| fractional number (eg: 5/3) | rational |
+| `['0'-'9']+` | number |
+| `"0b"['0'-'9']+` | binary word |
+| `[]` | weak array |
+| `list([])` | weak list |
+| `stack()` | weak stack |
+| `queue()` | weak queue |
+
+## Weak types
+
+__Weak types__, are temporary types linked to some values that we don't know the type for the moment. After the conversion from parsing structure to abstract model, there isn't any weak type left. It exists two weak types: `weak number` and `weak`. Weak types are inferred at the type checking step.
+
+### Weak number type
+
+By default, all literals numbers that aren't fractional (and without dot), for example `1`, `5`, `326` are of type `weak number` which mean: this value is a number, but for the moment, we don't know if it's a rational or an integer.
+
+### Weak type
+
+By default, all __empty__ arrays are of type `weak array`, lists of type `weak list`, and so on for stacks and queues. It means: this is an array (or list, ...) but for the moment, we don't know his inner type.
+
+## Compatible types
+
+Values with compatible types can be mixed in the same expression.
+
+| Type A| Type B|
+|-------|-------|
+| `bool`  | `bool` |
+| `rat`   | `rat`  |
+| `rat`   | `weak number` |
+| `int`   | `int`   |
+| `int`   | `weak number` |
+| `binary(l)`   | `binary(l)` |
+| `'a array(l)`   | `'a array(l)` |
+| `'a array(l)`   | `weak array(l)` |
+| `'a list`   | `'a list` |
+| `'a list`   | `weak list` |
+| `'a stack`   | `'a stack` |
+| `'a stack`   | `weak stack` |
+| `'a queue`   | `'a queue` |
+| `'a queue`   | `weak queue` |
+
+## Type strength
+
+Only compatible types can be compared. Note: `'a` is any non-weak type. A stronger type can replace a weaker type if compatible.
+
+ - `weak < 'a`
+ - `weak < weak number`
+ - `weak number < rat`
+ - `weak number < int`
+ - `weak array(l) < 'a array(l)`
+ - `weak list < 'a list`
+ - `weak stack < 'a stack` 
+ - `weak queue < 'a queue`
+
+## Inference
+
+To be inferred, a value type must be a `weak number` or a `weak sequence` (`weak array(l)`, `weak list`, ...). Moreover, type inference of a value can only be made if the given infer type is __compatible__ with the value type and the given infer type is __stronger__ than the value type.
+
+Whenever a sub-expression compound of many terms is reach, we compare the strength of each term. The stronger type is keep. This enables to infer weak type to stronger types. For example:
+
+```ocaml
+2 + 4 * i
+
+produce the tree
+
+    +
+   / \
+  2   *
+     / \
+    4   i
+```
+
+When traversing the tree expression, type checking functions do the following:
+
+ - deduce `4` as `weak number` 
+ - deduce variable `i` as `int`
+ - check that two factors are compatibles
+ - check that `*` operator is used on number types
+ - get the stronger type between the two terms, so as `weak number < int`, it get `int`
+ - deduce `2` as `weak number`
+ - check that two terms are compatibles
+ - check that `+` operator is used on number types
+ - get the stronger types between the two factors, so as `weak number < int` it get `int`
+ 
+### Assignment inference
+
+When an assignment to a variable is made (in an update for example), the type of the assigned variable is passed as argument in the type checking functions.
+
+Therefore, when a literal value with weak type is reach, the literal value is directly inferred, if possible, to the same type as the type given as argument. If it's not possible, a type error is raised immediately. For example: 
+
+```ocaml
+var i : int;
+...
+do {
+    (* 8, 2 literals will be inferred to int *)
+    i = 8 + 2
+}
+```
+
+```ocaml
+var b : bool;
+...
+do {
+    (* 8, 2 literals cannot be inferred to bool, so an error is raised *)
+    b = 8 + 2
+}
+```
+
+### Note on weak typed expressions
+
+If the expression remains weak typed after type checking it's not a problem. When the converter will reach it, it will convert this expression to the default type rational. For examples:
+
+- `5 + 8 * 2` will be deduced as `weak number` and converted to a rational expression.
+- `[]` will be deduced as `weak array(0)` and converted to `rational array(0)`.
+- `[2, 4]` will be deduced as `weak number array(2)` and converted to `rational array(2)`.
+
+____________
+
+## Type constraint resolver (function signature inference)
+
+In order to resolve type signature of built-in and user defined function, there is a module called `TypeConstraintResolver` that use `DiscreteType` and `FunctionSig` module to resolve the effective signature of a function according to the arguments passed when call it.
+
+__All type constraint resolutions and type checking of the functions was made in `ExpressionConverter` module at `Parsed_function_call` case.__
+
+### Type constraints
+
+Type constraints are used to define functions signatures. For example, `list_cons` has the signature:
+
+```ocaml
+Type_name_constraint "a";
+Defined_type_constraint (List_constraint (Type_name_constraint "a"));
+Defined_type_constraint (List_constraint (Type_name_constraint "a"))
+```
+
+which mean: `'a -> 'a list -> 'a list`. In other words, `list_cons` take as arguments an element of type `a`, a list of type `a` and return a list of type `a`. 
+
+### Type constraint resolver
+
+The `TypeConstraintResolver` module aim to resolve the actual signature of a function according to the way it was called, and check that there isn't any inconsistency between the given argument types. It enables to make the type checking on built-in and user defined functions calls.
+
+In this example above `a` is a type constraint that can be replaced by any type. A user can call this function in different ways, for example: `my_bool_list = list_cons(True, my_bool_list)`, `my_int_list = list_cons(1, my_int_list)`... In the first case, the type constraint resolver should resolve the call with signature `bool -> bool list -> bool list`, in the second case as `int -> int list -> int list`.
+
+In case of inconsistency, an error should be raised. For example, if the user make a call like this `my_bool_list = list_cons(0, my_bool_list)`, the actual signature is `int -> bool list -> weak` and type constraint `a` was resolved at the same time as `int` and `bool` which is inconsistent.
+
+### Dependent types
+
+Dependent types are types dependent to a value. In IMITATOR, array(k) and binary(k) are dependent types, because the value of their lengths takes part of the type. For example, `int array(1)` is not the same type as `int array(2)` and `binary(1)` is not the same type as `binary(2)`.
+
+The value of length, __must be a constant expression__. It mean that this expression can be resolved at the "compile" time. It's because IMITATOR need to resolve value of the length in the semantic analysis process in order to know the type of variables when the type checking is executed.
+
+Type constraints can represent dependent type, for example, `array_append` has the signature: 
+
+```ocaml
+Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l1")));
+Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l2")));
+Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_plus_constraint ("l1", Length_constraint_expression (Length_scalar_constraint "l2")))));
+```
+
+which mean: `'a array(l1) -> 'a array(l2) -> 'a array(l1 + l2)`. In other words, the function has an array of type `a` and length `l1`, an array of type `a` and length `l2` as arguments, and return an array of type `a` and length `l1` + `l2`.
+
+# Conversion
+
+ - Module: `ExpressionConverter.Convert`, `DiscreteExpressionConverter`
+ - Functions: `{abstract_expression}_of_{typed_expression}`
+
+When type checking succeed (no type errors), we obtain a __typed tree__ of the type checked expression. This __typed tree__ can now be converted into an __abstract tree__.
+
+The functions that makes the conversion just traverse the typed tree and look at the type of each sub-expressions to choose the correct tag of the abstract tree.
+
+For examplen the typed tree: `{i : int} + {2 : int} * {5 : int}` will be converted to an int arithmetic expression.
+
+____________
 
 # Graph dependency resolver
 
@@ -183,8 +417,8 @@ We consider as __used__ all components reachable from `system` (`sys` as you can
  - Unused user defined functions are always removed from the model.
  - Unused function parameter are only reported as a warning.
  - There is no unused local variables possible (see rules), so they will never be removed.
-  
 
+____________
 
 # Updates
 
@@ -201,7 +435,9 @@ Updates are makes at `AlgoStateBased.compute_new_location_guards_updates`.
 
 ### Sequential
 
-Sequential
+TODO
+
+____________
 
 ## Assignment mode
 
@@ -238,6 +474,8 @@ The functions that return reference can be found at:
 
  - `DiscreteExpressionEvaluator.eval_stack_expression_with_context`
  - `DiscreteExpressionEvaluator.eval_queue_expression_with_context`
+
+____________
 
 # Value packing
 
