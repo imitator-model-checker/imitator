@@ -1611,22 +1611,90 @@ The possible runtime errors include:
 \section{User defined functions}\label{section:user_defined_functions}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Users have the ability to declare their own functions, called user defined functions.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Declaration}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-Users have the ability to declare their own functions, called user defined functions.
-User defined functions have zero or many parameters and can return one value.
-All function parameters are passed by value.
+A user defined function can be compound of declarations (local variables), imperative instructions (modification of global variables) and must have one return expression.
 
-A user defined function can be compound of declarations, imperative instructions, and one return expression.
+User defined functions can have zero or many parameters and must return one value. Note that all function parameters are passed by value.
 
+User functions must be declared directly after the variable declarations and are global to all \IPTA.
+
+\paragraph{} Below, some user function declarations examples :
 
 \begin{IMITATORmodel}
-	fn my_custom_function() :
+	var
+		my_global_i, my_global_j : int;
+
+	fn two() : int
+	begin
+		(* Return 2 *)
+		1 + 1
+	end
+
+	fn add_one(i : int) : int
+	begin
+		(* Add one to i *)
+		i + 1
+	end
+
+	fn add(a : int, b : int) : int
+	begin
+		(* Add a to b *)
+		a + b
+	end
+
+	(* Linear interpolation example with some local variables *)
+	fn lerp(a : rat, b : rat, x : rat) : rat
+	begin
+		let length = b - a in
+		let pos = length * x in
+		a + pos
+	end
+
+	fn side_effect(i : int, j : int) : int
+	begin
+		(* Modify some global variables *)
+		my_global_i := i * 2;
+		my_global_j := j * 3;
+		my_global_i + my_global_j
+	end
+
 \end{IMITATORmodel}
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Some rules}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+\begin{itemize}
+	\item Modification of a clock or a parameter value is forbidden.
+	\item Modification of a function parameter value is forbidden.
+	\item Modification of a local variable value is forbidden.
+	\item As soon as you modify a global variable, function is marked as "side-effect function" and can only be used in updates.
+	\item Shadowing a global variable with a local one is available (local variable with the same name as a global variable).
+	\item Shadowing a local variable with a second one is available (local variable with the same name as a previously declared local variable).
+	\item Calls of another functions are available.
+	\item Recursive calls are forbidden.
+\end{itemize}
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Call}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+User defined functions can be called in guards, invariants or updates as the same manner as the built-in functions.
+Of course, side-effect functions cannot be used anywhere than in sequential updates.
+
+To illustrate the use of user defined functions, note that the following guard in the model fragment below will evaluate to true:
+
+\begin{IMITATORmodel}
+	when two() = 2 goto lend;
+	when add_one(5) = 6 goto lend;
+	when add(1, 2) = 3 goto lend;
+	when lerp(0, 5, 1 / 2) = 2.5 goto lend;
+\end{IMITATORmodel}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2825,8 +2893,12 @@ The only \imitator{} built-in function fully supported by our translation is the
 Partially supported \imitator{} built-in functions are the following: \styleIMI{shift\_left}, \styleIMI{shift\_right}, \styleIMI{fill\_left}, \styleIMI{fill\_right}.
 Because of binary words are encoded into integer variables, these functions could have a unspecified behaviors.
 
+\paragraph{User defined functions}
+
+We make the best effort to translate user defined functions into the \uppaal{} formalism, if possible.
+
 \begin{becareful}
-	Unsupported \imitator{} built-in functions will not be declared (and implemented) in \uppaal{} translation, resulting to a bad program when trying to call one. The declaration and implementation of these functions in \uppaal{}, if the \uppaal{} input syntax allows it, is the responsibility of the user.
+	Unsupported \imitator{} built-in / user defined functions will not be declared (and implemented) in \uppaal{} translation, resulting to a bad program when trying to call one. The declaration and implementation of these functions in \uppaal{}, if the \uppaal{} input syntax allows it, is the responsibility of the user.
 \end{becareful}
 
 \paragraph{Strong broadcast synchronization}
@@ -2876,7 +2948,7 @@ imitator model.imi -imi2HyTech
 
 \imitator{} will generate a file \stylePath{model.hy}. \\
 
-The syntax going beyond that of \hytech{} (typically, Booleans, binary words, arrays, lists…), which notably includes \imitator{} built-in functions, is obviously not translated correctly.
+The syntax going beyond that of \hytech{} (typically, Booleans, binary words, arrays, lists…), which notably includes \imitator{} built-in and user defined functions, is obviously not translated correctly.
 In addition, the translation of properties is not supported.
 % TODO
 
@@ -2959,6 +3031,10 @@ The only \imitator{} built-in function fully supported by our translation is the
 \begin{becareful}
 	Unsupported \imitator{} built-in functions will not be declared in \jani{} translation, resulting to a bad program when trying to call one of them. The declaration and implementation of these functions in \jani{}, if the \jani{} formalism allow it, is the responsability of the user.
 \end{becareful}
+
+\paragraph{User defined functions}
+
+As Jani doesn't seems to have a scheme that enable the declaration of local variables in user defined functions, for the moment, only the user defined functions containing one expression as a body are correctly translated.
 
 \paragraph{Properties}
 Properties are so far not translated to \jani{}.
@@ -3929,7 +4005,69 @@ We define each of those two components below.
 \regleGrammaire{automata\_descriptions}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{include\_file\_list} \nt{declarations} \nt{automata} \\
+	\  & \nt{include\_file\_list} \nt{declarations} \nt{decl\_fun\_lists} \nt{automata} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{decl\_fun\_lists}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{decl\_fun\_nonempty\_list} \\
+	$|$ & \emptystring
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{decl\_fun\_nonempty\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{decl\_fun\_def} \\
+	$|$ & \nt{decl\_fun\_nonempty\_list} \nt{decl\_fun\_def}
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{decl\_fun\_def}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{fn} \nt{<name>} \styleIMI{(} \nt{fun\_parameter\_list} \styleIMI{) : } \nt{var\_type\_discrete} \styleIMI{begin} \nt{fun\_body} \styleIMI{end} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{fun\_parameter\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{fun\_parameter\_nonempty\_list} \\
+	$|$ & \emptystring
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{fun\_parameter\_nonempty\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{<name>} \styleIMI{:} \nt{var\_type\_discrete} \\
+	$|$ & \nt{fun\_parameter\_list} \styleIMI{,} \nt{<name>} \styleIMI{:} \nt{var\_type\_discrete}
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{fun\_body}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{fun\_local\_decl} \\
+	$|$ & \nt{fun\_instruction} \\
+	$|$ & \nt{expression}
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{fun\_local\_decl}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{let} \nt{<name>} \styleIMI{:} \nt{var\_type\_discrete} \styleIMI{=} \nt{expression} \styleIMI{in} \nt{fun\_body} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{fun\_instruction}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{update} \styleIMI{;} \nt{fun\_body} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -5183,6 +5321,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{fill\_left} \\
 	\styleIMI{fill\_right} \\
 	\styleIMI{flow} \\
+	\styleIMI{fn} \\
 	\styleIMI{goto} \\
 	\styleIMI{happened} \\
 	\styleIMI{has} \\
