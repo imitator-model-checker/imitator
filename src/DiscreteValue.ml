@@ -20,9 +20,12 @@ open Exceptions
 (* Parsing structure modules *)
 open DiscreteType
 
+(* TODO benjamin CLEAN rename variants, rename module *)
 type parsed_value =
+    (* TODO benjamin rename a Weak_number_value *)
     | Number_value of NumConst.t
     | Rational_value of NumConst.t
+    (* TODO benjamin make literal int to have the use of this variant *)
     | Int_value of Int32.t
     | Bool_value of bool
     | Binary_word_value of BinaryWord.t

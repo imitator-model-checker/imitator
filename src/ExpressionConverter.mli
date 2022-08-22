@@ -3,6 +3,7 @@ module rec TypeChecker : sig
 open ParsingStructure
 open DiscreteType
 
+(* TODO benjamin MOVE to new module TypedExpression with all string functions *)
 type inner_type = var_type_discrete
 
 type typed_variable_scope =
@@ -51,6 +52,7 @@ and typed_product_quotient =
 
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete * typed_variable_scope
+	(* TODO benjamin see if possible to change DiscreteValue.parsed_value to abstract value which allow to remove to_int_value and other convert function of DiscreteValue *)
 	| Typed_constant of DiscreteValue.parsed_value * var_type_discrete
 	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
 	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete

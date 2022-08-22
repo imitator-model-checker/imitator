@@ -21,6 +21,7 @@
 type var_type_discrete_number =
     | Var_type_discrete_rat
     | Var_type_discrete_int
+    (* TODO benjamin rename to weak_number *)
     | Var_type_discrete_unknown_number
 
 (* Specific type of discrete variables *)
