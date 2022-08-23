@@ -467,16 +467,30 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
     in
 
     (* Eval function body *)
-    let rec eval_fun_body_with_context eval_context_opt = function
+    let rec eval_fun_body_with_context eval_context = function
+        | Fun_local_decl (variable_name, _, expr, next_expr) ->
+            let value = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in
+            Hashtbl.add eval_context.local_variables variable_name value;
+
+            eval_fun_body_with_context eval_context next_expr
+
+        | Fun_instruction (normal_update, next_expr) ->
+            direct_update_with_context variable_names functions_table_opt eval_context normal_update;
+            eval_fun_body_with_context eval_context next_expr
+
+        | Fun_expr expr ->
+            eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr
+    in
+
+    (* Eval function *)
+    let eval_fun_type_with_context eval_context_opt = function
         | Fun_builtin builtin_f ->
             (* Execute built-in function given argument values *)
             let l_del, r_del = Constants.default_paren_delimiter in
             let str_fun_call = function_name ^ l_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " param_names ^ r_del in
             builtin_f str_fun_call arg_values
 
-        | Fun_local_decl (variable_name, _, expr, next_expr) ->
-
-            (* TODO benjamin IMPLEMENT HERE group Fun_local_decl and Fun_instruction in Fun_user_function to make this checking one time only *)
+        | Fun_user f ->
             let eval_context =
                 match eval_context_opt with
                 | Some eval_context -> eval_context
@@ -487,32 +501,10 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
                     Some checks may failed before."
                 )
             in
+            eval_fun_body_with_context eval_context f
 
-            let value = eval_global_expression_with_context variable_names functions_table_opt eval_context_opt expr in
-            Hashtbl.add eval_context.local_variables variable_name value;
-
-            eval_fun_body_with_context eval_context_opt next_expr
-
-        | Fun_instruction (normal_update, next_expr) ->
-
-            let eval_context =
-                match eval_context_opt with
-                | Some eval_context -> eval_context
-                | None -> raise (InternalError
-                    "Trying to evaluate a function without `eval_context`.
-                    Only constant expression can be evaluated without context
-                    and constant expression can't contains functions calls.
-                    Some checks may failed before."
-                )
-            in
-
-            direct_update_with_context variable_names functions_table_opt eval_context normal_update;
-            eval_fun_body_with_context eval_context_opt next_expr
-
-        | Fun_expr expr ->
-            eval_global_expression_with_context variable_names functions_table_opt eval_context_opt expr
     in
-    eval_fun_body_with_context new_eval_context_opt fun_def.body
+    eval_fun_type_with_context new_eval_context_opt fun_def.body
 
 
 and compute_update_value_opt_with_context variable_names functions_table_opt eval_context (update_type, expr) =

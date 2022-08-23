@@ -2856,7 +2856,7 @@ let fun_definition_of_typed_fun_definition variable_infos (typed_fun_definition 
         name = typed_fun_definition.name;
         parameter_names = typed_fun_definition.parameters;
         signature_constraint = FunctionSig.signature_constraint_of_signature typed_fun_definition.signature;
-        body = fun_body_of_typed_fun_body variable_infos typed_fun_definition.body;
+        body = Fun_user (fun_body_of_typed_fun_body variable_infos typed_fun_definition.body);
         side_effect = typed_fun_definition.side_effect
     }
 
