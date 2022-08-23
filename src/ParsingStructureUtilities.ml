@@ -1107,21 +1107,21 @@ let get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref 
         (function _ -> ())
         (add_variable_of_discrete_boolean_expression variables_used_ref)
 
-(* TODO benjamin create function that gather all local variables and reduce this one *)
 (* Gather all variable names (global variables only) used in a parsed function definition in a given accumulator *)
 let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def : parsed_fun_definition) =
 
     (* Add parameters as local variables *)
     let parameter_names = List.map first_of_tuple fun_def.parameters in
     let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
+    let local_variables_ref = ref local_variables in
 
     (* Check if all variables defined in user function body using local variables set *)
-    let rec get_variables_in_parsed_next_expr_rec local_variables = function
+    let rec get_variables_in_parsed_next_expr_rec local_variables_ref = function
         | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, id) ->
             (* Add the new declared local variable to set *)
-            let local_variables = StringSet.add variable_name local_variables in
+            local_variables_ref := StringSet.add variable_name !local_variables_ref;
             (* Gather variables in next expressions *)
-            get_variables_in_parsed_next_expr_rec local_variables next_expr;
+            get_variables_in_parsed_next_expr_rec local_variables_ref next_expr;
             (* Gather variables in init expression *)
             iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) init_expr
 
@@ -1129,15 +1129,15 @@ let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def 
             (* Gather variables in normal update *)
             get_variables_in_parsed_normal_update_with_accumulator variable_used_ref normal_update;
             (* Gather variables in next expressions *)
-            get_variables_in_parsed_next_expr_rec local_variables next_expr;
+            get_variables_in_parsed_next_expr_rec local_variables_ref next_expr;
 
         | Parsed_fun_expr expr ->
             iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) expr
 
     in
-    get_variables_in_parsed_next_expr_rec local_variables fun_def.body;
+    get_variables_in_parsed_next_expr_rec local_variables_ref fun_def.body;
     (* Remove local variables from variable found in function (because we need to get only global variables and local variables shadow global variables) *)
-    variable_used_ref := StringSet.diff !variable_used_ref local_variables
+    variable_used_ref := StringSet.diff !variable_used_ref !local_variables_ref
 
 (* Create and wrap an accumulator then return result directly *)
 let wrap_accumulator f expr =
