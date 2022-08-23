@@ -21,7 +21,7 @@ open CustomModules
 (* Leaf for parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of variable_name
-    | Leaf_constant of DiscreteValue.parsed_value
+    | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
 
 (* Leaf for parsed update *)
@@ -459,7 +459,7 @@ and string_of_parsed_factor variable_infos = function
             ^ AbstractValue.string_of_value value
         ) else
             variable_name
-    | Parsed_DF_constant value -> DiscreteValue.string_of_value value
+    | Parsed_DF_constant value -> ParsedValue.string_of_value value
     | Parsed_sequence (expr_list, seq_type) as seq ->
         let str_elements = List.map (string_of_parsed_boolean_expression variable_infos) expr_list in
         let str_array = "[" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_elements ^ "]" in
@@ -874,14 +874,14 @@ and is_linear_parsed_factor variable_infos = function
         | Var_type_clock
         | Var_type_parameter
         | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rat)
-        | Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number) -> true
+        | Var_type_discrete (Var_type_discrete_number Var_type_discrete_weak_number) -> true
         | Var_type_discrete _ -> false
         )
     (* only rational constant *)
     | Parsed_DF_constant value ->
         (match value with
         | Rational_value _
-        | Number_value _ -> true
+        | Weak_number_value _ -> true
         | _ -> false
         )
     | Parsed_DF_expression expr ->
@@ -1301,13 +1301,13 @@ and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = fun
 (* If it's not possible, we raise an InvalidExpression exception *)
 and try_convert_linear_term_of_parsed_discrete_factor = function
         | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name)
-        | Parsed_DF_constant value -> Constant (DiscreteValue.to_numconst_value value)
+        | Parsed_DF_constant value -> Constant (ParsedValue.to_numconst_value value)
         | Parsed_DF_unary_min parsed_discrete_factor ->
             (* Check for unary min, negate variable and constant *)
             (match parsed_discrete_factor with
                 | Parsed_DF_variable variable_name -> Variable(NumConst.minus_one, variable_name)
                 | Parsed_DF_constant value ->
-                    let numconst_value = DiscreteValue.to_numconst_value value in
+                    let numconst_value = ParsedValue.to_numconst_value value in
                     Constant (NumConst.neg numconst_value)
                 | _ -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
             )

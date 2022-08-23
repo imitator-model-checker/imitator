@@ -18,7 +18,7 @@ open CustomModules
 (* Leaf of parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of string
-    | Leaf_constant of DiscreteValue.parsed_value
+    | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
 
 (* Leaf for parsed update *)

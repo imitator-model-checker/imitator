@@ -702,7 +702,7 @@ let discrete_init_of_discrete_linear_predicate variable_infos = function
             match (op, expression) with
             (* Simple constant: OK *)
             | (PARSED_OP_EQ, Linear_term (Constant c)) ->
-                let rational_value = DiscreteValue.Number_value c in
+                let rational_value = ParsedValue.Weak_number_value c in
                 My_left (
                     updated_variable_name,
                     Parsed_global_expression (
@@ -714,7 +714,7 @@ let discrete_init_of_discrete_linear_predicate variable_infos = function
                 )
             (* Constant: OK *)
             | (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
-                let coef_rational_value = DiscreteValue.Number_value coef in
+                let coef_rational_value = ParsedValue.Weak_number_value coef in
                 My_left (
                     updated_variable_name,
                     Parsed_global_expression (
@@ -1276,7 +1276,7 @@ let is_only_resets variable_infos updates =
         (* An expression to zero *)
         let is_update_to_zero =
             match update with
-            | Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant value))))) when DiscreteValue.is_zero value -> true
+            | Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant value))))) when ParsedValue.is_zero value -> true
             | _ -> false
         in
         (* Check if it's a clock *)

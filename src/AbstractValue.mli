@@ -12,7 +12,7 @@
  ************************************************************)
 
  (* Parsing structure module *)
-open DiscreteValue
+open ParsedValue
 open DiscreteType
 
 type abstract_number_value =

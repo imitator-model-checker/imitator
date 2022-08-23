@@ -400,8 +400,8 @@ arithmetic_factor:
 
 literal_scalar_constant:
   | number { $1 }
-  | CT_TRUE { DiscreteValue.Bool_value true }
-  | CT_FALSE { DiscreteValue.Bool_value false }
+  | CT_TRUE { ParsedValue.Bool_value true }
+  | CT_FALSE { ParsedValue.Bool_value false }
   | binary_word { $1 }
 ;
 
@@ -430,13 +430,13 @@ function_argument_fol:
 
 
 number:
-	| integer { DiscreteValue.Number_value $1 }
-	| float { DiscreteValue.Rational_value $1 }
-	/*| integer OP_DIV pos_integer { ( DiscreteValue.Rational_value (NumConst.div $1 $3)) }*/
+	| integer { ParsedValue.Weak_number_value $1 }
+	| float { ParsedValue.Rational_value $1 }
+	/*| integer OP_DIV pos_integer { ( ParsedValue.Rational_value (NumConst.div $1 $3)) }*/
 ;
 
 binary_word:
-        BINARYWORD { DiscreteValue.Binary_word_value (BinaryWord.binaryword_of_string $1) }
+        BINARYWORD { ParsedValue.Binary_word_value (BinaryWord.binaryword_of_string $1) }
 ;
 
 
@@ -490,7 +490,7 @@ pos_float:
 ;
 
 binary_word:
-        BINARYWORD { DiscreteValue.Binary_word_value (BinaryWord.binaryword_of_string $1) }
+        BINARYWORD { ParsedValue.Binary_word_value (BinaryWord.binaryword_of_string $1) }
 ;
 
 /************************************************************/

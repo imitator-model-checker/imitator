@@ -16,7 +16,7 @@ open Exceptions
 open Constants
 
  (* Parsing structure modules *)
-open DiscreteValue
+open ParsedValue
 open DiscreteType
 
 type abstract_number_value =
@@ -267,7 +267,7 @@ let to_rat_value = function
     | v -> raise (InternalError ("Unable to convert `" ^ string_of_value v ^ "` to NumConst.t value"))
 
 let rec of_parsed_value = function
-    | Number_value v -> raise (InternalError "Unable to convert number value to abstract value")
+    | Weak_number_value v -> raise (InternalError "Unable to convert number value to abstract value")
     | Rational_value v -> Abstract_scalar_value (Abstract_number_value (Abstract_rat_value v))
     | Int_value v -> Abstract_scalar_value (Abstract_number_value (Abstract_int_value v))
     | Bool_value v -> Abstract_scalar_value (Abstract_bool_value v)

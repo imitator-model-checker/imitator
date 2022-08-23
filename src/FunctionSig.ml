@@ -21,7 +21,7 @@ open Exceptions
 
 (* Parsing structure modules *)
 open DiscreteType
-open DiscreteValue
+open ParsedValue
 
 (* Abstract modules *)
 open DiscreteExpressions
@@ -154,7 +154,7 @@ let is_discrete_type_compatible_with_defined_type_number_constraint discrete_num
     match discrete_number_type, defined_type_number_constraint with
     | Var_type_discrete_int, Int_constraint _
     | Var_type_discrete_rat, Rat_constraint
-    | Var_type_discrete_unknown_number, _ -> true
+    | Var_type_discrete_weak_number, _ -> true
     | _ -> false
 
 let is_discrete_type_compatible_with_type_number_constraint discrete_number_type = function
@@ -196,7 +196,7 @@ let type_number_constraint_of_discrete_number_type = function
     | Var_type_discrete_rat -> Rat_constraint
     | Var_type_discrete_int -> Int_constraint Int_type_constraint
     (* Note benjamin: a case that never happen shouldn't appear, due to a bad modeling, to fix *)
-    | Var_type_discrete_unknown_number -> raise (InternalError "should never happen")
+    | Var_type_discrete_weak_number -> raise (InternalError "should never happen")
 
 let type_constraint_of_discrete_type discrete_type =
     let rec type_constraint_of_discrete_type_rec = function

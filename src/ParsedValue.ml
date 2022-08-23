@@ -20,10 +20,8 @@ open Exceptions
 (* Parsing structure modules *)
 open DiscreteType
 
-(* TODO benjamin CLEAN rename variants, rename module *)
 type parsed_value =
-    (* TODO benjamin rename a Weak_number_value *)
-    | Number_value of NumConst.t
+    | Weak_number_value of NumConst.t
     | Rational_value of NumConst.t
     (* TODO benjamin make literal int to have the use of this variant *)
     | Int_value of Int32.t
@@ -36,7 +34,7 @@ type parsed_value =
 
 (* Get discrete var type of a discrete value *)
 let rec discrete_type_of_value = function
-    | Number_value _ -> Var_type_discrete_number Var_type_discrete_unknown_number
+    | Weak_number_value _ -> Var_type_discrete_number Var_type_discrete_weak_number
     | Rational_value _ -> Var_type_discrete_number Var_type_discrete_rat
     | Int_value _ -> Var_type_discrete_number Var_type_discrete_int
     | Bool_value _ -> Var_type_discrete_bool
@@ -74,7 +72,7 @@ let customized_string_of_value customized_string =
     let l_par_del, r_par_del = Constants.default_paren_delimiter in
 
     let rec customized_string_of_value_rec = function
-        | Number_value x
+        | Weak_number_value x
         | Rational_value x -> NumConst.string_of_numconst x
         | Bool_value x -> if x then customized_string.boolean_string.true_string else customized_string.boolean_string.false_string
         | Int_value x -> Int32.to_string x
@@ -121,7 +119,7 @@ let default_queue_value = Queue_value (Queue.create ())
 
 
 let is_zero = function
-    | Number_value value
+    | Weak_number_value value
     | Rational_value value -> value = NumConst.zero
     | Int_value value -> value = Int32.zero
     | value -> false
@@ -171,7 +169,7 @@ let queue_value = function
 
 (* Convert any discrete value to NumConst.t value, if possible *)
 let to_numconst_value = function
-    | Number_value x
+    | Weak_number_value x
     | Rational_value x -> x
     (* Warning, a bit is lost when converting on 32 bit platform !*)
     | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
@@ -181,7 +179,7 @@ let to_numconst_value = function
 (* Convert any discrete value to Int32 value, if possible *)
 let to_int_value = function
     (* Warning !!!! conversion to int should be dependant of the platform ! *)
-    | Number_value x
+    | Weak_number_value x
     | Rational_value x -> Int32.of_int (NumConst.to_int x)
     | Bool_value x -> if x then Int32.one else Int32.zero
     (* Warning, a bit is lost when converting on 32 bit platform !*)

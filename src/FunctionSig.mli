@@ -18,7 +18,7 @@
 
 (* Parsing structure modules *)
 open DiscreteType
-open DiscreteValue
+open ParsedValue
 
 (* Name of constraint *)
 type constraint_name = string

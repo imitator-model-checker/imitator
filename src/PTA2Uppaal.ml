@@ -63,7 +63,7 @@ let scaling_factor = 200
 
 (* Customized string of discrete number type *)
 let string_of_var_type_discrete_number = function
-    | Var_type_discrete_unknown_number
+    | Var_type_discrete_weak_number
     | Var_type_discrete_rat -> "int"
     | Var_type_discrete_int -> "int"
 

@@ -92,7 +92,7 @@ and parsed_product_quotient =
 
 and parsed_discrete_factor =
 	| Parsed_DF_variable of variable_name
-	| Parsed_DF_constant of DiscreteValue.parsed_value
+	| Parsed_DF_constant of ParsedValue.parsed_value
 	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
     | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression

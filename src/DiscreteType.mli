@@ -21,7 +21,7 @@
 type var_type_discrete_number =
     | Var_type_discrete_rat
     | Var_type_discrete_int
-    | Var_type_discrete_unknown_number
+    | Var_type_discrete_weak_number
 
 (* Specific type of discrete variables *)
 type var_type_discrete =

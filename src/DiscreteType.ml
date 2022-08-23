@@ -21,8 +21,7 @@
 type var_type_discrete_number =
     | Var_type_discrete_rat
     | Var_type_discrete_int
-    (* TODO benjamin rename to weak_number *)
-    | Var_type_discrete_unknown_number
+    | Var_type_discrete_weak_number
 
 (* Specific type of discrete variables *)
 type var_type_discrete =
@@ -52,7 +51,7 @@ type var_type =
 let string_of_var_type_discrete_number = function
     | Var_type_discrete_rat -> "rational"
     | Var_type_discrete_int -> "int"
-    | Var_type_discrete_unknown_number -> "number"
+    | Var_type_discrete_weak_number -> "number"
 
 (* String of discrete var type *)
 let rec string_of_var_type_discrete = function
@@ -89,18 +88,18 @@ let is_discrete_type_number_type = function
 
 (* Check if discrete type is a Var_type_unknown_number *)
 let is_discrete_type_unknown_number_type = function
-    | Var_type_discrete_number Var_type_discrete_unknown_number -> true
+    | Var_type_discrete_number Var_type_discrete_weak_number -> true
     | _ -> false
 
 (* Check if discrete type is not a Var_type_unknown_number *)
 let is_discrete_type_known_number_type = function
-    | Var_type_discrete_number Var_type_discrete_unknown_number -> false
+    | Var_type_discrete_number Var_type_discrete_weak_number -> false
     | Var_type_discrete_number _ -> true
     | _ -> false
 
 (* Check if discrete type is, or holding a inner type that is unknown number type *)
 let rec is_discrete_type_holding_unknown_number_type = function
-    | Var_type_discrete_number Var_type_discrete_unknown_number -> true
+    | Var_type_discrete_number Var_type_discrete_weak_number -> true
     | Var_type_discrete_array (inner_type, _)
     | Var_type_discrete_list inner_type
     | Var_type_discrete_stack inner_type
@@ -108,7 +107,7 @@ let rec is_discrete_type_holding_unknown_number_type = function
     | _ -> false
 
 let rec is_discrete_type_holding_known_number_type = function
-    | Var_type_discrete_number Var_type_discrete_unknown_number -> false
+    | Var_type_discrete_number Var_type_discrete_weak_number -> false
     | Var_type_discrete_number _ -> true
     | Var_type_discrete_array (inner_type, _)
     | Var_type_discrete_list inner_type
@@ -135,7 +134,7 @@ let rec extract_inner_type = function
 (* For example : 1 is unknown number, it will be a rational, [1,2] is an array of unknown number, it will be *)
 (* an array of rational *)
 let rec default_type_of_type_holding_unknown_number_type = function
-    | Var_type_discrete_number Var_type_discrete_unknown_number -> Var_type_discrete_number Var_type_discrete_rat
+    | Var_type_discrete_number Var_type_discrete_weak_number -> Var_type_discrete_number Var_type_discrete_rat
     | Var_type_discrete_array (inner_type, length) -> Var_type_discrete_array (default_type_of_type_holding_unknown_number_type inner_type, length)
     | Var_type_discrete_list inner_type -> Var_type_discrete_list (default_type_of_type_holding_unknown_number_type inner_type)
     | Var_type_discrete_stack inner_type -> Var_type_discrete_stack (default_type_of_type_holding_unknown_number_type inner_type)
@@ -181,8 +180,8 @@ let rec is_discrete_type_compatibles var_type expr_type =
     | _, Var_type_weak
     | Var_type_weak, _ -> true
     (* any number type with literal number *)
-    | Var_type_discrete_number _, Var_type_discrete_number Var_type_discrete_unknown_number
-    | Var_type_discrete_number Var_type_discrete_unknown_number, Var_type_discrete_number _ -> true
+    | Var_type_discrete_number _, Var_type_discrete_number Var_type_discrete_weak_number
+    | Var_type_discrete_number Var_type_discrete_weak_number, Var_type_discrete_number _ -> true
     (* Two array of same type are compatibles *)
     | Var_type_discrete_array (l_inner_type, l_length), Var_type_discrete_array (r_inner_type, r_length) when l_length = r_length ->
         is_discrete_type_compatibles l_inner_type r_inner_type
@@ -199,8 +198,8 @@ let rec is_discrete_type_compatibles var_type expr_type =
 (* order: number < int = rat *)
 let stronger_discrete_number_type_of discrete_number_type_a discrete_number_type_b =
     match discrete_number_type_a, discrete_number_type_b with
-    | Var_type_discrete_unknown_number, Var_type_discrete_int
-    | Var_type_discrete_unknown_number, Var_type_discrete_rat -> discrete_number_type_b
+    | Var_type_discrete_weak_number, Var_type_discrete_int
+    | Var_type_discrete_weak_number, Var_type_discrete_rat -> discrete_number_type_b
     | _ -> discrete_number_type_a
 
 (* Get the stronger type between two given types, see stronger_discrete_number_type_of *)

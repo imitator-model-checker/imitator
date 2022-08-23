@@ -196,7 +196,7 @@ let jani_compound_datatype_ref str_datatype str_compound_datatype =
 let string_of_var_type_discrete_number = function
     | Var_type_discrete_rat -> json_quoted "real"
     | Var_type_discrete_int -> json_quoted "int"
-    | Var_type_discrete_unknown_number -> json_quoted "number"
+    | Var_type_discrete_weak_number -> json_quoted "number"
 
 (* String of discrete var type *)
 let rec string_of_var_type_discrete = function
