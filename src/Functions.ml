@@ -20,7 +20,7 @@ open OCamlUtilities
 
 (* Parsing structure modules *)
 open DiscreteType
-open DiscreteValue
+open ParsedValue
 open ParsingStructure
 open ParsingStructureUtilities
 

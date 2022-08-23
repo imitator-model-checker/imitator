@@ -21,7 +21,7 @@ open CustomModules
 (* Leaf for parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of variable_name
-    | Leaf_constant of DiscreteValue.parsed_value
+    | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
 
 (* Leaf for parsed update *)
@@ -459,7 +459,7 @@ and string_of_parsed_factor variable_infos = function
             ^ AbstractValue.string_of_value value
         ) else
             variable_name
-    | Parsed_DF_constant value -> DiscreteValue.string_of_value value
+    | Parsed_DF_constant value -> ParsedValue.string_of_value value
     | Parsed_sequence (expr_list, seq_type) as seq ->
         let str_elements = List.map (string_of_parsed_boolean_expression variable_infos) expr_list in
         let str_array = "[" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_elements ^ "]" in
@@ -874,14 +874,14 @@ and is_linear_parsed_factor variable_infos = function
         | Var_type_clock
         | Var_type_parameter
         | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rat)
-        | Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number) -> true
+        | Var_type_discrete (Var_type_discrete_number Var_type_discrete_weak_number) -> true
         | Var_type_discrete _ -> false
         )
     (* only rational constant *)
     | Parsed_DF_constant value ->
         (match value with
         | Rational_value _
-        | Number_value _ -> true
+        | Weak_number_value _ -> true
         | _ -> false
         )
     | Parsed_DF_expression expr ->
@@ -1107,21 +1107,21 @@ let get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref 
         (function _ -> ())
         (add_variable_of_discrete_boolean_expression variables_used_ref)
 
-(* TODO benjamin create function that gather all local variables and reduce this one *)
 (* Gather all variable names (global variables only) used in a parsed function definition in a given accumulator *)
 let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def : parsed_fun_definition) =
 
     (* Add parameters as local variables *)
     let parameter_names = List.map first_of_tuple fun_def.parameters in
     let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
+    let local_variables_ref = ref local_variables in
 
     (* Check if all variables defined in user function body using local variables set *)
-    let rec get_variables_in_parsed_next_expr_rec local_variables = function
+    let rec get_variables_in_parsed_next_expr_rec local_variables_ref = function
         | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, id) ->
             (* Add the new declared local variable to set *)
-            let local_variables = StringSet.add variable_name local_variables in
+            local_variables_ref := StringSet.add variable_name !local_variables_ref;
             (* Gather variables in next expressions *)
-            get_variables_in_parsed_next_expr_rec local_variables next_expr;
+            get_variables_in_parsed_next_expr_rec local_variables_ref next_expr;
             (* Gather variables in init expression *)
             iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) init_expr
 
@@ -1129,15 +1129,15 @@ let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def 
             (* Gather variables in normal update *)
             get_variables_in_parsed_normal_update_with_accumulator variable_used_ref normal_update;
             (* Gather variables in next expressions *)
-            get_variables_in_parsed_next_expr_rec local_variables next_expr;
+            get_variables_in_parsed_next_expr_rec local_variables_ref next_expr;
 
         | Parsed_fun_expr expr ->
             iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) expr
 
     in
-    get_variables_in_parsed_next_expr_rec local_variables fun_def.body;
+    get_variables_in_parsed_next_expr_rec local_variables_ref fun_def.body;
     (* Remove local variables from variable found in function (because we need to get only global variables and local variables shadow global variables) *)
-    variable_used_ref := StringSet.diff !variable_used_ref local_variables
+    variable_used_ref := StringSet.diff !variable_used_ref !local_variables_ref
 
 (* Create and wrap an accumulator then return result directly *)
 let wrap_accumulator f expr =
@@ -1301,13 +1301,13 @@ and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = fun
 (* If it's not possible, we raise an InvalidExpression exception *)
 and try_convert_linear_term_of_parsed_discrete_factor = function
         | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name)
-        | Parsed_DF_constant value -> Constant (DiscreteValue.to_numconst_value value)
+        | Parsed_DF_constant value -> Constant (ParsedValue.to_numconst_value value)
         | Parsed_DF_unary_min parsed_discrete_factor ->
             (* Check for unary min, negate variable and constant *)
             (match parsed_discrete_factor with
                 | Parsed_DF_variable variable_name -> Variable(NumConst.minus_one, variable_name)
                 | Parsed_DF_constant value ->
-                    let numconst_value = DiscreteValue.to_numconst_value value in
+                    let numconst_value = ParsedValue.to_numconst_value value in
                     Constant (NumConst.neg numconst_value)
                 | _ -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
             )

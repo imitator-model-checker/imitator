@@ -16,7 +16,7 @@
 open Exceptions
 open ParsingStructure
 open DiscreteType
-open DiscreteValue
+open ParsedValue
 open OCamlUtilities
 
 (* Variable kind type represent a variable or a constant kind *)

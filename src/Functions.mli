@@ -17,7 +17,7 @@
 (* Parsing structure modules *)
 open ParsingStructure
 open DiscreteType
-open DiscreteValue
+open ParsedValue
 
 (* Abstract modules *)
 open FunctionSig

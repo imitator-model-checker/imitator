@@ -23,7 +23,7 @@ open DiscreteType
 (* Discrete value of different specific types *)
 
 type parsed_value =
-    | Number_value of NumConst.t
+    | Weak_number_value of NumConst.t
     | Rational_value of NumConst.t
     | Int_value of Int32.t
     | Bool_value of bool

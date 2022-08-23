@@ -63,7 +63,7 @@ and typed_product_quotient =
 
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete * typed_variable_scope
-	| Typed_constant of DiscreteValue.parsed_value * var_type_discrete
+	| Typed_constant of ParsedValue.parsed_value * var_type_discrete
 	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
 	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_unary_min of typed_discrete_factor * var_type_discrete_number
@@ -193,7 +193,7 @@ and typed_product_quotient =
 
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete * typed_variable_scope
-	| Typed_constant of DiscreteValue.parsed_value * var_type_discrete
+	| Typed_constant of ParsedValue.parsed_value * var_type_discrete
     | Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
     | Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_unary_min of typed_discrete_factor * var_type_discrete_number
@@ -334,7 +334,7 @@ and string_of_typed_discrete_factor variable_infos discrete_type = function
 	| Typed_variable (variable_name, _, _) ->
 	    string_format_typed_node variable_name discrete_type
 	| Typed_constant (value, _) ->
-        string_format_typed_node (DiscreteValue.string_of_value value) discrete_type
+        string_format_typed_node (ParsedValue.string_of_value value) discrete_type
 
     | Typed_sequence (list_expr, _, seq_type) ->
 	    let l_del, r_del = Constants.default_array_string.array_literal_delimiter in
@@ -464,6 +464,7 @@ and string_of_typed_state_predicate variable_infos = function
 (* ------------------------------------------------------------------ *)
 (* ------------------------------------------------------------------ *)
 
+(* Message when many members of an expression are not compatibles *)
 let ill_typed_message_of_expressions str_expressions discrete_types str_outer_expr =
     let x = List.combine str_expressions discrete_types in
     let str_expressions_with_type_list = List.map (fun (str_expr, discrete_type) -> "`" ^ str_expr ^ ":" ^ DiscreteType.string_of_var_type_discrete discrete_type ^ "`") x in
@@ -475,6 +476,7 @@ let ill_typed_message_of_expressions str_expressions discrete_types str_outer_ex
     ^ str_outer_expr
     ^ "` are ill-typed or incompatibles."
 
+(* Message when two members of an expression are not compatibles *)
 let ill_typed_message str_left_expr str_right_expr str_outer_expr l_type r_type =
     "Some of the expressions `"
     ^ str_left_expr
@@ -487,6 +489,18 @@ let ill_typed_message str_left_expr str_right_expr str_outer_expr l_type r_type 
     ^ "` in `"
     ^ str_outer_expr
     ^ "` are ill-typed or incompatibles."
+
+(* Message when variable type not compatible with assigned expression type *)
+let ill_typed_variable_message variable_name str_discrete_type str_expr expr_discrete_type =
+    "Variable `"
+    ^ variable_name
+    ^ "` of type "
+    ^ str_discrete_type
+    ^ " is not compatible with expression `"
+    ^ str_expr
+    ^ "` of type "
+    ^ DiscreteType.string_of_var_type_discrete expr_discrete_type
+    ^ "."
 
 (* Get inner type of a collection analysing types of it's elements *)
 (* If the collection is empty, it's type will be inferred by the context *)
@@ -677,8 +691,8 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
 
             (* Doing division *)
-            let l_numconst = DiscreteValue.to_numconst_value lv in
-            let r_numconst = DiscreteValue.to_numconst_value rv in
+            let l_numconst = ParsedValue.to_numconst_value lv in
+            let r_numconst = ParsedValue.to_numconst_value rv in
             let numconst_value = NumConst.div l_numconst r_numconst in
             (* Check if result is representable by an int *)
             let can_be_int = NumConst.is_int numconst_value in
@@ -686,7 +700,7 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
             (* If it's representable by an int, it can be a rational or an int *)
             let discrete_number_type =
                 if can_be_int then
-                    Var_type_discrete_unknown_number
+                    Var_type_discrete_weak_number
                 (* If it's not representable by an int, it's a rational *)
                 else
                     Var_type_discrete_rat
@@ -754,20 +768,20 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         (* we can infer directly unknown number to infer type *)
         let infer_discrete_type =
             match infer_type_opt, discrete_type with
-            | Some ((Var_type_discrete_number _) as infer_type), Var_type_discrete_number Var_type_discrete_unknown_number -> infer_type
+            | Some ((Var_type_discrete_number _) as infer_type), Var_type_discrete_number Var_type_discrete_weak_number -> infer_type
             | _ -> discrete_type
         in
 
         Typed_variable (variable_name, infer_discrete_type, scope), infer_discrete_type, false
 
 	| Parsed_DF_constant value ->
-        let discrete_type = DiscreteValue.discrete_type_of_value value in
+        let discrete_type = ParsedValue.discrete_type_of_value value in
 
         (* If infer type is given and discrete type is unknown number *)
         (* we can infer directly unknown number to infer type *)
         let infer_discrete_type =
             match infer_type_opt, discrete_type with
-            | Some ((Var_type_discrete_number _) as infer_type), Var_type_discrete_number Var_type_discrete_unknown_number -> infer_type
+            | Some ((Var_type_discrete_number _) as infer_type), Var_type_discrete_number Var_type_discrete_weak_number -> infer_type
             | _ -> discrete_type
         in
 
@@ -966,7 +980,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 
                 let infer_resolved_constraint =
                     match infer_type_opt, resolved_constraint with
-                    | Some ((Var_type_discrete_number _) as infer_type), Resolved_type_constraint (Var_type_discrete_number Var_type_discrete_unknown_number) -> Resolved_type_constraint infer_type
+                    | Some ((Var_type_discrete_number _) as infer_type), Resolved_type_constraint (Var_type_discrete_number Var_type_discrete_weak_number) -> Resolved_type_constraint infer_type
                     | _ -> resolved_constraint
                 in
                 constraint_name, infer_resolved_constraint
@@ -1058,17 +1072,8 @@ let rec type_check_fun_body local_variables variable_infos infer_type_opt = func
 
         (* Check compatibility between local variable declared type and it's init expression *)
         if not (is_discrete_type_compatibles discrete_type init_discrete_type) then
-            (* TODO benjamin REFACTOR same message at different places *)
             raise (TypeError (
-                "Variable `"
-                ^ variable_name
-                ^ "` of type "
-                ^ DiscreteType.string_of_var_type_discrete discrete_type
-                ^ " is not compatible with expression `"
-                ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
-                ^ "` of type "
-                ^ DiscreteType.string_of_var_type_discrete init_discrete_type
-                ^ "."
+                ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete discrete_type) (ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr) init_discrete_type
             ));
 
         (* All is ok, convert to a typed function local declaration *)
@@ -1244,20 +1249,6 @@ and type_check_parsed_state_predicate_factor variable_infos infer_type_opt = fun
 (* If not, raise a TypeError exception with an error message *)
 let check_type_assignment variable_infos variable_name variable_type expr =
 
-    (* Function that construct type error message *)
-    let get_error_message variable_name variable_type expr_type expr =
-        "Variable "
-        ^ variable_name
-        ^ " of type "
-        ^ DiscreteType.string_of_var_type_discrete variable_type
-        ^ " is not compatible with expression : `"
-        ^ string_of_parsed_global_expression variable_infos expr
-        ^ "`"
-        ^ " of type "
-        ^ DiscreteType.string_of_var_type_discrete expr_type
-        ^ "."
-    in
-
     (* Eventually get a number type to infer *)
 (*    let variable_number_type_opt = DiscreteType.extract_number_of_discrete_type variable_type in*)
     let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
@@ -1277,7 +1268,7 @@ let check_type_assignment variable_infos variable_name variable_type expr =
 
     (* Not consistent ? raise a type error with appropriate message *)
     if not (is_consistent) then (
-        raise (TypeError (get_error_message variable_name variable_type expr_var_type_discrete expr))
+        raise (TypeError (ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr) expr_var_type_discrete))
     )
     else (
         typed_expr
@@ -1387,7 +1378,7 @@ let check_update variable_infos update_types parsed_update_type expr =
     let variable_name, var_type =
         match variable_name_opt with
         | Some variable_name -> variable_name, VariableInfo.var_type_of_variable_or_constant variable_infos variable_name
-        | None -> "", Var_type_discrete (Var_type_discrete_number Var_type_discrete_unknown_number) (* By default, infer numbers to unknown numbers *)
+        | None -> "", Var_type_discrete (Var_type_discrete_number Var_type_discrete_weak_number) (* By default, infer numbers to unknown numbers *)
     in
 
     (* Eventually get a number type to infer *)
@@ -1414,15 +1405,7 @@ let check_update variable_infos update_types parsed_update_type expr =
     (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
      if not (DiscreteType.is_discrete_type_compatibles l_value_type expr_type) then (
         raise (TypeError (
-            "Variable `"
-            ^ variable_name
-            ^ "` of type "
-            ^ DiscreteType.string_of_var_type var_type
-            ^ " is not compatible with expression `"
-            ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
-            ^ "` of type "
-            ^ DiscreteType.string_of_var_type_discrete expr_type
-            ^ "."
+            ill_typed_variable_message variable_name (DiscreteType.string_of_var_type var_type) (ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr) expr_type
             )
         )
     );
@@ -1633,7 +1616,7 @@ and global_expression_of_typed_boolean_expression variable_infos expr discrete_t
 and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos discrete_number_type = function
 	| Typed_discrete_bool_expr (expr, _) ->
 	    (match discrete_number_type with
-	    | Var_type_discrete_unknown_number
+	    | Var_type_discrete_weak_number
 	    | Var_type_discrete_rat ->
 	        Rational_arithmetic_expression (rational_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos expr)
 	    | Var_type_discrete_int ->
@@ -1644,7 +1627,7 @@ and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos di
 and discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type = function
 	| Typed_arithmetic_expr (expr, discrete_type) ->
 	    (match discrete_number_type with
-	    | Var_type_discrete_unknown_number
+	    | Var_type_discrete_weak_number
 	    | Var_type_discrete_rat ->
 	        Rational_arithmetic_expression (rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr)
 	    | Var_type_discrete_int ->
@@ -1659,7 +1642,7 @@ and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression varia
 	    let sum_diff = sum_diff_of_typed_sum_diff typed_sum_diff in
 
         (match discrete_number_type with
-        | Var_type_discrete_unknown_number
+        | Var_type_discrete_weak_number
         | Var_type_discrete_rat ->
             Rational_arithmetic_expression (
                 Rational_sum_diff (
@@ -1680,7 +1663,7 @@ and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression varia
 
 	| Typed_term (term, _) ->
         (match discrete_number_type with
-        | Var_type_discrete_unknown_number
+        | Var_type_discrete_weak_number
         | Var_type_discrete_rat ->
             Rational_arithmetic_expression (Rational_term (rational_arithmetic_expression_of_typed_term variable_infos term))
         | Var_type_discrete_int ->
@@ -1805,7 +1788,7 @@ and bool_expression_of_typed_factor variable_infos = function
             )
         )
 	| Typed_constant (value, _) ->
-	    Bool_constant (DiscreteValue.bool_value value)
+	    Bool_constant (ParsedValue.bool_value value)
 
     | Typed_expr (expr, _) ->
         bool_expression_of_typed_arithmetic_expression variable_infos expr
@@ -1904,7 +1887,7 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
         )
 
 	| Typed_constant (value, _) ->
-	    Rational_constant (DiscreteValue.to_numconst_value value)
+	    Rational_constant (ParsedValue.to_numconst_value value)
 
 	| Typed_expr (expr, _) ->
 	    Rational_nested_expression (
@@ -2004,7 +1987,7 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
         )
 
 	| Typed_constant (value, _) ->
-	    Int_constant (DiscreteValue.to_int_value value)
+	    Int_constant (ParsedValue.to_int_value value)
 
 	| Typed_expr (expr, _) ->
 	    Int_nested_expression (
@@ -2086,7 +2069,7 @@ and binary_expression_of_typed_factor variable_infos length = function
         )
 
 	| Typed_constant (value, _) ->
-	    Binary_word_constant (DiscreteValue.binary_word_value value)
+	    Binary_word_constant (ParsedValue.binary_word_value value)
 
 	| Typed_expr (expr, _) ->
         binary_expression_of_typed_arithmetic_expression variable_infos length expr
@@ -2180,7 +2163,7 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
         )
 
 	| Typed_constant (value, _) ->
-	    Array_constant (Array.map AbstractValue.of_parsed_value (DiscreteValue.array_value value))
+	    Array_constant (Array.map AbstractValue.of_parsed_value (ParsedValue.array_value value))
 
     | Typed_sequence (expr_list, _, Typed_array) ->
         (* Should take inner_type unbox type *)
@@ -2279,7 +2262,7 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
         )
 
 	| Typed_constant (value, _) ->
-	    List_constant (List.map AbstractValue.of_parsed_value (DiscreteValue.list_value value))
+	    List_constant (List.map AbstractValue.of_parsed_value (ParsedValue.list_value value))
 
     | Typed_sequence (expr_list, _, Typed_list) ->
         Literal_list (List.map (fun expr -> global_expression_of_typed_boolean_expression variable_infos expr discrete_type) expr_list)
@@ -2806,7 +2789,7 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 			)
 		| Typed_constant (var_value, _) ->
             (* Update the constant *)
-            let numconst_value = DiscreteValue.to_numconst_value var_value in
+            let numconst_value = ParsedValue.to_numconst_value var_value in
             constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
 		| Typed_unary_min (parsed_discrete_factor, _) ->
 			update_coef_array_in_parsed_update_factor mult_factor parsed_discrete_factor

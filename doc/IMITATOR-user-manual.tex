@@ -1670,13 +1670,13 @@ User functions must be declared directly after the variable declarations and are
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 \begin{itemize}
-	\item Modification of a clock or a parameter value is forbidden.
-	\item Modification of a function parameter value is forbidden.
-	\item Modification of a local variable value is forbidden.
-	\item As soon as you modify a global variable, function is marked as "side-effect function" and can only be used in updates.
-	\item Shadowing a global variable with a local one is available (local variable with the same name as a global variable).
-	\item Shadowing a local variable with a second one is available (local variable with the same name as a previously declared local variable).
-	\item Calls of another functions are available.
+	\item Modification of a clock or a parameter value is forbidden;
+	\item Modification of a function parameter value is forbidden;
+	\item Modification of a local variable value is forbidden;
+	\item As soon as you modify a global variable, function is marked as "side-effect function" and can only be used in updates;
+	\item Shadowing a global variable with a local one is available (local variable with the same name as a global variable);
+	\item Shadowing a local variable with a second one is available (local variable with the same name as a previously declared local variable);
+	\item Calls of another functions are available;
 	\item Recursive calls are forbidden.
 \end{itemize}
 
