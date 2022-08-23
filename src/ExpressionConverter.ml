@@ -464,6 +464,7 @@ and string_of_typed_state_predicate variable_infos = function
 (* ------------------------------------------------------------------ *)
 (* ------------------------------------------------------------------ *)
 
+(* Message when many members of an expression are not compatibles *)
 let ill_typed_message_of_expressions str_expressions discrete_types str_outer_expr =
     let x = List.combine str_expressions discrete_types in
     let str_expressions_with_type_list = List.map (fun (str_expr, discrete_type) -> "`" ^ str_expr ^ ":" ^ DiscreteType.string_of_var_type_discrete discrete_type ^ "`") x in
@@ -475,6 +476,7 @@ let ill_typed_message_of_expressions str_expressions discrete_types str_outer_ex
     ^ str_outer_expr
     ^ "` are ill-typed or incompatibles."
 
+(* Message when two members of an expression are not compatibles *)
 let ill_typed_message str_left_expr str_right_expr str_outer_expr l_type r_type =
     "Some of the expressions `"
     ^ str_left_expr
@@ -487,6 +489,18 @@ let ill_typed_message str_left_expr str_right_expr str_outer_expr l_type r_type 
     ^ "` in `"
     ^ str_outer_expr
     ^ "` are ill-typed or incompatibles."
+
+(* Message when variable type not compatible with assigned expression type *)
+let ill_typed_variable_message variable_name str_discrete_type str_expr expr_discrete_type =
+    "Variable `"
+    ^ variable_name
+    ^ "` of type "
+    ^ str_discrete_type
+    ^ " is not compatible with expression `"
+    ^ str_expr
+    ^ "` of type "
+    ^ DiscreteType.string_of_var_type_discrete expr_discrete_type
+    ^ "."
 
 (* Get inner type of a collection analysing types of it's elements *)
 (* If the collection is empty, it's type will be inferred by the context *)
@@ -1058,17 +1072,8 @@ let rec type_check_fun_body local_variables variable_infos infer_type_opt = func
 
         (* Check compatibility between local variable declared type and it's init expression *)
         if not (is_discrete_type_compatibles discrete_type init_discrete_type) then
-            (* TODO benjamin REFACTOR same message at different places *)
             raise (TypeError (
-                "Variable `"
-                ^ variable_name
-                ^ "` of type "
-                ^ DiscreteType.string_of_var_type_discrete discrete_type
-                ^ " is not compatible with expression `"
-                ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
-                ^ "` of type "
-                ^ DiscreteType.string_of_var_type_discrete init_discrete_type
-                ^ "."
+                ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete discrete_type) (ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr) init_discrete_type
             ));
 
         (* All is ok, convert to a typed function local declaration *)
@@ -1244,20 +1249,6 @@ and type_check_parsed_state_predicate_factor variable_infos infer_type_opt = fun
 (* If not, raise a TypeError exception with an error message *)
 let check_type_assignment variable_infos variable_name variable_type expr =
 
-    (* Function that construct type error message *)
-    let get_error_message variable_name variable_type expr_type expr =
-        "Variable "
-        ^ variable_name
-        ^ " of type "
-        ^ DiscreteType.string_of_var_type_discrete variable_type
-        ^ " is not compatible with expression : `"
-        ^ string_of_parsed_global_expression variable_infos expr
-        ^ "`"
-        ^ " of type "
-        ^ DiscreteType.string_of_var_type_discrete expr_type
-        ^ "."
-    in
-
     (* Eventually get a number type to infer *)
 (*    let variable_number_type_opt = DiscreteType.extract_number_of_discrete_type variable_type in*)
     let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
@@ -1277,7 +1268,7 @@ let check_type_assignment variable_infos variable_name variable_type expr =
 
     (* Not consistent ? raise a type error with appropriate message *)
     if not (is_consistent) then (
-        raise (TypeError (get_error_message variable_name variable_type expr_var_type_discrete expr))
+        raise (TypeError (ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr) expr_var_type_discrete))
     )
     else (
         typed_expr
@@ -1414,15 +1405,7 @@ let check_update variable_infos update_types parsed_update_type expr =
     (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
      if not (DiscreteType.is_discrete_type_compatibles l_value_type expr_type) then (
         raise (TypeError (
-            "Variable `"
-            ^ variable_name
-            ^ "` of type "
-            ^ DiscreteType.string_of_var_type var_type
-            ^ " is not compatible with expression `"
-            ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
-            ^ "` of type "
-            ^ DiscreteType.string_of_var_type_discrete expr_type
-            ^ "."
+            ill_typed_variable_message variable_name (DiscreteType.string_of_var_type var_type) (ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr) expr_type
             )
         )
     );
