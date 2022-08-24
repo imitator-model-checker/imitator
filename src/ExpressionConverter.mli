@@ -52,7 +52,6 @@ and typed_product_quotient =
 
 and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete * typed_variable_scope
-	(* TODO benjamin see if possible to change ParsedValue.parsed_value to abstract value which allow to remove to_int_value and other convert function of ParsedValue *)
 	| Typed_constant of ParsedValue.parsed_value * var_type_discrete
 	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
 	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete

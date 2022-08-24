@@ -4073,7 +4073,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* For all locations *)
 		List.exists (fun location_index ->
 			let invariant = invariants automaton_index location_index in
-			(* TODO benjamin duplicate in PTA2TikZ, maybe we should create general Guard module ? *)
 			match invariant with
 			    | True_guard -> false
                 | False_guard -> false

@@ -2687,8 +2687,7 @@ let linear_term_of_linear_expression variable_infos linear_expression =
     linear_term_of_array array_of_coef constant
 
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-(* TODO benjamin REFACTOR rename to linear_term_of_typed_arithmetic_expression *)
-let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
+let linear_term_of_typed_arithmetic_expression variable_infos pdae =
 
     let index_of_variables = variable_infos.index_of_variables in
     let constants = variable_infos.constants in
@@ -2807,7 +2806,7 @@ let linear_term_of_typed_update_arithmetic_expression variable_infos pdae =
 
 let linear_term_of_typed_discrete_boolean_expression variable_infos = function
     | Typed_arithmetic_expr (expr, _) ->
-        linear_term_of_typed_update_arithmetic_expression variable_infos expr
+        linear_term_of_typed_arithmetic_expression variable_infos expr
     | expr ->
         raise (
             InvalidExpression (
