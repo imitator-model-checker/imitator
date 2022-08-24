@@ -670,7 +670,7 @@ let string_of_custom_user_functions model =
 
         (* Convert a function expression into a string *)
         let rec string_of_next_expr = function
-            | Fun_builtin _ -> ""
+
             | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
                 print_warning ("Local declaration of `" ^ variable_name ^ "` in function `" ^ fun_def.name ^ "` are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
@@ -683,28 +683,28 @@ let string_of_custom_user_functions model =
                 string_of_global_expression model.variable_names expr
         in
 
-        let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
-        let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
-        (* Convert parameters into a string *)
-        let str_param_list = List.map (fun (param_name, type_constraint) ->
-            jani_function_parameter param_name (string_of_type_constraint type_constraint)
-        ) parameter_names_with_constraints in
+        let string_of_fun_type = function
+            | Fun_builtin _ -> "" (* Don't print builtin functions *)
+            | Fun_user f ->
+                let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
+                let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
+                (* Convert parameters into a string *)
+                let str_param_list = List.map (fun (param_name, type_constraint) ->
+                    jani_function_parameter param_name (string_of_type_constraint type_constraint)
+                ) parameter_names_with_constraints in
 
-        let str_param_array = array_of_list str_param_list in
+                let str_param_array = array_of_list str_param_list in
 
-        let str_fun_body = string_of_next_expr fun_def.body in
+                let str_body = string_of_next_expr f in
 
-        if str_fun_body <> "" then (
-            (* Format function definition *)
-            jani_function_declaration
-                fun_def.name
-                (string_of_type_constraint return_type_constraint)
-                str_param_array
-                (string_of_next_expr fun_def.body)
-        )
-        else
-            ""
-
+                (* Format function definition *)
+                jani_function_declaration
+                    fun_def.name
+                    (string_of_type_constraint return_type_constraint)
+                    str_param_array
+                    str_body
+        in
+        string_of_fun_type fun_def.body
 
     in
 

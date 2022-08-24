@@ -215,15 +215,9 @@ and expression_access_type =
 
 (* Function local declaration or expression *)
 and fun_body =
-    | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
-    (* TODO benjamin IMPLEMENT here add Fun_user_defined and move the three variant into new type *)
     | Fun_local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * fun_body
     | Fun_instruction of (update_type * global_expression) * fun_body
     | Fun_expr of global_expression
-
-(* Different function shapes *)
-and fun_shape =
-    | Fun_shape_int_int_int of (Int32.t -> Int32.t -> Int32.t)
 
 (* Update type *)
 and scalar_or_index_update_type =
@@ -238,6 +232,9 @@ and update_type =
     (* Unit expression, side effect expression without assignment, ie: stack_pop(s) *)
     | Void_update
 
+type fun_type =
+    | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
+    | Fun_user of fun_body
 
 type 'a my_expression =
     (* A typed expression *)
