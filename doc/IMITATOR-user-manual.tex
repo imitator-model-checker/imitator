@@ -1607,40 +1607,46 @@ The possible runtime errors include:
 	\item index out of range (\eg{} in an array);
 	\item operation on an empty collection (\eg{} accessing the top element of an empty stack).
 \end{itemize}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{User defined functions}\label{section:user_defined_functions}
+\section{User-defined functions}\label{section:user_defined_functions}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Users have the ability to declare their own functions, called user defined functions.
+In addition to the built-in functions (see \cref{table:summary:builtin-functions}), users have the ability to declare their own functions, called \emph{user-defined functions}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Declaration}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-A user defined function can be compound of declarations (local variables), imperative instructions (modification of global variables) and must have one return expression.
+A user-defined function is made of a (possibly empty) list of declarations of local variables, of a set of imperative instructions (modification of global variables) and must have one return expression.
+Note that, due to the possibility to modify global variables, user-defined functions may become \emph{side-effect} functions; if the functions have indeed side-effect, they can only be used in updates (not in guards nor in invariants).
 
-User defined functions can have zero or many parameters and must return one value. Note that all function parameters are passed by value.
+User-defined functions can have zero or more arguments, and must return one value. Note that all arguments are passed by value.
 
-User functions must be declared directly after the variable declarations and are global to all \IPTA.
+User functions must be declared directly after the variable declarations and are global to all \IPTA{} in the \NIPTA{}.
 
-\paragraph{} Below, some user function declarations examples :
+We give below some examples of user function definitions:
 
 \begin{IMITATORmodel}
 	var
 		my_global_i, my_global_j : int;
 
+	(* This function has no argument, and return 2 *)
 	fn two() : int
 	begin
 		(* Return 2 *)
 		1 + 1
 	end
 
+	(* This function adds 1 to the integer argument *)
 	fn add_one(i : int) : int
 	begin
 		(* Add one to i *)
 		i + 1
 	end
 
+	(* This function sums the two integer arguments *)
 	fn add(a : int, b : int) : int
 	begin
 		(* Add a to b *)
@@ -1655,6 +1661,7 @@ User functions must be declared directly after the variable declarations and are
 		a + pos
 	end
 
+	(* This function has side effects *)
 	fn side_effect(i : int, j : int) : int
 	begin
 		(* Modify some global variables *)
@@ -1670,24 +1677,24 @@ User functions must be declared directly after the variable declarations and are
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 \begin{itemize}
-	\item Modification of a clock or a parameter value is forbidden;
-	\item Modification of a function parameter value is forbidden;
+	\item Modification of a clock or a parameter is forbidden inside a function;
+	\item Modification of a function argument is forbidden;
 	\item Modification of a local variable value is forbidden;
-	\item As soon as you modify a global variable, function is marked as "side-effect function" and can only be used in updates;
-	\item Shadowing a global variable with a local one is available (local variable with the same name as a global variable);
-	\item Shadowing a local variable with a second one is available (local variable with the same name as a previously declared local variable);
-	\item Calls of another functions are available;
-	\item Recursive calls are forbidden.
+	\item As soon as a global variable is modified, the function is labeled internally as a ``side-effect function'', and can only be used in updates (not in guards neither in invariants);
+	\item Shadowing a global variable with a local one is possible (local variable with the same name as a global variable);
+	\item Shadowing a local variable with another local variable is possible (local variable with the same name as a previously declared local variable);
+	\item Calls of another functions are possible;
+	\item Recursive calls are forbidden (including mutually recursive calls).
 \end{itemize}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Call}
+\subsection{Calling a user-defined function}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-User defined functions can be called in guards, invariants or updates as the same manner as the built-in functions.
-Of course, side-effect functions cannot be used anywhere than in sequential updates.
+User-defined functions can be called in guards, invariants or updates in the same manner as the built-in functions.
+However, side-effect user-defined functions can only be used in sequential updates.
 
-To illustrate the use of user defined functions, note that the following guard in the model fragment below will evaluate to true:
+To illustrate the use of user-defined functions, note that the following guard in the model fragment below will evaluate to true:
 
 \begin{IMITATORmodel}
 	when two() = 2 goto lend;
@@ -2893,12 +2900,12 @@ The only \imitator{} built-in function fully supported by our translation is the
 Partially supported \imitator{} built-in functions are the following: \styleIMI{shift\_left}, \styleIMI{shift\_right}, \styleIMI{fill\_left}, \styleIMI{fill\_right}.
 Because of binary words are encoded into integer variables, these functions could have a unspecified behaviors.
 
-\paragraph{User defined functions}
+\paragraph{User-defined functions}
 
-We make the best effort to translate user defined functions into the \uppaal{} formalism, if possible.
+We make the best effort to translate user-defined functions into the \uppaal{} formalism, if possible.
 
 \begin{becareful}
-	Unsupported \imitator{} built-in / user defined functions will not be declared (and implemented) in \uppaal{} translation, resulting to a bad program when trying to call one. The declaration and implementation of these functions in \uppaal{}, if the \uppaal{} input syntax allows it, is the responsibility of the user.
+	Unsupported \imitator{} built-in / user-defined functions will not be declared (and implemented) in \uppaal{} translation, resulting to a bad program when trying to call one. The declaration and implementation of these functions in \uppaal{}, if the \uppaal{} input syntax allows it, is the responsibility of the user.
 \end{becareful}
 
 \paragraph{Strong broadcast synchronization}
@@ -2948,7 +2955,7 @@ imitator model.imi -imi2HyTech
 
 \imitator{} will generate a file \stylePath{model.hy}. \\
 
-The syntax going beyond that of \hytech{} (typically, Booleans, binary words, arrays, lists…), which notably includes \imitator{} built-in and user defined functions, is obviously not translated correctly.
+The syntax going beyond that of \hytech{} (typically, Booleans, binary words, arrays, lists…), which notably includes \imitator{} built-in and user-defined functions, is obviously not translated correctly.
 In addition, the translation of properties is not supported.
 % TODO
 
@@ -3032,9 +3039,9 @@ The only \imitator{} built-in function fully supported by our translation is the
 	Unsupported \imitator{} built-in functions will not be declared in \jani{} translation, resulting to a bad program when trying to call one of them. The declaration and implementation of these functions in \jani{}, if the \jani{} formalism allow it, is the responsability of the user.
 \end{becareful}
 
-\paragraph{User defined functions}
+\paragraph{User-defined functions}
 
-As Jani doesn't seems to have a scheme that enable the declaration of local variables in user defined functions, for the moment, only the user defined functions containing one expression as a body are correctly translated.
+As Jani does not seem to have a scheme that enable the declaration of local variables in user-defined functions, for the moment, only the user-defined functions containing one expression as a body are correctly translated.
 
 \paragraph{Properties}
 Properties are so far not translated to \jani{}.
