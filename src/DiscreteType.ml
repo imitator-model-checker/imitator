@@ -26,6 +26,7 @@ type var_type_discrete_number =
 (* Specific type of discrete variables *)
 type var_type_discrete =
     | Var_type_weak
+    | Var_type_void
     | Var_type_discrete_bool
     | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_binary_word of int
@@ -56,6 +57,7 @@ let string_of_var_type_discrete_number = function
 (* String of discrete var type *)
 let rec string_of_var_type_discrete = function
     | Var_type_weak -> "weak"
+    | Var_type_void -> "void"
     | Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | Var_type_discrete_bool -> "bool"
     | Var_type_discrete_binary_word l -> "binary(" ^ string_of_int l ^ ")"

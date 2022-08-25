@@ -26,6 +26,7 @@ type var_type_discrete_number =
 (* Specific type of discrete variables *)
 type var_type_discrete =
     | Var_type_weak
+    | Var_type_void
     | Var_type_discrete_bool
     | Var_type_discrete_number of var_type_discrete_number
     | Var_type_discrete_binary_word of int

@@ -69,6 +69,7 @@ let string_of_var_type_discrete_number = function
 
 (* Customized string of discrete var type *)
 let rec string_of_var_type_discrete = function
+    | Var_type_void -> "void"
     | Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | Var_type_discrete_bool -> "bool"
     | Var_type_discrete_binary_word length ->
@@ -109,6 +110,7 @@ let string_of_scalar_value = function
         string_of_int (BinaryWord.to_int v)
 
 let rec string_of_value = function
+    | Abstract_void_value -> ""
     | Abstract_scalar_value v -> string_of_scalar_value v
     | Abstract_container_value v -> string_of_container_value v
 
@@ -388,6 +390,7 @@ let string_of_fun_definitions model =
 
             | Fun_expr expr ->
                 "return " ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names expr ^ ";\n"
+            | Fun_void_expr -> ""
         in
 
         (* Convert a function into a string *)

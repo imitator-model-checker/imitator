@@ -337,6 +337,7 @@ let string_of_fun_definitions model =
 
             | Fun_expr expr ->
                 DiscreteExpressions.string_of_global_expression model.variable_names expr ^ "\n"
+            | Fun_void_expr -> ""
         in
 
         (* Convert function into a string *)

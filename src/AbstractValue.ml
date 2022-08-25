@@ -29,6 +29,7 @@ type abstract_scalar_value =
     | Abstract_binary_word_value of BinaryWord.t
 
 type abstract_value =
+    | Abstract_void_value
     | Abstract_scalar_value of abstract_scalar_value
     | Abstract_container_value of abstract_container_value
 
@@ -50,6 +51,7 @@ let customized_string_of_scalar_value customized_string = function
     | Abstract_binary_word_value v -> BinaryWord.string_of_binaryword v
 
 let rec customized_string_of_value customized_string = function
+    | Abstract_void_value -> ""
     | Abstract_scalar_value v -> customized_string_of_scalar_value customized_string v
     | Abstract_container_value v -> string_of_container_value customized_string v
 
@@ -121,6 +123,7 @@ let hash_scalar_value = function
     | Abstract_binary_word_value v -> BinaryWord.hash v
 
 let rec hash = function
+    | Abstract_void_value -> 0
     | Abstract_scalar_value v -> hash_scalar_value v
     | Abstract_container_value v -> hash_container_value v
 
@@ -167,6 +170,7 @@ let equal_container_value a b = match a, b with
     | _ -> raise (InternalError "Unable to compare two different typed values.")
 
 let equal a b = match a, b with
+    | Abstract_void_value, Abstract_void_value -> true
     | Abstract_scalar_value a, Abstract_scalar_value b -> equal_scalar_value a b
     | Abstract_container_value a, Abstract_container_value b -> equal_container_value a b
     | _ -> raise (InternalError "Unable to compare two different typed values.")
@@ -184,6 +188,7 @@ let default_number_value = function
     | _ -> raise (InternalError "Unable to get number value of non number type.")
 
 let rec default_value_of_discrete_type = function
+    | Var_type_void -> Abstract_void_value
     | Var_type_discrete_number t -> Abstract_scalar_value (Abstract_number_value (default_number_value t))
     | Var_type_discrete_bool -> Abstract_scalar_value (Abstract_bool_value false)
     | Var_type_discrete_binary_word l -> Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.zero l))
@@ -208,6 +213,7 @@ let discrete_type_of_scalar_value = function
     | Abstract_binary_word_value value -> Var_type_discrete_binary_word (BinaryWord.length value)
 
 let rec discrete_type_of_value = function
+    | Abstract_void_value -> Var_type_void
     | Abstract_scalar_value v -> discrete_type_of_scalar_value v
     | Abstract_container_value v -> discrete_type_of_container_value v
 

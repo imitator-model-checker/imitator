@@ -99,6 +99,7 @@ type typed_fun_body =
     | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_body
     | Typed_fun_instruction of typed_normal_update * typed_fun_body
     | Typed_fun_expr of typed_global_expression
+    | Typed_fun_void_expr
 
 type typed_fun_definition = {
     name : variable_name; (* function name *)

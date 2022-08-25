@@ -47,6 +47,7 @@ type product_quotient =
 (****************************************************************)
 type global_expression =
     (* A typed expression *)
+    | Void_expression of void_expression
     | Arithmetic_expression of discrete_arithmetic_expression
     | Bool_expression of boolean_expression
     | Binary_word_expression of binary_word_expression
@@ -208,6 +209,9 @@ and queue_expression =
     | Queue_array_access of expression_access_type * int_arithmetic_expression
     | Queue_function_call of variable_name * variable_name list * global_expression list
 
+and void_expression =
+    | Void_function_call of variable_name * variable_name list * global_expression list
+
 and expression_access_type =
     | Expression_array_access of array_expression
     | Expression_list_access of list_expression
@@ -217,6 +221,7 @@ and fun_body =
     | Fun_local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * fun_body
     | Fun_instruction of (update_type * global_expression) * fun_body
     | Fun_expr of global_expression
+    | Fun_void_expr
 
 (* Update type *)
 and scalar_or_index_update_type =

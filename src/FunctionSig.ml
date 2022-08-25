@@ -61,6 +61,7 @@ type type_constraint =
 
 (* Constraint on concrete type *)
 and defined_type_constraint =
+    | Void_constraint
     | Number_constraint of type_number_constraint
     | Bool_constraint
     | Binary_constraint of length_constraint
@@ -107,6 +108,8 @@ let string_of_type_number_constraint = function
     | Defined_type_number_constraint defined_type_constraint_number -> string_of_type_number defined_type_constraint_number
 
 let rec string_of_defined_type_constraint = function
+    | Void_constraint ->
+        "void"
     | Number_constraint type_number_constraint ->
         string_of_type_number_constraint type_number_constraint
     | Bool_constraint ->
@@ -169,6 +172,7 @@ let rec is_discrete_type_compatible_with_type_constraint discrete_type = functio
 
 and is_discrete_type_compatible_with_defined_type_constraint discrete_type defined_type_constraint =
     match discrete_type, defined_type_constraint with
+    | Var_type_void, Void_constraint -> true
     | Var_type_discrete_number discrete_number_type, Number_constraint type_number_constraint ->
         is_discrete_type_compatible_with_type_number_constraint discrete_number_type type_number_constraint
     | Var_type_discrete_bool, Bool_constraint -> true
@@ -200,6 +204,7 @@ let type_number_constraint_of_discrete_number_type = function
 
 let type_constraint_of_discrete_type discrete_type =
     let rec type_constraint_of_discrete_type_rec = function
+        | Var_type_void -> Void_constraint
         | Var_type_discrete_number discrete_number_type ->
             let type_number_constraint = type_number_constraint_of_discrete_number_type discrete_number_type in
             Number_constraint (Defined_type_number_constraint type_number_constraint)

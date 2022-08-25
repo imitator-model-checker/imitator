@@ -200,6 +200,7 @@ let string_of_var_type_discrete_number = function
 
 (* String of discrete var type *)
 let rec string_of_var_type_discrete = function
+    | Var_type_void -> "void"
     | Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | Var_type_discrete_bool -> json_quoted "bool"
     | Var_type_discrete_binary_word _ ->
@@ -246,6 +247,8 @@ let string_of_type_number_constraint = function
 
 (* String of defined type constraint for Jani *)
 let rec string_of_defined_type_constraint = function
+    | Void_constraint ->
+        json_quoted "void"
     | Number_constraint type_number_constraint ->
         string_of_type_number_constraint type_number_constraint
     | Bool_constraint ->
@@ -285,6 +288,7 @@ let string_of_scalar_value = function
 
 (* Get string representation of a discrete value in Jani *)
 let rec string_of_value = function
+    | Abstract_void_value -> ""
     | Abstract_scalar_value v -> string_of_scalar_value v
     | Abstract_container_value v -> string_of_container_value v
 
@@ -332,6 +336,7 @@ let string_of_comparison variable_names l_expr relop r_expr string_fun =
         (string_fun variable_names r_expr)
 
 let rec string_of_global_expression variable_names = function
+    | Void_expression expr -> string_of_void_expression variable_names expr
     | Arithmetic_expression expr -> string_of_arithmetic_expression variable_names expr
     | Bool_expression expr -> string_of_boolean_expression variable_names expr
     | Binary_word_expression expr -> string_of_binary_word_expression variable_names expr
@@ -596,14 +601,18 @@ and string_of_queue_expression variable_names = function
     | Queue_function_call (function_name, _, args_expr) ->
         string_of_function_call variable_names function_name args_expr
 
-and string_of_expression_of_access_for_jani variable_names = function
+and string_of_void_expression variable_names = function
+    | Void_function_call (function_name, _, args_expr) ->
+        string_of_function_call variable_names function_name args_expr
+
+and string_of_expression_of_access variable_names = function
     | Expression_array_access array_expr ->
         string_of_array_expression variable_names array_expr
     | Expression_list_access list_expr ->
         string_of_list_expression variable_names list_expr
 
 and string_of_expression_access variable_names access_type index_expr =
-    let str_expr = string_of_expression_of_access_for_jani variable_names access_type in
+    let str_expr = string_of_expression_of_access variable_names access_type in
     let str_index_expr = string_of_int_arithmetic_expression variable_names index_expr in
     jani_array_access str_expr str_index_expr
 
@@ -681,6 +690,7 @@ let string_of_custom_user_functions model =
 
             | Fun_expr expr ->
                 string_of_global_expression model.variable_names expr
+            | Fun_void_expr -> ""
         in
 
         let string_of_fun_type = function

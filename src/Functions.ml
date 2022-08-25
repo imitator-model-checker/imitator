@@ -87,6 +87,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
         | Parsed_fun_expr expr ->
             (* Check if expression has side-effects *)
             ParsingStructureUtilities.exists_in_parsed_global_expression is_leaf_has_side_effects expr
+        | Parsed_fun_void_expr -> false
     in
     is_next_expr_has_side_effects fun_def.body
 
@@ -109,7 +110,9 @@ let fun_def_without_unused_local_vars unused_local_vars (fun_def : parsed_fun_de
             let new_next_expr_without_unused = next_expr_without_unused next_expr in
             Parsed_fun_instruction (normal_update, new_next_expr_without_unused)
 
-        | Parsed_fun_expr _ as expr -> expr
+
+        | Parsed_fun_expr _
+        | Parsed_fun_void_expr as expr -> expr
 
     in
     { fun_def with body = next_expr_without_unused fun_def.body }

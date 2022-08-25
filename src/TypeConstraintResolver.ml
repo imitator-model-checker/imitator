@@ -173,6 +173,8 @@ let get_discrete_type_resolved_constraint resolved_constraints_table constraint_
     | _ -> raise (InternalError "")
 
 let rec discrete_type_of_defined_type_constraint resolved_constraints_table = function
+    | Void_constraint ->
+        Var_type_void
     | Number_constraint type_number_constraint ->
         discrete_type_of_type_number_constraint resolved_constraints_table type_number_constraint
     | Bool_constraint ->
