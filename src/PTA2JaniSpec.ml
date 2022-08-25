@@ -602,6 +602,9 @@ and string_of_queue_expression variable_names = function
         string_of_function_call variable_names function_name args_expr
 
 and string_of_void_expression variable_names = function
+    | Literal_void -> ""
+    | Void_variable variable_index -> json_quoted (variable_names variable_index)
+    | Void_local_variable variable_name -> json_quoted variable_name
     | Void_function_call (function_name, _, args_expr) ->
         string_of_function_call variable_names function_name args_expr
 

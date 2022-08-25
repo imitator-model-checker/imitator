@@ -209,7 +209,11 @@ and queue_expression =
     | Queue_function_call of variable_name * variable_name list * global_expression list
 
 and void_expression =
+    | Literal_void
+    | Void_variable of Automaton.variable_index
+    | Void_local_variable of variable_name
     | Void_function_call of variable_name * variable_name list * global_expression list
+
 
 and expression_access_type =
     | Expression_array_access of array_expression
@@ -836,6 +840,9 @@ and customized_string_of_queue_expression customized_string variable_names = fun
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and customized_string_of_void_expression customized_string variable_names = function
+    | Literal_void -> ""
+    | Void_variable variable_index -> variable_names variable_index
+    | Void_local_variable variable_name -> variable_name
     | Void_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 

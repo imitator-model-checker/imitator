@@ -2513,6 +2513,18 @@ and void_expression_of_typed_term variable_infos = function
         raise (InternalError fail_message)
 
 and void_expression_of_typed_factor variable_infos = function
+	| Typed_variable (variable_name, _, scope) ->
+	    (match scope with
+	    | Local ->
+	        Void_local_variable variable_name
+	    | Global ->
+            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+            (match variable_kind with
+            | Constant_kind value -> Literal_void
+            | Variable_kind discrete_index -> Void_variable discrete_index
+            )
+        )
+
 	| Typed_expr (expr, _) ->
         void_expression_of_typed_arithmetic_expression variable_infos expr
 

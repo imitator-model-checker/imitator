@@ -210,6 +210,9 @@ and queue_expression =
     | Queue_function_call of variable_name * variable_name list * global_expression list
 
 and void_expression =
+    | Literal_void
+    | Void_variable of Automaton.variable_index
+    | Void_local_variable of variable_name
     | Void_function_call of variable_name * variable_name list * global_expression list
 
 and expression_access_type =

@@ -414,6 +414,10 @@ and eval_queue_expression_with_context variable_names functions_table_opt eval_c
         queue_value result
 
 and eval_void_expression_with_context variable_names functions_table_opt eval_context_opt = function
+    | Literal_void
+    | Void_variable _
+    | Void_local_variable _ ->
+        Abstract_void_value
     | Void_function_call (function_name, param_names, expr_args) ->
         let _ = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
         Abstract_void_value
