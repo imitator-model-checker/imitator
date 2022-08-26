@@ -26,6 +26,9 @@ open FunctionSig
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
+(* Get local variables of a parsed function definition *)
+val local_variables_of_fun : parsed_fun_definition -> (variable_name * var_type_discrete) list
+
 (* Get builtin functions meta *)
 val builtin_functions_metadata : function_metadata list
 (* Get builtin function metadata as a table *)
