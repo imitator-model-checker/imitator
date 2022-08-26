@@ -4201,7 +4201,7 @@ We define each of those two components below.
 \begin{tabular}{l l}
  	\ & \nt{var\_type\_scalar} \\
 	$|$ & \nt{var\_type} \styleIMI{array(} \nt{arithmetic\_expression} \styleIMI{)} \\
-  $|$ & \nt{var\_type} \styleIMI{list} \\
+  	$|$ & \nt{var\_type} \styleIMI{list} \\
 	$|$ & \nt{var\_type} \styleIMI{stack} \\
 	$|$ & \nt{var\_type} \styleIMI{queue} \\
 
@@ -4211,7 +4211,8 @@ We define each of those two components below.
 \regleGrammaire{var\_type\_scalar}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-  $|$ & \styleIMI{binary (} \nt{pos\_integer}  \styleIMI{)} \\
+	$|$ & \styleIMI{void} \\
+  	$|$ & \styleIMI{binary (} \nt{pos\_integer}  \styleIMI{)} \\
 	$|$ & \styleIMI{bool}  \\
 	$|$ & \styleIMI{constant}  \\
 	$|$ & \styleIMI{discrete}  \\
@@ -4489,6 +4490,7 @@ We define each of those two components below.
 	$|$ & \nt{list\_expression} \\
 	$|$ & \nt{stack\_expression} \\
 	$|$ & \nt{queue\_expression} \\
+	$|$ & \nt{void\_expression} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -4501,6 +4503,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{array\_mem (} \nt{global\_expression} \styleIMI{, } \nt{array\_expression} \styleIMI{)} \\
 	$|$ \ & \styleIMI{<name>} \\
 	$|$ & \nt{literal\_array} \\
+	$|$ & \nt{function\_call} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -4517,6 +4520,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{list\_tl (} \nt{list\_expression} \styleIMI{)} \\
 	$|$ \ & \styleIMI{<name>} \\
 	$|$ & \nt{literal\_list} \\
+	$|$ & \nt{function\_call} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -4532,6 +4536,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{stack\_length (} \nt{stack\_expression} \styleIMI{)} \\
 	$|$ \ & \styleIMI{<name>} \\
 	$|$ & \styleIMI{stack()} \\
+	$|$ & \nt{function\_call} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -4547,6 +4552,14 @@ We define each of those two components below.
 	$|$ & \styleIMI{queue\_length (} \nt{queue\_expression} \styleIMI{)} \\
 	$|$ \ & \styleIMI{<name>} \\
 	$|$ & \styleIMI{queue()} \\
+	$|$ & \nt{function\_call} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{void\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\ & \nt{function\_call} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -4597,6 +4610,7 @@ We define each of those two components below.
 	$|$ \	& \nt{array\_access} \\
 	$|$ \ 	& \styleIMI{<name>} \\
 	$|$ \ 	& \styleIMI{<binary\_word>} \\
+	$|$ & \nt{function\_call} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -4621,6 +4635,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{<name>}                                     \\
 	$|$	& \styleIMI{True}                                                    \\
 	$|$ & \styleIMI{False}                                                   \\
+	$|$ & \nt{function\_call} \\
 \end{tabular}
 
 
@@ -4655,11 +4670,25 @@ We define each of those two components below.
 	$|$ & \styleIMI{rational\_of\_int(} \nt{arithmetic\_expression} \styleIMI{)} \\
 	$|$ & \nt{array\_access}									\\
 	$|$ & \styleIMI{<name>}                                     \\
-	$|$   & \nt{rational}
+	$|$   & \nt{rational} \\
+	$|$ & \nt{function\_call}
 \end{tabular}
 
+%------------------------------------------------------------
+\regleGrammaire{function\_call}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\ & \styleIMI{<name>} \styleIMI{(} \nt{function\_argument\_fol} \styleIMI{)}
+\end{tabular}
 
-
+%------------------------------------------------------------
+\regleGrammaire{function\_argument\_fol}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{global\_expression} \styleIMI{,} \nt{function\_argument\_fol} \\
+	$|$ & \nt{global\_expression} \\
+	$|$ & \emptystring
+\end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{convex\_predicate}
@@ -5469,6 +5498,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{True} \\
 	\styleIMI{urgent} \\
 	\styleIMI{var} \\
+	\styleIMI{void} \\
 	\styleIMI{wait} \\
 	\styleIMI{when} \\
 	\styleIMI{while} \\
