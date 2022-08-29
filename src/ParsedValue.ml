@@ -21,6 +21,7 @@ open Exceptions
 open DiscreteType
 
 type parsed_value =
+    | Void_value
     | Weak_number_value of NumConst.t
     | Rational_value of NumConst.t
     (* TODO benjamin make literal int to have the use of this variant *)
