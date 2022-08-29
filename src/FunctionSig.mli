@@ -55,6 +55,7 @@ type type_constraint =
 
 (* Constraint on concrete type *)
 and defined_type_constraint =
+    | Void_constraint
     | Number_constraint of type_number_constraint
     | Bool_constraint
     | Binary_constraint of length_constraint

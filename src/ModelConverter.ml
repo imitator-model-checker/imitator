@@ -885,7 +885,14 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
 	(* Return whether the init declaration passed the tests *)
 	discrete_values_pairs, discrete_initialization_well_formed
 
+(* Check if a constant or a variable is typed as a void, print error when one found *)
+let has_void_constant_or_variable str_var_kind name var_type =
 
+    let str_var_kind_capitalized = String.capitalize_ascii str_var_kind in
+
+    match var_type with
+    | Var_type_discrete Var_type_void -> print_error (str_var_kind_capitalized ^ " `" ^ name ^ "` was declared as `void`. A " ^ str_var_kind ^ " cannot be declared as `void`."); true
+    | _ -> false
 
 (************************************************************)
 (** Converting the model *)
@@ -2949,6 +2956,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     }
     in
 
+    (* Check that constants are not void *)
+    let has_void_constants = List.exists (fun (name, _, var_type) ->
+        has_void_constant_or_variable "constant" name var_type
+    ) constants in
+
+    if has_void_constants then
+        raise InvalidModel;
+
     (* Evaluate the constants init expressions *)
     let evaluated_constants = List.map (fun (name, expr, var_type) ->
 
@@ -2962,7 +2977,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
                 ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
                 ^ "\" use undeclared variable or constant"
             );
-            raise (InvalidModel);
+            raise InvalidModel;
         );
 
         (* TYPE CHECKING *)
@@ -3153,6 +3168,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	)
 	in
 
+    (* Check that variables are not void *)
+    let has_void_variables = List.exists (fun (var_type, name) ->
+        has_void_constant_or_variable "variable" name var_type
+    ) discrete_names_by_type in
+
+    if has_void_variables then
+        raise InvalidModel;
+
     (* Group variable names by types *)
 	let discrete_names_by_type_group = OCamlUtilities.group_by_and_map (fun (var_type, var_name) -> var_type) (fun (var_type, var_name) -> var_name) discrete_names_by_type in
 
@@ -3305,7 +3328,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* Convert var_type from ParsingStructure to AbstractModel *)
 		type_of_variables.(i) <- var_type;
         (* Print type infos *)
-		print_message Verbose_high ("variable " ^ v ^ " : " ^ (DiscreteType.string_of_var_type type_of_variables.(i)))
+		print_message Verbose_high ("set type variable " ^ v ^ " : " ^ (DiscreteType.string_of_var_type type_of_variables.(i)))
 	done;
 
 	(* Functional representation *)

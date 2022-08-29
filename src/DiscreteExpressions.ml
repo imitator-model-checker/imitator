@@ -45,6 +45,7 @@ type product_quotient =
 (****************************************************************)
 type global_expression =
     (* A typed expression *)
+    | Void_expression of void_expression
     | Arithmetic_expression of discrete_arithmetic_expression
     | Bool_expression of boolean_expression
     | Binary_word_expression of binary_word_expression
@@ -207,6 +208,8 @@ and queue_expression =
     | Queue_array_access of expression_access_type * int_arithmetic_expression
     | Queue_function_call of variable_name * variable_name list * global_expression list
 
+and void_expression =
+    | Void_function_call of variable_name * variable_name list * global_expression list
 
 
 and expression_access_type =
@@ -218,6 +221,7 @@ and fun_body =
     | Fun_local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * fun_body
     | Fun_instruction of (update_type * global_expression) * fun_body
     | Fun_expr of global_expression
+    | Fun_void_expr
 
 (* Update type *)
 and scalar_or_index_update_type =
@@ -550,6 +554,7 @@ let string_of_conj_dis = function
     | Or -> Constants.default_string.or_operator
 
 let rec customized_string_of_global_expression customized_string variable_names = function
+    | Void_expression expr -> customized_string_of_void_expression customized_string variable_names expr
     | Arithmetic_expression expr -> customized_string_of_arithmetic_expression customized_string variable_names expr
     | Bool_expression expr -> customized_string_of_boolean_expression customized_string variable_names expr
     | Binary_word_expression expr -> customized_string_of_binary_word_expression customized_string variable_names expr
@@ -831,6 +836,9 @@ and customized_string_of_queue_expression customized_string variable_names = fun
     | Queue_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
+and customized_string_of_void_expression customized_string variable_names = function
+    | Void_function_call (function_name, _, args_expr) ->
+        customized_string_of_function_call customized_string variable_names function_name args_expr
 
 and string_of_expression_of_access customized_string variable_names = function
     | Expression_array_access array_expr ->

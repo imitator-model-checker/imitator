@@ -335,10 +335,23 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         not (has_parameter_modifications || has_local_variable_modifications || has_clock_param_modifications || was_updated_by_clock_param)
     in
 
+    (* Check if there isn't any void typed variable or parameter *)
+    let is_any_void_local_variable =
+        (* Get local variables / parameters of parsed function *)
+        let local_variables = Functions.local_variables_of_fun fun_def in
+        (* Check if exist any void variable *)
+        List.exists (fun (variable_name, discrete_type) ->
+            match discrete_type with
+            | Var_type_void -> print_error ("Local variable or parameter `" ^ variable_name ^ "` in `" ^ fun_def.name ^ "` was declared as `void`. A variable cannot be declared as `void`."); true
+            | _ -> false
+        ) local_variables
+    in
+
     (* Return *)
     is_consistent_duplicate_parameters
     && is_assignments_are_allowed
     && is_all_variables_defined
+    && not is_any_void_local_variable
 
 let convert_fun_definition variable_infos (fun_definition : parsed_fun_definition) =
 

@@ -187,6 +187,7 @@ type parsed_next_expr =
     | Parsed_fun_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_global_expression (* init expr *) * parsed_next_expr * int (* id *)
     | Parsed_fun_instruction of normal_update * parsed_next_expr
     | Parsed_fun_expr of parsed_global_expression
+    | Parsed_fun_void_expr
 
 (* Metadata of a function *)
 type function_metadata = {

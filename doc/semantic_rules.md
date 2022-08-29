@@ -1,3 +1,17 @@
+# Variable declaration
+
+ - Declare a variable or a constant as `void` is forbidden
+
+# User-defined functions
+
+## Parameters
+
+ - Declare a parameter as `void` is forbidden
+
+## Local variables 
+
+ - Declare a local variable as `void` is forbidden
+
 # Init
 
 ## Discrete init

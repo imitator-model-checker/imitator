@@ -25,6 +25,7 @@ type abstract_scalar_value =
     | Abstract_binary_word_value of BinaryWord.t
 
 type abstract_value =
+    | Abstract_void_value
     | Abstract_scalar_value of abstract_scalar_value
     | Abstract_container_value of abstract_container_value
 

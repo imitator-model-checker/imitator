@@ -110,7 +110,7 @@ type typed_fun_body =
     | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_body
     | Typed_fun_instruction of typed_normal_update * typed_fun_body
     | Typed_fun_expr of typed_global_expression
-
+    | Typed_fun_void_expr
 
 type typed_fun_definition = {
     name : variable_name; (* function name *)
@@ -240,6 +240,7 @@ type typed_fun_body =
     | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_body
     | Typed_fun_instruction of typed_normal_update * typed_fun_body
     | Typed_fun_expr of typed_global_expression
+    | Typed_fun_void_expr
 
 type typed_fun_definition = {
     name : variable_name; (* function name *)
@@ -411,7 +412,7 @@ let rec string_of_fun_body variable_infos = function
 
     | Typed_fun_expr expr ->
         string_of_typed_global_expression variable_infos expr
-
+    | Typed_fun_void_expr -> ""
 
 
 let string_of_typed_loc_predicate variable_infos = function
@@ -1097,6 +1098,7 @@ let rec type_check_fun_body local_variables variable_infos infer_type_opt = func
     | Parsed_fun_expr expr ->
         let typed_expr, discrete_type, has_side_effects = type_check_global_expression (Some local_variables) variable_infos infer_type_opt expr in
         Typed_fun_expr typed_expr, discrete_type, has_side_effects
+    | Parsed_fun_void_expr -> Typed_fun_void_expr, Var_type_void, false
 
 let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStructure.parsed_fun_definition) =
     (* Get parameter types and return type of the function *)
@@ -1581,6 +1583,10 @@ and global_expression_of_typed_boolean_expression_without_type variable_infos = 
 
 and global_expression_of_typed_boolean_expression variable_infos expr discrete_type =
     match discrete_type with
+    | Var_type_void ->
+        Void_expression (
+            void_expression_of_typed_boolean_expression variable_infos expr
+        )
     | Var_type_discrete_number discrete_number_type ->
         Arithmetic_expression (
             discrete_arithmetic_expression_of_typed_boolean_expression variable_infos discrete_number_type expr
@@ -1754,6 +1760,7 @@ and bool_expression_of_typed_comparison variable_infos l_expr relop r_expr = fun
             convert_parsed_relop relop,
             queue_expression_of_typed_discrete_boolean_expression variable_infos inner_type r_expr
         )
+    | Var_type_void
     | Var_type_weak ->
         raise (InternalError expression_must_have_type_message)
 
@@ -2473,6 +2480,69 @@ and queue_expression_of_typed_function_call variable_infos discrete_type argumen
         List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
     )
 
+and void_expression_of_typed_boolean_expression variable_infos = function
+    | Typed_discrete_bool_expr (expr, _) ->
+       void_expression_of_typed_discrete_boolean_expression variable_infos expr
+    | _ as expr ->
+        let str_expr = string_of_typed_boolean_expression variable_infos expr in
+        let fail_message = expr_type_doesnt_match_to_structure_message "void" str_expr in
+        raise (InternalError fail_message)
+
+and void_expression_of_typed_discrete_boolean_expression variable_infos = function
+    | Typed_arithmetic_expr (expr, _) ->
+        void_expression_of_typed_arithmetic_expression variable_infos expr
+    | _ as expr ->
+	    let str_expr = string_of_typed_discrete_boolean_expression variable_infos expr in
+	    let fail_message = expr_type_doesnt_match_to_structure_message "void" str_expr in
+	    raise (InternalError fail_message)
+
+and void_expression_of_typed_arithmetic_expression variable_infos = function
+	| Typed_term (term, _) ->
+        void_expression_of_typed_term variable_infos term
+	| _ as expr ->
+	    let str_expr = string_of_typed_discrete_arithmetic_expression variable_infos Var_type_weak expr in
+	    let fail_message = expr_type_doesnt_match_to_structure_message "void" str_expr in
+	    raise (InternalError fail_message)
+
+and void_expression_of_typed_term variable_infos = function
+	| Typed_factor (factor, _) ->
+        void_expression_of_typed_factor variable_infos factor
+    | _ as expr ->
+	    let str_expr = string_of_typed_discrete_term variable_infos Var_type_weak expr in
+	    let fail_message = expr_type_doesnt_match_to_structure_message "void" str_expr in
+        raise (InternalError fail_message)
+
+and void_expression_of_typed_factor variable_infos = function
+	| Typed_variable (variable_name, _, scope) ->
+	    (* Some code should control that variables and function parameters cannot be declared as void *)
+	    (* If this exception is raised, it mean that control was not made before properly *)
+        raise (InternalError
+            "`void` keyword is reserved for function return type.
+            Literals, constants, function parameters, local or global variables of type `void` cannot be declared.
+            It should be checked before."
+        )
+
+	| Typed_expr (expr, _) ->
+        void_expression_of_typed_arithmetic_expression variable_infos expr
+
+	| Typed_function_call (function_name, argument_expressions, _) ->
+	    void_expression_of_typed_function_call variable_infos argument_expressions function_name
+
+	| _ as expr ->
+	    let str_expr = string_of_typed_discrete_factor variable_infos Var_type_weak expr in
+	    let fail_message = expr_type_doesnt_match_to_structure_message "void" str_expr in
+	    raise (InternalError fail_message)
+
+and void_expression_of_typed_function_call variable_infos argument_expressions function_name =
+
+    let fun_meta = user_function_meta variable_infos function_name in
+
+    Void_function_call (
+        function_name,
+        fun_meta.parameter_names,
+        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+    )
+
 (* --------------------*)
 (* Access conversion *)
 (* --------------------*)
@@ -2849,6 +2919,8 @@ let rec fun_body_of_typed_fun_body variable_infos = function
         Fun_expr (
             global_expression_of_typed_global_expression variable_infos typed_expr
         )
+    | Typed_fun_void_expr ->
+        Fun_void_expr
 
 let fun_definition_of_typed_fun_definition variable_infos (typed_fun_definition : typed_fun_definition) : fun_definition =
     {

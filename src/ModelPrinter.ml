@@ -337,6 +337,7 @@ let string_of_fun_definitions model =
 
             | Fun_expr expr ->
                 DiscreteExpressions.string_of_global_expression model.variable_names expr ^ "\n"
+            | Fun_void_expr -> ""
         in
 
         (* Convert function into a string *)
@@ -368,7 +369,7 @@ let string_of_fun_definitions model =
     (* Map each definition to it's string representation *)
     let str_fun_definitions_list = List.map string_of_fun_definition fun_definition_list in
     (* Join all strings *)
-    OCamlUtilities.string_of_list_of_string_with_sep "\n\n" str_fun_definitions_list
+    OCamlUtilities.string_of_list_of_string_with_sep_without_empty_strings "\n\n" str_fun_definitions_list
 
 (* Get string of a global expression *)
 let string_of_global_expression = DiscreteExpressions.string_of_global_expression

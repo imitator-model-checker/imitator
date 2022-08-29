@@ -4,7 +4,7 @@
  *
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
- * Module description: Functions that extract information on parsed model (dependency graph of variables / functions, etc.)
+ * Module description: Functions that extract useful information on parsed model (dependency graph of variables / functions, etc.)
  *
  * File contributors : Benjamin L.
  * Created           : 2022/05/18
@@ -209,7 +209,8 @@ let declared_components_of_model parsed_model =
                     Local_variable_ref (variable_name, fun_def.name, id) ::
                     all_local_variable_of_fun_body fun_body
             | Parsed_fun_instruction _
-            | Parsed_fun_expr _ -> []
+            | Parsed_fun_expr _
+            | Parsed_fun_void_expr -> []
         in
         all_local_variable_of_fun_body fun_def.body
     in
@@ -385,6 +386,8 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_global_expression local_variables expr in
                 let all_refs = variables_used_refs @ functions_used_refs in
                 List.map (fun _ref -> (fun_ref, _ref)) all_refs
+
+            | Parsed_fun_void_expr -> []
         in
         (* Get all component relations of current function body *)
         function_relations_in_parsed_next_expr_rec local_variables fun_def.body
@@ -581,7 +584,7 @@ let string_of_dependency_graph (components, component_relations) =
     "digraph dependency_graph {" ^ str_components ^ ";" ^ str_component_relations ^ "}"
 
 (* Utils function for traversing a parsed_fun_definition *)
-let traverse_function operator f (fun_def : parsed_fun_definition) =
+let traverse_function operator f base (fun_def : parsed_fun_definition) =
     (* Add parameters as local variables *)
     let parameter_refs = List.map (fun (param_name, _) -> Param_ref (param_name, fun_def.name)) fun_def.parameters in
     let local_variable_components = List.fold_right ComponentSet.add parameter_refs ComponentSet.empty in
@@ -606,7 +609,7 @@ let traverse_function operator f (fun_def : parsed_fun_definition) =
 
         | Parsed_fun_expr _ as expr ->
             f !local_variable_components_ref expr
-
+        | Parsed_fun_void_expr -> base
     in
     traverse_parsed_next_expr fun_def.body
 
@@ -646,9 +649,10 @@ let left_variables_of_assignments_in (fun_def : parsed_fun_definition) =
 
             | None -> ()
             );
-        | Parsed_fun_expr expr -> ()
+        | Parsed_fun_expr _
+        | Parsed_fun_void_expr -> ()
     in
-    traverse_function bin_unit left_variables_of_assignments_in_parsed_next_expr fun_def;
+    traverse_function bin_unit left_variables_of_assignments_in_parsed_next_expr () fun_def;
     !components_ref
 
 let variable_ref_of local_variable_components variable_name =
@@ -680,7 +684,8 @@ let right_variables_of_assignments_in (fun_def : parsed_fun_definition) =
             let variable_refs = List.map (variable_ref_of local_variable_components) variable_names in
             component_refs := List.fold_left (Fun.flip ComponentSet.add) !component_refs variable_refs
 
-        | Parsed_fun_expr expr -> ()
+        | Parsed_fun_expr _
+        | Parsed_fun_void_expr -> ()
     in
-    traverse_function bin_unit right_variables_of_assignments_in_parsed_next_expr fun_def;
+    traverse_function bin_unit right_variables_of_assignments_in_parsed_next_expr () fun_def;
     !component_refs

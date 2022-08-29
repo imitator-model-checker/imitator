@@ -22,6 +22,7 @@ open DiscreteExpressions
 open AbstractModel
 open DiscreteType
 open AbstractValue
+open FunctionSig
 open Result
 
 
@@ -61,14 +62,15 @@ let uppaal_assignment = " = "
 (* Positioning *)
 let scaling_factor = 200
 
-(* Customized string of discrete number type *)
+(* Customized string of discrete number type for UPPAAL *)
 let string_of_var_type_discrete_number = function
     | Var_type_discrete_weak_number
     | Var_type_discrete_rat -> "int"
     | Var_type_discrete_int -> "int"
 
-(* Customized string of discrete var type *)
+(* Customized string of discrete var type for UPPAAL *)
 let rec string_of_var_type_discrete = function
+    | Var_type_void -> "void"
     | Var_type_discrete_number x -> string_of_var_type_discrete_number x
     | Var_type_discrete_bool -> "bool"
     | Var_type_discrete_binary_word length ->
@@ -85,11 +87,60 @@ let rec string_of_var_type_discrete = function
 
 
 
-(* Customized string of var_type *)
+(* Customized string of var_type for UPPAAL *)
 let string_of_var_type = function
 	| Var_type_clock -> "clock"
 	| Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
 	| Var_type_parameter -> "parameter"
+
+(* Customized string of length constraint for UPPAAL *)
+let rec string_of_length_constraint = function
+    | Length_constraint_expression length_constraint_expr -> string_of_length_constraint_expression length_constraint_expr
+    | Length_constraint length -> string_of_int length
+
+(* Customized string of length constraint expression for UPPAAL *)
+and string_of_length_constraint_expression = function
+    | Length_scalar_constraint constraint_name -> constraint_name
+    | Length_plus_constraint (constraint_name, length_constraint) -> constraint_name ^ " + " ^ string_of_length_constraint length_constraint
+
+(* Customized string of int type constraint for UPPAAL *)
+let string_of_int_type_constraint = function
+    | Int_type_constraint -> "int"
+    | Int_name_constraint constraint_name -> constraint_name ^ ":int"
+
+(* Customized string of number type constraint for UPPAAL *)
+let string_of_type_number = function
+    | Int_constraint int_constraint -> string_of_int_type_constraint int_constraint
+    | Rat_constraint -> "double"
+
+(* Customized string of number constraint for UPPAAL *)
+let string_of_type_number_constraint = function
+    | Number_type_name_constraint constraint_name -> "'" ^ constraint_name ^ " number"
+    | Defined_type_number_constraint defined_type_constraint_number -> string_of_type_number defined_type_constraint_number
+
+(* Customized string of defined type constraint for UPPAAL *)
+let rec string_of_defined_type_constraint = function
+    | Void_constraint ->
+        "void"
+    | Number_constraint type_number_constraint ->
+        string_of_type_number_constraint type_number_constraint
+    | Bool_constraint ->
+        "bool"
+    | Binary_constraint length_constraint ->
+        "int"
+    | Array_constraint (type_constraint, length_constraint) ->
+        string_of_type_constraint type_constraint ^ "[]"
+    | List_constraint type_constraint ->
+        string_of_type_constraint type_constraint ^ "[]"
+    | Stack_constraint type_constraint ->
+        string_of_type_constraint type_constraint ^ "[]"
+    | Queue_constraint type_constraint ->
+        string_of_type_constraint type_constraint ^ "[]"
+
+(* Customized string of type constraint for UPPAAL *)
+and string_of_type_constraint = function
+    | Type_name_constraint constraint_name -> "'" ^ constraint_name
+    | Defined_type_constraint defined_type_constraint -> string_of_defined_type_constraint defined_type_constraint
 
 (* Get the UPPAAL string representation of a value according to it's IMITATOR type *)
 (* For example a literal array is translated from `[1,2,..,n]` to `{1,2,..,n}` *)
@@ -109,6 +160,7 @@ let string_of_scalar_value = function
         string_of_int (BinaryWord.to_int v)
 
 let rec string_of_value = function
+    | Abstract_void_value -> ""
     | Abstract_scalar_value v -> string_of_scalar_value v
     | Abstract_container_value v -> string_of_container_value v
 
@@ -388,6 +440,7 @@ let string_of_fun_definitions model =
 
             | Fun_expr expr ->
                 "return " ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names expr ^ ";\n"
+            | Fun_void_expr -> ""
         in
 
         (* Convert a function into a string *)
@@ -397,12 +450,12 @@ let string_of_fun_definitions model =
                 let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
                 let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
                 (* Convert parameters into a string *)
-                let str_param_list = List.map (fun (param_name, type_constraint) -> FunctionSig.string_of_type_constraint type_constraint ^ " " ^ param_name) parameter_names_with_constraints in
+                let str_param_list = List.map (fun (param_name, type_constraint) -> string_of_type_constraint type_constraint ^ " " ^ param_name) parameter_names_with_constraints in
                 let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in
 
                 let str_body = string_of_next_expr f in
                 (* Format function definition *)
-                FunctionSig.string_of_type_constraint return_type_constraint ^ " " ^ fun_def.name ^ "(" ^ str_params ^ ") { \n"
+                string_of_type_constraint return_type_constraint ^ " " ^ fun_def.name ^ "(" ^ str_params ^ ") { \n"
                 ^ str_body
                 ^ "}"
         in
@@ -437,10 +490,7 @@ let string_of_declarations model actions_and_nb_automata =
 
     (* Declare built-in functions *)
 
-    ^ string_of_builtin_functions model
-
-    (* Declare custom user functions *)
-    ^ string_of_fun_definitions model
+    ^ "\n\n" ^ string_of_builtin_functions model
 
 	(* Declare clocks *)
 	^ (string_of_clocks model)
@@ -450,6 +500,9 @@ let string_of_declarations model actions_and_nb_automata =
 
 	(* Declare discrete needed to encode strong broadcast *)
 	^ (string_of_discrete_nb_strongbroadcast model actions_and_nb_automata)
+
+    (* Declare custom user functions *)
+    ^ "\n\n" ^ string_of_fun_definitions model
 
 	(* Declare parameters *)
 	^ (string_of_parameters model)

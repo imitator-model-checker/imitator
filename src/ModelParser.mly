@@ -71,7 +71,7 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY
+	CT_VOID CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY
   CT_INSIDE
   CT_DO
   CT_SEQ
@@ -201,6 +201,7 @@ var_type:
 
 var_type_discrete:
     | var_type_discrete_number { Var_type_discrete_number $1 }
+    | CT_VOID { Var_type_void }
     | CT_BOOL { Var_type_discrete_bool }
     | CT_BINARY_WORD LPAREN pos_integer RPAREN { Var_type_discrete_binary_word (NumConst.to_bounded_int $3) }
     | var_type_discrete_array { $1 }
@@ -281,6 +282,7 @@ fun_body:
   | fun_local_decl { $1 }
   | fun_instruction { $1 }
   | expression { Parsed_fun_expr $1 }
+  | { Parsed_fun_void_expr }
 ;
 
 fun_local_decl:
@@ -659,7 +661,6 @@ postfix_arithmetic_factor:
 arithmetic_factor:
   | arithmetic_factor LSQBRA arithmetic_expression RSQBRA { Parsed_DF_access ($1, $3) }
   | arithmetic_factor LPAREN function_argument_fol RPAREN { Parsed_function_call ($1, $3) }
-  | arithmetic_factor LPAREN RPAREN { Parsed_function_call ($1, []) }
   | literal_scalar_constant { Parsed_DF_constant $1 }
   | literal_non_scalar_constant { $1 }
   | NAME { Parsed_DF_variable $1 }
@@ -695,7 +696,8 @@ literal_array_fol:
 function_argument_fol:
   | boolean_expression COMMA function_argument_fol { $1 :: $3 }
   | boolean_expression { [$1] }
-
+  | { [] }
+;
 
 number:
 	| integer { ParsedValue.Weak_number_value $1 }

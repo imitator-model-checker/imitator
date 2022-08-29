@@ -34,6 +34,28 @@ open FunctionSig
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
+(* Get local variables of a parsed function definition *)
+let local_variables_of_fun (fun_def : parsed_fun_definition) =
+   (* Add parameters as local variables *)
+    let parameters = List.map (fun (param_name, discrete_type) -> param_name, discrete_type) fun_def.parameters in
+
+    (* Function that traverse function body expression *)
+    let rec local_variables_of_parsed_next_expr = function
+        | Parsed_fun_local_decl (variable_name, discrete_type, _, next_expr, _) ->
+            let local_variables = local_variables_of_parsed_next_expr next_expr in
+            (* Add the new declared local variable *)
+            (variable_name, discrete_type) :: local_variables
+
+        | Parsed_fun_instruction (_, next_expr) ->
+            local_variables_of_parsed_next_expr next_expr
+
+        | Parsed_fun_expr _
+        | Parsed_fun_void_expr -> []
+    in
+
+    let local_variables = local_variables_of_parsed_next_expr fun_def.body in
+    parameters @ local_variables
+
 (* Infer whether a user function is subject to side effects *)
 let rec is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
 
@@ -87,6 +109,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
         | Parsed_fun_expr expr ->
             (* Check if expression has side-effects *)
             ParsingStructureUtilities.exists_in_parsed_global_expression is_leaf_has_side_effects expr
+        | Parsed_fun_void_expr -> false
     in
     is_next_expr_has_side_effects fun_def.body
 
@@ -109,7 +132,9 @@ let fun_def_without_unused_local_vars unused_local_vars (fun_def : parsed_fun_de
             let new_next_expr_without_unused = next_expr_without_unused next_expr in
             Parsed_fun_instruction (normal_update, new_next_expr_without_unused)
 
-        | Parsed_fun_expr _ as expr -> expr
+
+        | Parsed_fun_expr _
+        | Parsed_fun_void_expr as expr -> expr
 
     in
     { fun_def with body = next_expr_without_unused fun_def.body }

@@ -90,6 +90,7 @@ let try_eval_local_variable variable_name = function
 
 (* Evaluate an expression *)
 let rec eval_global_expression_with_context variable_names functions_table_opt eval_context_opt = function
+    | Void_expression expr -> eval_void_expression_with_context variable_names functions_table_opt eval_context_opt expr
     | Arithmetic_expression expr -> Abstract_scalar_value (eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt expr)
     | Bool_expression expr -> Abstract_scalar_value (Abstract_bool_value (eval_boolean_expression_with_context variable_names functions_table_opt eval_context_opt expr))
     | Binary_word_expression expr -> Abstract_scalar_value (Abstract_binary_word_value (eval_binary_word_expression_with_context variable_names functions_table_opt eval_context_opt expr))
@@ -412,6 +413,11 @@ and eval_queue_expression_with_context variable_names functions_table_opt eval_c
         let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
         queue_value result
 
+and eval_void_expression_with_context variable_names functions_table_opt eval_context_opt = function
+    | Void_function_call (function_name, param_names, expr_args) ->
+        let _ = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+        Abstract_void_value
+
 and get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr =
 
         let index = eval_int_expression_with_context variable_names functions_table_opt eval_context_opt index_expr in
@@ -480,6 +486,7 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
 
         | Fun_expr expr ->
             eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr
+        | Fun_void_expr -> Abstract_void_value
     in
 
     (* Eval function *)

@@ -150,6 +150,7 @@ and fold_parsed_next_expr operator base leaf_fun leaf_update_fun = function
 
     | Parsed_fun_expr expr ->
         fold_parsed_global_expression operator base leaf_fun expr
+    | Parsed_fun_void_expr -> base
 
 and fold_parsed_normal_update operator base leaf_fun leaf_update_fun (update_type, expr) =
     operator
@@ -257,6 +258,7 @@ let fold_parsed_function_definition operator base leaf_fun leaf_update_fun (fun_
 
         | Parsed_fun_expr expr ->
             fold_parsed_global_expression operator base leaf_fun expr
+        | Parsed_fun_void_expr -> base
     in
     fold_parsed_function_next_expr fun_def.body
 
@@ -523,6 +525,7 @@ and string_of_parsed_next_expr variable_infos = function
 
         | Parsed_fun_expr expr ->
             string_of_parsed_global_expression variable_infos expr
+        | Parsed_fun_void_expr -> ""
 
 and string_of_parsed_normal_update variable_infos (update_type, expr) =
     let str_left_member = string_of_parsed_update_type variable_infos update_type in
@@ -955,7 +958,7 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
 
         | Parsed_fun_expr expr ->
             all_variables_defined_in_parsed_global_expression local_variables expr
-
+        | Parsed_fun_void_expr -> true
     in
     all_variables_defined_in_parsed_next_expr_rec local_variables fun_def.body
 
@@ -1133,7 +1136,7 @@ let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def 
 
         | Parsed_fun_expr expr ->
             iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) expr
-
+        | Parsed_fun_void_expr -> ()
     in
     get_variables_in_parsed_next_expr_rec local_variables_ref fun_def.body;
     (* Remove local variables from variable found in function (because we need to get only global variables and local variables shadow global variables) *)
