@@ -2909,6 +2909,10 @@ END CONSTRAINT
 /* Discrete variables declarations (WARNING: these variables can be rational-valued in IMITATOR, but they become integer-valued in Uppaal) */
 bool b = true;
 
+/* User defined function declarations (WARNING: some user defined functions may not be well translated) */
+
+
+
 /* Action declarations */
 
 
@@ -2921,20 +2925,20 @@ bool b = true;
 
 <template><name x="0" y="0">pta</name><declaration>// No local declaration for automaton 'pta'
 </declaration>
- 
+
 <location id="id_pta0_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40"></label></location>
- 
+
 <location id="id_pta0_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40"></label></location>
- 
+
 <location id="id_pta0_loc2" x="400" y="0">
 	<name x="400" y="-40">lend</name>
 	<label kind="invariant" x="400" y="40">b</label></location>
  <init ref="id_pta0_loc0"/>
- 
+
 	<transition>
 		<source ref="id_pta0_loc0"/>
 		<target ref="id_pta0_loc1"/>
@@ -21102,6 +21106,10 @@ clock x;
 /* Discrete variable declarations needed to encode IMITATOR's strong broadcast into Uppaal */
 int nb__a = 3;
 
+/* User defined function declarations (WARNING: some user defined functions may not be well translated) */
+
+
+
 /* Action declarations */
 broadcast chan a; /* This action is used in 3 automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the correctness is ensured thanks to variable 'nb__a' */
 chan b;
@@ -21115,16 +21123,16 @@ broadcast chan c;
 
 <template><name x="0" y="0">pta1</name><declaration>// No local declaration for automaton 'pta1'
 </declaration>
- 
+
 <location id="id_pta0_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
- 
+
 <location id="id_pta0_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
  <init ref="id_pta0_loc0"/>
- 
+
 	<transition>
 		<source ref="id_pta0_loc0"/>
 		<target ref="id_pta0_loc0"/>
@@ -21137,23 +21145,23 @@ broadcast chan c;
 		<target ref="id_pta0_loc1"/>
 		<label kind="synchronisation" x="100" y="80">b!</label>
 		<label kind="guard" x="100" y="40"> x == 4</label>
-		
+
 	</transition>
  </template>
 
 
 <template><name x="1" y="1">pta2</name><declaration>// No local declaration for automaton 'pta2'
 </declaration>
- 
+
 <location id="id_pta1_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
- 
+
 <location id="id_pta1_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
  <init ref="id_pta1_loc0"/>
- 
+
 	<transition>
 		<source ref="id_pta1_loc0"/>
 		<target ref="id_pta1_loc0"/>
@@ -21166,27 +21174,27 @@ broadcast chan c;
 		<target ref="id_pta1_loc1"/>
 		<label kind="synchronisation" x="100" y="80">b?</label>
 		<label kind="guard" x="100" y="40"></label>
-		
+
 	</transition>
  </template>
 
 
 <template><name x="2" y="2">pta3</name><declaration>// No local declaration for automaton 'pta3'
 </declaration>
- 
+
 <location id="id_pta2_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
- 
+
 <location id="id_pta2_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
- 
+
 <location id="id_pta2_loc2" x="400" y="0">
 	<name x="400" y="-40">l3</name>
 	<label kind="invariant" x="400" y="40">nb__a == 3</label></location>
  <init ref="id_pta2_loc0"/>
- 
+
 	<transition>
 		<source ref="id_pta2_loc0"/>
 		<target ref="id_pta2_loc1"/>
