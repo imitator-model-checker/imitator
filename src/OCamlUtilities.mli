@@ -99,6 +99,9 @@ val elements_existing_several_times : 'a list -> 'a list
 (** Remove the first occurence of element e in list l; return the list unchanged if not found *)
 val list_remove_first_occurence : 'a -> 'a list -> 'a list
 
+(* Remove all empty strings in list *)
+val list_without_empty_string : string list -> string list
+
 (** Remove the ith element of a list *)
 val list_delete_at : int -> 'a list -> 'a list
 

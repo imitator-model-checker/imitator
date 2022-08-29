@@ -1677,6 +1677,11 @@ We give below some examples of user function definitions:
 		my_global_i + my_global_j
 	end
 
+	fn side_effect_without_return_type(i : int, j : int) : void
+	begin
+		side_effect(i, j);
+	end
+
 \end{IMITATORmodel}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%

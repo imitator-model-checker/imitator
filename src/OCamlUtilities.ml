@@ -208,6 +208,8 @@ let elements_existing_several_times l =
 (*** WARNING: not tested ***)
 let list_remove_first_occurence e l = ExtList.List.remove l e
 
+(* Remove all empty strings in list *)
+let list_without_empty_string = List.filter (fun s -> s <> "")
 
 (** Remove the ith element of a list *)
 let list_delete_at i al =
