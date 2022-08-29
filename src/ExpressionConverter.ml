@@ -2514,15 +2514,12 @@ and void_expression_of_typed_term variable_infos = function
 
 and void_expression_of_typed_factor variable_infos = function
 	| Typed_variable (variable_name, _, scope) ->
-	    (match scope with
-	    | Local ->
-	        Void_local_variable variable_name
-	    | Global ->
-            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
-            (match variable_kind with
-            | Constant_kind value -> Literal_void
-            | Variable_kind discrete_index -> Void_variable discrete_index
-            )
+	    (* Some code should control that variables and function parameters cannot be declared as void *)
+	    (* If this exception is raised, it mean that control was not made before properly *)
+        raise (InternalError
+            "`void` keyword is reserved for function return type.
+            Literals, constants, function parameters, local or global variables of type `void` cannot be declared.
+            It should be checked before."
         )
 
 	| Typed_expr (expr, _) ->

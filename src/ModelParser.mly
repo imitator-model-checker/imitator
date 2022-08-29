@@ -672,7 +672,6 @@ literal_scalar_constant:
   | CT_TRUE { ParsedValue.Bool_value true }
   | CT_FALSE { ParsedValue.Bool_value false }
   | binary_word { $1 }
-  | LPAREN RPAREN { ParsedValue.Void_value }
 ;
 
 literal_non_scalar_constant:
