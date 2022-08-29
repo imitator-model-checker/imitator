@@ -46,7 +46,6 @@ val fold_parsed_normal_update : ('a -> 'a -> 'a) -> 'a -> (parsing_structure_lea
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
 val for_all_in_parsed_boolean_expression : (parsing_structure_leaf -> bool) -> parsed_boolean_expression -> bool
-val for_all_in_parsed_boolean_expression : (parsing_structure_leaf -> bool) -> parsed_boolean_expression -> bool
 val for_all_in_parsed_discrete_boolean_expression : (parsing_structure_leaf -> bool) -> parsed_discrete_boolean_expression -> bool
 val for_all_in_parsed_discrete_arithmetic_expression : (parsing_structure_leaf -> bool) -> parsed_discrete_arithmetic_expression -> bool
 val for_all_in_parsed_discrete_term : (parsing_structure_leaf -> bool) -> parsed_discrete_term -> bool
@@ -69,7 +68,6 @@ val for_all_in_parsed_function_definition : (parsing_structure_leaf -> bool) -> 
 
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
-val exists_in_parsed_boolean_expression : (parsing_structure_leaf -> bool) -> parsed_boolean_expression -> bool
 val exists_in_parsed_boolean_expression : (parsing_structure_leaf -> bool) -> parsed_boolean_expression -> bool
 val exists_in_parsed_discrete_boolean_expression : (parsing_structure_leaf -> bool) -> parsed_discrete_boolean_expression -> bool
 val exists_in_parsed_discrete_arithmetic_expression : (parsing_structure_leaf -> bool) -> parsed_discrete_arithmetic_expression -> bool
@@ -94,7 +92,6 @@ val exists_in_parsed_function_definition : (parsing_structure_leaf -> bool) -> (
 
 (** Apply units over leaf of a parsing structure **)
 
-val iterate_parsed_boolean_expression : (parsing_structure_leaf -> unit) -> parsed_boolean_expression -> unit
 val iterate_parsed_boolean_expression : (parsing_structure_leaf -> unit) -> parsed_boolean_expression -> unit
 val iterate_parsed_discrete_boolean_expression : (parsing_structure_leaf -> unit) -> parsed_discrete_boolean_expression -> unit
 val iterate_parsed_discrete_arithmetic_expression : (parsing_structure_leaf -> unit) -> parsed_discrete_arithmetic_expression -> unit
@@ -123,7 +120,6 @@ val function_name_of_parsed_factor : parsed_discrete_factor -> string
 val string_of_assignment : string -> string -> string
 val string_of_let_in : string -> string -> string -> string
 
-val string_of_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> string
 val string_of_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> string
 val string_of_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> string
 val string_of_parsed_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> string
@@ -161,10 +157,8 @@ val json_of_function_metadata : function_metadata -> JsonFormatter.json_element
 val discrete_boolean_expression_constant_value_opt : parsed_discrete_boolean_expression -> bool option
 
 val is_parsed_boolean_expression_constant : variable_infos -> parsed_boolean_expression -> bool
-val is_parsed_boolean_expression_constant : variable_infos -> parsed_boolean_expression -> bool
 val is_parsed_arithmetic_expression_constant : variable_infos -> parsed_discrete_arithmetic_expression -> bool
 
-val is_linear_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
 val is_linear_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
 val is_linear_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
 val is_linear_parsed_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> bool
@@ -187,8 +181,6 @@ val all_variables_defined_in_nonlinear_convex_predicate : variable_infos -> (var
 
 val all_variable_in_parsed_state_predicate : useful_parsing_model_information -> variable_infos -> (variable_name -> unit) option -> (automaton_name -> unit) option -> (automaton_name -> location_name -> unit) option -> parsed_state_predicate -> bool
 
-(* Check that there is only discrete variables in a parsed global expression *)
-val only_discrete_in_parsed_boolean_expression : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_boolean_expression -> bool
 (* Check that there is only discrete variables in a parsed boolean expression *)
 val only_discrete_in_parsed_boolean_expression : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_boolean_expression -> bool
 (* Check that there is only discrete variables in a parsed discrete boolean expression *)

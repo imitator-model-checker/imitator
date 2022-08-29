@@ -267,7 +267,6 @@ let apply_evaluate_and fold_func = fold_func (OCamlUtilities.evaluate_and)
 let apply_evaluate_and_with_base fold_func = fold_func (OCamlUtilities.evaluate_and) true
 
 let for_all_in_parsed_boolean_expression = apply_evaluate_and_with_base fold_parsed_boolean_expression
-let for_all_in_parsed_boolean_expression = apply_evaluate_and_with_base fold_parsed_boolean_expression
 let for_all_in_parsed_discrete_boolean_expression = apply_evaluate_and_with_base fold_parsed_discrete_boolean_expression
 let for_all_in_parsed_discrete_arithmetic_expression = apply_evaluate_and_with_base fold_parsed_discrete_arithmetic_expression
 let for_all_in_parsed_discrete_term = apply_evaluate_and_with_base fold_parsed_discrete_term
@@ -304,7 +303,6 @@ let apply_evaluate_or fold_func = fold_func (||)
 let apply_evaluate_or_with_base fold_func = fold_func (||) false
 
 let exists_in_parsed_boolean_expression = apply_evaluate_or_with_base fold_parsed_boolean_expression
-let exists_in_parsed_boolean_expression = apply_evaluate_or_with_base fold_parsed_boolean_expression
 let exists_in_parsed_discrete_boolean_expression = apply_evaluate_or_with_base fold_parsed_discrete_boolean_expression
 let exists_in_parsed_discrete_arithmetic_expression = apply_evaluate_or_with_base fold_parsed_discrete_arithmetic_expression
 let exists_in_parsed_discrete_term = apply_evaluate_or_with_base fold_parsed_discrete_term
@@ -339,7 +337,6 @@ let apply_evaluate_unit fold_func = fold_func bin_unit
 let apply_evaluate_unit_with_base fold_func = fold_func bin_unit ()
 
 
-let iterate_parsed_boolean_expression = apply_evaluate_unit_with_base fold_parsed_boolean_expression
 let iterate_parsed_boolean_expression = apply_evaluate_unit_with_base fold_parsed_boolean_expression
 let iterate_parsed_discrete_boolean_expression = apply_evaluate_unit_with_base fold_parsed_discrete_boolean_expression
 let iterate_parsed_discrete_arithmetic_expression = apply_evaluate_unit_with_base fold_parsed_discrete_arithmetic_expression
@@ -791,10 +788,6 @@ let no_variables variable_infos = function
         let variable_index = index_of_variable_name variable_infos variable_name in
         variable_infos.type_of_variables variable_index = Var_type_parameter
 
-(* Check if a parsed global expression is constant *)
-let is_parsed_boolean_expression_constant variable_infos =
-    for_all_in_parsed_boolean_expression (is_constant variable_infos)
-
 (* Check if a parsed boolean expression is constant *)
 let is_parsed_boolean_expression_constant variable_infos =
     for_all_in_parsed_boolean_expression (is_constant variable_infos)
@@ -808,7 +801,7 @@ let is_parsed_term_constant variable_infos = for_all_in_parsed_discrete_term (is
 (* Check if a parsed term is constant *)
 let is_parsed_factor_constant variable_infos = for_all_in_parsed_discrete_factor (is_constant variable_infos)
 
-(* Check if a parsed global expression is linear *)
+(* Check if a parsed boolean expression is linear *)
 let rec is_linear_parsed_boolean_expression variable_infos = function
     | Parsed_conj_dis _ -> false
     | Parsed_Discrete_boolean_expression expr ->
@@ -884,10 +877,6 @@ and is_linear_parsed_factor variable_infos = function
     | Parsed_sequence _
     | Parsed_DF_access _
     | Parsed_function_call _ -> false
-
-(* Check that all variables in a parsed global expression are effectively be defined *)
-let all_variables_defined_in_parsed_boolean_expression variable_infos callback expr =
-    for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos None callback) expr
 
 let all_variables_defined_in_parsed_boolean_expression_without_callback variable_infos expr =
     for_all_in_parsed_boolean_expression (is_variable_defined variable_infos None) expr
@@ -984,10 +973,6 @@ let all_variable_in_parsed_state_predicate parsing_infos variable_infos undefine
         (is_variable_defined_with_callback variable_infos None undefined_variable_callback_opt)
         expr
 
-(* Check that there is only discrete variables in a parsed global expression *)
-let only_discrete_in_parsed_boolean_expression variable_infos clock_or_param_found_callback_opt expr =
-    for_all_in_parsed_boolean_expression (is_only_discrete variable_infos clock_or_param_found_callback_opt) expr
-
 (* Check that there is only discrete variables in a parsed boolean expression *)
 let only_discrete_in_parsed_boolean_expression variable_infos clock_or_param_found_callback_opt expr =
     for_all_in_parsed_boolean_expression (is_only_discrete variable_infos clock_or_param_found_callback_opt) expr
@@ -1029,10 +1014,6 @@ let add_function_of_discrete_boolean_expression function_used_ref = function
 
 let get_functions_in_parsed_boolean_expression_with_accumulator function_used_ref =
     iterate_parsed_boolean_expression (add_function_of_discrete_boolean_expression function_used_ref)
-
-(* Gather all variable names used in a global expression in a given accumulator *)
-let get_variables_in_parsed_boolean_expression_with_accumulator variables_used_ref =
-    iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
 
 (* Gather all variable names used in a parsed boolean expression in a given accumulator *)
 let get_variables_in_parsed_boolean_expression_with_accumulator variables_used_ref =
@@ -1138,10 +1119,11 @@ let wrap_accumulator f expr =
     f variables_used_ref expr;
     !variables_used_ref
 
+(* Gather all variable names used in a parsed boolean expression *)
 let get_functions_in_parsed_boolean_expression =
     wrap_accumulator get_functions_in_parsed_boolean_expression_with_accumulator
 
-(* Gather all variable names used in a global expression *)
+(* Gather all variable names used in a parsed boolean expression *)
 let get_variables_in_parsed_boolean_expression =
     wrap_accumulator get_variables_in_parsed_boolean_expression_with_accumulator
 
