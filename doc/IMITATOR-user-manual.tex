@@ -1656,8 +1656,8 @@ We give below some examples of user function definitions:
 	(* Linear interpolation example with some local variables *)
 	fn lerp(a : rat, b : rat, x : rat) : rat
 	begin
-		let length = b - a in
-		let pos = length * x in
+		let length : rat = b - a in
+		let pos : rat = length * x in
 		a + pos
 	end
 
