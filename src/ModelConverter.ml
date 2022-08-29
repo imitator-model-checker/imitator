@@ -273,7 +273,7 @@ let check_normal_update variable_infos automaton_name normal_update =
 
         let is_trying_to_assign_a_clock_or_param =
             if is_discrete then (
-                let is_only_discrete = ParsingStructureUtilities.only_discrete_in_parsed_global_expression variable_infos None update_expr in
+                let is_only_discrete = ParsingStructureUtilities.only_discrete_in_parsed_boolean_expression variable_infos None update_expr in
                 if not is_only_discrete then (
                     print_error ("Trying to update variable `" ^ updated_variable_name ^ "` with clock(s) or parameter(s) in `" ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos normal_update ^ "`.");
                     true
@@ -631,8 +631,8 @@ let check_init_definition parsed_model =
                 false
             )
             (* And that all variables in expr are defined *)
-            else if not (ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression_without_callback variable_infos expr) then (
-                print_error ("Expression \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr ^ "\" use undeclared variable(s)");
+            else if not (ParsingStructureUtilities.all_variables_defined_in_parsed_boolean_expression_without_callback variable_infos expr) then (
+                print_error ("Expression \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr ^ "\" use undeclared variable(s)");
                 false
             )
             else
@@ -687,7 +687,7 @@ let is_inequality_has_left_hand_removed_variable removed_variable_names = functi
 
 
 
-(* Convert discrete linear constraint predicate to a discrete init (tuple variable_name * parsed_global_expression) *)
+(* Convert discrete linear constraint predicate to a discrete init (tuple variable_name * parsed_boolean_expression) *)
 let discrete_init_of_discrete_linear_predicate variable_infos = function
     | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, updated_variable_name)), op , expression))
     when is_discrete_variable variable_infos updated_variable_name ->
@@ -705,26 +705,24 @@ let discrete_init_of_discrete_linear_predicate variable_infos = function
                 let rational_value = ParsedValue.Weak_number_value c in
                 My_left (
                     updated_variable_name,
-                    Parsed_global_expression (
                     Parsed_Discrete_boolean_expression (
                     Parsed_arithmetic_expression (
                     Parsed_DAE_term (
                     Parsed_DT_factor (
-                    Parsed_DF_constant rational_value)))))
+                    Parsed_DF_constant rational_value))))
                 )
             (* Constant: OK *)
             | (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
                 let coef_rational_value = ParsedValue.Weak_number_value coef in
                 My_left (
                     updated_variable_name,
-                    Parsed_global_expression (
                     Parsed_Discrete_boolean_expression (
                     Parsed_arithmetic_expression (
                     Parsed_DAE_term (
                     Parsed_product_quotient (
                     Parsed_DT_factor (Parsed_DF_constant coef_rational_value),
                     Parsed_DF_variable variable_name,
-                    Parsed_mul)))))
+                    Parsed_mul))))
                 )
 
             | _ ->
@@ -768,7 +766,7 @@ let check_discrete_inits functions_table variable_infos init_values_for_discrete
                     "Init variable \""
                     ^ variable_name
                     ^ "\" with a non constant expression \""
-                    ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
+                    ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr
                     ^ "\" is forbidden."
                 );
                 false
@@ -1241,7 +1239,7 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
         let parsed_scalar_or_index_update_type, update_expr = clock_update in
 
         (* Check that clock update is a linear expression *)
-        let is_linear = ParsingStructureUtilities.is_linear_parsed_global_expression variable_infos update_expr in
+        let is_linear = ParsingStructureUtilities.is_linear_parsed_boolean_expression variable_infos update_expr in
         if not is_linear then
             raise (InvalidExpression (
                 "Clock update `"
@@ -1283,7 +1281,7 @@ let is_only_resets variable_infos updates =
         (* An expression to zero *)
         let is_update_to_zero =
             match update with
-            | Parsed_global_expression (Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant value))))) when ParsedValue.is_zero value -> true
+            | Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant value)))) when ParsedValue.is_zero value -> true
             | _ -> false
         in
         (* Check if it's a clock *)
@@ -2970,11 +2968,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* Create variable infos containing only initialized constants *)
         let current_variable_infos = { variable_infos with constants = initialized_constants } in
         (* Check all constants used are defined *)
-        let all_variable_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_global_expression_without_callback current_variable_infos expr in
+        let all_variable_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_boolean_expression_without_callback current_variable_infos expr in
         if not all_variable_defined then (
             print_error (
                 "Expression \""
-                ^ ParsingStructureUtilities.string_of_parsed_global_expression variable_infos expr
+                ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr
                 ^ "\" use undeclared variable or constant"
             );
             raise InvalidModel;

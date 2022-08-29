@@ -45,7 +45,7 @@ val fold_parsed_normal_update : ('a -> 'a -> 'a) -> 'a -> (parsing_structure_lea
 
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
-val for_all_in_parsed_global_expression : (parsing_structure_leaf -> bool) -> parsed_global_expression -> bool
+val for_all_in_parsed_boolean_expression : (parsing_structure_leaf -> bool) -> parsed_boolean_expression -> bool
 val for_all_in_parsed_boolean_expression : (parsing_structure_leaf -> bool) -> parsed_boolean_expression -> bool
 val for_all_in_parsed_discrete_boolean_expression : (parsing_structure_leaf -> bool) -> parsed_discrete_boolean_expression -> bool
 val for_all_in_parsed_discrete_arithmetic_expression : (parsing_structure_leaf -> bool) -> parsed_discrete_arithmetic_expression -> bool
@@ -69,7 +69,7 @@ val for_all_in_parsed_function_definition : (parsing_structure_leaf -> bool) -> 
 
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
-val exists_in_parsed_global_expression : (parsing_structure_leaf -> bool) -> parsed_global_expression -> bool
+val exists_in_parsed_boolean_expression : (parsing_structure_leaf -> bool) -> parsed_boolean_expression -> bool
 val exists_in_parsed_boolean_expression : (parsing_structure_leaf -> bool) -> parsed_boolean_expression -> bool
 val exists_in_parsed_discrete_boolean_expression : (parsing_structure_leaf -> bool) -> parsed_discrete_boolean_expression -> bool
 val exists_in_parsed_discrete_arithmetic_expression : (parsing_structure_leaf -> bool) -> parsed_discrete_arithmetic_expression -> bool
@@ -94,7 +94,7 @@ val exists_in_parsed_function_definition : (parsing_structure_leaf -> bool) -> (
 
 (** Apply units over leaf of a parsing structure **)
 
-val iterate_parsed_global_expression : (parsing_structure_leaf -> unit) -> parsed_global_expression -> unit
+val iterate_parsed_boolean_expression : (parsing_structure_leaf -> unit) -> parsed_boolean_expression -> unit
 val iterate_parsed_boolean_expression : (parsing_structure_leaf -> unit) -> parsed_boolean_expression -> unit
 val iterate_parsed_discrete_boolean_expression : (parsing_structure_leaf -> unit) -> parsed_discrete_boolean_expression -> unit
 val iterate_parsed_discrete_arithmetic_expression : (parsing_structure_leaf -> unit) -> parsed_discrete_arithmetic_expression -> unit
@@ -123,7 +123,7 @@ val function_name_of_parsed_factor : parsed_discrete_factor -> string
 val string_of_assignment : string -> string -> string
 val string_of_let_in : string -> string -> string -> string
 
-val string_of_parsed_global_expression : variable_infos -> parsed_global_expression -> string
+val string_of_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> string
 val string_of_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> string
 val string_of_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> string
 val string_of_parsed_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> string
@@ -134,7 +134,7 @@ val string_of_parsed_fun_def : variable_infos -> parsed_fun_definition -> string
 
 val string_of_parsed_update : variable_infos -> update -> string
 val string_of_parsed_normal_update : variable_infos -> normal_update -> string
-val string_of_parsed_clock_update : variable_infos -> parsed_scalar_or_index_update_type * parsed_global_expression -> string
+val string_of_parsed_clock_update : variable_infos -> parsed_scalar_or_index_update_type * parsed_boolean_expression -> string
 val string_of_parsed_update_type : variable_infos -> parsed_update_type -> string
 val string_of_parsed_scalar_or_index_update_type : variable_infos -> parsed_scalar_or_index_update_type -> string
 
@@ -160,11 +160,11 @@ val json_of_function_metadata : function_metadata -> JsonFormatter.json_element
 (* If the expression is more complex, return None *)
 val discrete_boolean_expression_constant_value_opt : parsed_discrete_boolean_expression -> bool option
 
-val is_parsed_global_expression_constant : variable_infos -> parsed_global_expression -> bool
+val is_parsed_boolean_expression_constant : variable_infos -> parsed_boolean_expression -> bool
 val is_parsed_boolean_expression_constant : variable_infos -> parsed_boolean_expression -> bool
 val is_parsed_arithmetic_expression_constant : variable_infos -> parsed_discrete_arithmetic_expression -> bool
 
-val is_linear_parsed_global_expression : variable_infos -> parsed_global_expression -> bool
+val is_linear_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
 val is_linear_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
 val is_linear_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
 val is_linear_parsed_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> bool
@@ -172,8 +172,8 @@ val is_linear_parsed_term : variable_infos -> parsed_discrete_term -> bool
 val is_linear_parsed_factor : variable_infos -> parsed_discrete_factor -> bool
 
 
-val all_variables_defined_in_parsed_global_expression : variable_infos -> (variable_name -> unit) option -> parsed_global_expression -> bool
-val all_variables_defined_in_parsed_global_expression_without_callback : variable_infos -> parsed_global_expression -> bool
+val all_variables_defined_in_parsed_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_boolean_expression -> bool
+val all_variables_defined_in_parsed_boolean_expression_without_callback : variable_infos -> parsed_boolean_expression -> bool
 val all_variables_defined_in_parsed_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_boolean_expression -> bool
 val all_variables_defined_in_parsed_discrete_boolean_expression : variable_infos -> (variable_name -> unit) option -> parsed_discrete_boolean_expression -> bool
 val all_variables_defined_in_parsed_discrete_arithmetic_expression : variable_infos -> (variable_name -> unit) option -> parsed_discrete_arithmetic_expression -> bool
@@ -188,7 +188,7 @@ val all_variables_defined_in_nonlinear_convex_predicate : variable_infos -> (var
 val all_variable_in_parsed_state_predicate : useful_parsing_model_information -> variable_infos -> (variable_name -> unit) option -> (automaton_name -> unit) option -> (automaton_name -> location_name -> unit) option -> parsed_state_predicate -> bool
 
 (* Check that there is only discrete variables in a parsed global expression *)
-val only_discrete_in_parsed_global_expression : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_global_expression -> bool
+val only_discrete_in_parsed_boolean_expression : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_boolean_expression -> bool
 (* Check that there is only discrete variables in a parsed boolean expression *)
 val only_discrete_in_parsed_boolean_expression : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_boolean_expression -> bool
 (* Check that there is only discrete variables in a parsed discrete boolean expression *)
@@ -200,7 +200,7 @@ val is_parsed_linear_expression_constant : variable_infos -> linear_expression -
 
 
 
-val get_variables_in_parsed_global_expression_with_accumulator : StringSet.t ref -> parsed_global_expression -> unit
+val get_variables_in_parsed_boolean_expression_with_accumulator : StringSet.t ref -> parsed_boolean_expression -> unit
 val get_variables_in_parsed_boolean_expression_with_accumulator : StringSet.t ref -> parsed_boolean_expression -> unit
 val get_variables_in_parsed_discrete_boolean_expression_with_accumulator : StringSet.t ref -> parsed_discrete_boolean_expression -> unit
 val get_variables_in_parsed_update_with_accumulator : StringSet.t ref -> update -> unit
@@ -210,8 +210,8 @@ val get_variables_in_parsed_simple_predicate_with_accumulator : StringSet.t ref 
 val get_variables_in_parsed_state_predicate_with_accumulator : StringSet.t ref -> parsed_state_predicate -> unit
 val get_variables_in_parsed_fun_def_with_accumulator : StringSet.t ref -> parsed_fun_definition -> unit
 
-val get_variables_in_parsed_global_expression : parsed_global_expression -> StringSet.t
-val get_functions_in_parsed_global_expression : parsed_global_expression -> StringSet.t
+val get_variables_in_parsed_boolean_expression : parsed_boolean_expression -> StringSet.t
+val get_functions_in_parsed_boolean_expression : parsed_boolean_expression -> StringSet.t
 val get_variables_in_parsed_discrete_boolean_expression : parsed_discrete_boolean_expression -> StringSet.t
 val get_variables_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> StringSet.t
 val get_functions_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> StringSet.t

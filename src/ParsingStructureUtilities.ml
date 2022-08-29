@@ -62,10 +62,7 @@ let function_name_of_parsed_factor = function
 
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
-let rec fold_parsed_global_expression operator base leaf_fun = function
-     | Parsed_global_expression expr -> fold_parsed_boolean_expression operator base leaf_fun expr
-
-and fold_parsed_boolean_expression operator base leaf_fun = function
+let rec fold_parsed_boolean_expression operator base leaf_fun = function
     | Parsed_conj_dis (l_expr, r_expr, _) ->
 	    operator
 	        (fold_parsed_boolean_expression operator base leaf_fun l_expr)
@@ -139,7 +136,7 @@ and fold_parsed_next_expr operator base leaf_fun leaf_update_fun = function
         operator
             (operator
                 (leaf_update_fun (Leaf_update_updated_variable variable_name))
-                (fold_parsed_global_expression operator base leaf_fun init_expr)
+                (fold_parsed_boolean_expression operator base leaf_fun init_expr)
             )
             (fold_parsed_next_expr operator base leaf_fun leaf_update_fun next_expr)
 
@@ -149,13 +146,13 @@ and fold_parsed_next_expr operator base leaf_fun leaf_update_fun = function
             (fold_parsed_next_expr operator base leaf_fun leaf_update_fun next_expr)
 
     | Parsed_fun_expr expr ->
-        fold_parsed_global_expression operator base leaf_fun expr
+        fold_parsed_boolean_expression operator base leaf_fun expr
     | Parsed_fun_void_expr -> base
 
 and fold_parsed_normal_update operator base leaf_fun leaf_update_fun (update_type, expr) =
     operator
         (fold_parsed_update_type operator base leaf_fun leaf_update_fun update_type)
-        (fold_parsed_global_expression operator base leaf_fun expr)
+        (fold_parsed_boolean_expression operator base leaf_fun expr)
 
 (** Fold a parsed update expression using operator applying custom function on leaves **)
 and fold_parsed_update operator base leaf_fun leaf_update_fun = function
@@ -199,7 +196,7 @@ let fold_parsed_nonlinear_constraint = fold_parsed_discrete_boolean_expression
 let fold_init_state_predicate operator base loc_assignment_leaf_fun linear_expression_leaf_fun linear_constraint_leaf_fun leaf_fun = function
 	| Parsed_loc_assignment (automaton_name, loc_name) -> loc_assignment_leaf_fun (automaton_name, loc_name)
 	| Parsed_linear_predicate linear_constraint -> fold_parsed_linear_constraint operator linear_expression_leaf_fun linear_constraint_leaf_fun linear_constraint
-	| Parsed_discrete_predicate (_, expr) -> fold_parsed_global_expression operator base leaf_fun expr
+	| Parsed_discrete_predicate (_, expr) -> fold_parsed_boolean_expression operator base leaf_fun expr
 
 let fold_parsed_loc_predicate operator base predicate_leaf_fun leaf_fun = function
     | Parsed_loc_predicate_EQ (automaton_name, loc_name) ->
@@ -247,7 +244,7 @@ let fold_parsed_function_definition operator base leaf_fun leaf_update_fun (fun_
             operator
                 (operator
                     (leaf_fun (Leaf_variable variable_name))
-                    (fold_parsed_global_expression operator base leaf_fun init_expr)
+                    (fold_parsed_boolean_expression operator base leaf_fun init_expr)
                 )
                 (fold_parsed_function_next_expr next_expr)
 
@@ -257,19 +254,19 @@ let fold_parsed_function_definition operator base leaf_fun leaf_update_fun (fun_
                 (fold_parsed_function_next_expr next_expr)
 
         | Parsed_fun_expr expr ->
-            fold_parsed_global_expression operator base leaf_fun expr
+            fold_parsed_boolean_expression operator base leaf_fun expr
         | Parsed_fun_void_expr -> base
     in
     fold_parsed_function_next_expr fun_def.body
 
-let flat_map_parsed_global_expression = fold_parsed_global_expression (@) []
+let flat_map_parsed_boolean_expression = fold_parsed_boolean_expression (@) []
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
 (* Apply to a fold function the standard parameters for evaluate AND *)
 let apply_evaluate_and fold_func = fold_func (OCamlUtilities.evaluate_and)
 let apply_evaluate_and_with_base fold_func = fold_func (OCamlUtilities.evaluate_and) true
 
-let for_all_in_parsed_global_expression = apply_evaluate_and_with_base fold_parsed_global_expression
+let for_all_in_parsed_boolean_expression = apply_evaluate_and_with_base fold_parsed_boolean_expression
 let for_all_in_parsed_boolean_expression = apply_evaluate_and_with_base fold_parsed_boolean_expression
 let for_all_in_parsed_discrete_boolean_expression = apply_evaluate_and_with_base fold_parsed_discrete_boolean_expression
 let for_all_in_parsed_discrete_arithmetic_expression = apply_evaluate_and_with_base fold_parsed_discrete_arithmetic_expression
@@ -306,7 +303,7 @@ let for_all_in_parsed_function_definition = apply_evaluate_and_with_base fold_pa
 let apply_evaluate_or fold_func = fold_func (||)
 let apply_evaluate_or_with_base fold_func = fold_func (||) false
 
-let exists_in_parsed_global_expression = apply_evaluate_or_with_base fold_parsed_global_expression
+let exists_in_parsed_boolean_expression = apply_evaluate_or_with_base fold_parsed_boolean_expression
 let exists_in_parsed_boolean_expression = apply_evaluate_or_with_base fold_parsed_boolean_expression
 let exists_in_parsed_discrete_boolean_expression = apply_evaluate_or_with_base fold_parsed_discrete_boolean_expression
 let exists_in_parsed_discrete_arithmetic_expression = apply_evaluate_or_with_base fold_parsed_discrete_arithmetic_expression
@@ -342,7 +339,7 @@ let apply_evaluate_unit fold_func = fold_func bin_unit
 let apply_evaluate_unit_with_base fold_func = fold_func bin_unit ()
 
 
-let iterate_parsed_global_expression = apply_evaluate_unit_with_base fold_parsed_global_expression
+let iterate_parsed_boolean_expression = apply_evaluate_unit_with_base fold_parsed_boolean_expression
 let iterate_parsed_boolean_expression = apply_evaluate_unit_with_base fold_parsed_boolean_expression
 let iterate_parsed_discrete_boolean_expression = apply_evaluate_unit_with_base fold_parsed_discrete_boolean_expression
 let iterate_parsed_discrete_arithmetic_expression = apply_evaluate_unit_with_base fold_parsed_discrete_arithmetic_expression
@@ -430,10 +427,7 @@ let string_of_let_in variable_name str_discrete_type str_init_expr =
     ^ str_init_expr
     ^ "in"
 
-let rec string_of_parsed_global_expression variable_infos = function
-    | Parsed_global_expression expr -> string_of_parsed_boolean_expression variable_infos expr
-
-and string_of_parsed_arithmetic_expression variable_infos = function
+let rec string_of_parsed_arithmetic_expression variable_infos = function
     | Parsed_sum_diff (arithmetic_expr, term, sum_diff) ->
             string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
             ^ string_of_parsed_sum_diff sum_diff
@@ -515,7 +509,7 @@ and string_of_parsed_next_expr variable_infos = function
             string_of_let_in
                 variable_name
                 (DiscreteType.string_of_var_type_discrete discrete_type)
-                (string_of_parsed_global_expression variable_infos init_expr)
+                (string_of_parsed_boolean_expression variable_infos init_expr)
             ^ "\n"
             ^ string_of_parsed_next_expr variable_infos next_expr
 
@@ -524,17 +518,17 @@ and string_of_parsed_next_expr variable_infos = function
             ^ string_of_parsed_next_expr variable_infos next_expr
 
         | Parsed_fun_expr expr ->
-            string_of_parsed_global_expression variable_infos expr
+            string_of_parsed_boolean_expression variable_infos expr
         | Parsed_fun_void_expr -> ""
 
 and string_of_parsed_normal_update variable_infos (update_type, expr) =
     let str_left_member = string_of_parsed_update_type variable_infos update_type in
-    let str_right_member = string_of_parsed_global_expression variable_infos expr in
+    let str_right_member = string_of_parsed_boolean_expression variable_infos expr in
     string_of_assignment str_left_member str_right_member
 
 and string_of_parsed_clock_update variable_infos (scalar_or_index_update_type, expr) =
     let str_left_member = string_of_parsed_scalar_or_index_update_type variable_infos scalar_or_index_update_type in
-    let str_right_member = string_of_parsed_global_expression variable_infos expr in
+    let str_right_member = string_of_parsed_boolean_expression variable_infos expr in
     string_of_assignment str_left_member str_right_member
 
 and string_of_parsed_update variable_infos = function
@@ -607,7 +601,7 @@ let string_of_parsed_init_state_predicate variable_infos = function
 	| Parsed_discrete_predicate (variable_name, expr) ->
 	    variable_name
 	    ^ " = "
-	    ^ string_of_parsed_global_expression variable_infos expr
+	    ^ string_of_parsed_boolean_expression variable_infos expr
 
 
 let string_of_parsed_nonlinear_constraint = string_of_parsed_discrete_boolean_expression
@@ -798,8 +792,8 @@ let no_variables variable_infos = function
         variable_infos.type_of_variables variable_index = Var_type_parameter
 
 (* Check if a parsed global expression is constant *)
-let is_parsed_global_expression_constant variable_infos =
-    for_all_in_parsed_global_expression (is_constant variable_infos)
+let is_parsed_boolean_expression_constant variable_infos =
+    for_all_in_parsed_boolean_expression (is_constant variable_infos)
 
 (* Check if a parsed boolean expression is constant *)
 let is_parsed_boolean_expression_constant variable_infos =
@@ -815,11 +809,7 @@ let is_parsed_term_constant variable_infos = for_all_in_parsed_discrete_term (is
 let is_parsed_factor_constant variable_infos = for_all_in_parsed_discrete_factor (is_constant variable_infos)
 
 (* Check if a parsed global expression is linear *)
-let rec is_linear_parsed_global_expression variable_infos = function
-    | Parsed_global_expression expr -> is_linear_parsed_boolean_expression variable_infos expr
-
-(* Check if a parsed boolean expression is linear *)
-and is_linear_parsed_boolean_expression variable_infos = function
+let rec is_linear_parsed_boolean_expression variable_infos = function
     | Parsed_conj_dis _ -> false
     | Parsed_Discrete_boolean_expression expr ->
         is_linear_parsed_discrete_boolean_expression variable_infos expr
@@ -896,11 +886,11 @@ and is_linear_parsed_factor variable_infos = function
     | Parsed_function_call _ -> false
 
 (* Check that all variables in a parsed global expression are effectively be defined *)
-let all_variables_defined_in_parsed_global_expression variable_infos callback expr =
-    for_all_in_parsed_global_expression (is_variable_defined_with_callback variable_infos None callback) expr
+let all_variables_defined_in_parsed_boolean_expression variable_infos callback expr =
+    for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos None callback) expr
 
-let all_variables_defined_in_parsed_global_expression_without_callback variable_infos expr =
-    for_all_in_parsed_global_expression (is_variable_defined variable_infos None) expr
+let all_variables_defined_in_parsed_boolean_expression_without_callback variable_infos expr =
+    for_all_in_parsed_boolean_expression (is_variable_defined variable_infos None) expr
 
 (* Check that all variables in a parsed boolean expression are effectively be defined *)
 let all_variables_defined_in_parsed_boolean_expression variable_infos callback expr =
@@ -929,9 +919,9 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
     let parameter_names = List.map first_of_tuple fun_def.parameters in
     let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
 
-    (* Overwrite function `all_variables_defined_in_parsed_global_expression` adding a parameter for taking into account local variables set *)
-    let all_variables_defined_in_parsed_global_expression local_variables (* expr *) =
-        for_all_in_parsed_global_expression (is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback) (* expr *)
+    (* Overwrite function `all_variables_defined_in_parsed_boolean_expression` adding a parameter for taking into account local variables set *)
+    let all_variables_defined_in_parsed_boolean_expression local_variables (* expr *) =
+        for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback) (* expr *)
     in
     (* Overwrite function `all_variables_defined_in_parsed_normal_update` adding a parameter for taking into account local variables set *)
     let all_variables_defined_in_parsed_normal_update local_variables (* expr *) =
@@ -944,7 +934,7 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
     let rec all_variables_defined_in_parsed_next_expr_rec local_variables = function
         | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, _) ->
             (* Add the new declared local variable to set *)
-            let all_variables_defined_in_init_expr = all_variables_defined_in_parsed_global_expression local_variables init_expr in
+            let all_variables_defined_in_init_expr = all_variables_defined_in_parsed_boolean_expression local_variables init_expr in
             let local_variables = StringSet.add variable_name local_variables in
             all_variables_defined_in_parsed_next_expr_rec local_variables next_expr && all_variables_defined_in_init_expr
 
@@ -957,7 +947,7 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
             all_variables_defined_in_normal_update && all_variables_defined_in_next_expr
 
         | Parsed_fun_expr expr ->
-            all_variables_defined_in_parsed_global_expression local_variables expr
+            all_variables_defined_in_parsed_boolean_expression local_variables expr
         | Parsed_fun_void_expr -> true
     in
     all_variables_defined_in_parsed_next_expr_rec local_variables fun_def.body
@@ -995,8 +985,8 @@ let all_variable_in_parsed_state_predicate parsing_infos variable_infos undefine
         expr
 
 (* Check that there is only discrete variables in a parsed global expression *)
-let only_discrete_in_parsed_global_expression variable_infos clock_or_param_found_callback_opt expr =
-    for_all_in_parsed_global_expression (is_only_discrete variable_infos clock_or_param_found_callback_opt) expr
+let only_discrete_in_parsed_boolean_expression variable_infos clock_or_param_found_callback_opt expr =
+    for_all_in_parsed_boolean_expression (is_only_discrete variable_infos clock_or_param_found_callback_opt) expr
 
 (* Check that there is only discrete variables in a parsed boolean expression *)
 let only_discrete_in_parsed_boolean_expression variable_infos clock_or_param_found_callback_opt expr =
@@ -1037,12 +1027,12 @@ let add_function_of_discrete_boolean_expression function_used_ref = function
         (* Add the variable name to the set and update the reference *)
         function_used_ref := StringSet.add function_name !function_used_ref
 
-let get_functions_in_parsed_global_expression_with_accumulator function_used_ref =
-    iterate_parsed_global_expression (add_function_of_discrete_boolean_expression function_used_ref)
+let get_functions_in_parsed_boolean_expression_with_accumulator function_used_ref =
+    iterate_parsed_boolean_expression (add_function_of_discrete_boolean_expression function_used_ref)
 
 (* Gather all variable names used in a global expression in a given accumulator *)
-let get_variables_in_parsed_global_expression_with_accumulator variables_used_ref =
-    iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
+let get_variables_in_parsed_boolean_expression_with_accumulator variables_used_ref =
+    iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
 
 (* Gather all variable names used in a parsed boolean expression in a given accumulator *)
 let get_variables_in_parsed_boolean_expression_with_accumulator variables_used_ref =
@@ -1126,7 +1116,7 @@ let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def 
             (* Gather variables in next expressions *)
             get_variables_in_parsed_next_expr_rec local_variables_ref next_expr;
             (* Gather variables in init expression *)
-            iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) init_expr
+            iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variable_used_ref) init_expr
 
         | Parsed_fun_instruction (normal_update, next_expr) ->
             (* Gather variables in normal update *)
@@ -1135,7 +1125,7 @@ let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def 
             get_variables_in_parsed_next_expr_rec local_variables_ref next_expr;
 
         | Parsed_fun_expr expr ->
-            iterate_parsed_global_expression (add_variable_of_discrete_boolean_expression variable_used_ref) expr
+            iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variable_used_ref) expr
         | Parsed_fun_void_expr -> ()
     in
     get_variables_in_parsed_next_expr_rec local_variables_ref fun_def.body;
@@ -1148,12 +1138,12 @@ let wrap_accumulator f expr =
     f variables_used_ref expr;
     !variables_used_ref
 
-let get_functions_in_parsed_global_expression =
-    wrap_accumulator get_functions_in_parsed_global_expression_with_accumulator
+let get_functions_in_parsed_boolean_expression =
+    wrap_accumulator get_functions_in_parsed_boolean_expression_with_accumulator
 
 (* Gather all variable names used in a global expression *)
-let get_variables_in_parsed_global_expression =
-    wrap_accumulator get_variables_in_parsed_global_expression_with_accumulator
+let get_variables_in_parsed_boolean_expression =
+    wrap_accumulator get_variables_in_parsed_boolean_expression_with_accumulator
 
 (* Gather all variable names used in a parsed discrete boolean expression *)
 let get_variables_in_parsed_discrete_boolean_expression =
@@ -1199,7 +1189,7 @@ let get_variables_in_parsed_fun_def =
 let get_variables_in_init_state_predicate = function
 	| Parsed_loc_assignment _ -> StringSet.empty
 	| Parsed_linear_predicate linear_constraint -> get_variables_in_linear_constraint linear_constraint
-	| Parsed_discrete_predicate (_, expr) -> get_variables_in_parsed_global_expression expr
+	| Parsed_discrete_predicate (_, expr) -> get_variables_in_parsed_boolean_expression expr
 
 (* Gather all variable names used in a non-linear convex predicate (non-linear constraint list) *)
 let get_variables_in_nonlinear_convex_predicate convex_predicate =
