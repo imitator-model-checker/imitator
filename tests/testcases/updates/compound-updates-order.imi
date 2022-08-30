@@ -15,8 +15,8 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created          : 2022/03/17
- * Last modified    : 2022/06/17
- * Model version    : 1.0
+ * Last modified    : 2022/08/30
+ * Model version    : 1.1
  *
  * IMITATOR version : 3.3
  ************************************************************)
@@ -90,24 +90,7 @@ accepting loc lend: invariant True
  end (* pta *)
 (************************************************************)
 
-(************************************************************)
- automaton pta3
-(************************************************************)
-synclabs : a;
-loc l1: invariant True
-	when
-    & True
-  do {
-    r3 := stack_top(s)
-  }
-  sync a
-  goto lend;
-
-
-accepting loc lend: invariant True
- end (* pta *)
-(************************************************************)
-
+#include "./compound-updates-order-pta3-include.imi";
 
 (************************************************************)
 (* Initial state *)

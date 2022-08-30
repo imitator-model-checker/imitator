@@ -281,12 +281,12 @@ fun_signature:
 fun_body:
   | fun_local_decl { $1 }
   | fun_instruction { $1 }
-  | expression { Parsed_fun_expr $1 }
+  | boolean_expression { Parsed_fun_expr $1 }
   | { Parsed_fun_void_expr }
 ;
 
 fun_local_decl:
-  | CT_LET NAME COLON var_type_discrete OP_EQ expression CT_IN fun_body { Parsed_fun_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
+  | CT_LET NAME COLON var_type_discrete OP_EQ boolean_expression CT_IN fun_body { Parsed_fun_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
 ;
 
 fun_instruction:
@@ -566,30 +566,30 @@ parsed_update_type:
 /** Normal updates */
 update:
 	/*** NOTE: deprecated syntax ***/
-	| NAME APOSTROPHE OP_EQ expression {
+	| NAME APOSTROPHE OP_EQ boolean_expression {
 		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
 		(Parsed_variable_update (Parsed_scalar_update $1), $4)
 		}
 
 		/** NOT ALLOWED FROM 3.2 (2021/10) */
-/*	| NAME APOSTROPHE OP_ASSIGN expression {
+/*	| NAME APOSTROPHE OP_ASSIGN boolean_expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
 		(Parsed_variable_update (Parsed_scalar_update $1), $4)
 	}*/
 	/*** NOTE: deprecated syntax ***/
-	| NAME OP_EQ expression {
+	| NAME OP_EQ boolean_expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
 		(Parsed_variable_update (Parsed_scalar_update $1), $3)
 	}
 
-	| parsed_update_type OP_ASSIGN expression { (Parsed_variable_update $1, $3) }
-  | expression { (Parsed_void_update, $1) }
+	| parsed_update_type OP_ASSIGN boolean_expression { (Parsed_variable_update $1, $3) }
+  | boolean_expression { (Parsed_void_update, $1) }
 ;
 
 /** Normal updates without deprecated (avoid parsing errors on function)*/
 update_without_deprecated:
-	| parsed_update_type OP_ASSIGN expression { (Parsed_variable_update $1, $3) }
-  | expression { (Parsed_void_update, $1) }
+	| parsed_update_type OP_ASSIGN boolean_expression { (Parsed_variable_update $1, $3) }
+  | boolean_expression { (Parsed_void_update, $1) }
 ;
 
 /** List containing only normal updates.
@@ -767,7 +767,7 @@ linear_term:
 
 /* Init expression for variable */
 init_value_expression:
-    | expression { $1 }
+    | boolean_expression { $1 }
 ;
 
 /* Linear expression over rationals only */
@@ -924,7 +924,7 @@ init_discrete_expression_nonempty_list :
 new_init_discrete_state_predicate:
 	| new_init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
 	| LPAREN new_init_discrete_state_predicate  RPAREN { $2 }
-	| NAME OP_ASSIGN expression { Parsed_discrete_predicate ($1, $3) }
+	| NAME OP_ASSIGN boolean_expression { Parsed_discrete_predicate ($1, $3) }
 ;
 
 new_init_continuous_expression:
@@ -941,12 +941,6 @@ new_init_continuous_state_predicate:
     | LPAREN new_init_continuous_state_predicate RPAREN { $2 }
     | linear_constraint { Parsed_linear_predicate $1 }
 ;
-
-expression:
-    | boolean_expression { Parsed_global_expression $1 }
-;
-
-
 
 /************************************************************/
 /** MISC. */

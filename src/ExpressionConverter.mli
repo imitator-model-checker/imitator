@@ -20,10 +20,7 @@ type typed_conj_dis =
     | Typed_and
     | Typed_or
 
-type typed_global_expression =
-    | Typed_global_expr of typed_boolean_expression * var_type_discrete
-
-and typed_boolean_expression =
+type typed_boolean_expression =
 	| Typed_conj_dis of typed_boolean_expression * typed_boolean_expression * typed_conj_dis (* implicitly bool type *)
 	| Typed_discrete_bool_expr of typed_discrete_boolean_expression * var_type_discrete
 
@@ -67,7 +64,7 @@ type typed_update_type =
     | Typed_variable_update of typed_scalar_or_index_update_type
     | Typed_void_update
 
-type typed_normal_update = typed_update_type * typed_global_expression
+type typed_normal_update = typed_update_type * typed_boolean_expression
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
@@ -96,9 +93,9 @@ and typed_state_predicate =
 type typed_guard = typed_discrete_boolean_expression list
 
 type typed_fun_body =
-    | Typed_fun_local_decl of variable_name * var_type_discrete * typed_global_expression * typed_fun_body
+    | Typed_fun_local_decl of variable_name * var_type_discrete * typed_boolean_expression * typed_fun_body
     | Typed_fun_instruction of typed_normal_update * typed_fun_body
-    | Typed_fun_expr of typed_global_expression
+    | Typed_fun_expr of typed_boolean_expression
     | Typed_fun_void_expr
 
 type typed_fun_definition = {
@@ -112,13 +109,13 @@ type typed_fun_definition = {
 val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
 
 (* Check that a discrete init is well typed *)
-val check_discrete_init : variable_infos -> variable_name -> parsed_global_expression -> typed_global_expression
+val check_discrete_init : variable_infos -> variable_name -> parsed_boolean_expression -> typed_boolean_expression
 (* Check that a constant declarations is well typed *)
-val check_constant_expression : variable_infos -> variable_name * parsed_global_expression * DiscreteType.var_type -> typed_global_expression
+val check_constant_expression : variable_infos -> variable_name * parsed_boolean_expression * DiscreteType.var_type -> typed_boolean_expression
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
 (* Check that an update is well typed *)
-val check_update : variable_infos -> updates_type -> parsed_update_type -> ParsingStructure.parsed_global_expression -> typed_normal_update
+val check_update : variable_infos -> updates_type -> parsed_update_type -> ParsingStructure.parsed_boolean_expression -> typed_normal_update
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
@@ -140,8 +137,9 @@ open DiscreteExpressions
 val linear_term_of_linear_expression : variable_infos -> ParsingStructure.linear_expression -> LinearConstraint.pxd_linear_term
 val linear_constraint_of_convex_predicate : variable_infos -> ParsingStructure.linear_constraint list -> LinearConstraint.pxd_linear_constraint
 
-val linear_term_of_typed_global_expression : variable_infos -> TypeChecker.typed_global_expression -> LinearConstraint.pxd_linear_term
-val global_expression_of_typed_global_expression : variable_infos -> TypeChecker.typed_global_expression -> DiscreteExpressions.global_expression
+val linear_term_of_typed_boolean_expression : variable_infos -> TypeChecker.typed_boolean_expression -> LinearConstraint.pxd_linear_term
+val global_expression_of_typed_boolean_expression_by_type : variable_infos -> TypeChecker.typed_boolean_expression -> DiscreteType.var_type_discrete -> DiscreteExpressions.global_expression
+val global_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.typed_boolean_expression -> DiscreteExpressions.global_expression
 val bool_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.typed_boolean_expression -> DiscreteExpressions.boolean_expression
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression

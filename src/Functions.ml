@@ -86,7 +86,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
     let rec is_next_expr_has_side_effects = function
         | Parsed_fun_local_decl (_, _, init_expr, next_expr, _) ->
             (* Check if init expression has side-effects *)
-            let has_init_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_global_expression is_leaf_has_side_effects init_expr in
+            let has_init_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_boolean_expression is_leaf_has_side_effects init_expr in
             (* Check if next expressions has side-effects *)
             let has_next_expr_side_effects = is_next_expr_has_side_effects next_expr in
             (* Check if any has side-effects *)
@@ -99,7 +99,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
             (* If the instruction is not an assignment *)
             | Parsed_void_update ->
                 (* Check if the update expression has side-effects *)
-                let has_update_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_global_expression is_leaf_has_side_effects update_expr in
+                let has_update_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_boolean_expression is_leaf_has_side_effects update_expr in
                 (* Check if next expressions has side-effects *)
                 let has_next_expr_side_effects = is_next_expr_has_side_effects next_expr in
                 (* Check if any has side-effects *)
@@ -108,7 +108,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
 
         | Parsed_fun_expr expr ->
             (* Check if expression has side-effects *)
-            ParsingStructureUtilities.exists_in_parsed_global_expression is_leaf_has_side_effects expr
+            ParsingStructureUtilities.exists_in_parsed_boolean_expression is_leaf_has_side_effects expr
         | Parsed_fun_void_expr -> false
     in
     is_next_expr_has_side_effects fun_def.body

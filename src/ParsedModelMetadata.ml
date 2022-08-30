@@ -262,12 +262,12 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
         in
 
         (* Function that return component reference found in a parsed global expression *)
-        let get_variable_and_function_refs_in_parsed_global_expression local_variables expr =
+        let get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr =
             (* Get variables used in the local init expression of the variable *)
-            let variables_used = string_set_to_list (get_variables_in_parsed_global_expression expr) in
+            let variables_used = string_set_to_list (get_variables_in_parsed_boolean_expression expr) in
             let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
             (* Get functions used in the local init expression of the variable *)
-            let functions_used = string_set_to_list (get_functions_in_parsed_global_expression expr) in
+            let functions_used = string_set_to_list (get_functions_in_parsed_boolean_expression expr) in
             let functions_used_refs = List.map (fun function_name -> Fun_ref function_name) functions_used in
             (* Get refs *)
             variables_used_refs, functions_used_refs
@@ -283,7 +283,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 let local_variables = StringMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
 
                 (* Get variable and function refs used in the local init expression *)
-                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_global_expression local_variables init_expr in
+                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables init_expr in
                 let all_refs = variables_used_refs @ functions_used_refs in
                 let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
@@ -318,7 +318,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                         let variable_ref = get_variable_ref local_variables variable_name in
 
                         (* Get variable and function refs used in the update expression *)
-                        let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_global_expression local_variables expr in
+                        let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
                         let all_refs = variables_used_refs @ functions_used_refs in
                         let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
@@ -362,8 +362,8 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                         (* Current function 'f' use s, x, y *)
 
                         (* Get variables used in update expression *)
-                        let variables_used = get_variables_in_parsed_global_expression expr in
-                        let functions_used = get_functions_in_parsed_global_expression expr in
+                        let variables_used = get_variables_in_parsed_boolean_expression expr in
+                        let functions_used = get_functions_in_parsed_boolean_expression expr in
 
                         let fun_use_variables_relations = variable_to_variable_relations local_variables fun_ref variables_used in
 
@@ -383,7 +383,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
 
             | Parsed_fun_expr expr ->
                 (* Get variable and function refs used in the expression *)
-                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_global_expression local_variables expr in
+                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
                 let all_refs = variables_used_refs @ functions_used_refs in
                 List.map (fun _ref -> (fun_ref, _ref)) all_refs
 
@@ -414,7 +414,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
             | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable _), _, Linear_term (Constant _))) -> acc
             (* *)
             | Parsed_discrete_predicate (variable_name, expr) ->
-                let used_variable_names = ParsingStructureUtilities.get_variables_in_parsed_global_expression expr in
+                let used_variable_names = ParsingStructureUtilities.get_variables_in_parsed_boolean_expression expr in
                 let used_variable_names_list = string_set_to_list used_variable_names in
                 List.map (fun used_variable_name -> Global_variable_ref variable_name, Global_variable_ref used_variable_name) used_variable_names_list
             (* Linear constraint: get variables *)
@@ -680,7 +680,7 @@ let right_variables_of_assignments_in (fun_def : parsed_fun_definition) =
     let right_variables_of_assignments_in_parsed_next_expr local_variable_components = function
         | Parsed_fun_local_decl (_, _, expr, _, _)
         | Parsed_fun_instruction ((_, expr), _) ->
-            let variable_names = string_set_to_list (ParsingStructureUtilities.get_variables_in_parsed_global_expression expr) in
+            let variable_names = string_set_to_list (ParsingStructureUtilities.get_variables_in_parsed_boolean_expression expr) in
             let variable_refs = List.map (variable_ref_of local_variable_components) variable_names in
             component_refs := List.fold_left (Fun.flip ComponentSet.add) !component_refs variable_refs
 

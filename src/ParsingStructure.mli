@@ -48,15 +48,9 @@ type parsed_conj_dis =
     | Parsed_or
 
 (****************************************************************)
-(** Global expression *)
-(****************************************************************)
-type parsed_global_expression =
-    | Parsed_global_expression of parsed_boolean_expression
-
-(****************************************************************)
 (** Boolean expressions *)
 (****************************************************************)
-and parsed_boolean_expression =
+type parsed_boolean_expression =
     | Parsed_conj_dis of parsed_boolean_expression * parsed_boolean_expression * parsed_conj_dis (* Conjunction / Disjunction *)
 	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
 
@@ -102,7 +96,7 @@ and parsed_discrete_factor =
 
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
-type variable_declaration = DiscreteType.var_type * (variable_name * parsed_global_expression option) list
+type variable_declaration = DiscreteType.var_type * (variable_name * parsed_boolean_expression option) list
 type variable_declarations = variable_declaration list
 
 (****************************************************************)
@@ -168,7 +162,7 @@ type updates_type =
     | Parsed_std_updates (* Standard updates `then` *)
 
 (** basic updating *)
-type normal_update = parsed_update_type * parsed_global_expression
+type normal_update = parsed_update_type * parsed_boolean_expression
 (** conditional updating *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 
@@ -184,9 +178,9 @@ type update_section = update list (* pre-updates sequential *) * update list (* 
 (** User functions *)
 (****************************************************************)
 type parsed_next_expr =
-    | Parsed_fun_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_global_expression (* init expr *) * parsed_next_expr * int (* id *)
+    | Parsed_fun_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * parsed_next_expr * int (* id *)
     | Parsed_fun_instruction of normal_update * parsed_next_expr
-    | Parsed_fun_expr of parsed_global_expression
+    | Parsed_fun_expr of parsed_boolean_expression
     | Parsed_fun_void_expr
 
 (* Metadata of a function *)
@@ -248,7 +242,7 @@ type parsed_automaton = automaton_name * sync_name list * parsed_location list
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
 	| Parsed_linear_predicate of linear_constraint
-	| Parsed_discrete_predicate of variable_name * parsed_global_expression
+	| Parsed_discrete_predicate of variable_name * parsed_boolean_expression
 
 type init_definition = parsed_init_state_predicate list
 
