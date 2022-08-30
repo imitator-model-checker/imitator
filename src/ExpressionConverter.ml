@@ -916,7 +916,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
             match type_constraint with
             | Defined_type_constraint (Number_constraint (Defined_type_number_constraint Int_constraint (Int_name_constraint constraint_name))) ->
 
-                let converted_expr = Convert.global_expression_of_typed_boolean_expression variable_infos expr (Var_type_discrete_number Var_type_discrete_int) in
+                let converted_expr = Convert.global_expression_of_typed_boolean_expression_by_type variable_infos expr (Var_type_discrete_number Var_type_discrete_int) in
 
                 if not (DiscreteExpressionEvaluator.is_global_expression_constant None converted_expr) then (
                     raise (TypeError (
@@ -1479,8 +1479,8 @@ val linear_term_of_linear_expression : variable_infos -> ParsingStructure.linear
 val linear_constraint_of_convex_predicate : variable_infos -> ParsingStructure.linear_constraint list -> LinearConstraint.pxd_linear_constraint
 
 val linear_term_of_typed_boolean_expression : variable_infos -> TypeChecker.typed_boolean_expression -> LinearConstraint.pxd_linear_term
-val global_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.typed_boolean_expression -> DiscreteType.var_type_discrete -> DiscreteExpressions.global_expression
-val global_expression_of_typed_boolean_expression_without_type : variable_infos -> TypeChecker.typed_boolean_expression -> DiscreteExpressions.global_expression
+val global_expression_of_typed_boolean_expression_by_type : variable_infos -> TypeChecker.typed_boolean_expression -> DiscreteType.var_type_discrete -> DiscreteExpressions.global_expression
+val global_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.typed_boolean_expression -> DiscreteExpressions.global_expression
 val bool_expression_of_typed_boolean_expression : variable_infos -> TypeChecker.typed_boolean_expression -> DiscreteExpressions.boolean_expression
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> TypeChecker.typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
@@ -1554,13 +1554,13 @@ let conj_dis_of_typed_conj_dis = function
     | Typed_or -> Or
 
 
-let rec global_expression_of_typed_boolean_expression_without_type variable_infos = function
+let rec global_expression_of_typed_boolean_expression variable_infos = function
 	| Typed_conj_dis _ as expr ->
-	    global_expression_of_typed_boolean_expression variable_infos expr Var_type_discrete_bool
+	    global_expression_of_typed_boolean_expression_by_type variable_infos expr Var_type_discrete_bool
 	| Typed_discrete_bool_expr (_, discrete_type) as expr ->
-	    global_expression_of_typed_boolean_expression variable_infos expr discrete_type
+	    global_expression_of_typed_boolean_expression_by_type variable_infos expr discrete_type
 
-and global_expression_of_typed_boolean_expression variable_infos expr discrete_type =
+and global_expression_of_typed_boolean_expression_by_type variable_infos expr discrete_type =
     match discrete_type with
     | Var_type_void ->
         Void_expression (
@@ -1799,7 +1799,7 @@ and bool_expression_of_typed_function_call variable_infos argument_expressions f
     Bool_function_call (
         function_name,
         fun_meta.parameter_names,
-        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
     )
 
 (* --------------------*)
@@ -1900,7 +1900,7 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
     Rational_function_call (
         function_name,
         fun_meta.parameter_names,
-        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
     )
 
 (* --------------------*)
@@ -2001,7 +2001,7 @@ and int_expression_of_typed_function_call variable_infos argument_expressions fu
     Int_function_call (
         function_name,
         fun_meta.parameter_names,
-        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
     )
 
 
@@ -2081,7 +2081,7 @@ and binary_expression_of_typed_function_call variable_infos length argument_expr
     Binary_word_function_call (
         function_name,
         fun_meta.parameter_names,
-        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
     )
 
 (* --------------------*)
@@ -2153,7 +2153,7 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
 
     | Typed_sequence (expr_list, _, Typed_array) ->
         (* Should take inner_type unbox type *)
-        let expressions = List.map (fun expr -> global_expression_of_typed_boolean_expression variable_infos expr discrete_type) expr_list in
+        let expressions = List.map (fun expr -> global_expression_of_typed_boolean_expression_by_type variable_infos expr discrete_type) expr_list in
         Literal_array (Array.of_list expressions)
 
 	| Typed_expr (expr, _) ->
@@ -2180,7 +2180,7 @@ and array_expression_of_typed_function_call variable_infos discrete_type argumen
     Array_function_call (
         function_name,
         fun_meta.parameter_names,
-        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
     )
 
 (* --------------------*)
@@ -2251,7 +2251,7 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
 	    List_constant (List.map AbstractValue.of_parsed_value (ParsedValue.list_value value))
 
     | Typed_sequence (expr_list, _, Typed_list) ->
-        Literal_list (List.map (fun expr -> global_expression_of_typed_boolean_expression variable_infos expr discrete_type) expr_list)
+        Literal_list (List.map (fun expr -> global_expression_of_typed_boolean_expression_by_type variable_infos expr discrete_type) expr_list)
 
 	| Typed_expr (expr, _) ->
         list_expression_of_typed_arithmetic_expression variable_infos discrete_type expr
@@ -2277,7 +2277,7 @@ and list_expression_of_typed_function_call variable_infos discrete_type argument
     List_function_call (
         function_name,
         fun_meta.parameter_names,
-        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
     )
 
 and stack_expression_of_typed_boolean_expression_with_type variable_infos = function
@@ -2365,7 +2365,7 @@ and stack_expression_of_typed_function_call variable_infos discrete_type argumen
     Stack_function_call (
         function_name,
         fun_meta.parameter_names,
-        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
     )
 
 
@@ -2456,7 +2456,7 @@ and queue_expression_of_typed_function_call variable_infos discrete_type argumen
     Queue_function_call (
         function_name,
         fun_meta.parameter_names,
-        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
     )
 
 and void_expression_of_typed_boolean_expression variable_infos = function
@@ -2519,7 +2519,7 @@ and void_expression_of_typed_function_call variable_infos argument_expressions f
     Void_function_call (
         function_name,
         fun_meta.parameter_names,
-        List.map (global_expression_of_typed_boolean_expression_without_type variable_infos) argument_expressions
+        List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
     )
 
 (* --------------------*)
@@ -2881,18 +2881,18 @@ let rec fun_body_of_typed_fun_body variable_infos = function
         Fun_local_decl (
             variable_name,
             discrete_type,
-            global_expression_of_typed_boolean_expression_without_type variable_infos typed_init_expr,
+            global_expression_of_typed_boolean_expression variable_infos typed_init_expr,
             fun_body_of_typed_fun_body variable_infos typed_next_expr
         )
     | Typed_fun_instruction ((typed_update_type, typed_expr), typed_next_expr) ->
         Fun_instruction (
             (update_type_of_typed_update_type variable_infos typed_update_type,
-            global_expression_of_typed_boolean_expression_without_type variable_infos typed_expr),
+            global_expression_of_typed_boolean_expression variable_infos typed_expr),
             fun_body_of_typed_fun_body variable_infos typed_next_expr
         )
     | Typed_fun_expr typed_expr ->
         Fun_expr (
-            global_expression_of_typed_boolean_expression_without_type variable_infos typed_expr
+            global_expression_of_typed_boolean_expression variable_infos typed_expr
         )
     | Typed_fun_void_expr ->
         Fun_void_expr

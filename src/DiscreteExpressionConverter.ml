@@ -35,7 +35,7 @@ let convert_discrete_init variable_infos variable_name expr =
     (* Print *)
 (*    ImitatorUtilities.print_message Verbose_standard (ExpressionConverter.TypeChecker.string_of_typed_boolean_expression variable_infos typed_expr);*)
     (* Convert *)
-    ExpressionConverter.Convert.global_expression_of_typed_boolean_expression_without_type variable_infos typed_expr
+    ExpressionConverter.Convert.global_expression_of_typed_boolean_expression variable_infos typed_expr
 
 let convert_discrete_constant initialized_constants (name, expr, var_type) =
     (* Create fake variable_infos containing just initialized constants *)
@@ -52,7 +52,7 @@ let convert_discrete_constant initialized_constants (name, expr, var_type) =
     in
 
     let typed_expr = ExpressionConverter.TypeChecker.check_constant_expression variable_infos (name, expr, var_type) in
-    ExpressionConverter.Convert.global_expression_of_typed_boolean_expression_without_type variable_infos typed_expr
+    ExpressionConverter.Convert.global_expression_of_typed_boolean_expression variable_infos typed_expr
 
 
 
@@ -149,7 +149,7 @@ let convert_guard variable_infos guard_convex_predicate =
 let convert_update variable_infos updates_type parsed_update_type expr =
     let typed_update_type, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos updates_type parsed_update_type expr in
     ExpressionConverter.Convert.update_type_of_typed_update_type variable_infos typed_update_type,
-    ExpressionConverter.Convert.global_expression_of_typed_boolean_expression_without_type variable_infos typed_expr
+    ExpressionConverter.Convert.global_expression_of_typed_boolean_expression variable_infos typed_expr
 
 let convert_continuous_update variable_infos parsed_scalar_or_index_update_type expr =
     let parsed_update_type = Parsed_variable_update parsed_scalar_or_index_update_type in
