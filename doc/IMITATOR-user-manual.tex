@@ -1619,13 +1619,18 @@ In addition to the built-in functions (see \cref{table:summary:builtin-functions
 \subsection{Declaration}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-A user-defined function is made of a (possibly empty) list of declarations of local variables, of a set of imperative instructions (modification of global variables) and must have one return expression.
+A user-defined function is made of a (possibly empty) list of declarations of local variables, of a set of imperative instructions (modification of global variables) and may have one return expression.
+
+Local variable declarations and imperative instructions can be written in any order. A function may or may not return a value.
+If a function return something, the last instruction should be an expression that is the return expression. If a function return nothing, it should be typed as \styleIMI{void} and doesn't have any return expression.
+
 Note that, due to the possibility to modify global variables, user-defined functions may become \emph{side-effect} functions; if the functions have indeed side-effect, they can only be used in updates (not in guards nor in invariants).
 
 User-defined functions can have zero or more arguments, and must return one value. Note that all arguments are passed by value.
 
 User functions must be declared directly after the variable declarations and are global to all \IPTA{} in the \NIPTA{}.
 
+\begin{example}
 We give below some examples of user function definitions:
 
 \begin{IMITATORmodel}
@@ -1683,6 +1688,7 @@ We give below some examples of user function definitions:
 	end
 
 \end{IMITATORmodel}
+\end{example}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Some rules}
@@ -1696,6 +1702,7 @@ We give below some examples of user function definitions:
 	\item Recursive calls are forbidden (including mutually recursive calls).
 \end{itemize}
 
+\begin{example}
 We give below some examples of incorrect user function definitions:
 
 \begin{IMITATORmodel}
@@ -1729,6 +1736,7 @@ We give below some examples of incorrect user function definitions:
 	end
 
 \end{IMITATORmodel}
+\end{example}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Some other practices}
@@ -1740,8 +1748,8 @@ We give below some examples of incorrect user function definitions:
 \item Calls of another functions are possible;
 \end{itemize}
 
+\begin{example}
 We give below some examples of user function definitions:
-
 
 \begin{IMITATORmodel}
 
@@ -1774,6 +1782,7 @@ We give below some examples of user function definitions:
 	end
 
 \end{IMITATORmodel}
+\end{example}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Calling a user-defined function}
@@ -1782,6 +1791,9 @@ We give below some examples of user function definitions:
 User-defined functions can be called in guards, invariants or updates in the same manner as the built-in functions.
 However, side-effect user-defined functions can only be used in sequential updates.
 
+Arguments of a function can be any well-typed expression as well as other function calls.
+
+\begin{example}
 To illustrate the use of user-defined functions, note that the following guard in the model fragment below will evaluate to true:
 
 \begin{IMITATORmodel}
@@ -1790,6 +1802,7 @@ To illustrate the use of user-defined functions, note that the following guard i
 	when add(1, two()) = 3 goto lend;
 	when lerp(0, 5, 1 / 2) = 2.5 goto lend;
 \end{IMITATORmodel}
+\end{example}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
