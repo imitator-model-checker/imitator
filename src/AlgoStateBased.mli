@@ -79,6 +79,9 @@ val compute_initial_state_or_abort : unit -> State.state
 val compute_valuated_invariant : Location.global_location -> LinearConstraint.px_linear_constraint
 
 
+
+val apply_updates_assign_backward : LinearConstraint.pxd_linear_constraint -> (AbstractModel.clock_updates list) -> unit
+
 (*------------------------------------------------------------*)
 (* Compute the list of stopped and elapsing clocks in a location *)
 (* Returns a pair (stopped clocks, elapsing clocks)           *)

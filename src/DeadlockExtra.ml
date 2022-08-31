@@ -4,35 +4,55 @@ type clock_updates = (Automaton.clock_index * LinearConstraint.pxd_linear_term) 
 
 open LinearConstraint
 open StateSpace
+open DiscreteExpressionEvaluator
+
+let dl_instantiate_discrete_gen discrete constr = 
+    pxd_intersection_assign discrete [constr];
+    pxd_hide_discrete_and_collapse discrete
 
 (* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
 let dl_instantiate_discrete state_space state_index constr = 
 	let glob_location = get_location state_space (get_global_location_index state_space state_index) in
     let discrete = AlgoStateBased.discrete_constraint_of_global_location glob_location in
-    pxd_intersection_assign discrete [constr];
-    pxd_hide_discrete_and_collapse discrete
+    ImitatorUtilities.print_message Verbose_medium            ("MBDJ: \027[32mReal discrete variables " ^ string_of_state_index state_index ^ ":\027[0m = \n" ^ 
+    string_of_pxd_linear_constraint (Input.get_model()).variable_names discrete); 
+    dl_instantiate_discrete_gen discrete constr
+
+(* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
+let dl_instantiate_discrete_after_seq state_space state_index constr transition = 
+	let glob_location = get_location state_space (get_global_location_index state_space state_index) in
+
+    (* Copy location where we perform the destructive sequential updates*)
+    let location = Location.copy_location glob_location in
+    let model = Input.get_model() in 
+
+
+    (* Get functions that enable reading / writing global variables at a given location *)
+    let discrete_access = Location.discrete_access_of_location location in
+    List.iter (fun transition_index -> 
+        let transitions_description = model.transitions_description transition_index in
+		(** Collecting the updates by evaluating the conditions, if there is any *)
+        let _ (* no clock update for pre-updates *), discrete_seq_updates = AlgoStateBased.get_updates glob_location transitions_description.seq_updates in
+
+        (* Make `seq` sequential updates (make these updates now, only on discrete) *)
+        List.iter (direct_update discrete_access) (List.rev discrete_seq_updates);
+    ) transition;
+
+    let discrete = AlgoStateBased.discrete_constraint_of_global_location location in
+
+    dl_instantiate_discrete_gen discrete constr
 
 (* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
 (* This is probably incomplete, if there was also a discrete update *) 
-let dl_inverse_update state_space state_index z updates = 
+let dl_inverse_update state_space state_index z updates transition = 
     let model = Input.get_model () in (* only for printing *)
     let constr = px_copy z in
-    let equality update = (* create an equlity x-lt=0 *)
-        let (x,lt) = update in
-        let clock = make_pxd_linear_term [(NumConst.one,x)] NumConst.zero in
-        let diff = sub_pxd_linear_terms clock lt in
-        let eq = make_pxd_linear_inequality diff Op_eq in
-        ImitatorUtilities.print_message Verbose_medium  
-           ("JvdP: \027[32mNew inverse update:\027[0m = \n" ^ 
-             string_of_pxd_linear_inequality model.variable_names eq);
-        eq in
-    let updates_eqs = List.map equality updates in
-    let updates_pxd = make_pxd_constraint updates_eqs in
-    let updates_px = dl_instantiate_discrete state_space state_index updates_pxd in
+    let constr_pxd = pxd_of_px_constraint constr in
+    (AlgoStateBased.apply_updates_assign_backward constr_pxd updates);
 
-    px_intersection_assign constr [updates_px];
-    px_hide_assign (List.map fst updates) constr;
-    constr
+    let constr_px = dl_instantiate_discrete_after_seq state_space state_index constr_pxd transition in
+
+    constr_px
 
 (* Apply past time operator *)
 let dl_inverse_time state_space state_index z =
@@ -41,9 +61,9 @@ let dl_inverse_time state_space state_index z =
 
 
 (* compute direct predecessor of z2 in z1, linked by (guard,updates) *)
-let dl_predecessor state_space state_index z1 guard updates z2 =
+let dl_predecessor state_space state_index z1 guard updates z2 transition =
     let model = Input.get_model () in (* only for printing *)
-    let constr = dl_inverse_update state_space state_index z2 updates in
+    let constr = dl_inverse_update state_space state_index z2 updates transition in
     px_intersection_assign constr [z1];
     let constr_pxd = pxd_of_px_constraint constr in
     pxd_intersection_assign constr_pxd [guard];
@@ -59,24 +79,16 @@ let dl_get_clock_updates state_space combined_transition =
 	let model = Input.get_model () in
 
 	(* For all transitions involved in the combined transition *)
-	let resets = List.fold_left (fun current_resets transition_index ->
+	let updates = List.fold_left (fun current_updates transition_index ->
 		(* Get the actual transition *)
 		let transition = model.transitions_description transition_index in
-        let zero =  make_pxd_linear_term [] NumConst.zero in
-		(*** WARNING: we only accept clock resets (no arbitrary updates) ***)
-		match transition.updates.clock with
-			(* No update at all *)
-			| No_update -> current_resets
-			(* Reset to 0 only *)
-			| Resets clock_resets -> List.rev_append (List.map (fun x -> (x,zero)) clock_resets) current_resets
-			(* Reset to arbitrary value (including discrete, parameters and clocks) *)
-			| Updates clock_updates -> List.rev_append clock_updates current_resets
+        transition.updates.clock :: current_updates
 	) [] combined_transition
 	in
 
 	(* Keep each update once *)
     (* TODO: check for inconsistent updates? *)
-	OCamlUtilities.list_only_once resets
+	OCamlUtilities.list_only_once updates
 
 let dl_weakest_precondition state_space s1_index transition s2_index =
     let z1 = (get_state state_space s1_index).px_constraint in
@@ -86,4 +98,4 @@ let dl_weakest_precondition state_space s1_index transition s2_index =
     let updates = dl_get_clock_updates state_space transition in
     let guard = get_guard state_space s1_index transition s2_index in
  
-    dl_predecessor state_space s1_index z1 guard updates z2
+    dl_predecessor state_space s1_index z1 guard updates z2 transition
