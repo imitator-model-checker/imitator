@@ -20,7 +20,7 @@ open AbstractModel
 open AbstractProperty
 open DiscreteExpressions
 open DiscreteType
-open ExpressionConverter.TypeChecker
+open TypedStructure
 
 (* Convert parsed_loc_predicate *)
 let loc_predicate_of_typed_loc_predicate model_info = function
