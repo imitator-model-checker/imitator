@@ -480,6 +480,25 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
 
             eval_fun_body_with_context eval_context next_expr
 
+        | Fun_loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr) ->
+            let from_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) from_expr in
+            let to_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) to_expr in
+
+            let old_value_opt = Hashtbl.find_opt eval_context.local_variables variable_name in
+
+            for i = (Int32.to_int from_value) to (Int32.to_int to_value) do
+                let i_value = AbstractValue.of_int (Int32.of_int i) in
+                Hashtbl.replace eval_context.local_variables variable_name i_value;
+                eval_fun_body_with_context eval_context inner_expr;
+            done;
+
+            (match old_value_opt with
+            | Some old_value -> Hashtbl.replace eval_context.local_variables variable_name old_value
+            | None -> () (* Hashtbl.remove eval_context.local_variables variable_name *)
+            );
+
+            eval_fun_body_with_context eval_context next_expr
+
         | Fun_instruction (normal_update, next_expr) ->
             direct_update_with_context variable_names functions_table_opt eval_context normal_update;
             eval_fun_body_with_context eval_context next_expr

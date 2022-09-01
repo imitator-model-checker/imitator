@@ -174,12 +174,17 @@ type update =
 (* Three type of updates (pre-updates, updates, post-updates) grouped in section *)
 type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *)
 
+type parsed_loop_dir =
+    | Parsed_loop_up
+    | Parsed_loop_down
+
 (****************************************************************)
 (** User functions *)
 (****************************************************************)
 type parsed_next_expr =
     | Parsed_fun_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * parsed_next_expr * int (* id *)
     | Parsed_fun_instruction of normal_update * parsed_next_expr
+    | Parsed_fun_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * parsed_next_expr (* inner bloc *) * parsed_next_expr (* next *) * int (* id *)
     | Parsed_fun_expr of parsed_boolean_expression
     | Parsed_fun_void_expr
 

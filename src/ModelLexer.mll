@@ -137,6 +137,8 @@ rule token = parse
   | "stack"          { CT_STACK }
   | "queue"          { CT_QUEUE }
   | "fn"             { CT_FUN   }
+  | "for"            { CT_FOR }
+  | "to"             { CT_TO }
 
 
 

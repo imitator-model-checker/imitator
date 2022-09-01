@@ -42,6 +42,10 @@ type product_quotient =
     | Mul
     | Div
 
+type loop_dir =
+    | Loop_up
+    | Loop_down
+
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
@@ -220,6 +224,7 @@ and expression_access_type =
 and fun_body =
     | Fun_local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * fun_body
     | Fun_instruction of (update_type * global_expression) * fun_body
+    | Fun_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * fun_body (* inner bloc *) * fun_body (* next bloc *)
     | Fun_expr of global_expression
     | Fun_void_expr
 

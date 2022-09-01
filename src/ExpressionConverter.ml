@@ -620,7 +620,7 @@ let type_check_parsed_update_type local_variables_opt variable_infos = function
         let typed_parsed_scalar_or_index_update_type, discrete_type, has_side_effects = type_check_parsed_scalar_or_index_update_type local_variables_opt variable_infos parsed_scalar_or_index_update_type in
         Typed_variable_update typed_parsed_scalar_or_index_update_type, discrete_type, has_side_effects
 
-    | Parsed_void_update -> Typed_void_update, Var_type_weak, false
+    | Parsed_void_update -> Typed_void_update, Var_type_void, false
 
 
 let rec type_check_fun_body local_variables variable_infos infer_type_opt = function
@@ -662,6 +662,43 @@ let rec type_check_fun_body local_variables variable_infos infer_type_opt = func
         let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_fun_body local_variables variable_infos infer_type_opt next_expr in
 
         Typed_fun_instruction ((typed_update_type, typed_expr), typed_next_expr), next_expr_discrete_type, true
+
+    | Parsed_fun_loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr, _) as outer_expr ->
+        (* Add local variable to hashtable *)
+        Hashtbl.add local_variables variable_name (Var_type_discrete_number Var_type_discrete_int);
+        (* Resolve typed from expr *)
+        let typed_from_expr, from_expr_type, is_from_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) from_expr in
+        (* Resolve typed to expr *)
+        let typed_to_expr, to_expr_type, is_to_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) to_expr in
+        (* Resolve typed inner expr *)
+        let typed_inner_expr, inner_expr_discrete_type, inner_expr_has_side_effects (* side effects *) = type_check_fun_body local_variables variable_infos infer_type_opt inner_expr in
+        (* Resolve typed next expr *)
+        let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_fun_body local_variables variable_infos infer_type_opt next_expr in
+
+        let typed_loop_dir =
+            match loop_dir with
+            | Parsed_loop_up -> Typed_loop_up
+            | Parsed_loop_down -> Typed_loop_down
+        in
+
+        (* TODO benjamin here side effect is not always true in loop ? *)
+        let has_side_effects = true in
+
+        (* Check from and to expr type are int *)
+        (match from_expr_type, to_expr_type with
+        | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_int ->
+            Typed_fun_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_expr, typed_next_expr), Var_type_void, has_side_effects
+        | _ ->
+            raise (TypeError (
+                ill_typed_message_of_expressions
+                    [
+                        string_of_parsed_arithmetic_expression variable_infos from_expr;
+                        string_of_parsed_arithmetic_expression variable_infos to_expr
+                    ]
+                    [from_expr_type; to_expr_type]
+                    (string_of_parsed_next_expr variable_infos outer_expr)
+            ))
+        )
 
     | Parsed_fun_expr expr ->
         let typed_expr, discrete_type, has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
@@ -1136,6 +1173,9 @@ let conj_dis_of_typed_conj_dis = function
     | Typed_and -> And
     | Typed_or -> Or
 
+let loop_dir_of_typed_loop_dir = function
+    | Typed_loop_up -> Loop_up
+    | Typed_loop_down -> Loop_down
 
 let rec global_expression_of_typed_boolean_expression variable_infos = function
 	| Typed_conj_dis _ as expr ->
@@ -2467,16 +2507,29 @@ let rec fun_body_of_typed_fun_body variable_infos = function
             global_expression_of_typed_boolean_expression variable_infos typed_init_expr,
             fun_body_of_typed_fun_body variable_infos typed_next_expr
         )
+
+    | Typed_fun_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_expr, typed_next_expr) ->
+        Fun_loop (
+            variable_name,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_from_expr,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_to_expr,
+            loop_dir_of_typed_loop_dir typed_loop_dir,
+            fun_body_of_typed_fun_body variable_infos typed_inner_expr,
+            fun_body_of_typed_fun_body variable_infos typed_next_expr
+        )
+
     | Typed_fun_instruction ((typed_update_type, typed_expr), typed_next_expr) ->
         Fun_instruction (
             (update_type_of_typed_update_type variable_infos typed_update_type,
             global_expression_of_typed_boolean_expression variable_infos typed_expr),
             fun_body_of_typed_fun_body variable_infos typed_next_expr
         )
+
     | Typed_fun_expr typed_expr ->
         Fun_expr (
             global_expression_of_typed_boolean_expression variable_infos typed_expr
         )
+
     | Typed_fun_void_expr ->
         Fun_void_expr
 

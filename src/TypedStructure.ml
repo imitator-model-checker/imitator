@@ -92,9 +92,14 @@ and typed_state_predicate =
 
 type typed_guard = typed_discrete_boolean_expression list
 
+type typed_loop_dir =
+    | Typed_loop_up
+    | Typed_loop_down
+
 type typed_fun_body =
     | Typed_fun_local_decl of variable_name * var_type_discrete * typed_boolean_expression * typed_fun_body
     | Typed_fun_instruction of typed_normal_update * typed_fun_body
+    | Typed_fun_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_fun_body (* inner bloc *) * typed_fun_body (* next bloc *)
     | Typed_fun_expr of typed_boolean_expression
     | Typed_fun_void_expr
 

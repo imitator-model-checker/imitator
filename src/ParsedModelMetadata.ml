@@ -206,8 +206,13 @@ let declared_components_of_model parsed_model =
 
         let rec all_local_variable_of_fun_body = function
             | Parsed_fun_local_decl (variable_name, _, _, fun_body, id) ->
-                    Local_variable_ref (variable_name, fun_def.name, id) ::
-                    all_local_variable_of_fun_body fun_body
+                Local_variable_ref (variable_name, fun_def.name, id) ::
+                all_local_variable_of_fun_body fun_body
+
+            | Parsed_fun_loop (variable_name, _, _, _, inner_expr, next_expr, id) ->
+                Local_variable_ref (variable_name, fun_def.name, id)
+                :: (all_local_variable_of_fun_body inner_expr @ all_local_variable_of_fun_body next_expr)
+
             | Parsed_fun_instruction _
             | Parsed_fun_expr _
             | Parsed_fun_void_expr -> []
@@ -268,6 +273,18 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
             let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
             (* Get functions used in the local init expression of the variable *)
             let functions_used = string_set_to_list (get_functions_in_parsed_boolean_expression expr) in
+            let functions_used_refs = List.map (fun function_name -> Fun_ref function_name) functions_used in
+            (* Get refs *)
+            variables_used_refs, functions_used_refs
+        in
+
+        (* Function that return component reference found in a parsed arithmetic expression *)
+        let get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables expr =
+            (* Get variables used in the local init expression of the variable *)
+            let variables_used = string_set_to_list (get_variables_in_parsed_discrete_arithmetic_expression expr) in
+            let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
+            (* Get functions used in the local init expression of the variable *)
+            let functions_used = string_set_to_list (get_functions_in_parsed_discrete_arithmetic_expression expr) in
             let functions_used_refs = List.map (fun function_name -> Fun_ref function_name) functions_used in
             (* Get refs *)
             variables_used_refs, functions_used_refs
@@ -380,6 +397,32 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 let next_declaration_relations = function_relations_in_parsed_next_expr_rec local_variables next_expr in
                 (* Concat current relations with next relations *)
                 relations @ next_declaration_relations
+
+            | Parsed_fun_loop (variable_name, from_expr, to_expr, _, inner_expr, next_expr, id) ->
+                (* Create local variable ref representing a unique variable ref *)
+                let variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
+                (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
+                let local_variables = StringMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
+
+                (* Get variable and function refs used in the from expression *)
+                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables from_expr in
+                let all_refs = variables_used_refs @ functions_used_refs in
+                (* Get variable and function refs used in the to expression *)
+                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables to_expr in
+                let all_refs = all_refs @ variables_used_refs @ functions_used_refs in
+
+                let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
+
+                (* Add a relation between current function and declared variable *)
+                (* The declared variable will always be considered as used here *)
+                let relations = (fun_ref, variable_ref) :: relations in
+
+                (* Get list of relations for the inner expressions *)
+                let inner_declaration_relations = function_relations_in_parsed_next_expr_rec local_variables inner_expr in
+                (* Get list of relations for the next expression / declaration *)
+                let next_declaration_relations = function_relations_in_parsed_next_expr_rec local_variables next_expr in
+                (* Concat current relations with next relations *)
+                inner_declaration_relations @ next_declaration_relations @ relations
 
             | Parsed_fun_expr expr ->
                 (* Get variable and function refs used in the expression *)
@@ -591,6 +634,7 @@ let traverse_function operator f base (fun_def : parsed_fun_definition) =
     (* Create ref of local variable components set *)
     let local_variable_components_ref = ref local_variable_components in
 
+    (* TODO benjamin see if can replace by general function *)
     (* Function that traverse function body expression *)
     let rec traverse_parsed_next_expr = function
         | Parsed_fun_local_decl (variable_name, _, _, next_expr, id) as expr ->
@@ -600,6 +644,18 @@ let traverse_function operator f base (fun_def : parsed_fun_definition) =
 
             operator
                 (f !local_variable_components_ref expr)
+                (traverse_parsed_next_expr next_expr)
+
+        | Parsed_fun_loop (variable_name, _, _, _, inner_expr, next_expr, id) as expr ->
+            (* Add the new declared local variable to set *)
+            let local_variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
+            local_variable_components_ref := ComponentSet.add local_variable_ref !local_variable_components_ref;
+
+            operator
+                (operator
+                    (f !local_variable_components_ref expr)
+                    (traverse_parsed_next_expr inner_expr)
+                )
                 (traverse_parsed_next_expr next_expr)
 
         | Parsed_fun_instruction (_, next_expr) as expr ->
@@ -623,7 +679,8 @@ let left_variables_of_assignments_in (fun_def : parsed_fun_definition) =
 
     (* Function that get assigned variable in function body expression *)
     let rec left_variables_of_assignments_in_parsed_next_expr local_variable_components = function
-        | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, id) -> ()
+        | Parsed_fun_loop _
+        | Parsed_fun_local_decl _ -> ()
 
         | Parsed_fun_instruction ((parsed_update_type, _), next_expr) ->
 
@@ -684,6 +741,7 @@ let right_variables_of_assignments_in (fun_def : parsed_fun_definition) =
             let variable_refs = List.map (variable_ref_of local_variable_components) variable_names in
             component_refs := List.fold_left (Fun.flip ComponentSet.add) !component_refs variable_refs
 
+        | Parsed_fun_loop _
         | Parsed_fun_expr _
         | Parsed_fun_void_expr -> ()
     in

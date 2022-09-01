@@ -94,7 +94,7 @@ let unzip l = List.fold_left
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
-    CT_FUN CT_BEGIN
+    CT_FUN CT_BEGIN CT_FOR CT_TO
 
 
 %token EOF
@@ -275,6 +275,8 @@ fun_parameter_nonempty_list:
 fun_body:
   | fun_local_decl { $1 }
   | fun_instruction { $1 }
+  /* for loop */
+  | CT_FOR NAME OP_EQ arithmetic_expression CT_TO arithmetic_expression CT_DO fun_body CT_END fun_body { Parsed_fun_loop ($2, $4, $6, Parsed_loop_up, $8, $10, Parsing.symbol_start ()) }
   | boolean_expression { Parsed_fun_expr $1 }
   | { Parsed_fun_void_expr }
 ;

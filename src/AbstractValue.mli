@@ -67,4 +67,7 @@ val is_rational_value : abstract_value -> bool
 val to_int_value : abstract_value -> Int32.t
 val to_rat_value : abstract_value -> NumConst.t
 
+val of_int : Int32.t -> abstract_value
+val of_rat : NumConst.t -> abstract_value
+
 val of_parsed_value : parsed_value -> abstract_value

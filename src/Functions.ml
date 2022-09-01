@@ -34,6 +34,7 @@ open FunctionSig
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
+(* TODO benjamin REFACT when general function in ParsingStructureUtilities *)
 (* Get local variables of a parsed function definition *)
 let local_variables_of_fun (fun_def : parsed_fun_definition) =
    (* Add parameters as local variables *)
@@ -45,6 +46,13 @@ let local_variables_of_fun (fun_def : parsed_fun_definition) =
             let local_variables = local_variables_of_parsed_next_expr next_expr in
             (* Add the new declared local variable *)
             (variable_name, discrete_type) :: local_variables
+
+        | Parsed_fun_loop (variable_name, _, _, _, inner_expr, next_expr, _) ->
+            let local_variables_inner_expr = local_variables_of_parsed_next_expr inner_expr in
+            let local_variables_next_expr = local_variables_of_parsed_next_expr next_expr in
+            let local_variables = local_variables_inner_expr @ local_variables_next_expr in
+            (* Add the new declared local variable *)
+            (variable_name, Var_type_discrete_number Var_type_discrete_int) :: local_variables
 
         | Parsed_fun_instruction (_, next_expr) ->
             local_variables_of_parsed_next_expr next_expr
@@ -83,6 +91,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
     (* Search fun in builtin, if found get side_effect property *)
     (* If not found search into user_function_def, and call recursively this function *)
     (* if no function found -> undefined function *)
+    (* TODO benjamin REFACTOR replace by a general function in ParsingStructureUtilities *)
     let rec is_next_expr_has_side_effects = function
         | Parsed_fun_local_decl (_, _, init_expr, next_expr, _) ->
             (* Check if init expression has side-effects *)
@@ -105,6 +114,17 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
                 (* Check if any has side-effects *)
                 has_update_expr_side_effects || has_next_expr_side_effects
             )
+        | Parsed_fun_loop (_, from_expr, to_expr, _, inner_expr, next_expr, _) ->
+            (* Check if the from expression has side-effects *)
+            let has_from_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_discrete_arithmetic_expression is_leaf_has_side_effects from_expr in
+            (* Check if the to expression has side-effects *)
+            let has_to_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_discrete_arithmetic_expression is_leaf_has_side_effects to_expr in
+            (* Check if the inner expressions has side-effects *)
+            let has_inner_expr_side_effects = is_next_expr_has_side_effects inner_expr in
+            (* Check if the next expressions has side-effects *)
+            let has_next_expr_side_effects = is_next_expr_has_side_effects next_expr in
+            (* Check if any has side-effects *)
+            has_from_expr_side_effects || has_to_expr_side_effects || has_inner_expr_side_effects || has_next_expr_side_effects
 
         | Parsed_fun_expr expr ->
             (* Check if expression has side-effects *)
@@ -113,6 +133,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
     in
     is_next_expr_has_side_effects fun_def.body
 
+(*
 (* Remove the declarations of unused local variables from function body *)
 let fun_def_without_unused_local_vars unused_local_vars (fun_def : parsed_fun_definition) =
 
@@ -138,7 +159,7 @@ let fun_def_without_unused_local_vars unused_local_vars (fun_def : parsed_fun_de
 
     in
     { fun_def with body = next_expr_without_unused fun_def.body }
-
+*)
 (* binary(l) -> l -> binary(l) *)
 let shift_signature =
     [
