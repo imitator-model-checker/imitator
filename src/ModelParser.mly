@@ -94,7 +94,7 @@ let unzip l = List.fold_left
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
-    CT_FUN CT_BEGIN CT_ARROW
+    CT_FUN CT_BEGIN
 
 
 %token EOF
@@ -269,12 +269,6 @@ fun_parameter_list:
 fun_parameter_nonempty_list:
   | NAME COLON var_type_discrete { [($1, $3)] }
   | fun_parameter_list COMMA NAME COLON var_type_discrete { ($3, $5) :: $1 }
-;
-
-/* Function signature (OCaml form) */
-fun_signature:
-  | var_type_discrete { [$1] }
-  | fun_signature CT_ARROW var_type_discrete { $3 :: $1 }
 ;
 
 /* Body of function, declarations or expression */
