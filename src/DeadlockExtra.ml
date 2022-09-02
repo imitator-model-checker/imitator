@@ -14,8 +14,6 @@ let dl_instantiate_discrete_gen discrete constr =
 let dl_instantiate_discrete state_space state_index constr = 
 	let glob_location = get_location state_space (get_global_location_index state_space state_index) in
     let discrete = AlgoStateBased.discrete_constraint_of_global_location glob_location in
-    ImitatorUtilities.print_message Verbose_medium            ("MBDJ: \027[32mReal discrete variables " ^ string_of_state_index state_index ^ ":\027[0m = \n" ^ 
-    string_of_pxd_linear_constraint (Input.get_model()).variable_names discrete); 
     dl_instantiate_discrete_gen discrete constr
 
 (* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
@@ -69,9 +67,7 @@ let dl_predecessor state_space state_index z1 guard updates z2 transition =
     px_intersection_assign constr [z1];
     let constr_pxd = pxd_of_px_constraint constr in
     pxd_intersection_assign constr_pxd [guard];
-
-    ImitatorUtilities.print_message Verbose_medium  ("JvdP: \027[32mInverse_update\027[0m = \n" ^ string_of_px_linear_constraint model.variable_names constr);
-    ImitatorUtilities.print_message Verbose_medium  ("JvdP: \027[32mWith guard\027[0m = \n" ^ string_of_pxd_linear_constraint model.variable_names constr_pxd);
+    
     constr_pxd
     (* result *)
 
