@@ -402,10 +402,10 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 (* Create local variable ref representing a unique variable ref *)
                 let variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
                 (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
-                let local_variables = StringMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
+                let local_variables_of_loop = StringMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
 
                 (* Get variable and function refs used in the from expression *)
-                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables from_expr in
+                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables_of_loop from_expr in
                 let all_refs = variables_used_refs @ functions_used_refs in
                 (* Get variable and function refs used in the to expression *)
                 let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables to_expr in

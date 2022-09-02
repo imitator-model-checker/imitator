@@ -1,7 +1,8 @@
+open CustomModules
 open DiscreteExpressions
 open Automaton
 
-type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
+type variable_table = AbstractValue.abstract_value VariableMap.t
 type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
 type variable_name_table = variable_index -> variable_name
 

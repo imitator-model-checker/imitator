@@ -32,8 +32,6 @@ val check_fun_definition : variable_infos -> parsed_fun_definition -> typed_fun_
 
 end = struct
 
-module VariableMap = Map.Make(DiscreteType.var_type_discrete)
-
 (* Message when many members of an expression are not compatibles *)
 let ill_typed_message_of_expressions str_expressions discrete_types str_outer_expr =
     let x = List.combine str_expressions discrete_types in
@@ -316,13 +314,12 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
 
 and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt = function
 	| Parsed_DF_variable variable_name ->
-
         (* If it's local variable, take it's type *)
         (* local variables are more priority and shadow global variables  *)
 	    let discrete_type, scope =
             match local_variables_opt with
-            | Some local_variables when Hashtbl.mem local_variables variable_name  ->
-                let discrete_type = Hashtbl.find local_variables variable_name in
+            | Some local_variables when VariableMap.mem variable_name local_variables ->
+                let discrete_type = VariableMap.find variable_name local_variables in
                 discrete_type, Local
 
             | _ ->
@@ -622,7 +619,7 @@ let type_check_parsed_update_type local_variables_opt variable_infos = function
 let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt = function
     | Parsed_local_decl (variable_name, discrete_type, expr, next_expr, _) ->
         (* Add local variable to hashtable *)
-        Hashtbl.add local_variables variable_name discrete_type;
+        let local_variables = VariableMap.add variable_name discrete_type local_variables in
 
         (* Get inner type of discrete type to infer *)
         (* For example : `let s : int stack = stack()` extract `int` type of `int stack` declaration *)
@@ -660,14 +657,15 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         Typed_assignment ((typed_update_type, typed_expr), typed_next_expr), next_expr_discrete_type, true
 
     | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr, _) as outer_expr ->
-        (* Add local variable to hashtable *)
-        Hashtbl.add local_variables variable_name (Var_type_discrete_number Var_type_discrete_int);
+        (* Add local variable for loop to hashtable *)
+        let loop_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
+
         (* Resolve typed from expr *)
         let typed_from_expr, from_expr_type, is_from_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) from_expr in
         (* Resolve typed to expr *)
         let typed_to_expr, to_expr_type, is_to_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) to_expr in
         (* Resolve typed inner expr *)
-        let typed_inner_expr, inner_expr_discrete_type, inner_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt inner_expr in
+        let typed_inner_expr, inner_expr_discrete_type, inner_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc loop_local_variables variable_infos infer_type_opt inner_expr in
         (* Resolve typed next expr *)
         let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
@@ -683,7 +681,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         (* Check from and to expr type are int *)
         (match from_expr_type, to_expr_type with
         | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_int ->
-            Typed_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_expr, typed_next_expr), Var_type_void, has_side_effects
+            Typed_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_expr, typed_next_expr), next_expr_discrete_type, has_side_effects
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -699,6 +697,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
     | Parsed_bloc_expr expr ->
         let typed_expr, discrete_type, has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
         Typed_bloc_expr typed_expr, discrete_type, has_side_effects
+
     | Parsed_bloc_void -> Typed_bloc_void, Var_type_void, false
 
 let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStructure.parsed_fun_definition) =
@@ -709,12 +708,7 @@ let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStr
     let signature = parameter_discrete_types @ [return_type] in
 
     (* Add parameters as local variables of the function *)
-    let nb_parameter = List.length fun_definition.parameters in
-    let local_variables = Hashtbl.create nb_parameter in
-
-    List.iter (fun (parameter_name, parameter_type) ->
-        Hashtbl.add local_variables parameter_name parameter_type
-    ) fun_definition.parameters;
+    let local_variables = List.fold_left (fun acc (param_name, param_type) -> VariableMap.add param_name param_type acc) VariableMap.empty fun_definition.parameters in
 
     (* Eventually infer the body expression type of function to the return type underlying type of the function *)
     let infer_type_opt = Some (DiscreteType.extract_inner_type return_type) in

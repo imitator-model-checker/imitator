@@ -527,6 +527,7 @@ and string_of_parsed_seq_code_bloc variable_infos = function
         | Parsed_assignment (normal_update, next_expr) ->
             string_of_parsed_normal_update variable_infos normal_update
             ^ string_of_parsed_seq_code_bloc variable_infos next_expr
+
         | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr, _) ->
             "for "
             ^ variable_name
@@ -534,9 +535,9 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             ^ string_of_parsed_arithmetic_expression variable_infos from_expr
             ^ (match loop_dir with Parsed_loop_up -> " to " | Parsed_loop_down -> " downto ")
             ^ string_of_parsed_arithmetic_expression variable_infos to_expr
-            ^ " do \n"
+            ^ " do\n"
             ^ string_of_parsed_seq_code_bloc variable_infos inner_expr
-            ^ "\ndone"
+            ^ "\ndone\n"
             ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
         | Parsed_bloc_expr expr ->
@@ -973,9 +974,9 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
             (* Check if variables defined in to expr *)
             let all_variables_defined_in_to_expr = all_variables_defined_in_parsed_discrete_arithmetic_expression local_variables to_expr in
             (* Add the new declared local variable to set *)
-            let local_variables = StringSet.add variable_name local_variables in
+            let local_variables_of_loop = StringSet.add variable_name local_variables in
             (* Check if variables defined in inner expressions *)
-            let all_variables_defined_in_inner_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables inner_expr in
+            let all_variables_defined_in_inner_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables_of_loop inner_expr in
             (* Check if variables defined in next expressions *)
             let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr in
             (* Is all defined ? *)
