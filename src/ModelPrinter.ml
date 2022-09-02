@@ -331,6 +331,16 @@ let string_of_fun_definitions model =
                 ^ " in \n"
                 ^ string_of_next_expr next_expr
 
+            | Loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr) ->
+                "for " ^ variable_name ^ " = "
+                ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names from_expr
+                ^ (match loop_dir with Loop_up -> " to " | Loop_down -> " downto ")
+                ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names to_expr
+                ^ " do\n"
+                ^ string_of_next_expr inner_expr
+                ^ "\ndone\n"
+                ^ string_of_next_expr next_expr
+
             | Assignment (discrete_update, next_expr) ->
                 DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
                 ^ string_of_next_expr next_expr

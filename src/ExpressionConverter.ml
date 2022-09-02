@@ -32,11 +32,7 @@ val check_fun_definition : variable_infos -> parsed_fun_definition -> typed_fun_
 
 end = struct
 
-
-(* ------------------------------------------------------------------ *)
-(* ------------------------------------------------------------------ *)
-(* ------------------------------------------------------------------ *)
-(* ------------------------------------------------------------------ *)
+module VariableMap = Map.Make(DiscreteType.var_type_discrete)
 
 (* Message when many members of an expression are not compatibles *)
 let ill_typed_message_of_expressions str_expressions discrete_types str_outer_expr =
@@ -982,10 +978,10 @@ let check_update variable_infos update_types parsed_update_type expr =
     let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_update_type_opt parsed_update_type in
 
     (* Get assigned variable type *)
-    let variable_name, var_type =
+    let is_void_update, variable_name, var_type =
         match variable_name_opt with
-        | Some variable_name -> variable_name, VariableInfo.var_type_of_variable_or_constant variable_infos variable_name
-        | None -> "", Var_type_discrete (Var_type_discrete_number Var_type_discrete_weak_number) (* By default, infer numbers to unknown numbers *)
+        | Some variable_name -> false, variable_name, VariableInfo.var_type_of_variable_or_constant variable_infos variable_name
+        | None -> true, "", Var_type_discrete (Var_type_discrete_number Var_type_discrete_weak_number) (* By default, infer numbers to unknown numbers *)
     in
 
     (* Eventually get a number type to infer *)
@@ -1010,7 +1006,7 @@ let check_update variable_infos update_types parsed_update_type expr =
         ));
 
     (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
-     if not (DiscreteType.is_discrete_type_compatibles l_value_type expr_type) then (
+     if not (is_void_update || DiscreteType.is_discrete_type_compatibles l_value_type expr_type) then (
         raise (TypeError (
             ill_typed_variable_message variable_name (DiscreteType.string_of_var_type var_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
             )
