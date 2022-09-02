@@ -41,27 +41,27 @@ let local_variables_of_fun (fun_def : parsed_fun_definition) =
     let parameters = List.map (fun (param_name, discrete_type) -> param_name, discrete_type) fun_def.parameters in
 
     (* Function that traverse function body expression *)
-    let rec local_variables_of_parsed_next_expr = function
-        | Parsed_fun_local_decl (variable_name, discrete_type, _, next_expr, _) ->
-            let local_variables = local_variables_of_parsed_next_expr next_expr in
+    let rec local_variables_of_parsed_seq_code_bloc = function
+        | Parsed_local_decl (variable_name, discrete_type, _, next_expr, _) ->
+            let local_variables = local_variables_of_parsed_seq_code_bloc next_expr in
             (* Add the new declared local variable *)
             (variable_name, discrete_type) :: local_variables
 
-        | Parsed_fun_loop (variable_name, _, _, _, inner_expr, next_expr, _) ->
-            let local_variables_inner_expr = local_variables_of_parsed_next_expr inner_expr in
-            let local_variables_next_expr = local_variables_of_parsed_next_expr next_expr in
+        | Parsed_loop (variable_name, _, _, _, inner_expr, next_expr, _) ->
+            let local_variables_inner_expr = local_variables_of_parsed_seq_code_bloc inner_expr in
+            let local_variables_next_expr = local_variables_of_parsed_seq_code_bloc next_expr in
             let local_variables = local_variables_inner_expr @ local_variables_next_expr in
             (* Add the new declared local variable *)
             (variable_name, Var_type_discrete_number Var_type_discrete_int) :: local_variables
 
-        | Parsed_fun_instruction (_, next_expr) ->
-            local_variables_of_parsed_next_expr next_expr
+        | Parsed_assignment (_, next_expr) ->
+            local_variables_of_parsed_seq_code_bloc next_expr
 
-        | Parsed_fun_expr _
-        | Parsed_fun_void_expr -> []
+        | Parsed_bloc_expr _
+        | Parsed_bloc_void -> []
     in
 
-    let local_variables = local_variables_of_parsed_next_expr fun_def.body in
+    let local_variables = local_variables_of_parsed_seq_code_bloc fun_def.body in
     parameters @ local_variables
 
 (* Infer whether a user function is subject to side effects *)
@@ -93,7 +93,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
     (* if no function found -> undefined function *)
     (* TODO benjamin REFACTOR replace by a general function in ParsingStructureUtilities *)
     let rec is_next_expr_has_side_effects = function
-        | Parsed_fun_local_decl (_, _, init_expr, next_expr, _) ->
+        | Parsed_local_decl (_, _, init_expr, next_expr, _) ->
             (* Check if init expression has side-effects *)
             let has_init_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_boolean_expression is_leaf_has_side_effects init_expr in
             (* Check if next expressions has side-effects *)
@@ -101,7 +101,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
             (* Check if any has side-effects *)
             has_init_expr_side_effects || has_next_expr_side_effects
 
-        | Parsed_fun_instruction ((parsed_update_type, update_expr), next_expr) ->
+        | Parsed_assignment ((parsed_update_type, update_expr), next_expr) ->
             (match parsed_update_type with
             (* When any variable is assigned (written) the function is subject to side-effects *)
             | Parsed_variable_update _ -> true
@@ -114,7 +114,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
                 (* Check if any has side-effects *)
                 has_update_expr_side_effects || has_next_expr_side_effects
             )
-        | Parsed_fun_loop (_, from_expr, to_expr, _, inner_expr, next_expr, _) ->
+        | Parsed_loop (_, from_expr, to_expr, _, inner_expr, next_expr, _) ->
             (* Check if the from expression has side-effects *)
             let has_from_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_discrete_arithmetic_expression is_leaf_has_side_effects from_expr in
             (* Check if the to expression has side-effects *)
@@ -126,10 +126,10 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
             (* Check if any has side-effects *)
             has_from_expr_side_effects || has_to_expr_side_effects || has_inner_expr_side_effects || has_next_expr_side_effects
 
-        | Parsed_fun_expr expr ->
+        | Parsed_bloc_expr expr ->
             (* Check if expression has side-effects *)
             ParsingStructureUtilities.exists_in_parsed_boolean_expression is_leaf_has_side_effects expr
-        | Parsed_fun_void_expr -> false
+        | Parsed_bloc_void -> false
     in
     is_next_expr_has_side_effects fun_def.body
 
@@ -139,23 +139,23 @@ let fun_def_without_unused_local_vars unused_local_vars (fun_def : parsed_fun_de
 
     (* Return body of function without unused expression *)
     let rec next_expr_without_unused = function
-        | Parsed_fun_local_decl (variable_name, discrete_type, init_expr, next_expr, id) ->
+        | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, id) ->
             (* If current declaration is found in unused local variable, just remove by skipping *)
             if List.mem (variable_name, id) unused_local_vars then
                 next_expr_without_unused next_expr
             (* Else,  *)
             else (
                 let new_next_expr_without_unused = next_expr_without_unused next_expr in
-                Parsed_fun_local_decl (variable_name, discrete_type, init_expr, new_next_expr_without_unused, id)
+                Parsed_local_decl (variable_name, discrete_type, init_expr, new_next_expr_without_unused, id)
             )
 
-        | Parsed_fun_instruction (normal_update, next_expr) ->
+        | Parsed_assignment (normal_update, next_expr) ->
             let new_next_expr_without_unused = next_expr_without_unused next_expr in
-            Parsed_fun_instruction (normal_update, new_next_expr_without_unused)
+            Parsed_assignment (normal_update, new_next_expr_without_unused)
 
 
-        | Parsed_fun_expr _
-        | Parsed_fun_void_expr as expr -> expr
+        | Parsed_bloc_expr _
+        | Parsed_bloc_void as expr -> expr
 
     in
     { fun_def with body = next_expr_without_unused fun_def.body }

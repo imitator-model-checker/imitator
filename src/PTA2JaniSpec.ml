@@ -680,17 +680,17 @@ let string_of_custom_user_functions model =
         (* Convert a function expression into a string *)
         let rec string_of_next_expr = function
 
-            | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
+            | Local_decl (variable_name, discrete_type, init_expr, next_expr) ->
                 print_warning ("Local declaration of `" ^ variable_name ^ "` in function `" ^ fun_def.name ^ "` are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
-            | Fun_instruction (discrete_update, next_expr) ->
+            | Assignment (discrete_update, next_expr) ->
                 print_warning ("Instruction found in function `" ^ fun_def.name ^ "`. Instructions are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
-            | Fun_expr expr ->
+            | Bloc_expr expr ->
                 string_of_global_expression model.variable_names expr
-            | Fun_void_expr -> ""
+            | Bloc_void -> ""
         in
 
         let string_of_fun_type = function

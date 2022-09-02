@@ -250,7 +250,7 @@ decl_fun_nonempty_list:
 
 /* Function definition */
 decl_fun_def:
-  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete CT_BEGIN fun_body CT_END {
+  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete CT_BEGIN seq_code_bloc CT_END {
     {
       name = $2;
       parameters = List.rev $4;
@@ -272,21 +272,21 @@ fun_parameter_nonempty_list:
 ;
 
 /* Body of function, declarations or expression */
-fun_body:
+seq_code_bloc:
   | fun_local_decl { $1 }
   | fun_instruction { $1 }
   /* for loop */
-  | CT_FOR NAME OP_EQ arithmetic_expression CT_TO arithmetic_expression CT_DO fun_body CT_END fun_body { Parsed_fun_loop ($2, $4, $6, Parsed_loop_up, $8, $10, Parsing.symbol_start ()) }
-  | boolean_expression { Parsed_fun_expr $1 }
-  | { Parsed_fun_void_expr }
+  | CT_FOR NAME OP_EQ arithmetic_expression CT_TO arithmetic_expression CT_DO seq_code_bloc CT_END seq_code_bloc { Parsed_loop ($2, $4, $6, Parsed_loop_up, $8, $10, Parsing.symbol_start ()) }
+  | boolean_expression { Parsed_bloc_expr $1 }
+  | { Parsed_bloc_void }
 ;
 
 fun_local_decl:
-  | CT_LET NAME COLON var_type_discrete OP_EQ boolean_expression CT_IN fun_body { Parsed_fun_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
+  | CT_LET NAME COLON var_type_discrete OP_EQ boolean_expression CT_IN seq_code_bloc { Parsed_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
 ;
 
 fun_instruction:
-  | update_without_deprecated SEMICOLON fun_body { Parsed_fun_instruction ($1, $3) }
+  | update_without_deprecated SEMICOLON seq_code_bloc { Parsed_assignment ($1, $3) }
 ;
 
 /************************************************************/

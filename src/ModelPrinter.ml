@@ -323,7 +323,7 @@ let string_of_fun_definitions model =
 
         (* Convert a function expression into a string *)
         let rec string_of_next_expr = function
-            | Fun_local_decl (variable_name, discrete_type, init_expr, next_expr) ->
+            | Local_decl (variable_name, discrete_type, init_expr, next_expr) ->
                 "let " ^ variable_name ^ " : "
                 ^ DiscreteType.string_of_var_type_discrete discrete_type
                 ^ " = "
@@ -331,13 +331,13 @@ let string_of_fun_definitions model =
                 ^ " in \n"
                 ^ string_of_next_expr next_expr
 
-            | Fun_instruction (discrete_update, next_expr) ->
+            | Assignment (discrete_update, next_expr) ->
                 DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
                 ^ string_of_next_expr next_expr
 
-            | Fun_expr expr ->
+            | Bloc_expr expr ->
                 DiscreteExpressions.string_of_global_expression model.variable_names expr ^ "\n"
-            | Fun_void_expr -> ""
+            | Bloc_void -> ""
         in
 
         (* Convert function into a string *)

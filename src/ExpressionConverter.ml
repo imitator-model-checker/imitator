@@ -623,8 +623,8 @@ let type_check_parsed_update_type local_variables_opt variable_infos = function
     | Parsed_void_update -> Typed_void_update, Var_type_void, false
 
 
-let rec type_check_fun_body local_variables variable_infos infer_type_opt = function
-    | Parsed_fun_local_decl (variable_name, discrete_type, expr, next_expr, _) ->
+let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt = function
+    | Parsed_local_decl (variable_name, discrete_type, expr, next_expr, _) ->
         (* Add local variable to hashtable *)
         Hashtbl.add local_variables variable_name discrete_type;
 
@@ -637,7 +637,7 @@ let rec type_check_fun_body local_variables variable_infos infer_type_opt = func
         (* Type check and infer init expression of the local variable declaration *)
         let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
         (* Type check and infer the next expression of the function body *)
-        let typed_next_expr, next_expr_discrete_type, is_next_expr_has_side_effects = type_check_fun_body local_variables variable_infos infer_type_opt next_expr in
+        let typed_next_expr, next_expr_discrete_type, is_next_expr_has_side_effects = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
         (* Check compatibility between local variable declared type and it's init expression *)
         if not (is_discrete_type_compatibles discrete_type init_discrete_type) then
@@ -646,24 +646,24 @@ let rec type_check_fun_body local_variables variable_infos infer_type_opt = func
             ));
 
         (* All is ok, convert to a typed function local declaration *)
-        Typed_fun_local_decl (
+        Typed_local_decl (
             variable_name,
             discrete_type,
             typed_init_expr,
             typed_next_expr
         ), next_expr_discrete_type, is_init_expr_has_side_effects || is_next_expr_has_side_effects
 
-    | Parsed_fun_instruction ((parsed_update_type, expr), next_expr) ->
+    | Parsed_assignment ((parsed_update_type, expr), next_expr) ->
         (* Resolve typed expression *)
         let typed_expr, expr_type, has_side_effects (* side effects *) = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
         (* Resolve typed update type *)
         let typed_update_type, l_value_type, is_parsed_update_type_has_side_effects (* side effects *) = type_check_parsed_update_type (Some local_variables) variable_infos parsed_update_type in
         (* Resolve typed next expr *)
-        let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_fun_body local_variables variable_infos infer_type_opt next_expr in
+        let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
-        Typed_fun_instruction ((typed_update_type, typed_expr), typed_next_expr), next_expr_discrete_type, true
+        Typed_assignment ((typed_update_type, typed_expr), typed_next_expr), next_expr_discrete_type, true
 
-    | Parsed_fun_loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr, _) as outer_expr ->
+    | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr, _) as outer_expr ->
         (* Add local variable to hashtable *)
         Hashtbl.add local_variables variable_name (Var_type_discrete_number Var_type_discrete_int);
         (* Resolve typed from expr *)
@@ -671,9 +671,9 @@ let rec type_check_fun_body local_variables variable_infos infer_type_opt = func
         (* Resolve typed to expr *)
         let typed_to_expr, to_expr_type, is_to_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) to_expr in
         (* Resolve typed inner expr *)
-        let typed_inner_expr, inner_expr_discrete_type, inner_expr_has_side_effects (* side effects *) = type_check_fun_body local_variables variable_infos infer_type_opt inner_expr in
+        let typed_inner_expr, inner_expr_discrete_type, inner_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt inner_expr in
         (* Resolve typed next expr *)
-        let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_fun_body local_variables variable_infos infer_type_opt next_expr in
+        let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
         let typed_loop_dir =
             match loop_dir with
@@ -687,7 +687,7 @@ let rec type_check_fun_body local_variables variable_infos infer_type_opt = func
         (* Check from and to expr type are int *)
         (match from_expr_type, to_expr_type with
         | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_int ->
-            Typed_fun_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_expr, typed_next_expr), Var_type_void, has_side_effects
+            Typed_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_expr, typed_next_expr), Var_type_void, has_side_effects
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -696,14 +696,14 @@ let rec type_check_fun_body local_variables variable_infos infer_type_opt = func
                         string_of_parsed_arithmetic_expression variable_infos to_expr
                     ]
                     [from_expr_type; to_expr_type]
-                    (string_of_parsed_next_expr variable_infos outer_expr)
+                    (string_of_parsed_seq_code_bloc variable_infos outer_expr)
             ))
         )
 
-    | Parsed_fun_expr expr ->
+    | Parsed_bloc_expr expr ->
         let typed_expr, discrete_type, has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
-        Typed_fun_expr typed_expr, discrete_type, has_side_effects
-    | Parsed_fun_void_expr -> Typed_fun_void_expr, Var_type_void, false
+        Typed_bloc_expr typed_expr, discrete_type, has_side_effects
+    | Parsed_bloc_void -> Typed_bloc_void, Var_type_void, false
 
 let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStructure.parsed_fun_definition) =
     (* Get parameter types and return type of the function *)
@@ -722,7 +722,7 @@ let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStr
 
     (* Eventually infer the body expression type of function to the return type underlying type of the function *)
     let infer_type_opt = Some (DiscreteType.extract_inner_type return_type) in
-    let typed_body, body_discrete_type, is_body_has_side_effects = type_check_fun_body local_variables variable_infos infer_type_opt fun_definition.body in
+    let typed_body, body_discrete_type, is_body_has_side_effects = type_check_seq_code_bloc local_variables variable_infos infer_type_opt fun_definition.body in
     (* Check type compatibility between function body and return type *)
     let is_body_type_compatible = is_discrete_type_compatibles body_discrete_type return_type in
 
@@ -732,7 +732,7 @@ let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStr
             ^ fun_definition.name
             ^ FunctionSig.string_of_signature signature
             ^ "` does not match with implementation `"
-            ^ string_of_typed_fun_body variable_infos typed_body
+            ^ string_of_typed_seq_code_bloc variable_infos typed_body
             ^ "` of type "
             ^ DiscreteType.string_of_var_type_discrete body_discrete_type
             ^ "."
@@ -2499,46 +2499,46 @@ let linear_term_of_typed_boolean_expression variable_infos = function
         )
 
 
-let rec fun_body_of_typed_fun_body variable_infos = function
-    | Typed_fun_local_decl (variable_name, discrete_type, typed_init_expr, typed_next_expr) ->
-        Fun_local_decl (
+let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
+    | Typed_local_decl (variable_name, discrete_type, typed_init_expr, typed_next_expr) ->
+        Local_decl (
             variable_name,
             discrete_type,
             global_expression_of_typed_boolean_expression variable_infos typed_init_expr,
-            fun_body_of_typed_fun_body variable_infos typed_next_expr
+            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
         )
 
-    | Typed_fun_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_expr, typed_next_expr) ->
-        Fun_loop (
+    | Typed_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_expr, typed_next_expr) ->
+        Loop (
             variable_name,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_from_expr,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_to_expr,
             loop_dir_of_typed_loop_dir typed_loop_dir,
-            fun_body_of_typed_fun_body variable_infos typed_inner_expr,
-            fun_body_of_typed_fun_body variable_infos typed_next_expr
+            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_inner_expr,
+            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
         )
 
-    | Typed_fun_instruction ((typed_update_type, typed_expr), typed_next_expr) ->
-        Fun_instruction (
+    | Typed_assignment ((typed_update_type, typed_expr), typed_next_expr) ->
+        Assignment (
             (update_type_of_typed_update_type variable_infos typed_update_type,
             global_expression_of_typed_boolean_expression variable_infos typed_expr),
-            fun_body_of_typed_fun_body variable_infos typed_next_expr
+            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
         )
 
-    | Typed_fun_expr typed_expr ->
-        Fun_expr (
+    | Typed_bloc_expr typed_expr ->
+        Bloc_expr (
             global_expression_of_typed_boolean_expression variable_infos typed_expr
         )
 
-    | Typed_fun_void_expr ->
-        Fun_void_expr
+    | Typed_bloc_void ->
+        Bloc_void
 
 let fun_definition_of_typed_fun_definition variable_infos (typed_fun_definition : typed_fun_definition) : fun_definition =
     {
         name = typed_fun_definition.name;
         parameter_names = typed_fun_definition.parameters;
         signature_constraint = FunctionSig.signature_constraint_of_signature typed_fun_definition.signature;
-        body = Fun_user (fun_body_of_typed_fun_body variable_infos typed_fun_definition.body);
+        body = Fun_user (seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_fun_definition.body);
         side_effect = typed_fun_definition.side_effect
     }
 
