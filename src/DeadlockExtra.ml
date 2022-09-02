@@ -26,17 +26,19 @@ let dl_instantiate_discrete_after_seq state_space state_index constr transition 
     let location = Location.copy_location glob_location in
     let model = Input.get_model() in 
 
-
     (* Get functions that enable reading / writing global variables at a given location *)
     let discrete_access = Location.discrete_access_of_location location in
-    List.iter (fun transition_index -> 
-        let transitions_description = model.transitions_description transition_index in
+    (* Make all sequential update first ! *)
+	List.iter (fun transition_index ->
+		(* Get the automaton concerned *)
+		(* Access the transition and get the components *)
+		let transitions_description = model.transitions_description transition_index in
 		(** Collecting the updates by evaluating the conditions, if there is any *)
-        let _ (* no clock update for pre-updates *), discrete_seq_updates = AlgoStateBased.get_updates glob_location transitions_description.seq_updates in
+        let _ (* no clock update for seq updates *), discrete_seq_updates = AlgoStateBased.get_updates (Some model.variable_names) (Some model.functions_table) glob_location transitions_description.seq_updates in
 
         (* Make `seq` sequential updates (make these updates now, only on discrete) *)
-        List.iter (direct_update discrete_access) (List.rev discrete_seq_updates);
-    ) transition;
+        List.iter (direct_update (Some model.variable_names) (Some model.functions_table) discrete_access) (List.rev discrete_seq_updates);
+	) transition;
 
     let discrete = AlgoStateBased.discrete_constraint_of_global_location location in
 
