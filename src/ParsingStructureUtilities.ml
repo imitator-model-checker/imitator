@@ -131,23 +131,30 @@ and fold_parsed_update_type operator base leaf_fun leaf_update_fun = function
         fold_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun parsed_scalar_or_index_update_type
     | Parsed_void_update -> base
 
-and fold_parsed_next_expr operator base leaf_fun leaf_update_fun = function
-    | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, _) ->
+and fold_parsed_seq_code_bloc operator base leaf_fun leaf_update_fun = function
+    | Parsed_local_decl (variable_name, _, init_expr, next_expr, _) ->
         operator
             (operator
                 (leaf_update_fun (Leaf_update_updated_variable variable_name))
                 (fold_parsed_boolean_expression operator base leaf_fun init_expr)
             )
-            (fold_parsed_next_expr operator base leaf_fun leaf_update_fun next_expr)
+            (fold_parsed_seq_code_bloc operator base leaf_fun leaf_update_fun next_expr)
 
-    | Parsed_fun_instruction (normal_update, next_expr) ->
+    | Parsed_loop (variable_name, from_expr, to_expr, _, inner_expr, next_expr, _) ->
+        leaf_fun (Leaf_variable variable_name)
+        |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun from_expr)
+        |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun to_expr)
+        |> operator (fold_parsed_seq_code_bloc operator base leaf_fun leaf_update_fun inner_expr)
+        |> operator (fold_parsed_seq_code_bloc operator base leaf_fun leaf_update_fun next_expr)
+
+    | Parsed_assignment (normal_update, next_expr) ->
         operator
             (fold_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update)
-            (fold_parsed_next_expr operator base leaf_fun leaf_update_fun next_expr)
+            (fold_parsed_seq_code_bloc operator base leaf_fun leaf_update_fun next_expr)
 
-    | Parsed_fun_expr expr ->
+    | Parsed_bloc_expr expr ->
         fold_parsed_boolean_expression operator base leaf_fun expr
-    | Parsed_fun_void_expr -> base
+    | Parsed_bloc_void -> base
 
 and fold_parsed_normal_update operator base leaf_fun leaf_update_fun (update_type, expr) =
     operator
@@ -240,7 +247,7 @@ and fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun = func
 let fold_parsed_function_definition operator base leaf_fun leaf_update_fun (fun_def : parsed_fun_definition) =
 
     let rec fold_parsed_function_next_expr = function
-        | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, id) ->
+        | Parsed_local_decl (variable_name, _, init_expr, next_expr, id) ->
             operator
                 (operator
                     (leaf_fun (Leaf_variable variable_name))
@@ -248,14 +255,21 @@ let fold_parsed_function_definition operator base leaf_fun leaf_update_fun (fun_
                 )
                 (fold_parsed_function_next_expr next_expr)
 
-        | Parsed_fun_instruction (normal_update, next_expr) ->
+        | Parsed_loop (variable_name, from_expr, to_expr, _, inner_expr, next_expr, _) ->
+            leaf_fun (Leaf_variable variable_name)
+            |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun from_expr)
+            |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun to_expr)
+            |> operator (fold_parsed_function_next_expr inner_expr)
+            |> operator (fold_parsed_function_next_expr next_expr)
+
+        | Parsed_assignment (normal_update, next_expr) ->
             operator
                 (fold_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update)
                 (fold_parsed_function_next_expr next_expr)
 
-        | Parsed_fun_expr expr ->
+        | Parsed_bloc_expr expr ->
             fold_parsed_boolean_expression operator base leaf_fun expr
-        | Parsed_fun_void_expr -> base
+        | Parsed_bloc_void -> base
     in
     fold_parsed_function_next_expr fun_def.body
 
@@ -271,7 +285,7 @@ let for_all_in_parsed_discrete_boolean_expression = apply_evaluate_and_with_base
 let for_all_in_parsed_discrete_arithmetic_expression = apply_evaluate_and_with_base fold_parsed_discrete_arithmetic_expression
 let for_all_in_parsed_discrete_term = apply_evaluate_and_with_base fold_parsed_discrete_term
 let for_all_in_parsed_discrete_factor = apply_evaluate_and_with_base fold_parsed_discrete_factor
-let for_all_in_parsed_next_expr = apply_evaluate_and_with_base fold_parsed_next_expr
+let for_all_in_parsed_seq_code_bloc = apply_evaluate_and_with_base fold_parsed_seq_code_bloc
 
 (** Check if all leaf of a linear expression satisfy the predicate **)
 let for_all_in_parsed_linear_expression = apply_evaluate_and fold_parsed_linear_expression
@@ -501,22 +515,34 @@ and string_of_parsed_discrete_boolean_expression variable_infos = function
     | Parsed_Not expr ->
             "not (" ^ (string_of_parsed_boolean_expression variable_infos expr) ^ ")"
 
-and string_of_parsed_next_expr variable_infos = function
-        | Parsed_fun_local_decl (variable_name, discrete_type, init_expr, next_expr, _) ->
+and string_of_parsed_seq_code_bloc variable_infos = function
+        | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, _) ->
             string_of_let_in
                 variable_name
                 (DiscreteType.string_of_var_type_discrete discrete_type)
                 (string_of_parsed_boolean_expression variable_infos init_expr)
             ^ "\n"
-            ^ string_of_parsed_next_expr variable_infos next_expr
+            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
-        | Parsed_fun_instruction (normal_update, next_expr) ->
+        | Parsed_assignment (normal_update, next_expr) ->
             string_of_parsed_normal_update variable_infos normal_update
-            ^ string_of_parsed_next_expr variable_infos next_expr
+            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
-        | Parsed_fun_expr expr ->
+        | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr, _) ->
+            "for "
+            ^ variable_name
+            ^ " = "
+            ^ string_of_parsed_arithmetic_expression variable_infos from_expr
+            ^ (match loop_dir with Parsed_loop_up -> " to " | Parsed_loop_down -> " downto ")
+            ^ string_of_parsed_arithmetic_expression variable_infos to_expr
+            ^ " do\n"
+            ^ string_of_parsed_seq_code_bloc variable_infos inner_expr
+            ^ "\ndone\n"
+            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
+
+        | Parsed_bloc_expr expr ->
             string_of_parsed_boolean_expression variable_infos expr
-        | Parsed_fun_void_expr -> ""
+        | Parsed_bloc_void -> ""
 
 and string_of_parsed_normal_update variable_infos (update_type, expr) =
     let str_left_member = string_of_parsed_update_type variable_infos update_type in
@@ -564,7 +590,7 @@ let string_of_parsed_fun_def variable_infos fun_def =
     let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
     (* Format function definition to string *)
     "fn " ^ fun_def.name ^ " (" ^ str_parameters ^ ") : " ^ DiscreteType.string_of_var_type_discrete fun_def.return_type ^ "\n"
-    ^ string_of_parsed_next_expr variable_infos fun_def.body ^ "\n"
+    ^ string_of_parsed_seq_code_bloc variable_infos fun_def.body ^ "\n"
     ^ "end\n"
 
 let rec string_of_parsed_linear_constraint variable_infos = function
@@ -912,6 +938,12 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
     let all_variables_defined_in_parsed_boolean_expression local_variables (* expr *) =
         for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback) (* expr *)
     in
+
+    (* Overwrite function `all_variables_defined_in_parsed_discrete_arithmetic_expression` adding a parameter for taking into account local variables set *)
+    let all_variables_defined_in_parsed_discrete_arithmetic_expression local_variables (* expr *) =
+        for_all_in_parsed_discrete_arithmetic_expression (is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback) (* expr *)
+    in
+
     (* Overwrite function `all_variables_defined_in_parsed_normal_update` adding a parameter for taking into account local variables set *)
     let all_variables_defined_in_parsed_normal_update local_variables (* expr *) =
         let leaf_fun = is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback in
@@ -919,27 +951,42 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
         for_all_in_parsed_normal_update leaf_fun leaf_update (* expr *)
     in
 
+    (* TODO benjamin REFACTOR replace by a general function in ParsingStructureUtilities *)
     (* Check if all variables defined in user function body using local variables set *)
-    let rec all_variables_defined_in_parsed_next_expr_rec local_variables = function
-        | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, _) ->
-            (* Add the new declared local variable to set *)
+    let rec all_variables_defined_in_parsed_seq_code_bloc_rec local_variables = function
+        | Parsed_local_decl (variable_name, _, init_expr, next_expr, _) ->
             let all_variables_defined_in_init_expr = all_variables_defined_in_parsed_boolean_expression local_variables init_expr in
+            (* Add the new declared local variable to set *)
             let local_variables = StringSet.add variable_name local_variables in
-            all_variables_defined_in_parsed_next_expr_rec local_variables next_expr && all_variables_defined_in_init_expr
+            all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr && all_variables_defined_in_init_expr
 
-        | Parsed_fun_instruction (normal_update, next_expr) ->
+        | Parsed_assignment (normal_update, next_expr) ->
             (* Check if variables defined in normal update *)
             let all_variables_defined_in_normal_update = all_variables_defined_in_parsed_normal_update local_variables normal_update in
             (* Check if variables defined in next expressions *)
-            let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_next_expr_rec local_variables next_expr in
+            let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr in
             (* Is all defined ? *)
             all_variables_defined_in_normal_update && all_variables_defined_in_next_expr
 
-        | Parsed_fun_expr expr ->
+        | Parsed_loop (variable_name, from_expr, to_expr, _, inner_expr, next_expr, _) ->
+            (* Check if variables defined in from expr *)
+            let all_variables_defined_in_from_expr = all_variables_defined_in_parsed_discrete_arithmetic_expression local_variables from_expr in
+            (* Check if variables defined in to expr *)
+            let all_variables_defined_in_to_expr = all_variables_defined_in_parsed_discrete_arithmetic_expression local_variables to_expr in
+            (* Add the new declared local variable to set *)
+            let local_variables_of_loop = StringSet.add variable_name local_variables in
+            (* Check if variables defined in inner expressions *)
+            let all_variables_defined_in_inner_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables_of_loop inner_expr in
+            (* Check if variables defined in next expressions *)
+            let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr in
+            (* Is all defined ? *)
+            all_variables_defined_in_inner_expr && all_variables_defined_in_from_expr && all_variables_defined_in_to_expr && all_variables_defined_in_next_expr
+
+        | Parsed_bloc_expr expr ->
             all_variables_defined_in_parsed_boolean_expression local_variables expr
-        | Parsed_fun_void_expr -> true
+        | Parsed_bloc_void -> true
     in
-    all_variables_defined_in_parsed_next_expr_rec local_variables fun_def.body
+    all_variables_defined_in_parsed_seq_code_bloc_rec local_variables fun_def.body
 
 (* Check that all variables in a linear expression are effectively be defined *)
 let all_variables_defined_in_linear_expression variable_infos callback_fail expr =
@@ -1081,6 +1128,7 @@ let get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref 
         (function _ -> ())
         (add_variable_of_discrete_boolean_expression variables_used_ref)
 
+(* TODO benjamin REFAC see if local variable is useless or not, replace this when general function in ParsingStructureUtilities *)
 (* Gather all variable names (global variables only) used in a parsed function definition in a given accumulator *)
 let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def : parsed_fun_definition) =
 
@@ -1090,26 +1138,39 @@ let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def 
     let local_variables_ref = ref local_variables in
 
     (* Check if all variables defined in user function body using local variables set *)
-    let rec get_variables_in_parsed_next_expr_rec local_variables_ref = function
-        | Parsed_fun_local_decl (variable_name, _, init_expr, next_expr, id) ->
+    let rec get_variables_in_parsed_seq_code_bloc_rec local_variables_ref = function
+        | Parsed_local_decl (variable_name, _, init_expr, next_expr, id) ->
             (* Add the new declared local variable to set *)
             local_variables_ref := StringSet.add variable_name !local_variables_ref;
             (* Gather variables in next expressions *)
-            get_variables_in_parsed_next_expr_rec local_variables_ref next_expr;
+            get_variables_in_parsed_seq_code_bloc_rec local_variables_ref next_expr;
             (* Gather variables in init expression *)
             iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variable_used_ref) init_expr
 
-        | Parsed_fun_instruction (normal_update, next_expr) ->
+        | Parsed_loop (variable_name, from_expr, to_expr, _, inner_expr, next_expr, id) ->
+            (* Add the new declared local variable to set *)
+            local_variables_ref := StringSet.add variable_name !local_variables_ref;
+
+            (* Gather variables in from expr *)
+            get_variables_in_parsed_discrete_arithmetic_expression_with_accumulator variable_used_ref from_expr;
+            (* Gather variables in to expr *)
+            get_variables_in_parsed_discrete_arithmetic_expression_with_accumulator variable_used_ref to_expr;
+            (* Gather variables in inner expressions *)
+            get_variables_in_parsed_seq_code_bloc_rec local_variables_ref inner_expr;
+            (* Gather variables in next expressions *)
+            get_variables_in_parsed_seq_code_bloc_rec local_variables_ref next_expr;
+
+        | Parsed_assignment (normal_update, next_expr) ->
             (* Gather variables in normal update *)
             get_variables_in_parsed_normal_update_with_accumulator variable_used_ref normal_update;
             (* Gather variables in next expressions *)
-            get_variables_in_parsed_next_expr_rec local_variables_ref next_expr;
+            get_variables_in_parsed_seq_code_bloc_rec local_variables_ref next_expr;
 
-        | Parsed_fun_expr expr ->
+        | Parsed_bloc_expr expr ->
             iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variable_used_ref) expr
-        | Parsed_fun_void_expr -> ()
+        | Parsed_bloc_void -> ()
     in
-    get_variables_in_parsed_next_expr_rec local_variables_ref fun_def.body;
+    get_variables_in_parsed_seq_code_bloc_rec local_variables_ref fun_def.body;
     (* Remove local variables from variable found in function (because we need to get only global variables and local variables shadow global variables) *)
     variable_used_ref := StringSet.diff !variable_used_ref !local_variables_ref
 

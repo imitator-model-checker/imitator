@@ -113,6 +113,9 @@ let queue_value = function
     | Abstract_container_value (Abstract_queue_value v) -> v
     | v -> raise (InternalError ("Unable to get queue value of non-queue value: " ^ string_of_value v))
 
+let of_int x = Abstract_scalar_value (Abstract_number_value (Abstract_int_value x))
+let of_rat x = Abstract_scalar_value (Abstract_number_value (Abstract_rat_value x))
+
 let hash_number_value = function
     | Abstract_rat_value x -> Gmp.Z.to_int (NumConst.get_num x)
     | Abstract_int_value x -> Int32.to_int x

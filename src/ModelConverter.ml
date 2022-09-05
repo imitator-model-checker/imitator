@@ -3462,6 +3462,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         raise InvalidModel
     );
 
+    (*
     (* Function that remove unused local variable from function definitions *)
     let fun_def_without_unused_local_vars =
         (* Get unused components as a list *)
@@ -3487,7 +3488,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         else
             fun_def_without_unused_local_vars
     in
-
+    *)
     (* Create table of user function definitions *)
     let user_function_definitions_table = List.map (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def) used_function_definitions |> OCamlUtilities.hashtbl_of_tuples in
 

@@ -127,6 +127,7 @@ val string_of_parsed_term : variable_infos -> parsed_discrete_term -> string
 val string_of_parsed_factor : variable_infos -> parsed_discrete_factor -> string
 val string_of_parsed_relop : parsed_relop -> string -> string -> string
 val string_of_parsed_fun_def : variable_infos -> parsed_fun_definition -> string
+val string_of_parsed_seq_code_bloc : variable_infos -> parsed_seq_code_bloc -> string
 
 val string_of_parsed_update : variable_infos -> update -> string
 val string_of_parsed_normal_update : variable_infos -> normal_update -> string

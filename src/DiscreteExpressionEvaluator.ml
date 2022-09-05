@@ -1,3 +1,4 @@
+open CustomModules
 open Automaton
 open Location
 open AbstractModel
@@ -6,7 +7,7 @@ open AbstractValue
 open DiscreteExpressions
 open Exceptions
 
-type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
+type variable_table = AbstractValue.abstract_value VariableMap.t
 type functions_table = (variable_name, fun_definition) Hashtbl.t
 type variable_name_table = variable_index -> variable_name
 
@@ -32,7 +33,7 @@ type delayed_update_result =
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context (discrete_valuation, discrete_setter) =
-    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = Hashtbl.create 0 }
+    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = VariableMap.empty }
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context_opt = function
@@ -84,7 +85,7 @@ let try_eval_function function_name : functions_table option -> fun_definition =
 (* Otherwise, it means that we are trying to evaluate an expression that should have to be constant (without variable) *)
 (* For example in constant declaration, in this case trying to evaluate a variable raise an error *)
 let try_eval_local_variable variable_name = function
-    | Some eval_context -> Hashtbl.find eval_context.local_variables variable_name
+    | Some eval_context -> VariableMap.find variable_name eval_context.local_variables
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
 
@@ -463,7 +464,7 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
     (* Associate each parameter with their value *)
     let param_names_with_arg_values = List.combine param_names arg_values in
     (* Get or create local variables table *)
-    let local_variables = OCamlUtilities.hashtbl_of_tuples param_names_with_arg_values in
+    let local_variables = List.fold_left (fun acc (param_name, value) -> VariableMap.add param_name value acc) VariableMap.empty param_names_with_arg_values in
 
     (* Update (optional) context *)
     let new_eval_context_opt =
@@ -473,20 +474,33 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
     in
 
     (* Eval function body *)
-    let rec eval_fun_body_with_context eval_context = function
-        | Fun_local_decl (variable_name, _, expr, next_expr) ->
+    let rec eval_seq_code_bloc_with_context eval_context = function
+        | Local_decl (variable_name, _, expr, next_expr) ->
             let value = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in
-            Hashtbl.add eval_context.local_variables variable_name value;
+            (* Add new variable to eval context *)
+            let new_eval_context = {eval_context with local_variables = VariableMap.add variable_name value eval_context.local_variables } in
 
-            eval_fun_body_with_context eval_context next_expr
+            eval_seq_code_bloc_with_context new_eval_context next_expr
 
-        | Fun_instruction (normal_update, next_expr) ->
+        | Loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr) ->
+            let from_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) from_expr in
+            let to_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) to_expr in
+
+            for i = (Int32.to_int from_value) to (Int32.to_int to_value) do
+                let abs_value = AbstractValue.of_int (Int32.of_int i) in
+                let loop_eval_context = {eval_context with local_variables = VariableMap.add variable_name abs_value eval_context.local_variables } in
+                eval_seq_code_bloc_with_context loop_eval_context inner_expr;
+            done;
+
+            eval_seq_code_bloc_with_context eval_context next_expr
+
+        | Assignment (normal_update, next_expr) ->
             direct_update_with_context variable_names functions_table_opt eval_context normal_update;
-            eval_fun_body_with_context eval_context next_expr
+            eval_seq_code_bloc_with_context eval_context next_expr
 
-        | Fun_expr expr ->
+        | Bloc_expr expr ->
             eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr
-        | Fun_void_expr -> Abstract_void_value
+        | Bloc_void -> Abstract_void_value
     in
 
     (* Eval function *)
@@ -508,7 +522,7 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
                     Some checks may failed before."
                 )
             in
-            eval_fun_body_with_context eval_context f
+            eval_seq_code_bloc_with_context eval_context f
 
     in
     eval_fun_type_with_context new_eval_context_opt fun_def.body

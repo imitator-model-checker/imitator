@@ -175,13 +175,23 @@ type update =
 type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *)
 
 (****************************************************************)
+(** Bloc of sequential code *)
+(****************************************************************)
+
+type parsed_loop_dir =
+    | Parsed_loop_up
+    | Parsed_loop_down
+
+type parsed_seq_code_bloc =
+    | Parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * parsed_seq_code_bloc * int (* id *)
+    | Parsed_assignment of normal_update * parsed_seq_code_bloc
+    | Parsed_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * parsed_seq_code_bloc (* inner bloc *) * parsed_seq_code_bloc (* next *) * int (* id *)
+    | Parsed_bloc_expr of parsed_boolean_expression
+    | Parsed_bloc_void
+
+(****************************************************************)
 (** User functions *)
 (****************************************************************)
-type parsed_next_expr =
-    | Parsed_fun_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * parsed_next_expr * int (* id *)
-    | Parsed_fun_instruction of normal_update * parsed_next_expr
-    | Parsed_fun_expr of parsed_boolean_expression
-    | Parsed_fun_void_expr
 
 (* Metadata of a function *)
 type function_metadata = {
@@ -196,7 +206,7 @@ type parsed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : (variable_name * DiscreteType.var_type_discrete) list; (* parameter names and types *)
     return_type : DiscreteType.var_type_discrete; (* return type *)
-    body : parsed_next_expr; (* body *)
+    body : parsed_seq_code_bloc; (* body *)
 }
 
 type parsed_fun_definition_list = parsed_fun_definition list

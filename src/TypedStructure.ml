@@ -92,17 +92,22 @@ and typed_state_predicate =
 
 type typed_guard = typed_discrete_boolean_expression list
 
-type typed_fun_body =
-    | Typed_fun_local_decl of variable_name * var_type_discrete * typed_boolean_expression * typed_fun_body
-    | Typed_fun_instruction of typed_normal_update * typed_fun_body
-    | Typed_fun_expr of typed_boolean_expression
-    | Typed_fun_void_expr
+type typed_loop_dir =
+    | Typed_loop_up
+    | Typed_loop_down
+
+type typed_seq_code_bloc =
+    | Typed_local_decl of variable_name * var_type_discrete * typed_boolean_expression * typed_seq_code_bloc
+    | Typed_assignment of typed_normal_update * typed_seq_code_bloc
+    | Typed_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next bloc *)
+    | Typed_bloc_expr of typed_boolean_expression
+    | Typed_bloc_void
 
 type typed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
-    body : typed_fun_body; (* body *)
+    body : typed_seq_code_bloc; (* body *)
     side_effect : bool;
 }
 
@@ -246,25 +251,36 @@ let string_of_typed_update_type variable_infos = function
         string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
     | Typed_void_update -> ""
 
-let rec string_of_typed_fun_body variable_infos = function
-    | Typed_fun_local_decl (variable_name, discrete_type, expr, next_expr) ->
+let rec string_of_typed_seq_code_bloc variable_infos = function
+    | Typed_local_decl (variable_name, discrete_type, expr, next_expr) ->
         ParsingStructureUtilities.string_of_let_in
             variable_name
             (DiscreteType.string_of_var_type_discrete discrete_type)
             (string_of_typed_boolean_expression variable_infos expr)
         ^ "\n"
-        ^ string_of_typed_fun_body variable_infos next_expr
+        ^ string_of_typed_seq_code_bloc variable_infos next_expr
 
-    | Typed_fun_instruction ((typed_update_type, update_expr), next_expr) ->
+    (* TODO benjamin REFACTOR rename inner_expr to inner_bloc *)
+    | Typed_loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr) ->
+        "for " ^ variable_name ^ " = "
+        ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) from_expr
+        ^ (match loop_dir with Typed_loop_up -> " to " | Typed_loop_down -> " downto ")
+        ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) to_expr
+        ^ " do\n"
+        ^ string_of_typed_seq_code_bloc variable_infos inner_expr
+        ^ "\ndone\n"
+        ^ string_of_typed_seq_code_bloc variable_infos next_expr
+
+    | Typed_assignment ((typed_update_type, update_expr), next_expr) ->
         let str_left_member = string_of_typed_update_type variable_infos typed_update_type in
         let str_right_member = string_of_typed_boolean_expression variable_infos update_expr in
         ParsingStructureUtilities.string_of_assignment str_left_member str_right_member
         ^ ";\n"
-        ^ string_of_typed_fun_body variable_infos next_expr
+        ^ string_of_typed_seq_code_bloc variable_infos next_expr
 
-    | Typed_fun_expr expr ->
+    | Typed_bloc_expr expr ->
         string_of_typed_boolean_expression variable_infos expr
-    | Typed_fun_void_expr -> ""
+    | Typed_bloc_void -> ""
 
 
 let string_of_typed_loc_predicate variable_infos = function

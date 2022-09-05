@@ -94,7 +94,7 @@ let unzip l = List.fold_left
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
-    CT_FUN CT_BEGIN CT_ARROW
+    CT_FUN CT_BEGIN CT_FOR CT_TO CT_DONE
 
 
 %token EOF
@@ -250,7 +250,7 @@ decl_fun_nonempty_list:
 
 /* Function definition */
 decl_fun_def:
-  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete CT_BEGIN fun_body CT_END {
+  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete CT_BEGIN seq_code_bloc CT_END {
     {
       name = $2;
       parameters = List.rev $4;
@@ -271,26 +271,22 @@ fun_parameter_nonempty_list:
   | fun_parameter_list COMMA NAME COLON var_type_discrete { ($3, $5) :: $1 }
 ;
 
-/* Function signature (OCaml form) */
-fun_signature:
-  | var_type_discrete { [$1] }
-  | fun_signature CT_ARROW var_type_discrete { $3 :: $1 }
-;
-
 /* Body of function, declarations or expression */
-fun_body:
+seq_code_bloc:
   | fun_local_decl { $1 }
   | fun_instruction { $1 }
-  | boolean_expression { Parsed_fun_expr $1 }
-  | { Parsed_fun_void_expr }
+  /* for loop */
+  | CT_FOR NAME OP_EQ arithmetic_expression CT_TO arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_loop ($2, $4, $6, Parsed_loop_up, $8, $10, Parsing.symbol_start ()) }
+  | boolean_expression { Parsed_bloc_expr $1 }
+  | { Parsed_bloc_void }
 ;
 
 fun_local_decl:
-  | CT_LET NAME COLON var_type_discrete OP_EQ boolean_expression CT_IN fun_body { Parsed_fun_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
+  | CT_LET NAME COLON var_type_discrete OP_EQ boolean_expression CT_IN seq_code_bloc { Parsed_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
 ;
 
 fun_instruction:
-  | update_without_deprecated SEMICOLON fun_body { Parsed_fun_instruction ($1, $3) }
+  | update_without_deprecated SEMICOLON seq_code_bloc { Parsed_assignment ($1, $3) }
 ;
 
 /************************************************************/

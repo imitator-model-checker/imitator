@@ -40,6 +40,10 @@ type product_quotient =
     | Mul
     | Div
 
+type loop_dir =
+    | Loop_up
+    | Loop_down
+
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
@@ -216,12 +220,13 @@ and expression_access_type =
     | Expression_array_access of array_expression
     | Expression_list_access of list_expression
 
-(* Function local declaration or expression *)
-and fun_body =
-    | Fun_local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * fun_body
-    | Fun_instruction of (update_type * global_expression) * fun_body
-    | Fun_expr of global_expression
-    | Fun_void_expr
+(* Bloc of sequential code *)
+and seq_code_bloc =
+    | Local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * seq_code_bloc
+    | Assignment of (update_type * global_expression) * seq_code_bloc
+    | Loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next bloc *)
+    | Bloc_expr of global_expression
+    | Bloc_void
 
 (* Update type *)
 and scalar_or_index_update_type =
@@ -238,7 +243,7 @@ and update_type =
 
 type fun_type =
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
-    | Fun_user of fun_body
+    | Fun_user of seq_code_bloc
 
 type 'a my_expression =
     (* A typed expression *)
