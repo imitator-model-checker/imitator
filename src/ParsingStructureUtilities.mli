@@ -26,13 +26,10 @@ type parsing_structure_leaf =
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =
-    | Leaf_linear_constant of NumConst.t
-    | Leaf_linear_variable of NumConst.t * variable_name
-
-(* Leaf of linear constraint *)
-type linear_constraint_leaf =
     | Leaf_true_linear_constraint
     | Leaf_false_linear_constraint
+    | Leaf_linear_constant of NumConst.t
+    | Leaf_linear_variable of NumConst.t * variable_name
 
 val fold_parsed_function_definition : ('a -> 'a -> 'a) -> 'a -> ((variable_name * var_type_discrete * int) VariableMap.t -> (variable_name * var_type_discrete * int) option -> parsed_seq_code_bloc -> 'a) -> (parsing_structure_leaf -> 'a) -> parsed_fun_definition -> 'a
 val fold_parsed_normal_update : ('a -> 'a -> 'a) -> 'a -> (parsing_structure_leaf -> 'a) -> normal_update -> 'a
@@ -51,7 +48,7 @@ val for_all_in_parsed_linear_expression : (linear_expression_leaf -> bool) -> li
 (** Check if all leaf of a linear term satisfy the predicate **)
 val for_all_in_parsed_linear_term : (linear_expression_leaf -> bool) -> linear_term -> bool
 (** Check if all leaf of a linear constraint satisfy the predicate **)
-val for_all_in_parsed_linear_constraint : (linear_expression_leaf -> bool) -> (linear_constraint_leaf -> bool) -> linear_constraint -> bool
+val for_all_in_parsed_linear_constraint : (linear_expression_leaf -> bool) -> linear_constraint -> bool
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
 val for_all_in_parsed_nonlinear_constraint : (parsing_structure_leaf -> bool) -> nonlinear_constraint -> bool
 (** Check if all leaf of a parsed normal update satisfy the predicate **)
@@ -76,7 +73,7 @@ val exists_in_parsed_linear_expression : (linear_expression_leaf -> bool) -> lin
 (** Check if any leaf of a linear term the predicate **)
 val exists_in_parsed_linear_term : (linear_expression_leaf -> bool) -> linear_term -> bool
 (** Check if any leaf of a linear constraint satisfy the predicate **)
-val exists_in_parsed_linear_constraint : (linear_expression_leaf -> bool) -> (linear_constraint_leaf -> bool) -> linear_constraint -> bool
+val exists_in_parsed_linear_constraint : (linear_expression_leaf -> bool) -> linear_constraint -> bool
 (** Check if any leaf of a non-linear constraint satisfy the predicate **)
 val exists_in_parsed_nonlinear_constraint : (parsing_structure_leaf -> bool) -> nonlinear_constraint -> bool
 
@@ -104,7 +101,7 @@ val iterate_parsed_linear_expression : (linear_expression_leaf -> unit) -> linea
 (** Iterate over a linear term applying a unit function **)
 val iterate_parsed_linear_term : (linear_expression_leaf -> unit) -> linear_term -> unit
 (** Iterate over a linear constraint applying a unit function **)
-val iterate_parsed_linear_constraint : (linear_expression_leaf -> unit) -> (linear_constraint_leaf -> unit) -> linear_constraint -> unit
+val iterate_parsed_linear_constraint : (linear_expression_leaf -> unit) -> linear_constraint -> unit
 (** Iterate over a non-linear constraint applying a unit function **)
 val iterate_parsed_nonlinear_constraint : (parsing_structure_leaf -> unit) -> nonlinear_constraint -> unit
 (** Iterate over a non-linear convex predicate **)

@@ -101,9 +101,12 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 				| Some cost ->
 				print_message Verbose_total ("          Gathering variables in used cost");
 				ParsingStructureUtilities.iterate_parsed_linear_expression (function
-                    | Leaf_linear_constant _ -> ()
                     | Leaf_linear_variable (_, variable_name) ->
                         all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                    | Leaf_linear_constant _
+                    | Leaf_false_linear_constraint
+                    | Leaf_true_linear_constraint -> ()
+
 				) cost;
 
 				| None -> ()

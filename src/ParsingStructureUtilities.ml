@@ -29,13 +29,10 @@ type parsing_structure_leaf =
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =
-    | Leaf_linear_constant of NumConst.t
-    | Leaf_linear_variable of NumConst.t * variable_name
-
-(* Leaf of linear constraint *)
-type linear_constraint_leaf =
     | Leaf_true_linear_constraint
     | Leaf_false_linear_constraint
+    | Leaf_linear_constant of NumConst.t
+    | Leaf_linear_variable of NumConst.t * variable_name
 
 (* Leaf of init state predicate *)
 type init_state_predicate_leaf =
@@ -176,9 +173,9 @@ and fold_parsed_update operator base leaf_fun = function
         in
         operator fold_updates (fold_parsed_boolean_expression operator base leaf_fun bool_expr)
 
-let rec fold_parsed_linear_constraint operator leaf_fun linear_constraint_leaf_fun = function
-    | Parsed_true_constraint -> linear_constraint_leaf_fun Leaf_true_linear_constraint
-    | Parsed_false_constraint -> linear_constraint_leaf_fun Leaf_false_linear_constraint
+let rec fold_parsed_linear_constraint operator leaf_fun = function
+    | Parsed_true_constraint -> leaf_fun Leaf_true_linear_constraint
+    | Parsed_false_constraint -> leaf_fun Leaf_false_linear_constraint
     | Parsed_linear_constraint (l_expr, _, r_expr) ->
         operator
             (fold_parsed_linear_expression operator leaf_fun l_expr)
@@ -203,9 +200,9 @@ and fold_parsed_linear_term operator leaf_fun = function
 let fold_parsed_nonlinear_constraint = fold_parsed_discrete_boolean_expression
 
 
-let fold_init_state_predicate operator base loc_assignment_leaf_fun linear_expression_leaf_fun linear_constraint_leaf_fun leaf_fun = function
+let fold_init_state_predicate operator base loc_assignment_leaf_fun linear_expression_leaf_fun leaf_fun = function
 	| Parsed_loc_assignment (automaton_name, loc_name) -> loc_assignment_leaf_fun (automaton_name, loc_name)
-	| Parsed_linear_predicate linear_constraint -> fold_parsed_linear_constraint operator linear_expression_leaf_fun linear_constraint_leaf_fun linear_constraint
+	| Parsed_linear_predicate linear_constraint -> fold_parsed_linear_constraint operator linear_expression_leaf_fun linear_constraint
 	| Parsed_discrete_predicate (_, expr) -> fold_parsed_boolean_expression operator base leaf_fun expr
 
 let fold_parsed_loc_predicate operator base predicate_leaf_fun leaf_fun = function
@@ -682,7 +679,9 @@ let is_constant variable_infos = function
 (* Check if linear leaf is a constant *)
 let is_linear_constant variable_infos = function
     | Leaf_linear_variable (_, variable_name) -> is_constant_is_defined variable_infos variable_name
-    | Leaf_linear_constant _ -> true
+    | Leaf_linear_constant _
+    | Leaf_false_linear_constraint
+    | Leaf_true_linear_constraint -> true
 
 (* Check if leaf is a variable that is defined *)
 (* A given callback is executed if it's not a defined variable *)
@@ -732,13 +731,16 @@ let is_variable_defined variable_infos local_variables_opt = is_variable_defined
 
 (* Check if linear expression leaf is a variable that is defined *)
 let is_variable_defined_in_linear_expression variable_infos callback_fail = function
-    | Leaf_linear_constant _ -> true
     | Leaf_linear_variable (_, variable_name) ->
         if not (List.mem variable_name variable_infos.variable_names) && not (is_constant_is_defined variable_infos variable_name) then(
             callback_fail variable_name; false
         )
         else
             true
+
+    | Leaf_linear_constant _
+    | Leaf_false_linear_constraint
+    | Leaf_true_linear_constraint -> true
 
 (* Check if a state predicate leaf has it's automaton / location defined *)
 let is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_info undefined_automaton_callback_opt undefined_loc_callback_opt = function
@@ -790,7 +792,6 @@ let is_only_discrete variable_infos clock_or_param_found_callback_opt = function
 
 (* Check if leaf isn't a variable *)
 let no_variables variable_infos = function
-    | Leaf_linear_constant _ -> true
     | Leaf_linear_variable (_, variable_name) ->
         (* Constants are allowed *)
         (is_constant_is_defined variable_infos variable_name)
@@ -798,6 +799,10 @@ let no_variables variable_infos = function
         ||
         let variable_index = index_of_variable_name variable_infos variable_name in
         variable_infos.type_of_variables variable_index = Var_type_parameter
+
+    | Leaf_linear_constant _
+    | Leaf_false_linear_constraint
+    | Leaf_true_linear_constraint -> true
 
 (* Check if a parsed boolean expression is constant *)
 let is_parsed_boolean_expression_constant variable_infos =
@@ -979,8 +984,7 @@ let all_variables_defined_in_linear_expression variable_infos callback_fail expr
 (* Check that all variables in a linear constraint are effectively be defined *)
 let all_variables_defined_in_linear_constraint variable_infos callback_fail expr =
     for_all_in_parsed_linear_constraint
-        (is_variable_defined_in_linear_expression variable_infos callback_fail)
-        (function | Leaf_false_linear_constraint | Leaf_true_linear_constraint -> true) expr
+        (is_variable_defined_in_linear_expression variable_infos callback_fail) expr
 
 (* Check that all variables in a non-linear constraint are effectively be defined *)
 let all_variables_defined_in_nonlinear_constraint variable_infos callback expr =
@@ -1022,10 +1026,13 @@ let is_parsed_linear_expression_constant variable_infos expr =
 
 (* Gather all variable names used in a linear_expression *)
 let add_variable_of_linear_expression variables_used_ref = function
-    | Leaf_linear_constant _ -> ()
     | Leaf_linear_variable (_, variable_name) ->
         (* Add the variable name to the set and update the reference *)
         variables_used_ref := StringSet.add variable_name !variables_used_ref
+
+    | Leaf_linear_constant _
+    | Leaf_false_linear_constraint
+    | Leaf_true_linear_constraint -> ()
 
 (* Gather all variable names used in a discrete boolean expression *)
 let add_variable_of_discrete_boolean_expression variables_used_ref = function
@@ -1074,9 +1081,7 @@ let get_variables_in_linear_expression_with_accumulator variables_used_ref =
 
 (* Gather all variable names used in a linear constraint in a given accumulator *)
 let get_variables_in_linear_constraint_with_accumulator variables_used_ref =
-    iterate_parsed_linear_constraint
-        (add_variable_of_linear_expression variables_used_ref)
-        (function | Leaf_true_linear_constraint | Leaf_false_linear_constraint -> ())
+    iterate_parsed_linear_constraint (add_variable_of_linear_expression variables_used_ref)
 
 (* Gather all variable names used in a non-linear constraint in a given accumulator *)
 let get_variables_in_nonlinear_constraint_with_accumulator = get_variables_in_parsed_discrete_boolean_expression_with_accumulator
