@@ -339,7 +339,6 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
     let is_any_void_local_variable =
         (* Get local variables / parameters of parsed function *)
         let local_variables = Functions.local_variables_of_fun fun_def in
-
         (* Check if exist any void variable *)
         List.exists (fun (variable_name, discrete_type) ->
             match discrete_type with

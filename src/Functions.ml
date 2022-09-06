@@ -41,11 +41,7 @@ let local_variables_of_fun (fun_def : parsed_fun_definition) =
     ParsingStructureUtilities.fold_parsed_function_definition
         (@) (* concat operator *)
         [] (* base *)
-        (fun _ new_local_variable_opt _ ->
-            match new_local_variable_opt with
-            Some (n, t, _) -> [n, t]
-            | None -> []
-        )
+        (function Leaf_decl_variable (variable_name, discrete_type, _) -> [variable_name, discrete_type])
         (function _ -> [])
         fun_def
 
@@ -72,7 +68,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
     in
 
     ParsingStructureUtilities.exists_in_parsed_function_definition
-        (fun _ _ _ -> false) (* This function cannot give more info on side effect, juste useful for getting local var info *)
+        (function _ -> false) (* no side effect for variable declarations *)
         is_leaf_has_side_effects (* Check if leaf has side effect *)
         fun_def
 
