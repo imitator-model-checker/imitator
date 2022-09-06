@@ -15,13 +15,13 @@ open ParsingStructure
 open DiscreteType
 open CustomModules
 
-(* Leaf of parsing structure *)
+(* Leaves of parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of string
     | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
 
-(* Leaf for parsed update *)
+(* Leaves of parsed update *)
 type parsed_update_leaf =
     | Leaf_update_updated_variable of variable_name
 
@@ -40,6 +40,7 @@ type nonlinear_constraint_leaf =
     | Leaf_true_nonlinear_constraint
     | Leaf_false_nonlinear_constraint
 
+val fold_parsed_function_definition : ('a -> 'a -> 'a) -> 'a -> ((variable_name * var_type_discrete * int) VariableMap.t -> (variable_name * var_type_discrete * int) option -> parsed_seq_code_bloc -> 'a) -> (parsing_structure_leaf -> 'a) -> (parsed_update_leaf -> 'a) -> parsed_fun_definition -> 'a
 val fold_parsed_normal_update : ('a -> 'a -> 'a) -> 'a -> (parsing_structure_leaf -> 'a) -> (parsed_update_leaf -> 'a) -> normal_update -> 'a
 
 
@@ -63,8 +64,10 @@ val for_all_in_parsed_nonlinear_constraint : (parsing_structure_leaf -> bool) ->
 val for_all_in_parsed_normal_update : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> normal_update -> bool
 (** Check if all leaf of a parsed update satisfy the predicate **)
 val for_all_in_parsed_update : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> update -> bool
-
-val for_all_in_parsed_function_definition : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> parsed_fun_definition -> bool
+(** Check if all leaf of a parsed sequential code bloc satisfy the predicate **)
+val for_all_in_parsed_seq_code_bloc_with_local_variables : ((variable_name * var_type_discrete * int) VariableMap.t -> (variable_name * var_type_discrete * int) option -> parsed_seq_code_bloc -> bool) -> (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> (variable_name * var_type_discrete * int) VariableMap.t -> parsed_seq_code_bloc -> bool
+(** Check if all leaf of a parsed function definition satisfy the predicate **)
+val for_all_in_parsed_function_definition : ((variable_name * var_type_discrete * int) VariableMap.t -> (variable_name * var_type_discrete * int) option -> parsed_seq_code_bloc -> bool) -> (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> parsed_fun_definition -> bool
 
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
@@ -88,7 +91,10 @@ val exists_in_parsed_update : (parsing_structure_leaf -> bool) -> (parsed_update
 (** Check if any leaf of a parsed normal update satisfy the predicate **)
 val exists_in_parsed_normal_update : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> normal_update -> bool
 
-val exists_in_parsed_function_definition : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> parsed_fun_definition -> bool
+(** Check if any leaf of a parsed sequential code bloc satisfy the predicate **)
+(*val exists_in_parsed_seq_code_bloc_with_local_variables : (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> parsed_seq_code_bloc -> bool*)
+(** Check if any leaf of a parsed function definition satisfy the predicate **)
+val exists_in_parsed_function_definition :  ((variable_name * var_type_discrete * int) VariableMap.t -> (variable_name * var_type_discrete * int) option -> parsed_seq_code_bloc -> bool) -> (parsing_structure_leaf -> bool) -> (parsed_update_leaf -> bool) -> parsed_fun_definition -> bool
 
 (** Apply units over leaf of a parsing structure **)
 
@@ -110,7 +116,10 @@ val iterate_parsed_nonlinear_constraint : (parsing_structure_leaf -> unit) -> no
 (** Iterate over a non-linear convex predicate **)
 val iterate_parsed_nonlinear_convex_predicate : (parsing_structure_leaf -> unit) -> convex_predicate -> unit
 
-val iterate_in_parsed_function_definition : (parsing_structure_leaf -> unit) -> (parsed_update_leaf -> unit) -> parsed_fun_definition -> unit
+(** Iterate over a parsed sequential code bloc definition **)
+(*val iterate_in_parsed_seq_code_bloc_with_local_variables : (parsing_structure_leaf -> unit) -> (parsed_update_leaf -> unit) -> parsed_seq_code_bloc -> unit*)
+(** Iterate over a parsed function definition **)
+val iterate_in_parsed_function_definition :  ((variable_name * var_type_discrete * int) VariableMap.t -> (variable_name * var_type_discrete * int) option -> parsed_seq_code_bloc -> unit) -> (parsing_structure_leaf -> unit) -> (parsed_update_leaf -> unit) -> parsed_fun_definition -> unit
 
 val label_of_parsed_factor_constructor : parsed_discrete_factor -> string
 

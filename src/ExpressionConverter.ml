@@ -619,7 +619,7 @@ let type_check_parsed_update_type local_variables_opt variable_infos = function
 let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt = function
     | Parsed_local_decl (variable_name, discrete_type, expr, next_expr, _) ->
         (* Add local variable to hashtable *)
-        let local_variables = VariableMap.add variable_name discrete_type local_variables in
+        let new_local_variables = VariableMap.add variable_name discrete_type local_variables in
 
         (* Get inner type of discrete type to infer *)
         (* For example : `let s : int stack = stack()` extract `int` type of `int stack` declaration *)
@@ -630,7 +630,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         (* Type check and infer init expression of the local variable declaration *)
         let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
         (* Type check and infer the next expression of the function body *)
-        let typed_next_expr, next_expr_discrete_type, is_next_expr_has_side_effects = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
+        let typed_next_expr, next_expr_discrete_type, is_next_expr_has_side_effects = type_check_seq_code_bloc new_local_variables variable_infos infer_type_opt next_expr in
 
         (* Check compatibility between local variable declared type and it's init expression *)
         if not (is_discrete_type_compatibles discrete_type init_discrete_type) then

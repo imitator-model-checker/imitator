@@ -17,6 +17,7 @@
 (* Utils modules *)
 open Exceptions
 open OCamlUtilities
+open CustomModules
 
 (* Parsing structure modules *)
 open DiscreteType
@@ -34,35 +35,20 @@ open FunctionSig
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
-(* TODO benjamin REFACT when general function in ParsingStructureUtilities *)
-(* Get local variables of a parsed function definition *)
+
 let local_variables_of_fun (fun_def : parsed_fun_definition) =
-   (* Add parameters as local variables *)
-    let parameters = List.map (fun (param_name, discrete_type) -> param_name, discrete_type) fun_def.parameters in
-
-    (* Function that traverse function body expression *)
-    let rec local_variables_of_parsed_seq_code_bloc = function
-        | Parsed_local_decl (variable_name, discrete_type, _, next_expr, _) ->
-            let local_variables = local_variables_of_parsed_seq_code_bloc next_expr in
-            (* Add the new declared local variable *)
-            (variable_name, discrete_type) :: local_variables
-
-        | Parsed_loop (variable_name, _, _, _, inner_expr, next_expr, _) ->
-            let local_variables_inner_expr = local_variables_of_parsed_seq_code_bloc inner_expr in
-            let local_variables_next_expr = local_variables_of_parsed_seq_code_bloc next_expr in
-            let local_variables = local_variables_inner_expr @ local_variables_next_expr in
-            (* Add the new declared local variable *)
-            (variable_name, Var_type_discrete_number Var_type_discrete_int) :: local_variables
-
-        | Parsed_assignment (_, next_expr) ->
-            local_variables_of_parsed_seq_code_bloc next_expr
-
-        | Parsed_bloc_expr _
-        | Parsed_bloc_void -> []
-    in
-
-    let local_variables = local_variables_of_parsed_seq_code_bloc fun_def.body in
-    parameters @ local_variables
+    (* Concat all local variables found when traversing the function body *)
+    ParsingStructureUtilities.fold_parsed_function_definition
+        (@) (* concat operator *)
+        [] (* base *)
+        (fun _ new_local_variable_opt _ ->
+            match new_local_variable_opt with
+            Some (n, t, _) -> [n, t]
+            | None -> []
+        )
+        (function _ -> [])
+        (function _ -> [])
+        fun_def
 
 (* Infer whether a user function is subject to side effects *)
 let rec is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
@@ -85,81 +71,13 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
 
         | _ -> false
     in
-    (* Loop into function body - OK *)
-    (* For each expression in body : *)
-    (* check for leaf_fun in init_expr, expr *)
-    (* Search fun in builtin, if found get side_effect property *)
-    (* If not found search into user_function_def, and call recursively this function *)
-    (* if no function found -> undefined function *)
-    (* TODO benjamin REFACTOR replace by a general function in ParsingStructureUtilities *)
-    let rec is_next_expr_has_side_effects = function
-        | Parsed_local_decl (_, _, init_expr, next_expr, _) ->
-            (* Check if init expression has side-effects *)
-            let has_init_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_boolean_expression is_leaf_has_side_effects init_expr in
-            (* Check if next expressions has side-effects *)
-            let has_next_expr_side_effects = is_next_expr_has_side_effects next_expr in
-            (* Check if any has side-effects *)
-            has_init_expr_side_effects || has_next_expr_side_effects
 
-        | Parsed_assignment ((parsed_update_type, update_expr), next_expr) ->
-            (match parsed_update_type with
-            (* When any variable is assigned (written) the function is subject to side-effects *)
-            | Parsed_variable_update _ -> true
-            (* If the instruction is not an assignment *)
-            | Parsed_void_update ->
-                (* Check if the update expression has side-effects *)
-                let has_update_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_boolean_expression is_leaf_has_side_effects update_expr in
-                (* Check if next expressions has side-effects *)
-                let has_next_expr_side_effects = is_next_expr_has_side_effects next_expr in
-                (* Check if any has side-effects *)
-                has_update_expr_side_effects || has_next_expr_side_effects
-            )
-        | Parsed_loop (_, from_expr, to_expr, _, inner_expr, next_expr, _) ->
-            (* Check if the from expression has side-effects *)
-            let has_from_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_discrete_arithmetic_expression is_leaf_has_side_effects from_expr in
-            (* Check if the to expression has side-effects *)
-            let has_to_expr_side_effects = ParsingStructureUtilities.exists_in_parsed_discrete_arithmetic_expression is_leaf_has_side_effects to_expr in
-            (* Check if the inner expressions has side-effects *)
-            let has_inner_expr_side_effects = is_next_expr_has_side_effects inner_expr in
-            (* Check if the next expressions has side-effects *)
-            let has_next_expr_side_effects = is_next_expr_has_side_effects next_expr in
-            (* Check if any has side-effects *)
-            has_from_expr_side_effects || has_to_expr_side_effects || has_inner_expr_side_effects || has_next_expr_side_effects
+    ParsingStructureUtilities.exists_in_parsed_function_definition
+        (fun _ _ _ -> false) (* This function cannot give more info on side effect, juste useful for getting local var info *)
+        is_leaf_has_side_effects (* Check if leaf has side effect *)
+        (function Leaf_update_updated_variable _ -> true) (* When updating a variable -> side effect *)
+        fun_def
 
-        | Parsed_bloc_expr expr ->
-            (* Check if expression has side-effects *)
-            ParsingStructureUtilities.exists_in_parsed_boolean_expression is_leaf_has_side_effects expr
-        | Parsed_bloc_void -> false
-    in
-    is_next_expr_has_side_effects fun_def.body
-
-(*
-(* Remove the declarations of unused local variables from function body *)
-let fun_def_without_unused_local_vars unused_local_vars (fun_def : parsed_fun_definition) =
-
-    (* Return body of function without unused expression *)
-    let rec next_expr_without_unused = function
-        | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, id) ->
-            (* If current declaration is found in unused local variable, just remove by skipping *)
-            if List.mem (variable_name, id) unused_local_vars then
-                next_expr_without_unused next_expr
-            (* Else,  *)
-            else (
-                let new_next_expr_without_unused = next_expr_without_unused next_expr in
-                Parsed_local_decl (variable_name, discrete_type, init_expr, new_next_expr_without_unused, id)
-            )
-
-        | Parsed_assignment (normal_update, next_expr) ->
-            let new_next_expr_without_unused = next_expr_without_unused next_expr in
-            Parsed_assignment (normal_update, new_next_expr_without_unused)
-
-
-        | Parsed_bloc_expr _
-        | Parsed_bloc_void as expr -> expr
-
-    in
-    { fun_def with body = next_expr_without_unused fun_def.body }
-*)
 (* binary(l) -> l -> binary(l) *)
 let shift_signature =
     [
