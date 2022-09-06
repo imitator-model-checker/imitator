@@ -47,7 +47,6 @@ let local_variables_of_fun (fun_def : parsed_fun_definition) =
             | None -> []
         )
         (function _ -> [])
-        (function _ -> [])
         fun_def
 
 (* Infer whether a user function is subject to side effects *)
@@ -68,14 +67,13 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
             )
             else
                 raise (UndefinedFunction fun_def.name);
-
+        | Leaf_update_updated_variable _ -> true (* when updating a global variable, then side effects ! *)
         | _ -> false
     in
 
     ParsingStructureUtilities.exists_in_parsed_function_definition
         (fun _ _ _ -> false) (* This function cannot give more info on side effect, juste useful for getting local var info *)
         is_leaf_has_side_effects (* Check if leaf has side effect *)
-        (function Leaf_update_updated_variable _ -> true) (* When updating a variable -> side effect *)
         fun_def
 
 (* binary(l) -> l -> binary(l) *)

@@ -220,7 +220,7 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         in
 
         let print_variable_in_fun_not_declared_opt = Some print_variable_in_fun_not_declared in
-        ParsingStructureUtilities.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt print_variable_in_fun_not_declared_opt fun_def
+        ParsingStructureUtilities.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt fun_def
     in
 
     (* Check if assignments found in function body are allowed *)

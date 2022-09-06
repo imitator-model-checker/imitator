@@ -128,7 +128,8 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                     all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                 | Leaf_fun function_name ->
                     all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                | Leaf_constant _ -> ()
+                | Leaf_constant _
+                | Leaf_update_updated_variable _ -> ()
 			) location.invariant;
 
 			(* Gather in transitions *)
@@ -141,7 +142,8 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                         all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                     | Leaf_fun function_name ->
                         all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                    | Leaf_constant _ -> ()
+                    | Leaf_constant _
+                    | Leaf_update_updated_variable _ -> ()
                 ) convex_predicate;
 
 				(* Gather in the updates *)
@@ -155,8 +157,9 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                             all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                         | Leaf_fun function_name ->
                             all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                        | Leaf_constant _ -> ()
-					) (function _ -> ()) update_expression;
+                        | Leaf_constant _
+                        | Leaf_update_updated_variable _ -> ()
+					) update_expression;
 
                 ) updates;
 
@@ -169,8 +172,10 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                 (* eg: r := stack_pop(s) *)
 				List.iter (fun update_expression ->
 					ParsingStructureUtilities.iterate_parsed_update
-					    (function _ -> ())
 					    (function
+                            | Leaf_variable _
+                            | Leaf_constant _
+                            | Leaf_fun _ -> ()
 					        | Leaf_update_updated_variable variable_name ->
                                 all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                         )
