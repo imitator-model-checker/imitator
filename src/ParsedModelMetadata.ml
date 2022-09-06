@@ -132,7 +132,7 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                 | Leaf_fun function_name ->
                     all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
                 | Leaf_constant _
-                | Leaf_update_updated_variable _ -> ()
+                | Leaf_update_variable _ -> ()
 			) location.invariant;
 
 			(* Gather in transitions *)
@@ -146,7 +146,7 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                     | Leaf_fun function_name ->
                         all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
                     | Leaf_constant _
-                    | Leaf_update_updated_variable _ -> ()
+                    | Leaf_update_variable _ -> ()
                 ) convex_predicate;
 
 				(* Gather in the updates *)
@@ -161,7 +161,7 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                         | Leaf_fun function_name ->
                             all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
                         | Leaf_constant _
-                        | Leaf_update_updated_variable _ -> ()
+                        | Leaf_update_variable _ -> ()
 					) update_expression;
 
                 ) updates;
@@ -179,7 +179,7 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                             | Leaf_variable _
                             | Leaf_constant _
                             | Leaf_fun _ -> ()
-					        | Leaf_update_updated_variable variable_name ->
+					        | Leaf_update_variable variable_name ->
                                 all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                         )
                     update_expression;

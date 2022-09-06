@@ -25,7 +25,7 @@ type parsing_structure_leaf =
     | Leaf_variable of variable_name
     | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
-    | Leaf_update_updated_variable of variable_name
+    | Leaf_update_variable of variable_name
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =
@@ -111,7 +111,7 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
 	    fold_parsed_discrete_factor operator base leaf_fun factor
 
 and fold_parsed_scalar_or_index_update_type operator base leaf_fun = function
-    | Parsed_scalar_update variable_name -> leaf_fun (Leaf_update_updated_variable variable_name)
+    | Parsed_scalar_update variable_name -> leaf_fun (Leaf_update_variable variable_name)
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) ->
         operator
             (fold_parsed_scalar_or_index_update_type operator base leaf_fun parsed_scalar_or_index_update_type)
@@ -674,7 +674,7 @@ let is_constant variable_infos = function
     | Leaf_variable variable_name -> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
     | Leaf_fun _
-    | Leaf_update_updated_variable _ -> false
+    | Leaf_update_variable _ -> false
 
 (* Check if linear leaf is a constant *)
 let is_linear_constant variable_infos = function
@@ -707,7 +707,7 @@ let is_variable_defined_with_callback variable_infos local_variables_opt variabl
         is_defined
     | Leaf_fun _ -> true
     | Leaf_constant _ -> true
-    | Leaf_update_updated_variable variable_name ->
+    | Leaf_update_variable variable_name ->
 
         let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
 
@@ -788,7 +788,7 @@ let is_only_discrete variable_infos clock_or_param_found_callback_opt = function
     | Leaf_constant _
     (* As long as function can only return discrete and can't manipulate clocks and parameters *)
     | Leaf_fun _ -> true
-    | Leaf_update_updated_variable _ -> true
+    | Leaf_update_variable _ -> true
 
 (* Check if leaf isn't a variable *)
 let no_variables variable_infos = function
@@ -1038,7 +1038,7 @@ let add_variable_of_linear_expression variables_used_ref = function
 let add_variable_of_discrete_boolean_expression variables_used_ref = function
     | Leaf_constant _
     | Leaf_fun _
-    | Leaf_update_updated_variable _ -> ()
+    | Leaf_update_variable _ -> ()
     | Leaf_variable variable_name ->
         (* Add the variable name to the set and update the reference *)
         variables_used_ref := StringSet.add variable_name !variables_used_ref
@@ -1047,7 +1047,7 @@ let add_variable_of_discrete_boolean_expression variables_used_ref = function
 let add_function_of_discrete_boolean_expression function_used_ref = function
     | Leaf_constant _
     | Leaf_variable _
-    | Leaf_update_updated_variable _ -> ()
+    | Leaf_update_variable _ -> ()
     | Leaf_fun function_name ->
         (* Add the variable name to the set and update the reference *)
         function_used_ref := StringSet.add function_name !function_used_ref

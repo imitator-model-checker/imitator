@@ -67,7 +67,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
             )
             else
                 raise (UndefinedFunction fun_def.name);
-        | Leaf_update_updated_variable _ -> true (* when updating a global variable, then side effects ! *)
+        | Leaf_update_variable _ -> true (* when updating a global variable, then side effects ! *)
         | _ -> false
     in
 

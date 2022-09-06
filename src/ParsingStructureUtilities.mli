@@ -22,7 +22,7 @@ type parsing_structure_leaf =
     | Leaf_variable of string
     | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
-    | Leaf_update_updated_variable of variable_name
+    | Leaf_update_variable of variable_name
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =
