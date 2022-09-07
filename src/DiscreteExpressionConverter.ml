@@ -22,6 +22,7 @@ open ImitatorUtilities
 (* Parsing structure modules *)
 open ParsingStructure
 open ParsingStructureMeta
+open ParsingStructureGraph
 open DiscreteType
 
 (* Abstract model modules *)
@@ -227,9 +228,9 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
     let is_assignments_are_allowed =
 
         (* Check for assigned variables (local and global) in a function implementation *)
-        let left_variable_refs = ParsingStructureMeta.left_variables_of_assignments_in fun_def |> ComponentSet.elements in
+        let left_variable_refs = ParsingStructureGraph.left_variables_of_assignments_in fun_def |> ComponentSet.elements in
         (* Check for variables (local and global) at the right side of an assignment in a function implementation *)
-        let right_variable_refs = ParsingStructureMeta.right_variables_of_assignments_in fun_def |> ComponentSet.elements in
+        let right_variable_refs = ParsingStructureGraph.right_variables_of_assignments_in fun_def |> ComponentSet.elements in
 
         (* Check that no local variable are updated *)
         let assigned_local_variable_names = List.filter_map (function

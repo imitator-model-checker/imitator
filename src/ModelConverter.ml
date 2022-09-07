@@ -31,6 +31,7 @@ open VariableInfo
 open AbstractProperty
 open ParsingStructureUtilities
 open ParsingStructureMeta
+open ParsingStructureGraph
 open DiscreteType
 open CustomModules
 open JsonFormatter
@@ -3100,17 +3101,17 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 
     (* Resolve dependency graph of the model *)
-    let dependency_graph = ParsingStructureMeta.dependency_graph ~no_var_autoremove:options#no_variable_autoremove parsed_model in
+    let dependency_graph = ParsingStructureGraph.dependency_graph ~no_var_autoremove:options#no_variable_autoremove parsed_model in
     (* Get dependency graph as dot format *)
-    let str_dependency_graph = lazy (ParsingStructureMeta.string_of_dependency_graph dependency_graph) in
+    let str_dependency_graph = lazy (ParsingStructureGraph.string_of_dependency_graph dependency_graph) in
     (* Print dependency graph *)
     ImitatorUtilities.print_message_lazy Verbose_high str_dependency_graph;
 
     (* Get unused components and print warnings *)
-    let unused_components = ParsingStructureMeta.unused_components_of_model dependency_graph in
+    let unused_components = ParsingStructureGraph.unused_components_of_model dependency_graph in
 
     (* Iter on unused components and print warnings *)
-    ParsingStructureMeta.ComponentSet.iter (function
+    ComponentSet.iter (function
         | Fun_ref function_name ->
             print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")
         | Local_variable_ref (variable_name, function_name, _) ->
@@ -3133,7 +3134,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	)else (
 
 		(* Gather all variables used *)
-		let all_variables_used_in_model = ParsingStructureMeta.used_variables_of_model dependency_graph in
+		let all_variables_used_in_model = ParsingStructureGraph.used_variables_of_model dependency_graph in
 		let all_variables_used_in_property = all_variables_in_property_option parsed_property_option in
 		let all_variable_used = StringSet.union all_variables_used_in_model all_variables_used_in_property in
 
@@ -3435,13 +3436,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Gather all functions metadata in a table *)
 
     (* Get user functions metadata from parsed functions *)
-    let used_function_names = ParsingStructureMeta.used_functions_of_model dependency_graph in
+    let used_function_names = ParsingStructureGraph.used_functions_of_model dependency_graph in
     (* Get only used user functions definition *)
     let used_function_definitions = List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions in
 
     (* Check for function cycles *)
 
-    let cycle_infos = model_cycle_infos dependency_graph in
+    let cycle_infos = ParsingStructureGraph.model_cycle_infos dependency_graph in
     let model_has_cycle = List.exists first_of_tuple cycle_infos in
     let cycle_paths = List.filter_map (fun (has_cycle, path) -> if has_cycle then Some path else None) cycle_infos in
 
