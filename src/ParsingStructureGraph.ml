@@ -405,6 +405,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 (* Concat current relations with next relations *)
                 relations @ next_declaration_relations
 
+            (* TODO benjamin IMPORTANT see that ! ref from i to other expression from and to that's bad *)
             | Parsed_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
                 (* Create local variable ref representing a unique variable ref *)
                 let variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
@@ -412,7 +413,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 let local_variables_of_loop = StringMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
 
                 (* Get variable and function refs used in the from expression *)
-                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables_of_loop from_expr in
+                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables from_expr in
                 let all_refs = variables_used_refs @ functions_used_refs in
                 (* Get variable and function refs used in the to expression *)
                 let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables to_expr in
@@ -425,9 +426,26 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 let relations = (fun_ref, variable_ref) :: relations in
 
                 (* Get list of relations for the inner expressions *)
+                let inner_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables_of_loop inner_bloc in
+                (* Get list of relations for the next expression / declaration *)
+                let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
+                (* Concat current relations with next relations *)
+                inner_declaration_relations @ next_declaration_relations @ relations
+
+            | Parsed_while_loop (condition_expr, inner_bloc, next_expr) ->
+
+                (* Get variable and function refs used in the condition expression *)
+                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables condition_expr in
+                let all_refs = variables_used_refs @ functions_used_refs in
+
+                (* Make relations between variable used in condition expression and current function *)
+                let relations = List.map (fun _ref -> (fun_ref, _ref)) all_refs in
+
+                (* Get list of relations for the inner expressions *)
                 let inner_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables inner_bloc in
                 (* Get list of relations for the next expression / declaration *)
                 let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
+
                 (* Concat current relations with next relations *)
                 inner_declaration_relations @ next_declaration_relations @ relations
 
@@ -665,6 +683,14 @@ let traverse_function operator f base (fun_def : parsed_fun_definition) =
                 )
                 (traverse_parsed_seq_code_bloc next_expr)
 
+        | Parsed_while_loop (condition_expr, inner_bloc, next_expr) as expr ->
+            operator
+                (operator
+                    (f !local_variable_components_ref expr)
+                    (traverse_parsed_seq_code_bloc inner_bloc)
+                )
+                (traverse_parsed_seq_code_bloc next_expr)
+
         | Parsed_assignment (_, next_expr) as expr ->
             operator
                 (f !local_variable_components_ref expr)
@@ -687,6 +713,7 @@ let left_variables_of_assignments_in (fun_def : parsed_fun_definition) =
     (* Function that get assigned variable in function body expression *)
     let rec left_variables_of_assignments_in_parsed_seq_code_bloc local_variable_components = function
         | Parsed_loop _
+        | Parsed_while_loop _
         | Parsed_local_decl _ -> ()
 
         | Parsed_assignment ((parsed_update_type, _), next_expr) ->
@@ -749,6 +776,7 @@ let right_variables_of_assignments_in (fun_def : parsed_fun_definition) =
             component_refs := List.fold_left (Fun.flip ComponentSet.add) !component_refs variable_refs
 
         | Parsed_loop _
+        | Parsed_while_loop _
         | Parsed_bloc_expr _
         | Parsed_bloc_void -> ()
     in

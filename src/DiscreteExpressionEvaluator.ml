@@ -494,6 +494,14 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
 
             eval_seq_code_bloc_with_context eval_context next_expr
 
+        | While_loop (condition_expr, inner_bloc, next_expr) ->
+
+            while (eval_boolean_expression_with_context variable_names functions_table_opt (Some eval_context) condition_expr) do
+                eval_seq_code_bloc_with_context eval_context inner_bloc;
+            done;
+
+            eval_seq_code_bloc_with_context eval_context next_expr
+
         | Assignment (normal_update, next_expr) ->
             direct_update_with_context variable_names functions_table_opt eval_context normal_update;
             eval_seq_code_bloc_with_context eval_context next_expr

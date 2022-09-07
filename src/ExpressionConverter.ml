@@ -2535,6 +2535,13 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
             seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
         )
 
+    | Typed_while_loop (typed_condition_expr, typed_inner_bloc, typed_next_expr) ->
+        While_loop (
+            bool_expression_of_typed_boolean_expression variable_infos typed_condition_expr,
+            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_inner_bloc,
+            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
+        )
+
     | Typed_assignment ((typed_update_type, typed_expr), typed_next_expr) ->
         Assignment (
             (update_type_of_typed_update_type variable_infos typed_update_type,

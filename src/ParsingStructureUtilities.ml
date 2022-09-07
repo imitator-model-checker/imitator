@@ -139,6 +139,11 @@ and fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun = fu
         |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun inner_bloc)
         |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun next_expr)
 
+    | Parsed_while_loop (condition_expr, inner_bloc, next_expr) ->
+        fold_parsed_boolean_expression operator base leaf_fun condition_expr
+        |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun inner_bloc)
+        |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun next_expr)
+
     | Parsed_assignment (normal_update, next_expr) ->
         operator
             (fold_parsed_normal_update operator base leaf_fun normal_update)
@@ -514,6 +519,14 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             ^ string_of_parsed_arithmetic_expression variable_infos from_expr
             ^ (match loop_dir with Parsed_loop_up -> " to " | Parsed_loop_down -> " downto ")
             ^ string_of_parsed_arithmetic_expression variable_infos to_expr
+            ^ " do\n"
+            ^ string_of_parsed_seq_code_bloc variable_infos inner_bloc
+            ^ "\ndone\n"
+            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
+
+        | Parsed_while_loop (condition_expr, inner_bloc, next_expr) ->
+            "while "
+            ^ string_of_parsed_boolean_expression variable_infos condition_expr
             ^ " do\n"
             ^ string_of_parsed_seq_code_bloc variable_infos inner_bloc
             ^ "\ndone\n"
