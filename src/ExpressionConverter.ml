@@ -969,7 +969,7 @@ let check_guard variable_infos =
 let check_update variable_infos update_types parsed_update_type expr =
 
     (* Get assigned variable name *)
-    let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_update_type_opt parsed_update_type in
+    let variable_name_opt = ParsingStructureMeta.variable_name_of_parsed_update_type_opt parsed_update_type in
 
     (* Get assigned variable type *)
     let is_void_update, variable_name, var_type =

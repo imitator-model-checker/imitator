@@ -21,7 +21,7 @@ open ImitatorUtilities
 
 (* Parsing structure modules *)
 open ParsingStructure
-open ParsedModelMetadata
+open ParsingStructureMeta
 open DiscreteType
 
 (* Abstract model modules *)
@@ -73,19 +73,19 @@ let split_convex_predicate_into_discrete_and_continuous variable_infos convex_pr
   let partitions = List.partition
     (fun nonlinear_inequality ->
         (* Try to get value if it's a simple value (True / False) *)
-        let value_opt = ParsingStructureUtilities.discrete_boolean_expression_constant_value_opt nonlinear_inequality in
+        let value_opt = ParsingStructureMeta.discrete_boolean_expression_constant_value_opt nonlinear_inequality in
 
         match value_opt with
         | Some true -> true
         | Some false -> raise False_exception
-        | None -> ParsingStructureUtilities.only_discrete_in_nonlinear_expression variable_infos nonlinear_inequality
+        | None -> ParsingStructureMeta.only_discrete_in_nonlinear_expression variable_infos nonlinear_inequality
 
     ) convex_predicate
     in
     (* Get discrete part as a nonlinear constraint but convert back continuous part to a linear constraint *)
     let discrete_part, continuous_part = partitions in
         discrete_part,
-        List.map (fun nonlinear_constraint -> ParsingStructureUtilities.linear_constraint_of_nonlinear_constraint nonlinear_constraint) continuous_part
+        List.map (fun nonlinear_constraint -> ParsingStructureMeta.linear_constraint_of_nonlinear_constraint nonlinear_constraint) continuous_part
 
 
 let convert_guard variable_infos guard_convex_predicate =
@@ -220,16 +220,16 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         in
 
         let print_variable_in_fun_not_declared_opt = Some print_variable_in_fun_not_declared in
-        ParsingStructureUtilities.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt fun_def
+        ParsingStructureMeta.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt fun_def
     in
 
     (* Check if assignments found in function body are allowed *)
     let is_assignments_are_allowed =
 
         (* Check for assigned variables (local and global) in a function implementation *)
-        let left_variable_refs = ParsedModelMetadata.left_variables_of_assignments_in fun_def |> ComponentSet.elements in
+        let left_variable_refs = ParsingStructureMeta.left_variables_of_assignments_in fun_def |> ComponentSet.elements in
         (* Check for variables (local and global) at the right side of an assignment in a function implementation *)
-        let right_variable_refs = ParsedModelMetadata.right_variables_of_assignments_in fun_def |> ComponentSet.elements in
+        let right_variable_refs = ParsingStructureMeta.right_variables_of_assignments_in fun_def |> ComponentSet.elements in
 
         (* Check that no local variable are updated *)
         let assigned_local_variable_names = List.filter_map (function
