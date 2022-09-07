@@ -401,7 +401,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 (* Concat current relations with next relations *)
                 relations @ next_declaration_relations
 
-            | Parsed_loop (variable_name, from_expr, to_expr, _, inner_expr, next_expr, id) ->
+            | Parsed_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
                 (* Create local variable ref representing a unique variable ref *)
                 let variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
                 (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
@@ -421,7 +421,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 let relations = (fun_ref, variable_ref) :: relations in
 
                 (* Get list of relations for the inner expressions *)
-                let inner_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables inner_expr in
+                let inner_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables inner_bloc in
                 (* Get list of relations for the next expression / declaration *)
                 let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
                 (* Concat current relations with next relations *)
@@ -649,7 +649,7 @@ let traverse_function operator f base (fun_def : parsed_fun_definition) =
                 (f !local_variable_components_ref expr)
                 (traverse_parsed_seq_code_bloc next_expr)
 
-        | Parsed_loop (variable_name, _, _, _, inner_expr, next_expr, id) as expr ->
+        | Parsed_loop (variable_name, _, _, _, inner_bloc, next_expr, id) as expr ->
             (* Add the new declared local variable to set *)
             let local_variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
             local_variable_components_ref := ComponentSet.add local_variable_ref !local_variable_components_ref;
@@ -657,7 +657,7 @@ let traverse_function operator f base (fun_def : parsed_fun_definition) =
             operator
                 (operator
                     (f !local_variable_components_ref expr)
-                    (traverse_parsed_seq_code_bloc inner_expr)
+                    (traverse_parsed_seq_code_bloc inner_bloc)
                 )
                 (traverse_parsed_seq_code_bloc next_expr)
 

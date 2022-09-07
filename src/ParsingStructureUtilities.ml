@@ -132,11 +132,11 @@ and fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun = fu
         |> operator (fold_parsed_boolean_expression operator base leaf_fun init_expr)
         |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun next_expr)
 
-    | Parsed_loop (variable_name, from_expr, to_expr, _, inner_expr, next_expr, id) ->
+    | Parsed_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
         seq_code_bloc_leaf_fun (Leaf_decl_variable (variable_name, (Var_type_discrete_number Var_type_discrete_int), id))
         |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun from_expr)
         |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun to_expr)
-        |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun inner_expr)
+        |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun inner_bloc)
         |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun next_expr)
 
     | Parsed_assignment (normal_update, next_expr) ->
@@ -507,7 +507,7 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             string_of_parsed_normal_update variable_infos normal_update
             ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
-        | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr, _) ->
+        | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) ->
             "for "
             ^ variable_name
             ^ " = "
@@ -515,7 +515,7 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             ^ (match loop_dir with Parsed_loop_up -> " to " | Parsed_loop_down -> " downto ")
             ^ string_of_parsed_arithmetic_expression variable_infos to_expr
             ^ " do\n"
-            ^ string_of_parsed_seq_code_bloc variable_infos inner_expr
+            ^ string_of_parsed_seq_code_bloc variable_infos inner_bloc
             ^ "\ndone\n"
             ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
@@ -952,7 +952,7 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
             (* Is all defined ? *)
             all_variables_defined_in_normal_update && all_variables_defined_in_next_expr
 
-        | Parsed_loop (variable_name, from_expr, to_expr, _, inner_expr, next_expr, _) ->
+        | Parsed_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, _) ->
             (* Check if variables defined in from expr *)
             let all_variables_defined_in_from_expr = all_variables_defined_in_parsed_discrete_arithmetic_expression local_variables from_expr in
             (* Check if variables defined in to expr *)
@@ -960,11 +960,11 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
             (* Add the new declared local variable to set *)
             let local_variables_of_loop = StringSet.add variable_name local_variables in
             (* Check if variables defined in inner expressions *)
-            let all_variables_defined_in_inner_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables_of_loop inner_expr in
+            let all_variables_defined_in_inner_bloc = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables_of_loop inner_bloc in
             (* Check if variables defined in next expressions *)
             let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr in
             (* Is all defined ? *)
-            all_variables_defined_in_inner_expr && all_variables_defined_in_from_expr && all_variables_defined_in_to_expr && all_variables_defined_in_next_expr
+            all_variables_defined_in_inner_bloc && all_variables_defined_in_from_expr && all_variables_defined_in_to_expr && all_variables_defined_in_next_expr
 
         | Parsed_bloc_expr expr ->
             all_variables_defined_in_parsed_boolean_expression local_variables expr
@@ -1111,52 +1111,6 @@ let get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref 
         (function _ -> ())
         (add_variable_of_discrete_boolean_expression variables_used_ref)
 
-(* TODO benjamin REFAC see if local variable is useless or not, replace this when general function in ParsingStructureUtilities *)
-(* Gather all variable names (global variables only) used in a parsed function definition in a given accumulator *)
-let get_global_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def : parsed_fun_definition) =
-    
-    (* Add parameters as local variables *)
-    let parameter_names = List.map first_of_tuple fun_def.parameters in
-    let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
-    let local_variables_ref = ref local_variables in
-
-    (* Check if all variables defined in user function body using local variables set *)
-    let rec get_variables_in_parsed_seq_code_bloc_rec local_variables_ref = function
-        | Parsed_local_decl (variable_name, _, init_expr, next_expr, id) ->
-            (* Add the new declared local variable to set *)
-            local_variables_ref := StringSet.add variable_name !local_variables_ref;
-            (* Gather variables in next expressions *)
-            get_variables_in_parsed_seq_code_bloc_rec local_variables_ref next_expr;
-            (* Gather variables in init expression *)
-            iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variable_used_ref) init_expr
-
-        | Parsed_loop (variable_name, from_expr, to_expr, _, inner_expr, next_expr, id) ->
-            (* Add the new declared local variable to set *)
-            local_variables_ref := StringSet.add variable_name !local_variables_ref;
-
-            (* Gather variables in from expr *)
-            get_variables_in_parsed_discrete_arithmetic_expression_with_accumulator variable_used_ref from_expr;
-            (* Gather variables in to expr *)
-            get_variables_in_parsed_discrete_arithmetic_expression_with_accumulator variable_used_ref to_expr;
-            (* Gather variables in inner expressions *)
-            get_variables_in_parsed_seq_code_bloc_rec local_variables_ref inner_expr;
-            (* Gather variables in next expressions *)
-            get_variables_in_parsed_seq_code_bloc_rec local_variables_ref next_expr;
-
-        | Parsed_assignment (normal_update, next_expr) ->
-            (* Gather variables in normal update *)
-            get_variables_in_parsed_normal_update_with_accumulator variable_used_ref normal_update;
-            (* Gather variables in next expressions *)
-            get_variables_in_parsed_seq_code_bloc_rec local_variables_ref next_expr;
-
-        | Parsed_bloc_expr expr ->
-            iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variable_used_ref) expr
-        | Parsed_bloc_void -> ()
-    in
-    get_variables_in_parsed_seq_code_bloc_rec local_variables_ref fun_def.body;
-    (* Remove local variables from variable found in function (because we need to get only global variables and local variables shadow global variables) *)
-    variable_used_ref := StringSet.diff !variable_used_ref !local_variables_ref
-
 (* Create and wrap an accumulator then return result directly *)
 let wrap_accumulator f expr =
     let variables_used_ref = ref StringSet.empty in
@@ -1206,10 +1160,6 @@ let get_variables_in_nonlinear_constraint =
 (* Gather all function names used in a non-linear constraint *)
 let get_functions_in_nonlinear_constraint =
     wrap_accumulator get_functions_in_nonlinear_constraint_with_accumulator
-
-(* Gather all variable names (global variables only) used in a parsed function definition *)
-let get_global_variables_in_parsed_fun_def =
-    wrap_accumulator get_global_variables_in_parsed_fun_def_with_accumulator
 
 (* Gather all variable names used in a parsed init state predicate *)
 let get_variables_in_init_state_predicate = function

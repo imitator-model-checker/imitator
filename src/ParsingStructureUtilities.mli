@@ -205,7 +205,6 @@ val get_functions_in_parsed_update_with_accumulator : StringSet.t ref -> update 
 val get_variables_in_parsed_normal_update_with_accumulator : StringSet.t ref -> normal_update -> unit
 val get_variables_in_parsed_simple_predicate_with_accumulator : StringSet.t ref -> parsed_simple_predicate -> unit
 val get_variables_in_parsed_state_predicate_with_accumulator : StringSet.t ref -> parsed_state_predicate -> unit
-val get_global_variables_in_parsed_fun_def_with_accumulator : StringSet.t ref -> parsed_fun_definition -> unit
 
 val get_variables_in_parsed_boolean_expression : parsed_boolean_expression -> StringSet.t
 val get_functions_in_parsed_boolean_expression : parsed_boolean_expression -> StringSet.t
@@ -222,8 +221,6 @@ val get_variables_in_nonlinear_convex_predicate : nonlinear_constraint list -> S
 val get_functions_in_nonlinear_convex_predicate : nonlinear_constraint list -> StringSet.t
 val get_variables_in_parsed_simple_predicate : parsed_simple_predicate -> StringSet.t
 val get_variables_in_parsed_state_predicate : parsed_state_predicate -> StringSet.t
-
-val get_global_variables_in_parsed_fun_def : parsed_fun_definition -> StringSet.t
 
 val variable_name_of_parsed_update_type_opt : parsed_update_type -> variable_name option
 val variable_name_of_parsed_update_type : parsed_update_type -> variable_name

@@ -656,7 +656,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
 
         Typed_assignment ((typed_update_type, typed_expr), typed_next_expr), next_expr_discrete_type, true
 
-    | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr, _) as outer_expr ->
+    | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) as outer_expr ->
         (* Add local variable for loop to hashtable *)
         let loop_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
 
@@ -665,7 +665,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         (* Resolve typed to expr *)
         let typed_to_expr, to_expr_type, is_to_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) to_expr in
         (* Resolve typed inner expr *)
-        let typed_inner_expr, inner_expr_discrete_type, inner_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc loop_local_variables variable_infos infer_type_opt inner_expr in
+        let typed_inner_bloc, inner_bloc_discrete_type, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc loop_local_variables variable_infos infer_type_opt inner_bloc in
         (* Resolve typed next expr *)
         let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
@@ -681,7 +681,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         (* Check from and to expr type are int *)
         (match from_expr_type, to_expr_type with
         | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_int ->
-            Typed_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_expr, typed_next_expr), next_expr_discrete_type, has_side_effects
+            Typed_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc, typed_next_expr), next_expr_discrete_type, has_side_effects
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -2498,13 +2498,13 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
             seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
         )
 
-    | Typed_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_expr, typed_next_expr) ->
+    | Typed_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc, typed_next_expr) ->
         Loop (
             variable_name,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_from_expr,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_to_expr,
             loop_dir_of_typed_loop_dir typed_loop_dir,
-            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_inner_expr,
+            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_inner_bloc,
             seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
         )
 
