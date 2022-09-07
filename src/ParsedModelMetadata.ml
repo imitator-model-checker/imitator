@@ -211,21 +211,12 @@ let declared_components_of_model parsed_model =
 
     (* Get all declared local variables in a given function definition *)
     let all_declared_local_variables_in_fun_def (fun_def : parsed_fun_definition) =
-
-        let rec all_local_variable_of_seq_code_bloc = function
-            | Parsed_local_decl (variable_name, _, _, seq_code_bloc, id) ->
-                Local_variable_ref (variable_name, fun_def.name, id) ::
-                all_local_variable_of_seq_code_bloc seq_code_bloc
-
-            | Parsed_loop (variable_name, _, _, _, inner_expr, next_expr, id) ->
-                Local_variable_ref (variable_name, fun_def.name, id)
-                :: (all_local_variable_of_seq_code_bloc inner_expr @ all_local_variable_of_seq_code_bloc next_expr)
-
-            | Parsed_assignment _
-            | Parsed_bloc_expr _
-            | Parsed_bloc_void -> []
-        in
-        all_local_variable_of_seq_code_bloc fun_def.body
+        ParsingStructureUtilities.fold_parsed_function_definition
+            (@) (* operator concat list *)
+            [] (* base *)
+            (function Leaf_decl_variable (variable_name, _, id) -> [Local_variable_ref (variable_name, fun_def.name, id)])
+            (function _ -> [])
+            fun_def
     in
 
     (* Get all declared parameters in a given function definition *)
@@ -236,6 +227,10 @@ let declared_components_of_model parsed_model =
     let all_declared_local_variables_in_model =
         List.fold_left (fun acc fun_def -> all_declared_local_variables_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions
     in
+
+    let ss = List.map (function Local_variable_ref (variable_name, _, _) -> variable_name) all_declared_local_variables_in_model in
+    let sss = OCamlUtilities.string_of_list_of_string_with_sep "," ss in
+    print_standard_message ("ParsedModelMetadata: " ^ sss);
 
     let all_declared_params_in_model =
         List.fold_left (fun acc fun_def -> all_declared_params_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions

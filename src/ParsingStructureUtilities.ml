@@ -914,6 +914,7 @@ let all_variables_defined_in_parsed_update variable_infos undefined_variable_cal
 
 (* Check that all variables in a parsed fun declaration are effectively be defined *)
 let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_callback (fun_def : parsed_fun_definition) =
+
     (* Add parameters as local variables *)
     let parameter_names = List.map first_of_tuple fun_def.parameters in
     let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
@@ -1112,8 +1113,8 @@ let get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref 
 
 (* TODO benjamin REFAC see if local variable is useless or not, replace this when general function in ParsingStructureUtilities *)
 (* Gather all variable names (global variables only) used in a parsed function definition in a given accumulator *)
-let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def : parsed_fun_definition) =
-
+let get_global_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def : parsed_fun_definition) =
+    
     (* Add parameters as local variables *)
     let parameter_names = List.map first_of_tuple fun_def.parameters in
     let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
@@ -1207,8 +1208,8 @@ let get_functions_in_nonlinear_constraint =
     wrap_accumulator get_functions_in_nonlinear_constraint_with_accumulator
 
 (* Gather all variable names (global variables only) used in a parsed function definition *)
-let get_variables_in_parsed_fun_def =
-    wrap_accumulator get_variables_in_parsed_fun_def_with_accumulator
+let get_global_variables_in_parsed_fun_def =
+    wrap_accumulator get_global_variables_in_parsed_fun_def_with_accumulator
 
 (* Gather all variable names used in a parsed init state predicate *)
 let get_variables_in_init_state_predicate = function
