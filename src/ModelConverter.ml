@@ -30,7 +30,8 @@ open ParsingStructure
 open VariableInfo
 open AbstractProperty
 open ParsingStructureUtilities
-open ParsedModelMetadata
+open ParsingStructureMeta
+open ParsingStructureGraph
 open DiscreteType
 open CustomModules
 open JsonFormatter
@@ -248,9 +249,9 @@ let check_normal_update variable_infos automaton_name normal_update =
     in
 
     (* Check that all variables in update are declared, and call print function if it's not the case *)
-    let all_variables_declared = ParsingStructureUtilities.all_variables_defined_in_parsed_normal_update variable_infos print_variable_in_update_not_declared_opt print_variable_in_update_not_declared_opt normal_update in
+    let all_variables_declared = ParsingStructureMeta.all_variables_defined_in_parsed_normal_update variable_infos print_variable_in_update_not_declared_opt normal_update in
     (* Get (maybe) an updated variable in normal update *)
-    let updated_variable_name_opt = (ParsingStructureUtilities.fold_parsed_normal_update (@) [] (function _ -> []) (function Leaf_update_updated_variable variable_name -> [variable_name]) normal_update |> List.filter (fun x -> x <> "") |> List.nth_opt) 0 in
+    let updated_variable_name_opt = (ParsingStructureUtilities.fold_parsed_normal_update (@) [] (function Leaf_update_variable variable_name -> [variable_name] | _ -> []) normal_update |> List.filter (fun x -> x <> "") |> List.nth_opt) 0 in
 
     let updated_variable_name = match updated_variable_name_opt with Some updated_variable_name -> updated_variable_name | None -> "_" in
 
@@ -273,7 +274,7 @@ let check_normal_update variable_infos automaton_name normal_update =
 
         let is_trying_to_assign_a_clock_or_param =
             if is_discrete then (
-                let is_only_discrete = ParsingStructureUtilities.only_discrete_in_parsed_boolean_expression variable_infos None update_expr in
+                let is_only_discrete = ParsingStructureMeta.only_discrete_in_parsed_boolean_expression variable_infos None update_expr in
                 if not is_only_discrete then (
                     print_error ("Trying to update variable `" ^ updated_variable_name ^ "` with clock(s) or parameter(s) in `" ^ ParsingStructureUtilities.string_of_parsed_normal_update variable_infos normal_update ^ "`.");
                     true
@@ -330,11 +331,11 @@ let check_update variable_infos automaton_name = function
         in
 
 	    (* Check that all variables in update condition are declared *)
-        let all_declared_in_condition = ParsingStructureUtilities.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_variable_in_update_condition_not_declared) bool_expr in
+        let all_declared_in_condition = ParsingStructureMeta.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_variable_in_update_condition_not_declared) bool_expr in
 
 	    (* Check that boolean condition expression doesn't contains any clock(s) or parameter(s) *)
 	    let is_condition_use_only_discrete =
-	        ParsingStructureUtilities.only_discrete_in_parsed_boolean_expression variable_infos (Some print_conditional_update_contain_clock_or_param_error) bool_expr
+	        ParsingStructureMeta.only_discrete_in_parsed_boolean_expression variable_infos (Some print_conditional_update_contain_clock_or_param_error) bool_expr
         in
 
 	    (* Check all normal updates are valid (make a map for avoid short-circuit eval with for_all) *)
@@ -515,7 +516,7 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 				match location.cost with
 				| Some cost ->
 				print_message Verbose_total ("          Checking cost");
-				if not (ParsingStructureUtilities.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message cost) then well_formed := false;
+				if not (ParsingStructureMeta.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message cost) then well_formed := false;
 				| None -> ()
 			end;
 
@@ -534,7 +535,7 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 			(*** TODO: preciser quel automate et quelle location en cas d'erreur ***)
 
 			print_message Verbose_total ("          Checking convex predicate");
-			if not (ParsingStructureUtilities.all_variables_defined_in_nonlinear_convex_predicate variable_infos (Some undeclared_variable_in_boolean_expression_message) location.invariant) then well_formed := false;
+			if not (ParsingStructureMeta.all_variables_defined_in_nonlinear_convex_predicate variable_infos (Some undeclared_variable_in_boolean_expression_message) location.invariant) then well_formed := false;
 
 
 			(* Check transitions *)
@@ -542,10 +543,10 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 			List.iter (fun (convex_predicate, update_section, sync, target_location_name) ->
 				(* Check the convex predicate *)
 				print_message Verbose_total ("            Checking convex predicate");
-				if not (ParsingStructureUtilities.all_variables_defined_in_nonlinear_convex_predicate variable_infos (Some undeclared_variable_in_boolean_expression_message) convex_predicate) then well_formed := false;
+				if not (ParsingStructureMeta.all_variables_defined_in_nonlinear_convex_predicate variable_infos (Some undeclared_variable_in_boolean_expression_message) convex_predicate) then well_formed := false;
 				(* Check the updates *)
 				print_message Verbose_total ("            Checking updates");
-				let updates = ParsingStructureUtilities.updates_of_update_section update_section in
+				let updates = ParsingStructureMeta.updates_of_update_section update_section in
 				List.iter (fun update -> if not (check_update variable_infos automaton_name update) then well_formed := false) updates;
 				(* Check the sync *)
 				print_message Verbose_total ("            Checking sync name ");
@@ -631,7 +632,7 @@ let check_init_definition parsed_model =
                 false
             )
             (* And that all variables in expr are defined *)
-            else if not (ParsingStructureUtilities.all_variables_defined_in_parsed_boolean_expression_without_callback variable_infos expr) then (
+            else if not (ParsingStructureMeta.all_variables_defined_in_parsed_boolean_expression_without_callback variable_infos expr) then (
                 print_error ("Expression \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr ^ "\" use undeclared variable(s)");
                 false
             )
@@ -658,7 +659,7 @@ let check_init_definition parsed_model =
         | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when is_variable_removed variable_infos variable_name ->
             print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
             (* Still check the second term *)
-            if not (ParsingStructureUtilities.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message linear_expression) then (
+            if not (ParsingStructureMeta.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message linear_expression) then (
                 print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s)");
                 false
             )
@@ -666,7 +667,7 @@ let check_init_definition parsed_model =
                 true
         (* General case: check *)
         | Parsed_linear_constraint _ as linear_constraint ->
-            if not (ParsingStructureUtilities.all_variables_defined_in_linear_constraint variable_infos undeclared_variable_in_linear_constraint_message linear_constraint) then (
+            if not (ParsingStructureMeta.all_variables_defined_in_linear_constraint variable_infos undeclared_variable_in_linear_constraint_message linear_constraint) then (
                 print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s)");
                 false
             )
@@ -852,7 +853,7 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
 	List.iter (fun lp ->
 
         (* Search variables used in linear predicate *)
-	    let variable_names = ParsingStructureUtilities.get_variables_in_init_state_predicate lp in
+	    let variable_names = ParsingStructureMeta.get_variables_in_init_state_predicate lp in
 
         (* Gathering all variables that are non rational *)
         let non_rational_variable_names = StringSet.filter (fun variable_name ->
@@ -1213,7 +1214,7 @@ let get_conditional_update_value = function
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filter_updates removed_variable_names updates =
   let not_removed_variable (parsed_update_type, _) =
-    let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_update_type_opt parsed_update_type in
+    let variable_name_opt = ParsingStructureMeta.variable_name_of_parsed_update_type_opt parsed_update_type in
     match variable_name_opt with
     | Some variable_name ->
         not (List.mem variable_name removed_variable_names)
@@ -1239,7 +1240,7 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
         let parsed_scalar_or_index_update_type, update_expr = clock_update in
 
         (* Check that clock update is a linear expression *)
-        let is_linear = ParsingStructureUtilities.is_linear_parsed_boolean_expression variable_infos update_expr in
+        let is_linear = ParsingStructureMeta.is_linear_parsed_boolean_expression variable_infos update_expr in
         if not is_linear then
             raise (InvalidExpression (
                 "Clock update `"
@@ -1247,7 +1248,7 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
                 ^ "` is not a linear expression. A linear expression is expected for clock update."
             ));
 
-        let variable_name = ParsingStructureUtilities.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+        let variable_name = ParsingStructureMeta.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
         let variable_index = index_of_variable_name variable_infos variable_name in
         let _, converted_update = DiscreteExpressionConverter.convert_continuous_update variable_infos parsed_scalar_or_index_update_type update_expr in
         variable_index, converted_update
@@ -1304,7 +1305,7 @@ let split_to_clock_discrete_updates variable_infos updates =
     let is_clock_update (parsed_update_type, _) =
 
         (* Get updated variable name *)
-        let variable_name_opt = ParsingStructureUtilities.variable_name_of_parsed_update_type_opt parsed_update_type in
+        let variable_name_opt = ParsingStructureMeta.variable_name_of_parsed_update_type_opt parsed_update_type in
 
         match variable_name_opt with
         | Some variable_name ->
@@ -1676,7 +1677,7 @@ let all_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_EF parsed_state_predicate
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate
-			-> ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
+			-> ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 			
 		
 		(*------------------------------------------------------------*)
@@ -1687,13 +1688,13 @@ let all_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
 		| Parsed_EFpmax (parsed_state_predicate , parameter_name)
 			(* First get the variables in the state predicate *)
-			-> ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
+			-> ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
 			(* Then add the parameter name *)
 			variables_used_ref := StringSet.add parameter_name !variables_used_ref
 		
 		(* Reachability with minimal-time *)
 		| Parsed_EFtmin parsed_state_predicate
-			-> ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
+			-> ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 
 		
 		(*------------------------------------------------------------*)
@@ -1702,11 +1703,11 @@ let all_variables_in_property_option (parsed_property_option : ParsingStructure.
 		
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate
-			-> ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
+			-> ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 
 		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 		| Parsed_Cycle_Through_generalized parsed_state_predicate_list
-			-> List.iter (ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref) parsed_state_predicate_list
+			-> List.iter (ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref) parsed_state_predicate_list
 
 		(** Infinite-run (cycle) with non-Zeno assumption *)
 		| Parsed_NZ_Cycle -> ()
@@ -1738,7 +1739,7 @@ let all_variables_in_property_option (parsed_property_option : ParsingStructure.
 		(* Non-complete, non-deterministic inverse method with convex result *)
 		| Parsed_PRP (parsed_state_predicate , parsed_pval) ->
 			(* First get the variables in the state predicate *)
-			ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
+			ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
 			(* Then add the pval *)
 			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_pval parsed_pval))
 		
@@ -1767,7 +1768,7 @@ let all_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, _)
 			->
 			(* First get the variables in the state predicate *)
-			ParsingStructureUtilities.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
+			ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
 			(* Then add the HyperRectangle *)
 			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle));
 
@@ -1786,7 +1787,7 @@ let all_variables_in_property_option (parsed_property_option : ParsingStructure.
 		(* a within d *)
 		| Parsed_pattern (Parsed_action_deadline (_ , duration)) ->
 (*			get_variables_in_linear_expression variables_used_ref duration*)
-            variables_used_ref := ParsingStructureUtilities.get_variables_in_linear_expression duration
+            variables_used_ref := ParsingStructureMeta.get_variables_in_linear_expression duration
 
 
 		(* if a2 then a1 happened within d before *)
@@ -1796,7 +1797,7 @@ let all_variables_in_property_option (parsed_property_option : ParsingStructure.
 		(* everytime a2 then a1 happened once within d before *)
 		| Parsed_pattern (Parsed_TB_Action_precedence_cyclicstrict ((*sync_name*)_, (*sync_name*)_, duration)) ->
 (*			get_variables_in_linear_expression variables_used_ref duration*)
-				variables_used_ref := ParsingStructureUtilities.get_variables_in_linear_expression duration
+				variables_used_ref := ParsingStructureMeta.get_variables_in_linear_expression duration
 
 		(* if a1 then eventually a2 within d *)
 		| Parsed_pattern (Parsed_TB_response_acyclic (_, _, parsed_duration))
@@ -1805,7 +1806,7 @@ let all_variables_in_property_option (parsed_property_option : ParsingStructure.
 		(* everytime a1 then eventually a2 within d once before next *)
 		| Parsed_pattern (Parsed_TB_response_cyclicstrict (_, _, parsed_duration)) ->
 (*		    get_variables_in_linear_expression variables_used_ref parsed_duration*)
-            variables_used_ref := ParsingStructureUtilities.get_variables_in_linear_expression parsed_duration;
+            variables_used_ref := ParsingStructureMeta.get_variables_in_linear_expression parsed_duration;
 
 		(* sequence a1, …, an *)
 		| Parsed_pattern (Parsed_Sequence_acyclic _)
@@ -2135,7 +2136,7 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 
 let check_parsed_state_predicate parsing_infos expr =
     let variable_infos = parsing_infos.variable_infos in
-    ParsingStructureUtilities.all_variable_in_parsed_state_predicate
+    ParsingStructureMeta.all_variable_in_parsed_state_predicate
         parsing_infos
         variable_infos
         (* Undefined variable name callback, triggered if an undefined variable is found *)
@@ -2440,8 +2441,8 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 			->
 			(* Check action name and deadline (perform all even if one fails) *)
 			let check1 = check_action_name index_of_actions a in
-			let check2 = ParsingStructureUtilities.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message d in
-			let check3 = (if ParsingStructureUtilities.no_variables_in_linear_expression variable_infos d
+			let check2 = ParsingStructureMeta.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message d in
+			let check3 = (if ParsingStructureMeta.no_variables_in_linear_expression variable_infos d
 						then true
 						else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
 			in
@@ -2467,8 +2468,8 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 			(* Check action names and deadline (perform 3 even if one fails) *)
 			let check1 = check_action_name index_of_actions a1 in
 			let check2 = check_action_name index_of_actions a2 in
-			let check3 = ParsingStructureUtilities.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message d in
-			let check4 = (if ParsingStructureUtilities.no_variables_in_linear_expression variable_infos d
+			let check3 = ParsingStructureMeta.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message d in
+			let check4 = (if ParsingStructureMeta.no_variables_in_linear_expression variable_infos d
 						then true
 						else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
 			in
@@ -2968,7 +2969,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* Create variable infos containing only initialized constants *)
         let current_variable_infos = { variable_infos with constants = initialized_constants } in
         (* Check all constants used are defined *)
-        let all_variable_defined = ParsingStructureUtilities.all_variables_defined_in_parsed_boolean_expression_without_callback current_variable_infos expr in
+        let all_variable_defined = ParsingStructureMeta.all_variables_defined_in_parsed_boolean_expression_without_callback current_variable_infos expr in
         if not all_variable_defined then (
             print_error (
                 "Expression \""
@@ -3100,17 +3101,17 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 
     (* Resolve dependency graph of the model *)
-    let dependency_graph = ParsedModelMetadata.dependency_graph ~no_var_autoremove:options#no_variable_autoremove parsed_model in
+    let dependency_graph = ParsingStructureGraph.dependency_graph ~no_var_autoremove:options#no_variable_autoremove parsed_model in
     (* Get dependency graph as dot format *)
-    let str_dependency_graph = lazy (ParsedModelMetadata.string_of_dependency_graph dependency_graph) in
+    let str_dependency_graph = lazy (ParsingStructureGraph.string_of_dependency_graph dependency_graph) in
     (* Print dependency graph *)
     ImitatorUtilities.print_message_lazy Verbose_high str_dependency_graph;
 
     (* Get unused components and print warnings *)
-    let unused_components = ParsedModelMetadata.unused_components_of_model dependency_graph in
+    let unused_components = ParsingStructureGraph.unused_components_of_model dependency_graph in
 
     (* Iter on unused components and print warnings *)
-    ParsedModelMetadata.ComponentSet.iter (function
+    ComponentSet.iter (function
         | Fun_ref function_name ->
             print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")
         | Local_variable_ref (variable_name, function_name, _) ->
@@ -3133,7 +3134,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	)else (
 
 		(* Gather all variables used *)
-		let all_variables_used_in_model = ParsedModelMetadata.used_variables_of_model dependency_graph in
+		let all_variables_used_in_model = ParsingStructureGraph.used_variables_of_model dependency_graph in
 		let all_variables_used_in_property = all_variables_in_property_option parsed_property_option in
 		let all_variable_used = StringSet.union all_variables_used_in_model all_variables_used_in_property in
 
@@ -3435,13 +3436,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Gather all functions metadata in a table *)
 
     (* Get user functions metadata from parsed functions *)
-    let used_function_names = ParsedModelMetadata.used_functions_of_model dependency_graph in
+    let used_function_names = ParsingStructureGraph.used_functions_of_model dependency_graph in
     (* Get only used user functions definition *)
     let used_function_definitions = List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions in
 
     (* Check for function cycles *)
 
-    let cycle_infos = model_cycle_infos dependency_graph in
+    let cycle_infos = ParsingStructureGraph.model_cycle_infos dependency_graph in
     let model_has_cycle = List.exists first_of_tuple cycle_infos in
     let cycle_paths = List.filter_map (fun (has_cycle, path) -> if has_cycle then Some path else None) cycle_infos in
 

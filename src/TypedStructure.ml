@@ -260,14 +260,13 @@ let rec string_of_typed_seq_code_bloc variable_infos = function
         ^ "\n"
         ^ string_of_typed_seq_code_bloc variable_infos next_expr
 
-    (* TODO benjamin REFACTOR rename inner_expr to inner_bloc *)
-    | Typed_loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr) ->
+    | Typed_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
         "for " ^ variable_name ^ " = "
         ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) from_expr
         ^ (match loop_dir with Typed_loop_up -> " to " | Typed_loop_down -> " downto ")
         ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) to_expr
         ^ " do\n"
-        ^ string_of_typed_seq_code_bloc variable_infos inner_expr
+        ^ string_of_typed_seq_code_bloc variable_infos inner_bloc
         ^ "\ndone\n"
         ^ string_of_typed_seq_code_bloc variable_infos next_expr
 

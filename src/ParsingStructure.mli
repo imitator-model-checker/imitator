@@ -20,7 +20,7 @@ type variable_name = string
 type automaton_name	= string
 type location_name	= string
 type sync_name		= string
-
+type variable_id = int
 
 (****************************************************************)
 (** Operators *)

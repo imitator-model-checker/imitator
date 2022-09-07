@@ -4,15 +4,16 @@
  *
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
- * Module description: Functions that extract information on parsed model (dependency graph of variables / functions, etc.)
+ * Module description: Dependency graph of the parsed model (variables / functions, etc.)
  *
  * File contributors : Benjamin L.
- * Created           : 2022/05/18
+ * Created           : 2022/09/07
  *
  ************************************************************)
 
 open ParsingStructure
 open ParsingStructureUtilities
+open ParsingStructureMeta
 open CustomModules
 
 type automaton_name = string

@@ -18,34 +18,25 @@ open DiscreteType
 open OCamlUtilities
 open CustomModules
 
+type variable_callback = (variable_name -> unit) option
+
 (* Leaves of parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of variable_name
     | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
+    | Leaf_update_variable of variable_name
 
-(* Leaves of parsed update *)
-type parsed_update_leaf =
-    | Leaf_update_updated_variable of variable_name
-
-(* Leaves of seq code bloc *)
+(* Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
-    | Leaf_variable_decl of variable_name * var_type_discrete
+    | Leaf_decl_variable of variable_name * var_type_discrete * variable_id
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =
-    | Leaf_linear_constant of NumConst.t
-    | Leaf_linear_variable of NumConst.t * variable_name
-
-(* Leaf of linear constraint *)
-type linear_constraint_leaf =
     | Leaf_true_linear_constraint
     | Leaf_false_linear_constraint
-
-(* Leaf of non-linear constraint *)
-type nonlinear_constraint_leaf =
-    | Leaf_true_nonlinear_constraint
-    | Leaf_false_nonlinear_constraint
+    | Leaf_linear_constant of NumConst.t
+    | Leaf_linear_variable of NumConst.t * variable_name
 
 (* Leaf of init state predicate *)
 type init_state_predicate_leaf =
@@ -123,72 +114,62 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
 	| Parsed_DF_unary_min factor ->
 	    fold_parsed_discrete_factor operator base leaf_fun factor
 
-and fold_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun = function
-    | Parsed_scalar_update variable_name -> leaf_update_fun (Leaf_update_updated_variable variable_name)
+and fold_parsed_scalar_or_index_update_type operator base leaf_fun = function
+    | Parsed_scalar_update variable_name -> leaf_fun (Leaf_update_variable variable_name)
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) ->
         operator
-            (fold_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun parsed_scalar_or_index_update_type)
+            (fold_parsed_scalar_or_index_update_type operator base leaf_fun parsed_scalar_or_index_update_type)
             (fold_parsed_discrete_arithmetic_expression operator base leaf_fun index_expr)
 
-and fold_parsed_update_type operator base leaf_fun leaf_update_fun = function
+and fold_parsed_update_type operator base leaf_fun = function
     | Parsed_variable_update parsed_scalar_or_index_update_type ->
-        fold_parsed_scalar_or_index_update_type operator base leaf_fun leaf_update_fun parsed_scalar_or_index_update_type
+        fold_parsed_scalar_or_index_update_type operator base leaf_fun parsed_scalar_or_index_update_type
     | Parsed_void_update -> base
 
-and fold_parsed_seq_code_bloc_with_local_variables operator base f leaf_fun leaf_update_fun local_variables = function
-    | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, id) as outer_expr ->
-        (* Add new local variable to map *)
-        let new_variable = variable_name, discrete_type, id in
-        let new_local_variables = VariableMap.add variable_name new_variable local_variables in
-
-        (f local_variables (Some new_variable) outer_expr)
+and fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun = function
+    | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, id) ->
+        seq_code_bloc_leaf_fun (Leaf_decl_variable (variable_name, discrete_type, id))
         |> operator (fold_parsed_boolean_expression operator base leaf_fun init_expr)
-        |> operator (fold_parsed_seq_code_bloc_with_local_variables operator base f leaf_fun leaf_update_fun new_local_variables next_expr)
+        |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun next_expr)
 
-    | Parsed_loop (variable_name, from_expr, to_expr, _, inner_expr, next_expr, id) as outer_expr ->
-        (* Add loop local variable to map *)
-        let new_variable = variable_name, (Var_type_discrete_number Var_type_discrete_int), id in
-        let loop_local_variables = VariableMap.add variable_name new_variable local_variables in
-
-        (f local_variables (Some new_variable) outer_expr)
+    | Parsed_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
+        seq_code_bloc_leaf_fun (Leaf_decl_variable (variable_name, (Var_type_discrete_number Var_type_discrete_int), id))
         |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun from_expr)
         |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun to_expr)
-        |> operator (fold_parsed_seq_code_bloc_with_local_variables operator base f leaf_fun leaf_update_fun loop_local_variables inner_expr)
-        |> operator (fold_parsed_seq_code_bloc_with_local_variables operator base f leaf_fun leaf_update_fun local_variables next_expr)
+        |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun inner_bloc)
+        |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun next_expr)
 
-    | Parsed_assignment (normal_update, next_expr) as outer_expr ->
-        (f local_variables None outer_expr)
-        |> operator (fold_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update)
-        |> operator (fold_parsed_seq_code_bloc_with_local_variables operator base f leaf_fun leaf_update_fun local_variables next_expr)
-
-    | Parsed_bloc_expr expr as outer_expr ->
+    | Parsed_assignment (normal_update, next_expr) ->
         operator
-            (f local_variables None outer_expr)
-            (fold_parsed_boolean_expression operator base leaf_fun expr)
+            (fold_parsed_normal_update operator base leaf_fun normal_update)
+            (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun next_expr)
 
-    | Parsed_bloc_void as outer_expr ->
-        operator base (f local_variables None outer_expr)
+    | Parsed_bloc_expr expr ->
+        (fold_parsed_boolean_expression operator base leaf_fun expr)
 
-and fold_parsed_normal_update operator base leaf_fun leaf_update_fun (update_type, expr) =
+    | Parsed_bloc_void ->
+        base
+
+and fold_parsed_normal_update operator base leaf_fun (update_type, expr) =
     operator
-        (fold_parsed_update_type operator base leaf_fun leaf_update_fun update_type)
+        (fold_parsed_update_type operator base leaf_fun update_type)
         (fold_parsed_boolean_expression operator base leaf_fun expr)
 
 (** Fold a parsed update expression using operator applying custom function on leaves **)
-and fold_parsed_update operator base leaf_fun leaf_update_fun = function
+and fold_parsed_update operator base leaf_fun = function
 	| Normal normal_update ->
-	    fold_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update
+	    fold_parsed_normal_update operator base leaf_fun normal_update
 	| Condition (bool_expr, update_list_if, update_list_else) ->
         let all_updates = update_list_if@update_list_else in
         let fold_updates = List.fold_left (fun acc normal_update ->
-            operator acc (fold_parsed_normal_update operator base leaf_fun leaf_update_fun normal_update)
+            operator acc (fold_parsed_normal_update operator base leaf_fun normal_update)
         ) base all_updates
         in
         operator fold_updates (fold_parsed_boolean_expression operator base leaf_fun bool_expr)
 
-let rec fold_parsed_linear_constraint operator leaf_fun linear_constraint_leaf_fun = function
-    | Parsed_true_constraint -> linear_constraint_leaf_fun Leaf_true_linear_constraint
-    | Parsed_false_constraint -> linear_constraint_leaf_fun Leaf_false_linear_constraint
+let rec fold_parsed_linear_constraint operator leaf_fun = function
+    | Parsed_true_constraint -> leaf_fun Leaf_true_linear_constraint
+    | Parsed_false_constraint -> leaf_fun Leaf_false_linear_constraint
     | Parsed_linear_constraint (l_expr, _, r_expr) ->
         operator
             (fold_parsed_linear_expression operator leaf_fun l_expr)
@@ -213,9 +194,9 @@ and fold_parsed_linear_term operator leaf_fun = function
 let fold_parsed_nonlinear_constraint = fold_parsed_discrete_boolean_expression
 
 
-let fold_init_state_predicate operator base loc_assignment_leaf_fun linear_expression_leaf_fun linear_constraint_leaf_fun leaf_fun = function
+let fold_init_state_predicate operator base loc_assignment_leaf_fun linear_expression_leaf_fun leaf_fun = function
 	| Parsed_loc_assignment (automaton_name, loc_name) -> loc_assignment_leaf_fun (automaton_name, loc_name)
-	| Parsed_linear_predicate linear_constraint -> fold_parsed_linear_constraint operator linear_expression_leaf_fun linear_constraint_leaf_fun linear_constraint
+	| Parsed_linear_predicate linear_constraint -> fold_parsed_linear_constraint operator linear_expression_leaf_fun linear_constraint
 	| Parsed_discrete_predicate (_, expr) -> fold_parsed_boolean_expression operator base leaf_fun expr
 
 let fold_parsed_loc_predicate operator base predicate_leaf_fun leaf_fun = function
@@ -258,9 +239,10 @@ and fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun = func
 	    fold_parsed_state_predicate_term operator base predicate_leaf_fun leaf_fun predicate_term
 
 (**)
-let fold_parsed_function_definition operator base f leaf_fun leaf_update_fun (fun_def : parsed_fun_definition) =
-    let local_variables = List.fold_left (fun acc (param_name, param_type) -> VariableMap.add param_name (param_name, param_type, -1) acc) VariableMap.empty fun_def.parameters in
-    fold_parsed_seq_code_bloc_with_local_variables operator base f leaf_fun leaf_update_fun local_variables fun_def.body
+let fold_parsed_function_definition operator base seq_code_bloc_leaf_fun leaf_fun (fun_def : parsed_fun_definition) =
+    (* Apply seq_code_leaf_fun function on each parameters of the function and fold with operator *)
+    List.fold_left (fun acc (param_name, param_type) -> operator acc (seq_code_bloc_leaf_fun (Leaf_decl_variable (param_name, param_type, -1)))) base fun_def.parameters
+    |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun fun_def.body)
 
 let flat_map_parsed_boolean_expression = fold_parsed_boolean_expression (@) []
 (** Check if all leaf of a parsing structure satisfy the predicate **)
@@ -297,7 +279,7 @@ let for_all_in_parsed_state_predicate_term = apply_evaluate_and_with_base fold_p
 let for_all_in_parsed_state_predicate = apply_evaluate_and_with_base fold_parsed_state_predicate
 
 (** Check if all leaf of a parsed sequential code bloc satisfy the predicate **)
-let for_all_in_parsed_seq_code_bloc_with_local_variables = apply_evaluate_and_with_base fold_parsed_seq_code_bloc_with_local_variables
+let for_all_in_parsed_seq_code_bloc_with_local_variables = apply_evaluate_and_with_base fold_parsed_seq_code_bloc
 (** Check if all leaf of a parsed function definition satisfy the predicate **)
 let for_all_in_parsed_function_definition = apply_evaluate_and_with_base fold_parsed_function_definition
 
@@ -334,7 +316,7 @@ let exists_in_parsed_state_predicate_term = apply_evaluate_or_with_base fold_par
 let exists_in_parsed_state_predicate = apply_evaluate_or_with_base fold_parsed_state_predicate
 
 (** Check if any leaf of a parsed sequential code bloc satisfy the predicate **)
-let exists_in_parsed_seq_code_bloc_with_local_variables = apply_evaluate_or_with_base fold_parsed_seq_code_bloc_with_local_variables
+let exists_in_parsed_seq_code_bloc_with_local_variables = apply_evaluate_or_with_base fold_parsed_seq_code_bloc
 (** Check if any leaf of a parsed function definition satisfy the predicate **)
 let exists_in_parsed_function_definition = apply_evaluate_or_with_base fold_parsed_function_definition
 
@@ -372,7 +354,7 @@ let iterate_in_parsed_state_predicate_term = apply_evaluate_unit_with_base fold_
 let iterate_in_parsed_state_predicate = apply_evaluate_unit_with_base fold_parsed_state_predicate
 
 (** Iterate over a parsed sequential code bloc definition **)
-let iterate_in_parsed_seq_code_bloc_with_local_variables = apply_evaluate_unit_with_base fold_parsed_seq_code_bloc_with_local_variables
+let iterate_in_parsed_seq_code_bloc_with_local_variables = apply_evaluate_unit_with_base fold_parsed_seq_code_bloc
 (** Iterate over a parsed function definition **)
 let iterate_in_parsed_function_definition = apply_evaluate_unit_with_base fold_parsed_function_definition
 
@@ -525,7 +507,7 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             string_of_parsed_normal_update variable_infos normal_update
             ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
-        | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_expr, next_expr, _) ->
+        | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) ->
             "for "
             ^ variable_name
             ^ " = "
@@ -533,7 +515,7 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             ^ (match loop_dir with Parsed_loop_up -> " to " | Parsed_loop_down -> " downto ")
             ^ string_of_parsed_arithmetic_expression variable_infos to_expr
             ^ " do\n"
-            ^ string_of_parsed_seq_code_bloc variable_infos inner_expr
+            ^ string_of_parsed_seq_code_bloc variable_infos inner_bloc
             ^ "\ndone\n"
             ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
@@ -673,704 +655,3 @@ let json_of_function_metadata (fm : function_metadata) =
         "name", JsonFormatter.Json_string fm.name;
         "side-effects", JsonFormatter.Json_bool fm.side_effect
     ]
-
-(** Utils **)
-
-(* Try to get value of a discrete boolean expression, if directly a constant equals to false or true *)
-(* If the expression is more complex, return None *)
-let discrete_boolean_expression_constant_value_opt = function
-    | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant (Bool_value v)))) -> Some v
-    | _ -> None
-
-(* Check if leaf is a constant *)
-let is_constant variable_infos = function
-    | Leaf_variable variable_name -> is_constant_is_defined variable_infos variable_name
-    | Leaf_constant _ -> true
-    | Leaf_fun _ -> false
-
-(* Check if linear leaf is a constant *)
-let is_linear_constant variable_infos = function
-    | Leaf_linear_variable (_, variable_name) -> is_constant_is_defined variable_infos variable_name
-    | Leaf_linear_constant _ -> true
-
-(* Check if leaf is a variable that is defined *)
-(* A given callback is executed if it's not a defined variable *)
-let is_variable_defined_with_callback variable_infos local_variables_opt callback_opt = function
-    | Leaf_variable variable_name ->
-
-        let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
-
-        let is_defined_local =
-            match local_variables_opt with
-            | Some local_variables -> StringSet.mem variable_name local_variables
-            | None -> false
-        in
-
-        let is_defined = is_defined_global || is_defined_local in
-
-        if not is_defined then (
-            match callback_opt with
-            | Some callback -> callback variable_name
-            | None -> ()
-        );
-
-        is_defined
-    | Leaf_fun _ -> true
-    | Leaf_constant _ -> true
-
-(* Check if leaf for update is a variable that is defined *)
-(* A given callback is executed if it's not a defined variable *)
-let is_variable_defined_in_update_with_callback variable_infos local_variables_opt callback = function
-    | Leaf_update_updated_variable variable_name ->
-
-        let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
-
-        let is_defined_local =
-            match local_variables_opt with
-            | Some local_variables -> StringSet.mem variable_name local_variables
-            | None -> false
-        in
-
-        let is_defined = is_defined_global || is_defined_local in
-
-        if not is_defined then (
-            match callback with
-            | Some func -> func variable_name
-            | None -> ()
-        );
-
-        is_defined
-
-let is_variable_defined variable_infos local_variables_opt = is_variable_defined_with_callback variable_infos local_variables_opt None
-
-(* Check if linear expression leaf is a variable that is defined *)
-let is_variable_defined_in_linear_expression variable_infos callback_fail = function
-    | Leaf_linear_constant _ -> true
-    | Leaf_linear_variable (_, variable_name) ->
-        if not (List.mem variable_name variable_infos.variable_names) && not (is_constant_is_defined variable_infos variable_name) then(
-            callback_fail variable_name; false
-        )
-        else
-            true
-
-(* Check if a state predicate leaf has it's automaton / location defined *)
-let is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_info undefined_automaton_callback_opt undefined_loc_callback_opt = function
-    | Leaf_predicate_false
-    | Leaf_predicate_true
-    | Leaf_predicate_accepting -> true
-    | Leaf_predicate_EQ (automaton_name, location_name)
-    | Leaf_predicate_NEQ (automaton_name, location_name) ->
-        (* Find the automaton *)
-        if not (Hashtbl.mem parsing_info.index_of_automata automaton_name) then (
-            (match undefined_automaton_callback_opt with
-            | Some callback -> callback automaton_name
-            | None -> ()
-            );
-            false
-        ) else (
-            let automaton_index : Automaton.automaton_index = Hashtbl.find parsing_info.index_of_automata automaton_name in
-            (* Find the location *)
-            if not (Hashtbl.mem parsing_info.index_of_locations.(automaton_index) location_name) then (
-                (match undefined_loc_callback_opt with
-                | Some callback -> callback automaton_name location_name
-                | None -> ()
-                );
-                false
-            ) else (
-                (* Both checks passed *)
-                true
-            )
-        )
-
-(* Check if leaf is only a discrete variable *)
-let is_only_discrete variable_infos clock_or_param_found_callback_opt = function
-    | Leaf_variable variable_name ->
-        let var_type = var_type_of_variable_or_constant variable_infos variable_name in
-        (match var_type with
-        | Var_type_clock
-        | Var_type_parameter as var_type ->
-            (match clock_or_param_found_callback_opt with
-            | Some clock_or_param_found_callback -> clock_or_param_found_callback var_type variable_name
-            | None -> ()
-            ); false
-        | Var_type_discrete _ -> true
-        )
-    (* Constants can only be discrete *)
-    | Leaf_constant _
-    (* As long as function can only return discrete and can't manipulate clocks and parameters *)
-    | Leaf_fun _ -> true
-
-(* Check if leaf isn't a variable *)
-let no_variables variable_infos = function
-    | Leaf_linear_constant _ -> true
-    | Leaf_linear_variable (_, variable_name) ->
-        (* Constants are allowed *)
-        (is_constant_is_defined variable_infos variable_name)
-        (* Or parameter *)
-        ||
-        let variable_index = index_of_variable_name variable_infos variable_name in
-        variable_infos.type_of_variables variable_index = Var_type_parameter
-
-(* Check if a parsed boolean expression is constant *)
-let is_parsed_boolean_expression_constant variable_infos =
-    for_all_in_parsed_boolean_expression (is_constant variable_infos)
-
-(* Check if a parsed arithmetic expression is constant *)
-let is_parsed_arithmetic_expression_constant variable_infos =
-    for_all_in_parsed_discrete_arithmetic_expression (is_constant variable_infos)
-
-(* Check if a parsed term is constant *)
-let is_parsed_term_constant variable_infos = for_all_in_parsed_discrete_term (is_constant variable_infos)
-(* Check if a parsed term is constant *)
-let is_parsed_factor_constant variable_infos = for_all_in_parsed_discrete_factor (is_constant variable_infos)
-
-(* Check if a parsed boolean expression is linear *)
-let rec is_linear_parsed_boolean_expression variable_infos = function
-    | Parsed_conj_dis _ -> false
-    | Parsed_Discrete_boolean_expression expr ->
-        is_linear_parsed_discrete_boolean_expression variable_infos expr
-
-(* Check if a parsed discrete boolean expression is linear *)
-and is_linear_parsed_discrete_boolean_expression variable_infos = function
-    | Parsed_arithmetic_expression expr ->
-        is_linear_parsed_arithmetic_expression variable_infos expr
-    | Parsed_boolean_expression expr ->
-        is_linear_parsed_boolean_expression variable_infos expr
-    | Parsed_comparison _
-    | Parsed_comparison_in _
-    | Parsed_Not _ -> false
-
-(* Check if a parsed arithmetic expression is linear *)
-and is_linear_parsed_arithmetic_expression variable_infos = function
-    | Parsed_sum_diff (expr, term, _) ->
-        is_linear_parsed_arithmetic_expression variable_infos expr &&
-        is_linear_parsed_term variable_infos term
-    | Parsed_DAE_term term ->
-        is_linear_parsed_term variable_infos term
-
-(* Check if a parsed term is linear *)
-and is_linear_parsed_term variable_infos = function
-    | Parsed_product_quotient (term, factor, parsed_product_quotient) ->
-
-        (* Check both term and factor are linear *)
-        let is_linear_term = is_linear_parsed_term variable_infos term in
-        let is_linear_factor = is_linear_parsed_factor variable_infos factor in
-        let is_linear = is_linear_term && is_linear_factor in
-
-        (* Check if term, factor are constant *)
-        let is_term_constant = is_parsed_term_constant variable_infos term in
-        let is_factor_constant = is_parsed_factor_constant variable_infos factor in
-
-        let is_linear_product_quotient =
-            match parsed_product_quotient with
-            (* k*k, v*k or k*v are linear, but not v*v (with k a constant and v a variable) *)
-            | Parsed_mul -> is_term_constant || is_factor_constant
-            (* v/k, k/k is linear *)
-            | Parsed_div -> is_factor_constant
-        in
-        is_linear && is_linear_product_quotient
-
-    | Parsed_DT_factor factor ->
-        is_linear_parsed_factor variable_infos factor
-
-(* Check if a parsed factor is linear *)
-and is_linear_parsed_factor variable_infos = function
-    (* only rational variable *)
-    | Parsed_DF_variable variable_name ->
-        let variable_index = index_of_variable_name variable_infos variable_name in
-        let discrete_type = variable_infos.type_of_variables variable_index in
-        (match discrete_type with
-        | Var_type_clock
-        | Var_type_parameter
-        | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rat)
-        | Var_type_discrete (Var_type_discrete_number Var_type_discrete_weak_number) -> true
-        | Var_type_discrete _ -> false
-        )
-    (* only rational constant *)
-    | Parsed_DF_constant value ->
-        (match value with
-        | Rational_value _
-        | Weak_number_value _ -> true
-        | _ -> false
-        )
-    | Parsed_DF_expression expr ->
-        is_linear_parsed_arithmetic_expression variable_infos expr
-    | Parsed_DF_unary_min factor ->
-        is_linear_parsed_factor variable_infos factor
-    | Parsed_sequence _
-    | Parsed_DF_access _
-    | Parsed_function_call _ -> false
-
-let all_variables_defined_in_parsed_boolean_expression_without_callback variable_infos expr =
-    for_all_in_parsed_boolean_expression (is_variable_defined variable_infos None) expr
-
-(* Check that all variables in a parsed boolean expression are effectively be defined *)
-let all_variables_defined_in_parsed_boolean_expression variable_infos callback expr =
-    for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos None callback) expr
-
-(* Check that all variables in a parsed discrete boolean expression are effectively be defined *)
-let all_variables_defined_in_parsed_discrete_boolean_expression variable_infos callback expr =
-    for_all_in_parsed_discrete_boolean_expression (is_variable_defined_with_callback variable_infos None callback) expr
-
-(* Check that all variables in a parsed discrete arithmetic expression are effectively be defined *)
-let all_variables_defined_in_parsed_discrete_arithmetic_expression variable_infos callback expr =
-    for_all_in_parsed_discrete_arithmetic_expression (is_variable_defined_with_callback variable_infos None callback) expr
-
-(* Check that all variables in a parsed normal update are effectively be defined *)
-let all_variables_defined_in_parsed_normal_update variable_infos undefined_variable_callback undefined_updated_variable_callback expr =
-    for_all_in_parsed_normal_update (is_variable_defined_with_callback variable_infos None undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos None undefined_updated_variable_callback) expr
-
-(* Check that all variables in a parsed update are effectively be defined *)
-let all_variables_defined_in_parsed_update variable_infos undefined_variable_callback undefined_updated_variable_callback expr =
-    for_all_in_parsed_update (is_variable_defined_with_callback variable_infos None undefined_variable_callback) (is_variable_defined_in_update_with_callback variable_infos None undefined_updated_variable_callback) expr
-
-(* Check that all variables in a parsed fun declaration are effectively be defined *)
-let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_callback undefined_updated_variable_callback (fun_def : parsed_fun_definition) =
-
-    (* Add parameters as local variables *)
-    let parameter_names = List.map first_of_tuple fun_def.parameters in
-    let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
-
-    (* Overwrite function `all_variables_defined_in_parsed_boolean_expression` adding a parameter for taking into account local variables set *)
-    let all_variables_defined_in_parsed_boolean_expression local_variables (* expr *) =
-        for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback) (* expr *)
-    in
-
-    (* Overwrite function `all_variables_defined_in_parsed_discrete_arithmetic_expression` adding a parameter for taking into account local variables set *)
-    let all_variables_defined_in_parsed_discrete_arithmetic_expression local_variables (* expr *) =
-        for_all_in_parsed_discrete_arithmetic_expression (is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback) (* expr *)
-    in
-
-    (* Overwrite function `all_variables_defined_in_parsed_normal_update` adding a parameter for taking into account local variables set *)
-    let all_variables_defined_in_parsed_normal_update local_variables (* expr *) =
-        let leaf_fun = is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback in
-        let leaf_update = is_variable_defined_in_update_with_callback variable_infos (Some local_variables) undefined_updated_variable_callback in
-        for_all_in_parsed_normal_update leaf_fun leaf_update (* expr *)
-    in
-
-    (* TODO benjamin REFACTOR replace by a general function in ParsingStructureUtilities *)
-    (* Check if all variables defined in user function body using local variables set *)
-    let rec all_variables_defined_in_parsed_seq_code_bloc_rec local_variables = function
-        | Parsed_local_decl (variable_name, _, init_expr, next_expr, _) ->
-            let all_variables_defined_in_init_expr = all_variables_defined_in_parsed_boolean_expression local_variables init_expr in
-            (* Add the new declared local variable to set *)
-            let local_variables = StringSet.add variable_name local_variables in
-            all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr && all_variables_defined_in_init_expr
-
-        | Parsed_assignment (normal_update, next_expr) ->
-            (* Check if variables defined in normal update *)
-            let all_variables_defined_in_normal_update = all_variables_defined_in_parsed_normal_update local_variables normal_update in
-            (* Check if variables defined in next expressions *)
-            let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr in
-            (* Is all defined ? *)
-            all_variables_defined_in_normal_update && all_variables_defined_in_next_expr
-
-        | Parsed_loop (variable_name, from_expr, to_expr, _, inner_expr, next_expr, _) ->
-            (* Check if variables defined in from expr *)
-            let all_variables_defined_in_from_expr = all_variables_defined_in_parsed_discrete_arithmetic_expression local_variables from_expr in
-            (* Check if variables defined in to expr *)
-            let all_variables_defined_in_to_expr = all_variables_defined_in_parsed_discrete_arithmetic_expression local_variables to_expr in
-            (* Add the new declared local variable to set *)
-            let local_variables_of_loop = StringSet.add variable_name local_variables in
-            (* Check if variables defined in inner expressions *)
-            let all_variables_defined_in_inner_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables_of_loop inner_expr in
-            (* Check if variables defined in next expressions *)
-            let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr in
-            (* Is all defined ? *)
-            all_variables_defined_in_inner_expr && all_variables_defined_in_from_expr && all_variables_defined_in_to_expr && all_variables_defined_in_next_expr
-
-        | Parsed_bloc_expr expr ->
-            all_variables_defined_in_parsed_boolean_expression local_variables expr
-        | Parsed_bloc_void -> true
-    in
-    all_variables_defined_in_parsed_seq_code_bloc_rec local_variables fun_def.body
-
-(* Check that all variables in a linear expression are effectively be defined *)
-let all_variables_defined_in_linear_expression variable_infos callback_fail expr =
-    for_all_in_parsed_linear_expression (is_variable_defined_in_linear_expression variable_infos callback_fail) expr
-
-(* Check that all variables in a linear constraint are effectively be defined *)
-let all_variables_defined_in_linear_constraint variable_infos callback_fail expr =
-    for_all_in_parsed_linear_constraint
-        (is_variable_defined_in_linear_expression variable_infos callback_fail)
-        (function | Leaf_false_linear_constraint | Leaf_true_linear_constraint -> true) expr
-
-(* Check that all variables in a non-linear constraint are effectively be defined *)
-let all_variables_defined_in_nonlinear_constraint variable_infos callback expr =
-    for_all_in_parsed_nonlinear_constraint
-        (is_variable_defined_with_callback variable_infos None callback)
-        expr
-
-(* Check that all variables in a non-linear convex predicate (non-linear constraint list) are effectively be defined *)
-let all_variables_defined_in_nonlinear_convex_predicate variable_infos callback non_linear_convex_predicate =
-  List.fold_left
-    (fun all_defined nonlinear_constraint ->
-       OCamlUtilities.evaluate_and all_defined (all_variables_defined_in_nonlinear_constraint variable_infos callback nonlinear_constraint)
-    )
-    true
-    non_linear_convex_predicate
-
-(* Check that all variables in a state predicate are effectively be defined *)
-let all_variable_in_parsed_state_predicate parsing_infos variable_infos undefined_variable_callback_opt undefined_automaton_callback_opt undefined_loc_callback_opt expr =
-    for_all_in_parsed_state_predicate
-        (is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_infos undefined_automaton_callback_opt undefined_loc_callback_opt)
-        (is_variable_defined_with_callback variable_infos None undefined_variable_callback_opt)
-        expr
-
-(* Check that there is only discrete variables in a parsed boolean expression *)
-let only_discrete_in_parsed_boolean_expression variable_infos clock_or_param_found_callback_opt expr =
-    for_all_in_parsed_boolean_expression (is_only_discrete variable_infos clock_or_param_found_callback_opt) expr
-
-(* Check that there is only discrete variables in a parsed discrete boolean expression *)
-let only_discrete_in_nonlinear_expression variable_infos expr =
-    for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos None) expr
-
-(* Check if there is no variables in a linear expression *)
-let no_variables_in_linear_expression variable_infos expr =
-    for_all_in_parsed_linear_expression (no_variables variable_infos) expr
-
-(* Check if a linear expression is constant *)
-let is_parsed_linear_expression_constant variable_infos expr =
-    for_all_in_parsed_linear_expression (is_linear_constant variable_infos) expr
-
-(* Gather all variable names used in a linear_expression *)
-let add_variable_of_linear_expression variables_used_ref = function
-    | Leaf_linear_constant _ -> ()
-    | Leaf_linear_variable (_, variable_name) ->
-        (* Add the variable name to the set and update the reference *)
-        variables_used_ref := StringSet.add variable_name !variables_used_ref
-
-(* Gather all variable names used in a discrete boolean expression *)
-let add_variable_of_discrete_boolean_expression variables_used_ref = function
-    | Leaf_constant _
-    | Leaf_fun _ -> ()
-    | Leaf_variable variable_name ->
-        (* Add the variable name to the set and update the reference *)
-        variables_used_ref := StringSet.add variable_name !variables_used_ref
-
-(* Gather all function names used in a discrete boolean expression *)
-let add_function_of_discrete_boolean_expression function_used_ref = function
-    | Leaf_constant _
-    | Leaf_variable _ -> ()
-    | Leaf_fun function_name ->
-        (* Add the variable name to the set and update the reference *)
-        function_used_ref := StringSet.add function_name !function_used_ref
-
-let get_functions_in_parsed_boolean_expression_with_accumulator function_used_ref =
-    iterate_parsed_boolean_expression (add_function_of_discrete_boolean_expression function_used_ref)
-
-(* Gather all variable names used in a parsed boolean expression in a given accumulator *)
-let get_variables_in_parsed_boolean_expression_with_accumulator variables_used_ref =
-    iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
-
-(* Gather all variable names used in a parsed discrete boolean expression in a given accumulator *)
-let get_variables_in_parsed_discrete_boolean_expression_with_accumulator variables_used_ref =
-    iterate_parsed_discrete_boolean_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
-
-(* Gather all function names used in a parsed discrete boolean expression in a given accumulator *)
-let get_functions_in_parsed_discrete_boolean_expression_with_accumulator variables_used_ref =
-    iterate_parsed_discrete_boolean_expression (add_function_of_discrete_boolean_expression variables_used_ref)
-
-(* Gather all variable names used in a parsed discrete arithmetic expression in a given accumulator *)
-let get_variables_in_parsed_discrete_arithmetic_expression_with_accumulator variables_used_ref =
-    iterate_parsed_discrete_arithmetic_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
-
-(* Gather all function names used in a parsed discrete arithmetic expression in a given accumulator *)
-let get_functions_in_parsed_discrete_arithmetic_expression_with_accumulator functions_used_ref =
-    iterate_parsed_discrete_arithmetic_expression (add_function_of_discrete_boolean_expression functions_used_ref)
-
-(* Gather all variable names used in a linear expression in a given accumulator *)
-let get_variables_in_linear_expression_with_accumulator variables_used_ref =
-    iterate_parsed_linear_expression (add_variable_of_linear_expression variables_used_ref)
-
-(* Gather all variable names used in a linear constraint in a given accumulator *)
-let get_variables_in_linear_constraint_with_accumulator variables_used_ref =
-    iterate_parsed_linear_constraint
-        (add_variable_of_linear_expression variables_used_ref)
-        (function | Leaf_true_linear_constraint | Leaf_false_linear_constraint -> ())
-
-(* Gather all variable names used in a non-linear constraint in a given accumulator *)
-let get_variables_in_nonlinear_constraint_with_accumulator = get_variables_in_parsed_discrete_boolean_expression_with_accumulator
-
-(* Gather all function names used in a non-linear constraint in a given accumulator *)
-let get_functions_in_nonlinear_constraint_with_accumulator = get_functions_in_parsed_discrete_boolean_expression_with_accumulator
-
-(* Gather all variable names used in an update in a given accumulator *)
-let get_variables_in_parsed_update_with_accumulator variables_used_ref =
-    iterate_parsed_update
-        (add_variable_of_discrete_boolean_expression variables_used_ref)
-        (function _ -> ())
-
-(* Gather all function names used in an update in a given accumulator *)
-let get_functions_in_parsed_update_with_accumulator variables_used_ref =
-    iterate_parsed_update
-        (add_function_of_discrete_boolean_expression variables_used_ref)
-        (function _ -> ())
-
-(* Gather all variable names used in a normal update in a given accumulator *)
-let get_variables_in_parsed_normal_update_with_accumulator variables_used_ref =
-    iterate_parsed_normal_update
-        (add_variable_of_discrete_boolean_expression variables_used_ref)
-        (function _ -> ())
-
-(* Gather all variable names used in a parsed simple predicate in a given accumulator *)
-let get_variables_in_parsed_simple_predicate_with_accumulator variables_used_ref =
-    iterate_in_parsed_simple_predicate
-        (function _ -> ())
-        (add_variable_of_discrete_boolean_expression variables_used_ref)
-
-(* Gather all variable names used in a parsed state predicate in a given accumulator *)
-let get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref =
-    iterate_in_parsed_state_predicate
-        (function _ -> ())
-        (add_variable_of_discrete_boolean_expression variables_used_ref)
-
-(* TODO benjamin REFAC see if local variable is useless or not, replace this when general function in ParsingStructureUtilities *)
-(* Gather all variable names (global variables only) used in a parsed function definition in a given accumulator *)
-let get_variables_in_parsed_fun_def_with_accumulator variable_used_ref (fun_def : parsed_fun_definition) =
-
-    (* Add parameters as local variables *)
-    let parameter_names = List.map first_of_tuple fun_def.parameters in
-    let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
-    let local_variables_ref = ref local_variables in
-
-    (* Check if all variables defined in user function body using local variables set *)
-    let rec get_variables_in_parsed_seq_code_bloc_rec local_variables_ref = function
-        | Parsed_local_decl (variable_name, _, init_expr, next_expr, id) ->
-            (* Add the new declared local variable to set *)
-            local_variables_ref := StringSet.add variable_name !local_variables_ref;
-            (* Gather variables in next expressions *)
-            get_variables_in_parsed_seq_code_bloc_rec local_variables_ref next_expr;
-            (* Gather variables in init expression *)
-            iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variable_used_ref) init_expr
-
-        | Parsed_loop (variable_name, from_expr, to_expr, _, inner_expr, next_expr, id) ->
-            (* Add the new declared local variable to set *)
-            local_variables_ref := StringSet.add variable_name !local_variables_ref;
-
-            (* Gather variables in from expr *)
-            get_variables_in_parsed_discrete_arithmetic_expression_with_accumulator variable_used_ref from_expr;
-            (* Gather variables in to expr *)
-            get_variables_in_parsed_discrete_arithmetic_expression_with_accumulator variable_used_ref to_expr;
-            (* Gather variables in inner expressions *)
-            get_variables_in_parsed_seq_code_bloc_rec local_variables_ref inner_expr;
-            (* Gather variables in next expressions *)
-            get_variables_in_parsed_seq_code_bloc_rec local_variables_ref next_expr;
-
-        | Parsed_assignment (normal_update, next_expr) ->
-            (* Gather variables in normal update *)
-            get_variables_in_parsed_normal_update_with_accumulator variable_used_ref normal_update;
-            (* Gather variables in next expressions *)
-            get_variables_in_parsed_seq_code_bloc_rec local_variables_ref next_expr;
-
-        | Parsed_bloc_expr expr ->
-            iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variable_used_ref) expr
-        | Parsed_bloc_void -> ()
-    in
-    get_variables_in_parsed_seq_code_bloc_rec local_variables_ref fun_def.body;
-    (* Remove local variables from variable found in function (because we need to get only global variables and local variables shadow global variables) *)
-    variable_used_ref := StringSet.diff !variable_used_ref !local_variables_ref
-
-(* Create and wrap an accumulator then return result directly *)
-let wrap_accumulator f expr =
-    let variables_used_ref = ref StringSet.empty in
-    f variables_used_ref expr;
-    !variables_used_ref
-
-(* Gather all variable names used in a parsed boolean expression *)
-let get_functions_in_parsed_boolean_expression =
-    wrap_accumulator get_functions_in_parsed_boolean_expression_with_accumulator
-
-(* Gather all variable names used in a parsed boolean expression *)
-let get_variables_in_parsed_boolean_expression =
-    wrap_accumulator get_variables_in_parsed_boolean_expression_with_accumulator
-
-(* Gather all variable names used in a parsed discrete boolean expression *)
-let get_variables_in_parsed_discrete_boolean_expression =
-    wrap_accumulator get_variables_in_parsed_discrete_boolean_expression_with_accumulator
-
-(* Gather all variable names used in a parsed discrete arithmetic expression *)
-let get_variables_in_parsed_discrete_arithmetic_expression =
-    wrap_accumulator get_variables_in_parsed_discrete_arithmetic_expression_with_accumulator
-
-(* Gather all function names used in a parsed discrete arithmetic expression *)
-let get_functions_in_parsed_discrete_arithmetic_expression =
-    wrap_accumulator get_functions_in_parsed_discrete_arithmetic_expression_with_accumulator
-
-(* Gather all variable names used in a parsed update expression *)
-let get_variables_in_parsed_update =
-    wrap_accumulator get_variables_in_parsed_update_with_accumulator
-
-(* Gather all variable names used in a parsed normal update expression *)
-let get_variables_in_parsed_normal_update =
-    wrap_accumulator get_variables_in_parsed_normal_update_with_accumulator
-
-(* Gather all variable names used in a linear expression *)
-let get_variables_in_linear_expression =
-    wrap_accumulator get_variables_in_linear_expression_with_accumulator
-
-(* Gather all variable names used in a linear constraint *)
-let get_variables_in_linear_constraint =
-    wrap_accumulator get_variables_in_linear_constraint_with_accumulator
-
-(* Gather all variable names used in a non-linear constraint *)
-let get_variables_in_nonlinear_constraint =
-    wrap_accumulator get_variables_in_nonlinear_constraint_with_accumulator
-
-(* Gather all function names used in a non-linear constraint *)
-let get_functions_in_nonlinear_constraint =
-    wrap_accumulator get_functions_in_nonlinear_constraint_with_accumulator
-
-(* Gather all variable names (global variables only) used in a parsed function definition *)
-let get_variables_in_parsed_fun_def =
-    wrap_accumulator get_variables_in_parsed_fun_def_with_accumulator
-
-(* Gather all variable names used in a parsed init state predicate *)
-let get_variables_in_init_state_predicate = function
-	| Parsed_loc_assignment _ -> StringSet.empty
-	| Parsed_linear_predicate linear_constraint -> get_variables_in_linear_constraint linear_constraint
-	| Parsed_discrete_predicate (_, expr) -> get_variables_in_parsed_boolean_expression expr
-
-(* Gather all variable names used in a non-linear convex predicate (non-linear constraint list) *)
-let get_variables_in_nonlinear_convex_predicate convex_predicate =
-    List.map (get_variables_in_nonlinear_constraint) convex_predicate |>
-    List.fold_left (fun variables acc -> StringSet.union acc variables) StringSet.empty
-
-(* Gather all function names used in a non-linear convex predicate (non-linear constraint list) *)
-let get_functions_in_nonlinear_convex_predicate convex_predicate =
-    List.map (get_functions_in_nonlinear_constraint) convex_predicate |>
-    List.fold_left (fun variables acc -> StringSet.union acc variables) StringSet.empty
-
-let get_variables_in_parsed_simple_predicate =
-    wrap_accumulator get_variables_in_parsed_simple_predicate_with_accumulator
-
-let get_variables_in_parsed_state_predicate =
-    wrap_accumulator get_variables_in_parsed_state_predicate_with_accumulator
-
-(* Get variable name from a variable access *)
-(* ex : my_var[0][0] -> my_var *)
-let rec variable_name_of_parsed_scalar_or_index_update_type = function
-    | Parsed_scalar_update variable_name -> variable_name
-    | Parsed_indexed_update (parsed_scalar_or_index_update_type, _) -> variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type
-
-(* Get variable name if any *)
-let rec variable_name_of_parsed_update_type_opt = function
-    | Parsed_variable_update parsed_scalar_or_index_update_type ->
-        Some (variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type)
-    | Parsed_void_update -> None
-
-let variable_name_of_parsed_update_type parsed_update_type =
-    let variable_name_opt = variable_name_of_parsed_update_type_opt parsed_update_type in
-    match variable_name_opt with
-    | Some variable_name -> variable_name
-    | None -> raise (InternalError "Unable to get variable name of an update.")
-
-(* - --- - -- - *)
-
-
-(*------------------------------------------------------------*)
-(* Try to convert a non-linear expression to a linear *)
-(* If it's not possible (due to non-linear expression involving clocks or parameters *)
-(* we raise an InvalidExpression exception *)
-(*------------------------------------------------------------*)
-
-(* Try to convert parsed discrete term to a linear term *)
-(* If it's not possible, we raise an InvalidExpression exception *)
-let rec try_convert_linear_term_of_parsed_discrete_term = function
-    | Parsed_product_quotient (term, factor, Parsed_mul) ->
-        (* Check consistency of multiplication, if it keep constant we can convert to a linear term *)
-        let linear_term, linear_factor =
-            try_convert_linear_term_of_parsed_discrete_term term,
-            try_convert_linear_term_of_parsed_discrete_factor factor
-        in
-        (match linear_term, linear_factor with
-            (* Constant multiplied by constant, it's ok*)
-            | Constant l_const_value, Constant r_const_value ->
-                let value = NumConst.mul l_const_value r_const_value in
-                Constant value
-            (* Constant multiplied by a variable (commutative), it's ok *)
-            | Variable (var_value, variable_name), Constant const_value
-            | Constant const_value, Variable (var_value, variable_name) ->
-                let value = NumConst.mul var_value const_value in
-                Variable (value, variable_name)
-            (* Other cases are non-linears, so it's impossible to make the conversion, we raise an exception *)
-            | _ ->
-                raise (InvalidExpression ("A non-linear arithmetic expression involve clock(s) / parameter(s)"))
-        )
-    | Parsed_product_quotient (term, factor, Parsed_div) ->
-        (* Check consistency of division, if it keep constants we can convert to a linear term *)
-        let linear_term, linear_factor =
-        try_convert_linear_term_of_parsed_discrete_term term,
-        try_convert_linear_term_of_parsed_discrete_factor factor
-        in
-        (match linear_term, linear_factor with
-            (* Constant divided by constant, it's ok*)
-            | Constant l_const_value, Constant r_const_value ->
-                let value = NumConst.div l_const_value r_const_value in
-                Constant value
-            (* Other cases are non-linear, so it's impossible to make the conversion, we raise an exception *)
-            | _ ->
-                raise (InvalidExpression ("A non-linear arithmetic expression involve clock(s) / parameter(s)"))
-        )
-    (* Try to convert factor *)
-    | Parsed_DT_factor parsed_discrete_factor -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
-
-(* Try to convert parsed discrete arithmetic expression (non-linear expression) to a linear expression *)
-(* If it's not possible, we raise an InvalidExpression exception *)
-and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = function
-    | Parsed_sum_diff (expr, term, sum_diff) ->
-        let linear_expr, linear_term =
-            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr,
-            try_convert_linear_term_of_parsed_discrete_term term
-        in
-        (match sum_diff with
-        | Parsed_plus -> Linear_plus_expression (linear_expr, linear_term)
-        | Parsed_minus ->  Linear_minus_expression (linear_expr, linear_term)
-        )
-    | Parsed_DAE_term term ->
-        Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
-
-(* Try to convert parsed discrete factor to a linear term *)
-(* If it's not possible, we raise an InvalidExpression exception *)
-and try_convert_linear_term_of_parsed_discrete_factor = function
-        | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name)
-        | Parsed_DF_constant value -> Constant (ParsedValue.to_numconst_value value)
-        | Parsed_DF_unary_min parsed_discrete_factor ->
-            (* Check for unary min, negate variable and constant *)
-            (match parsed_discrete_factor with
-                | Parsed_DF_variable variable_name -> Variable(NumConst.minus_one, variable_name)
-                | Parsed_DF_constant value ->
-                    let numconst_value = ParsedValue.to_numconst_value value in
-                    Constant (NumConst.neg numconst_value)
-                | _ -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
-            )
-
-        (* Nested expression used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
-        | Parsed_DF_expression expr ->
-            raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
-
-        | _ as factor ->
-            raise (InvalidExpression ("Use of \"" ^ label_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
-
-let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
-    | Parsed_arithmetic_expression _ ->
-        raise (InvalidExpression "An expression that involve clock(s) / parameter(s) contains a boolean variable")
-    | Parsed_comparison (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr) ->
-        Parsed_linear_constraint (
-            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression l_expr,
-            relop,
-            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression r_expr
-        )
-    | Parsed_comparison (l_expr, relop, r_expr) ->
-        raise (InvalidExpression "Use of non arithmetic comparison is forbidden in an expression that involve clock(s) / parameter(s)")
-    (* Expression in used ! So it's impossible to make the conversion, we raise an exception*)
-    | Parsed_comparison_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
-    | Parsed_boolean_expression _ -> raise (InvalidExpression "A non-convex predicate involve clock(s) / parameter(s)")
-    | Parsed_Not _ -> raise (InvalidExpression "A not expression involve clock(s) / parameter(s)")
-
-let linear_constraint_of_nonlinear_constraint = try_convert_linear_expression_of_parsed_discrete_boolean_expression
-
-(* Gather all updates of update section (pre-updates, updates and post-updates) *)
-let updates_of_update_section update_section =
-    let seq_updates, updates = update_section in
-    seq_updates @ updates
