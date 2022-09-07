@@ -30,6 +30,113 @@ open AbstractModel
 open DiscreteExpressions
 open ExpressionConverter.Convert
 
+
+(*------------------------------------------------------------*)
+(* Try to convert a non-linear expression to a linear *)
+(* If it's not possible (due to non-linear expression involving clocks or parameters *)
+(* we raise an InvalidExpression exception *)
+(*------------------------------------------------------------*)
+
+(* Try to convert parsed discrete term to a linear term *)
+(* If it's not possible, we raise an InvalidExpression exception *)
+let rec try_convert_linear_term_of_parsed_discrete_term = function
+    | Parsed_product_quotient (term, factor, Parsed_mul) ->
+        (* Check consistency of multiplication, if it keep constant we can convert to a linear term *)
+        let linear_term, linear_factor =
+            try_convert_linear_term_of_parsed_discrete_term term,
+            try_convert_linear_term_of_parsed_discrete_factor factor
+        in
+        (match linear_term, linear_factor with
+            (* Constant multiplied by constant, it's ok*)
+            | Constant l_const_value, Constant r_const_value ->
+                let value = NumConst.mul l_const_value r_const_value in
+                Constant value
+            (* Constant multiplied by a variable (commutative), it's ok *)
+            | Variable (var_value, variable_name), Constant const_value
+            | Constant const_value, Variable (var_value, variable_name) ->
+                let value = NumConst.mul var_value const_value in
+                Variable (value, variable_name)
+            (* Other cases are non-linears, so it's impossible to make the conversion, we raise an exception *)
+            | _ ->
+                raise (InvalidExpression ("A non-linear arithmetic expression involve clock(s) / parameter(s)"))
+        )
+    | Parsed_product_quotient (term, factor, Parsed_div) ->
+        (* Check consistency of division, if it keep constants we can convert to a linear term *)
+        let linear_term, linear_factor =
+        try_convert_linear_term_of_parsed_discrete_term term,
+        try_convert_linear_term_of_parsed_discrete_factor factor
+        in
+        (match linear_term, linear_factor with
+            (* Constant divided by constant, it's ok*)
+            | Constant l_const_value, Constant r_const_value ->
+                let value = NumConst.div l_const_value r_const_value in
+                Constant value
+            (* Other cases are non-linear, so it's impossible to make the conversion, we raise an exception *)
+            | _ ->
+                raise (InvalidExpression ("A non-linear arithmetic expression involve clock(s) / parameter(s)"))
+        )
+    (* Try to convert factor *)
+    | Parsed_DT_factor parsed_discrete_factor -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
+
+(* Try to convert parsed discrete arithmetic expression (non-linear expression) to a linear expression *)
+(* If it's not possible, we raise an InvalidExpression exception *)
+and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = function
+    | Parsed_sum_diff (expr, term, sum_diff) ->
+        let linear_expr, linear_term =
+            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr,
+            try_convert_linear_term_of_parsed_discrete_term term
+        in
+        (match sum_diff with
+        | Parsed_plus -> Linear_plus_expression (linear_expr, linear_term)
+        | Parsed_minus ->  Linear_minus_expression (linear_expr, linear_term)
+        )
+    | Parsed_DAE_term term ->
+        Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
+
+(* Try to convert parsed discrete factor to a linear term *)
+(* If it's not possible, we raise an InvalidExpression exception *)
+and try_convert_linear_term_of_parsed_discrete_factor = function
+        | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name)
+        | Parsed_DF_constant value -> Constant (ParsedValue.to_numconst_value value)
+        | Parsed_DF_unary_min parsed_discrete_factor ->
+            (* Check for unary min, negate variable and constant *)
+            (match parsed_discrete_factor with
+                | Parsed_DF_variable variable_name -> Variable(NumConst.minus_one, variable_name)
+                | Parsed_DF_constant value ->
+                    let numconst_value = ParsedValue.to_numconst_value value in
+                    Constant (NumConst.neg numconst_value)
+                | _ -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
+            )
+
+        (* Nested expression used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
+        | Parsed_DF_expression expr ->
+            raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
+
+        | _ as factor ->
+            raise (InvalidExpression ("Use of \"" ^ ParsingStructureUtilities.label_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
+
+let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
+    | Parsed_arithmetic_expression _ ->
+        raise (InvalidExpression "An expression that involve clock(s) / parameter(s) contains a boolean variable")
+    | Parsed_comparison (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr) ->
+        Parsed_linear_constraint (
+            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression l_expr,
+            relop,
+            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression r_expr
+        )
+    | Parsed_comparison (l_expr, relop, r_expr) ->
+        raise (InvalidExpression "Use of non arithmetic comparison is forbidden in an expression that involve clock(s) / parameter(s)")
+    (* Expression in used ! So it's impossible to make the conversion, we raise an exception*)
+    | Parsed_comparison_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
+    | Parsed_boolean_expression _ -> raise (InvalidExpression "A non-convex predicate involve clock(s) / parameter(s)")
+    | Parsed_Not _ -> raise (InvalidExpression "A not expression involve clock(s) / parameter(s)")
+
+let linear_constraint_of_nonlinear_constraint = try_convert_linear_expression_of_parsed_discrete_boolean_expression
+
+
+
+
+
 let convert_discrete_init variable_infos variable_name expr =
     (* Get typed expression *)
     let typed_expr = ExpressionConverter.TypeChecker.check_discrete_init variable_infos variable_name expr in
@@ -86,7 +193,7 @@ let split_convex_predicate_into_discrete_and_continuous variable_infos convex_pr
     (* Get discrete part as a nonlinear constraint but convert back continuous part to a linear constraint *)
     let discrete_part, continuous_part = partitions in
         discrete_part,
-        List.map (fun nonlinear_constraint -> ParsingStructureMeta.linear_constraint_of_nonlinear_constraint nonlinear_constraint) continuous_part
+        List.map (fun nonlinear_constraint -> linear_constraint_of_nonlinear_constraint nonlinear_constraint) continuous_part
 
 
 let convert_guard variable_infos guard_convex_predicate =

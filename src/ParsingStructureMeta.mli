@@ -90,7 +90,5 @@ val variable_name_of_parsed_update_type_opt : parsed_update_type -> variable_nam
 val variable_name_of_parsed_update_type : parsed_update_type -> variable_name
 val variable_name_of_parsed_scalar_or_index_update_type : parsed_scalar_or_index_update_type -> variable_name
 
-val linear_constraint_of_nonlinear_constraint : nonlinear_constraint -> linear_constraint
-
 (* Gather all updates of update section (pre-updates, updates and post-updates) *)
 val updates_of_update_section : update_section -> update list
