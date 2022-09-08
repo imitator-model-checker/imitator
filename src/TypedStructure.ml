@@ -271,6 +271,14 @@ let rec string_of_typed_seq_code_bloc variable_infos = function
         ^ "\ndone\n"
         ^ string_of_typed_seq_code_bloc variable_infos next_expr
 
+    | Typed_while_loop (condition_expr, inner_bloc, next_expr) ->
+        "while "
+        ^ string_of_typed_boolean_expression variable_infos condition_expr
+        ^ " do\n"
+        ^ string_of_typed_seq_code_bloc variable_infos inner_bloc
+        ^ "\ndone\n"
+        ^ string_of_typed_seq_code_bloc variable_infos next_expr
+
     | Typed_assignment ((typed_update_type, update_expr), next_expr) ->
         let str_left_member = string_of_typed_update_type variable_infos typed_update_type in
         let str_right_member = string_of_typed_boolean_expression variable_infos update_expr in

@@ -232,10 +232,6 @@ let declared_components_of_model parsed_model =
         List.fold_left (fun acc fun_def -> all_declared_local_variables_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions
     in
 
-    let ss = List.map (function Local_variable_ref (variable_name, _, _) -> variable_name) all_declared_local_variables_in_model in
-    let sss = OCamlUtilities.string_of_list_of_string_with_sep "," ss in
-    print_standard_message ("ParsingStructureMeta: " ^ sss);
-
     let all_declared_params_in_model =
         List.fold_left (fun acc fun_def -> all_declared_params_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions
     in

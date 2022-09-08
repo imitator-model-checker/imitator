@@ -688,6 +688,11 @@ let string_of_custom_user_functions model =
                 print_warning ("Instruction found in function `" ^ fun_def.name ^ "`. Instructions are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
+            | Loop (_, _, _, _, _, next_expr)
+            | While_loop (_, _, next_expr) ->
+                print_warning ("While/for loop was found in function `" ^ fun_def.name ^ "`. Instructions are not supported by Jani and will not be translated.");
+                string_of_next_expr next_expr
+
             | Bloc_expr expr ->
                 string_of_global_expression model.variable_names expr
             | Bloc_void -> ""
