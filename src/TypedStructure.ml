@@ -100,6 +100,7 @@ type typed_seq_code_bloc =
     | Typed_local_decl of variable_name * var_type_discrete * typed_boolean_expression * typed_seq_code_bloc
     | Typed_assignment of typed_normal_update * typed_seq_code_bloc
     | Typed_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next bloc *)
+    | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next *)
     | Typed_bloc_expr of typed_boolean_expression
     | Typed_bloc_void
 
@@ -265,6 +266,14 @@ let rec string_of_typed_seq_code_bloc variable_infos = function
         ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) from_expr
         ^ (match loop_dir with Typed_loop_up -> " to " | Typed_loop_down -> " downto ")
         ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) to_expr
+        ^ " do\n"
+        ^ string_of_typed_seq_code_bloc variable_infos inner_bloc
+        ^ "\ndone\n"
+        ^ string_of_typed_seq_code_bloc variable_infos next_expr
+
+    | Typed_while_loop (condition_expr, inner_bloc, next_expr) ->
+        "while "
+        ^ string_of_typed_boolean_expression variable_infos condition_expr
         ^ " do\n"
         ^ string_of_typed_seq_code_bloc variable_infos inner_bloc
         ^ "\ndone\n"

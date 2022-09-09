@@ -341,6 +341,14 @@ let string_of_fun_definitions model =
                 ^ "\ndone\n"
                 ^ string_of_next_expr next_expr
 
+            | While_loop (condition_expr, inner_bloc, next_expr) ->
+                "while "
+                ^ DiscreteExpressions.string_of_boolean_expression model.variable_names condition_expr
+                ^ " do\n"
+                ^ string_of_next_expr inner_bloc
+                ^ "\ndone\n"
+                ^ string_of_next_expr next_expr
+
             | Assignment (discrete_update, next_expr) ->
                 DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
                 ^ string_of_next_expr next_expr

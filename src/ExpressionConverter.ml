@@ -659,7 +659,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
     | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) as outer_expr ->
         (* Add local variable for loop to hashtable *)
         let loop_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
-
+        (* TODO benjamin IMPORTANT LOOK for infer type opt in inner_bloc is good or wrong ? *)
         (* Resolve typed from expr *)
         let typed_from_expr, from_expr_type, is_from_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) from_expr in
         (* Resolve typed to expr *)
@@ -681,6 +681,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         (* Check from and to expr type are int *)
         (match from_expr_type, to_expr_type with
         | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_int ->
+            (* TODO benjamin look for the returned type, if return void instead *)
             Typed_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc, typed_next_expr), next_expr_discrete_type, has_side_effects
         | _ ->
             raise (TypeError (
@@ -690,6 +691,32 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
                         string_of_parsed_arithmetic_expression variable_infos to_expr
                     ]
                     [from_expr_type; to_expr_type]
+                    (string_of_parsed_seq_code_bloc variable_infos outer_expr)
+            ))
+        )
+
+    | Parsed_while_loop (condition_expr, inner_bloc, next_expr) as outer_expr ->
+
+        (* TODO benjamin IMPORTANT LOOK for infer type opt in inner_bloc is good or wrong ? *)
+        (* Resolve typed from expr *)
+        let typed_condition_expr, condition_expr_type, is_condition_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt condition_expr in
+        (* Resolve typed inner expr *)
+        let typed_inner_bloc, inner_bloc_discrete_type, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt inner_bloc in
+        (* Resolve typed next expr *)
+        let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
+
+        (* TODO benjamin here side effect is not always true in loop ? *)
+        let has_side_effects = true in
+
+        (match condition_expr_type with
+        | Var_type_discrete_bool ->
+            (* TODO benjamin look for the returned type, if return void instead *)
+            Typed_while_loop (typed_condition_expr, typed_inner_bloc, typed_next_expr), next_expr_discrete_type, has_side_effects
+        | _ ->
+            raise (TypeError (
+                ill_typed_message_of_expressions
+                    [string_of_parsed_boolean_expression variable_infos condition_expr]
+                    [condition_expr_type]
                     (string_of_parsed_seq_code_bloc variable_infos outer_expr)
             ))
         )
@@ -2504,6 +2531,13 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_from_expr,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_to_expr,
             loop_dir_of_typed_loop_dir typed_loop_dir,
+            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_inner_bloc,
+            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
+        )
+
+    | Typed_while_loop (typed_condition_expr, typed_inner_bloc, typed_next_expr) ->
+        While_loop (
+            bool_expression_of_typed_boolean_expression variable_infos typed_condition_expr,
             seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_inner_bloc,
             seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
         )

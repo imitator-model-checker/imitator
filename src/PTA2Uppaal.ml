@@ -197,6 +197,37 @@ and string_of_discrete_name_from_var_type_discrete discrete_name = function
         ^ "]"
     | _ -> discrete_name
 
+(************************************************************)
+(** Control structure strings *)
+(************************************************************)
+
+let string_of_loop_comparator_op = function
+    | Loop_up -> "<"
+    | Loop_down -> ">"
+
+let string_of_loop_inc_op = function
+    | Loop_up -> "++"
+    | Loop_down -> "--"
+
+(* for loop string representation in UPPAAL *)
+let string_of_for_loop variable_name str_from str_to loop_dir str_inner_bloc str_next_expr  =
+    "int " ^ variable_name ^ ";\n" (* declare variable *)
+    ^ "for ("
+    ^ variable_name ^ " = " ^ str_from ^ "; "
+    ^ variable_name ^ (string_of_loop_comparator_op loop_dir) ^ str_to ^ "; "
+    ^ variable_name ^ (string_of_loop_inc_op loop_dir) ^ ") {\n"
+    ^ str_inner_bloc
+    ^ "\n}\n\n"
+    ^ str_next_expr
+
+(* while loop string representation in UPPAAL *)
+let string_of_while_loop str_condition_expr str_inner_bloc str_next_expr =
+    "while ("
+    ^ str_condition_expr
+    ^ ") {\n"
+    ^ str_inner_bloc
+    ^ "\n}\n\n"
+    ^ str_next_expr
 
 (************************************************************)
 (** Header *)
@@ -433,6 +464,21 @@ let string_of_fun_definitions model =
                 string_of_var_type_discrete discrete_type ^ " " ^ variable_name ^ " = "
                 ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names init_expr ^ ";\n"
                 ^ string_of_next_expr next_expr
+
+            | Loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
+                string_of_for_loop
+                    variable_name
+                    (DiscreteExpressions.customized_string_of_int_arithmetic_expression all_uppaal_strings model.variable_names from_expr)
+                    (DiscreteExpressions.customized_string_of_int_arithmetic_expression all_uppaal_strings model.variable_names to_expr)
+                    loop_dir
+                    (string_of_next_expr inner_bloc)
+                    (string_of_next_expr next_expr)
+
+            | While_loop (condition_expr, inner_bloc, next_expr) ->
+                string_of_while_loop
+                    (DiscreteExpressions.customized_string_of_boolean_expression all_uppaal_strings model.variable_names condition_expr)
+                    (string_of_next_expr inner_bloc)
+                    (string_of_next_expr next_expr)
 
             | Assignment (discrete_update, next_expr) ->
                 DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"

@@ -277,6 +277,9 @@ seq_code_bloc:
   | fun_instruction { $1 }
   /* for loop */
   | CT_FOR NAME OP_EQ arithmetic_expression CT_TO arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_loop ($2, $4, $6, Parsed_loop_up, $8, $10, Parsing.symbol_start ()) }
+  /* while loop */
+  | CT_WHILE boolean_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_while_loop ($2, $4, $6) }
+  /**/
   | boolean_expression { Parsed_bloc_expr $1 }
   | { Parsed_bloc_void }
 ;
