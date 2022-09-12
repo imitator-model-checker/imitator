@@ -656,7 +656,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
 
         Typed_assignment ((typed_update_type, typed_expr), typed_next_expr), next_expr_discrete_type, true
 
-    | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) as outer_expr ->
+    | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) as outer_expr ->
         (* Add local variable for loop to hashtable *)
         let loop_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
         (* TODO benjamin IMPORTANT LOOK for infer type opt in inner_bloc is good or wrong ? *)
@@ -671,8 +671,8 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
 
         let typed_loop_dir =
             match loop_dir with
-            | Parsed_loop_up -> Typed_loop_up
-            | Parsed_loop_down -> Typed_loop_down
+            | Parsed_for_loop_up -> Typed_for_loop_up
+            | Parsed_for_loop_down -> Typed_for_loop_down
         in
 
         (* TODO benjamin here side effect is not always true in loop ? *)
@@ -682,7 +682,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         (match from_expr_type, to_expr_type with
         | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_int ->
             (* TODO benjamin look for the returned type, if return void instead when dissociate with function *)
-            Typed_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc, typed_next_expr), next_expr_discrete_type, has_side_effects
+            Typed_for_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc, typed_next_expr), next_expr_discrete_type, has_side_effects
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -1227,8 +1227,8 @@ let conj_dis_of_typed_conj_dis = function
     | Typed_or -> Or
 
 let loop_dir_of_typed_loop_dir = function
-    | Typed_loop_up -> Loop_up
-    | Typed_loop_down -> Loop_down
+    | Typed_for_loop_up -> Loop_up
+    | Typed_for_loop_down -> Loop_down
 
 let rec global_expression_of_typed_boolean_expression variable_infos = function
 	| Typed_conj_dis _ as expr ->
@@ -2561,8 +2561,8 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
             seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
         )
 
-    | Typed_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc, typed_next_expr) ->
-        Loop (
+    | Typed_for_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc, typed_next_expr) ->
+        For_loop (
             variable_name,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_from_expr,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_to_expr,

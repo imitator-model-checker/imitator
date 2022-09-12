@@ -276,7 +276,7 @@ seq_code_bloc:
   | fun_local_decl { $1 }
   | fun_instruction { $1 }
   /* for loop */
-  | CT_FOR NAME OP_EQ arithmetic_expression CT_TO arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_loop ($2, $4, $6, Parsed_loop_up, $8, $10, Parsing.symbol_start ()) }
+  | CT_FOR NAME OP_EQ arithmetic_expression CT_TO arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_for_loop ($2, $4, $6, Parsed_for_loop_up, $8, $10, Parsing.symbol_start ()) }
   /* while loop */
   | CT_WHILE boolean_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_while_loop ($2, $4, $6) }
   /* conditional */

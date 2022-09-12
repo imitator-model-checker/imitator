@@ -224,7 +224,7 @@ and expression_access_type =
 and seq_code_bloc =
     | Local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * seq_code_bloc
     | Assignment of (update_type * global_expression) * seq_code_bloc
-    | Loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next bloc *)
+    | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next bloc *)
     | While_loop of boolean_expression (* condition *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next *)
     | If of boolean_expression (* condition *) * seq_code_bloc (* then bloc *) * seq_code_bloc option (* else bloc *) * seq_code_bloc (* next *)
     | Bloc_expr of global_expression

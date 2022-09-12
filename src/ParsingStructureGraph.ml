@@ -402,7 +402,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 relations @ next_declaration_relations
 
             (* TODO benjamin IMPORTANT see that ! ref from i to other expression from and to that's bad *)
-            | Parsed_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
+            | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
                 (* Create local variable ref representing a unique variable ref *)
                 let variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
                 (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
@@ -693,7 +693,7 @@ let traverse_function operator f base (fun_def : parsed_fun_definition) =
                 (f !local_variable_components_ref expr)
                 (traverse_parsed_seq_code_bloc next_expr)
 
-        | Parsed_loop (variable_name, _, _, _, inner_bloc, next_expr, id) as expr ->
+        | Parsed_for_loop (variable_name, _, _, _, inner_bloc, next_expr, id) as expr ->
             (* Add the new declared local variable to set *)
             let local_variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
             local_variable_components_ref := ComponentSet.add local_variable_ref !local_variable_components_ref;
@@ -740,7 +740,7 @@ let left_variables_of_assignments_in (fun_def : parsed_fun_definition) =
 
     (* Function that get assigned variable in function body expression *)
     let rec left_variables_of_assignments_in_parsed_seq_code_bloc local_variable_components = function
-        | Parsed_loop _
+        | Parsed_for_loop _
         | Parsed_while_loop _
         | Parsed_if _
         | Parsed_local_decl _ -> ()
@@ -805,7 +805,7 @@ let right_variables_of_assignments_in (fun_def : parsed_fun_definition) =
             let variable_refs = List.map (variable_ref_of local_variable_components) variable_names in
             component_refs := List.fold_left (Fun.flip ComponentSet.add) !component_refs variable_refs
 
-        | Parsed_loop _
+        | Parsed_for_loop _
         | Parsed_while_loop _
         | Parsed_bloc_expr _
         | Parsed_if _

@@ -482,7 +482,7 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
 
             eval_seq_code_bloc_with_context new_eval_context next_expr
 
-        | Loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
+        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
             let from_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) from_expr in
             let to_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) to_expr in
 

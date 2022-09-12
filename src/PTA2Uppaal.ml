@@ -475,7 +475,7 @@ let string_of_fun_definitions model =
                 ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names init_expr ^ ";\n"
                 ^ string_of_next_expr next_expr
 
-            | Loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
+            | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
                 string_of_for_loop
                     variable_name
                     (DiscreteExpressions.customized_string_of_int_arithmetic_expression all_uppaal_strings model.variable_names from_expr)

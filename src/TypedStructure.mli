@@ -92,13 +92,13 @@ and typed_state_predicate =
 type typed_guard = typed_discrete_boolean_expression list
 
 type typed_loop_dir =
-    | Typed_loop_up
-    | Typed_loop_down
+    | Typed_for_loop_up
+    | Typed_for_loop_down
 
 type typed_seq_code_bloc =
     | Typed_local_decl of variable_name * var_type_discrete * typed_boolean_expression * typed_seq_code_bloc
     | Typed_assignment of typed_normal_update * typed_seq_code_bloc
-    | Typed_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next bloc *)
+    | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next bloc *)
     | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next *)
     | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* then bloc *) * typed_seq_code_bloc option (* else bloc *) * typed_seq_code_bloc (* next *)
     | Typed_bloc_expr of typed_boolean_expression

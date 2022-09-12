@@ -132,7 +132,7 @@ and fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun = fu
         |> operator (fold_parsed_boolean_expression operator base leaf_fun init_expr)
         |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun next_expr)
 
-    | Parsed_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
+    | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
         seq_code_bloc_leaf_fun (Leaf_decl_variable (variable_name, (Var_type_discrete_number Var_type_discrete_int), id))
         |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun from_expr)
         |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun to_expr)
@@ -524,12 +524,12 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             string_of_parsed_normal_update variable_infos normal_update
             ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
-        | Parsed_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) ->
+        | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) ->
             "for "
             ^ variable_name
             ^ " = "
             ^ string_of_parsed_arithmetic_expression variable_infos from_expr
-            ^ (match loop_dir with Parsed_loop_up -> " to " | Parsed_loop_down -> " downto ")
+            ^ (match loop_dir with Parsed_for_loop_up -> " to " | Parsed_for_loop_down -> " downto ")
             ^ string_of_parsed_arithmetic_expression variable_infos to_expr
             ^ " do\n"
             ^ string_of_parsed_seq_code_bloc variable_infos inner_bloc

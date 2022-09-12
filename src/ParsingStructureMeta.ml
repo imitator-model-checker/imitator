@@ -315,7 +315,7 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
             (* Is all defined ? *)
             all_variables_defined_in_normal_update && all_variables_defined_in_next_expr
 
-        | Parsed_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, _) ->
+        | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, _) ->
             (* Check if variables defined in from expr *)
             let all_variables_defined_in_from_expr = all_variables_defined_in_parsed_discrete_arithmetic_expression local_variables from_expr in
             (* Check if variables defined in to expr *)

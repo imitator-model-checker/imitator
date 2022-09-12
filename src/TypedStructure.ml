@@ -93,13 +93,13 @@ and typed_state_predicate =
 type typed_guard = typed_discrete_boolean_expression list
 
 type typed_loop_dir =
-    | Typed_loop_up
-    | Typed_loop_down
+    | Typed_for_loop_up
+    | Typed_for_loop_down
 
 type typed_seq_code_bloc =
     | Typed_local_decl of variable_name * var_type_discrete * typed_boolean_expression * typed_seq_code_bloc
     | Typed_assignment of typed_normal_update * typed_seq_code_bloc
-    | Typed_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next bloc *)
+    | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next bloc *)
     | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next *)
     | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* then bloc *) * typed_seq_code_bloc option (* else bloc *) * typed_seq_code_bloc (* next *)
     | Typed_bloc_expr of typed_boolean_expression
@@ -262,10 +262,10 @@ let rec string_of_typed_seq_code_bloc variable_infos = function
         ^ "\n"
         ^ string_of_typed_seq_code_bloc variable_infos next_expr
 
-    | Typed_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
+    | Typed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
         "for " ^ variable_name ^ " = "
         ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) from_expr
-        ^ (match loop_dir with Typed_loop_up -> " to " | Typed_loop_down -> " downto ")
+        ^ (match loop_dir with Typed_for_loop_up -> " to " | Typed_for_loop_down -> " downto ")
         ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) to_expr
         ^ " do\n"
         ^ string_of_typed_seq_code_bloc variable_infos inner_bloc
