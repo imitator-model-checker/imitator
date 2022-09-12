@@ -665,7 +665,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         (* Resolve typed to expr *)
         let typed_to_expr, to_expr_type, is_to_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) to_expr in
         (* Resolve typed inner expr *)
-        let typed_inner_bloc, inner_bloc_discrete_type, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc loop_local_variables variable_infos infer_type_opt inner_bloc in
+        let typed_inner_bloc, _, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc loop_local_variables variable_infos infer_type_opt inner_bloc in
         (* Resolve typed next expr *)
         let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
@@ -681,7 +681,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         (* Check from and to expr type are int *)
         (match from_expr_type, to_expr_type with
         | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_int ->
-            (* TODO benjamin look for the returned type, if return void instead *)
+            (* TODO benjamin look for the returned type, if return void instead when dissociate with function *)
             Typed_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc, typed_next_expr), next_expr_discrete_type, has_side_effects
         | _ ->
             raise (TypeError (
@@ -698,10 +698,10 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
     | Parsed_while_loop (condition_expr, inner_bloc, next_expr) as outer_expr ->
 
         (* TODO benjamin IMPORTANT LOOK for infer type opt in inner_bloc is good or wrong ? *)
-        (* Resolve typed from expr *)
+        (* Resolve typed condition expr *)
         let typed_condition_expr, condition_expr_type, is_condition_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt condition_expr in
         (* Resolve typed inner expr *)
-        let typed_inner_bloc, inner_bloc_discrete_type, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt inner_bloc in
+        let typed_inner_bloc, _, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt inner_bloc in
         (* Resolve typed next expr *)
         let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
@@ -710,8 +710,44 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
 
         (match condition_expr_type with
         | Var_type_discrete_bool ->
-            (* TODO benjamin look for the returned type, if return void instead *)
+            (* TODO benjamin look for the returned type, if return void instead when dissociate with function *)
             Typed_while_loop (typed_condition_expr, typed_inner_bloc, typed_next_expr), next_expr_discrete_type, has_side_effects
+        | _ ->
+            raise (TypeError (
+                ill_typed_message_of_expressions
+                    [string_of_parsed_boolean_expression variable_infos condition_expr]
+                    [condition_expr_type]
+                    (string_of_parsed_seq_code_bloc variable_infos outer_expr)
+            ))
+        )
+
+    | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) as outer_expr ->
+        (* Resolve typed from expr *)
+        let typed_condition_expr, condition_expr_type, is_condition_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt condition_expr in
+
+        (* Resolve typed then expr *)
+        let typed_then_bloc, _, then_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt then_bloc in
+
+        (* Resolve typed else expr *)
+        let typed_else_bloc_opt, else_bloc_has_side_effects =
+            match else_bloc_opt with
+            | Some else_bloc ->
+                let typed_else_bloc, _, else_bloc_has_side_effects = type_check_seq_code_bloc local_variables variable_infos infer_type_opt else_bloc in
+                Some typed_else_bloc, else_bloc_has_side_effects
+            | None ->
+                None, false
+        in
+
+        (* Resolve typed next expr *)
+        let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
+
+        (* TODO benjamin here side effect is not always true in loop ? *)
+        let has_side_effects = true in
+
+        (match condition_expr_type with
+        | Var_type_discrete_bool ->
+            (* TODO benjamin look for the returned type, if return void instead when dissociate with function *)
+            Typed_if (typed_condition_expr, typed_then_bloc, typed_else_bloc_opt, typed_next_expr), next_expr_discrete_type, has_side_effects
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -2540,6 +2576,25 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
             bool_expression_of_typed_boolean_expression variable_infos typed_condition_expr,
             seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_inner_bloc,
             seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
+        )
+
+    | Typed_if (typed_condition_expr, typed_then_bloc, typed_else_bloc_opt, typed_next_expr) ->
+        let condition_expr = bool_expression_of_typed_boolean_expression variable_infos typed_condition_expr in
+        let then_bloc = seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_then_bloc in
+        let next_expr = seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr in
+
+        let else_bloc_opt =
+            match typed_else_bloc_opt with
+            | Some typed_else_bloc ->
+                Some (seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_else_bloc)
+            | None -> None
+        in
+
+        If (
+            condition_expr,
+            then_bloc,
+            else_bloc_opt,
+            next_expr
         )
 
     | Typed_assignment ((typed_update_type, typed_expr), typed_next_expr) ->

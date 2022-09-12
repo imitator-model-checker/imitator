@@ -229,6 +229,16 @@ let string_of_while_loop str_condition_expr str_inner_bloc str_next_expr =
     ^ "\n}\n\n"
     ^ str_next_expr
 
+(* if string representation in UPPAAL *)
+let string_of_if str_condition_expr str_then_bloc str_else_bloc str_next_expr =
+    "if ("
+    ^ str_condition_expr
+    ^ ") {\n"
+    ^ str_then_bloc
+    ^ "}\n"
+    ^ if str_else_bloc <> "" then "else\n{\n" ^ str_else_bloc ^ "}\n" else ""
+    ^ str_next_expr
+
 (************************************************************)
 (** Header *)
 (************************************************************)
@@ -478,6 +488,21 @@ let string_of_fun_definitions model =
                 string_of_while_loop
                     (DiscreteExpressions.customized_string_of_boolean_expression all_uppaal_strings model.variable_names condition_expr)
                     (string_of_next_expr inner_bloc)
+                    (string_of_next_expr next_expr)
+
+            | If (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+                (* Get string of else bloc if defined *)
+                let str_else_bloc =
+                    match else_bloc_opt with
+                    | Some else_bloc ->
+                        string_of_next_expr else_bloc
+                    | None -> ""
+                in
+
+                string_of_if
+                    (DiscreteExpressions.customized_string_of_boolean_expression all_uppaal_strings model.variable_names condition_expr)
+                    (string_of_next_expr then_bloc)
+                    str_else_bloc
                     (string_of_next_expr next_expr)
 
             | Assignment (discrete_update, next_expr) ->

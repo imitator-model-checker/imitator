@@ -339,6 +339,24 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
             (* Is all defined ? *)
             all_variables_defined_in_condition_expr && all_variables_defined_in_inner_bloc && all_variables_defined_in_next_expr
 
+        | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+            (* Check if variables defined in from expr *)
+            let all_variables_defined_in_condition_expr = all_variables_defined_in_parsed_boolean_expression local_variables condition_expr in
+            (* Check if variables defined in then expressions *)
+            let all_variables_defined_in_then_bloc = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables then_bloc in
+            (* Check if variables defined in else expressions *)
+            let all_variables_defined_in_else_bloc =
+                match else_bloc_opt with
+                | Some else_bloc ->
+                    all_variables_defined_in_parsed_seq_code_bloc_rec local_variables else_bloc
+                | None ->
+                    true
+            in
+            (* Check if variables defined in next expressions *)
+            let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr in
+            (* Is all defined ? *)
+            all_variables_defined_in_condition_expr && all_variables_defined_in_then_bloc && all_variables_defined_in_else_bloc && all_variables_defined_in_next_expr
+
         | Parsed_bloc_expr expr ->
             all_variables_defined_in_parsed_boolean_expression local_variables expr
         | Parsed_bloc_void -> true

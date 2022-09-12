@@ -106,6 +106,15 @@ let jani_binary_operator str_operator str_left str_right =
         json_property "right" str_right
     |]
 
+(* Format a Jani if-then-else operator *)
+let jani_if_then_else str_condition str_then str_else =
+    json_struct [|
+        json_property "op" "ite";
+        json_property "if" str_condition;
+        json_property "then" str_then;
+        json_property "else" str_else
+    |]
+
 (* Format a Jani unary operator *)
 let jani_unary_operator str_operator str_expr =
     json_struct [|

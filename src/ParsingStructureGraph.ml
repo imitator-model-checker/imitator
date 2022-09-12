@@ -445,6 +445,32 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 (* Concat current relations with next relations *)
                 inner_declaration_relations @ next_declaration_relations @ relations
 
+            | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+
+                (* Get variable and function refs used in the condition expression *)
+                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables condition_expr in
+                let all_refs = variables_used_refs @ functions_used_refs in
+
+                (* Make relations between variable used and current function *)
+                let relations = List.map (fun _ref -> (fun_ref, _ref)) all_refs in
+
+                (* Get list of relations for the then bloc expressions *)
+                let then_bloc_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables then_bloc in
+
+                (* Get list of relations for the else bloc expressions *)
+                let else_bloc_declaration_relations =
+                    match else_bloc_opt with
+                    | Some else_bloc ->
+                        function_relations_in_parsed_seq_code_bloc_rec local_variables else_bloc
+                    | None -> []
+                in
+
+                (* Get list of relations for the next expression / declaration *)
+                let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
+
+                (* Concat current relations with next relations *)
+                then_bloc_declaration_relations @ else_bloc_declaration_relations @ next_declaration_relations @ relations
+
             | Parsed_bloc_expr expr ->
                 (* Get variable and function refs used in the expression *)
                 let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
@@ -679,13 +705,19 @@ let traverse_function operator f base (fun_def : parsed_fun_definition) =
                 )
                 (traverse_parsed_seq_code_bloc next_expr)
 
-        | Parsed_while_loop (condition_expr, inner_bloc, next_expr) as expr ->
+        | Parsed_while_loop (_, inner_bloc, next_expr) as expr ->
             operator
                 (operator
                     (f !local_variable_components_ref expr)
                     (traverse_parsed_seq_code_bloc inner_bloc)
                 )
                 (traverse_parsed_seq_code_bloc next_expr)
+
+        | Parsed_if (_, then_bloc, else_bloc_opt, next_expr) as expr ->
+            (f !local_variable_components_ref expr)
+            |> operator (traverse_parsed_seq_code_bloc then_bloc)
+            |> (match else_bloc_opt with Some else_bloc -> operator (traverse_parsed_seq_code_bloc else_bloc) | None -> operator base)
+            |> operator (traverse_parsed_seq_code_bloc next_expr)
 
         | Parsed_assignment (_, next_expr) as expr ->
             operator
@@ -699,7 +731,7 @@ let traverse_function operator f base (fun_def : parsed_fun_definition) =
     traverse_parsed_seq_code_bloc fun_def.body
 
 
-
+(* TODO benjamin REFACT look at this function, very ugly *)
 (* Get all variables (local and global) at the left side of an assignment in a function body implementation *)
 let left_variables_of_assignments_in (fun_def : parsed_fun_definition) =
 
@@ -710,6 +742,7 @@ let left_variables_of_assignments_in (fun_def : parsed_fun_definition) =
     let rec left_variables_of_assignments_in_parsed_seq_code_bloc local_variable_components = function
         | Parsed_loop _
         | Parsed_while_loop _
+        | Parsed_if _
         | Parsed_local_decl _ -> ()
 
         | Parsed_assignment ((parsed_update_type, _), next_expr) ->
@@ -757,6 +790,7 @@ let variable_ref_of local_variable_components variable_name =
     (* Else it's possibly an update of a global variable (or an nonexistent variable) *)
     | None -> Global_variable_ref variable_name
 
+(* TODO benjamin REFACT look at this function, very ugly *)
 (* Get all variables (local and global) at the right side of an assignment in a function body implementation *)
 let right_variables_of_assignments_in (fun_def : parsed_fun_definition) =
 
@@ -774,6 +808,7 @@ let right_variables_of_assignments_in (fun_def : parsed_fun_definition) =
         | Parsed_loop _
         | Parsed_while_loop _
         | Parsed_bloc_expr _
+        | Parsed_if _
         | Parsed_bloc_void -> ()
     in
     traverse_function bin_unit right_variables_of_assignments_in_parsed_seq_code_bloc () fun_def;

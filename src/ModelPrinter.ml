@@ -349,6 +349,23 @@ let string_of_fun_definitions model =
                 ^ "\ndone\n"
                 ^ string_of_next_expr next_expr
 
+            | If (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+                (* Get string of else bloc if defined *)
+                let str_else_bloc =
+                    match else_bloc_opt with
+                    | Some else_bloc ->
+                        " else " ^ string_of_next_expr then_bloc
+                    | None -> ""
+                in
+
+                "if "
+                ^ DiscreteExpressions.string_of_boolean_expression model.variable_names condition_expr
+                ^ " then "
+                ^ string_of_next_expr then_bloc
+                ^ str_else_bloc
+                ^ " end\n"
+                ^ string_of_next_expr next_expr
+
             | Assignment (discrete_update, next_expr) ->
                 DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
                 ^ string_of_next_expr next_expr

@@ -504,6 +504,23 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
 
             eval_seq_code_bloc_with_context eval_context next_expr
 
+        | If (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+
+            (* Evaluation condition *)
+            let condition_evaluated = eval_boolean_expression_with_context variable_names functions_table_opt (Some eval_context) condition_expr in
+
+            (* Execute then or else bloc (if defined) *)
+            if condition_evaluated then (
+                let _ = eval_seq_code_bloc_with_context eval_context then_bloc in ()
+            ) else (
+                match else_bloc_opt with
+                | Some else_bloc ->
+                    let _ = eval_seq_code_bloc_with_context eval_context else_bloc in ()
+                | None -> ()
+            );
+
+            eval_seq_code_bloc_with_context eval_context next_expr
+
         | Assignment (normal_update, next_expr) ->
             direct_update_with_context variable_names functions_table_opt eval_context normal_update;
             eval_seq_code_bloc_with_context eval_context next_expr

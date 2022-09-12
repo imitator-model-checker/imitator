@@ -144,6 +144,18 @@ and fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun = fu
         |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun inner_bloc)
         |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun next_expr)
 
+    | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+        let else_bloc_result =
+            match else_bloc_opt with
+            | Some else_bloc -> fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun else_bloc
+            | None -> base
+        in
+
+        fold_parsed_boolean_expression operator base leaf_fun condition_expr
+        |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun then_bloc)
+        |> operator else_bloc_result
+        |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun next_expr)
+
     | Parsed_assignment (normal_update, next_expr) ->
         operator
             (fold_parsed_normal_update operator base leaf_fun normal_update)
@@ -530,6 +542,23 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             ^ " do\n"
             ^ string_of_parsed_seq_code_bloc variable_infos inner_bloc
             ^ "\ndone\n"
+            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
+
+        | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+            (* string representation of else bloc if defined *)
+            let str_else =
+                match else_bloc_opt with
+                | Some else_bloc ->
+                    " else " ^ string_of_parsed_seq_code_bloc variable_infos else_bloc
+                | None -> ""
+            in
+
+            "if "
+            ^ string_of_parsed_boolean_expression variable_infos condition_expr
+            ^ " then "
+            ^ string_of_parsed_seq_code_bloc variable_infos then_bloc
+            ^ str_else
+            ^ " end\n\n"
             ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
         | Parsed_bloc_expr expr ->
