@@ -280,6 +280,23 @@ let rec string_of_typed_seq_code_bloc variable_infos = function
         ^ "\ndone\n"
         ^ string_of_typed_seq_code_bloc variable_infos next_expr
 
+    | Typed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+        (* string representation of else bloc if defined *)
+        let str_else =
+            match else_bloc_opt with
+            | Some else_bloc ->
+                " else " ^ string_of_typed_seq_code_bloc variable_infos else_bloc
+            | None -> ""
+        in
+
+        "if "
+        ^ string_of_typed_boolean_expression variable_infos condition_expr
+        ^ " then "
+        ^ string_of_typed_seq_code_bloc variable_infos then_bloc
+        ^ str_else
+        ^ " end\n\n"
+        ^ string_of_typed_seq_code_bloc variable_infos next_expr
+
     | Typed_assignment ((typed_update_type, update_expr), next_expr) ->
         let str_left_member = string_of_typed_update_type variable_infos typed_update_type in
         let str_right_member = string_of_typed_boolean_expression variable_infos update_expr in
