@@ -322,56 +322,63 @@ let string_of_fun_definitions model =
     let string_of_fun_definition fun_def =
 
         (* Convert a function expression into a string *)
-        let rec string_of_next_expr = function
+        let rec string_of_next_expr level expr =
+
+            (* Create tabs according to level *)
+            let tabs, tabs_1  = OCamlUtilities.string_n_times level "  ", OCamlUtilities.string_n_times (level + 1) "  " in
+
+            match expr with
             | Local_decl (variable_name, discrete_type, init_expr, next_expr) ->
-                "let " ^ variable_name ^ " : "
+                tabs
+                ^ "let " ^ variable_name ^ " : "
                 ^ DiscreteType.string_of_var_type_discrete discrete_type
                 ^ " = "
                 ^ DiscreteExpressions.string_of_global_expression model.variable_names init_expr
                 ^ " in \n"
-                ^ string_of_next_expr next_expr
+                ^ string_of_next_expr level next_expr
 
             | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
-                "for " ^ variable_name ^ " = "
+                tabs ^ "for " ^ variable_name ^ " = "
                 ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names from_expr
                 ^ (match loop_dir with Loop_up -> " to " | Loop_down -> " downto ")
                 ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names to_expr
                 ^ " do\n"
-                ^ string_of_next_expr inner_bloc
-                ^ "\ndone\n"
-                ^ string_of_next_expr next_expr
+                ^ string_of_next_expr (level + 1) inner_bloc
+                ^ tabs ^ "done\n\n"
+                ^ string_of_next_expr level next_expr
 
             | While_loop (condition_expr, inner_bloc, next_expr) ->
-                "while "
+                tabs ^ "while "
                 ^ DiscreteExpressions.string_of_boolean_expression model.variable_names condition_expr
                 ^ " do\n"
-                ^ string_of_next_expr inner_bloc
-                ^ "\ndone\n"
-                ^ string_of_next_expr next_expr
+                ^ string_of_next_expr (level + 1) inner_bloc
+                ^ tabs ^ "done\n\n"
+                ^ string_of_next_expr level next_expr
 
             | If (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
                 (* Get string of else bloc if defined *)
                 let str_else_bloc =
                     match else_bloc_opt with
                     | Some else_bloc ->
-                        " else " ^ string_of_next_expr then_bloc
+                        tabs ^ "else\n" ^ string_of_next_expr (level + 1) then_bloc
                     | None -> ""
                 in
 
-                "if "
+                tabs ^ "if "
                 ^ DiscreteExpressions.string_of_boolean_expression model.variable_names condition_expr
-                ^ " then "
-                ^ string_of_next_expr then_bloc
+                ^ " then\n"
+                ^ string_of_next_expr (level + 1) then_bloc
                 ^ str_else_bloc
-                ^ " end\n"
-                ^ string_of_next_expr next_expr
+                ^ tabs ^ "end\n\n"
+                ^ string_of_next_expr level next_expr
 
             | Assignment (discrete_update, next_expr) ->
-                DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
-                ^ string_of_next_expr next_expr
+                tabs ^ DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
+                ^ string_of_next_expr level next_expr
 
             | Bloc_expr expr ->
-                DiscreteExpressions.string_of_global_expression model.variable_names expr ^ "\n"
+                tabs ^ DiscreteExpressions.string_of_global_expression model.variable_names expr ^ "\n"
+
             | Bloc_void -> ""
         in
 
@@ -385,11 +392,11 @@ let string_of_fun_definitions model =
                 let str_param_list = List.map (fun (param_name, type_constraint) -> param_name ^ " : " ^ FunctionSig.string_of_type_constraint type_constraint) parameter_names_with_constraints in
                 let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in
 
-                let str_body = string_of_next_expr f in
+                let str_body = string_of_next_expr 1 f in
 
-                "fn " ^ fun_def.name ^ "(" ^ str_params ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin \n"
+                "fn " ^ fun_def.name ^ "(" ^ str_params ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin\n\n"
                 ^ str_body
-                ^ "end"
+                ^ "\nend"
         in
 
 

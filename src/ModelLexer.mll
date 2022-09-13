@@ -139,6 +139,7 @@ rule token = parse
   | "fn"             { CT_FUN   }
   | "for"            { CT_FOR }
   | "to"             { CT_TO }
+  | "downto"         { CT_DOWNTO }
   | "done"           { CT_DONE }
 
 
