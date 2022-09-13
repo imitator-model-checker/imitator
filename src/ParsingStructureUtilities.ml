@@ -426,13 +426,13 @@ let string_of_assignment str_left_member str_right_member =
 
 (* String representation of let-in structure *)
 let string_of_let_in variable_name str_discrete_type str_init_expr =
-    "let "
+    "var "
     ^ variable_name
     ^ " : "
     ^ str_discrete_type
     ^ " = "
     ^ str_init_expr
-    ^ "in"
+    ^ ";"
 
 let rec string_of_parsed_arithmetic_expression variable_infos = function
     | Parsed_sum_diff (arithmetic_expr, term, sum_diff) ->

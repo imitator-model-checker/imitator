@@ -75,7 +75,7 @@ let unzip l = List.fold_left
   CT_INSIDE
   CT_DO
   CT_SEQ
-  CT_LET CT_IN
+  CT_IN
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -292,7 +292,7 @@ loop_dir:
 ;
 
 fun_local_decl:
-  | CT_LET NAME COLON var_type_discrete OP_EQ boolean_expression CT_IN seq_code_bloc { Parsed_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
+  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression SEMICOLON seq_code_bloc { Parsed_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
 ;
 
 fun_instruction:

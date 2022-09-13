@@ -72,8 +72,8 @@ end
 (* Replace n bit by zeros from left to right *)
 fn zero_left(bin : binary(4), n : int) : binary(4)
 begin
-  let l_bin : binary(4) = shift_left(bin, n) in
-  let r_bin : binary(4) = shift_right(l_bin, n) in
+  var l_bin : binary(4) = shift_left(bin, n);
+  var r_bin : binary(4) = shift_right(l_bin, n);
   r_bin
 end
 
@@ -102,12 +102,12 @@ begin
   a_global[last_idx_fun(a_global)] := 1;
   i_global := a * 2;
   (* Shadow parameter a *)
-  let a : int = 5 in
+  var a : int = 5;
   r_global := rational_of_int(i_global + a);
   (* Shadow local variable a *)
-  let a : int = 1 in
+  var a : int = 1;
   (* Shadow global variable i1 *)
-  let i1 : int = 2 in
+  var i1 : int = 2;
   a + i1 (* Should give 3 *)
 end
 

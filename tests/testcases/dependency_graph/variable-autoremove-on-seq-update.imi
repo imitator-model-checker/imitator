@@ -28,7 +28,7 @@ var
 
 fn f() : int
 begin
-  let x : int = stack_pop(s) in
+  var x : int = stack_pop(s);
   0
 end
 

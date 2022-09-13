@@ -1079,8 +1079,8 @@ var
 		: int;
 
 fn f() : int begin
-let i1 : int = i + 1 in
-let i2 : int = (i + 1) * 2 in
+var i1 : int = i + 1;
+var i2 : int = (i + 1) * 2;
 i1 + i2
 end
 

@@ -30,7 +30,7 @@ var
 
 fn f1() : int
 begin
-  let x : int = stack_pop(s1) in
+  var x : int = stack_pop(s1);
   1 + 0
 end
 
