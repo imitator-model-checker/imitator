@@ -30,7 +30,7 @@ var
 fn modify_global_var() : bool
 begin
   i := 1;
-  True
+  return True
 end
 
 (* We deduce that this function had side effects, but local var s is isolated... *)
@@ -38,7 +38,7 @@ fn use_side_effect_builtin() : bool
 begin
   var s : int stack = stack();
   stack_push(0, s);
-  True
+  return True
 end
 
 automaton P

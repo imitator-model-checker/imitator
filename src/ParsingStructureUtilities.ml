@@ -562,7 +562,7 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
         | Parsed_bloc_expr expr ->
-            string_of_parsed_boolean_expression variable_infos expr
+            "return " ^ string_of_parsed_boolean_expression variable_infos expr
         | Parsed_bloc_void -> ""
 
 and string_of_parsed_normal_update variable_infos (update_type, expr) =

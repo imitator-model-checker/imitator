@@ -29,7 +29,7 @@ var
 fn f() : int
 begin
   var x : int = stack_pop(s);
-  0
+  return 0
 end
 
 

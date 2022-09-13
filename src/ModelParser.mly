@@ -94,7 +94,7 @@ let unzip l = List.fold_left
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
-    CT_FUN CT_BEGIN CT_FOR CT_TO CT_DOWNTO CT_DONE
+    CT_FUN CT_RETURN CT_BEGIN CT_FOR CT_TO CT_DOWNTO CT_DONE
 
 
 %token EOF
@@ -282,7 +282,7 @@ seq_code_bloc:
   /* conditional */
   | CT_IF boolean_expression CT_THEN seq_code_bloc CT_END seq_code_bloc { Parsed_if ($2, $4, None, $6) }
   | CT_IF boolean_expression CT_THEN seq_code_bloc CT_ELSE seq_code_bloc CT_END seq_code_bloc { Parsed_if ($2, $4, Some $6, $8) }
-  | boolean_expression { Parsed_bloc_expr $1 }
+  | CT_RETURN boolean_expression { Parsed_bloc_expr $2 }
   | { Parsed_bloc_void }
 ;
 

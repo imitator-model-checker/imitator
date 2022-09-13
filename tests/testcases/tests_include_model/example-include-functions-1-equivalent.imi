@@ -28,7 +28,7 @@ var
 fn f() : int begin
   var i1 : int = i + 1;
   var i2 : int = (i + 1) * 2;
-  i1 + i2
+  return i1 + i2
 end
 
 

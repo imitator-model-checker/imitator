@@ -42,31 +42,31 @@ var
 (* Last index of an array *)
 fn last_idx_fun(a : int array(2)) : int
 begin
-  array_length(a) - 1
+  return array_length(a) - 1
 end
 
 (* Linear interpolation *)
 fn lerp(a : rat, b : rat, x : rat) : rat
 begin
-  a + (b - a) * x
+  return a + (b - a) * x
 end
 
 (* Add global variable i with x *)
 fn int_f(x : int) : int
 begin
-  x + i1
+  return x + i1
 end
 
 (* Add global variable i with x *)
 fn rat_f(r : rat) : rat
 begin
-  r + r1
+  return r + r1
 end
 
 (* my own not using not *)
 fn my_not(b : bool) : bool
 begin
-  not(b)
+  return not(b)
 end
 
 (* Replace n bit by zeros from left to right *)
@@ -74,7 +74,7 @@ fn zero_left(bin : binary(4), n : int) : binary(4)
 begin
   var l_bin : binary(4) = shift_left(bin, n);
   var r_bin : binary(4) = shift_right(l_bin, n);
-  r_bin
+  return r_bin
 end
 
 (* Push 0,1,2 to a stack (side effect function) *)
@@ -83,7 +83,7 @@ begin
   stack_push(0, my_stack);
   stack_push(1, my_stack);
   stack_push(2, my_stack);
-  my_stack
+  return my_stack
 end
 
 (* Push 0,1,2 to a queue (side effect function) *)
@@ -92,7 +92,7 @@ begin
   queue_push(0, my_queue);
   queue_push(1, my_queue);
   queue_push(2, my_queue);
-  my_queue
+  return my_queue
 end
 
 (* Setting value to some global variables (side effect function) *)
@@ -108,7 +108,7 @@ begin
   var a : int = 1;
   (* Shadow global variable i1 *)
   var i1 : int = 2;
-  a + i1 (* Should give 3 *)
+  return a + i1 (* Should give 3 *)
 end
 
 automaton P

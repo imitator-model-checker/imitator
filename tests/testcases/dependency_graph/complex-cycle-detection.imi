@@ -26,13 +26,13 @@ var
 fn f2() : bool
 begin
   var x : bool = f1();
-  x
+  return x
 end
 
 fn f1() : bool
 begin
   var x : bool = f2();
-  x
+  return x
 end
 
 fn f3() : bool
@@ -40,7 +40,7 @@ begin
   var x : bool = f1();
   var y : bool = x & True;
   var z : bool = y & True;
-  z
+  return z
 end
 
 
