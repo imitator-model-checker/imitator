@@ -401,7 +401,6 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 (* Concat current relations with next relations *)
                 relations @ next_declaration_relations
 
-            (* TODO benjamin IMPORTANT see that ! ref from i to other expression from and to that's bad *)
             | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
                 (* Create local variable ref representing a unique variable ref *)
                 let variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
@@ -415,10 +414,10 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables to_expr in
                 let all_refs = all_refs @ variables_used_refs @ functions_used_refs in
 
+                (* variable of for loop (for i, i) use variables found in from_expr and to_expr  *)
                 let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
-                (* Add a relation between current function and declared variable *)
-                (* The declared variable will always be considered as used here *)
+                (* Add a relation between current function and variable of for loop *)
                 let relations = (fun_ref, variable_ref) :: relations in
 
                 (* Get list of relations for the inner expressions *)

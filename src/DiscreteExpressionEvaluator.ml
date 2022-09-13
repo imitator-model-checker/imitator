@@ -486,12 +486,25 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
             let from_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) from_expr in
             let to_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) to_expr in
 
-            for i = (Int32.to_int from_value) to (Int32.to_int to_value) do
+            let execute_inner_bloc i =
                 let abs_value = AbstractValue.of_int (Int32.of_int i) in
                 let loop_eval_context = {eval_context with local_variables = VariableMap.add variable_name abs_value eval_context.local_variables } in
                 (* Don't get any value as it was evaluated as void expression *)
                 let _ = eval_seq_code_bloc_with_context loop_eval_context inner_bloc in ()
-            done;
+            in
+
+            let i32_from_value, i32_to_value = Int32.to_int from_value, Int32.to_int to_value in
+
+            (match loop_dir with
+            | Loop_up ->
+                for i = i32_from_value to i32_to_value do
+                    execute_inner_bloc i;
+                done
+            | Loop_down ->
+                for i = i32_from_value downto i32_to_value do
+                    execute_inner_bloc i;
+                done
+            );
 
             eval_seq_code_bloc_with_context eval_context next_expr
 

@@ -621,14 +621,8 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         (* Add local variable to hashtable *)
         let new_local_variables = VariableMap.add variable_name discrete_type local_variables in
 
-        (* Get inner type of discrete type to infer *)
-        (* For example : `let s : int stack = stack()` extract `int` type of `int stack` declaration *)
-        (* And then, with the type `int` we can infer the right expression having the type `weak stack` to a `int stack` *)
-        (* Same examples with queue, array, and any composed type... *)
-        let variable_number_type_opt = Some (DiscreteType.extract_inner_type discrete_type) in
-
         (* Type check and infer init expression of the local variable declaration *)
-        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
+        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
         (* Type check and infer the next expression of the function body *)
         let typed_next_expr, next_expr_discrete_type, is_next_expr_has_side_effects = type_check_seq_code_bloc new_local_variables variable_infos infer_type_opt next_expr in
 
@@ -654,18 +648,27 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         (* Resolve typed next expr *)
         let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
+        let variable_name = ParsingStructureUtilities.string_of_parsed_update_type variable_infos parsed_update_type in
+        let is_void_update = match parsed_update_type with Parsed_void_update -> true | _ -> false in
+
+        (* Check compatibility between assignee variable type (if not a void update) and it's assigned expression *)
+        if not (is_void_update || is_discrete_type_compatibles l_value_type expr_type) then
+            raise (TypeError (
+                ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete l_value_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
+            ));
+
         Typed_assignment ((typed_update_type, typed_expr), typed_next_expr), next_expr_discrete_type, true
 
     | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) as outer_expr ->
         (* Add local variable for loop to hashtable *)
         let loop_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
-        (* TODO benjamin IMPORTANT LOOK for infer type opt in inner_bloc is good or wrong ? *)
+
         (* Resolve typed from expr *)
         let typed_from_expr, from_expr_type, is_from_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) from_expr in
         (* Resolve typed to expr *)
         let typed_to_expr, to_expr_type, is_to_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) to_expr in
         (* Resolve typed inner expr *)
-        let typed_inner_bloc, _, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc loop_local_variables variable_infos infer_type_opt inner_bloc in
+        let typed_inner_bloc, _, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc loop_local_variables variable_infos None inner_bloc in
         (* Resolve typed next expr *)
         let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
@@ -697,11 +700,10 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
 
     | Parsed_while_loop (condition_expr, inner_bloc, next_expr) as outer_expr ->
 
-        (* TODO benjamin IMPORTANT LOOK for infer type opt in inner_bloc is good or wrong ? *)
         (* Resolve typed condition expr *)
         let typed_condition_expr, condition_expr_type, is_condition_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt condition_expr in
         (* Resolve typed inner expr *)
-        let typed_inner_bloc, _, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt inner_bloc in
+        let typed_inner_bloc, _, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos None inner_bloc in
         (* Resolve typed next expr *)
         let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
@@ -910,7 +912,6 @@ and type_check_parsed_state_predicate_factor variable_infos infer_type_opt = fun
 let check_type_assignment variable_infos variable_name variable_type expr =
 
     (* Eventually get a number type to infer *)
-(*    let variable_number_type_opt = DiscreteType.extract_number_of_discrete_type variable_type in*)
     let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
     (* Resolve typed expression *)
     let typed_expr, expr_var_type_discrete, has_side_effects = type_check_parsed_boolean_expression None variable_infos variable_number_type_opt expr in
