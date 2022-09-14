@@ -273,8 +273,10 @@ fun_parameter_nonempty_list:
 
 /* Body of function, declarations or expression */
 seq_code_bloc:
-  | fun_local_decl { $1 }
-  | fun_instruction { $1 }
+  /* local declaration */
+  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression SEMICOLON seq_code_bloc { Parsed_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
+  /* instruction */
+  | update_without_deprecated SEMICOLON seq_code_bloc { Parsed_assignment ($1, $3) }
   /* for loop */
   | CT_FOR NAME OP_EQ arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_for_loop ($2, $4, $6, $5, $8, $10, Parsing.symbol_start ()) }
   /* while loop */
@@ -282,21 +284,13 @@ seq_code_bloc:
   /* conditional */
   | CT_IF boolean_expression CT_THEN seq_code_bloc CT_END seq_code_bloc { Parsed_if ($2, $4, None, $6) }
   | CT_IF boolean_expression CT_THEN seq_code_bloc CT_ELSE seq_code_bloc CT_END seq_code_bloc { Parsed_if ($2, $4, Some $6, $8) }
-  | CT_RETURN boolean_expression { Parsed_bloc_expr $2 }
+  | CT_RETURN boolean_expression semicolon_opt { Parsed_bloc_expr $2 }
   | { Parsed_bloc_void }
 ;
 
 loop_dir:
   | CT_TO { Parsed_for_loop_up }
   | CT_DOWNTO { Parsed_for_loop_down }
-;
-
-fun_local_decl:
-  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression SEMICOLON seq_code_bloc { Parsed_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
-;
-
-fun_instruction:
-  | update_without_deprecated SEMICOLON seq_code_bloc { Parsed_assignment ($1, $3) }
 ;
 
 /************************************************************/
