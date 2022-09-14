@@ -72,6 +72,7 @@ let dl_predecessor state_space state_index z1 guard updates z2 transition =
     (* result *)
 
 (* this extends get_resets: we return (x,0) for resets and (x,lt) for updates *)
+
 let dl_get_clock_updates state_space combined_transition =
 	(* Retrieve the model *)
 	let model = Input.get_model () in

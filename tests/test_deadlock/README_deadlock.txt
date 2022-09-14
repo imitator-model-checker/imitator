@@ -1,10 +1,10 @@
 ../../bin/imitator deadlock1.imi deadlock.imiprop
 
-Old:
+Old [branch develop]:
 Final positive constraint guaranteeing deadlock-freeness:
    p >= 0
 
-New (correct):
+New (correct):  [branch deadlock]
 Final positive constraint guaranteeing deadlock-freeness:
    3 >= p
  & p >= 0
@@ -24,7 +24,7 @@ Final positive constraint guaranteeing deadlock-freeness:
  & q >= 0
  & 3 >= p
 
-
+???.imi
 Old:
 Final positive constraint guaranteeing deadlock-freeness:
   p >= 0
