@@ -354,9 +354,9 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         (* Check that no constants are updated *)
         let assigned_constant_names = List.filter_map (function
             | Global_variable_ref variable_name ->
-                let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_name in
-                (match variable_kind with
-                | VariableInfo.Constant_kind _ -> Some variable_name
+                let variable_kind_opt = VariableInfo.variable_kind_of_variable_name_opt variable_infos variable_name in
+                (match variable_kind_opt with
+                | Some (VariableInfo.Constant_kind _) -> Some variable_name
                 | _ -> None
                 )
             | _ -> None

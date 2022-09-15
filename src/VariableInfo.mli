@@ -42,7 +42,10 @@ val var_type_of_variable_or_constant_opt : variable_infos -> variable_name -> va
 val discrete_type_of_variable_or_constant : variable_infos -> variable_name -> var_type_discrete
 val discrete_type_of_variable_or_constant_opt : variable_infos -> variable_name -> var_type_discrete option
 
+(* Know if variable with a given name is a variable or a constant *)
 val variable_kind_of_variable_name : variable_infos -> variable_name -> variable_kind
+(* Know if variable with a given name is a variable or a constant, if variable not found, return None *)
+val variable_kind_of_variable_name_opt : variable_infos -> variable_name -> variable_kind option
 
 (* Check if variable is a discrete variable given it's name *)
 val is_discrete_variable : variable_infos -> variable_name -> bool

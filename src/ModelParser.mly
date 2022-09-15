@@ -94,7 +94,7 @@ let unzip l = List.fold_left
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
-    CT_FUN CT_RETURN CT_BEGIN CT_FOR CT_TO CT_DOWNTO CT_DONE
+    CT_FUN CT_RETURN CT_BEGIN CT_FOR CT_FROM CT_TO CT_DOWNTO CT_DONE
 
 
 %token EOF
@@ -278,7 +278,7 @@ seq_code_bloc:
   /* instruction */
   | update_without_deprecated SEMICOLON seq_code_bloc { Parsed_assignment ($1, $3) }
   /* for loop */
-  | CT_FOR NAME OP_EQ arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_for_loop ($2, $4, $6, $5, $8, $10, Parsing.symbol_start ()) }
+  | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_for_loop ($2, $4, $6, $5, $8, $10, Parsing.symbol_start ()) }
   /* while loop */
   | CT_WHILE boolean_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_while_loop ($2, $4, $6) }
   /* conditional */
