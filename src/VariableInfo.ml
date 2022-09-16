@@ -126,6 +126,13 @@ let variable_kind_of_variable_name variable_infos variable_name =
     else
         Variable_kind (index_of_variable_name variable_infos variable_name)
 
+(* Know if variable with a given name is a variable or a constant, if variable not found, return None *)
+let variable_kind_of_variable_name_opt variable_infos variable_name =
+    try
+        Some (variable_kind_of_variable_name variable_infos variable_name)
+    with Not_found ->
+        None
+
 (* Check if variable is a discrete variable given it's name *)
 let is_discrete_variable variable_infos variable_name =
     (* Get defined state of variable *)

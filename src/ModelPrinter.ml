@@ -330,11 +330,11 @@ let string_of_fun_definitions model =
             match expr with
             | Local_decl (variable_name, discrete_type, init_expr, next_expr) ->
                 tabs
-                ^ "let " ^ variable_name ^ " : "
+                ^ "var " ^ variable_name ^ " : "
                 ^ DiscreteType.string_of_var_type_discrete discrete_type
                 ^ " = "
                 ^ DiscreteExpressions.string_of_global_expression model.variable_names init_expr
-                ^ " in \n"
+                ^ "; \n"
                 ^ string_of_next_expr level next_expr
 
             | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
@@ -377,7 +377,7 @@ let string_of_fun_definitions model =
                 ^ string_of_next_expr level next_expr
 
             | Bloc_expr expr ->
-                tabs ^ DiscreteExpressions.string_of_global_expression model.variable_names expr ^ "\n"
+                tabs ^ "return " ^ DiscreteExpressions.string_of_global_expression model.variable_names expr ^ "\n"
 
             | Bloc_void -> ""
         in

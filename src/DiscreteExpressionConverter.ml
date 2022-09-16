@@ -351,6 +351,17 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
             | _ -> None
         ) left_variable_refs in
 
+        (* Check that no constants are updated *)
+        let assigned_constant_names = List.filter_map (function
+            | Global_variable_ref variable_name ->
+                let variable_kind_opt = VariableInfo.variable_kind_of_variable_name_opt variable_infos variable_name in
+                (match variable_kind_opt with
+                | Some (VariableInfo.Constant_kind _) -> Some variable_name
+                | _ -> None
+                )
+            | _ -> None
+        ) left_variable_refs in
+
         (* Check that no clocks are updated *)
         (* Get only clock update and map to a clock names list *)
         let assigned_clock_type_names = List.filter_map (function
@@ -382,6 +393,8 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         let has_parameter_modifications = List.length assigned_parameter_names > 0 in
         (* Is any local variable modifications in user function ? *)
         let has_local_variable_modifications = List.length assigned_local_variable_names > 0 in
+        (* Is any constant modifications in user function ? *)
+        let has_assigned_constant_modifications = List.length assigned_constant_names > 0 in
         (* Is any clock modifications in user function ? *)
         let has_clock_param_modifications = List.length assigned_clock_type_names > 0 in
         (* Is any discrete is updated by a clock or parameter ? *)
@@ -407,6 +420,16 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
                 "`. Local variables are immutables."
             );
         ) assigned_local_variable_names;
+
+        List.iter (fun variable_name ->
+            print_error (
+                "Trying to update constant `"
+                ^ variable_name
+                ^ "` in `"
+                ^ fun_def.name ^
+                "`. Constants are immutables."
+            );
+        ) assigned_constant_names;
 
         List.iter (fun (var_type, variable_name) ->
             let str_var_type = string_of_var_type var_type in
@@ -440,7 +463,7 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
             );
         ) right_variable_clock_type_names;
 
-        not (has_parameter_modifications || has_local_variable_modifications || has_clock_param_modifications || was_updated_by_clock_param)
+        not (has_assigned_constant_modifications || has_parameter_modifications || has_local_variable_modifications || has_clock_param_modifications || was_updated_by_clock_param)
     in
 
     (* Check if there isn't any void typed variable or parameter *)

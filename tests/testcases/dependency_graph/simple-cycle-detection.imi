@@ -26,7 +26,7 @@ var
 
 fn f() : int
 begin
-  f()
+  return f()
 end
 
 

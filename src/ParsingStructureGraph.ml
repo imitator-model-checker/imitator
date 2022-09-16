@@ -677,57 +677,55 @@ let traverse_function operator f base (fun_def : parsed_fun_definition) =
     (* Add parameters as local variables *)
     let parameter_refs = List.map (fun (param_name, _) -> Param_ref (param_name, fun_def.name)) fun_def.parameters in
     let local_variable_components = List.fold_right ComponentSet.add parameter_refs ComponentSet.empty in
-    (* Create ref of local variable components set *)
-    let local_variable_components_ref = ref local_variable_components in
 
     (* TODO benjamin see if can replace by general function *)
     (* Function that traverse function body expression *)
-    let rec traverse_parsed_seq_code_bloc = function
+    let rec traverse_parsed_seq_code_bloc local_variable_components = function
         | Parsed_local_decl (variable_name, _, _, next_expr, id) as expr ->
             (* Add the new declared local variable to set *)
             let local_variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
-            local_variable_components_ref := ComponentSet.add local_variable_ref !local_variable_components_ref;
+            let new_local_variable_components = ComponentSet.add local_variable_ref local_variable_components in
 
             operator
-                (f !local_variable_components_ref expr)
-                (traverse_parsed_seq_code_bloc next_expr)
+                (f new_local_variable_components expr)
+                (traverse_parsed_seq_code_bloc new_local_variable_components next_expr)
 
         | Parsed_for_loop (variable_name, _, _, _, inner_bloc, next_expr, id) as expr ->
             (* Add the new declared local variable to set *)
             let local_variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
-            local_variable_components_ref := ComponentSet.add local_variable_ref !local_variable_components_ref;
+            let local_variable_components_inner_bloc = ComponentSet.add local_variable_ref local_variable_components in
 
             operator
                 (operator
-                    (f !local_variable_components_ref expr)
-                    (traverse_parsed_seq_code_bloc inner_bloc)
+                    (f local_variable_components expr)
+                    (traverse_parsed_seq_code_bloc local_variable_components_inner_bloc inner_bloc)
                 )
-                (traverse_parsed_seq_code_bloc next_expr)
+                (traverse_parsed_seq_code_bloc local_variable_components next_expr)
 
         | Parsed_while_loop (_, inner_bloc, next_expr) as expr ->
             operator
                 (operator
-                    (f !local_variable_components_ref expr)
-                    (traverse_parsed_seq_code_bloc inner_bloc)
+                    (f local_variable_components expr)
+                    (traverse_parsed_seq_code_bloc local_variable_components inner_bloc)
                 )
-                (traverse_parsed_seq_code_bloc next_expr)
+                (traverse_parsed_seq_code_bloc local_variable_components next_expr)
 
         | Parsed_if (_, then_bloc, else_bloc_opt, next_expr) as expr ->
-            (f !local_variable_components_ref expr)
-            |> operator (traverse_parsed_seq_code_bloc then_bloc)
-            |> (match else_bloc_opt with Some else_bloc -> operator (traverse_parsed_seq_code_bloc else_bloc) | None -> operator base)
-            |> operator (traverse_parsed_seq_code_bloc next_expr)
+            (f local_variable_components expr)
+            |> operator (traverse_parsed_seq_code_bloc local_variable_components then_bloc)
+            |> (match else_bloc_opt with Some else_bloc -> operator (traverse_parsed_seq_code_bloc local_variable_components else_bloc) | None -> operator base)
+            |> operator (traverse_parsed_seq_code_bloc local_variable_components next_expr)
 
         | Parsed_assignment (_, next_expr) as expr ->
             operator
-                (f !local_variable_components_ref expr)
-                (traverse_parsed_seq_code_bloc next_expr)
+                (f local_variable_components expr)
+                (traverse_parsed_seq_code_bloc local_variable_components next_expr)
 
         | Parsed_bloc_expr _ as expr ->
-            f !local_variable_components_ref expr
+            f local_variable_components expr
         | Parsed_bloc_void -> base
     in
-    traverse_parsed_seq_code_bloc fun_def.body
+    traverse_parsed_seq_code_bloc local_variable_components fun_def.body
 
 
 (* TODO benjamin REFACT look at this function, very ugly *)
@@ -738,7 +736,7 @@ let left_variables_of_assignments_in (fun_def : parsed_fun_definition) =
     let components_ref = ref ComponentSet.empty in
 
     (* Function that get assigned variable in function body expression *)
-    let rec left_variables_of_assignments_in_parsed_seq_code_bloc local_variable_components = function
+    let left_variables_of_assignments_in_parsed_seq_code_bloc local_variable_components = function
         | Parsed_for_loop _
         | Parsed_while_loop _
         | Parsed_if _

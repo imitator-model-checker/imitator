@@ -590,6 +590,8 @@ and compute_update_value_opt_with_context variable_names functions_table_opt eva
     | Void_update ->
         let _ = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in None
 
+(* Directly update a discrete variable *)
+(* This function is used for sequential updates *)
 and direct_update_with_context variable_names functions_table_opt eval_context update =
 
     let discrete_index_new_value_pair_opt = compute_update_value_opt_with_context variable_names functions_table_opt eval_context update in
@@ -599,6 +601,8 @@ and direct_update_with_context variable_names functions_table_opt eval_context u
         (* Direct update ! *)
         eval_context.discrete_setter discrete_index new_value
 
+(* Record an update into the updated_discrete hash table, then the updates can be made later  *)
+(* This function is used for non-sequential updates *)
 and delayed_update_with_context variable_names functions_table_opt eval_context updated_discrete update =
 
     let discrete_index_new_value_pair_opt = compute_update_value_opt_with_context variable_names functions_table_opt eval_context update in

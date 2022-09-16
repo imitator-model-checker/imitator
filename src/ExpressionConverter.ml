@@ -617,34 +617,42 @@ let type_check_parsed_update_type local_variables_opt variable_infos = function
 
 
 let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt = function
-    | Parsed_local_decl (variable_name, discrete_type, expr, next_expr, _) ->
+    | Parsed_local_decl (variable_name, variable_type, expr, next_expr, _) ->
         (* Add local variable to hashtable *)
-        let new_local_variables = VariableMap.add variable_name discrete_type local_variables in
+        let new_local_variables = VariableMap.add variable_name variable_type local_variables in
+
+        (* Eventually get a number type to infer *)
+        let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
 
         (* Type check and infer init expression of the local variable declaration *)
-        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
+        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
         (* Type check and infer the next expression of the function body *)
         let typed_next_expr, next_expr_discrete_type, is_next_expr_has_side_effects = type_check_seq_code_bloc new_local_variables variable_infos infer_type_opt next_expr in
 
         (* Check compatibility between local variable declared type and it's init expression *)
-        if not (is_discrete_type_compatibles discrete_type init_discrete_type) then
+        if not (is_discrete_type_compatibles variable_type init_discrete_type) then
             raise (TypeError (
-                ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete discrete_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) init_discrete_type
+                ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) init_discrete_type
             ));
 
         (* All is ok, convert to a typed function local declaration *)
         Typed_local_decl (
             variable_name,
-            discrete_type,
+            variable_type,
             typed_init_expr,
             typed_next_expr
         ), next_expr_discrete_type, is_init_expr_has_side_effects || is_next_expr_has_side_effects
 
     | Parsed_assignment ((parsed_update_type, expr), next_expr) ->
-        (* Resolve typed expression *)
-        let typed_expr, expr_type, has_side_effects (* side effects *) = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
         (* Resolve typed update type *)
-        let typed_update_type, l_value_type, is_parsed_update_type_has_side_effects (* side effects *) = type_check_parsed_update_type (Some local_variables) variable_infos parsed_update_type in
+        let typed_update_type, variable_type, is_parsed_update_type_has_side_effects (* side effects *) = type_check_parsed_update_type (Some local_variables) variable_infos parsed_update_type in
+
+        (* Eventually get a number type to infer *)
+        let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
+
+        (* Resolve typed expression *)
+        let typed_expr, expr_type, has_side_effects (* side effects *) = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
+
         (* Resolve typed next expr *)
         let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
@@ -652,9 +660,9 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         let is_void_update = match parsed_update_type with Parsed_void_update -> true | _ -> false in
 
         (* Check compatibility between assignee variable type (if not a void update) and it's assigned expression *)
-        if not (is_void_update || is_discrete_type_compatibles l_value_type expr_type) then
+        if not (is_void_update || is_discrete_type_compatibles variable_type expr_type) then
             raise (TypeError (
-                ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete l_value_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
+                ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
             ));
 
         Typed_assignment ((typed_update_type, typed_expr), typed_next_expr), next_expr_discrete_type, true
@@ -701,7 +709,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
     | Parsed_while_loop (condition_expr, inner_bloc, next_expr) as outer_expr ->
 
         (* Resolve typed condition expr *)
-        let typed_condition_expr, condition_expr_type, is_condition_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt condition_expr in
+        let typed_condition_expr, condition_expr_type, is_condition_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos None condition_expr in
         (* Resolve typed inner expr *)
         let typed_inner_bloc, _, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos None inner_bloc in
         (* Resolve typed next expr *)
@@ -725,16 +733,16 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
 
     | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) as outer_expr ->
         (* Resolve typed from expr *)
-        let typed_condition_expr, condition_expr_type, is_condition_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt condition_expr in
+        let typed_condition_expr, condition_expr_type, is_condition_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos None condition_expr in
 
         (* Resolve typed then expr *)
-        let typed_then_bloc, _, then_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt then_bloc in
+        let typed_then_bloc, _, then_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos None then_bloc in
 
         (* Resolve typed else expr *)
         let typed_else_bloc_opt, else_bloc_has_side_effects =
             match else_bloc_opt with
             | Some else_bloc ->
-                let typed_else_bloc, _, else_bloc_has_side_effects = type_check_seq_code_bloc local_variables variable_infos infer_type_opt else_bloc in
+                let typed_else_bloc, _, else_bloc_has_side_effects = type_check_seq_code_bloc local_variables variable_infos None else_bloc in
                 Some typed_else_bloc, else_bloc_has_side_effects
             | None ->
                 None, false

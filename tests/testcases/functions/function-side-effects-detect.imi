@@ -30,27 +30,27 @@ var
 
 fn f1() : int
 begin
-  let x : int = stack_pop(s1) in
-  1 + 0
+  var x : int = stack_pop(s1);
+  return 1 + 0
 end
 
 fn f2() : int
 begin
-  f1()
+  return f1()
 end
 
 fn f3() : int
 begin
-  0
+  return 0
 end
 
 fn f4() : int
 begin
-  f1() + f3()
+  return f1() + f3()
 end
 
 fn f5(i : int) : int begin
-  i + 1
+  return i + 1
 end
 
 automaton P

@@ -25,22 +25,22 @@ var
 
 fn f2() : bool
 begin
-  let x : bool = f1() in
-  x
+  var x : bool = f1();
+  return x
 end
 
 fn f1() : bool
 begin
-  let x : bool = f2() in
-  x
+  var x : bool = f2();
+  return x
 end
 
 fn f3() : bool
 begin
-  let x : bool = f1() in
-  let y : bool = x & True in
-  let z : bool = y & True in
-  z
+  var x : bool = f1();
+  var y : bool = x & True;
+  var z : bool = y & True;
+  return z
 end
 
 

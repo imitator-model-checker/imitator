@@ -75,7 +75,7 @@ let unzip l = List.fold_left
   CT_INSIDE
   CT_DO
   CT_SEQ
-  CT_LET CT_IN
+  CT_IN
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -94,7 +94,7 @@ let unzip l = List.fold_left
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
-    CT_FUN CT_BEGIN CT_FOR CT_TO CT_DOWNTO CT_DONE
+    CT_FUN CT_RETURN CT_BEGIN CT_FOR CT_FROM CT_TO CT_DOWNTO CT_DONE
 
 
 %token EOF
@@ -273,30 +273,24 @@ fun_parameter_nonempty_list:
 
 /* Body of function, declarations or expression */
 seq_code_bloc:
-  | fun_local_decl { $1 }
-  | fun_instruction { $1 }
+  /* local declaration */
+  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression SEMICOLON seq_code_bloc { Parsed_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
+  /* instruction */
+  | update_without_deprecated SEMICOLON seq_code_bloc { Parsed_assignment ($1, $3) }
   /* for loop */
-  | CT_FOR NAME OP_EQ arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_for_loop ($2, $4, $6, $5, $8, $10, Parsing.symbol_start ()) }
+  | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_for_loop ($2, $4, $6, $5, $8, $10, Parsing.symbol_start ()) }
   /* while loop */
   | CT_WHILE boolean_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_while_loop ($2, $4, $6) }
   /* conditional */
   | CT_IF boolean_expression CT_THEN seq_code_bloc CT_END seq_code_bloc { Parsed_if ($2, $4, None, $6) }
   | CT_IF boolean_expression CT_THEN seq_code_bloc CT_ELSE seq_code_bloc CT_END seq_code_bloc { Parsed_if ($2, $4, Some $6, $8) }
-  | boolean_expression { Parsed_bloc_expr $1 }
+  | CT_RETURN boolean_expression semicolon_opt { Parsed_bloc_expr $2 }
   | { Parsed_bloc_void }
 ;
 
 loop_dir:
   | CT_TO { Parsed_for_loop_up }
   | CT_DOWNTO { Parsed_for_loop_down }
-;
-
-fun_local_decl:
-  | CT_LET NAME COLON var_type_discrete OP_EQ boolean_expression CT_IN seq_code_bloc { Parsed_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
-;
-
-fun_instruction:
-  | update_without_deprecated SEMICOLON seq_code_bloc { Parsed_assignment ($1, $3) }
 ;
 
 /************************************************************/
