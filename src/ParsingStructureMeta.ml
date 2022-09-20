@@ -198,7 +198,7 @@ let has_side_effect_parsed_normal_update variable_infos = exists_in_parsed_norma
 let has_side_effect_parsed_state_predicate variable_infos = exists_in_parsed_state_predicate (function _ -> false) (has_side_effects variable_infos)
 
 
-
+(* TODO benjamin generalize with ParsingStructureUtilities *)
 let has_side_effect_parsed_seq_code_bloc variable_infos =
 
     let rec has_side_effect_parsed_seq_code_bloc_rec local_variables = function
