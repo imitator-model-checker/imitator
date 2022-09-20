@@ -89,8 +89,8 @@ let type_check_collection discrete_types infer_type_opt =
 let rec type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt = function
 	| Parsed_conj_dis (l_expr, r_expr, parsed_conj_dis) as outer_expr ->
 
-        let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt l_expr in
-        let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt r_expr in
+        let l_typed_expr, l_type = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt l_expr in
+        let r_typed_expr, r_type = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt r_expr in
 
         let typed_conj_dis =
             match parsed_conj_dis with
@@ -100,7 +100,7 @@ let rec type_check_parsed_boolean_expression local_variables_opt variable_infos 
 
         (* Check that left and right members are Boolean *)
         (match l_type, r_type with
-        | Var_type_discrete_bool, Var_type_discrete_bool -> Typed_conj_dis (l_typed_expr, r_typed_expr, typed_conj_dis), Var_type_discrete_bool, l_has_side_effects || r_has_side_effects
+        | Var_type_discrete_bool, Var_type_discrete_bool -> Typed_conj_dis (l_typed_expr, r_typed_expr, typed_conj_dis), Var_type_discrete_bool
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -114,23 +114,23 @@ let rec type_check_parsed_boolean_expression local_variables_opt variable_infos 
         )
 
 	| Parsed_Discrete_boolean_expression expr ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_discrete_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
-	    Typed_discrete_bool_expr (typed_expr, discrete_type), discrete_type, has_side_effects
+	    let typed_expr, discrete_type = type_check_parsed_discrete_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
+	    Typed_discrete_bool_expr (typed_expr, discrete_type), discrete_type
 
 and type_check_parsed_discrete_boolean_expression local_variables_opt variable_infos infer_type_opt = function
     | Parsed_arithmetic_expression expr ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt expr in
-	    Typed_arithmetic_expr (typed_expr, discrete_type), discrete_type, has_side_effects
+	    let typed_expr, discrete_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt expr in
+	    Typed_arithmetic_expr (typed_expr, discrete_type), discrete_type
 
 	| Parsed_comparison (l_expr, relop, r_expr) as outer_expr ->
 
-	    let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_discrete_boolean_expression local_variables_opt variable_infos infer_type_opt l_expr in
-	    let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_discrete_boolean_expression local_variables_opt variable_infos infer_type_opt r_expr in
+	    let l_typed_expr, l_type = type_check_parsed_discrete_boolean_expression local_variables_opt variable_infos infer_type_opt l_expr in
+	    let r_typed_expr, r_type = type_check_parsed_discrete_boolean_expression local_variables_opt variable_infos infer_type_opt r_expr in
 
         (* Check that left and right members are type compatibles *)
         if is_discrete_type_compatibles l_type r_type then (
             let discrete_type = stronger_discrete_type_of l_type r_type in
-            Typed_comparison (l_typed_expr, relop, r_typed_expr, discrete_type), Var_type_discrete_bool, l_has_side_effects || r_has_side_effects
+            Typed_comparison (l_typed_expr, relop, r_typed_expr, discrete_type), Var_type_discrete_bool
         )
         else
             raise (TypeError (
@@ -144,9 +144,9 @@ and type_check_parsed_discrete_boolean_expression local_variables_opt variable_i
             ))
 
 	| Parsed_comparison_in (in_expr, lw_expr, up_expr) as outer_expr ->
-	    let in_typed_expr, in_type, in_has_side_effects = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt in_expr in
-	    let lw_typed_expr, lw_type, lw_has_side_effects = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt lw_expr in
-	    let up_typed_expr, up_type, up_has_side_effects = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt up_expr in
+	    let in_typed_expr, in_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt in_expr in
+	    let lw_typed_expr, lw_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt lw_expr in
+	    let up_typed_expr, up_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt up_expr in
 
         (* Check that expression are numbers *)
         let in_number_type, lw_number_type, up_number_type =
@@ -172,7 +172,7 @@ and type_check_parsed_discrete_boolean_expression local_variables_opt variable_i
 
         if in_lw_compatible && in_up_compatible && lw_up_compatible then (
             let inner_number_type = stronger_discrete_number_type_of (stronger_discrete_number_type_of in_number_type lw_number_type) up_number_type in
-            Typed_comparison_in (in_typed_expr, lw_typed_expr, up_typed_expr, inner_number_type), Var_type_discrete_bool, in_has_side_effects || lw_has_side_effects || up_has_side_effects
+            Typed_comparison_in (in_typed_expr, lw_typed_expr, up_typed_expr, inner_number_type), Var_type_discrete_bool
         )
         else
             raise (TypeError (
@@ -187,15 +187,15 @@ and type_check_parsed_discrete_boolean_expression local_variables_opt variable_i
             ))
 
 	| Parsed_boolean_expression expr ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
-	    Typed_bool_expr typed_expr, discrete_type, has_side_effects
+	    let typed_expr, discrete_type = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
+	    Typed_bool_expr typed_expr, discrete_type
 
 	| Parsed_Not expr as outer_expr ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
+	    let typed_expr, discrete_type = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
 
         (* Check that expression type is Boolean *)
 	    (match discrete_type with
-	    | Var_type_discrete_bool -> Typed_not_expr typed_expr, Var_type_discrete_bool, has_side_effects
+	    | Var_type_discrete_bool -> Typed_not_expr typed_expr, Var_type_discrete_bool
 	    | _ ->
             raise (TypeError (
                 "Expression `"
@@ -210,8 +210,8 @@ and type_check_parsed_discrete_boolean_expression local_variables_opt variable_i
 
 and type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt = function
 	| Parsed_sum_diff (expr, term, sum_diff) as outer_expr ->
-	    let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt expr in
-	    let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt term in
+	    let l_typed_expr, l_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt expr in
+	    let r_typed_expr, r_type = type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt term in
 
         let typed_sum_diff =
             match sum_diff with
@@ -223,7 +223,7 @@ and type_check_parsed_discrete_arithmetic_expression local_variables_opt variabl
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
             let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
-            Typed_sum_diff (l_typed_expr, r_typed_expr, discrete_number_type, typed_sum_diff), Var_type_discrete_number discrete_number_type, l_has_side_effects || r_has_side_effects
+            Typed_sum_diff (l_typed_expr, r_typed_expr, discrete_number_type, typed_sum_diff), Var_type_discrete_number discrete_number_type
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -237,8 +237,8 @@ and type_check_parsed_discrete_arithmetic_expression local_variables_opt variabl
         )
 
 	| Parsed_DAE_term term ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt term in
-	    Typed_term (typed_expr, discrete_type), discrete_type, has_side_effects
+	    let typed_expr, discrete_type = type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt term in
+	    Typed_term (typed_expr, discrete_type), discrete_type
 
 and type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt = function
     (* Specific case, literal rational => constant / constant *)
@@ -246,8 +246,8 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
 
     | Parsed_product_quotient ((Parsed_DT_factor (Parsed_DF_constant lv) as term), (Parsed_DF_constant rv as factor), Parsed_div) as outer_expr ->
 
-	    let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt term in
-	    let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
+	    let l_typed_expr, l_type = type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt term in
+	    let r_typed_expr, r_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
 
         (* Check that members are numbers and compatible *)
         (match l_type, r_type with
@@ -269,7 +269,7 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
                     Var_type_discrete_rat
             in
 
-            Typed_product_quotient (l_typed_expr, r_typed_expr, discrete_number_type, Typed_div), Var_type_discrete_number discrete_number_type, l_has_side_effects || r_has_side_effects
+            Typed_product_quotient (l_typed_expr, r_typed_expr, discrete_number_type, Typed_div), Var_type_discrete_number discrete_number_type
 
         | _ ->
 
@@ -284,8 +284,8 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
         )
 
     | Parsed_product_quotient (term, factor, parsed_product_quotient) as outer_expr ->
-	    let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt term in
-	    let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
+	    let l_typed_expr, l_type = type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt term in
+	    let r_typed_expr, r_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
 
         let typed_product_quotient =
             match parsed_product_quotient with
@@ -297,7 +297,7 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
         (match l_type, r_type with
         | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
             let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
-            Typed_product_quotient (l_typed_expr, r_typed_expr, discrete_number_type, typed_product_quotient), Var_type_discrete_number discrete_number_type, l_has_side_effects || r_has_side_effects
+            Typed_product_quotient (l_typed_expr, r_typed_expr, discrete_number_type, typed_product_quotient), Var_type_discrete_number discrete_number_type
         | _ -> raise (TypeError (
             ill_typed_message
                 (string_of_parsed_term variable_infos term)
@@ -309,8 +309,8 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
         )
 
 	| Parsed_DT_factor factor ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
-	    Typed_factor (typed_expr, discrete_type), discrete_type, has_side_effects
+	    let typed_expr, discrete_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
+	    Typed_factor (typed_expr, discrete_type), discrete_type
 
 and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt = function
 	| Parsed_DF_variable variable_name ->
@@ -334,7 +334,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
             | _ -> discrete_type
         in
 
-        Typed_variable (variable_name, infer_discrete_type, scope), infer_discrete_type, false
+        Typed_variable (variable_name, infer_discrete_type, scope), infer_discrete_type
 
 	| Parsed_DF_constant value ->
         let discrete_type = ParsedValue.discrete_type_of_value value in
@@ -347,13 +347,12 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
             | _ -> discrete_type
         in
 
-        Typed_constant (value, infer_discrete_type), infer_discrete_type, false
+        Typed_constant (value, infer_discrete_type), infer_discrete_type
 
 	| Parsed_sequence (list_expr, seq_type) as outer_expr ->
         let type_checks = List.map (type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt) list_expr in
-        let typed_expressions = List.map (fun (typed_expr, _, _) -> typed_expr) type_checks in
-        let discrete_types = List.map (fun (_, discrete_type, _) -> discrete_type) type_checks in
-        let has_side_effects = List.exists (fun (_, _, side_effects) -> side_effects) type_checks in
+        let typed_expressions = List.map (fun (typed_expr, _) -> typed_expr) type_checks in
+        let discrete_types = List.map (fun (_, discrete_type) -> discrete_type) type_checks in
 
         let all_compatibles = OCamlUtilities.for_all_in_arrangement (fun a b -> is_discrete_type_compatibles a b) discrete_types in
 
@@ -374,7 +373,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
                     | Parsed_queue ->
                         Var_type_discrete_queue inner_type, Typed_queue
             in
-            Typed_sequence (typed_expressions, inner_type, seq_type), discrete_type, has_side_effects
+            Typed_sequence (typed_expressions, inner_type, seq_type), discrete_type
         )
         else (
             let str_expressions = List.map (string_of_parsed_boolean_expression variable_infos) list_expr in
@@ -388,8 +387,8 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         )
 
     | Parsed_DF_access (factor, index_expr) ->
-        let typed_factor, factor_type, is_factor_has_side_effects = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
-        let typed_index, index_type, is_index_has_side_effects = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos None (* None: mean no inference for index *) index_expr in
+        let typed_factor, factor_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
+        let typed_index, index_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos None (* None: mean no inference for index *) index_expr in
 
         if not (is_discrete_type_number_type index_type) || is_discrete_type_rational_type index_type then
             raise (TypeError "Index cannot be another type than int.");
@@ -397,20 +396,20 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         (* Check that accessed element is a collection *)
         (match factor_type with
         | Var_type_discrete_array (inner_type, _)
-        | Var_type_discrete_list inner_type -> Typed_access (typed_factor, typed_index, factor_type, inner_type), inner_type, is_factor_has_side_effects || is_index_has_side_effects
+        | Var_type_discrete_list inner_type -> Typed_access (typed_factor, typed_index, factor_type, inner_type), inner_type
         | _ -> raise (TypeError "Cannot make an access to another type than array or list.")
         )
 
 	| Parsed_DF_expression expr ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt expr in
-	    Typed_expr (typed_expr, discrete_type), discrete_type, has_side_effects
+	    let typed_expr, discrete_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt expr in
+	    Typed_expr (typed_expr, discrete_type), discrete_type
 
 	| Parsed_DF_unary_min factor as outer_expr ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
+	    let typed_expr, discrete_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
 
         (* Check that expression is a number *)
         (match discrete_type with
-        | Var_type_discrete_number discrete_number_type -> Typed_unary_min (typed_expr, discrete_number_type), discrete_type, has_side_effects
+        | Var_type_discrete_number discrete_number_type -> Typed_unary_min (typed_expr, discrete_number_type), discrete_type
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -447,12 +446,9 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         (* We doesn't infer arguments types because arguments types are not dependent of the context *)
         let type_checks = List.map (type_check_parsed_boolean_expression local_variables_opt variable_infos None (* None: mean no inference for arguments *)) argument_expressions in
         (* Get arguments discrete types  *)
-        let call_signature = List.map (fun (_, discrete_type, _) -> discrete_type) type_checks in
+        let call_signature = List.map (fun (_, discrete_type) -> discrete_type) type_checks in
         (* Convert to typed arguments expressions *)
-        let typed_expressions = List.map (fun (typed_expr, _, _) -> typed_expr) type_checks in
-
-        (* Check possible side-effects in parameters *)
-        let has_side_effects = List.exists (fun (_, _, has_side_effects) -> has_side_effects) type_checks in
+        let typed_expressions = List.map (fun (typed_expr, _) -> typed_expr) type_checks in
 
         (* Get function signature *)
         let function_signature_constraint = function_metadata.signature_constraint in
@@ -577,10 +573,9 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         in
 
         (* Get typed arguments expressions *)
-        let typed_expressions = List.map (fun (typed_expr, _, _) -> typed_expr) type_checks in
+        let typed_expressions = List.map (fun (typed_expr, _) -> typed_expr) type_checks in
 
-        let is_subject_to_side_effect = function_metadata.side_effect in
-        Typed_function_call (function_name, typed_expressions, return_type), return_type, is_subject_to_side_effect || has_side_effects
+        Typed_function_call (function_name, typed_expressions, return_type), return_type
 
 
 
@@ -589,12 +584,12 @@ let rec type_check_parsed_scalar_or_index_update_type local_variables_opt variab
         (* Get assigned variable type *)
         let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
         let discrete_type = discrete_type_of_var_type var_type in
-        Typed_scalar_update variable_name, discrete_type, false (* no side effect *)
+        Typed_scalar_update variable_name, discrete_type
 
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) as indexed_update ->
 
-        let typed_update_type, discrete_type, is_parsed_scalar_or_index_update_type_has_side_effects = type_check_parsed_scalar_or_index_update_type local_variables_opt variable_infos parsed_scalar_or_index_update_type in
-        let typed_index_expr_type, index_discrete_type, is_index_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) index_expr in
+        let typed_update_type, discrete_type = type_check_parsed_scalar_or_index_update_type local_variables_opt variable_infos parsed_scalar_or_index_update_type in
+        let typed_index_expr_type, index_discrete_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) index_expr in
 
         (* Check that index expression is an int expression *)
         if index_discrete_type <> Var_type_discrete_number Var_type_discrete_int then
@@ -606,14 +601,14 @@ let rec type_check_parsed_scalar_or_index_update_type local_variables_opt variab
             | Var_type_discrete_array (inner_type, _) -> inner_type
             | _ -> raise (TypeError "Trying to make a write access to a non-array variable.")
         in
-        Typed_indexed_update (typed_update_type, typed_index_expr_type, discrete_type), discrete_type, is_parsed_scalar_or_index_update_type_has_side_effects || is_index_expr_has_side_effects
+        Typed_indexed_update (typed_update_type, typed_index_expr_type, discrete_type), discrete_type
 
 let type_check_parsed_update_type local_variables_opt variable_infos = function
     | Parsed_variable_update parsed_scalar_or_index_update_type ->
-        let typed_parsed_scalar_or_index_update_type, discrete_type, has_side_effects = type_check_parsed_scalar_or_index_update_type local_variables_opt variable_infos parsed_scalar_or_index_update_type in
-        Typed_variable_update typed_parsed_scalar_or_index_update_type, discrete_type, has_side_effects
+        let typed_parsed_scalar_or_index_update_type, discrete_type = type_check_parsed_scalar_or_index_update_type local_variables_opt variable_infos parsed_scalar_or_index_update_type in
+        Typed_variable_update typed_parsed_scalar_or_index_update_type, discrete_type
 
-    | Parsed_void_update -> Typed_void_update, Var_type_void, false
+    | Parsed_void_update -> Typed_void_update, Var_type_void
 
 
 let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt = function
@@ -625,9 +620,9 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
 
         (* Type check and infer init expression of the local variable declaration *)
-        let typed_init_expr, init_discrete_type, is_init_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
+        let typed_init_expr, init_discrete_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
         (* Type check and infer the next expression of the function body *)
-        let typed_next_expr, next_expr_discrete_type, is_next_expr_has_side_effects = type_check_seq_code_bloc new_local_variables variable_infos infer_type_opt next_expr in
+        let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc new_local_variables variable_infos infer_type_opt next_expr in
 
         (* Check compatibility between local variable declared type and it's init expression *)
         if not (is_discrete_type_compatibles variable_type init_discrete_type) then
@@ -641,20 +636,20 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
             variable_type,
             typed_init_expr,
             typed_next_expr
-        ), next_expr_discrete_type, is_init_expr_has_side_effects || is_next_expr_has_side_effects
+        ), next_expr_discrete_type
 
     | Parsed_assignment ((parsed_update_type, expr), next_expr) ->
         (* Resolve typed update type *)
-        let typed_update_type, variable_type, is_parsed_update_type_has_side_effects (* side effects *) = type_check_parsed_update_type (Some local_variables) variable_infos parsed_update_type in
+        let typed_update_type, variable_type = type_check_parsed_update_type (Some local_variables) variable_infos parsed_update_type in
 
         (* Eventually get a number type to infer *)
         let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
 
         (* Resolve typed expression *)
-        let typed_expr, expr_type, has_side_effects (* side effects *) = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
+        let typed_expr, expr_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
 
         (* Resolve typed next expr *)
-        let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
+        let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
         let variable_name = ParsingStructureUtilities.string_of_parsed_update_type variable_infos parsed_update_type in
         let is_void_update = match parsed_update_type with Parsed_void_update -> true | _ -> false in
@@ -665,20 +660,20 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
                 ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
             ));
 
-        Typed_assignment ((typed_update_type, typed_expr), typed_next_expr), next_expr_discrete_type, true
+        Typed_assignment ((typed_update_type, typed_expr), typed_next_expr), next_expr_discrete_type
 
     | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) as outer_expr ->
         (* Add local variable for loop to hashtable *)
         let loop_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
 
         (* Resolve typed from expr *)
-        let typed_from_expr, from_expr_type, is_from_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) from_expr in
+        let typed_from_expr, from_expr_type = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) from_expr in
         (* Resolve typed to expr *)
-        let typed_to_expr, to_expr_type, is_to_expr_has_side_effects = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) to_expr in
+        let typed_to_expr, to_expr_type = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) to_expr in
         (* Resolve typed inner expr *)
-        let typed_inner_bloc, _, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc loop_local_variables variable_infos None inner_bloc in
+        let typed_inner_bloc, _ = type_check_seq_code_bloc loop_local_variables variable_infos None inner_bloc in
         (* Resolve typed next expr *)
-        let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
+        let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
         let typed_loop_dir =
             match loop_dir with
@@ -686,14 +681,11 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
             | Parsed_for_loop_down -> Typed_for_loop_down
         in
 
-        (* TODO benjamin here side effect is not always true in loop ? *)
-        let has_side_effects = true in
-
         (* Check from and to expr type are int *)
         (match from_expr_type, to_expr_type with
         | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_int ->
             (* TODO benjamin look for the returned type, if return void instead when dissociate with function *)
-            Typed_for_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc, typed_next_expr), next_expr_discrete_type, has_side_effects
+            Typed_for_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc, typed_next_expr), next_expr_discrete_type
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -709,19 +701,16 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
     | Parsed_while_loop (condition_expr, inner_bloc, next_expr) as outer_expr ->
 
         (* Resolve typed condition expr *)
-        let typed_condition_expr, condition_expr_type, is_condition_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos None condition_expr in
+        let typed_condition_expr, condition_expr_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos None condition_expr in
         (* Resolve typed inner expr *)
-        let typed_inner_bloc, _, inner_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos None inner_bloc in
+        let typed_inner_bloc, _ = type_check_seq_code_bloc local_variables variable_infos None inner_bloc in
         (* Resolve typed next expr *)
-        let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
-
-        (* TODO benjamin here side effect is not always true in loop ? *)
-        let has_side_effects = true in
+        let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
         (match condition_expr_type with
         | Var_type_discrete_bool ->
             (* TODO benjamin look for the returned type, if return void instead when dissociate with function *)
-            Typed_while_loop (typed_condition_expr, typed_inner_bloc, typed_next_expr), next_expr_discrete_type, has_side_effects
+            Typed_while_loop (typed_condition_expr, typed_inner_bloc, typed_next_expr), next_expr_discrete_type
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -733,31 +722,28 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
 
     | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) as outer_expr ->
         (* Resolve typed from expr *)
-        let typed_condition_expr, condition_expr_type, is_condition_expr_has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos None condition_expr in
+        let typed_condition_expr, condition_expr_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos None condition_expr in
 
         (* Resolve typed then expr *)
-        let typed_then_bloc, _, then_bloc_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos None then_bloc in
+        let typed_then_bloc, _ = type_check_seq_code_bloc local_variables variable_infos None then_bloc in
 
         (* Resolve typed else expr *)
-        let typed_else_bloc_opt, else_bloc_has_side_effects =
+        let typed_else_bloc_opt =
             match else_bloc_opt with
             | Some else_bloc ->
-                let typed_else_bloc, _, else_bloc_has_side_effects = type_check_seq_code_bloc local_variables variable_infos None else_bloc in
-                Some typed_else_bloc, else_bloc_has_side_effects
+                let typed_else_bloc, _ = type_check_seq_code_bloc local_variables variable_infos None else_bloc in
+                Some typed_else_bloc
             | None ->
-                None, false
+                None
         in
 
         (* Resolve typed next expr *)
-        let typed_next_expr, next_expr_discrete_type, next_expr_has_side_effects (* side effects *) = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
-
-        (* TODO benjamin here side effect is not always true in loop ? *)
-        let has_side_effects = true in
+        let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
         (match condition_expr_type with
         | Var_type_discrete_bool ->
             (* TODO benjamin look for the returned type, if return void instead when dissociate with function *)
-            Typed_if (typed_condition_expr, typed_then_bloc, typed_else_bloc_opt, typed_next_expr), next_expr_discrete_type, has_side_effects
+            Typed_if (typed_condition_expr, typed_then_bloc, typed_else_bloc_opt, typed_next_expr), next_expr_discrete_type
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -768,10 +754,10 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         )
 
     | Parsed_bloc_expr expr ->
-        let typed_expr, discrete_type, has_side_effects = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
-        Typed_bloc_expr typed_expr, discrete_type, has_side_effects
+        let typed_expr, discrete_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
+        Typed_bloc_expr typed_expr, discrete_type
 
-    | Parsed_bloc_void -> Typed_bloc_void, Var_type_void, false
+    | Parsed_bloc_void -> Typed_bloc_void, Var_type_void
 
 let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.parsed_fun_definition) =
     (* Get parameter types and return type of the function *)
@@ -785,7 +771,7 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
 
     (* Eventually infer the body expression type of function to the return type underlying type of the function *)
     let infer_type_opt = Some (DiscreteType.extract_inner_type return_type) in
-    let typed_body, body_discrete_type, _ = type_check_seq_code_bloc local_variables variable_infos infer_type_opt fun_def.body in
+    let typed_body, body_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt fun_def.body in
     (* Check eventual side effects in body *)
     let is_body_has_side_effects = ParsingStructureMeta.has_side_effect_parsed_seq_code_bloc variable_infos fun_def.body in
 
@@ -813,16 +799,16 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
     }
     in
 
-    typed_fun_def, return_type, is_body_has_side_effects
+    typed_fun_def, return_type
 
 
 let type_check_parsed_loc_predicate variable_infos infer_type_opt = function
-	| Parsed_loc_predicate_EQ (automaton_name, loc_name) -> Typed_loc_predicate_EQ (automaton_name, loc_name), Var_type_discrete_bool, false
-	| Parsed_loc_predicate_NEQ (automaton_name, loc_name) -> Typed_loc_predicate_NEQ (automaton_name, loc_name), Var_type_discrete_bool, false
+	| Parsed_loc_predicate_EQ (automaton_name, loc_name) -> Typed_loc_predicate_EQ (automaton_name, loc_name), Var_type_discrete_bool
+	| Parsed_loc_predicate_NEQ (automaton_name, loc_name) -> Typed_loc_predicate_NEQ (automaton_name, loc_name), Var_type_discrete_bool
 
 let rec type_check_parsed_simple_predicate variable_infos infer_type_opt = function
 	| Parsed_discrete_boolean_expression expr ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_discrete_boolean_expression None variable_infos infer_type_opt expr in
+	    let typed_expr, discrete_type = type_check_parsed_discrete_boolean_expression None variable_infos infer_type_opt expr in
 
         if not (DiscreteType.is_discrete_type_bool_type discrete_type) then (
             raise (TypeError (
@@ -834,24 +820,24 @@ let rec type_check_parsed_simple_predicate variable_infos infer_type_opt = funct
             ))
         )
         else
-	        Typed_discrete_boolean_expression (typed_expr, discrete_type), discrete_type, has_side_effects
+	        Typed_discrete_boolean_expression (typed_expr, discrete_type), discrete_type
 
 	| Parsed_loc_predicate predicate ->
-	    let typed_predicate, discrete_type, has_side_effects = type_check_parsed_loc_predicate variable_infos infer_type_opt predicate in
-	    Typed_loc_predicate typed_predicate, discrete_type, has_side_effects
+	    let typed_predicate, discrete_type = type_check_parsed_loc_predicate variable_infos infer_type_opt predicate in
+	    Typed_loc_predicate typed_predicate, discrete_type
 
-	| Parsed_state_predicate_true -> Typed_state_predicate_true, Var_type_discrete_bool, false
-	| Parsed_state_predicate_false -> Typed_state_predicate_false, Var_type_discrete_bool, false
-	| Parsed_state_predicate_accepting -> Typed_state_predicate_accepting, Var_type_discrete_bool, false
+	| Parsed_state_predicate_true -> Typed_state_predicate_true, Var_type_discrete_bool
+	| Parsed_state_predicate_false -> Typed_state_predicate_false, Var_type_discrete_bool
+	| Parsed_state_predicate_accepting -> Typed_state_predicate_accepting, Var_type_discrete_bool
 
 and type_check_parsed_state_predicate variable_infos infer_type_opt = function
 	| Parsed_state_predicate_OR (l_expr, r_expr) as outer_expr ->
-	    let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_state_predicate variable_infos infer_type_opt l_expr in
-	    let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_state_predicate variable_infos infer_type_opt r_expr in
+	    let l_typed_expr, l_type = type_check_parsed_state_predicate variable_infos infer_type_opt l_expr in
+	    let r_typed_expr, r_type = type_check_parsed_state_predicate variable_infos infer_type_opt r_expr in
 
 	    (match l_type, r_type with
 	    | Var_type_discrete_bool, Var_type_discrete_bool ->
-	        Typed_state_predicate_OR (l_typed_expr, r_typed_expr), Var_type_discrete_bool, l_has_side_effects || r_has_side_effects
+	        Typed_state_predicate_OR (l_typed_expr, r_typed_expr), Var_type_discrete_bool
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -865,17 +851,17 @@ and type_check_parsed_state_predicate variable_infos infer_type_opt = function
 	    )
 
 	| Parsed_state_predicate_term term ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_state_predicate_term variable_infos infer_type_opt term in
-	    Typed_state_predicate_term (typed_expr, discrete_type), discrete_type, has_side_effects
+	    let typed_expr, discrete_type = type_check_parsed_state_predicate_term variable_infos infer_type_opt term in
+	    Typed_state_predicate_term (typed_expr, discrete_type), discrete_type
 
 and type_check_parsed_state_predicate_term variable_infos infer_type_opt = function
 	| Parsed_state_predicate_term_AND (l_expr, r_expr) as outer_expr ->
-	    let l_typed_expr, l_type, l_has_side_effects = type_check_parsed_state_predicate_term variable_infos infer_type_opt l_expr in
-	    let r_typed_expr, r_type, r_has_side_effects = type_check_parsed_state_predicate_term variable_infos infer_type_opt r_expr in
+	    let l_typed_expr, l_type = type_check_parsed_state_predicate_term variable_infos infer_type_opt l_expr in
+	    let r_typed_expr, r_type = type_check_parsed_state_predicate_term variable_infos infer_type_opt r_expr in
 
 	    (match l_type, r_type with
 	    | Var_type_discrete_bool, Var_type_discrete_bool ->
-	        Typed_state_predicate_term_AND (l_typed_expr, r_typed_expr), Var_type_discrete_bool, l_has_side_effects || r_has_side_effects
+	        Typed_state_predicate_term_AND (l_typed_expr, r_typed_expr), Var_type_discrete_bool
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -889,16 +875,16 @@ and type_check_parsed_state_predicate_term variable_infos infer_type_opt = funct
 	    )
 
 	| Parsed_state_predicate_factor factor ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_state_predicate_factor variable_infos infer_type_opt factor in
-	    Typed_state_predicate_factor (typed_expr, discrete_type), discrete_type, has_side_effects
+	    let typed_expr, discrete_type = type_check_parsed_state_predicate_factor variable_infos infer_type_opt factor in
+	    Typed_state_predicate_factor (typed_expr, discrete_type), discrete_type
 
 and type_check_parsed_state_predicate_factor variable_infos infer_type_opt = function
 	| Parsed_state_predicate_factor_NOT factor as outer_expr ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_state_predicate_factor variable_infos infer_type_opt factor in
+	    let typed_expr, discrete_type = type_check_parsed_state_predicate_factor variable_infos infer_type_opt factor in
 
         (* Check that expression type is boolean *)
 	    (match discrete_type with
-	    | Var_type_discrete_bool -> Typed_state_predicate_factor_NOT typed_expr, discrete_type, has_side_effects
+	    | Var_type_discrete_bool -> Typed_state_predicate_factor_NOT typed_expr, discrete_type
 	    | _ ->
 	        raise (TypeError (
                 ill_typed_message_of_expressions
@@ -909,12 +895,12 @@ and type_check_parsed_state_predicate_factor variable_infos infer_type_opt = fun
         )
 
 	| Parsed_simple_predicate predicate ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_simple_predicate variable_infos infer_type_opt predicate in
-	    Typed_simple_predicate (typed_expr, discrete_type), discrete_type, has_side_effects
+	    let typed_expr, discrete_type = type_check_parsed_simple_predicate variable_infos infer_type_opt predicate in
+	    Typed_simple_predicate (typed_expr, discrete_type), discrete_type
 
 	| Parsed_state_predicate predicate ->
-	    let typed_expr, discrete_type, has_side_effects = type_check_parsed_state_predicate variable_infos infer_type_opt predicate in
-	    Typed_state_predicate (typed_expr, discrete_type), discrete_type, has_side_effects
+	    let typed_expr, discrete_type = type_check_parsed_state_predicate variable_infos infer_type_opt predicate in
+	    Typed_state_predicate (typed_expr, discrete_type), discrete_type
 
 
 
@@ -925,7 +911,7 @@ let check_type_assignment variable_infos variable_name variable_type expr =
     (* Eventually get a number type to infer *)
     let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
     (* Resolve typed expression *)
-    let typed_expr, expr_var_type_discrete, _ = type_check_parsed_boolean_expression None variable_infos variable_number_type_opt expr in
+    let typed_expr, expr_var_type_discrete = type_check_parsed_boolean_expression None variable_infos variable_number_type_opt expr in
     (* Check eventual side effects in assignment *)
     let has_side_effects = ParsingStructureMeta.has_side_effect_parsed_boolean_expression variable_infos expr in
 
@@ -1007,7 +993,7 @@ let check_constant_expression variable_infos (name, expr, var_type) =
 (* return a tuple containing the non-linear constraint uniformly typed and the resolved type of the expression *)
 let check_nonlinear_constraint variable_infos nonlinear_constraint =
 
-    let typed_nonlinear_constraint, discrete_type, _ = type_check_parsed_discrete_boolean_expression None variable_infos None nonlinear_constraint in
+    let typed_nonlinear_constraint, discrete_type = type_check_parsed_discrete_boolean_expression None variable_infos None nonlinear_constraint in
     (* Check eventual side effects in non-linear constraint *)
     let has_side_effects = ParsingStructureMeta.has_side_effect_parsed_discrete_boolean_expression variable_infos nonlinear_constraint in
 
@@ -1066,14 +1052,14 @@ let check_update variable_infos update_types parsed_update_type expr =
     in
 
     (* Resolve typed expression *)
-    let typed_expr, expr_type, _ (* side effects *) = type_check_parsed_boolean_expression None variable_infos variable_number_type_opt expr in
-    (* Check eventual side effects in update *)
-    let has_side_effects = ParsingStructureMeta.has_side_effect_parsed_boolean_expression variable_infos expr in
+    let typed_expr, expr_type = type_check_parsed_boolean_expression None variable_infos variable_number_type_opt expr in
+    (* Check eventual side effects in update expression (left and right member) *)
+    let has_side_effects = ParsingStructureMeta.has_side_effect_parsed_normal_update variable_infos (parsed_update_type, expr) in
 
-    let typed_update_type, l_value_type, is_parsed_update_type_has_side_effects (* side effects *) = type_check_parsed_update_type None variable_infos parsed_update_type in
+    let typed_update_type, l_value_type = type_check_parsed_update_type None variable_infos parsed_update_type in
 
     (* Check that continuous / discrete not sequential updates doesn't contain side effects *)
-    if update_types = Parsed_std_updates && (has_side_effects || is_parsed_update_type_has_side_effects) then
+    if update_types = Parsed_std_updates && has_side_effects then
         raise (TypeError (
             "`then` update bloc contain one or more expression with side effects `"
             ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr
@@ -1106,7 +1092,7 @@ let check_conditional variable_infos expr =
     print_message Verbose_high "----------";
     print_message Verbose_high ("Infer conditional expression: " ^ string_of_parsed_boolean_expression variable_infos expr);
 
-    let typed_expr, expr_type, _ (* side effects *) = type_check_parsed_boolean_expression None variable_infos None expr in
+    let typed_expr, expr_type = type_check_parsed_boolean_expression None variable_infos None expr in
 
     (* Check that non-linear constraint is a Boolean expression *)
     match expr_type with
@@ -1123,7 +1109,7 @@ let check_conditional variable_infos expr =
 (* Check that a predicate is well typed *)
 let check_state_predicate variable_infos predicate =
     (* Type check *)
-    let typed_predicate, discrete_type, _ = type_check_parsed_state_predicate variable_infos None predicate in
+    let typed_predicate, discrete_type = type_check_parsed_state_predicate variable_infos None predicate in
     (* Check eventual side effects in state predicate *)
     let has_side_effects = ParsingStructureMeta.has_side_effect_parsed_state_predicate variable_infos predicate in
 
@@ -1150,7 +1136,7 @@ let check_state_predicate variable_infos predicate =
         ))
 
 let check_fun_definition variable_infos (parsed_fun_definition : parsed_fun_definition) =
-    let typed_fun_definition, _, _ = type_check_parsed_fun_definition variable_infos parsed_fun_definition in
+    let typed_fun_definition, _ = type_check_parsed_fun_definition variable_infos parsed_fun_definition in
     typed_fun_definition
 
 end

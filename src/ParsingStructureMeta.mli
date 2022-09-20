@@ -34,6 +34,8 @@ val has_side_effect_parsed_boolean_expression : variable_infos -> parsed_boolean
 val has_side_effect_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
 (* Check if a parsed discrete arithmetic expression has side effects *)
 val has_side_effect_parsed_discrete_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> bool
+(* Check if a parsed normal update has side effects *)
+val has_side_effect_parsed_normal_update : variable_infos -> normal_update -> bool
 (* Check if a parsed state predicate has side effects *)
 val has_side_effect_parsed_state_predicate : variable_infos -> parsed_state_predicate -> bool
 (* Check if a parsed sequential code bloc has side effects *)

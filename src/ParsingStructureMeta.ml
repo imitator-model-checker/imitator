@@ -192,8 +192,12 @@ let has_side_effect_parsed_boolean_expression variable_infos = exists_in_parsed_
 let has_side_effect_parsed_discrete_boolean_expression variable_infos = exists_in_parsed_discrete_boolean_expression (has_side_effects variable_infos)
 (* Check if a parsed discrete arithmetic expression has side effects *)
 let has_side_effect_parsed_discrete_arithmetic_expression variable_infos = exists_in_parsed_discrete_arithmetic_expression (has_side_effects variable_infos)
+(* Check if a parsed normal update has side effects *)
+let has_side_effect_parsed_normal_update variable_infos = exists_in_parsed_normal_update (has_side_effects variable_infos)
 (* Check if a parsed state predicate has side effects *)
 let has_side_effect_parsed_state_predicate variable_infos = exists_in_parsed_state_predicate (function _ -> false) (has_side_effects variable_infos)
+
+
 
 let has_side_effect_parsed_seq_code_bloc variable_infos =
 
@@ -209,12 +213,10 @@ let has_side_effect_parsed_seq_code_bloc variable_infos =
 
             is_init_expr_has_side_effects || is_next_expr_has_side_effects
 
-        | Parsed_assignment ((parsed_update_type, expr), next_expr) ->
+        | Parsed_assignment (((parsed_update_type, expr) as normal_update), next_expr) ->
 
-    (*        let is_parsed_update_type_has_side_effects = has_side_effect_parsed_update_type (Some local_variables) variable_infos parsed_update_type in*)
-            let has_side_effects = has_side_effect_parsed_boolean_expression variable_infos expr in
+            let has_side_effects = has_side_effect_parsed_normal_update variable_infos normal_update in
             let next_expr_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables next_expr in
-
             true
 
         | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) as outer_expr ->
