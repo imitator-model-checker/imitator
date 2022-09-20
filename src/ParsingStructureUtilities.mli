@@ -103,6 +103,8 @@ val exists_in_parsed_nonlinear_constraint : (parsing_structure_leaf -> bool) -> 
 val exists_in_parsed_update : (parsing_structure_leaf -> bool) -> update -> bool
 (** Check if any leaf of a parsed normal update satisfy the predicate **)
 val exists_in_parsed_normal_update : (parsing_structure_leaf -> bool) -> normal_update -> bool
+(** Check if any leaf of a parsed state predicate satisfy the predicate **)
+val exists_in_parsed_state_predicate : (state_predicate_leaf -> bool) -> (parsing_structure_leaf -> bool) -> parsed_state_predicate -> bool
 
 (** Check if any leaf of a parsed sequential code bloc satisfy the predicate **)
 (*val exists_in_parsed_seq_code_bloc_with_local_variables : (parsing_structure_leaf -> bool) -> parsed_seq_code_bloc -> bool*)

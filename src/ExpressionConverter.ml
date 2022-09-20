@@ -773,26 +773,29 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
 
     | Parsed_bloc_void -> Typed_bloc_void, Var_type_void, false
 
-let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStructure.parsed_fun_definition) =
+let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.parsed_fun_definition) =
     (* Get parameter types and return type of the function *)
-    let parameter_names, parameter_discrete_types = List.split fun_definition.parameters in
-    let return_type = fun_definition.return_type in
+    let parameter_names, parameter_discrete_types = List.split fun_def.parameters in
+    let return_type = fun_def.return_type in
     (* Construct signature *)
     let signature = parameter_discrete_types @ [return_type] in
 
     (* Add parameters as local variables of the function *)
-    let local_variables = List.fold_left (fun acc (param_name, param_type) -> VariableMap.add param_name param_type acc) VariableMap.empty fun_definition.parameters in
+    let local_variables = List.fold_left (fun acc (param_name, param_type) -> VariableMap.add param_name param_type acc) VariableMap.empty fun_def.parameters in
 
     (* Eventually infer the body expression type of function to the return type underlying type of the function *)
     let infer_type_opt = Some (DiscreteType.extract_inner_type return_type) in
-    let typed_body, body_discrete_type, is_body_has_side_effects = type_check_seq_code_bloc local_variables variable_infos infer_type_opt fun_definition.body in
+    let typed_body, body_discrete_type, _ = type_check_seq_code_bloc local_variables variable_infos infer_type_opt fun_def.body in
+    (* Check eventual side effects in body *)
+    let is_body_has_side_effects = ParsingStructureMeta.has_side_effect_parsed_seq_code_bloc variable_infos fun_def.body in
+
     (* Check type compatibility between function body and return type *)
     let is_body_type_compatible = is_discrete_type_compatibles body_discrete_type return_type in
 
     if not is_body_type_compatible then
         raise (TypeError (
             "Function signature `"
-            ^ fun_definition.name
+            ^ fun_def.name
             ^ FunctionSig.string_of_signature signature
             ^ "` does not match with implementation `"
             ^ string_of_typed_seq_code_bloc variable_infos typed_body
@@ -801,8 +804,8 @@ let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStr
             ^ "."
         ));
 
-    let typed_fun_definition = {
-        name = fun_definition.name;
+    let typed_fun_def = {
+        name = fun_def.name;
         parameters = parameter_names;
         signature = signature;
         body = typed_body;
@@ -810,7 +813,7 @@ let type_check_parsed_fun_definition variable_infos (fun_definition : ParsingStr
     }
     in
 
-    typed_fun_definition, return_type, is_body_has_side_effects
+    typed_fun_def, return_type, is_body_has_side_effects
 
 
 let type_check_parsed_loc_predicate variable_infos infer_type_opt = function
@@ -922,7 +925,9 @@ let check_type_assignment variable_infos variable_name variable_type expr =
     (* Eventually get a number type to infer *)
     let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
     (* Resolve typed expression *)
-    let typed_expr, expr_var_type_discrete, has_side_effects = type_check_parsed_boolean_expression None variable_infos variable_number_type_opt expr in
+    let typed_expr, expr_var_type_discrete, _ = type_check_parsed_boolean_expression None variable_infos variable_number_type_opt expr in
+    (* Check eventual side effects in assignment *)
+    let has_side_effects = ParsingStructureMeta.has_side_effect_parsed_boolean_expression variable_infos expr in
 
     (* Check if initialisation (init / constant) has side effects *)
     if has_side_effects then
@@ -1002,7 +1007,9 @@ let check_constant_expression variable_infos (name, expr, var_type) =
 (* return a tuple containing the non-linear constraint uniformly typed and the resolved type of the expression *)
 let check_nonlinear_constraint variable_infos nonlinear_constraint =
 
-    let typed_nonlinear_constraint, discrete_type, has_side_effects = type_check_parsed_discrete_boolean_expression None variable_infos None nonlinear_constraint in
+    let typed_nonlinear_constraint, discrete_type, _ = type_check_parsed_discrete_boolean_expression None variable_infos None nonlinear_constraint in
+    (* Check eventual side effects in non-linear constraint *)
+    let has_side_effects = ParsingStructureMeta.has_side_effect_parsed_discrete_boolean_expression variable_infos nonlinear_constraint in
 
     (* Print type annotations *)
     ImitatorUtilities.print_message Verbose_high (
@@ -1059,7 +1066,9 @@ let check_update variable_infos update_types parsed_update_type expr =
     in
 
     (* Resolve typed expression *)
-    let typed_expr, expr_type, has_side_effects (* side effects *) = type_check_parsed_boolean_expression None variable_infos variable_number_type_opt expr in
+    let typed_expr, expr_type, _ (* side effects *) = type_check_parsed_boolean_expression None variable_infos variable_number_type_opt expr in
+    (* Check eventual side effects in update *)
+    let has_side_effects = ParsingStructureMeta.has_side_effect_parsed_boolean_expression variable_infos expr in
 
     let typed_update_type, l_value_type, is_parsed_update_type_has_side_effects (* side effects *) = type_check_parsed_update_type None variable_infos parsed_update_type in
 
@@ -1114,7 +1123,9 @@ let check_conditional variable_infos expr =
 (* Check that a predicate is well typed *)
 let check_state_predicate variable_infos predicate =
     (* Type check *)
-    let typed_predicate, discrete_type, has_side_effects = type_check_parsed_state_predicate variable_infos None predicate in
+    let typed_predicate, discrete_type, _ = type_check_parsed_state_predicate variable_infos None predicate in
+    (* Check eventual side effects in state predicate *)
+    let has_side_effects = ParsingStructureMeta.has_side_effect_parsed_state_predicate variable_infos predicate in
 
     (* Print type annotations *)
     ImitatorUtilities.print_message Verbose_high (
