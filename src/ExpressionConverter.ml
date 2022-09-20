@@ -1236,6 +1236,11 @@ let loop_dir_of_typed_loop_dir = function
     | Typed_for_loop_up -> Loop_up
     | Typed_for_loop_down -> Loop_down
 
+(* Raise internal error when expected typed expression doesn't match with target abstract model expression *)
+let raise_conversion_error str_structure_name str_expr =
+    let fail_message = expr_type_doesnt_match_to_structure_message str_structure_name str_expr in
+    raise (InternalError fail_message)
+
 let rec global_expression_of_typed_boolean_expression variable_infos = function
 	| Typed_conj_dis _ as expr ->
 	    global_expression_of_typed_boolean_expression_by_type variable_infos expr Var_type_discrete_bool
@@ -1337,10 +1342,7 @@ and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression varia
             Int_arithmetic_expression (Int_term (int_arithmetic_expression_of_typed_term variable_infos term))
         )
 
-(* --------------------*)
-(* Bool conversion *)
-(* --------------------*)
-
+(* Bool expression conversion *)
 and bool_expression_of_typed_boolean_expression variable_infos = function
     | Typed_conj_dis (l_expr, r_expr, typed_conj_dis) ->
         Conj_dis (
@@ -1669,22 +1671,18 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
         )
 
 	| Typed_function_call (function_name, argument_expressions, _) ->
-	    int_expression_of_typed_function_call variable_infos argument_expressions function_name
+        let fun_meta = user_function_meta variable_infos function_name in
+
+        Int_function_call (
+            function_name,
+            fun_meta.parameter_names,
+            List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
+        )
 
 	| _ as expr ->
 	    let str_expr = string_of_typed_discrete_factor variable_infos Var_type_weak expr in
 	    let fail_message = expr_type_doesnt_match_to_structure_message "int" str_expr in
 	    raise (InternalError fail_message)
-
-and int_expression_of_typed_function_call variable_infos argument_expressions function_name =
-
-    let fun_meta = user_function_meta variable_infos function_name in
-
-    Int_function_call (
-        function_name,
-        fun_meta.parameter_names,
-        List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
-    )
 
 (* Binary word conversion *)
 and binary_expression_of_typed_boolean_expression variable_infos length = function
@@ -1767,22 +1765,6 @@ and binary_expression_of_typed_arithmetic_expression variable_infos length expr 
 (* --------------------*)
 (* Array conversion *)
 (* --------------------*)
-
-and array_expression_of_typed_boolean_expression_with_type variable_infos = function
-    | Typed_discrete_bool_expr (expr, discrete_type) ->
-        let inner_type =
-            match discrete_type with
-            | Var_type_discrete_array (inner_type, _) -> inner_type
-            | inner_type -> raise (InternalError ("The expression type indicate that it should be converted to an array expression, but a " ^ (DiscreteType.string_of_var_type_discrete inner_type) ^ " expression is found. Maybe something failed in type checking or conversion."))
-        in
-        array_expression_of_typed_discrete_boolean_expression variable_infos inner_type expr
-
-    | _ as expr ->
-	    let str_expr = string_of_typed_boolean_expression variable_infos expr in
-	    let fail_message = expr_type_doesnt_match_to_structure_message "array" str_expr in
-	    raise (InternalError fail_message)
-
-
 and array_expression_of_typed_boolean_expression variable_infos discrete_type = function
     | Typed_discrete_bool_expr (expr, _) ->
         array_expression_of_typed_discrete_boolean_expression variable_infos discrete_type expr
@@ -1866,22 +1848,6 @@ and array_expression_of_typed_function_call variable_infos discrete_type argumen
 (* --------------------*)
 (* List conversion *)
 (* --------------------*)
-
-and list_expression_of_typed_boolean_expression_with_type variable_infos = function
-    | Typed_discrete_bool_expr (expr, discrete_type) ->
-        let inner_type =
-            match discrete_type with
-            | Var_type_discrete_list inner_type -> inner_type
-            | inner_type -> raise (InternalError ("The expression type indicate that it should be converted to a list expression, but a " ^ (DiscreteType.string_of_var_type_discrete inner_type) ^ " expression is found. Maybe something failed in type checking or conversion."))
-        in
-
-        list_expression_of_typed_discrete_boolean_expression variable_infos inner_type expr
-    | _ as expr ->
-	    let str_expr = string_of_typed_boolean_expression variable_infos expr in
-	    let fail_message = expr_type_doesnt_match_to_structure_message "list" str_expr in
-	    raise (InternalError fail_message)
-
-
 and list_expression_of_typed_boolean_expression variable_infos discrete_type = function
     | Typed_discrete_bool_expr (expr, _) ->
         list_expression_of_typed_discrete_boolean_expression variable_infos discrete_type expr
@@ -1957,15 +1923,6 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
 	    raise (InternalError fail_message)
 
 (* Stack expression conversion *)
-and stack_expression_of_typed_boolean_expression_with_type variable_infos = function
-    | Typed_discrete_bool_expr (expr, discrete_type) ->
-        stack_expression_of_typed_discrete_boolean_expression variable_infos expr
-    | _ as expr ->
-	    let str_expr = string_of_typed_boolean_expression variable_infos expr in
-	    let fail_message = expr_type_doesnt_match_to_structure_message Constants.stack_string str_expr in
-	    raise (InternalError fail_message)
-
-
 and stack_expression_of_typed_boolean_expression variable_infos = function
     | Typed_discrete_bool_expr (expr, _) ->
         stack_expression_of_typed_discrete_boolean_expression variable_infos expr
@@ -1976,10 +1933,7 @@ and stack_expression_of_typed_boolean_expression variable_infos = function
 
 and stack_expression_of_typed_discrete_boolean_expression variable_infos expr =
 
-    let raise_error str_expr =
-        let fail_message = expr_type_doesnt_match_to_structure_message Constants.stack_string str_expr in
-        raise (InternalError fail_message)
-    in
+    let raise_error = raise_conversion_error Constants.stack_string in
 
     let rec stack_expression_of_typed_discrete_boolean_expression = function
         | Typed_arithmetic_expr (Typed_term (Typed_factor (factor, _), _), _) ->
@@ -2025,14 +1979,6 @@ and stack_expression_of_typed_discrete_boolean_expression variable_infos expr =
     stack_expression_of_typed_discrete_boolean_expression expr
 
 (* Queue expression conversion *)
-and queue_expression_of_typed_boolean_expression_with_type variable_infos = function
-    | Typed_discrete_bool_expr (expr, discrete_type) ->
-        queue_expression_of_typed_discrete_boolean_expression variable_infos expr
-    | _ as expr ->
-	    let str_expr = string_of_typed_boolean_expression variable_infos expr in
-	    let fail_message = expr_type_doesnt_match_to_structure_message "queue" str_expr in
-	    raise (InternalError fail_message)
-
 and queue_expression_of_typed_boolean_expression variable_infos = function
     | Typed_discrete_bool_expr (expr, _) ->
         queue_expression_of_typed_discrete_boolean_expression variable_infos expr
@@ -2043,10 +1989,7 @@ and queue_expression_of_typed_boolean_expression variable_infos = function
 
 and queue_expression_of_typed_discrete_boolean_expression variable_infos expr =
 
-    let raise_error str_expr =
-        let fail_message = expr_type_doesnt_match_to_structure_message Constants.queue_string str_expr in
-        raise (InternalError fail_message)
-    in
+    let raise_error = raise_conversion_error Constants.queue_string in
 
     let rec queue_expression_of_typed_discrete_boolean_expression = function
         | Typed_arithmetic_expr (Typed_term (Typed_factor (factor, _), _), _) ->
@@ -2095,10 +2038,7 @@ and queue_expression_of_typed_discrete_boolean_expression variable_infos expr =
 (* Void expression conversion *)
 and void_expression_of_typed_boolean_expression variable_infos expr =
 
-    let raise_error str_expr =
-        let fail_message = expr_type_doesnt_match_to_structure_message Constants.void_string str_expr in
-        raise (InternalError fail_message)
-    in
+    let raise_error = raise_conversion_error Constants.void_string in
 
     let rec void_expression_of_typed_boolean_expression = function
         | Typed_discrete_bool_expr (Typed_arithmetic_expr (Typed_term (Typed_factor (factor, _), _), _), _) ->
@@ -2110,11 +2050,15 @@ and void_expression_of_typed_boolean_expression variable_infos expr =
         | Typed_variable (variable_name, _, scope) ->
             (* Some code should control that variables and function parameters cannot be declared as void *)
             (* If this exception is raised, it mean that control was not made before properly *)
-            raise (InternalError
-                "`void` keyword is reserved for function return type.
-                Literals, constants, function parameters, local or global variables of type `void` cannot be declared.
+            raise (InternalError (
+                "`"
+                ^ Constants.void_string
+                ^ "` keyword is reserved for function return type.
+                Literals, constants, function parameters, local or global variables of type `"
+                ^ Constants.void_string
+                ^ "` cannot be declared.
                 It should be checked before."
-            )
+            ))
 
         | Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
             void_expression_of_typed_factor factor
@@ -2152,6 +2096,7 @@ and expression_access_type_of_typed_factor variable_infos factor = function
             ^ " although it was been type checked before."
         ))
 
+(* Alias *)
 let nonlinear_constraint_of_typed_nonlinear_constraint = bool_expression_of_typed_discrete_boolean_expression
 
 let rec scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos = function
