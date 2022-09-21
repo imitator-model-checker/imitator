@@ -98,7 +98,7 @@ type typed_loop_dir =
 
 type typed_seq_code_bloc =
     | Typed_local_decl of variable_name * var_type_discrete * typed_boolean_expression * typed_seq_code_bloc
-    | Typed_assignment of typed_normal_update * typed_seq_code_bloc
+    | Typed_assignment of typed_normal_update * typed_seq_code_bloc * typed_variable_scope
     | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next bloc *)
     | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next *)
     | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* then bloc *) * typed_seq_code_bloc option (* else bloc *) * typed_seq_code_bloc (* next *)
@@ -313,7 +313,7 @@ let rec string_of_typed_seq_code_bloc variable_infos = function
         ^ " end\n\n"
         ^ string_of_typed_seq_code_bloc variable_infos next_expr
 
-    | Typed_assignment ((typed_update_type, update_expr), next_expr) ->
+    | Typed_assignment ((typed_update_type, update_expr), next_expr, _) ->
         let str_left_member = string_of_typed_update_type variable_infos typed_update_type in
         let str_right_member = string_of_typed_boolean_expression variable_infos update_expr in
         ParsingStructureUtilities.string_of_assignment str_left_member str_right_member

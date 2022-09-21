@@ -483,12 +483,12 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         (* Try to resolve dependent types (a dependent type is a type that depend on a value, see wikipedia) *)
         (* For example fill_left(b(l), i) for a binary word of length l, return a binary word of length b(l + i) *)
         (* You can see that the return type depend on the value i *)
-        (* As typing system is static, only constant expressions can be considered for a value that produce in dependent type *)
+        (* As typing system is static, only constant expressions can be considered for a value produced in dependent type *)
         let dependent_type_constraints = OCamlUtilities.rev_filter_map (fun (type_constraint, expr) ->
             match type_constraint with
             | Defined_type_constraint (Number_constraint (Defined_type_number_constraint Int_constraint (Int_name_constraint constraint_name))) ->
 
-                let converted_expr = Convert.global_expression_of_typed_boolean_expression_by_type variable_infos expr (Var_type_discrete_number Var_type_discrete_int) in
+                let converted_expr = Convert.global_expression_of_typed_boolean_expression variable_infos expr in
 
                 if not (DiscreteExpressionEvaluator.is_global_expression_constant None converted_expr) then (
                     raise (TypeError (
@@ -582,8 +582,16 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 let rec type_check_parsed_scalar_or_index_update_type local_variables_opt variable_infos = function
     | Parsed_scalar_update variable_name ->
         (* Get assigned variable type *)
-        let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
-        let discrete_type = discrete_type_of_var_type var_type in
+
+        let discrete_type =
+            match local_variables_opt with
+            | Some local_variable when VariableMap.mem variable_name local_variable ->
+                VariableMap.find variable_name local_variable
+            | _ ->
+                let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
+                discrete_type_of_var_type var_type
+        in
+
         Typed_scalar_update variable_name, discrete_type
 
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) as indexed_update ->
@@ -660,7 +668,10 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
                 ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
             ));
 
-        Typed_assignment ((typed_update_type, typed_expr), typed_next_expr), next_expr_discrete_type
+        (* Get assignment scope *)
+        let scope = if VariableMap.mem variable_name local_variables then Local else Global in
+
+        Typed_assignment ((typed_update_type, typed_expr), typed_next_expr, scope), next_expr_discrete_type
 
     | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) as outer_expr ->
         (* Add local variable for loop to hashtable *)
@@ -1190,7 +1201,7 @@ let expression_must_have_type_message = "An expression should have a determined 
 let expr_type_doesnt_match_to_structure_message str_expr_type str_expr = "The deduced expression type indicate that it should be converted to a " ^ str_expr_type ^ " expression, but it's incompatible with this expression structure: `" ^ str_expr ^ "`. Maybe something failed in type checking or conversion."
 
 (** Convert a Boolean operator to its abstract model *)
-let convert_parsed_relop = function
+let relop_of_parsed_relop = function
 	| PARSED_OP_L -> OP_L
 	| PARSED_OP_LEQ	-> OP_LEQ
 	| PARSED_OP_EQ	-> OP_EQ
@@ -1369,7 +1380,7 @@ and bool_expression_of_typed_discrete_boolean_expression variable_infos = functi
 
 and bool_expression_of_typed_comparison variable_infos l_expr parsed_relop r_expr discrete_type =
 
-    let relop = convert_parsed_relop parsed_relop in
+    let relop = relop_of_parsed_relop parsed_relop in
 
     match discrete_type with
     | Var_type_discrete_number discrete_number_type ->
@@ -1962,6 +1973,19 @@ let update_type_of_typed_update_type variable_infos = function
         )
     | Typed_void_update -> Void_update
 
+let rec scalar_or_index_local_update_type_of_typed_scalar_or_index_update_type variable_infos = function
+    | Typed_scalar_update variable_name -> Scalar_local_update variable_name
+
+    | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, _) ->
+        Indexed_local_update (
+            scalar_or_index_local_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+        )
+
+let scalar_or_index_local_update_type_of_typed_update_type variable_infos = function
+    | Typed_variable_update typed_scalar_or_index_update_type ->
+        scalar_or_index_local_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
+    | Typed_void_update -> raise (InternalError "Unable to have void update on local variable.")
 
 (*------------------------------------------------------------*)
 (* Convert an array of variable coef into a linear term *)
@@ -2319,11 +2343,21 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
             next_expr
         )
 
-    | Typed_assignment ((typed_update_type, typed_expr), typed_next_expr) ->
-        Assignment (
-            (update_type_of_typed_update_type variable_infos typed_update_type,
-            global_expression_of_typed_boolean_expression variable_infos typed_expr),
-            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
+    | Typed_assignment ((typed_update_type, typed_expr), typed_next_expr, scope) ->
+
+        (match scope with
+        | Global ->
+            Assignment (
+                (update_type_of_typed_update_type variable_infos typed_update_type,
+                global_expression_of_typed_boolean_expression variable_infos typed_expr),
+                seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
+            )
+        | Local ->
+            Local_assignment (
+                (scalar_or_index_local_update_type_of_typed_update_type variable_infos typed_update_type,
+                global_expression_of_typed_boolean_expression variable_infos typed_expr),
+                seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
+            )
         )
 
     | Typed_bloc_expr typed_expr ->

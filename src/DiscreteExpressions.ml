@@ -206,11 +206,19 @@ and expression_access_type =
 and seq_code_bloc =
     | Local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * seq_code_bloc
     | Assignment of (update_type * global_expression) * seq_code_bloc
+    | Local_assignment of (scalar_or_index_local_update_type * global_expression) * seq_code_bloc
     | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next bloc *)
     | While_loop of boolean_expression (* condition *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next *)
     | If of boolean_expression (* condition *) * seq_code_bloc (* then bloc *) * seq_code_bloc option (* else bloc *) * seq_code_bloc (* next *)
     | Bloc_expr of global_expression
     | Bloc_void
+
+(* Update type *)
+and scalar_or_index_local_update_type =
+    (* Variable update, ie: x := 1 *)
+    | Scalar_local_update of variable_name
+    (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
+    | Indexed_local_update of scalar_or_index_local_update_type * int_arithmetic_expression
 
 (* Update type *)
 and scalar_or_index_update_type =
@@ -869,6 +877,14 @@ let string_of_update_type variable_names = function
     | Variable_update scalar_or_index_update_type ->
         string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type
     | Void_update -> ""
+
+let rec string_of_scalar_or_index_local_update_type variable_names = function
+    | Scalar_local_update variable_name -> variable_name
+    | Indexed_local_update (scalar_or_index_local_update_type, index_expr) ->
+        string_of_scalar_or_index_local_update_type variable_names scalar_or_index_local_update_type
+        ^ "["
+        ^ string_of_int_arithmetic_expression variable_names index_expr
+        ^ "]"
 
 let string_of_discrete_update variable_names (update_type, expr) =
     let str_left_member = string_of_update_type variable_names update_type in
