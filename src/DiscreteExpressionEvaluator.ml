@@ -538,6 +538,10 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
             direct_update_with_context variable_names functions_table_opt eval_context normal_update;
             eval_seq_code_bloc_with_context eval_context next_expr
 
+        | Local_assignment (local_update, next_expr) ->
+            let new_eval_context = direct_local_update_with_context variable_names functions_table_opt eval_context local_update in
+            eval_seq_code_bloc_with_context new_eval_context next_expr
+
         | Bloc_expr expr ->
             eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr
         | Bloc_void -> Abstract_void_value
@@ -601,6 +605,28 @@ and direct_update_with_context variable_names functions_table_opt eval_context u
         (* Direct update ! *)
         eval_context.discrete_setter discrete_index new_value
 
+(* Directly update a local discrete variable *)
+and direct_local_update_with_context variable_names functions_table_opt eval_context (scalar_or_index_local_update_type, expr) =
+
+   let rec variable_name_of_parsed_scalar_or_index_local_update_type = function
+        | Scalar_local_update variable_name -> variable_name
+        | Indexed_local_update (scalar_or_index_local_update_type, _) ->
+            variable_name_of_parsed_scalar_or_index_local_update_type scalar_or_index_local_update_type
+    in
+
+    (* Get discrete index *)
+    let variable_name = variable_name_of_parsed_scalar_or_index_local_update_type scalar_or_index_local_update_type in
+    (* Get value before update as old value *)
+    let old_value = VariableMap.find variable_name eval_context.local_variables in
+
+    (* Compute its new value *)
+    let new_value = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in
+    let new_value = pack_value_of_local variable_names functions_table_opt (Some eval_context) old_value new_value scalar_or_index_local_update_type in
+
+    (* Direct update ! *)
+    let updated_local_variables = VariableMap.update variable_name (function _ -> Some new_value) eval_context.local_variables in
+    {eval_context with local_variables = updated_local_variables}
+
 (* Record an update into the updated_discrete hash table, then the updates can be made later  *)
 (* This function is used for non-sequential updates *)
 and delayed_update_with_context variable_names functions_table_opt eval_context updated_discrete update =
@@ -641,7 +667,7 @@ and delayed_update_with_context variable_names functions_table_opt eval_context 
 and pack_value variable_names functions_table_opt eval_context_opt old_value new_value update_type =
 
     let rec pack_value_scalar_or_index_update_type = function
-        | Scalar_update discrete_index -> old_value, [||], None
+        | Scalar_update _ -> old_value, [||], None
         | Indexed_update (inner_scalar_or_index_update_type, index_expr) ->
 
             let old_value, _, _ = pack_value_scalar_or_index_update_type inner_scalar_or_index_update_type in
@@ -683,6 +709,46 @@ and pack_value variable_names functions_table_opt eval_context_opt old_value new
 (*        ImitatorUtilities.print_message Verbose_standard ("packed new value is: " ^ AbstractValue.string_of_value old_value);*)
         old_value
     | None -> new_value
+
+and pack_value_of_local variable_names functions_table_opt eval_context_opt old_value new_value scalar_or_index_local_update_type =
+
+    let rec pack_value_scalar_or_index_local_update_type = function
+        | Scalar_local_update _ -> old_value, [||], None
+        | Indexed_local_update (inner_scalar_or_index_local_update_type, index_expr) ->
+
+            let old_value, _, _ = pack_value_scalar_or_index_local_update_type inner_scalar_or_index_local_update_type in
+
+            (* Compute index *)
+            let index = Int32.to_int (eval_int_expression_with_context variable_names functions_table_opt eval_context_opt index_expr) in
+
+            (* Get inner array of discrete value of old value *)
+            let old_array = array_value old_value in
+
+            (* Check bounds *)
+            if index >= Array.length old_array || index < 0 then (
+
+                (* Create out of range fail message *)
+                let str_update_type =
+                    match variable_names with
+                    | Some variable_names -> DiscreteExpressions.string_of_scalar_or_index_local_update_type variable_names scalar_or_index_local_update_type
+                    | None -> ""
+                in
+
+                raise (Out_of_range ("Index out of range at `" ^ str_update_type ^ "`."))
+            );
+
+            (* Get element at given index *)
+            let unpacked_old_array = old_array.(index) in
+            unpacked_old_array, old_array, Some index
+    in
+
+    let unpacked_old_array, old_array, some_index = pack_value_scalar_or_index_local_update_type scalar_or_index_local_update_type in
+    match some_index with
+    | Some index ->
+        old_array.(index) <- new_value;
+        old_value
+    | None -> new_value
+
 
 (* Check if a nonlinear constraint is satisfied *)
 let check_nonlinear_constraint_with_context variable_names functions_table_opt eval_context_opt =

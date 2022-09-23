@@ -64,24 +64,6 @@ and discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
     | Int_arithmetic_expression of int_arithmetic_expression
 
-and 'a new_arithmetic_expression =
-    | Sum_diff of 'a new_arithmetic_expression * 'a new_term * sum_diff
-	| Arithmetic_term of 'a new_term
-
-and 'a new_term =
-	| Product_quotient of 'a new_term * 'a new_factor * product_quotient
-	| Arithmetic_factor of 'a new_factor
-
-and 'a new_factor =
-	| Arithmetic_global_variable of Automaton.variable_index
-	| Arithmetic_global_constant of 'a
-	| Arithmetic_local_variable of variable_name
-	| Arithmetic_nested_expression of 'a new_arithmetic_expression
-	| Arithmetic_unary_min of 'a new_factor
-    | Arithmetic_pow of 'a new_arithmetic_expression * int new_arithmetic_expression
-    | Arithmetic_array_access of expression_access_type * int new_arithmetic_expression
-    | Arithmetic_function_call of variable_name * variable_name list * global_expression list
-
 (****************************************************************)
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
@@ -224,11 +206,19 @@ and expression_access_type =
 and seq_code_bloc =
     | Local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * seq_code_bloc
     | Assignment of (update_type * global_expression) * seq_code_bloc
+    | Local_assignment of (scalar_or_index_local_update_type * global_expression) * seq_code_bloc
     | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next bloc *)
     | While_loop of boolean_expression (* condition *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next *)
     | If of boolean_expression (* condition *) * seq_code_bloc (* then bloc *) * seq_code_bloc option (* else bloc *) * seq_code_bloc (* next *)
     | Bloc_expr of global_expression
     | Bloc_void
+
+(* Update type *)
+and scalar_or_index_local_update_type =
+    (* Variable update, ie: x := 1 *)
+    | Scalar_local_update of variable_name
+    (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
+    | Indexed_local_update of scalar_or_index_local_update_type * int_arithmetic_expression
 
 (* Update type *)
 and scalar_or_index_update_type =
@@ -299,6 +289,7 @@ val string_of_queue_expression : variable_name_table -> queue_expression -> stri
 
 val string_of_update_type : variable_name_table -> update_type -> string
 val string_of_discrete_update : variable_name_table -> discrete_update -> string
+val string_of_scalar_or_index_local_update_type : variable_name_table -> scalar_or_index_local_update_type -> string
 
 val string_of_expression_access : variable_name_table -> expression_access_type -> int_arithmetic_expression -> string
 

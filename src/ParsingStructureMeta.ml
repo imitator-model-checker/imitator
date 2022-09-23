@@ -16,8 +16,10 @@ open ParsingStructureUtilities
 open OCamlUtilities
 open ImitatorUtilities
 open CustomModules
+open DiscreteType
 open VariableInfo
 open Exceptions
+
 
 (** Utils **)
 
@@ -32,6 +34,15 @@ let is_constant variable_infos = function
     | Leaf_variable variable_name -> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
     | Leaf_fun _
+    | Leaf_update_variable _ -> false
+
+(* Check if leaf has side effects *)
+let has_side_effects variable_infos = function
+    | Leaf_fun function_name ->
+        let function_metadata = Functions.function_metadata_by_name variable_infos function_name in
+        function_metadata.side_effect
+    | Leaf_variable _
+    | Leaf_constant _
     | Leaf_update_variable _ -> false
 
 (* Check if linear leaf is a constant *)
@@ -174,6 +185,79 @@ let is_parsed_arithmetic_expression_constant variable_infos =
 let is_parsed_term_constant variable_infos = for_all_in_parsed_discrete_term (is_constant variable_infos)
 (* Check if a parsed term is constant *)
 let is_parsed_factor_constant variable_infos = for_all_in_parsed_discrete_factor (is_constant variable_infos)
+
+(* Check if a parsed boolean expression has side effects *)
+let has_side_effect_parsed_boolean_expression variable_infos = exists_in_parsed_boolean_expression (has_side_effects variable_infos)
+(* Check if a parsed discrete boolean expression has side effects *)
+let has_side_effect_parsed_discrete_boolean_expression variable_infos = exists_in_parsed_discrete_boolean_expression (has_side_effects variable_infos)
+(* Check if a parsed discrete arithmetic expression has side effects *)
+let has_side_effect_parsed_discrete_arithmetic_expression variable_infos = exists_in_parsed_discrete_arithmetic_expression (has_side_effects variable_infos)
+(* Check if a parsed normal update has side effects *)
+let has_side_effect_parsed_normal_update variable_infos = exists_in_parsed_normal_update (has_side_effects variable_infos)
+(* Check if a parsed state predicate has side effects *)
+let has_side_effect_parsed_state_predicate variable_infos = exists_in_parsed_state_predicate (function _ -> false) (has_side_effects variable_infos)
+
+
+(* TODO benjamin generalize with ParsingStructureUtilities *)
+let has_side_effect_parsed_seq_code_bloc variable_infos =
+
+    let rec has_side_effect_parsed_seq_code_bloc_rec local_variables = function
+        | Parsed_local_decl (variable_name, variable_type, expr, next_expr, _) ->
+            (* Add local variable to hashtable *)
+            let new_local_variables = VariableMap.add variable_name variable_type local_variables in
+
+            (* Type check and infer init expression of the local variable declaration *)
+            let is_init_expr_has_side_effects = has_side_effect_parsed_boolean_expression variable_infos expr in
+            (* Type check and infer the next expression of the function body *)
+            let is_next_expr_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec new_local_variables next_expr in
+
+            is_init_expr_has_side_effects || is_next_expr_has_side_effects
+
+        | Parsed_assignment (((parsed_update_type, expr) as normal_update), next_expr) ->
+
+            let has_side_effects = has_side_effect_parsed_normal_update variable_infos normal_update in
+            let next_expr_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables next_expr in
+            true
+
+        | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) as outer_expr ->
+            (* Add local variable for loop to hashtable *)
+            let loop_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
+
+            let is_from_expr_has_side_effects = has_side_effect_parsed_discrete_arithmetic_expression variable_infos from_expr in
+            let is_to_expr_has_side_effects = has_side_effect_parsed_discrete_arithmetic_expression variable_infos to_expr in
+            let inner_bloc_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec loop_local_variables inner_bloc in
+            let next_expr_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables next_expr in
+            true
+
+        | Parsed_while_loop (condition_expr, inner_bloc, next_expr) as outer_expr ->
+
+            let is_condition_expr_has_side_effects = has_side_effect_parsed_boolean_expression variable_infos condition_expr in
+            let inner_bloc_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables inner_bloc in
+            let next_expr_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables next_expr in
+            true
+
+        | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) as outer_expr ->
+
+            let is_condition_expr_has_side_effects = has_side_effect_parsed_boolean_expression variable_infos condition_expr in
+            let then_bloc_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables then_bloc in
+
+            let else_bloc_has_side_effects =
+                match else_bloc_opt with
+                | Some else_bloc ->
+                    has_side_effect_parsed_seq_code_bloc_rec local_variables else_bloc
+                | None ->
+                    false
+            in
+
+            let next_expr_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables next_expr in
+            true
+
+        | Parsed_bloc_expr expr ->
+            has_side_effect_parsed_boolean_expression variable_infos expr
+
+        | Parsed_bloc_void -> false
+    in
+    has_side_effect_parsed_seq_code_bloc_rec VariableMap.empty
 
 (* Check if a parsed boolean expression is linear *)
 let rec is_linear_parsed_boolean_expression variable_infos = function
