@@ -856,6 +856,19 @@ let eval_pow str_expr = function
         Abstract_scalar_value (Abstract_number_value (Abstract_int_value (OCamlUtilities.pow x exponent)))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
+let eval_mod str_expr = function
+    | (Abstract_scalar_value (Abstract_number_value (Abstract_int_value a))) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value b)) :: _ ->
+        let i_a, i_b = Int32.to_int a, Int32.to_int b in
+        let modulo = Int32.of_int (i_a mod i_b) in
+        Abstract_scalar_value (Abstract_number_value (Abstract_int_value modulo))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_int_div str_expr = function
+    | (Abstract_scalar_value (Abstract_number_value (Abstract_int_value a))) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value b)) :: _ ->
+        let result = Int32.div a b in
+        Abstract_scalar_value (Abstract_number_value (Abstract_int_value result))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
 let eval_rational_of_int str_expr = function
     | Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
         ImitatorUtilities.print_warning

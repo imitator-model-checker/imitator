@@ -732,6 +732,14 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 \paragraph{Arithmetic functions}
 
 \begin{itemize}
+	\item \label{item:lbl-int_div} \styleIMI{int\_div(a:int, b:int):int} - compute the int division of a by b
+\end{itemize}
+
+\begin{itemize}
+	\item \label{item:lbl-mod} \styleIMI{mod(a:int, b:int):int} - compute the modulo of a by b
+\end{itemize}
+
+\begin{itemize}
     \item \label{item:lbl-pow} \styleIMI{pow(x:'a number, e:int):'a} with \styleIMI{'a number:[rational|int]} - compute the power of a (rational or integer) number
 \end{itemize}
 
@@ -741,7 +749,7 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
-		when pow(2, 3) = 8 goto l1;
+		when mod(5, 2) = 1 & int_div(5, 2) = 2 & pow(2, 3) = 8 goto l1;
 	\end{IMITATORmodel}
 %------------------------------------------------------------
 \end{example}
@@ -1186,6 +1194,10 @@ We summarize in \cref{table:summary:builtin-functions} the built-in functions fo
 			\rowHeader{} \textbf{Name} & \textbf{Description} \\
 			\hline
 		 	\multicolumn{2}{|c|}{\textbf{Arithmetic}} \\
+			\hline
+			\hyperref[item:lbl-int_div]{\styleIMI{int\_div}} & Int division        \\
+			\hline
+			\hyperref[item:lbl-mod]{\styleIMI{mod}} & Modulo of two int        \\
 			\hline
 			\hyperref[item:lbl-pow]{\styleIMI{pow}} & Pow a number        \\
 			\hline
@@ -5466,6 +5478,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{in} \\
 	\styleIMI{init} \\
 	\styleIMI{initially} \\
+	\styleIMI{int\_div} \\
 	\styleIMI{invariant} \\
 	\styleIMI{is} \\
 	\styleIMI{let} \\
@@ -5481,6 +5494,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{lognot} \\
 	\styleIMI{logor} \\
 	\styleIMI{logxor} \\
+	\styleIMI{mod} \\
 	\styleIMI{next} \\
 	\styleIMI{nosync\_obs} \\
 	\styleIMI{not} \\

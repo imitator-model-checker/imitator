@@ -127,6 +127,28 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
             side_effect = false;
         };
         {
+            name = "mod";
+            parameter_names = ["a"; "b"];
+            signature_constraint = [
+                Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
+                Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
+                Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
+            ];
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_mod;
+            side_effect = false;
+        };
+        {
+            name = "int_div";
+            parameter_names = ["a"; "b"];
+            signature_constraint = [
+                Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
+                Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
+                Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
+            ];
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_int_div;
+            side_effect = false;
+        };
+        {
             name = "rational_of_int";
             parameter_names = ["r"];
             signature_constraint = [
