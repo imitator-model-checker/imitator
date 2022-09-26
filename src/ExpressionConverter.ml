@@ -764,9 +764,9 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
             ))
         )
 
-    | Parsed_bloc_expr expr ->
+    | Parsed_return_expr expr ->
         let typed_expr, discrete_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
-        Typed_bloc_expr typed_expr, discrete_type
+        Typed_return_expr typed_expr, discrete_type
 
     | Parsed_bloc_void -> Typed_bloc_void, Var_type_void
 
@@ -2360,8 +2360,8 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
             )
         )
 
-    | Typed_bloc_expr typed_expr ->
-        Bloc_expr (
+    | Typed_return_expr typed_expr ->
+        Return_expr (
             global_expression_of_typed_boolean_expression variable_infos typed_expr
         )
 

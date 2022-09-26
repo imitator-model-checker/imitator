@@ -291,7 +291,7 @@ seq_code_bloc:
 /* Bloc of code, or return expression */
 seq_code_bloc_or_return:
   | seq_code_bloc { $1 }
-  | CT_RETURN boolean_expression semicolon_opt { Parsed_bloc_expr $2 }
+  | CT_RETURN boolean_expression semicolon_opt { Parsed_return_expr $2 }
 ;
 
 loop_dir:

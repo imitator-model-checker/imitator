@@ -542,7 +542,7 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
             let new_eval_context = direct_local_update_with_context variable_names functions_table_opt eval_context local_update in
             eval_seq_code_bloc_with_context new_eval_context next_expr
 
-        | Bloc_expr expr ->
+        | Return_expr expr ->
             eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr
         | Bloc_void -> Abstract_void_value
     in

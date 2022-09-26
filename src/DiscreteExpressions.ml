@@ -210,7 +210,7 @@ and seq_code_bloc =
     | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next bloc *)
     | While_loop of boolean_expression (* condition *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next *)
     | If of boolean_expression (* condition *) * seq_code_bloc (* then bloc *) * seq_code_bloc option (* else bloc *) * seq_code_bloc (* next *)
-    | Bloc_expr of global_expression
+    | Return_expr of global_expression
     | Bloc_void
 
 (* Update type *)

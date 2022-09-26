@@ -376,7 +376,7 @@ let string_of_fun_definitions model =
                 tabs ^ DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
                 ^ string_of_next_expr level next_expr
 
-            | Bloc_expr expr ->
+            | Return_expr expr ->
                 tabs ^ "return " ^ DiscreteExpressions.string_of_global_expression model.variable_names expr ^ "\n"
 
             | Bloc_void -> ""

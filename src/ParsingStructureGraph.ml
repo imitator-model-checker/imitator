@@ -470,7 +470,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 (* Concat current relations with next relations *)
                 then_bloc_declaration_relations @ else_bloc_declaration_relations @ next_declaration_relations @ relations
 
-            | Parsed_bloc_expr expr ->
+            | Parsed_return_expr expr ->
                 (* Get variable and function refs used in the expression *)
                 let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
                 let all_refs = variables_used_refs @ functions_used_refs in
@@ -721,7 +721,7 @@ let traverse_function operator f base (fun_def : parsed_fun_definition) =
                 (f local_variable_components expr)
                 (traverse_parsed_seq_code_bloc local_variable_components next_expr)
 
-        | Parsed_bloc_expr _ as expr ->
+        | Parsed_return_expr _ as expr ->
             f local_variable_components expr
         | Parsed_bloc_void -> base
     in
@@ -766,7 +766,7 @@ let left_variables_of_assignments_in (fun_def : parsed_fun_definition) =
 
             | None -> ()
             );
-        | Parsed_bloc_expr _
+        | Parsed_return_expr _
         | Parsed_bloc_void -> ()
     in
     traverse_function bin_unit left_variables_of_assignments_in_parsed_seq_code_bloc () fun_def;
@@ -804,7 +804,7 @@ let right_variables_of_assignments_in (fun_def : parsed_fun_definition) =
 
         | Parsed_for_loop _
         | Parsed_while_loop _
-        | Parsed_bloc_expr _
+        | Parsed_return_expr _
         | Parsed_if _
         | Parsed_bloc_void -> ()
     in

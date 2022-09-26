@@ -161,7 +161,7 @@ and fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun = fu
             (fold_parsed_normal_update operator base leaf_fun normal_update)
             (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun next_expr)
 
-    | Parsed_bloc_expr expr ->
+    | Parsed_return_expr expr ->
         (fold_parsed_boolean_expression operator base leaf_fun expr)
 
     | Parsed_bloc_void ->
@@ -561,7 +561,7 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             ^ " end\n\n"
             ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
-        | Parsed_bloc_expr expr ->
+        | Parsed_return_expr expr ->
             "return " ^ string_of_parsed_boolean_expression variable_infos expr
         | Parsed_bloc_void -> ""
 
