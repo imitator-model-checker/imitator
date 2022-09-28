@@ -659,17 +659,24 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
         (* Resolve typed next expr *)
         let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
 
-        let variable_name = ParsingStructureUtilities.string_of_parsed_update_type variable_infos parsed_update_type in
+        let str_update_type = ParsingStructureUtilities.string_of_parsed_update_type variable_infos parsed_update_type in
         let is_void_update = match parsed_update_type with Parsed_void_update -> true | _ -> false in
 
         (* Check compatibility between assignee variable type (if not a void update) and it's assigned expression *)
         if not (is_void_update || is_discrete_type_compatibles variable_type expr_type) then
             raise (TypeError (
-                ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
+                ill_typed_variable_message str_update_type (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
             ));
 
         (* Get assignment scope *)
-        let scope = if VariableMap.mem variable_name local_variables then Local else Global in
+        let variable_name_opt = ParsingStructureMeta.variable_name_of_parsed_update_type_opt parsed_update_type in
+
+        let scope =
+            match variable_name_opt with
+            | Some variable_name when VariableMap.mem variable_name local_variables -> Local
+            (* If None variable name (void update), or not in local variables *)
+            | _ -> Global
+        in
 
         Typed_assignment ((typed_update_type, typed_expr), typed_next_expr, scope), next_expr_discrete_type
 

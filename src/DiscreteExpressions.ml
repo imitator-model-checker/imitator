@@ -281,6 +281,7 @@ type nonlinear_constraint = discrete_boolean_expression list
 (** update: variable_index := linear_term *)
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
 type discrete_update = update_type * global_expression
+type discrete_local_update = scalar_or_index_local_update_type * global_expression
 
 (** Check linearity of a discrete expression **)
 
@@ -888,6 +889,12 @@ let rec string_of_scalar_or_index_local_update_type variable_names = function
 
 let string_of_discrete_update variable_names (update_type, expr) =
     let str_left_member = string_of_update_type variable_names update_type in
+    str_left_member
+    ^ (if str_left_member <> "" then " := " else "")
+    ^ string_of_global_expression variable_names expr
+
+let string_of_discrete_local_update variable_names (local_update_type, expr) =
+    let str_left_member = string_of_scalar_or_index_local_update_type variable_names local_update_type in
     str_left_member
     ^ (if str_left_member <> "" then " := " else "")
     ^ string_of_global_expression variable_names expr

@@ -242,6 +242,7 @@ type nonlinear_constraint = discrete_boolean_expression list
 (** update: variable_index := linear_term *)
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
 type discrete_update = update_type * global_expression
+type discrete_local_update = scalar_or_index_local_update_type * global_expression
 
 val is_linear_discrete_boolean_expression : discrete_boolean_expression -> bool
 val is_linear_nonlinear_constraint : nonlinear_constraint -> bool
@@ -289,6 +290,7 @@ val string_of_queue_expression : variable_name_table -> queue_expression -> stri
 
 val string_of_update_type : variable_name_table -> update_type -> string
 val string_of_discrete_update : variable_name_table -> discrete_update -> string
+val string_of_discrete_local_update : variable_name_table -> discrete_local_update -> string
 val string_of_scalar_or_index_local_update_type : variable_name_table -> scalar_or_index_local_update_type -> string
 
 val string_of_expression_access : variable_name_table -> expression_access_type -> int_arithmetic_expression -> string
