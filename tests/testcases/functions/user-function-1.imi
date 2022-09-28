@@ -34,10 +34,14 @@ var
   r_global : rat;
   a_global : int array(2);
 
+  number_stack : int stack;
+
   (* Some result variables *)
   i_result, i_result_2 : int;
   r_result, lerp_result : rat;
   top_stack, top_queue : int;
+  my_flatten_array : int array(4);
+  stack_sum_result : int;
 
 (* Last index of an array *)
 fn last_idx_fun(a : int array(2)) : int
@@ -111,6 +115,41 @@ begin
   return a + i1 (* Should give 3 *)
 end
 
+fn flatten_nested_array(a : int array(2) array(2)) : int array(4)
+begin
+    var flatten_arr : int array(4) = [0, 0, 0, 0];
+    var length : int = array_length(a);
+
+    for i from 0 to length - 1 do
+        for j from 0 to array_length(a[i]) - 1 do
+            flatten_arr[j + (i * length)] := a[j][i];
+        done
+    done
+
+    return flatten_arr;
+end
+
+fn stack_sum(s : int stack) : int
+begin
+
+    var n : int = 0;
+    while not (is_stack_empty(s)) do
+        n := n + stack_pop(s);
+    done
+
+    return n;
+end
+
+fn sss(s: int stack) : int
+begin
+    var n : int = 0;
+
+    while n < 10 do
+        n := n + 1;
+    done
+    return n;
+end
+
 automaton P
 
   loc l0: invariant True
@@ -128,6 +167,12 @@ automaton P
       top_queue = queue_top(q);
       i_result_2 := set_globals(5);
       lerp_result := lerp(4.98, 10.85, 0.5);
+      my_flatten_array := flatten_nested_array([[1, 2], [3, 4]]);
+      stack_push(5, number_stack);
+      stack_push(8, number_stack);
+      stack_push(9, number_stack);
+      stack_push(4, number_stack);
+      stack_sum_result := sss(number_stack);
 
     then
       i_result := int_f(2),
@@ -147,6 +192,7 @@ init := {
       r1 := 1,
       s := stack(),
       q := queue(),
-      bin := 0b1011
+      bin := 0b1011,
+      my_flatten_array := [0, 0, 0, 0]
     ;
 }
