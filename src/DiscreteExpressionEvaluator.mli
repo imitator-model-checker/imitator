@@ -47,6 +47,8 @@ val eval_constant_rational_term_opt : functions_table option -> rational_term ->
 val eval_constant_rational_factor_opt : functions_table option -> rational_factor -> NumConst.t option
 
 val eval_pow : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_mod : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_int_div : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
 val eval_rational_of_int : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
 val eval_shift_left : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
 val eval_shift_right : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value

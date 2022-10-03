@@ -15,8 +15,8 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created          : 2022/06/29
- * Last modified    : 2022/06/29
- * Model version    : 1.0
+ * Last modified    : 2022/10/27
+ * Model version    : 1.1
  *
  * IMITATOR version : 3.3
  ************************************************************)
@@ -24,7 +24,7 @@
 var
 
   r, r_pow, r2 : rat;
-  i = 5, i_pow : int;
+  i = 5, i_pow, i_div, modulo : int;
   b, bsl, bsr, bla, blo, blxo, bln : binary(4);
   bfl, bfr : binary(6);
   aa : int array(4);
@@ -65,6 +65,8 @@ automaton P
     (* int *)
 
     i_pow := pow(i, 2); (* i_pow = 25 *)
+    i_div := int_div(5, 2);
+    modulo := mod(5, 2);
 
     (* binary words *)
 

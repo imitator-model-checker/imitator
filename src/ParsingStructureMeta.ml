@@ -252,7 +252,7 @@ let has_side_effect_parsed_seq_code_bloc variable_infos =
             let next_expr_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables next_expr in
             true
 
-        | Parsed_bloc_expr expr ->
+        | Parsed_return_expr expr ->
             has_side_effect_parsed_boolean_expression variable_infos expr
 
         | Parsed_bloc_void -> false
@@ -441,7 +441,7 @@ let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_ca
             (* Is all defined ? *)
             all_variables_defined_in_condition_expr && all_variables_defined_in_then_bloc && all_variables_defined_in_else_bloc && all_variables_defined_in_next_expr
 
-        | Parsed_bloc_expr expr ->
+        | Parsed_return_expr expr ->
             all_variables_defined_in_parsed_boolean_expression local_variables expr
         | Parsed_bloc_void -> true
     in

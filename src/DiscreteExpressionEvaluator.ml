@@ -542,7 +542,7 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
             let new_eval_context = direct_local_update_with_context variable_names functions_table_opt eval_context local_update in
             eval_seq_code_bloc_with_context new_eval_context next_expr
 
-        | Bloc_expr expr ->
+        | Return_expr expr ->
             eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr
         | Bloc_void -> Abstract_void_value
     in
@@ -854,6 +854,19 @@ let eval_pow str_expr = function
         Abstract_scalar_value (Abstract_number_value (Abstract_rat_value (NumConst.pow x exponent)))
     | Abstract_scalar_value (Abstract_number_value (Abstract_int_value x)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value exponent)) :: _ ->
         Abstract_scalar_value (Abstract_number_value (Abstract_int_value (OCamlUtilities.pow x exponent)))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_mod str_expr = function
+    | (Abstract_scalar_value (Abstract_number_value (Abstract_int_value a))) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value b)) :: _ ->
+        let i_a, i_b = Int32.to_int a, Int32.to_int b in
+        let modulo = Int32.of_int (i_a mod i_b) in
+        Abstract_scalar_value (Abstract_number_value (Abstract_int_value modulo))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_int_div str_expr = function
+    | (Abstract_scalar_value (Abstract_number_value (Abstract_int_value a))) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value b)) :: _ ->
+        let result = Int32.div a b in
+        Abstract_scalar_value (Abstract_number_value (Abstract_int_value result))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_rational_of_int str_expr = function

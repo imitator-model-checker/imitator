@@ -210,7 +210,7 @@ and seq_code_bloc =
     | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next bloc *)
     | While_loop of boolean_expression (* condition *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next *)
     | If of boolean_expression (* condition *) * seq_code_bloc (* then bloc *) * seq_code_bloc option (* else bloc *) * seq_code_bloc (* next *)
-    | Bloc_expr of global_expression
+    | Return_expr of global_expression
     | Bloc_void
 
 (* Update type *)
@@ -281,6 +281,7 @@ type nonlinear_constraint = discrete_boolean_expression list
 (** update: variable_index := linear_term *)
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
 type discrete_update = update_type * global_expression
+type discrete_local_update = scalar_or_index_local_update_type * global_expression
 
 (** Check linearity of a discrete expression **)
 
@@ -888,6 +889,12 @@ let rec string_of_scalar_or_index_local_update_type variable_names = function
 
 let string_of_discrete_update variable_names (update_type, expr) =
     let str_left_member = string_of_update_type variable_names update_type in
+    str_left_member
+    ^ (if str_left_member <> "" then " := " else "")
+    ^ string_of_global_expression variable_names expr
+
+let string_of_discrete_local_update variable_names (local_update_type, expr) =
+    let str_left_member = string_of_scalar_or_index_local_update_type variable_names local_update_type in
     str_left_member
     ^ (if str_left_member <> "" then " := " else "")
     ^ string_of_global_expression variable_names expr

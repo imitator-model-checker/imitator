@@ -4554,7 +4554,7 @@ END CONSTRAINT
 	{
 		## Test version             : 1
 		## Test since               : 2022/07/19
-		## Last modified            : 2022/07/19
+		## Last modified            : 2022/10/27
 		'author': 'lbinria',
 		'purpose'    : 'Test all builtin functions',
 		'input_files': ['functions/builtin-functions.imi'],
@@ -4563,8 +4563,8 @@ END CONSTRAINT
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'builtin-functions-statespace.states' , 'content' : """
-STATE 1:
-  P: lend, queue_length = 2, queue_is_empty = True, queue_pop = 10, queue_top = 11, q = queue(), stack_length = 2, stack_is_empty = True, stack_pop = 11, stack_top = 10, s = stack(), list_length = 5, list_mem = True, list_rev = list([5, 4, 3, 2, 1]), list_cons = list([0, 1, 2, 3, 4, 5]), list_tl = list([2, 3, 4, 5]), list_hd = 1, list_is_empty = False, l = list([1, 2, 3, 4, 5]), a_length = 4, array_mem = True, aa = [1, 2, 3, 4], bfl = 0b101100, bfr = 0b001011, b = 0b1011, bsl = 0b1100, bsr = 0b0010, bla = 0b0011, blo = 0b1111, blxo = 0b1100, bln = 0b0100, i_pow = 25, r = 5, r_pow = 25 ==>
+  STATE 1:
+  P: lend, queue_length = 2, queue_is_empty = True, queue_pop = 10, queue_top = 11, q = queue(), stack_length = 2, stack_is_empty = True, stack_pop = 11, stack_top = 10, s = stack(), list_length = 5, list_mem = True, list_rev = list([5, 4, 3, 2, 1]), list_cons = list([0, 1, 2, 3, 4, 5]), list_tl = list([2, 3, 4, 5]), list_hd = 1, list_is_empty = False, l = list([1, 2, 3, 4, 5]), a_length = 4, array_mem = True, aa = [1, 2, 3, 4], bfl = 0b101100, bfr = 0b001011, b = 0b1011, bsl = 0b1100, bsr = 0b0010, bla = 0b0011, blo = 0b1111, blxo = 0b1100, bln = 0b0100, i_pow = 25, i_div = 2, modulo = 1, r = 5, r_pow = 25 ==> 
 &True
 		"""
 			 } # end result file
@@ -4621,102 +4621,6 @@ STATE 1:
   True
 		"""
 			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-	
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/06/30
-		## Last modified            : 2021/06/30
-		## Test for IMITATOR version: 3.1.0
-		'author': 'lbinria',
-		'purpose'    : 'Test that behaviors of all possible functions on binary word are correct ',
-		'input_files': ['functions/binary-word.imi'],
-		'tags': 'semantic, behavior, function',
-		'options'    : '-mode statespace -states-description -no-var-autoremove',
-		'expectations' : [
-			{'file': 'binary-word-statespace.states' , 'content' : """
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: loc_init, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00000 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 1:
-  pta: loc_land, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10100 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 2:
-  pta: loc_lor, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10111 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 3:
-  pta: loc_lxor, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00011 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 4:
-  pta: loc_lnot, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b01010 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 5:
-  pta: loc_shift_left, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10100 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 6:
-  pta: loc_shift_right, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 7:
-  pta: loc_fill_left, r = 0, i = 0, j = 0, bin_result2 = 0b10101000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 8:
-  pta: loc_fill_right, r = 0, i = 0, j = 0, bin_result2 = 0b00010101, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-		"""
-			 } # end result file
 			,
 		] # end expectations
 	} # end test case
