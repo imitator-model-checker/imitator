@@ -79,6 +79,9 @@ val compute_initial_state_or_abort : unit -> State.state
 val compute_valuated_invariant : Location.global_location -> LinearConstraint.px_linear_constraint
 
 
+
+val apply_updates_assign_backward : LinearConstraint.pxd_linear_constraint -> (AbstractModel.clock_updates list) -> unit
+
 (*------------------------------------------------------------*)
 (* Compute the list of stopped and elapsing clocks in a location *)
 (* Returns a pair (stopped clocks, elapsing clocks)           *)
@@ -129,6 +132,9 @@ val compute_new_location_guards_updates : Location.global_location -> StateSpace
 (*------------------------------------------------------------*)
 val apply_time_past : Location.global_location -> LinearConstraint.pxd_linear_constraint -> unit
 
+
+(* Exported JvdP *)
+val discrete_constraint_of_global_location: Location.global_location -> LinearConstraint.pxd_linear_constraint
 
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)

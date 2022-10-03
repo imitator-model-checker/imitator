@@ -525,7 +525,9 @@ val pxd_time_elapse_assign_wrt_polyhedron : pxd_linear_constraint -> pxd_linear_
 
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
 (*** NOTE: elapsing variables are constrained to be non-negative ***)
-(* val px_time_past_assign : variable list -> variable list -> px_linear_constraint -> unit *)
+
+(* JvdP: export px_time_past_assign *)
+val px_time_past_assign : variable list -> variable list -> px_linear_constraint -> unit
 (* val pxd_time_past_assign : variable list -> variable list -> pxd_linear_constraint -> unit *)
 
 (** Remove all upper bounds on the first variable list; the second list will remain constant *)
@@ -644,6 +646,11 @@ type px_nnconvex_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(* JvdP: export the list of clocks *)
+val clocks : unit -> (Automaton.clock_index list)
+(* JvdP: export the list of clocks *)
+val parameters : unit -> (Automaton.parameter_index list)
 
 (** Create a false constraint *)
 val false_p_nnconvex_constraint : unit -> p_nnconvex_constraint
