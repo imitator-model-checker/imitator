@@ -1,4 +1,15 @@
-(* JvdP: add some auxiliary code for deadlock checking, Paris July 2022 *)
+(************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Module description: utilities for deadlock checking
+ *
+ * File contributors : Mikael Bisgaard Dahlsen-Jensen, Jaco van de Pol
+ * Created           : 2022
+ *
+ ************************************************************)
+
+ (* JvdP: add some auxiliary code for deadlock checking, Paris July 2022 *)
 
 open LinearConstraint
 open StateSpace

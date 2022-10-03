@@ -11,7 +11,7 @@
 #
 # File description  : non-regression tests data
 #
-# File contributors : Étienne André, Jaime Arias, Benjamin Loillier
+# File contributors : Étienne André, Jaime Arias, Mikael Bisgaard Dahlsen-Jensen, Benjamin Loillier
 #
 # Created           : 2015/10/23
 # Last modified     : 2022/02/09
@@ -31,6 +31,7 @@ tests = [
 	##------------------------------------------------------------
 	#{
 		## Test version             : 1
+		## Test author              : XXXXXXXXXX
 		## Test since               : 2021/03/33
 		## Last modified            : 2021/03/33
 		## Test for IMITATOR version: 3.2
@@ -21409,8 +21410,9 @@ Constraint nature                       : good
 	##------------------------------------------------------------
 	{
 		# Test version             : 1
-		# Test since               : 2021/03/33
-		# Last modified            : 2021/03/33
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 1',
 		'input_files': ['deadlock/deadlock1.imi', 'deadlock/deadlock.imiprop'],
@@ -21433,8 +21435,9 @@ END CONSTRAINT
 	##------------------------------------------------------------
 	{
 		# Test version             : 1
-		# Test since               : 2021/03/33
-		# Last modified            : 2021/03/33
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 2',
 		'input_files': ['deadlock/deadlock2.imi', 'deadlock/deadlock.imiprop'],
@@ -21459,8 +21462,9 @@ END CONSTRAINT
 	##------------------------------------------------------------
 	{
 		# Test version             : 1
-		# Test since               : 2021/03/33
-		# Last modified            : 2021/03/33
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 3',
 		'input_files': ['deadlock/deadlock3.imi', 'deadlock/deadlock.imiprop'],
@@ -21482,8 +21486,9 @@ END CONSTRAINT
 	##------------------------------------------------------------
 	{
 		# Test version             : 1
-		# Test since               : 2021/03/33
-		# Last modified            : 2021/03/33
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 4',
 		'input_files': ['deadlock/deadlock4.imi', 'deadlock/deadlock.imiprop'],
@@ -21508,8 +21513,9 @@ END CONSTRAINT
 	##------------------------------------------------------------
 	{
 		# Test version             : 1
-		# Test since               : 2021/03/33
-		# Last modified            : 2021/03/33
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 5',
 		'input_files': ['deadlock/deadlock5.imi', 'deadlock/deadlock.imiprop'],
@@ -21531,8 +21537,9 @@ END CONSTRAINT
 	##------------------------------------------------------------
 	{
 		# Test version             : 1
-		# Test since               : 2021/03/33
-		# Last modified            : 2021/03/33
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 6',
 		'input_files': ['deadlock/deadlock6.imi', 'deadlock/deadlock.imiprop'],
@@ -21554,8 +21561,9 @@ END CONSTRAINT
 	##------------------------------------------------------------
 	{
 		# Test version             : 1
-		# Test since               : 2021/03/33
-		# Last modified            : 2021/03/33
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 7',
 		'input_files': ['deadlock/deadlock7.imi', 'deadlock/deadlock.imiprop'],
@@ -21578,8 +21586,9 @@ END CONSTRAINT
 	##------------------------------------------------------------
 	{
 		# Test version             : 1
-		# Test since               : 2021/03/33
-		# Last modified            : 2021/03/33
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 8',
 		'input_files': ['deadlock/deadlock8.imi', 'deadlock/deadlock.imiprop'],
