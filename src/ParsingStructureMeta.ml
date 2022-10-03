@@ -312,9 +312,9 @@ and is_linear_parsed_term variable_infos = function
 and is_linear_parsed_factor variable_infos = function
     (* only rational variable *)
     | Parsed_DF_variable variable_name ->
-        let variable_index = index_of_variable_name variable_infos variable_name in
-        let discrete_type = variable_infos.type_of_variables variable_index in
-        (match discrete_type with
+        let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
+
+        (match var_type with
         | Var_type_clock
         | Var_type_parameter
         | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rat)
