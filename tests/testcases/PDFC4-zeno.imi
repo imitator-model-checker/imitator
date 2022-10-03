@@ -1,5 +1,5 @@
 (************************************************************
- *                      IMITATOR MODEL
+ *                      IMITATOR MODEL                      
  *
  * Dummy example to test parametric deadlock-freeness checking
  *
@@ -39,7 +39,7 @@ loc l1: invariant x <= 5 + p1
 	when x >= p2 sync a goto l2;
 
 loc l2: invariant x <= 10
-	when True sync a do {x := 0} goto l2;
+	when True sync a goto l2;
 
 end (* pta *)
 
@@ -75,6 +75,7 @@ init := {
 		& p2 >= 0
 	;
 }
+
 
 
 

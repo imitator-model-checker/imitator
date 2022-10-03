@@ -12368,10 +12368,10 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop (BFS)',
-		'input_files': ['PDFC4.imi', 'PDFC-loop.imiprop'],
+		'input_files': ['PDFC4-zeno.imi', 'PDFC-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
-			{'file': 'PDFC4.res' , 'content' : """
+			{'file': 'PDFC4-zeno.res' , 'content' : """
 BEGIN CONSTRAINT
  10 >= p2
 & p2 >= 0
@@ -12395,10 +12395,10 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop (NDFS)',
-		'input_files': ['PDFC4.imi', 'PDFC-loop.imiprop'],
+		'input_files': ['PDFC4-zeno.imi', 'PDFC-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
-			{'file': 'PDFC4.res' , 'content' : """
+			{'file': 'PDFC4-zeno.res' , 'content' : """
 BEGIN CONSTRAINT
  10 >= p2
 & p2 >= 0
@@ -14355,10 +14355,10 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno)',
-		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
+		'input_files': ['PDFC4-zeno.imi', 'PDFC4-NZCUB.imiprop'],
 		'options'    : '-nz-method already',
 		'expectations' : [
-			{'file': 'PDFC4.res' , 'content' : """
+			{'file': 'PDFC4-zeno.res' , 'content' : """
 BEGIN CONSTRAINT
 False
 END CONSTRAINT
@@ -14379,10 +14379,10 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno); check',
-		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
+		'input_files': ['PDFC4-zeno.imi', 'PDFC4-NZCUB.imiprop'],
 		'options'    : '-nz-method check',
 		'expectations' : [
-			{'file': 'PDFC4.res' , 'content' : """
+			{'file': 'PDFC4-zeno.res' , 'content' : """
 BEGIN CONSTRAINT
 False
 END CONSTRAINT
@@ -14403,10 +14403,10 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno); transform',
-		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
+		'input_files': ['PDFC4-zeno.imi', 'PDFC4-NZCUB.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'PDFC4.res' , 'content' : """
+			{'file': 'PDFC4-zeno.res' , 'content' : """
 BEGIN CONSTRAINT
 False
 END CONSTRAINT
@@ -14647,16 +14647,21 @@ Number of computed states     : 2
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test author              : Étienne André
+		## Test since               : 2022/10/03
+		## Last modified            : 2022/10/03
+		## Test for IMITATOR version: 3.3
 		'purpose'    : 'Test PDFC: very basic example (normal result)',
 		'input_files': ['PDFC4.imi', 'PDFC-deadlockfree.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
- p1 + 5 >= p2
-& p1 >= 0
+ p1 >= 0
 & p2 >= 0
-& 10 >= p2
+& p1 + 5 >= p2
+& 5 >= p1
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -14664,49 +14669,42 @@ Constraint soundness          : exact
 Termination                   : regular termination
 Constraint nature             : good
 ------------------------------------------------------------
-Number of states              : 2
-Number of transitions         : 2
-Number of computed states     : 3
 """
 			} #end result file
 			,
-			{'file': 'PDFC4-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
 
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1 ==>
-& p1 + 5 >= x
-& p1 >= 0
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 2
+		## Test author              : Étienne André
+		## Test since               : 2016
+		## Last modified            : 2022/10/03
+		## Test for IMITATOR version: 3.3
+		'purpose'    : 'Test PDFC: very basic example, Zeno version (normal result)',
+		'input_files': ['PDFC4-zeno.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : ' -states-description',
+		'expectations' : [
+			{'file': 'PDFC4-zeno.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
 & p2 >= 0
-& x >= 0
-
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
-
-  /************************************************************/
-  STATE 1:
-  pta: l2 ==>
-& p1 >= 0
 & p1 + 5 >= p2
-& p2 >= 0
-& x >= p2
-& 10 >= x
+& 5 >= p1
+END CONSTRAINT
 
-  Projection onto the parameters:
-   10 >= p2
-& p2 >= 0
-& p1 >= 0
-& p1 + 5 >= p2
-
-  /************************************************************/
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1 via "a"
-  s_1 -> s_1 via "a"
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+Constraint nature             : good
+------------------------------------------------------------
 """
 			} #end result file
+			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
