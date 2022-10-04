@@ -89,16 +89,16 @@ class algoEF (state_predicate : AbstractProperty.state_predicate) =
 					let all_but_projectparameters = list_diff model.parameters parameters in
 					
 					(* Eliminate other parameters *)
-					let projected_init_p_nnconvex_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters synthesized_constraint in
+					let projected_synthesized_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters synthesized_constraint in
 
 					(* Print some information *)
 					if verbose_mode_greater Verbose_medium then(
 						self#print_algo_message Verbose_medium "After projection:";
-						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_init_p_nnconvex_constraint);
+						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_synthesized_constraint);
 					);
 					
 					(* Return *)
-					projected_init_p_nnconvex_constraint
+					projected_synthesized_constraint
 		in
 		
 		(* Get the termination status *)
