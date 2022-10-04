@@ -2035,7 +2035,7 @@ DESCRIPTION OF THE TRANSITIONS
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear D reachable)',
-		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-d-reachable.res' , 'content' : """
@@ -2060,7 +2060,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear PD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-pd-reachable.res' , 'content' : """
@@ -2086,7 +2086,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear XD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-xd-reachable.res' , 'content' : """
@@ -2111,7 +2111,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear PXD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-pxd-reachable.res' , 'content' : """
@@ -2136,7 +2136,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear D reachable)',
-		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-d-reachable.res' , 'content' : """
@@ -2161,7 +2161,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear PD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-pd-reachable.res' , 'content' : """
@@ -2187,7 +2187,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear XD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-xd-reachable.res' , 'content' : """
@@ -2212,7 +2212,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear PXD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-pxd-reachable.res' , 'content' : """
@@ -2264,7 +2264,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear D reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-d-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-d-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-d-reachable.res' , 'content' : """
@@ -2289,7 +2289,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-pd-reachable.res' , 'content' : """
@@ -2315,7 +2315,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear XD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-xd-reachable.res' , 'content' : """
@@ -2340,7 +2340,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PXD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-pxd-reachable.res' , 'content' : """
@@ -2365,7 +2365,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-semantic-error.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-semantic-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-pd-semantic-error.res' , 'content' : """
@@ -2388,7 +2388,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear XD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-semantic-error.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-semantic-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-xd-semantic-error.res' , 'content' : """
@@ -2411,7 +2411,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PXD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-semantic-error.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-semantic-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-pxd-semantic-error.res' , 'content' : """
@@ -2434,7 +2434,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear D reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-d-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-d-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-d-reachable.res' , 'content' : """
@@ -2459,7 +2459,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-pd-reachable.res' , 'content' : """
@@ -2485,7 +2485,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear XD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-xd-reachable.res' , 'content' : """
@@ -2510,7 +2510,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PXD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-pxd-reachable.res' , 'content' : """
@@ -2535,7 +2535,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-semantic-error.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-semantic-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-pd-semantic-error.res' , 'content' : """
@@ -2558,7 +2558,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear XD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-semantic-error.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-semantic-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-xd-semantic-error.res' , 'content' : """
@@ -2581,7 +2581,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PXD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-semantic-error.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-semantic-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-pxd-semantic-error.res' , 'content' : """
@@ -2604,7 +2604,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test linear expression unary minus in guard (computing)',
-		'input_files': ['linear_expressions/unary-minus-linear-expression.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/unary-minus-linear-expression.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'unary-minus-linear-expression.res' , 'content' : """
@@ -2679,7 +2679,7 @@ Number of IPTAs                         : 1
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression unary minus in guard (computing)',
-		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'unary-minus-guard.res' , 'content' : """
@@ -2821,7 +2821,7 @@ when  z * x / y > x do {}  sync a1 goto lend;
 	{
 		'purpose'    : 'Test Boolean True constant (computing)',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-constant-reachable.res' , 'content' : """
@@ -2841,7 +2841,7 @@ END CONSTRAINT
 	{
 		'purpose'    : 'Test Boolean False constant (computing)',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-constant-unreachable.res' , 'content' : """
@@ -2862,7 +2862,7 @@ END CONSTRAINT
 		'purpose'    : 'Test Boolean negation (computing)',
 		'tags':'boolean, computing, semantic',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-negation.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-negation.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-negation.res' , 'content' : """
@@ -2883,7 +2883,7 @@ END CONSTRAINT
 	{
 		'purpose'    : 'Test that a Boolean variable is correctly updated (computing)',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-discrete-var-update.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-discrete-var-update.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-discrete-var-update.res' , 'content' : """
@@ -2989,7 +2989,7 @@ Error                                   : invalid model
 	{
 		'purpose'    : 'Test that a Boolean variable is initialized with consistent type',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-variable-init-type-error.res' , 'content' : """
@@ -3013,7 +3013,7 @@ Error                                   : invalid model
 		'author': 'lbinria',
 		'purpose'    : 'Test that a Boolean variable is updated with a consistent typed expression',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-variable-update-type-error.res' , 'content' : """
@@ -3504,7 +3504,7 @@ True
 		'author': 'lbinria',
 		'purpose'    : 'Test general behavior of array expressions',
 		'tags':'array, computing, function, semantic',
-		'input_files': ['array_expressions/array.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['array_expressions/array.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'array-statespace.states' , 'content' : """
@@ -5573,7 +5573,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant',
-		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'safety-initial-state.res' , 'content' : """
@@ -5596,7 +5596,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant',
-		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'safety-initial-state2.res' , 'content' : """
