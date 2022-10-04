@@ -65,7 +65,7 @@ class algoAGnot (state_predicate : AbstractProperty.state_predicate) =
 		
 		(* Print some information *)
 		self#print_algo_message_newline Verbose_low (
-			"Performing negation of final constraint…"
+			"Performing initial constraint \ final resulting constraint…"
 		);
 		
 		
@@ -73,6 +73,13 @@ class algoAGnot (state_predicate : AbstractProperty.state_predicate) =
 		
 		(* Retrieve the initial parameter constraint *)
 		let initial_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint = self#get_initial_p_nnconvex_constraint_or_die in
+
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "As a reminder, the initial constraint is:";
+			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names initial_p_nnconvex_constraint);
+			self#print_algo_message Verbose_medium "As a reminder, the result constraint is:";
+			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
+		);
 
 		(* Projecting onto SOME parameters if required *)
 		let result =
@@ -85,10 +92,10 @@ class algoAGnot (state_predicate : AbstractProperty.state_predicate) =
 			if verbose_mode_greater Verbose_medium then(
 				self#print_algo_message Verbose_medium "Projecting the initial constraint onto some of the parameters.";
 				self#print_algo_message Verbose_medium "Before projection:";
-				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names initial_p_nnconvex_constraint);
+				self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names initial_p_nnconvex_constraint);
 			);
 
-			(*** TODO! do only once for all... ***)
+			(*** TODO! do only once for all… ***)
 			let all_but_projectparameters = list_diff model.parameters parameters in
 			
 			(* Eliminate other parameters *)
@@ -97,7 +104,7 @@ class algoAGnot (state_predicate : AbstractProperty.state_predicate) =
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
 				self#print_algo_message Verbose_medium "After projection:";
-				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_init_p_nnconvex_constraint);
+				self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_init_p_nnconvex_constraint);
 			);
 			
 			(* Return *)
@@ -109,8 +116,11 @@ class algoAGnot (state_predicate : AbstractProperty.state_predicate) =
 		
 		
 		(* Print some information *)
-		self#print_algo_message_newline Verbose_medium (
-			"Negation of final constraint completed."
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message_newline Verbose_medium (
+				"Negation of final constraint completed:"
+			);
+			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result);
 		);
 		
 		(* Get the termination status *)
