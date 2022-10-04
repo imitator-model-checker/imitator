@@ -13038,7 +13038,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with no real loop (1a)',
-		'input_files': ['testNoCycle-1a.imi', 'basic-properties/acceptingLoop.imiprop'],
+		'input_files': ['testNoCycle-1a.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1a.res' , 'content' : """
@@ -13066,7 +13066,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with no real loop (1b)',
-		'input_files': ['testNoCycle-1b.imi', 'basic-properties/acceptingLoop.imiprop'],
+		'input_files': ['testNoCycle-1b.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1b.res' , 'content' : """
@@ -13586,7 +13586,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS: simple example with no real loop (1a)',
-		'input_files': ['testNoCycle-1a.imi', 'basic-properties/acceptingLoop.imiprop'],
+		'input_files': ['testNoCycle-1a.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testNoCycle-1a.res' , 'content' : """
@@ -13614,7 +13614,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS: simple example with no real loop (1b)',
-		'input_files': ['testNoCycle-1b.imi', 'basic-properties/acceptingLoop.imiprop'],
+		'input_files': ['testNoCycle-1b.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testNoCycle-1b.res' , 'content' : """
@@ -13788,7 +13788,7 @@ Termination                             : regular termination
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test AccLoopSynth with depth-limit to check the quick reachability (NDFS)',
-		'input_files': ['quick-reach.imi', 'basic-properties/acceptingLoop.imiprop'],
+		'input_files': ['quick-reach.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '-depth-limit 3 -cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'quick-reach.res' , 'content' : """
@@ -13817,7 +13817,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test AccLoopSynth with depth-limit to check the quick reachability (BFS)',
-		'input_files': ['quick-reach.imi', 'basic-properties/acceptingLoop.imiprop'],
+		'input_files': ['quick-reach.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '-depth-limit 4 -cycle-algo BFS',
 		'expectations' : [
 			{'file': 'quick-reach.res' , 'content' : """
