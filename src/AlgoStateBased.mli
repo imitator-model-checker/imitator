@@ -227,11 +227,6 @@ class virtual algoStateBased :
 		(*** TODO: make private (while accessible to subclasses ***)
 		val mutable termination_status : Result.bfs_algorithm_termination option
 
-		(* Constraint of the initial state after time elapsing (used by some algorithms to initialize their variables) *)
-		val mutable initial_constraint : LinearConstraint.px_linear_constraint option
-		val mutable initial_p_constraint : LinearConstraint.p_linear_constraint option
-		val mutable initial_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint option
-
 		(* List of state_index that have unexplored successors in case of premature termination *)
 		val mutable unexplored_successors : unexplored_successors
 
