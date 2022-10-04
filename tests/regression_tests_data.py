@@ -15195,13 +15195,15 @@ Constraint nature             : good/bad
 		'expectations' : [
 			{'file': 'PDFC10-negflow.res' , 'content' : """
 BEGIN CONSTRAINT
-TODO
+ p1 >= 0
+& p2 > 5 + p1
+& 15 >= p1
 END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-Constraint nature             : good
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
 """
 			} #end result file
