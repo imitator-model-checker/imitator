@@ -271,6 +271,10 @@ let convert_conditional variable_infos expr =
     (* Convert *)
     ExpressionConverter.Convert.bool_expression_of_typed_boolean_expression variable_infos typed_expr
 
+let check_seq_code_bloc variable_infos seq_code_bloc =
+    (* TODO benjamin IMPLEMENT to FILL *)
+    true
+
 (* Check if user function definition is well formed *)
 let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
 
@@ -491,6 +495,7 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
     && is_all_variables_defined
     && not is_any_void_local_variable
 
+(* TODO benjamin fill comment *)
 let convert_fun_definition variable_infos (fun_definition : parsed_fun_definition) =
 
     (* Some checks *)
@@ -504,3 +509,16 @@ let convert_fun_definition variable_infos (fun_definition : parsed_fun_definitio
     let typed_fun_definition = ExpressionConverter.TypeChecker.check_fun_definition variable_infos fun_definition in
     (* Convert *)
     ExpressionConverter.Convert.fun_definition_of_typed_fun_definition variable_infos typed_fun_definition
+
+(* TODO benjamin fill comment *)
+let convert_seq_code_bloc variable_infos seq_code_bloc =
+    (* Some checks *)
+    let well_formed_user_function = check_seq_code_bloc variable_infos seq_code_bloc in
+
+    (* Not well formed, raise an error *)
+    if not well_formed_user_function then
+        raise InvalidModel;
+
+    (* Type check *)
+    let typed_seq_code_bloc = ExpressionConverter.TypeChecker.check_seq_code_bloc variable_infos seq_code_bloc in
+    ExpressionConverter.Convert.seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc

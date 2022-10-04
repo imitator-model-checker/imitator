@@ -27,7 +27,9 @@ val check_update : variable_infos -> updates_type -> parsed_update_type -> Parsi
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
 val check_state_predicate : variable_infos -> parsed_state_predicate -> typed_state_predicate
-(* Check that a function definition is well typed *)
+(* Check whether a parsed sequential bloc definition is well typed *)
+val check_seq_code_bloc : variable_infos -> parsed_seq_code_bloc -> typed_seq_code_bloc
+(* Check whether a function definition is well typed *)
 val check_fun_definition : variable_infos -> parsed_fun_definition -> typed_fun_definition
 
 end = struct
@@ -673,9 +675,17 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
 
         let scope =
             match variable_name_opt with
-            | Some variable_name when VariableMap.mem variable_name local_variables -> Local
-            (* If None variable name (void update), or not in local variables *)
-            | _ -> Global
+            | Some variable_name when VariableMap.mem variable_name local_variables -> Ass_discrete_local
+            (* If not in local variables *)
+            | Some variable_name ->
+                let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
+                (match var_type with
+                | Var_type_clock -> Ass_clock
+                | _ -> Ass_discrete_global
+                )
+            (* If None variable name (void update) *)
+            | None ->
+                Ass_discrete_global
         in
 
         Typed_assignment ((typed_update_type, typed_expr), typed_next_expr, scope), next_expr_discrete_type
@@ -1153,6 +1163,11 @@ let check_state_predicate variable_infos predicate =
             ^ "` is not a Boolean expression."
         ))
 
+(* Check whether a parsed sequential bloc definition is well typed *)
+let check_seq_code_bloc variable_infos parsed_seq_code_bloc =
+    first_of_tuple (type_check_seq_code_bloc VariableMap.empty variable_infos None parsed_seq_code_bloc)
+
+(* Check whether a function definition is well typed *)
 let check_fun_definition variable_infos (parsed_fun_definition : parsed_fun_definition) =
     let typed_fun_definition, _ = type_check_parsed_fun_definition variable_infos parsed_fun_definition in
     typed_fun_definition
@@ -1183,7 +1198,7 @@ val bool_expression_of_typed_boolean_expression : variable_infos -> typed_boolea
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val update_type_of_typed_update_type : variable_infos -> typed_update_type -> DiscreteExpressions.update_type
-
+val seq_code_bloc_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc -> DiscreteExpressions.seq_code_bloc
 val fun_definition_of_typed_fun_definition : variable_infos -> typed_fun_definition -> AbstractModel.fun_definition
 
 end = struct
@@ -1994,6 +2009,10 @@ let scalar_or_index_local_update_type_of_typed_update_type variable_infos = func
         scalar_or_index_local_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
     | Typed_void_update -> raise (InternalError "Unable to have void update on local variable.")
 
+let clock_index_of_typed_update_type variable_infos = function
+    | Typed_variable_update (Typed_scalar_update clock_name) -> VariableInfo.index_of_variable_name variable_infos clock_name
+    | _ -> raise (InternalError "Unable to have indexed update on clock.")
+
 (*------------------------------------------------------------*)
 (* Convert an array of variable coef into a linear term *)
 (*------------------------------------------------------------*)
@@ -2353,16 +2372,22 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
     | Typed_assignment ((typed_update_type, typed_expr), typed_next_expr, scope) ->
 
         (match scope with
-        | Global ->
+        | Ass_discrete_global ->
             Assignment (
                 (update_type_of_typed_update_type variable_infos typed_update_type,
                 global_expression_of_typed_boolean_expression variable_infos typed_expr),
                 seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
             )
-        | Local ->
+        | Ass_discrete_local ->
             Local_assignment (
                 (scalar_or_index_local_update_type_of_typed_update_type variable_infos typed_update_type,
                 global_expression_of_typed_boolean_expression variable_infos typed_expr),
+                seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
+            )
+        | Ass_clock ->
+            Clock_assignment (
+                (clock_index_of_typed_update_type variable_infos typed_update_type,
+                linear_term_of_typed_boolean_expression variable_infos typed_expr),
                 seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
             )
         )

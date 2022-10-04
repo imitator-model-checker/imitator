@@ -218,6 +218,7 @@ type parsed_flow = (variable_name * NumConst.t) list
 
 (* Transition = Guard * update list * sync label * destination location *)
 type transition = guard * update_section * sync * location_name
+type new_transition = guard * parsed_seq_code_bloc * sync * location_name
 
 (* Location = Name * Urgent type * Accepting type * Cost * Invariant * list of stopped clocks * transitions *)
 type parsed_location = {
@@ -237,6 +238,8 @@ type parsed_location = {
 	flow        : parsed_flow;
 	(* Transitions starting from this location *)
 	transitions : transition list;
+	(**)
+	new_transitions : new_transition list;
 }
 
 

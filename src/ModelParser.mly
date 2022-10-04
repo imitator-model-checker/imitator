@@ -74,6 +74,7 @@ let unzip l = List.fold_left
 	CT_VOID CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY
   CT_INSIDE
   CT_DO
+  CT_APPLY
   CT_SEQ
   CT_IN
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
@@ -89,7 +90,7 @@ let unzip l = List.fold_left
 	CT_THEN CT_TRUE
 	CT_UNKNOWN CT_URGENT
 	CT_VAR
-	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
+	CT_WAIT CT_WHEN CT_WHENU CT_WHILE CT_WITHIN
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
@@ -392,7 +393,7 @@ while_or_invariant_or_nothing:
 ;
 
 location:
-	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing nonlinear_convex_predicate stopwatches_and_flow_opt wait_opt transitions {
+	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing nonlinear_convex_predicate stopwatches_and_flow_opt wait_opt transitions new_transitions {
 		let urgency, accepting = $1 in
 		let name, cost = $2 in
 		let stopwatches, flow = $6 in
@@ -413,6 +414,7 @@ location:
 			flow		= flow;
 			(* Transitions starting from this location *)
 			transitions = $8;
+      new_transitions = $9;
 		}
 	}
 ;
@@ -495,6 +497,11 @@ transitions:
 	| { [] }
 ;
 
+new_transitions:
+	| new_transition new_transitions { $1 :: $2 }
+	| { [] }
+;
+
 /************************************************************/
 
 transition:
@@ -503,6 +510,14 @@ transition:
 		let update_list, sync = $3 in
 			$2, update_list, sync, $5
 	}
+;
+
+new_transition:
+  | CT_WHENU nonlinear_convex_predicate new_update_synchronization CT_GOTO NAME SEMICOLON
+  {
+    let update_list, sync = $3 in
+      $2, update_list, sync, $5
+  }
 ;
 
 /************************************************************/
@@ -516,10 +531,22 @@ update_synchronization:
 	| syn_label updates { $2, (Sync $1) }
 ;
 
+new_update_synchronization:
+	| { Parsed_bloc_void, NoSync }
+	| new_updates { $1, NoSync }
+	| syn_label { Parsed_bloc_void, (Sync $1) }
+	| new_updates syn_label { $1, (Sync $2) }
+	| syn_label new_updates { $2, (Sync $1) }
+;
+
 /************************************************************/
 
 updates:
   | CT_DO LBRACE seq_then_updates RBRACE { $3 }
+;
+
+new_updates:
+  | CT_APPLY LBRACE seq_code_bloc RBRACE { $3 }
 ;
 
 seq_then_updates:
