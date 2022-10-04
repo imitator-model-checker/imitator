@@ -166,7 +166,7 @@ class algoDeadlockFree =
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
-			self#print_algo_message Verbose_high ("nnconvex_s (s - good, not allowing exit) is:\n" ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names nnconvex_s));
+			self#print_algo_message Verbose_high ("nnconvex_s (s \ good, not allowing exit) is:\n" ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names nnconvex_s));
 		);
 		
 		(* Ensure clocks and parameters are not negative *)
@@ -175,7 +175,7 @@ class algoDeadlockFree =
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
-			self#print_algo_message Verbose_high ("After constraining clocks and parameters to be positive, nnconvex_s (s - good, not allowing exit) is now:\n" ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names nnconvex_s));
+			self#print_algo_message Verbose_high ("After constraining clocks and parameters to be positive, nnconvex_s (s \ good, not allowing exit) is now:\n" ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names nnconvex_s));
 		);
 		
 		(* Project onto the parameters *)
@@ -183,7 +183,7 @@ class algoDeadlockFree =
 			
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
-			self#print_algo_message Verbose_medium ("p_bad_constraint_s (True - good, not allowing exit, projected onto P) is:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_bad_constraint_s));
+			self#print_algo_message Verbose_medium ("p_bad_constraint_s (s \ good, not allowing exit, projected onto P) is:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_bad_constraint_s));
 		);
 		
 		(* Return the p_constraint *)
