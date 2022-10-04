@@ -42,6 +42,7 @@ src/PaTATOR.ml
 *.pdf
 *.ps
 
+*.graph
 *-regenerated.imi
 *.res
 *.states
