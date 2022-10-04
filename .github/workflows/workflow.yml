@@ -8,8 +8,8 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-20.04
-          - macos-12
+          - ubuntu-latest
+          - macos-latest
     runs-on: ${{ matrix.os }}
     env:
       DISTRIBUTED: False
@@ -31,7 +31,7 @@ jobs:
       # upload artifacts
       - uses: actions/upload-artifact@v2
         with:
-          name: artifacts
+          name: imitator-${{ matrix.os }}
           path: |
             bin/*
             doc/IMITATOR-user-manual.pdf
@@ -42,34 +42,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      # checkout project
-      - name: Checkout
-        uses: actions/checkout@v2
-
       # retrieve information
       - name: Retrieve artifacts
         uses: actions/download-artifact@v2
-        with:
-          name: artifacts
-
-      # get tag name
-      - name: Get the tag name
-        run: echo "TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
-
-      # prepare deploy
-      - name: Prepare deploy
-        run: .github/scripts/deploy.sh
-        shell: bash
 
       # deploy
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ env.TAG }}
-          release_name: ${{ env.TAG }}
+          tag_name: ${{ github.ref_name }}
+          release_name: ${{ github.ref_name }}
           files: |
-            bin/*
-            doc/IMITATOR-user-manual.pdf
-            doc/IMITATOR-not-developer-manual.pdf
+            imitator-macos-latest/bin/*
+            imitator-ubuntu-latest/bin/*
+            imitator-ubuntu-latest/doc/IMITATOR-user-manual.pdf
+            imitator-ubuntu-latest/doc/IMITATOR-not-developer-manual.pdf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

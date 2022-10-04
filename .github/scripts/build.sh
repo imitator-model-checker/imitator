@@ -73,8 +73,14 @@ elif [[ "$RUNNER_OS" = "macOS" ]]; then
     sudo cp METAS/META.ppl $(opam var lib)/ppl/META
 fi
 
+platform=`echo "${RUNNER_OS}" | awk '{print tolower($1)}'`
+tag="${GITHUB_REF_NAME##*/}"
 if [[ "$DISTRIBUTED" = "True" ]]; then
     sh build-patator.sh
+    cd bin
+    mv "patator" "patator-${tag}-${platform}-amd64"
 else
     sh build.sh
+    cd bin
+    mv "imitator" "imitator-${tag}-${platform}-amd64"
 fi
