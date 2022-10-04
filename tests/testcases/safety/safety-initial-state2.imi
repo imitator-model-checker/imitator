@@ -1,0 +1,81 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Basic safety property depending on the initial state constraint
+ * Description      : Basic safety property depending on the initial state constraint
+ * Correctness      : Safety
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/10/03
+ * Last modified    : 2022/10/03
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.3
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant x <= p
+	when 5 = x & x = p goto lF;
+
+accepting loc lF: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 3
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -5572,6 +5572,100 @@ Constraint nature                       : good
 	
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant',
+		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state.res' , 'content' : """
+BEGIN CONSTRAINT
+TODO
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant',
+		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/acceptingReachable.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state2.res' , 'content' : """
+BEGIN CONSTRAINT
+TODO
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant',
+		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-safety.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state.res' , 'content' : """
+BEGIN CONSTRAINT
+TODO
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant',
+		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/synth-safety.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state2.res' , 'content' : """
+BEGIN CONSTRAINT
+TODO
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EF with basic safety property for Fischer:3',
 		'input_files': ['F3.imi', 'F3.imiprop'],
 		'options'    : '',
