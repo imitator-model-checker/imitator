@@ -15061,6 +15061,208 @@ Constraint nature             : good/bad
 	} # end test case
 			
 	,
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TESTING FIX TO DEADLOCK COMPUTATION
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 1',
+		'input_files': ['deadlock/deadlock1.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'deadlock1.res' , 'content' : """
+			BEGIN CONSTRAINT
+ 3 >= p
+& p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 2',
+		'input_files': ['deadlock/deadlock2.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock2.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 >= q
+& p >= 0
+& q >= 0
+& 3 >= p
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 3',
+		'input_files': ['deadlock/deadlock3.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock3.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 2
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 4',
+		'input_files': ['deadlock/deadlock4.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock4.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 >= q
+& p >= 0
+& q >= 0
+& 2 >= p
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 5',
+		'input_files': ['deadlock/deadlock5.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 2
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 6',
+		'input_files': ['deadlock/deadlock6.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 4
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 7',
+		'input_files': ['deadlock/deadlock7.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock7.res' , 'content' : """
+BEGIN CONSTRAINT
+ q >= p
+& p >= 4
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 8',
+		'input_files': ['deadlock/deadlock8.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock8.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+	,
 	
 	#------------------------------------------------------------
 	{
@@ -21400,210 +21602,6 @@ Constraint nature                       : good
 
 	,
 
-	
-	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-	# TESTING FIX TO DEADLOCK COMPUTATION
-	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-
-	##------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Mikael Bisgaard Dahlsen-Jensen
-		# Test since               : 2022
-		# Last modified            : 2022
-		# Test for IMITATOR version: 3.2
-		'purpose'    : 'Updated Deadlock Test 1',
-		'input_files': ['deadlock/deadlock1.imi', 'basic-properties/synth-deadlock-free.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'deadlock1.res' , 'content' : """
-			BEGIN CONSTRAINT
- 3 >= p
-& p >= 0
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	##------------------------------------------------------------
-
-	,
-
-	##------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Mikael Bisgaard Dahlsen-Jensen
-		# Test since               : 2022
-		# Last modified            : 2022
-		# Test for IMITATOR version: 3.2
-		'purpose'    : 'Updated Deadlock Test 2',
-		'input_files': ['deadlock/deadlock2.imi', 'basic-properties/synth-deadlock-free.imiprop'],
-		'options'    : '-verbose mute',
-		'expectations' : [
-			{'file': 'deadlock2.res' , 'content' : """
-BEGIN CONSTRAINT
- 2 >= q
-& p >= 0
-& q >= 0
-& 3 >= p
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	##------------------------------------------------------------
-
-	,
-
-	##------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Mikael Bisgaard Dahlsen-Jensen
-		# Test since               : 2022
-		# Last modified            : 2022
-		# Test for IMITATOR version: 3.2
-		'purpose'    : 'Updated Deadlock Test 3',
-		'input_files': ['deadlock/deadlock3.imi', 'basic-properties/synth-deadlock-free.imiprop'],
-		'options'    : '-verbose mute',
-		'expectations' : [
-			{'file': 'deadlock3.res' , 'content' : """
-BEGIN CONSTRAINT
- p >= 2
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	##------------------------------------------------------------
-
-	,
-
-	##------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Mikael Bisgaard Dahlsen-Jensen
-		# Test since               : 2022
-		# Last modified            : 2022
-		# Test for IMITATOR version: 3.2
-		'purpose'    : 'Updated Deadlock Test 4',
-		'input_files': ['deadlock/deadlock4.imi', 'basic-properties/synth-deadlock-free.imiprop'],
-		'options'    : '-verbose mute',
-		'expectations' : [
-			{'file': 'deadlock4.res' , 'content' : """
-BEGIN CONSTRAINT
- 2 >= q
-& p >= 0
-& q >= 0
-& 2 >= p
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	##------------------------------------------------------------
-
-	,
-
-	##------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Mikael Bisgaard Dahlsen-Jensen
-		# Test since               : 2022
-		# Last modified            : 2022
-		# Test for IMITATOR version: 3.2
-		'purpose'    : 'Updated Deadlock Test 5',
-		'input_files': ['deadlock/deadlock5.imi', 'basic-properties/synth-deadlock-free.imiprop'],
-		'options'    : '-verbose mute',
-		'expectations' : [
-			{'file': 'deadlock5.res' , 'content' : """
-BEGIN CONSTRAINT
- p >= 2
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	##------------------------------------------------------------
-
-	,
-
-	##------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Mikael Bisgaard Dahlsen-Jensen
-		# Test since               : 2022
-		# Last modified            : 2022
-		# Test for IMITATOR version: 3.2
-		'purpose'    : 'Updated Deadlock Test 6',
-		'input_files': ['deadlock/deadlock6.imi', 'basic-properties/synth-deadlock-free.imiprop'],
-		'options'    : '-verbose mute',
-		'expectations' : [
-			{'file': 'deadlock6.res' , 'content' : """
-BEGIN CONSTRAINT
- p >= 4
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	##------------------------------------------------------------
-
-	,
-
-	##------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Mikael Bisgaard Dahlsen-Jensen
-		# Test since               : 2022
-		# Last modified            : 2022
-		# Test for IMITATOR version: 3.2
-		'purpose'    : 'Updated Deadlock Test 7',
-		'input_files': ['deadlock/deadlock7.imi', 'basic-properties/synth-deadlock-free.imiprop'],
-		'options'    : '-verbose mute',
-		'expectations' : [
-			{'file': 'deadlock7.res' , 'content' : """
-BEGIN CONSTRAINT
- q >= p
-& p >= 4
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	##------------------------------------------------------------
-
-	,
-
-	##------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Mikael Bisgaard Dahlsen-Jensen
-		# Test since               : 2022
-		# Last modified            : 2022
-		# Test for IMITATOR version: 3.2
-		'purpose'    : 'Updated Deadlock Test 8',
-		'input_files': ['deadlock/deadlock8.imi', 'basic-properties/synth-deadlock-free.imiprop'],
-		'options'    : '-verbose mute',
-		'expectations' : [
-			{'file': 'deadlock8.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	##------------------------------------------------------------
-
-	,
 	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'XXXX',
