@@ -12368,7 +12368,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop (BFS)',
-		'input_files': ['PDFC4-zeno.imi', 'PDFC-loop.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'deadlock/PDFC-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC4-zeno.res' , 'content' : """
@@ -12395,7 +12395,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop (NDFS)',
-		'input_files': ['PDFC4-zeno.imi', 'PDFC-loop.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'deadlock/PDFC-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC4-zeno.res' , 'content' : """
@@ -12534,7 +12534,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation (BFS)',
-		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -12560,7 +12560,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation (NDFS)',
-		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -13291,7 +13291,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth (BFS): simple example 3 (accepting for all valuations)',
-		'input_files': ['PDFC5.imi', 'PDFC5-accloop.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC5-accloop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -13321,7 +13321,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth (NDFS): simple example 3 (accepting for all valuations)',
-		'input_files': ['PDFC5.imi', 'PDFC5-accloop.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC5-accloop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -14355,7 +14355,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno)',
-		'input_files': ['PDFC4-zeno.imi', 'PDFC4-NZCUB.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'deadlock/PDFC4-NZCUB.imiprop'],
 		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'PDFC4-zeno.res' , 'content' : """
@@ -14379,7 +14379,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno); check',
-		'input_files': ['PDFC4-zeno.imi', 'PDFC4-NZCUB.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'deadlock/PDFC4-NZCUB.imiprop'],
 		'options'    : '-nz-method check',
 		'expectations' : [
 			{'file': 'PDFC4-zeno.res' , 'content' : """
@@ -14403,7 +14403,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno); transform',
-		'input_files': ['PDFC4-zeno.imi', 'PDFC4-NZCUB.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'deadlock/PDFC4-NZCUB.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'PDFC4-zeno.res' , 'content' : """
@@ -14528,7 +14528,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example without clocks',
-		'input_files': ['PDFC1.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC1.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : '-states-description',
 		'expectations' : [
 			{'file': 'PDFC1.res' , 'content' : """
@@ -14584,7 +14584,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
-		'input_files': ['PDFC3.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC3.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC3.res' , 'content' : """
@@ -14653,7 +14653,7 @@ Number of computed states     : 2
 		## Last modified            : 2022/10/03
 		## Test for IMITATOR version: 3.3
 		'purpose'    : 'Test PDFC: very basic example (normal result)',
-		'input_files': ['PDFC4.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC4.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
@@ -14686,7 +14686,7 @@ Constraint nature             : good
 		## Last modified            : 2022/10/03
 		## Test for IMITATOR version: 3.3
 		'purpose'    : 'Test PDFC: very basic example, Zeno version (normal result)',
-		'input_files': ['PDFC4-zeno.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC4-zeno.res' , 'content' : """
@@ -14714,7 +14714,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
-		'input_files': ['PDFC6.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC6.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : ' -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'PDFC6.res' , 'content' : """
@@ -14769,7 +14769,7 @@ Number of computed states     : 2
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (true result)',
-		'input_files': ['PDFC7.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC7.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC7.res' , 'content' : """
@@ -14826,7 +14826,7 @@ Number of computed states     : 3
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction',
-		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -14861,7 +14861,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction (no inclusion)',
-		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : '-comparison equality',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -14896,7 +14896,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction (explicit inclusion)',
-		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : '-comparison inclusion',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -14953,7 +14953,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation',
-		'input_files': ['PDFC8.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC8.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : '-depth-limit 5 -no-var-autoremove',
 		'expectations' : [
 			{'file': 'PDFC8.res' , 'content' : """
@@ -14987,7 +14987,7 @@ Number of computed states     : 8
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation and exact result',
-		'input_files': ['PDFC8b.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC8b.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC8b.res' , 'content' : """
@@ -15015,7 +15015,7 @@ Number of computed states     : 8
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: another example with basic backward under-approximation',
-		'input_files': ['PDFC9.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC9.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9.res' , 'content' : """
@@ -15039,7 +15039,7 @@ Constraint nature             : good/bad
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: again another example with basic backward under-approximation',
-		'input_files': ['PDFC9b.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC9b.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
 		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9b.res' , 'content' : """
