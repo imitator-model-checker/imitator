@@ -498,8 +498,21 @@ class algoDeadlockFree =
 		
 		(* Perform result = initial_state|P \ bad_constraint *)
 		let result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
+
+		self#print_algo_message_newline Verbose_high(
+			"Initial parameter constraint:\n" ^
+			(LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result)
+		);
+
 		LinearConstraint.p_nnconvex_difference_assign result bad_constraint;
 		
+		self#print_algo_message_newline Verbose_high(
+			"After negation:\n" ^
+			(LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result)
+		);
+
+
+
 		self#print_algo_message_newline Verbose_medium (
 			"Negation of final constraint completed."
 		);
