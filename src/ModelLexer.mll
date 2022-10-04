@@ -79,8 +79,8 @@ rule token = parse
 	| "binary"         { CT_BINARY_WORD }
   | "array"          { CT_ARRAY }
 	| "do"             { CT_DO }
-  | "apply"          { CT_APPLY }
   | "seq"            { CT_SEQ }
+  | "mix"            { CT_MIX }
   | "begin"          { CT_BEGIN }
   | "in"             { CT_IN }
 	| "else"           { CT_ELSE }
@@ -116,7 +116,6 @@ rule token = parse
 	| "var"            { CT_VAR }
 	| "wait"           { CT_WAIT }
 	| "when"           { CT_WHEN }
-  | "whenu"           { CT_WHENU }
 	| "while"          { CT_WHILE }
 	| "within"         { CT_WITHIN }
   (*

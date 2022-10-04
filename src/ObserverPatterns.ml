@@ -23,6 +23,7 @@ open ImitatorUtilities
 open Automaton
 open ParsingStructure
 open AbstractModel
+open DiscreteExpressions
 open AbstractProperty
 
 
@@ -57,6 +58,7 @@ let untimedt action_index target_index =
 		action		= action_index;
 		seq_updates = create_update No_update [] [];
 		updates		= create_update No_update [] [];
+		new_updates = No_update, Bloc_void;
 		target		= target_index;
 	}]
 
@@ -407,6 +409,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= nosync_index;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
+        		new_updates = No_update, Bloc_void;
 				target		= location_nok;
 			}];
 		transitions.(location_ok) <- allow_all location_ok;
@@ -450,6 +453,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a1;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
+                new_updates = (Resets [observer_clock_index]), Bloc_void;
 				target		= location_inter;
 			}];
 		transitions.(location_init).(a2) <- untimedt a2 location_nok;
@@ -459,6 +463,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a1;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
+				new_updates = (Resets [observer_clock_index]), Bloc_void;
 				target		= location_inter;
 			}];
 		transitions.(location_inter).(a2) <-
@@ -468,6 +473,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a2;
                 seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
+				new_updates = No_update, Bloc_void;
 				target		= location_ok;
 			}
 			;
@@ -476,6 +482,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a2;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
+				new_updates = No_update, Bloc_void;
 				target		= location_nok;
 			}
 			];
@@ -515,6 +522,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a1;
                 seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
+				new_updates = (Resets [observer_clock_index]), Bloc_void;
 				target		= location_ok;
 			}];
 		transitions.(location_init).(a2) <- untimedt a2 location_nok;
@@ -524,6 +532,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a1;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
+				new_updates = (Resets [observer_clock_index]), Bloc_void;
 				target		= location_ok;
 			}];
 		transitions.(location_ok).(a2) <-
@@ -533,6 +542,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a2;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
+				new_updates = No_update, Bloc_void;
 				target		= location_init;
 			}
 			;
@@ -541,6 +551,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a2;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
+				new_updates = No_update, Bloc_void;
 				target		= location_nok;
 			}
 			];
@@ -579,6 +590,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a1;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
+				new_updates = (Resets [observer_clock_index]), Bloc_void;
 				target		= location_ok;
 			}];
 		transitions.(location_init).(a2) <- untimedt a2 location_nok;
@@ -590,6 +602,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a2;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
+				new_updates = No_update, Bloc_void;
 				target		= location_init;
 			}
 			;
@@ -598,6 +611,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a2;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
+				new_updates = No_update, Bloc_void;
 				target		= location_nok;
 			}
 			];
@@ -635,6 +649,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a1;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
+				new_updates = (Resets [observer_clock_index]), Bloc_void;
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 0;
@@ -646,6 +661,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= nosync_index;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
+				new_updates = No_update, Bloc_void;
 				target		= 3;
 			}];
 		transitions.(2) <- allow_all 2;
@@ -682,6 +698,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a1;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
+				new_updates = (Resets [observer_clock_index]), Bloc_void;
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 0;
@@ -693,6 +710,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= nosync_index;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
+				new_updates = No_update, Bloc_void;
 				target		= 2;
 			}];
 		transitions.(2) <- allow_all 2;
@@ -729,6 +747,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= a1;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update (Resets [observer_clock_index]) [] [];
+				new_updates = (Resets [observer_clock_index]), Bloc_void;
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 2;
@@ -740,6 +759,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 				action		= nosync_index;
 				seq_updates = create_update No_update [] [];
 				updates		= create_update No_update [] [];
+				new_updates = No_update, Bloc_void;
 				target		= 2;
 			}];
 		transitions.(2) <- allow_all 2;

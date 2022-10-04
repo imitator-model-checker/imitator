@@ -171,18 +171,18 @@ type update =
 	| Normal of normal_update (** Updates without conditions *)
 	| Condition of condition_update (** Updates with conditions *)
 
+type parsed_loop_dir =
+    | Parsed_for_loop_up
+    | Parsed_for_loop_down
+
 (* Three type of updates (pre-updates, updates, post-updates) grouped in section *)
-type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *)
+type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *) * parsed_seq_code_bloc (* mixin updates *)
 
 (****************************************************************)
 (** Bloc of sequential code *)
 (****************************************************************)
 
-type parsed_loop_dir =
-    | Parsed_for_loop_up
-    | Parsed_for_loop_down
-
-type parsed_seq_code_bloc =
+and parsed_seq_code_bloc =
     | Parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * parsed_seq_code_bloc * int (* id *)
     | Parsed_assignment of normal_update * parsed_seq_code_bloc
     | Parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * parsed_seq_code_bloc (* inner bloc *) * parsed_seq_code_bloc (* next *) * int (* id *)
@@ -218,7 +218,6 @@ type parsed_flow = (variable_name * NumConst.t) list
 
 (* Transition = Guard * update list * sync label * destination location *)
 type transition = guard * update_section * sync * location_name
-type new_transition = guard * parsed_seq_code_bloc * sync * location_name
 
 (* Location = Name * Urgent type * Accepting type * Cost * Invariant * list of stopped clocks * transitions *)
 type parsed_location = {
@@ -238,8 +237,6 @@ type parsed_location = {
 	flow        : parsed_flow;
 	(* Transitions starting from this location *)
 	transitions : transition list;
-	(**)
-	new_transitions : new_transition list;
 }
 
 

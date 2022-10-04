@@ -1387,6 +1387,44 @@ let convert_updates variable_infos updates_type updates : updates =
     (** updates abstract model *)
     { converted_updates with conditional = conditional_updates_values }
 
+(* TODO benjamin IMPORTANT to check *)
+(* Get clock updates from a bloc of sequential code *)
+let clock_updates_of_seq_code_bloc variable_infos seq_code_bloc =
+
+    (* Search for clock assignment in sequential code bloc *)
+    let rec clock_assignment_in_seq_code_bloc = function
+        | Parsed_assignment ((parsed_update_type, expr), next_expr) ->
+
+            (* Get the update variable name *)
+            let variable_name = ParsingStructureMeta.variable_name_of_parsed_update_type parsed_update_type in
+            (* Get type of the variable *)
+            let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
+
+            (* Get next clock assignments *)
+            let next_clock_assignments = clock_assignment_in_seq_code_bloc next_expr in
+
+            (match var_type with
+            | Var_type_clock -> (Parsed_scalar_update variable_name, expr) :: next_clock_assignments
+            | _ -> next_clock_assignments
+            )
+        | Parsed_local_decl (_, _, _, next_expr, _)
+        | Parsed_for_loop (_, _, _, _, _, next_expr, _)
+        | Parsed_while_loop (_, _, next_expr)
+        | Parsed_if (_, _, _, next_expr) ->
+            clock_assignment_in_seq_code_bloc next_expr
+        | Parsed_return_expr _
+        | Parsed_bloc_void -> []
+    in
+
+    (* TODO benjamin IMPLEMENT here can refactor because is_only_resets use parsed_update_type, ...  *)
+    let parsed_clock_updates = clock_assignment_in_seq_code_bloc seq_code_bloc in
+    let parsed_updates = List.map (fun (scalar_or_index_update_type, expr) -> Parsed_variable_update scalar_or_index_update_type, expr) parsed_clock_updates in
+	(* Flag to check if there are clock resets only to 0 *)
+    let only_resets = is_only_resets variable_infos parsed_updates in
+
+    (* Convert continuous updates *)
+    to_abstract_clock_update variable_infos only_resets parsed_clock_updates
+
 
 (*------------------------------------------------------------*)
 (* Convert the transitions *)
@@ -1418,6 +1456,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 	action		= -1;
 	seq_updates	= { clock = No_update; discrete = [] ; conditional = []};
 	updates		= { clock = No_update; discrete = [] ; conditional = []};
+	new_updates = No_update, Bloc_void;
 	target		= -1;
 	} in
   let transitions_description : AbstractModel.transition array = Array.make nb_transitions dummy_transition in
@@ -1448,8 +1487,9 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* Convert the guard *)
               let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
 
-              let seq_updates, updates = update_section in
+              let seq_updates, updates, seq_code_bloc_update = update_section in
 
+                (* TODO benjamin IMPLEMENT have to delete some instruction ? in seq_code_bloc_update for removed variable ? *)
               let filtered_seq_updates = filter_updates removed_variable_names seq_updates in
               let filtered_updates = filter_updates removed_variable_names updates in
 
@@ -1477,6 +1517,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* translate parsed updates into their abstract model *)
               let converted_seq_updates = convert_updates variable_infos Parsed_seq_updates filtered_seq_updates in
               let converted_updates = convert_updates variable_infos Parsed_std_updates filtered_updates in
+              let converted_new_updates = clock_updates_of_seq_code_bloc variable_infos seq_code_bloc_update, DiscreteExpressionConverter.convert_seq_code_bloc variable_infos seq_code_bloc_update in
 
               (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
               (* Convert the updates *)
@@ -1511,6 +1552,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 					action  = action_index;
 					seq_updates = converted_seq_updates;
 					updates = converted_updates;
+					new_updates = converted_new_updates;
 					target  = target_location_index;
 				};
               (* Add the automaton *)

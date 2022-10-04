@@ -171,7 +171,7 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                 ) updates;
 
                 (* Only for seq updates *)
-                let seq_updates, _ = update_section in
+                let seq_updates, _, _ = update_section in
 
                 (* In seq update an assigned variable is considered as used (even if not used in any guard / invariant) *)
                 (* For example r := <anything>, r is considered as used *)
