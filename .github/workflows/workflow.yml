@@ -50,8 +50,8 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}"
-          release_name: ${{ github.ref_name }}"
+          tag_name: ${{ github.ref_name }}
+          release_name: ${{ github.ref_name }}
           files: |
             imitator-macos-latest/bin/*
             imitator-ubuntu-latest/bin/*
