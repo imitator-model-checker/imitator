@@ -5578,7 +5578,7 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'safety-initial-state.res' , 'content' : """
 BEGIN CONSTRAINT
-TODO
+ p >= 3
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -5601,7 +5601,8 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'safety-initial-state2.res' , 'content' : """
 BEGIN CONSTRAINT
-TODO
+ 5 >= p
+& p >= 3
 END CONSTRAINT
 
 ------------------------------------------------------------
