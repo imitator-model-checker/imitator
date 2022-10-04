@@ -14621,6 +14621,31 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test PDFC: very basic example with no deadlock but constrained initial state',
+		'input_files': ['deadlock/PDFC0-nodeadlock-init.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'PDFC0-nodeadlock-init.res' , 'content' : """
+BEGIN CONSTRAINT
+TODO
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+Constraint nature             : good
+------------------------------------------------------------
+"""
+			} #end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test PDFC: very basic example without clocks',
 		'input_files': ['deadlock/PDFC1.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-states-description',
@@ -15105,7 +15130,9 @@ Number of computed states     : 8
 			} #end result file
 		] # end expectations
 	} # end test case
+
 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: another example with basic backward under-approximation',
@@ -15129,7 +15156,9 @@ Constraint nature             : good/bad
 			} #end result file
 		] # end expectations
 	} # end test case
+
 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: again another example with basic backward under-approximation',
@@ -15155,6 +15184,30 @@ Constraint nature             : good/bad
 	} # end test case
 			
 	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PDFC: example with negative flow',
+		'input_files': ['deadlock/PDFC10-negflow.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'PDFC10-negflow.res' , 'content' : """
+BEGIN CONSTRAINT
+TODO
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+Constraint nature             : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+
+	,
+
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# TESTING FIX TO DEADLOCK COMPUTATION
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
