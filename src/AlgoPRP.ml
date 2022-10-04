@@ -72,11 +72,7 @@ class algoPRP (pval : PVal.pval) (state_predicate : AbstractProperty.state_predi
 		bad_state_found <- false;
 		
 		(* Parameter valuations cannot go beyond what is defined in the initial state of the model *)
-		good_constraint <- (
-			match initial_constraint with
-			| None -> raise (InternalError("The initial constraint was not yet set in PRP, although it should have been."))
-			| Some c -> LinearConstraint.px_hide_nonparameters_and_collapse c
-		);
+		good_constraint <- LinearConstraint.p_copy (self#get_initial_p_constraint_or_die);
 		
 		bad_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 		

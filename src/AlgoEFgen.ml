@@ -43,13 +43,6 @@ class virtual algoEFgen (state_predicate : AbstractProperty.state_predicate) =
 	(* Class variables *)
 	(************************************************************)
 	
-	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
-	(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
-	val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-		LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint
-
 	(* Counters *)
 	(*** NOTE: if EF is called several times, then each call will create a counter ***)
 	

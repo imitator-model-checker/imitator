@@ -30,12 +30,7 @@ class virtual algoEFgen : AbstractProperty.state_predicate ->
 		(************************************************************)
 
 		method virtual algorithm_name : string
-		
-		(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
-		(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
-		val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint
 
-		
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)

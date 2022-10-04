@@ -66,12 +66,6 @@ class algoDeadlockFree =
 		(* Constrain non-negative *)
 		LinearConstraint.px_constraint_of_nonnegative_variables clocks_and_parameters
 
-	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is often used in the algorithm) *)
-	val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
-		LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint
-	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -245,13 +239,16 @@ class algoDeadlockFree =
 	method check_termination_at_post_n =
 		(* Print some information *)
 		self#print_algo_message Verbose_high ("Entering check_termination_at_post_n…");
+
+		(* Retrieve the initial parameter constraint *)
+		let initial_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint = self#get_initial_p_nnconvex_constraint_or_die in
 		
 		(* True if the computed bad constraint is exactly equal to (or larger than) the initial parametric constraint *)
-		let stop = LinearConstraint.p_nnconvex_constraint_is_leq init_p_nnconvex_constraint bad_constraint in
+		let stop = LinearConstraint.p_nnconvex_constraint_is_leq initial_p_nnconvex_constraint bad_constraint in
 		
 		(* Print some information *)
 		if (stop && verbose_mode_greater Verbose_medium) || verbose_mode_greater Verbose_medium then(
-			self#print_algo_message Verbose_medium ("Initial constraint:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names init_p_nnconvex_constraint));
+			self#print_algo_message Verbose_medium ("Initial constraint:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names initial_p_nnconvex_constraint));
 			self#print_algo_message Verbose_medium ("Current bad constraint:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
 		);
 		
@@ -496,8 +493,11 @@ class algoDeadlockFree =
 			"Performing negation of final constraint…"
 		);
 		
+		(* Retrieve the initial parameter constraint *)
+		let initial_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint = self#get_initial_p_nnconvex_constraint_or_die in
+
 		(* Perform result = initial_state|P \ bad_constraint *)
-		let result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
+		let result = LinearConstraint.p_nnconvex_copy initial_p_nnconvex_constraint in
 
 		self#print_algo_message_newline Verbose_high(
 			"Initial parameter constraint:\n" ^
@@ -553,7 +553,7 @@ class algoDeadlockFree =
 			);
 			
 			(* Perform result = initial_state|P \ bad_constraint *)
-			let good_under_result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
+			let good_under_result = LinearConstraint.p_nnconvex_copy initial_p_nnconvex_constraint in
 			LinearConstraint.p_nnconvex_difference_assign good_under_result bad_constraint;
 			
 			self#print_algo_message_newline Verbose_medium (
