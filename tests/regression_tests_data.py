@@ -5620,6 +5620,31 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant',
+		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state-neg.res' , 'content' : """
+BEGIN CONSTRAINT
+  0 >= 3 + p1
+ & p2 + 3 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant',
 		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-safety.imiprop'],
 		'options'    : '',
@@ -5650,6 +5675,30 @@ Constraint nature                       : good
 			{'file': 'safety-initial-state2.res' , 'content' : """
 BEGIN CONSTRAINT
 p > 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test AGnot: basic reachability property depending on the initial invariant',
+		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-safety.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state-neg.res' , 'content' : """
+BEGIN CONSTRAINT
+False
 END CONSTRAINT
 
 ------------------------------------------------------------
