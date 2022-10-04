@@ -5626,7 +5626,7 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'safety-initial-state.res' , 'content' : """
 BEGIN CONSTRAINT
-TODO
+False
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -5649,7 +5649,7 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'safety-initial-state2.res' , 'content' : """
 BEGIN CONSTRAINT
-TODO
+p > 5
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -14628,7 +14628,8 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'PDFC0-nodeadlock-init.res' , 'content' : """
 BEGIN CONSTRAINT
-TODO
+ 5 >= p1
+& p1 >= 0
 END CONSTRAINT
 
 ------------------------------------------------------------
