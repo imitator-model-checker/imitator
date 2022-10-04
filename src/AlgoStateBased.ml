@@ -2776,6 +2776,8 @@ class virtual algoStateBased =
 	(* Constraint of the initial state (used by some algorithms to initialize their variables) *)
 	(*** NOTE: public ***)
 	val mutable initial_constraint : LinearConstraint.px_linear_constraint option = None
+	val mutable initial_p_constraint : LinearConstraint.p_linear_constraint option = None
+	val mutable initial_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint option = None
 
 	(* List of state_index that have unexplored successors in case of premature termination *)
 	(*** NOTE: public ***)
@@ -2873,6 +2875,23 @@ class virtual algoStateBased =
 		()
 		(* The end *)
 
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Methods to simplify the option handling *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method get_initial_p_constraint_or_die : LinearConstraint.p_linear_constraint =
+	begin
+		match initial_p_constraint with
+		| None -> raise (InternalError "The initial `initial_p_constraint` should have been set in `AlgoStateBased:get_initial_p_constraint_or_die`")
+		| Some c -> c
+	end
+
+	method get_initial_p_nnconvex_constraint_or_die : LinearConstraint.p_nnconvex_constraint =
+	begin
+		match initial_p_nnconvex_constraint with
+		| None -> raise (InternalError "The initial `initial_p_constraint` should have been set in `AlgoStateBased:get_initial_p_nnconvex_constraint_or_die`")
+		| Some c -> c
+	end
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the PaTATOR termination function *)
@@ -5380,11 +5399,15 @@ class virtual algoStateBased =
 
 		(* copy init state, as it might be destroyed later *)
 		(*** NOTE: this operation appears to be here totally useless ***)
-		let init_loc, init_constr = init_state.global_location, init_state.px_constraint in
-		let init_state : state = { global_location = init_loc; px_constraint = LinearConstraint.px_copy init_constr} in
+		let init_loc, init_px_constr = init_state.global_location, init_state.px_constraint in
+		let init_state : state = { global_location = init_loc; px_constraint = LinearConstraint.px_copy init_px_constr} in
 
 		(* Set up the initial state constraint *)
-		initial_constraint <- Some init_constr;
+		initial_constraint <- Some init_px_constr;
+		(* Set up the parametric projections (used by some algorithms) *)
+		let initial_constraint_projected_onto_p : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse init_px_constr in
+		initial_p_constraint <- Some initial_constraint_projected_onto_p;
+		initial_p_nnconvex_constraint <- Some (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint initial_constraint_projected_onto_p);
 
 		(* Variable initialization *)
 		(*** NOTE: must be done *after* the initial state computation (for PRP notably) ***)
