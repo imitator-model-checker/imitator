@@ -2035,7 +2035,7 @@ DESCRIPTION OF THE TRANSITIONS
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear D reachable)',
-		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-d-reachable.res' , 'content' : """
@@ -2060,7 +2060,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear PD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-pd-reachable.res' , 'content' : """
@@ -2086,7 +2086,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear XD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-xd-reachable.res' , 'content' : """
@@ -2111,7 +2111,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear PXD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-pxd-reachable.res' , 'content' : """
@@ -2136,7 +2136,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear D reachable)',
-		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-d-reachable.res' , 'content' : """
@@ -2161,7 +2161,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear PD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-pd-reachable.res' , 'content' : """
@@ -2187,7 +2187,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear XD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-xd-reachable.res' , 'content' : """
@@ -2212,7 +2212,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear PXD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-pxd-reachable.res' , 'content' : """
@@ -2264,7 +2264,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear D reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-d-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-d-reachable.res' , 'content' : """
@@ -2289,7 +2289,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-pd-reachable.res' , 'content' : """
@@ -2315,7 +2315,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear XD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-xd-reachable.res' , 'content' : """
@@ -2340,7 +2340,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PXD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-pxd-reachable.res' , 'content' : """
@@ -2365,7 +2365,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-semantic-error.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-pd-semantic-error.res' , 'content' : """
@@ -2388,7 +2388,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear XD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-semantic-error.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-xd-semantic-error.res' , 'content' : """
@@ -2411,7 +2411,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PXD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-semantic-error.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-pxd-semantic-error.res' , 'content' : """
@@ -2434,7 +2434,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear D reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-d-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-d-reachable.res' , 'content' : """
@@ -2459,7 +2459,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-pd-reachable.res' , 'content' : """
@@ -2485,7 +2485,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear XD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-xd-reachable.res' , 'content' : """
@@ -2510,7 +2510,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PXD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-pxd-reachable.res' , 'content' : """
@@ -2535,7 +2535,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-semantic-error.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-pd-semantic-error.res' , 'content' : """
@@ -2558,7 +2558,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear XD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-semantic-error.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-xd-semantic-error.res' , 'content' : """
@@ -2581,7 +2581,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PXD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-semantic-error.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-pxd-semantic-error.res' , 'content' : """
@@ -2604,7 +2604,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test linear expression unary minus in guard (computing)',
-		'input_files': ['linear_expressions/unary-minus-linear-expression.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/unary-minus-linear-expression.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'unary-minus-linear-expression.res' , 'content' : """
@@ -2679,7 +2679,7 @@ Number of IPTAs                         : 1
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression unary minus in guard (computing)',
-		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'unary-minus-guard.res' , 'content' : """
@@ -2821,7 +2821,7 @@ when  z * x / y > x do {}  sync a1 goto lend;
 	{
 		'purpose'    : 'Test Boolean True constant (computing)',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-constant-reachable.res' , 'content' : """
@@ -2841,7 +2841,7 @@ END CONSTRAINT
 	{
 		'purpose'    : 'Test Boolean False constant (computing)',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-constant-unreachable.res' , 'content' : """
@@ -2862,7 +2862,7 @@ END CONSTRAINT
 		'purpose'    : 'Test Boolean negation (computing)',
 		'tags':'boolean, computing, semantic',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-negation.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-negation.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-negation.res' , 'content' : """
@@ -2883,7 +2883,7 @@ END CONSTRAINT
 	{
 		'purpose'    : 'Test that a Boolean variable is correctly updated (computing)',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-discrete-var-update.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-discrete-var-update.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-discrete-var-update.res' , 'content' : """
@@ -2989,7 +2989,7 @@ Error                                   : invalid model
 	{
 		'purpose'    : 'Test that a Boolean variable is initialized with consistent type',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-variable-init-type-error.res' , 'content' : """
@@ -3013,7 +3013,7 @@ Error                                   : invalid model
 		'author': 'lbinria',
 		'purpose'    : 'Test that a Boolean variable is updated with a consistent typed expression',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-variable-update-type-error.res' , 'content' : """
@@ -3504,7 +3504,7 @@ True
 		'author': 'lbinria',
 		'purpose'    : 'Test general behavior of array expressions',
 		'tags':'array, computing, function, semantic',
-		'input_files': ['array_expressions/array.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['array_expressions/array.imi', 'basic-properties/acceptingReachable.imiprop'],
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'array-statespace.states' , 'content' : """
@@ -12368,7 +12368,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop (BFS)',
-		'input_files': ['deadlock/PDFC4-zeno.imi', 'deadlock/PDFC-loop.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC4-zeno.res' , 'content' : """
@@ -12395,7 +12395,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop (NDFS)',
-		'input_files': ['deadlock/PDFC4-zeno.imi', 'deadlock/PDFC-loop.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC4-zeno.res' , 'content' : """
@@ -12534,7 +12534,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation (BFS)',
-		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC-loop.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -12560,7 +12560,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation (NDFS)',
-		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC-loop.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -12944,7 +12944,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with no real loop (1a)',
-		'input_files': ['testNoCycle-1a.imi', 'acceptingLoop.imiprop'],
+		'input_files': ['testNoCycle-1a.imi', 'basic-properties/acceptingLoop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1a.res' , 'content' : """
@@ -12972,7 +12972,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with no real loop (1b)',
-		'input_files': ['testNoCycle-1b.imi', 'acceptingLoop.imiprop'],
+		'input_files': ['testNoCycle-1b.imi', 'basic-properties/acceptingLoop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1b.res' , 'content' : """
@@ -13492,7 +13492,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS: simple example with no real loop (1a)',
-		'input_files': ['testNoCycle-1a.imi', 'acceptingLoop.imiprop'],
+		'input_files': ['testNoCycle-1a.imi', 'basic-properties/acceptingLoop.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testNoCycle-1a.res' , 'content' : """
@@ -13520,7 +13520,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS: simple example with no real loop (1b)',
-		'input_files': ['testNoCycle-1b.imi', 'acceptingLoop.imiprop'],
+		'input_files': ['testNoCycle-1b.imi', 'basic-properties/acceptingLoop.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testNoCycle-1b.res' , 'content' : """
@@ -13694,7 +13694,7 @@ Termination                             : regular termination
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test AccLoopSynth with depth-limit to check the quick reachability (NDFS)',
-		'input_files': ['quick-reach.imi', 'acceptingLoop.imiprop'],
+		'input_files': ['quick-reach.imi', 'basic-properties/acceptingLoop.imiprop'],
 		'options'    : '-depth-limit 3 -cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'quick-reach.res' , 'content' : """
@@ -13723,7 +13723,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test AccLoopSynth with depth-limit to check the quick reachability (BFS)',
-		'input_files': ['quick-reach.imi', 'acceptingLoop.imiprop'],
+		'input_files': ['quick-reach.imi', 'basic-properties/acceptingLoop.imiprop'],
 		'options'    : '-depth-limit 4 -cycle-algo BFS',
 		'expectations' : [
 			{'file': 'quick-reach.res' , 'content' : """
@@ -14355,7 +14355,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno)',
-		'input_files': ['deadlock/PDFC4-zeno.imi', 'deadlock/PDFC4-NZCUB.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'PDFC4-zeno.res' , 'content' : """
@@ -14379,7 +14379,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno); check',
-		'input_files': ['deadlock/PDFC4-zeno.imi', 'deadlock/PDFC4-NZCUB.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '-nz-method check',
 		'expectations' : [
 			{'file': 'PDFC4-zeno.res' , 'content' : """
@@ -14403,7 +14403,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno); transform',
-		'input_files': ['deadlock/PDFC4-zeno.imi', 'deadlock/PDFC4-NZCUB.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'PDFC4-zeno.res' , 'content' : """
@@ -14528,7 +14528,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example without clocks',
-		'input_files': ['deadlock/PDFC1.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC1.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-states-description',
 		'expectations' : [
 			{'file': 'PDFC1.res' , 'content' : """
@@ -14584,7 +14584,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
-		'input_files': ['deadlock/PDFC3.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC3.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC3.res' , 'content' : """
@@ -14653,7 +14653,7 @@ Number of computed states     : 2
 		## Last modified            : 2022/10/03
 		## Test for IMITATOR version: 3.3
 		'purpose'    : 'Test PDFC: very basic example (normal result)',
-		'input_files': ['deadlock/PDFC4.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC4.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
@@ -14686,7 +14686,7 @@ Constraint nature             : good
 		## Last modified            : 2022/10/03
 		## Test for IMITATOR version: 3.3
 		'purpose'    : 'Test PDFC: very basic example, Zeno version (normal result)',
-		'input_files': ['deadlock/PDFC4-zeno.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC4-zeno.res' , 'content' : """
@@ -14714,7 +14714,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
-		'input_files': ['deadlock/PDFC6.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC6.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : ' -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'PDFC6.res' , 'content' : """
@@ -14769,7 +14769,7 @@ Number of computed states     : 2
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (true result)',
-		'input_files': ['deadlock/PDFC7.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC7.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC7.res' , 'content' : """
@@ -14826,7 +14826,7 @@ Number of computed states     : 3
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction',
-		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -14861,7 +14861,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction (no inclusion)',
-		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-comparison equality',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -14896,7 +14896,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction (explicit inclusion)',
-		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-comparison inclusion',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -14953,7 +14953,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation',
-		'input_files': ['deadlock/PDFC8.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC8.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-depth-limit 5 -no-var-autoremove',
 		'expectations' : [
 			{'file': 'PDFC8.res' , 'content' : """
@@ -14987,7 +14987,7 @@ Number of computed states     : 8
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation and exact result',
-		'input_files': ['deadlock/PDFC8b.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC8b.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC8b.res' , 'content' : """
@@ -15015,7 +15015,7 @@ Number of computed states     : 8
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: another example with basic backward under-approximation',
-		'input_files': ['deadlock/PDFC9.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC9.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9.res' , 'content' : """
@@ -15039,7 +15039,7 @@ Constraint nature             : good/bad
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: again another example with basic backward under-approximation',
-		'input_files': ['deadlock/PDFC9b.imi', 'deadlock/PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC9b.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9b.res' , 'content' : """
@@ -21413,8 +21413,8 @@ Constraint nature                       : good
 		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 1',
-		'input_files': ['deadlock/deadlock1.imi', 'deadlock/deadlock.imiprop'],
-		'options'    : '-verbose mute',
+		'input_files': ['deadlock/deadlock1.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'deadlock1.res' , 'content' : """
 			BEGIN CONSTRAINT
@@ -21438,7 +21438,7 @@ END CONSTRAINT
 		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 2',
-		'input_files': ['deadlock/deadlock2.imi', 'deadlock/deadlock.imiprop'],
+		'input_files': ['deadlock/deadlock2.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
 			{'file': 'deadlock2.res' , 'content' : """
@@ -21465,7 +21465,7 @@ END CONSTRAINT
 		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 3',
-		'input_files': ['deadlock/deadlock3.imi', 'deadlock/deadlock.imiprop'],
+		'input_files': ['deadlock/deadlock3.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
 			{'file': 'deadlock3.res' , 'content' : """
@@ -21489,7 +21489,7 @@ END CONSTRAINT
 		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 4',
-		'input_files': ['deadlock/deadlock4.imi', 'deadlock/deadlock.imiprop'],
+		'input_files': ['deadlock/deadlock4.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
 			{'file': 'deadlock4.res' , 'content' : """
@@ -21516,7 +21516,7 @@ END CONSTRAINT
 		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 5',
-		'input_files': ['deadlock/deadlock5.imi', 'deadlock/deadlock.imiprop'],
+		'input_files': ['deadlock/deadlock5.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
 			{'file': 'deadlock5.res' , 'content' : """
@@ -21540,7 +21540,7 @@ END CONSTRAINT
 		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 6',
-		'input_files': ['deadlock/deadlock6.imi', 'deadlock/deadlock.imiprop'],
+		'input_files': ['deadlock/deadlock6.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
 			{'file': 'deadlock6.res' , 'content' : """
@@ -21564,7 +21564,7 @@ END CONSTRAINT
 		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 7',
-		'input_files': ['deadlock/deadlock7.imi', 'deadlock/deadlock.imiprop'],
+		'input_files': ['deadlock/deadlock7.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
 			{'file': 'deadlock7.res' , 'content' : """
@@ -21589,7 +21589,7 @@ END CONSTRAINT
 		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Updated Deadlock Test 8',
-		'input_files': ['deadlock/deadlock8.imi', 'deadlock/deadlock.imiprop'],
+		'input_files': ['deadlock/deadlock8.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
 			{'file': 'deadlock8.res' , 'content' : """
