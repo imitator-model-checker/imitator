@@ -8,8 +8,8 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-20.04
-          - macos-12
+          - ubuntu-latest
+          - macos-latest
     runs-on: ${{ matrix.os }}
     env:
       DISTRIBUTED: False
