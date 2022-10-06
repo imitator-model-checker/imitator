@@ -1671,6 +1671,14 @@ let all_variables_in_property_option (parsed_property_option : ParsingStructure.
 		match parsed_property.property with
 	
 		(*------------------------------------------------------------*)
+		(* Basic properties *)
+		(*------------------------------------------------------------*)
+
+		(* Validity *)
+		| Parsed_Valid -> ()
+
+
+		(*------------------------------------------------------------*)
 		(* Non-nested CTL *)
 		(*------------------------------------------------------------*)
 		(* Reachability *)
@@ -2301,6 +2309,14 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		match parsed_property.property with
 
 		(*------------------------------------------------------------*)
+		(* Basic properties *)
+		(*------------------------------------------------------------*)
+
+		(* Validity *)
+		| Parsed_Valid -> true
+
+
+		(*------------------------------------------------------------*)
 		(* Non-nested CTL *)
 		(*------------------------------------------------------------*)
 		(* Reachability *)
@@ -2592,6 +2608,14 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 	| Some parsed_property ->
 		let property , converted_observer_structure_option =
 		match parsed_property.property with
+
+		(*------------------------------------------------------------*)
+		(* Basic properties *)
+		(*------------------------------------------------------------*)
+
+		(* Validity *)
+		| Parsed_Valid -> Valid, None
+
 
 		(*------------------------------------------------------------*)
 		(* Non-nested CTL *)

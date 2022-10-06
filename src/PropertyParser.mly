@@ -71,6 +71,7 @@ let resolve_property l =
 	CT_PROPERTY
 	CT_SEQUENCE CT_STEP CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
+	CT_VALID
 	CT_WITHIN
   CT_LIST CT_STACK CT_QUEUE
 
@@ -128,6 +129,12 @@ synth_or_exhibit:
 /************************************************************/
 property:
 /************************************************************/
+	/*------------------------------------------------------------*/
+	/* Basic properties */
+	/*------------------------------------------------------------*/
+	/* Reachability */
+	| CT_VALID { Parsed_Valid }
+
 	/*------------------------------------------------------------*/
 	/* Non-nested CTL */
 	/*------------------------------------------------------------*/

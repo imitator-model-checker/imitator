@@ -75,6 +75,7 @@ rule token = parse
  	| "PRP"            { CT_PRP }
  	| "PRPC"           { CT_PRPC }
  	| "TracePreservation" { CT_TRACEPRESERVATION }
+ 	| "Valid"          { CT_VALID }
 
 	| "accepting"      { CT_ACCEPTING }
 	| "always"         { CT_ALWAYS }

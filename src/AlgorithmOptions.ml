@@ -30,6 +30,12 @@ open AbstractProperty
 let default_state_comparison property : AbstractAlgorithm.state_comparison_operator =
 	match property.property with
 	(*------------------------------------------------------------*)
+	(* Basic properties *)
+	(*------------------------------------------------------------*)
+	(*** NOTE: irrelevant! ***)
+	| Valid -> No_check
+
+	(*------------------------------------------------------------*)
 	(* Non-nested CTL *)
 	(*------------------------------------------------------------*)
 
@@ -138,6 +144,12 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 (* Does the use of a given state_comparison_operator for a given abstract_property preserve the result correctness? *)
 let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_property) (state_comparison_operator : AbstractAlgorithm.state_comparison_operator) : bool =
 	match abstract_property.property with
+	(*------------------------------------------------------------*)
+	(* Basic properties *)
+	(*------------------------------------------------------------*)
+	(*** NOTE: irrelevant! ***)
+	| Valid -> true
+
 	(*------------------------------------------------------------*)
 	(* Non-nested CTL *)
 	(*------------------------------------------------------------*)
@@ -255,6 +267,13 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 
 let merge_needed property =
 	match property.property with
+	(*------------------------------------------------------------*)
+	(* Basic properties *)
+	(*------------------------------------------------------------*)
+	(*** NOTE: irrelevant! ***)
+	| Valid -> false
+
+
 	(*------------------------------------------------------------*)
 	(* Non-nested CTL *)
 	(*------------------------------------------------------------*)
@@ -480,6 +499,12 @@ let merge_needed property =
 let supports_witness property =
 	match property.property with
 	(*------------------------------------------------------------*)
+	(* Basic properties *)
+	(*------------------------------------------------------------*)
+	| Valid -> false
+
+
+	(*------------------------------------------------------------*)
 	(* Non-nested CTL *)
 	(*------------------------------------------------------------*)
 
@@ -587,6 +612,11 @@ let supports_witness property =
 let supports_exemplification property =
 	match property.property with
 	(*------------------------------------------------------------*)
+	(* Basic properties *)
+	(*------------------------------------------------------------*)
+	| Valid -> false
+
+	(*------------------------------------------------------------*)
 	(* Non-nested CTL *)
 	(*------------------------------------------------------------*)
 
@@ -643,6 +673,11 @@ let text_of_property property =
 	in
 	
 	match property.property with
+	(*------------------------------------------------------------*)
+	(* Basic properties *)
+	(*------------------------------------------------------------*)
+	| Valid -> "validity " ^ synthesis_or_witness
+
 	(*------------------------------------------------------------*)
 	(* Non-nested CTL *)
 	(*------------------------------------------------------------*)
