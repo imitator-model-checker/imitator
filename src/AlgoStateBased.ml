@@ -1255,6 +1255,20 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
 	) combined_transition;
 
+	(* Make mix update first ! *)
+	List.iter (fun transition_index ->
+		(* Get the automaton concerned *)
+		(* Access the transition and get the components *)
+		let automaton_index, transition = automaton_and_transition_of_transition_index transition_index in
+		(** Collecting the updates by evaluating the conditions, if there is any *)
+        let _ (* no clock update for seq updates *), seq_code_bloc_update = transition.new_updates in
+        let _ = eval_seq_code_bloc (Some model.variable_names) (Some model.functions_table) discrete_access seq_code_bloc_update in ()
+
+        (* Make `seq` sequential updates (make these updates now, only on discrete) *)
+(*        List.iter (direct_update (Some model.variable_names) (Some model.functions_table) discrete_access) (List.rev discrete_seq_updates);*)
+
+	) combined_transition;
+
 	(* Update the location for the automata synchronized with 'action_index' *)
 	(* make all non-sequential updates and return the list of guards and updates *)
 	let guards_and_updates = List.map (fun transition_index ->

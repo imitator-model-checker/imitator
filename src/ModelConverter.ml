@@ -1398,13 +1398,13 @@ let clock_updates_of_seq_code_bloc variable_infos seq_code_bloc =
             (* Get the update variable name *)
             let variable_name = ParsingStructureMeta.variable_name_of_parsed_update_type parsed_update_type in
             (* Get type of the variable *)
-            let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
+            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
 
             (* Get next clock assignments *)
             let next_clock_assignments = clock_assignment_in_seq_code_bloc next_expr in
 
-            (match var_type with
-            | Var_type_clock -> (Parsed_scalar_update variable_name, expr) :: next_clock_assignments
+            (match var_type_opt with
+            | Some Var_type_clock -> (Parsed_scalar_update variable_name, expr) :: next_clock_assignments
             | _ -> next_clock_assignments
             )
         | Parsed_local_decl (_, _, _, next_expr, _)
