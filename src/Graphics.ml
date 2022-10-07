@@ -1807,11 +1807,6 @@ let dot dot_image_extension radical dot_source_file : (string option) =
 
 (** `draw_statespace state_space algorithm_name radical` draws the state space using dot, if required by the options. *)
 let draw_statespace_if_requested state_space algorithm_name radical : unit =
-	(* Preliminary check: the state space shall not be empty *)
-	if (StateSpace.nb_states state_space) = 0 then (
-		print_warning "State space is empty: not drawing";
-	)else(
-	
 	(* Statistics *)
 	counter_graphics_statespace#start;
 
@@ -1820,23 +1815,29 @@ let draw_statespace_if_requested state_space algorithm_name radical : unit =
 	
 	(* Do not write if no dot AND no log *)
 	if options#graphical_state_space <> Graphical_state_space_none || options#states_description then (
-		let dot_model, states = dot_of_statespace state_space algorithm_name in
-		
-		(* Write states file if needed *)
-		if options#states_description then (
-			let states_file_name = (radical ^ "." ^ states_file_extension) in
-			print_message Verbose_standard ("Writing the states description to file `" ^ states_file_name ^ "`…");
-			write_to_file states_file_name states;
-		);
-		
-		(* Generate graphical state space if needed *)
-		if options#graphical_state_space <> Graphical_state_space_none then(
-			(* Call the dedicated function that returns a string option *)
-			let dot_success = dot state_space_image_format radical dot_model in
-			
-			match dot_success with
-			| None -> print_error "Oops…! Something went wrong with dot when drawing the state space."
-			| Some created_file -> print_message Verbose_standard ("Graphical state space successfully created in `" ^ created_file ^ "`.")
+		(* Preliminary check: the state space shall not be empty *)
+		if (StateSpace.nb_states state_space) = 0 then (
+			print_warning "State space is empty: not drawing";
+		)else(
+
+			let dot_model, states = dot_of_statespace state_space algorithm_name in
+
+			(* Write states file if needed *)
+			if options#states_description then (
+				let states_file_name = (radical ^ "." ^ states_file_extension) in
+				print_message Verbose_standard ("Writing the states description to file `" ^ states_file_name ^ "`…");
+				write_to_file states_file_name states;
+			);
+
+			(* Generate graphical state space if needed *)
+			if options#graphical_state_space <> Graphical_state_space_none then(
+				(* Call the dedicated function that returns a string option *)
+				let dot_success = dot state_space_image_format radical dot_model in
+
+				match dot_success with
+				| None -> print_error "Oops…! Something went wrong with dot when drawing the state space."
+				| Some created_file -> print_message Verbose_standard ("Graphical state space successfully created in `" ^ created_file ^ "`.")
+			);
 		);
 
 	);
@@ -1846,8 +1847,6 @@ let draw_statespace_if_requested state_space algorithm_name radical : unit =
 	
 	(* The end *)
 	()
-	
-	) (* end if state space not empty *)
 
 
 
