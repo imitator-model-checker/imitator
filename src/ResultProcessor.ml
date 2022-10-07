@@ -362,7 +362,7 @@ let export_to_file_errorresult error_type file_name =
 		| Lexing_error msg				-> "lexing error (" ^ msg ^ ")"
 		| ModelParsing_error msg		-> "model parsing error (" ^ msg ^ ")"
 		| PropertyParsing_error msg		-> "property parsing error (" ^ msg ^ ")"
-		| Unsatisfiable_initial_state	-> "unsatisfiable initial state"
+		| Unsatisfiable_initial_conditions	-> "unsatisfiable initial conditions"
 	in
 	
 	(* Prepare the string to write *)
@@ -396,7 +396,43 @@ let export_to_file_errorresult error_type file_name =
 
 
 
-	(* Write a `no_result` result to the result file *)
+(* Write an `error_result` result to the result file *)
+let export_to_file_unsatisfiableinitialstate file_name =
+	(* Start counter *)
+	counter#start;
+
+	(* Prepare the string to write *)
+	let file_content =
+
+		(* 1) Header *)
+		file_header ()
+
+		(* 2) Error message *)
+		^ "\n------------------------------------------------------------"
+		^ "\nUnsatisfiable initial state"
+		^ "\n------------------------------------------------------------"
+
+		(* 3) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
+		^ "\n------------------------------------------------------------"
+
+        (*  4) More info about the model *)
+        ^ add_custom_details_delimiters (Logger.json_string_of_details ())
+	in
+
+	(* Write to file *)
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
+
+	(* Stop counter *)
+	counter#stop;
+
+	(* The end *)
+	()
+
+
+
+(* Write a `no_result` result to the result file *)
 let export_to_file_noresult file_name =
 	(* Start counter *)
 	counter#start;
@@ -1001,6 +1037,22 @@ let process_result result algorithm_name prefix_option =
 		(* Print statistics *)
 		print_memory_statistics ();
 		
+		(* The end *)
+		()
+
+
+	| Unsatisfiable_initial_state ->
+		(* Write to file if requested *)
+		if options#output_result then(
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			export_to_file_unsatisfiableinitialstate file_name;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
+		);
+
+		(* Print statistics *)
+		print_memory_statistics ();
+
 		(* The end *)
 		()
 

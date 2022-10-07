@@ -56,11 +56,38 @@ class algoValid =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(*	method initialize_variables =
-		super#initialize_variables;
-		(* The end *)
-		()*)
 	
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns None unless the initial state cannot be kept, in which case the algorithm returns an imitator_result *)
+	(*** NOTE: this function is redefined here ***)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method try_termination_at_initial_state : Result.imitator_result option =
+		(* Retrieve the initial parameter constraint *)
+		let initial_p_constraint : LinearConstraint.p_linear_constraint = self#get_initial_p_constraint_or_die in
+
+		(* Set termination status *)
+		termination_status <- Some (Result.Regular_termination);
+
+		(* Immediate termination *)
+		Some (Result.Single_synthesis_result {
+			(* Good valuations *)
+			result				= Good_constraint (self#get_initial_p_nnconvex_constraint_or_die, Result.Constraint_exact);
+
+			(* English description of the constraint *)
+			constraint_description= "constraint guaranteeing validity";
+
+			(* Explored state space *)
+			state_space			= state_space;
+
+			(* Total computation time of the algorithm *)
+			computation_time	= time_from start_time;
+
+			(* Termination *)
+			termination			= Result.Regular_termination;
+		}
+	)
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)

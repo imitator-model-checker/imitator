@@ -69,7 +69,8 @@ exception TerminateAnalysis
 
 exception UnexpectedToken of char
 
-exception UnsatisfiableInitialState
+(* When the constraints in the initial state are not satisfiable *)
+exception UnsatisfiableInitialConditions
 
 (* Used when an expression is not well formed *)
 exception InvalidExpression of string

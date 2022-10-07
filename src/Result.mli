@@ -34,7 +34,7 @@ type error_type =
 	
 	| PropertyParsing_error			of string
 	
-	| Unsatisfiable_initial_state
+	| Unsatisfiable_initial_conditions
 
 
 (************************************************************)
@@ -43,7 +43,7 @@ type error_type =
 type nb_unexplored_successors = int
 
 (* Termination for state-space based algorithms *)
-type bfs_algorithm_termination =
+type state_based_algorithm_termination =
 	(* Fixpoint-like termination *)
 	| Regular_termination
 
@@ -123,8 +123,6 @@ type good_or_bad_constraint =
 	| Bad_constraint of constraint_and_soundness
 	(* Both good and bad valuations *)
 	| Good_bad_constraint of good_and_bad_constraint
-(*	(* result of NDFS *)
-	| Accepting_cycle_constraint of constraint_and_soundness*)
 
 
 (************************************************************)
@@ -150,7 +148,7 @@ type bc_coverage =
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(* BFS algorithms *)
+(* State-based algorithms *)
 (*------------------------------------------------------------*)
 
 type state_space_computation_result = {
@@ -164,7 +162,7 @@ type state_space_computation_result = {
 	computation_time	: float;
 	
 	(* Termination *)
-	termination			: bfs_algorithm_termination;
+	termination			: state_based_algorithm_termination;
 }
 
 
@@ -184,7 +182,7 @@ type single_synthesis_result = {
 	computation_time	: float;
 	
 	(* Termination *)
-	termination			: bfs_algorithm_termination;
+	termination			: state_based_algorithm_termination;
 }
 
 
@@ -206,7 +204,7 @@ type point_based_result = {
 	computation_time	: float;
 	
 	(* Termination *)
-	termination			: bfs_algorithm_termination;
+	termination			: state_based_algorithm_termination;
 }
 
 
@@ -239,7 +237,7 @@ type abstract_point_based_result = {
 	computation_time	: float;
 
 	(* Termination *)
-	termination			: bfs_algorithm_termination;
+	termination			: state_based_algorithm_termination;
 }
 
 (** Result for the original behavioral cartography and its variants: a list of tiles *)
@@ -339,7 +337,7 @@ type runs_exhibition_result = {
 	computation_time	: float;
 	
 	(* Termination *)
-	termination			: bfs_algorithm_termination;
+	termination			: state_based_algorithm_termination;
 }
 
 
@@ -358,10 +356,13 @@ type imitator_result =
 	(* No analysis: syntactic check only (+ generation of the result file with syntactic information if requested) *)
 	| Translation_result
 	
+	(* Unsatisfiable initial state (including invariant) *)
+	| Unsatisfiable_initial_state
+
 	(* Result for Post* *)
 	| State_space_computation_result of state_space_computation_result
 
-	(* Result for EFsynth, PDFC PRP *)
+	(* Result for Valid, EFsynth, PDFC PRP *)
 	| Single_synthesis_result of single_synthesis_result
 	
 	(* Result for IM, PRP *)

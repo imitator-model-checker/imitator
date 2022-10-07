@@ -1109,7 +1109,7 @@ let create_initial_state () : state =
 
     (* Initial invariant is not satisfied, we raise an exception ! *)
     if not (is_discrete_initial_invariants_satisfied) then(
-        raise UnsatisfiableInitialState
+        raise UnsatisfiableInitialConditions
     );
 
 	(* Extend dimensions for discrete *)
@@ -1195,7 +1195,7 @@ let create_initial_state () : state =
 
 
 (*------------------------------------------------------------*)
-(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialState *)
+(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialConditions *)
 (*------------------------------------------------------------*)
 let compute_initial_state_or_abort () : state =
 	(* Retrieve the model *)
@@ -1235,7 +1235,7 @@ let compute_initial_state_or_abort () : state =
 	(* Check the satisfiability *)
 	if not (LinearConstraint.px_is_satisfiable model.initial_constraint) then (
 		print_warning "The initial constraint of the model is not satisfiable.";
-		raise (UnsatisfiableInitialState);
+		raise (UnsatisfiableInitialConditions);
 	)else(
 		print_message Verbose_total ("\nThe initial constraint of the model is satisfiable.");
 	);
@@ -1249,7 +1249,7 @@ let compute_initial_state_or_abort () : state =
 	let begin_message = "The initial constraint of the model after invariant " ^ (if not options#no_time_elapsing then "and time elapsing " else "") in
 	if not (LinearConstraint.px_is_satisfiable initial_constraint_after_time_elapsing) then (
 		print_warning (begin_message ^ "is not satisfiable.");
-		raise (UnsatisfiableInitialState);
+		raise (UnsatisfiableInitialConditions);
 	)else(
 		print_message Verbose_total ("\n" ^ begin_message ^ "is satisfiable.");
 	);
@@ -2771,11 +2771,11 @@ class virtual algoStateBased =
 
 	(* Status of the analysis *)
 	(*** NOTE: public ***)
-	val mutable termination_status : Result.bfs_algorithm_termination option = None
+	val mutable termination_status : Result.state_based_algorithm_termination option = None
 
 	(* Constraint of the initial state (used by some algorithms to initialize their variables) *)
 	(*** NOTE: public ***)
-	val mutable initial_constraint_option : LinearConstraint.px_linear_constraint option = None
+	val mutable initial_px_constraint_option : LinearConstraint.px_linear_constraint option = None
 	val mutable initial_p_constraint_option : LinearConstraint.p_linear_constraint option = None
 	val mutable initial_p_nnconvex_constraint_option : LinearConstraint.p_nnconvex_constraint option = None
 
@@ -2879,6 +2879,12 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Methods to simplify the option handling *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method get_initial_px_constraint_or_die : LinearConstraint.px_linear_constraint =
+	begin
+		match initial_px_constraint_option with
+		| None -> raise (InternalError "The initial `initial_px_constraint_option` should have been set in `AlgoStateBased:get_initial_px_constraint_or_die`")
+		| Some c -> c
+	end
 	method get_initial_p_constraint_or_die : LinearConstraint.p_linear_constraint =
 	begin
 		match initial_p_constraint_option with
@@ -3047,6 +3053,25 @@ class virtual algoStateBased =
 	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual process_initial_state : State.state -> bool
+
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns None unless the initial state cannot be kept, in which case the algorithm returns an imitator_result *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method try_termination_at_initial_state : Result.imitator_result option =
+		(* Retrieve the initial constraint *)
+		let initial_px_constraint : LinearConstraint.px_linear_constraint = self#get_initial_px_constraint_or_die in
+		if LinearConstraint.px_is_satisfiable initial_px_constraint then(
+			(* Initial state is satisfiable *)
+			None
+		)else(
+			(* Set termination status *)
+			termination_status <- Some (Result.Regular_termination);
+
+			(* Special termination *)
+			Some Result.Unsatisfiable_initial_state
+		)
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -5403,7 +5428,7 @@ class virtual algoStateBased =
 		let init_state : state = { global_location = init_loc; px_constraint = LinearConstraint.px_copy init_px_constr} in
 
 		(* Set up the initial state constraint *)
-		initial_constraint_option <- Some init_px_constr;
+		initial_px_constraint_option <- Some init_px_constr;
 		(* Set up the parametric projections (used by some algorithms) *)
 		let initial_constraint_projected_onto_p : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse init_px_constr in
 		initial_p_constraint_option <- Some initial_constraint_projected_onto_p;
@@ -5428,7 +5453,23 @@ class virtual algoStateBased =
 		(* Create the state space *)
 		state_space <- StateSpace.make guessed_nb_transitions;
 
-		(* Check if the initial state should be kept according to the algorithm *)
+		(* Check whether the algorithm should immediately terminate because of an unsatisfiable initial state *)
+		let termination_at_initial_state : Result.imitator_result option = self#try_termination_at_initial_state in
+
+		match termination_at_initial_state with
+		(* Termination! *)
+		| Some imitator_result ->
+			(* Output a warning because this situation is still a little strange *)
+			print_warning "The initial state is not kept. Analysis will now terminate.";
+
+			imitator_result
+
+		(* No initial termination: continue *)
+		| None ->
+
+		(*** TODO: remove ***)
+
+(*		(* Check if the initial state should be kept according to the algorithm *)
 		let initial_state_added = self#process_initial_state init_state in
 
 		(* Degenerate case: initial state cannot be kept: terminate *)
@@ -5442,36 +5483,32 @@ class virtual algoStateBased =
 			(* Return the algorithm-dependent result and terminate *)
 			self#compute_result
 		(* Else: start the algorithm in a regular manner *)
-		)else(
+		)else( *)
 
-		(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
-		let init_state_index = match StateSpace.add_state state_space AbstractAlgorithm.No_check init_state with
-			(* The state is necessarily new as the state space was empty *)
-			| StateSpace.New_state state_index -> state_index
-			| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
-		in
+			(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
+			let init_state_index = match StateSpace.add_state state_space AbstractAlgorithm.No_check init_state with
+				(* The state is necessarily new as the state space was empty *)
+				| StateSpace.New_state state_index -> state_index
+				| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
+			in
 
-		(* Increment the number of computed states *)
-		StateSpace.increment_nb_gen_states state_space;
+			(* Increment the number of computed states *)
+			StateSpace.increment_nb_gen_states state_space;
 
-		(* Call generic method handling BFS *)
-		begin
-		match options#exploration_order with
-			| Exploration_layer_BFS -> self#explore_layer_bfs init_state_index;
-			| Exploration_queue_BFS -> self#explore_queue_bfs init_state_index;
-			| Exploration_queue_BFS_RS -> self#explore_queue_bfs init_state_index;
-			| Exploration_queue_BFS_PRIOR -> self#explore_queue_bfs init_state_index;
-(*			| Exploration_NDFS -> self#explore_layer_bfs init_state_index;
-            | Exploration_NDFS_sub -> self#explore_layer_bfs init_state_index;
-            | Exploration_layer_NDFS -> self#explore_layer_bfs init_state_index;
-            | Exploration_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;*)
-		end;
+			(* Call generic method handling BFS *)
+			begin
+			match options#exploration_order with
+				| Exploration_layer_BFS -> self#explore_layer_bfs init_state_index;
+				| Exploration_queue_BFS -> self#explore_queue_bfs init_state_index;
+				| Exploration_queue_BFS_RS -> self#explore_queue_bfs init_state_index;
+				| Exploration_queue_BFS_PRIOR -> self#explore_queue_bfs init_state_index;
+			end;
 
-		(* Return the algorithm-dependent result *)
-		self#compute_result
+			(* Return the algorithm-dependent result *)
+			self#compute_result
 
-		(*** TODO: split between process result and return result; in between, add some info (algo_name finished after….., etc.) ***)
-		) (* end if initial state added *)
+			(*** TODO: split between process result and return result; in between, add some info (algo_name finished after….., etc.) ***)
+		(* match initial state *)
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

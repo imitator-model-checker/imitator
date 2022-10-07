@@ -225,7 +225,7 @@ class virtual algoStateBased :
 
 		(* Status of the analysis *)
 		(*** TODO: make private (while accessible to subclasses ***)
-		val mutable termination_status : Result.bfs_algorithm_termination option
+		val mutable termination_status : Result.state_based_algorithm_termination option
 
 		(* List of state_index that have unexplored successors in case of premature termination *)
 		val mutable unexplored_successors : unexplored_successors
@@ -277,6 +277,7 @@ class virtual algoStateBased :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Methods to simplify the option handling *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method get_initial_px_constraint_or_die : LinearConstraint.px_linear_constraint
 		method get_initial_p_constraint_or_die : LinearConstraint.p_linear_constraint
 		method get_initial_p_nnconvex_constraint_or_die : LinearConstraint.p_nnconvex_constraint
 
@@ -329,6 +330,11 @@ class virtual algoStateBased :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method add_transition_to_state_space : (state_index * StateSpace.combined_transition * state_index) -> StateSpace.addition_result -> unit
 
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Actions to perform with the initial state; returns None unless the initial state cannot be kept, in which case the algorithm returns an imitator_result *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method try_termination_at_initial_state : Result.imitator_result option
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
