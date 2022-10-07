@@ -548,12 +548,12 @@ Is strongly deterministic?              : false
 		# Test since               : 2021/02/05
 		# Last modified            : 2021/02/05
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test unsatisfiable initial state (clock constraint)',
+		'purpose'    : 'Test unsatisfiable initial conditions (clock constraint)',
 		'input_files': ['unsatisfiableInitStateClocks.imi'],
 		'options'    : '-mode statespace',
 		'expectations' : [
 			{'file': 'unsatisfiableInitStateClocks.res' , 'content' : """
-Error                                   : unsatisfiable initial state
+Error                                   : unsatisfiable initial conditions
 		"""
 			} # end result file
 			,
@@ -569,12 +569,12 @@ Error                                   : unsatisfiable initial state
 		# Test since               : 2021/07/05
 		# Last modified            : 2021/07/05
 		# Test for IMITATOR version: 3.1
-		'purpose'    : 'Test state space (unsatisfiable initial state) even when a (useless, and non-existing) property is passed',
+		'purpose'    : 'Test state space (unsatisfiable initial conditions) even when a (useless, and non-existing) property is passed',
 		'input_files': ['unsatisfiableInitStateClocks.imi', 'nonexistingfile.imiprop'],
 		'options'    : '-mode statespace',
 		'expectations' : [
 			{'file': 'unsatisfiableInitStateClocks.res' , 'content' : """
-Error                                   : unsatisfiable initial state
+Error                                   : unsatisfiable initial conditions
 		"""
 			} # end result file
 			,
@@ -590,12 +590,12 @@ Error                                   : unsatisfiable initial state
 		# Test since               : 2021/02/05
 		# Last modified            : 2021/02/05
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test unsatisfiable initial state (clock constraint + invariant)',
+		'purpose'    : 'Test unsatisfiable initial conditions (clock constraint + invariant)',
 		'input_files': ['unsatisfiableInitStateClocksInv.imi'],
 		'options'    : '-mode statespace',
 		'expectations' : [
 			{'file': 'unsatisfiableInitStateClocksInv.res' , 'content' : """
-Error                                   : unsatisfiable initial state
+Error                                   : unsatisfiable initial conditions
 		"""
 			} # end result file
 			,
@@ -611,12 +611,12 @@ Error                                   : unsatisfiable initial state
 		# Test since               : 2021/02/05
 		# Last modified            : 2021/02/05
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test unsatisfiable initial state (discrete+clock constraint)',
+		'purpose'    : 'Test unsatisfiable initial conditions (discrete+clock constraint)',
 		'input_files': ['unsatisfiableInitStateDiscrete.imi'],
 		'options'    : '-mode statespace',
 		'expectations' : [
 			{'file': 'unsatisfiableInitStateDiscrete.res' , 'content' : """
-Error                                   : unsatisfiable initial state
+Error                                   : unsatisfiable initial conditions
 		"""
 			} # end result file
 			,
@@ -632,12 +632,12 @@ Error                                   : unsatisfiable initial state
 		# Test since               : 2021/02/05
 		# Last modified            : 2021/02/05
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test unsatisfiable initial state (incompatible discrete invariant)',
+		'purpose'    : 'Test unsatisfiable initial conditions (incompatible discrete invariant)',
 		'input_files': ['unsatisfiableInitStateDiscreteInv.imi'],
 		'options'    : '-mode statespace',
 		'expectations' : [
 			{'file': 'unsatisfiableInitStateDiscreteInv.res' , 'content' : """
-Error                                   : unsatisfiable initial state
+Error                                   : unsatisfiable initial conditions
 		"""
 			} # end result file
 			,
