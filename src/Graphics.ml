@@ -149,6 +149,8 @@ let get_v0_option () =
 	if Input.has_property() then(
 		
 		match (Input.get_property()).property with
+			| Valid
+
 			| EF _
 			| AGnot _
 			| EFpmin _
@@ -1353,6 +1355,8 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 					
 				| Cycle_through_generalized state_predicate_list
 					-> state_predicate_list
+
+				| Valid
 
 				| NZ_Cycle
 				| Deadlock_Freeness
