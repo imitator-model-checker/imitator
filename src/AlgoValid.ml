@@ -66,11 +66,11 @@ class algoValid =
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform with the initial state; returns None unless the initial state cannot be kept, in which case the algorithm returns an imitator_result *)
-	(*** NOTE: this function is redefined here ***)
+	(*** NOTE: this function is overridden here ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method try_termination_at_initial_state : Result.imitator_result option =
-		(* Retrieve the initial parameter constraint *)
-		let initial_p_constraint : LinearConstraint.p_linear_constraint = self#get_initial_p_constraint_or_die in
+
+		(* Terminate in any case *)
 
 		(* Set termination status *)
 		termination_status <- Some (Result.Regular_termination);

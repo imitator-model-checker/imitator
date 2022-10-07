@@ -57,7 +57,7 @@ let dl_instantiate_discrete_after_seq state_space state_index constr transition 
 (* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
 (* This is probably incomplete, if there was also a discrete update *) 
 let dl_inverse_update state_space state_index z updates transition = 
-    let model = Input.get_model () in (* only for printing *)
+(*     let model = Input.get_model () in (* only for printing *) *)
     let constr = px_copy z in
     let constr_pxd = pxd_of_px_constraint constr in
     (AlgoStateBased.apply_updates_assign_backward constr_pxd updates);
@@ -74,7 +74,7 @@ let dl_inverse_time state_space state_index z =
 
 (* compute direct predecessor of z2 in z1, linked by (guard,updates) *)
 let dl_predecessor state_space state_index z1 guard updates z2 transition =
-    let model = Input.get_model () in (* only for printing *)
+(*     let model = Input.get_model () in (* only for printing *) *)
     let constr = dl_inverse_update state_space state_index z2 updates transition in
     px_intersection_assign constr [z1];
     let constr_pxd = pxd_of_px_constraint constr in
