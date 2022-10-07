@@ -32,6 +32,7 @@ open AlgoGeneric
 open State
 open Result
 open StateSpace
+open CustomModules
 
 
 (************************************************************)
@@ -1255,6 +1256,10 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
 	) combined_transition;
 
+    (* Create context *)
+    let discrete_valuation, discrete_setter = discrete_access in
+    let eval_context = { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = VariableMap.empty; updated_clocks = Hashtbl.create 0; }in
+
 	(* Make mix update first ! *)
 	List.iter (fun transition_index ->
 		(* Get the automaton concerned *)
@@ -1262,12 +1267,46 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		let automaton_index, transition = automaton_and_transition_of_transition_index transition_index in
 		(** Collecting the updates by evaluating the conditions, if there is any *)
         let _ (* no clock update for seq updates *), seq_code_bloc_update = transition.new_updates in
-        let _ = eval_seq_code_bloc (Some model.variable_names) (Some model.functions_table) discrete_access seq_code_bloc_update in ()
+        let _ = eval_seq_code_bloc_with_context (Some model.variable_names) (Some model.functions_table) eval_context seq_code_bloc_update in ()
 
         (* Make `seq` sequential updates (make these updates now, only on discrete) *)
 (*        List.iter (direct_update (Some model.variable_names) (Some model.functions_table) discrete_access) (List.rev discrete_seq_updates);*)
 
 	) combined_transition;
+
+	(* Update the location for the automata synchronized with 'action_index' *)
+	(* make all non-sequential updates and return the list of guards and updates *)
+	let mix_clock_updates = List.map (fun transition_index ->
+		(* Get the automaton concerned *)
+		(* Access the transition and get the components *)
+		let _, transition = automaton_and_transition_of_transition_index transition_index in
+
+		(** Collecting the updates by evaluating the conditions, if there is any *)
+		let clock_updates, _ = transition.new_updates in
+
+        (* Map rewritten clock updates to clock updates list *)
+		let clock_updates = eval_context.updated_clocks |> Hashtbl.to_seq |> List.of_seq in
+		let clock_updates = Updates clock_updates in
+
+
+
+        (* Update the update flag *)
+        begin
+        match clock_updates with
+            (* Some updates? *)
+            | Resets (_ :: _)
+            | Updates (_ :: _) -> has_updates := true
+            (* Otherwise: no update *)
+            | No_update
+            | Resets []
+            | Updates [] -> ()
+        end;
+
+        (* Keep the updates  *)
+        clock_updates
+
+	) combined_transition
+	in
 
 	(* Update the location for the automata synchronized with 'action_index' *)
 	(* make all non-sequential updates and return the list of guards and updates *)
@@ -1313,6 +1352,8 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 
 	(* Split the list of guards and updates *)
 	let guards, clock_updates = List.split guards_and_updates in
+
+	let clock_updates = mix_clock_updates @ clock_updates in
 
 	(* Compute pairs to update the discrete variables *)
 	let updated_discrete_pairs = updated_discrete |> Hashtbl.to_seq |> List.of_seq in
