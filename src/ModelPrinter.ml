@@ -1092,6 +1092,12 @@ let string_of_abstract_property model property =
 		(* Non-nested CTL *)
 		(*------------------------------------------------------------*)
 		(* Reachability *)
+		| Valid -> "Valid"
+
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL *)
+		(*------------------------------------------------------------*)
+		(* Reachability *)
 		| EF state_predicate -> "EF(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 		(* Safety *)
 		| AGnot state_predicate ->
