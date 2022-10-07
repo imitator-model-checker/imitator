@@ -539,6 +539,179 @@ Is strongly deterministic?              : false
 
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TESTS FOR VALIDITY SYNTHESIS
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: unsatisfiable initial conditions (clock constraint)',
+		'input_files': ['unsatisfiableInitStateClocks.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateClocks.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: unsatisfiable initial conditions (clock constraint + invariant)',
+		'input_files': ['unsatisfiableInitStateClocksInv.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateClocksInv.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: unsatisfiable initial conditions (discrete+clock constraint)',
+		'input_files': ['unsatisfiableInitStateDiscrete.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateDiscrete.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: unsatisfiable initial conditions (unsatisfiable discrete invariant)',
+		'input_files': ['unsatisfiableInitStateDiscreteInv.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateDiscreteInv.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: basic model with parametric invariant',
+		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 3
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: basic model with parametric invariant (variant)',
+		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state2.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 3
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: basic model with parametric invariant and negative variable',
+		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state-neg.res' , 'content' : """
+BEGIN CONSTRAINT
+ p2 + 3 >= 0
+& 0 >= 3 + p1
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# TESTS ON UNSATISFIABLE INITIAL STATE
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -632,7 +805,7 @@ Error                                   : unsatisfiable initial conditions
 		# Test since               : 2021/02/05
 		# Last modified            : 2021/02/05
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test unsatisfiable initial conditions (incompatible discrete invariant)',
+		'purpose'    : 'Test unsatisfiable initial conditions (unsatisfiable discrete invariant)',
 		'input_files': ['unsatisfiableInitStateDiscreteInv.imi'],
 		'options'    : '-mode statespace',
 		'expectations' : [
@@ -5963,7 +6136,7 @@ END CONSTRAINT
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test EF with a parameter not used in the model (but still useful) + negative clock + negative flow',
 		'tags' : 'auto remove',
-		'input_files': ['test_param_unused.imi' , 'EFaccepting.imiprop'],
+		'input_files': ['test_param_unused.imi' , 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'test_param_unused.res' , 'content' : """
@@ -6194,7 +6367,7 @@ Number of computed states               : 14
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test EF with depth-limit to check the quick reachability (-merge none)',
-		'input_files': ['quick-reach.imi', 'EFaccepting.imiprop'],
+		'input_files': ['quick-reach.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '-merge none -depth-limit 3',
 		'expectations' : [
 			{'file': 'quick-reach.res' , 'content' : """
@@ -6221,7 +6394,7 @@ Constraint soundness                    : possible under-approximation
 		## Last modified            : 2021/09/01
 		## Test for IMITATOR version: 3.1
 		#'purpose'    : 'Test EF with depth-limit to check the quick reachability (-merge)',
-		#'input_files': ['quick-reach.imi', 'EFaccepting.imiprop'],
+		#'input_files': ['quick-reach.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		#'options'    : '-merge -depth-limit 3',
 		#'expectations' : [
 			#{'file': 'quick-reach.res' , 'content' : """
@@ -12488,7 +12661,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: flip-flop (no loop)',
-		'input_files': ['flipflop.imi', 'flipflop-loop.imiprop'],
+		'input_files': ['flipflop.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
@@ -12570,7 +12743,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with no real loop (1a) (BFS)',
-		'input_files': ['testNoCycle-1a.imi', 'loop.imiprop'],
+		'input_files': ['testNoCycle-1a.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1a.res' , 'content' : """
@@ -12598,7 +12771,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with no real loop (1a) (NDFS)',
-		'input_files': ['testNoCycle-1a.imi', 'loop.imiprop'],
+		'input_files': ['testNoCycle-1a.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1a.res' , 'content' : """
@@ -12626,7 +12799,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with no real loop (1b) (BFS)',
-		'input_files': ['testNoCycle-1b.imi', 'loop.imiprop'],
+		'input_files': ['testNoCycle-1b.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1b.res' , 'content' : """
@@ -12654,7 +12827,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with no real loop (1b) (NDFS)',
-		'input_files': ['testNoCycle-1b.imi', 'loop.imiprop'],
+		'input_files': ['testNoCycle-1b.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1b.res' , 'content' : """
@@ -12762,7 +12935,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis) (BFS)',
-		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop.imiprop'],
+		'input_files': ['testEFInclMerge.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
@@ -12793,7 +12966,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis) (NDFS)',
-		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop.imiprop'],
+		'input_files': ['testEFInclMerge.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
@@ -13997,7 +14170,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/10/07
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test option: -no-global-time-clock-in-comparison (without)',
-		'input_files': ['testExemplify-loop-single.imi', 'loop.imiprop'],
+		'input_files': ['testExemplify-loop-single.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS -depth-limit 10',
 		'expectations' : [
 			{'file': 'testExemplify-loop-single.res' , 'content' : """
@@ -14020,7 +14193,7 @@ END CONSTRAINT
 		# Last modified            : 2021/10/07
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test option: -no-global-time-clock-in-comparison (with)',
-		'input_files': ['testExemplify-loop-single.imi', 'loop.imiprop'],
+		'input_files': ['testExemplify-loop-single.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS -no-global-time-clock-in-comparison -depth-limit 10',
 		'expectations' : [
 			{'file': 'testExemplify-loop-single.res' , 'content' : """
@@ -14124,7 +14297,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/14
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test only `accepting` keyword: EF',
-		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EFaccepting.imiprop'],
+		'input_files': ['testEFaccepting.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFaccepting.res' , 'content' : """
@@ -14241,7 +14414,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test only `accepting` keyword: Loop',
-		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred.imiprop'],
+		'input_files': ['testEFaccepting.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testEFaccepting.res' , 'content' : """
@@ -14412,7 +14585,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test only `accepting` keyword: NDFS',
-		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred.imiprop'],
+		'input_files': ['testEFaccepting.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFaccepting.res' , 'content' : """
@@ -14475,7 +14648,7 @@ Constraint nature                       : good/bad
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: flip-flop (no loop)',
-		'input_files': ['flipflop.imi', 'flipflop-NZCUB.imiprop'],
+		'input_files': ['flipflop.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
@@ -14571,7 +14744,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: CUBPTA1 (non-Zeno loop)',
-		'input_files': ['CUBPTA1.imi', 'CUBPTA-NZCUB.imiprop'],
+		'input_files': ['CUBPTA1.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'CUBPTA1.res' , 'content' : """
@@ -14596,7 +14769,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: CUBPTA2 (2 non-Zeno loops)',
-		'input_files': ['CUBPTA2.imi', 'CUBPTA-NZCUB.imiprop'],
+		'input_files': ['CUBPTA2.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'CUBPTA2.res' , 'content' : """
@@ -14624,7 +14797,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test infinite run on one example (Zeno version)',
-		'input_files': ['testInfiniteRun.imi', 'testInfiniteRun-Zeno.imiprop'],
+		'input_files': ['testInfiniteRun.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testInfiniteRun.res' , 'content' : """
@@ -14648,7 +14821,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test infinite run on one example (non-Zeno version)',
-		'input_files': ['testInfiniteRun.imi', 'testInfiniteRun-nonZeno.imiprop'],
+		'input_files': ['testInfiniteRun.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testInfiniteRun.res' , 'content' : """
@@ -15101,7 +15274,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with early termination due to false constraint',
-		'input_files': ['flipflop.imi', 'flipflop-deadlockfree.imiprop'],
+		'input_files': ['flipflop.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
