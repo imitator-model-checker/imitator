@@ -48,12 +48,6 @@ class virtual algoLoopSynth :
 		(*** TODO: return the list of actually added states ***)
 		method add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
 
-		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_initial_state : State.state -> bool
-		
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified *)

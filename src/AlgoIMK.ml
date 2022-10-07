@@ -305,19 +305,26 @@ class algoIMK (pval : PVal.pval) =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+	(** Actions to perform with the initial state; returns None unless the initial state cannot be kept, in which case the algorithm returns an imitator_result *)
+	(*** NOTE: this function is redefined here ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_initial_state initial_state =
-		(* Get the constraint *)
-		let initial_constraint = initial_state.px_constraint in
-		
+	method try_termination_at_initial_state : Result.imitator_result option =
+		(* Retrieve the initial state *)
+		let initial_px_constraint : LinearConstraint.px_linear_constraint = self#get_initial_px_constraint_or_die in
+
 		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
 		(*** BADPROG: same reason ***)
-		let pi0_compatible = self#check_pi0compatibility initial_constraint in
-		
-		(* Keep only if pi-compatible *)
-		pi0_compatible
-		
+		let pi0_compatible = self#check_pi0compatibility initial_px_constraint in
+
+		if pi0_compatible then None
+		else(
+			(* Set termination status *)
+			termination_status <- Some (Result.Regular_termination);
+
+			(* Terminate *)
+			Some (self#compute_result)
+		)
+
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

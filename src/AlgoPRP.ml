@@ -221,6 +221,34 @@ class algoPRP (pval : PVal.pval) (state_predicate : AbstractProperty.state_predi
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns None unless the initial state cannot be kept, in which case the algorithm returns an imitator_result *)
+	(*** NOTE: this function is redefined here ***)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method try_termination_at_initial_state : Result.imitator_result option =
+		(* Retrieve the initial state *)
+		let initial_px_constraint : LinearConstraint.px_linear_constraint = self#get_initial_px_constraint_or_die in
+		(* Retrieve the model *)
+		let model = Input.get_model() in
+		let initial_state : State.state = {global_location = model.initial_location ; px_constraint = initial_px_constraint} in
+
+		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
+		(*** BADPROG: same reason ***)
+		let pi0_compatible = self#check_pi0compatibility initial_px_constraint in
+
+		if pi0_compatible then None
+		else(
+			(*(* Set termination status *)
+			termination_status <- Some (Result.Regular_termination);
+
+			(* Terminate *)
+			Some (self#compute_result)*)
+			(*** TODO: recheck! (2022/10/07) ***)
+			self#process_pi0_compatible_state initial_state;
+			None
+		)
+
+
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_initial_state initial_state =
@@ -237,7 +265,7 @@ class algoPRP (pval : PVal.pval) (state_predicate : AbstractProperty.state_predi
 		)else(
 			(* Run analysis to check the property, and decide whether the state should be kept or not) *)
 			self#process_pi0_compatible_state initial_state
-		)
+		)*)
 		
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

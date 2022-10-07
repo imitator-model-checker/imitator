@@ -56,10 +56,11 @@ class algoPRP : PVal.pval -> AbstractProperty.state_predicate ->
 		method virtual add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
 
 		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+		(** Actions to perform with the initial state; returns None unless the initial state cannot be kept, in which case the algorithm returns an imitator_result *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_initial_state : State.state -> bool
+		method try_termination_at_initial_state : Result.imitator_result option
 		
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

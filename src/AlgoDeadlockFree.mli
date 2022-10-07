@@ -33,18 +33,7 @@ class algoDeadlockFree :
 		(* Class methods *)
 		(************************************************************)
 		
-(* 		method run : unit -> Result.imitator_result *)
-		
 		method initialize_variables : unit
-		
-		(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
-(* 		method process_deadlock_state : StateSpace.state_index -> unit *)
-		
-		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_initial_state : State.state -> bool
 		
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

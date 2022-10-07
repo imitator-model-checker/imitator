@@ -248,15 +248,7 @@ class virtual algoLoopSynth =
 		(* The end *)
 		()
 
-	
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_initial_state _ =
-		(* Always keep the initial state *)
-		(*** NOTE: if the initial state is in a loop, this will be processed in later anyway ***)
-		true
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -88,14 +88,6 @@ class algoValid =
 		}
 	)
 
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_initial_state initial_state =
-		raise (InternalError "not implemented")
-
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the state space (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
