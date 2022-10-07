@@ -1616,7 +1616,7 @@ let compute_transitions location constr action_index automata involved_automata_
 (** Compute the initial state with the initial invariants and time elapsing *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-let create_initial_state () : State.state =
+let create_initial_state (abort_if_unsatisfiable_initial_state : bool) : State.state =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -1657,7 +1657,9 @@ let create_initial_state () : State.state =
 
 	(* Initial invariant is not satisfied, we raise an exception ! *)
 	if not (is_discrete_initial_invariants_satisfied) then(
-		raise UnsatisfiableInitialConditions
+		if abort_if_unsatisfiable_initial_state then(
+			raise UnsatisfiableInitialConditions
+		);
 	);
 
 	(* Extend dimensions for discrete *)
@@ -2982,6 +2984,8 @@ class virtual algoStateBased =
 
 				| NZ_Cycle
 
+				| Valid
+
 				| Deadlock_Freeness
 
 				(* Inverse method *)
@@ -3014,6 +3018,12 @@ class virtual algoStateBased =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Simple Boolean denoting whether we should abort if the initial state is unsatisfiable (basically, we should always abort, except for Validity-synthesis) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method abort_if_unsatisfiable_initial_state : bool = true
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialConditions *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_initial_state_or_abort : state =
@@ -3030,13 +3040,15 @@ class virtual algoStateBased =
 		(* Check the satisfiability *)
 		if not (LinearConstraint.px_is_satisfiable model.initial_constraint) then (
 			print_warning "The initial constraint of the model is not satisfiable.";
-			raise (UnsatisfiableInitialConditions);
+			if self#abort_if_unsatisfiable_initial_state then(
+				raise (UnsatisfiableInitialConditions);
+			);
 		)else(
 			print_message Verbose_total ("\nThe initial constraint of the model is satisfiable.");
 		);
 
 		(* Get the initial state after time elapsing *)
-		let init_state_after_time_elapsing : state = create_initial_state() in
+		let init_state_after_time_elapsing : state = create_initial_state (self#abort_if_unsatisfiable_initial_state) in
 		let initial_constraint_after_time_elapsing = init_state_after_time_elapsing.px_constraint in
 
 
@@ -3044,7 +3056,9 @@ class virtual algoStateBased =
 		let begin_message = "The initial constraint of the model after invariant " ^ (if not options#no_time_elapsing then "and time elapsing " else "") in
 		if not (LinearConstraint.px_is_satisfiable initial_constraint_after_time_elapsing) then (
 			print_warning (begin_message ^ "is not satisfiable.");
-			raise (UnsatisfiableInitialConditions);
+			if self#abort_if_unsatisfiable_initial_state then(
+				raise (UnsatisfiableInitialConditions);
+			);
 		)else(
 			print_message Verbose_total ("\n" ^ begin_message ^ "is satisfiable.");
 		);
