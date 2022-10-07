@@ -287,6 +287,7 @@ val pxd_constraint_of_discrete_values : (variable * coef) list -> pxd_linear_con
 (** Create a false constraint *)
 (* val false_constraint : unit -> linear_constraint *)
 val p_false_constraint : unit -> p_linear_constraint
+val px_false_constraint : unit -> px_linear_constraint
 val pxd_false_constraint : unit -> pxd_linear_constraint
 
 (** Create a true constraint *)

@@ -1703,6 +1703,7 @@ let set_dimensions nb_p nb_c nb_d =
 
 (** Create a false constraint *)
 let p_false_constraint () = ippl_false_constraint !p_dim
+let px_false_constraint () = ippl_false_constraint !px_dim
 let pxd_false_constraint () = ippl_false_constraint !pxd_dim
 
 
