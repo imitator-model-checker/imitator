@@ -871,7 +871,7 @@ let px_create_inequalities_constant variables_constant =
 
 
 (* Generate a polyhedron for computing the time elapsing for (parametric) timed automata, i.e., without stopwatches nor flows. *)
-let generate_polyhedron_time_elapsing_pta time_direction variables_elapse variables_constant =
+let generate_polyhedron_time_elapsing_pta (time_direction : time_direction) (variables_elapse : Automaton.variable_index list) (variables_constant : Automaton.variable_index list) : LinearConstraint.pxd_linear_constraint =
 	(* Create the inequalities var = 1, for var in variables_elapse *)
 	let inequalities_elapse = List.map (fun variable ->
 		(* Create a linear term of the form `var + (-1 | 1) = 0`, with `-1` for elapsing, or `1` for past *)
@@ -1088,177 +1088,6 @@ let apply_time_elapsing_to_concrete_valuation (location : Location.global_locati
 
 
 
-
-(*------------------------------------------------------------*)
-(** Compute the initial state with the initial invariants and time elapsing *)
-(*------------------------------------------------------------*)
-let create_initial_state () : state =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-
-	(* Get the declared init state with initial constraint C_0(X) *)
-	let initial_location = model.initial_location in
-	let initial_constraint = model.initial_constraint in
-
-    (* Get model invariants for the target location *)
-    let initial_invariants = get_model_invariants initial_location in
-    (* Check if the discrete invariants are all satisfied *)
-    let is_discrete_initial_invariants_satisfied = is_discrete_guards_satisfied initial_location initial_invariants in
-
-    (* Initial invariant is not satisfied, we raise an exception ! *)
-    if not (is_discrete_initial_invariants_satisfied) then(
-        raise UnsatisfiableInitialConditions
-    );
-
-	(* Extend dimensions for discrete *)
-	let initial_constraint = LinearConstraint.pxd_of_px_constraint initial_constraint in
-
-	(* Compute the invariants I_l0(X) for the initial locations *)
-	print_message Verbose_high ("\nComputing initial invariant I_l0(X)");
-	(* Create the invariant *)
-	let invariant = compute_plain_continuous_invariant initial_location in
-	(* Print some information *)
-	if verbose_mode_greater Verbose_total then
-		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
-
-	(* Compute constraint for assigning a (constant) value to discrete variables *)
-	print_message Verbose_high ("Computing constraint for discrete variables");
-	let discrete_constraint = discrete_constraint_of_global_location initial_location in
-	(* Print some information *)
-	if verbose_mode_greater Verbose_total then
-		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
-
-	(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
-	print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");
-	let current_constraint = LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)] in
-	(* Print some information *)
-	if verbose_mode_greater Verbose_total then
-		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
-
-
-	(*--- BEGIN only if time elapsing ---*)
-	if not options#no_time_elapsing then(
-		(* Perform time elapsing *)
-		print_message Verbose_high ("Applying time elapsing to [ C0(X) and I_l0(X) and D_i = d_i ]");
-		apply_time_elapsing initial_location current_constraint;
-
-(*		(* Compute the list of stopwatches *)
-		let stopped_clocks, elapsing_clocks = compute_stopwatches initial_location in
-		print_message Verbose_high ("Computing list of stopwatches");
-		if verbose_mode_greater Verbose_total then(
-			let list_of_names = List.map model.variable_names stopped_clocks in
-			print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-			let list_of_names = List.map model.variable_names elapsing_clocks in
-			print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-		);
-
-		LinearConstraint.pxd_time_elapse_assign (*model.clocks model.parameters_and_discrete*)
-			elapsing_clocks
-			(List.rev_append stopped_clocks model.parameters_and_discrete)
-			current_constraint
-		;
-		(* Print some information *)
-		if verbose_mode_greater Verbose_total then
-			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);*)
-
-
-		(* Perform intersection of [C(X) and I_l0(X) and D_i = d_i]time with I_l0(X) and D_i = d_i *)
-		(*** NOTE: intersection NOT necessary in absence of time elapsing, because the same I_l0(X) and D_i = d_i were intersected earlier ***)
-		print_message Verbose_high ("Performing intersection of [C0(X) and I_l0(X) and D_i = d_i]time and I_l0(X) and D_i = d_i");
-		LinearConstraint.pxd_intersection_assign current_constraint [invariant ; discrete_constraint];
-		(* Print some information *)
-		if verbose_mode_greater Verbose_total then
-			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
-	);
-
-	(*--- END only if time elapsing ---*)
-
-	(* Hide discrete *)
-	print_message Verbose_high ("Hide discrete");
-	let current_constraint = LinearConstraint.pxd_hide_discrete_and_collapse (*model.discrete*) current_constraint in
-	(* Print some information *)
-	if verbose_mode_greater Verbose_total then
-		print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
-
-
-	(* Remove useless clocks (if option activated) *)
-	if options#dynamic_clock_elimination then(
-		ClocksElimination.dynamic_clock_elimination initial_location current_constraint;
-	);
-
-
-	(* Return the initial state *)
-	{global_location = initial_location; px_constraint = current_constraint}
-
-
-
-(*------------------------------------------------------------*)
-(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialConditions *)
-(*------------------------------------------------------------*)
-let compute_initial_state_or_abort () : state =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-
-	(*** QUITE A HACK! Strange to have it here ***)
-	(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
-	if not model.has_non_1rate_clocks then(
-		let variables_elapse		= model.clocks in
-		let variables_constant		= model.parameters_and_discrete in
-		let time_el_polyhedron		= generate_polyhedron_time_elapsing_pta Forward variables_elapse variables_constant in
-		let time_pa_polyhedron		= generate_polyhedron_time_elapsing_pta Backward variables_elapse variables_constant in
-
-		(* Print some information *)
-		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high "Computed the static time elapsing polyhedron:";
-			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
-			print_message Verbose_high "";
-			print_message Verbose_high "Computed the static time past polyhedron:";
-			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
-			print_message Verbose_high "";
-		);
-
-		(* Save them *)
-		time_elapsing_polyhedron	:= Some time_el_polyhedron;
-		time_past_polyhedron 		:= Some time_pa_polyhedron;
-
-	);
-
-
-	(* Print the initial state *)
-	if verbose_mode_greater Verbose_medium then
-		print_message Verbose_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model {global_location = model.initial_location; px_constraint = model.initial_constraint}) ^ "\n");
-
-	(* Check the satisfiability *)
-	if not (LinearConstraint.px_is_satisfiable model.initial_constraint) then (
-		print_warning "The initial constraint of the model is not satisfiable.";
-		raise (UnsatisfiableInitialConditions);
-	)else(
-		print_message Verbose_total ("\nThe initial constraint of the model is satisfiable.");
-	);
-
-	(* Get the initial state after time elapsing *)
-	let init_state_after_time_elapsing : state = create_initial_state () in
-	let initial_constraint_after_time_elapsing = init_state_after_time_elapsing.px_constraint in
-
-
-	(* Check the satisfiability *)
-	let begin_message = "The initial constraint of the model after invariant " ^ (if not options#no_time_elapsing then "and time elapsing " else "") in
-	if not (LinearConstraint.px_is_satisfiable initial_constraint_after_time_elapsing) then (
-		print_warning (begin_message ^ "is not satisfiable.");
-		raise (UnsatisfiableInitialConditions);
-	)else(
-		print_message Verbose_total ("\n" ^ begin_message ^ "is satisfiable.");
-	);
-	(* Print the initial state after time elapsing *)
-	if verbose_mode_greater Verbose_medium then
-		print_message Verbose_medium ("\nInitial state computed:\n" ^ (ModelPrinter.string_of_state model init_state_after_time_elapsing) ^ "\n");
-
-	(* Return the initial state *)
-	init_state_after_time_elapsing
 
 
 (*------------------------------------------------------------*)
@@ -1780,6 +1609,137 @@ let compute_transitions location constr action_index automata involved_automata_
 		(* arrived here, so each automaton must have at least one legal transition *)
 		true
 	) with Unsat_exception -> false
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Compute the initial state with the initial invariants and time elapsing *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+let create_initial_state () : State.state =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(*** QUITE A HACK! Strange to have it here ***)
+	(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
+	if not model.has_non_1rate_clocks then(
+		let variables_elapse		= model.clocks in
+		let variables_constant		= model.parameters_and_discrete in
+		let time_el_polyhedron		= generate_polyhedron_time_elapsing_pta Forward variables_elapse variables_constant in
+		let time_pa_polyhedron		= generate_polyhedron_time_elapsing_pta Backward variables_elapse variables_constant in
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high "Computed the static time elapsing polyhedron:";
+			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
+			print_message Verbose_high "";
+			print_message Verbose_high "Computed the static time past polyhedron:";
+			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
+			print_message Verbose_high "";
+		);
+
+		(* Save them *)
+		time_elapsing_polyhedron	:= Some time_el_polyhedron;
+		time_past_polyhedron 		:= Some time_pa_polyhedron;
+
+	);
+
+	(* Get the declared init state with initial constraint C_0(X) *)
+	let initial_location = model.initial_location in
+	let initial_constraint = model.initial_constraint in
+
+	(* Get model invariants for the target location *)
+	let initial_invariants = get_model_invariants initial_location in
+	(* Check if the discrete invariants are all satisfied *)
+	let is_discrete_initial_invariants_satisfied = is_discrete_guards_satisfied initial_location initial_invariants in
+
+	(* Initial invariant is not satisfied, we raise an exception ! *)
+	if not (is_discrete_initial_invariants_satisfied) then(
+		raise UnsatisfiableInitialConditions
+	);
+
+	(* Extend dimensions for discrete *)
+	let initial_constraint = LinearConstraint.pxd_of_px_constraint initial_constraint in
+
+	(* Compute the invariants I_l0(X) for the initial locations *)
+	print_message Verbose_high ("\nComputing initial invariant I_l0(X)");
+	(* Create the invariant *)
+	let invariant = compute_plain_continuous_invariant initial_location in
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
+
+	(* Compute constraint for assigning a (constant) value to discrete variables *)
+	print_message Verbose_high ("Computing constraint for discrete variables");
+	let discrete_constraint = discrete_constraint_of_global_location initial_location in
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
+
+	(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
+	print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");
+	let current_constraint = LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)] in
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+
+
+	(*--- BEGIN only if time elapsing ---*)
+	if not options#no_time_elapsing then(
+		(* Perform time elapsing *)
+		print_message Verbose_high ("Applying time elapsing to [ C0(X) and I_l0(X) and D_i = d_i ]");
+		apply_time_elapsing initial_location current_constraint;
+
+(*		(* Compute the list of stopwatches *)
+		let stopped_clocks, elapsing_clocks = compute_stopwatches initial_location in
+		print_message Verbose_high ("Computing list of stopwatches");
+		if verbose_mode_greater Verbose_total then(
+			let list_of_names = List.map model.variable_names stopped_clocks in
+			print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+			let list_of_names = List.map model.variable_names elapsing_clocks in
+			print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+		);
+
+		LinearConstraint.pxd_time_elapse_assign (*model.clocks model.parameters_and_discrete*)
+			elapsing_clocks
+			(List.rev_append stopped_clocks model.parameters_and_discrete)
+			current_constraint
+		;
+		(* Print some information *)
+		if verbose_mode_greater Verbose_total then
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);*)
+
+
+		(* Perform intersection of [C(X) and I_l0(X) and D_i = d_i]time with I_l0(X) and D_i = d_i *)
+		(*** NOTE: intersection NOT necessary in absence of time elapsing, because the same I_l0(X) and D_i = d_i were intersected earlier ***)
+		print_message Verbose_high ("Performing intersection of [C0(X) and I_l0(X) and D_i = d_i]time and I_l0(X) and D_i = d_i");
+		LinearConstraint.pxd_intersection_assign current_constraint [invariant ; discrete_constraint];
+		(* Print some information *)
+		if verbose_mode_greater Verbose_total then
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+	);
+
+	(*--- END only if time elapsing ---*)
+
+	(* Hide discrete *)
+	print_message Verbose_high ("Hide discrete");
+	let current_constraint = LinearConstraint.pxd_hide_discrete_and_collapse (*model.discrete*) current_constraint in
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
+
+
+	(* Remove useless clocks (if option activated) *)
+	if options#dynamic_clock_elimination then(
+		ClocksElimination.dynamic_clock_elimination initial_location current_constraint;
+	);
+
+
+	(* Return the initial state *)
+	{global_location = initial_location; px_constraint = current_constraint}
+
 
 
 
@@ -3048,6 +3008,52 @@ class virtual algoStateBased =
 				);*)
 (* 				| _ -> raise (NotImplemented("AlgoStateBased > IMITATOR currently only implements selected algorithms in update_statespace_nature.")) *)
 		)
+
+
+
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialConditions *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method compute_initial_state_or_abort : state =
+		(* Retrieve the model *)
+		let model = Input.get_model() in
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+
+
+		(* Print the initial state *)
+		if verbose_mode_greater Verbose_medium then
+			print_message Verbose_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model {global_location = model.initial_location; px_constraint = model.initial_constraint}) ^ "\n");
+
+		(* Check the satisfiability *)
+		if not (LinearConstraint.px_is_satisfiable model.initial_constraint) then (
+			print_warning "The initial constraint of the model is not satisfiable.";
+			raise (UnsatisfiableInitialConditions);
+		)else(
+			print_message Verbose_total ("\nThe initial constraint of the model is satisfiable.");
+		);
+
+		(* Get the initial state after time elapsing *)
+		let init_state_after_time_elapsing : state = create_initial_state() in
+		let initial_constraint_after_time_elapsing = init_state_after_time_elapsing.px_constraint in
+
+
+		(* Check the satisfiability *)
+		let begin_message = "The initial constraint of the model after invariant " ^ (if not options#no_time_elapsing then "and time elapsing " else "") in
+		if not (LinearConstraint.px_is_satisfiable initial_constraint_after_time_elapsing) then (
+			print_warning (begin_message ^ "is not satisfiable.");
+			raise (UnsatisfiableInitialConditions);
+		)else(
+			print_message Verbose_total ("\n" ^ begin_message ^ "is satisfiable.");
+		);
+		(* Print the initial state after time elapsing *)
+		if verbose_mode_greater Verbose_medium then
+			print_message Verbose_medium ("\nInitial state computed:\n" ^ (ModelPrinter.string_of_state model init_state_after_time_elapsing) ^ "\n");
+
+		(* Return the initial state *)
+		init_state_after_time_elapsing
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -5421,7 +5427,7 @@ class virtual algoStateBased =
 		start_time <- Unix.gettimeofday();
 
 		(* Compute initial state *)
-		let init_state = compute_initial_state_or_abort() in
+		let init_state = self#compute_initial_state_or_abort in
 
 		(* copy init state, as it might be destroyed later *)
 		(*** NOTE: this operation appears to be here totally useless ***)

@@ -65,13 +65,8 @@ val counter_explore_using_strategy : Statistics.hybridCounter
 (**************************************************************)
 (* Class-independent functions *)
 (**************************************************************)
-(*------------------------------------------------------------*)
-(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialState *)
-(*------------------------------------------------------------*)
-val compute_initial_state_or_abort : unit -> State.state
 
 
-(* val compute_plain_invariant : Location.global_location -> LinearConstraint.pxd_linear_constraint *)
 
 (*------------------------------------------------------------*)
 (* Compute the invariant associated to a location and valuate the value of the discrete variables   *)
@@ -141,6 +136,13 @@ val discrete_constraint_of_global_location: Location.global_location -> LinearCo
 (*------------------------------------------------------------*)
 val apply_time_elapsing_to_concrete_valuation : Location.global_location -> NumConst.t -> LinearConstraint.px_valuation -> LinearConstraint.px_valuation
 
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Compute the initial state with the initial invariants and time elapsing *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*** NOTE: only needed as an interface for AlgoCartoGeneric, which does NOT inherit AlgoStateBased ***)
+val create_initial_state : unit -> State.state
 
 (*------------------------------------------------------------*)
 (** Given `Zn-1` and `Zn` such that `Zn` is the successor zone of `Zn-1` by guard `g-1` and updating variables in `Un-1` to some values (that we do not need to know as we know the zone), given `Zn+1` a set of concrete points (valuations) successor of zone `Zn` by elapsing of a set of variables `t` and non-elapsing of others `nont`, by guard `gn`, updates `Rn`, then `nnconvex_constraint_zone_predecessor_g_u(Zn-1, gn-1, Un-1, Zn, t, nont, gn, Un, Zn+1)` computes the subset of points in `Zn` that are predecessors of `Zn` (by updates of `Un`, guard `gn`, elapsing of `t`, non-elapsing of `nont`), and that are direct successors (without time elapsing) of `Zn-1` via `gn-1` and `Un-1`. *)
@@ -306,6 +308,12 @@ class virtual algoStateBased :
 		(* Update the nature of the trace set *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method update_statespace_nature : State.state -> unit
+
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialState *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method compute_initial_state_or_abort : State.state
 
 
 		(*------------------------------------------------------------*)

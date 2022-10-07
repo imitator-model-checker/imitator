@@ -681,7 +681,7 @@ class algoNZCUBdist =
 		start_time <- Unix.gettimeofday();
 
 		(* Compute initial state *)
-		let init_state = AlgoStateBased.compute_initial_state_or_abort () in
+		let init_state = self#compute_initial_state_or_abort in
 		
 		(* copy init state, as it might be destroyed later *)
 		(*** NOTE: this operation appears to be here totally useless ***)

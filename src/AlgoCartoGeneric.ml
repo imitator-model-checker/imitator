@@ -228,8 +228,6 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : Num
 	(** Given a cartography termination and a list of abstract_point_based_result, evalutes the coverage of the cartography *)
 	(*** NOTE: this should be a parameter of the class; but cannot due to inheritance from AlgoGeneric ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 	val mutable coverage_evaluation_function = None *)
-
 	
 	(* Number of dimensions (shortcut) *)
 	val mutable nb_dimensions = 0
@@ -253,9 +251,6 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : Num
 	val mutable current_algo_instance : AlgoStateBased.algoStateBased =
 		let dummy_pval = new PVal.pval in
 		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK dummy_pval in myalgo
-	
-(*	(* List of im_results *)
-	val mutable im_results : abstract_point_based_result list = []*)
 	
 	(* Manager for the tiles, the class of which depends on the tiles_storage type *)
 	(*** NOTE: arbitrarily set to TilesManagerList, but will be initialized later anyway ***)
@@ -409,8 +404,6 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : Num
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	method one_random_pi0 : PVal.pval =
-(*	(* Get the v0 *)
-	let v0 = self#get_v0 in*)
 	
 	(*** WARNING! Does not work with step <> 1 !!!! ***)
 	if step <> NumConst.one then
@@ -488,6 +481,51 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : Num
 	(************************************************************)
 
 
+	(*** HUGE HACK: copy-paste from AlgoStateBased, because the class does NOT inherit from AlgoStateBased, but from AlgoGeneric; so we need to move this code (and most AlgoStateBased parts) to a higher-level class ***)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialConditions *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private compute_initial_state_or_abort : state =
+		(* Retrieve the model *)
+		let model = Input.get_model() in
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+
+		(* Print the initial state *)
+		if verbose_mode_greater Verbose_medium then
+			print_message Verbose_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model {global_location = model.initial_location; px_constraint = model.initial_constraint}) ^ "\n");
+
+		(* Check the satisfiability *)
+		if not (LinearConstraint.px_is_satisfiable model.initial_constraint) then (
+			print_warning "The initial constraint of the model is not satisfiable.";
+			raise (UnsatisfiableInitialConditions);
+		)else(
+			print_message Verbose_total ("\nThe initial constraint of the model is satisfiable.");
+		);
+
+		(* Get the initial state after time elapsing *)
+		(*** NOTE: here is the call to AlgoStateBased *)
+		let init_state_after_time_elapsing : state = AlgoStateBased.create_initial_state() in
+		let initial_constraint_after_time_elapsing = init_state_after_time_elapsing.px_constraint in
+
+
+		(* Check the satisfiability *)
+		let begin_message = "The initial constraint of the model after invariant " ^ (if not options#no_time_elapsing then "and time elapsing " else "") in
+		if not (LinearConstraint.px_is_satisfiable initial_constraint_after_time_elapsing) then (
+			print_warning (begin_message ^ "is not satisfiable.");
+			raise (UnsatisfiableInitialConditions);
+		)else(
+			print_message Verbose_total ("\n" ^ begin_message ^ "is satisfiable.");
+		);
+		(* Print the initial state after time elapsing *)
+		if verbose_mode_greater Verbose_medium then
+			print_message Verbose_medium ("\nInitial state computed:\n" ^ (ModelPrinter.string_of_state model init_state_after_time_elapsing) ^ "\n");
+
+		(* Return the initial state *)
+		init_state_after_time_elapsing
+	(*** END HUGE HACK: copy-paste from AlgoStateBased, because the class does NOT inherit from AlgoStateBased, but from AlgoGeneric; so we need to move this code (and most AlgoStateBased parts) to a higher-level class ***)
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -495,7 +533,7 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : Num
 		(* Time counter for the algorithm *)
 		start_time <- Unix.gettimeofday();
 		
-		(* 		super#initialize_variables; *)
+		(* super#initialize_variables; *)
 
 		(* Set the number of dimensions in the system *)
 		nb_dimensions <- model.nb_parameters;
@@ -527,7 +565,7 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : Num
 		(*** TODO: check that the V0 is not empty ***)
 
 		(* Compute the initial state *)
-		let init_state = AlgoStateBased.compute_initial_state_or_abort() in
+		let init_state = self#compute_initial_state_or_abort in
 		
 		(* Set the counter of useless points to 0 *)
 		nb_unsuccessful_points <- 0;
@@ -678,11 +716,6 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : Num
 	
 	
 	
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Get all tiles *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method get_abstract_im_result_list =
-		im_results*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get the tiles manager *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -690,11 +723,6 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : Num
 		tiles_manager
 	
 	
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Set all tiles, i.e., replace the list of abstract_im_result by that given in argument (used when the collaborator creates a new AlgoCartoGeneric, and wants to add the previously computed tiles) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method set_abstract_im_result_list abstract_im_result_list =
-		im_results <- abstract_im_result_list*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the tiles manager, i.e., replace the list of tiles as managed by the manager with that given in argument (used when the collaborator creates a new AlgoCartoGeneric, and wants to add the previously computed tiles) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
