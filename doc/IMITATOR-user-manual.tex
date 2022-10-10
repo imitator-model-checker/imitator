@@ -4147,9 +4147,10 @@ The meta symbol \emptystring{} denotes the empty string.
 %------------------------------------------------------------
 \regleGrammaire{imitator\_input}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{automata\_descriptions} \nt{init} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{automata\_descriptions} \nt{init} \\
+\end{longtable}
 
 \medskip
 
@@ -4163,138 +4164,155 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{include\_file\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{include\_file} \nt{include\_file\_list} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{include\_file} \nt{include\_file\_list} \\
 	$|$ & \emptystring
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{include\_file}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{\#include} \styleIMI{"<path>"} \styleIMI{;} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{\#include} \styleIMI{"<path>"} \styleIMI{;} \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{automata\_descriptions}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{include\_file\_list} \nt{declarations} \nt{decl\_fun\_lists} \nt{automata} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{include\_file\_list} \nt{declarations} \nt{decl\_fun\_lists} \nt{automata} \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{decl\_fun\_lists}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{decl\_fun\_nonempty\_list} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{decl\_fun\_nonempty\_list} \\
 	$|$ & \emptystring
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{decl\_fun\_nonempty\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{decl\_fun\_def} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{decl\_fun\_def} \\
 	$|$ & \nt{decl\_fun\_nonempty\_list} \nt{decl\_fun\_def}
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{decl\_fun\_def}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{fn} \nt{<name>} \styleIMI{(} \nt{fun\_parameter\_list} \styleIMI{) : } \nt{var\_type\_discrete} \styleIMI{begin} \nt{fun\_body} \styleIMI{end} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{fn} \nt{<name>} \styleIMI{(} \nt{fun\_parameter\_list} \styleIMI{) : } \nt{var\_type\_discrete} \styleIMI{begin} \nt{fun\_body} \styleIMI{end} \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{fun\_parameter\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{fun\_parameter\_nonempty\_list} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{fun\_parameter\_nonempty\_list} \\
 	$|$ & \emptystring
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{fun\_parameter\_nonempty\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{<name>} \styleIMI{:} \nt{var\_type\_discrete} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{<name>} \styleIMI{:} \nt{var\_type\_discrete} \\
 	$|$ & \nt{fun\_parameter\_list} \styleIMI{,} \nt{<name>} \styleIMI{:} \nt{var\_type\_discrete}
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{fun\_body}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{fun\_local\_decl} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{fun\_local\_decl} \\
 	$|$ & \nt{fun\_instruction} \\
 	$|$ & \nt{expression}
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{fun\_local\_decl}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{let} \nt{<name>} \styleIMI{:} \nt{var\_type\_discrete} \styleIMI{=} \nt{expression} \styleIMI{in} \nt{fun\_body} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{let} \nt{<name>} \styleIMI{:} \nt{var\_type\_discrete} \styleIMI{=} \nt{expression} \styleIMI{in} \nt{fun\_body} \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{fun\_instruction}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{update} \styleIMI{;} \nt{fun\_body} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{update} \styleIMI{;} \nt{fun\_body} \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{declarations}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{var} \nt{var\_lists} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{var} \nt{var\_lists} \\
 	$|$ & \emptystring
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{var\_lists}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{var\_list} \styleIMI{:} \nt{var\_type} \styleIMI{;} \nt{var\_lists} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{var\_list} \styleIMI{:} \nt{var\_type} \styleIMI{;} \nt{var\_lists} \\
 	$|$ & \emptystring
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{var\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{<name>}                                             \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{<name>}                                             \\
 	$|$ & \styleIMI{<name> =} \nt{global\_expression}                             \\
 	$|$ & \styleIMI{<name>} \styleIMI{,} \nt{var\_list}                 \\
 	$|$ & \styleIMI{<name> =} \nt{global\_expression} \styleIMI{,} \nt{var\_list} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{var\_type}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
  	\ & \nt{var\_type\_discrete} \\
 	$|$ & \styleIMI{clock}     \\
 	$|$ & \styleIMI{parameter} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{var\_type\_discrete}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
  	\ & \nt{var\_type\_scalar} \\
 	$|$ & \nt{var\_type} \styleIMI{array(} \nt{arithmetic\_expression} \styleIMI{)} \\
   	$|$ & \nt{var\_type} \styleIMI{list} \\
 	$|$ & \nt{var\_type} \styleIMI{stack} \\
 	$|$ & \nt{var\_type} \styleIMI{queue} \\
 
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{var\_type\_scalar}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	$|$ & \styleIMI{void} \\
   	$|$ & \styleIMI{binary (} \nt{pos\_integer}  \styleIMI{)} \\
 	$|$ & \styleIMI{bool}  \\
@@ -4302,82 +4320,91 @@ We define each of those two components below.
 	$|$ & \styleIMI{discrete}  \\
 	$|$ & \styleIMI{int}  \\
 	$|$ & \styleIMI{rational}  \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{automata}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{automaton} \nt{automata}     \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{automaton} \nt{automata}     \\
 	$|$ & \nt{include\_file} \nt{automata} \\
 	$|$ & \emptystring                     \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{automaton}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{automaton} \styleIMI{<name>} \nt{prolog} \nt{locations} \styleIMI{end} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{automaton} \styleIMI{<name>} \nt{prolog} \nt{locations} \styleIMI{end} \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{prolog}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	$|$ & \nt{sync\_labels} \\
 	$|$ & \emptystring      \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{sync\_labels}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{synclabs} \styleIMI{:} \nt{name\_list} \styleIMI{;} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{synclabs} \styleIMI{:} \nt{name\_list} \styleIMI{;} \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{name\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{name\_nonempty\_list} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{name\_nonempty\_list} \\
 	$|$ & \emptystring              \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{name\_nonempty\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{<name>} \styleIMI{,} \nt{name\_nonempty\_list} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{<name>} \styleIMI{,} \nt{name\_nonempty\_list} \\
 	$|$ & \styleIMI{<name>}                                        \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{locations}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{location} \nt{locations} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{location} \nt{locations} \\
 	% TODO / NOTE: costs are allowed there (but not enough implemented)
 	$|$ & \emptystring                 \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{location\_attribute}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	$|$ & \emptystring{} \\
 	$|$ & \styleIMI{urgent} \\
 	$|$ & \styleIMI{accepting}        \\
 	$|$ & \styleIMI{accepting urgent} \\
 	$|$ & \styleIMI{urgent accepting} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{location}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{location\_attribute} \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate}  \\
-	& \quad{} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{location\_attribute} \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{nonlinear\_convex\_predicate}  \\
+	$|$ &\quad{} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
+\end{longtable}
 
 % \smallskip
 %
@@ -4390,147 +4417,164 @@ We define each of those two components below.
 % %------------------------------------------------------------
 % \regleGrammaire{\npec{wait\_opt}}
 % %------------------------------------------------------------
-% \begin{tabular}{l l}
+% \begin{longtable}{p{1em} p{.88\textwidth}}
+
 % 	\ & \npec{\styleIMI{wait()}} \\
 % 	$|$ & \npec{\styleIMI{wait}} \\
 % 	$|$ & \npec{\emptystring} \\
-% \end{tabular}
+% \end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{stopw\_and\_flow\_opt}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{stopwatches} \nt{flow} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{stopwatches} \nt{flow} \\
 	$|$ & \nt{flow} \nt{stopwatches} \\
 	$|$ & \nt{flow} \\
 	$|$ & \nt{stopwatches} \\
 	$|$ & \emptystring                                    \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{flow}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{flow \{} \nt{flow\_list} \styleIMI{\}} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{flow \{} \nt{flow\_list} \styleIMI{\}} \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{flow\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{flow\_nonempty\_list} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{flow\_nonempty\_list} \\
 	$|$ & \emptystring \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{flow\_nonempty\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{single\_flow} \styleIMI{,} \nt{flow\_nonempty\_list} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{single\_flow} \styleIMI{,} \nt{flow\_nonempty\_list} \\
 	$|$ & \nt{single\_flow} \nt{comma\_opt} \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{single\_flow}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	% TODO: not exactly \nt{constant\_arithmetic\_expr}! The grammar in ModelParser and PropertyParser are slightly different => unify
-	\   & \styleIMI{<name>' = } \nt{constant\_arithmetic\_expr} \\
-\end{tabular}
+	$|$ & \styleIMI{<name>' = } \nt{constant\_arithmetic\_expr} \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{stopwatches}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{stop\{} \nt{name\_list} \styleIMI{\}} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{stop\{} \nt{name\_list} \styleIMI{\}} \\
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{transitions}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{transition} \nt{transitions} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{transition} \nt{transitions} \\
 	$|$ & \emptystring                     \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{transition}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{when} \nt{nonlinear\_convex\_predicate} \nt{update\_synchronization} \styleIMI{goto} \styleIMI{<name>} \styleIMI{;} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{when} \nt{nonlinear\_convex\_predicate} \nt{update\_synchronization} \styleIMI{goto} \styleIMI{<name>} \styleIMI{;} \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{update\_synchronization}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{updates}                 \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{updates}                 \\
 	$|$ & \nt{syn\_label}              \\
 	$|$ & \nt{updates} \nt{syn\_label} \\
 	$|$ & \nt{syn\_label} \nt{updates} \\
 	$|$ & \emptystring                 \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{updates}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{do} \styleIMI{ \{ } \nt{seq\_then\_updates} \styleIMI{ \} } \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{do} \styleIMI{ \{ } \nt{seq\_then\_updates} \styleIMI{ \} } \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{seq\_then\_updates}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{seq} \nt{update\_seq\_nonempty\_list} \nt{then\_updates} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{seq} \nt{update\_seq\_nonempty\_list} \nt{then\_updates} \\
 	$|$  & \nt{update\_list} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{then\_updates}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{then} \nt{update\_list} \styleIMI{[end]} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{then} \nt{update\_list} \styleIMI{[end]} \\
 	$|$ & \emptystring                \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{update\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{update\_nonempty\_list} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{update\_nonempty\_list} \\
 	$|$ & \emptystring                \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{update\_nonempty\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{update} \styleIMI{,} \nt{update\_list}            \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{update} \styleIMI{,} \nt{update\_list}            \\
 	$|$ & \nt{condition\_update} \styleIMI{,} \nt{update\_list} \\
 	$|$ & \nt{update}                                           \\
 	$|$ & \nt{condition\_update}                                \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{update\_seq\_nonempty\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{update} \styleIMI{;} \nt{update\_list}            \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{update} \styleIMI{;} \nt{update\_list}            \\
 	$|$ & \nt{condition\_update} \styleIMI{;} \nt{update\_list} \\
 	$|$ & \nt{update}                                           \\
 	$|$ & \nt{condition\_update}                                \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{update}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{<name>} \styleIMI{:=} \nt{global\_expression} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{<name>} \styleIMI{:=} \nt{global\_expression} \\
+\end{longtable}
 
 % \smallskip
 %
@@ -4542,32 +4586,36 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{normal\_update\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{update} \styleIMI{,} \nt{normal\_update\_list} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{update} \styleIMI{,} \nt{normal\_update\_list} \\
 	$|$ & \nt{update}                                        \\
 	$|$ & \emptystring                                       \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{conditon\_update}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{if} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \styleIMI{then} \nt{normal\_update\_list} \styleIMI{end}                                           \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{if} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \styleIMI{then} \nt{normal\_update\_list} \styleIMI{end}                                           \\
 	$|$ & \styleIMI{if} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \styleIMI{then} \nt{normal\_update\_list} \styleIMI{else} \nt{normal\_update\_list} \styleIMI{end} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{syn\_label}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{sync} \styleIMI{<name>} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{sync} \styleIMI{<name>} \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{global\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{arithmetic\_expression} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{arithmetic\_expression} \\
 	$|$ & \nt{binary\_word\_expression} \\
 	$|$ & \nt{boolean\_expression} \\
 	$|$ & \nt{array\_expression} \\
@@ -4575,12 +4623,13 @@ We define each of those two components below.
 	$|$ & \nt{stack\_expression} \\
 	$|$ & \nt{queue\_expression} \\
 	$|$ & \nt{void\_expression} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{array\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	\ & \styleIMI{(} \nt{array\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{array\_append (} \nt{array\_expression} \styleIMI{, } \nt{array\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{array\_length (} \nt{array\_expression} \styleIMI{)} \\
@@ -4588,12 +4637,13 @@ We define each of those two components below.
 	$|$ \ & \styleIMI{<name>} \\
 	$|$ & \nt{literal\_array} \\
 	$|$ & \nt{function\_call} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{list\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	\ & \styleIMI{(} \nt{list\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{list\_cons (} \nt{global\_expression} \styleIMI{, } \nt{list\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{list\_hd (} \nt{list\_expression} \styleIMI{)} \\
@@ -4605,12 +4655,13 @@ We define each of those two components below.
 	$|$ \ & \styleIMI{<name>} \\
 	$|$ & \nt{literal\_list} \\
 	$|$ & \nt{function\_call} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{stack\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	\ & \styleIMI{(} \nt{stack\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{stack\_push (} \nt{global\_expression} \styleIMI{, } \nt{stack\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{stack\_pop (} \nt{stack\_expression} \styleIMI{)} \\
@@ -4621,12 +4672,13 @@ We define each of those two components below.
 	$|$ \ & \styleIMI{<name>} \\
 	$|$ & \styleIMI{stack()} \\
 	$|$ & \nt{function\_call} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{queue\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	\ & \styleIMI{(} \nt{queue\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{queue\_push (} \nt{global\_expression} \styleIMI{, } \nt{queue\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{queue\_pop (} \nt{queue\_expression} \styleIMI{)} \\
@@ -4637,268 +4689,292 @@ We define each of those two components below.
 	$|$ \ & \styleIMI{<name>} \\
 	$|$ & \styleIMI{queue()} \\
 	$|$ & \nt{function\_call} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{void\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	\ & \nt{function\_call} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{literal\_array}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{[} \styleIMI{]} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{[} \styleIMI{]} \\
 	$|$ & \styleIMI{[} \nt{literal\_expression\_fol} \styleIMI{]} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{literal\_expression\_fol}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{global\_expression} \styleIMI{,} \nt{literal\_expression\_fol} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{global\_expression} \styleIMI{,} \nt{literal\_expression\_fol} \\
 	$|$ & \nt{global\_expression} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{array\_access}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\ 	& \nt{array\_expression} \styleIMI{[} \nt{arithmetic\_expression} \styleIMI{]} \\
-	$|$ \ 	& \styleIMI{<name>} \styleIMI{[} \nt{arithmetic\_expression} \styleIMI{]} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+	$|$ &\nt{array\_expression} \styleIMI{[} \nt{arithmetic\_expression} \styleIMI{]} \\
+	$|$ & \styleIMI{<name>} \styleIMI{[} \nt{arithmetic\_expression} \styleIMI{]} \\
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{literal\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{list([} \styleIMI{])} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{list([} \styleIMI{])} \\
 	$|$ & \styleIMI{list([} \nt{literal\_expression\_fol} \styleIMI{])} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{binary\_word\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\ 	& \styleIMI{(} \nt{binary\_word\_expression} \styleIMI{)} \\
-	$|$ \	& \styleIMI{shift\_left (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
-	$|$ \   & \styleIMI{shift\_right (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
-	$|$ \   & \styleIMI{fill\_left (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
-	$|$ \   & \styleIMI{fill\_right (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
-	$|$ \   & \styleIMI{log\_and (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
-	$|$ \   & \styleIMI{log\_or (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
-	$|$ \   & \styleIMI{log\_xor (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
-	$|$ \   & \styleIMI{log\_not (} \nt{binary\_word\_expression} \styleIMI{)} \\
-	$|$ \	& \nt{array\_access} \\
-	$|$ \ 	& \styleIMI{<name>} \\
-	$|$ \ 	& \styleIMI{<binary\_word>} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+	$|$ &\styleIMI{(} \nt{binary\_word\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{shift\_left (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{shift\_right (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{fill\_left (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{fill\_right (} \nt{binary\_word\_expression} \styleIMI{, } \nt{arithmetic\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{log\_and (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{log\_or (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{log\_xor (} \nt{binary\_word\_expression} \styleIMI{, } \nt{binary\_word\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{log\_not (} \nt{binary\_word\_expression} \styleIMI{)} \\
+	$|$ & \nt{array\_access} \\
+	$|$ & \styleIMI{<name>} \\
+	$|$ & \styleIMI{<binary\_word>} \\
 	$|$ & \nt{function\_call} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{boolean\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	& \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression}    \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+	$|$ & \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression}    \\
 	$|$ & \nt{boolean\_expression} \styleIMI{|} \nt{boolean\_expression}     \\
 	$|$ & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
 	$|$ & \nt{discrete\_boolean\_expression}                                 \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{discrete\_boolean\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
 	$|$ & \nt{arithmetic\_expression} \styleIMI{in} $[$ \nt{arithmetic\_expression} \styleIMI{,} \nt{arithmetic\_expression} $]$ \\
 	$|$ & \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \\
   	$|$ & \styleIMI{not} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
 	$|$ & \nt{array\_access} \\
 	$|$ & \styleIMI{<name>}                                     \\
-	$|$	& \styleIMI{True}                                                    \\
+	$|$ & \styleIMI{True}                                                    \\
 	$|$ & \styleIMI{False}                                                   \\
 	$|$ & \nt{function\_call} \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{arithmetic\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{arithmetic\_term}                                          \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{arithmetic\_term}                                          \\
 	$|$ & \nt{arithmetic\_expression} \styleIMI{+} \nt{arithmetic\_term} \\
 	$|$ & \nt{arithmetic\_expression} \styleIMI{-} \nt{arithmetic\_term} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{arithmetic\_term}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{arithmetic\_factor}                                    \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{arithmetic\_factor}                                    \\
 	$|$ & \nt{rational} \styleIMI{<name>}                            \\
 	$|$ & \nt{arithmetic\_term} \styleIMI{*} \nt{arithmetic\_factor} \\
 	$|$ & \nt{arithmetic\_term} \styleIMI{/} \nt{arithmetic\_factor} \\
 	$|$ & \styleIMI{-} \nt{arithmetic\_term}                         \\
-\end{tabular}
+\end{longtable}
 
 
 
 %------------------------------------------------------------
 \regleGrammaire{arithmetic\_factor}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	& \styleIMI{(} \nt{arithmetic\_expression} \styleIMI{)} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ &\styleIMI{(} \nt{arithmetic\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{pow(} \nt{arithmetic\_expression}, \nt{arithmetic\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{rational\_of\_int(} \nt{arithmetic\_expression} \styleIMI{)} \\
 	$|$ & \nt{array\_access}									\\
 	$|$ & \styleIMI{<name>}                                     \\
 	$|$   & \nt{rational} \\
 	$|$ & \nt{function\_call}
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{function\_call}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\ & \styleIMI{<name>} \styleIMI{(} \nt{function\_argument\_fol} \styleIMI{)}
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{<name>} \styleIMI{(} \nt{function\_argument\_fol} \styleIMI{)}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{function\_argument\_fol}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{global\_expression} \styleIMI{,} \nt{function\_argument\_fol} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{global\_expression} \styleIMI{,} \nt{function\_argument\_fol} \\
 	$|$ & \nt{global\_expression} \\
 	$|$ & \emptystring
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{convex\_predicate}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{\&} \nt{convex\_predicate\_fol} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{\&} \nt{convex\_predicate\_fol} \\
 	$|$ & \nt{convex\_predicate\_fol}               \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{convex\_predicate\_fol}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{linear\_constraint} \styleIMI{\&} \nt{convex\_predicate} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{linear\_constraint} \styleIMI{\&} \nt{convex\_predicate} \\
 	$|$ & \nt{linear\_constraint}                                      \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{nonlinear\_convex\_predicate}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{\&} \nt{nonlinear\_convex\_predicate\_fol} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{\&} \nt{nonlinear\_convex\_predicate\_fol} \\
 	$|$ & \nt{nonlinear\_convex\_predicate\_fol}               \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{nonlinear\_convex\_predicate\_fol}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{nonlinear\_constraint} \styleIMI{\&} \nt{nonlinear\_convex\_predicate} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{nonlinear\_constraint} \styleIMI{\&} \nt{nonlinear\_convex\_predicate} \\
 	$|$ & \nt{nonlinear\_constraint}                                      \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{linear\_constraint}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{linear\_expression} \nt{relop} \nt{linear\_expression} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{linear\_expression} \nt{relop} \nt{linear\_expression} \\
 	$|$ & \styleIMI{True}                                            \\
 	$|$ & \styleIMI{False}                                           \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{nonlinear\_constraint}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{discrete\_boolean\_expression} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{discrete\_boolean\_expression} \\
 	$|$ & \styleIMI{True}                                            \\
 	$|$ & \styleIMI{False}                                           \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{relop}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{<}  \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{<}  \\
 	$|$ & \styleIMI{<=} \\
 	$|$ & \styleIMI{=}  \\
 	$|$ & \styleIMI{<>}  \\
 	$|$ & \styleIMI{>=} \\
 	$|$ & \styleIMI{>}  \\
 	% 	$|$ & \styleIMI{<>} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{linear\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{linear\_term}                                      \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{linear\_term}                                      \\
 	$|$ & \nt{linear\_expression} \styleIMI{+} \nt{linear\_term} \\
 	$|$ & \nt{linear\_expression} \styleIMI{-} \nt{linear\_term} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{linear\_term}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{rational}                                \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{rational}                                \\
 	$|$ & \nt{rational} \styleIMI{<name>}              \\
 	$|$ & \nt{rational} \styleIMI{*} \styleIMI{<name>} \\
 	$|$ & \styleIMI{-} \styleIMI{<name>}               \\
 	$|$ & \styleIMI{<name>}                            \\
 	$|$ & \styleIMI{(} \nt{linear\_term} \styleIMI{)}  \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{rational}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{integer}                                \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{integer}                                \\
 	$|$ & \nt{float}                                  \\
 	$|$ & \nt{integer} \styleIMI{/} \nt{pos\_integer} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{integer}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{pos\_integer}              \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{pos\_integer}              \\
 	$|$ & \styleIMI{-} \nt{pos\_integer} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{pos\_integer}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{<int>} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{<int>} \\
+\end{longtable}
 
 
 
 %------------------------------------------------------------
 \regleGrammaire{float}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{pos\_float}              \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{pos\_float}              \\
 	$|$ & \styleIMI{-} \nt{pos\_float} \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{pos\_float}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{<float>} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{<float>} \\
+\end{longtable}
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -4908,130 +4984,145 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{init}
 %------------------------------------------------------------
-% \begin{tabular}{l l}
+% \begin{longtable}{p{1em} p{.88\textwidth}}
+
 % 	 & \nt{init\_definition} \styleIMI{end} \\
 % 	 $|$ & \nt{old\_init\_definition} \styleIMI{end} \\
-% \end{tabular}
+% \end{longtable}
 %
 % %------------------------------------------------------------
 % \regleGrammaire{init\_definition}
 % %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{init} \styleIMI{:= \{} \nt{init\_discrete\_continuous\_definition} \styleIMI{\}} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{init} \styleIMI{:= \{} \nt{init\_discrete\_continuous\_definition} \styleIMI{\}} \\
 % 	$|$ & \emptystring                                                       \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{init\_discrete\_continuous\_definition}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	\ & \nt{init\_discrete\_definition} \nt{init\_continuous\_definition} \\
     $|$ & \nt{init\_continuous\_definition} \nt{init\_discrete\_definition} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{init\_discrete\_definition}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{discrete} \styleIMI{=} \nt{init\_discrete\_expression} \styleIMI{;} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{discrete} \styleIMI{=} \nt{init\_discrete\_expression} \styleIMI{;} \\
 	$|$ & \emptystring                                                       \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{init\_discrete\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{,}  \nt{init\_discrete\_expression\_nonempty\_list} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{,}  \nt{init\_discrete\_expression\_nonempty\_list} \\
 	$|$ &  \nt{init\_discrete\_expression\_nonempty\_list} \\
 	$|$ & \emptystring                                                       \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{init\_discrete\_expression\_nonempty\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{init\_discrete\_state\_predicate} \styleIMI{,}  \nt{init\_discrete\_expression\_nonempty\_list} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{init\_discrete\_state\_predicate} \styleIMI{,}  \nt{init\_discrete\_expression\_nonempty\_list} \\
 	$|$ & \nt{init\_discrete\_state\_predicate} \\
 	$|$ & \nt{init\_discrete\_state\_predicate} \styleIMI{,} \\                                                       \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{init\_discrete\_state\_predicate}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{<name> :=} \nt{global\_expression} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{<name> :=} \nt{global\_expression} \\
 	$|$ & \nt{init\_discrete\_loc\_predicate} \\
 	$|$ & \styleIMI{(}                                                      \nt{init\_discrete\_state\_predicate} \styleIMI{)}                                                      \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{init\_discrete\_loc\_predicate}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{loc[ <name> ] := <name>} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{loc[ <name> ] := <name>} \\
 	$|$ & \styleIMI{<name> is in <name>} \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{init\_continuous\_definition}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{continuous} \styleIMI{=} \nt{region\_expression} \styleIMI{;} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{continuous} \styleIMI{=} \nt{region\_expression} \styleIMI{;} \\
 	$|$ & \emptystring                                                       \\
-\end{tabular}
+\end{longtable}
 
 
 % %------------------------------------------------------------
 % \regleGrammaire{old\_init\_definition}
 % %------------------------------------------------------------
-% \begin{tabular}{l l}
-% 	\   & \styleIMI{init} \styleIMI{:=} \nt{region\_expression} \styleIMI{;} \\
+% \begin{longtable}{p{1em} p{.88\textwidth}}
+
+% 	$|$ & \styleIMI{init} \styleIMI{:=} \nt{region\_expression} \styleIMI{;} \\
 % 	$|$ & \emptystring                                                       \\
-% \end{tabular}
+% \end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{region\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{\&} \nt{region\_expression\_fol} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{\&} \nt{region\_expression\_fol} \\
 	$|$ & \nt{region\_expression\_fol}               \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{region\_expression\_fol}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{linear\_constraint}                                             \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{linear\_constraint}                                             \\
 	$|$ & \styleIMI{(} \nt{region\_expression\_fol} \styleIMI{)}                  \\
 	$|$ & \nt{region\_expression\_fol} \styleIMI{\&} \nt{region\_expression\_fol} \\
-\end{tabular}
+\end{longtable}
 
 
 % %------------------------------------------------------------
 % \regleGrammaire{init\_state\_predicate}
 % %------------------------------------------------------------
-% \begin{tabular}{l l}
-% 	\   & \nt{init\_loc\_predicate} \\
+% \begin{longtable}{p{1em} p{.88\textwidth}}
+
+% 	$|$ & \nt{init\_loc\_predicate} \\
 % 	$|$ & \nt{linear\_constraint}   \\
-% \end{tabular}
+% \end{longtable}
 %
 % %------------------------------------------------------------
 % \regleGrammaire{init\_loc\_predicate}
 % %------------------------------------------------------------
-% \begin{tabular}{l l}
-% 	\   & \styleIMI{loc[ <name> ] = <name>} \\
+% \begin{longtable}{p{1em} p{.88\textwidth}}
+
+% 	$|$ & \styleIMI{loc[ <name> ] = <name>} \\
 % 	$|$ & \styleIMI{<name> is in <name>}    \\
-% \end{tabular}
+% \end{longtable}
 %
 %
 % %------------------------------------------------------------
 % \regleGrammaire{discrete\_predicate}
 % %------------------------------------------------------------
-% \begin{tabular}{l l}
-% 	\   & \styleIMI{<name>} \nt{relop} \nt{rational}                                                         \\
+% \begin{longtable}{p{1em} p{.88\textwidth}}
+
+% 	$|$ & \styleIMI{<name>} \nt{relop} \nt{rational}                                                         \\
 % 	$|$ & \styleIMI{<name>} \styleIMI{in} \styleIMI{[}\nt{rational} \styleIMI{,} \nt{rational} \styleIMI{]}  \\
 % 	$|$ & \styleIMI{<name>} \styleIMI{in} \styleIMI{[}\nt{rational} \styleIMI{..} \nt{rational} \styleIMI{]} \\
-% \end{tabular}
+% \end{longtable}
 
 
 
@@ -5042,37 +5133,38 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{property\_definition}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{property\_kw\_opt} \nt{quantified\_property} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{property\_kw\_opt} \nt{quantified\_property} \\
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{property\_kw\_opt}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{property :=} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{property :=} \\
 	$|$ & \emptystring           \\
-\end{tabular}
+\end{longtable}
 
 %------------------------------------------------------------
 \regleGrammaire{quantified\_property}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	$|$ & \styleIMI{\#synth} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt}   \\
 	$|$ & \styleIMI{\#exhibit} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
 	$|$ & \styleIMI{\#witness} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
-\end{tabular}
+\end{longtable}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %------------------------------------------------------------
 \regleGrammaire{property}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-
+\begin{longtable}{p{1em} p{.88\textwidth}}
 	% 	Non-nested CTL
-
 	$|$ & \styleIMI{EF} \nt{state\_predicate}                                                                                  \\
 	$|$ & \styleIMI{AGnot} \nt{state\_predicate}                                                                               \\
 
@@ -5138,14 +5230,14 @@ We define each of those two components below.
 
 	% Observer pattern
 	$|$ & \styleIMI{pattern(} \nt{pattern} \styleIMI{)}                                                                                                       \\
-\end{tabular}
+\end{longtable}
 
 
 
 %------------------------------------------------------------
 \regleGrammaire{pattern}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
 	$|$ & \styleIMI{if <name> then <name> has happened before}                                                           \\
 	$|$ & \styleIMI{everytime <name> then <name> has happened before}                                                    \\
 	$|$ & \styleIMI{everytime <name> then <name> has happened once before}                                               \\
@@ -5166,7 +5258,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{sequence} \styleIMI{(} \nt{var\_list} \styleIMI{)}                                                   \\
 	$|$ & \styleIMI{always sequence} \nt{var\_list}                                                                      \\
 	$|$ & \styleIMI{always sequence} \styleIMI{(} \nt{var\_list} \styleIMI{)}                                            \\
-\end{tabular}
+\end{longtable}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -5174,65 +5266,71 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{state\_predicate\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	$|$ & \nt{non\_empty\_state\_predicate\_list} \\
 	$|$ & \emptystring{}
 	\\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{non\_empty\_state\_predicate\_list}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	$|$ & \nt{state\_predicate} \styleIMI{,} \nt{non\_empty\_state\_predicate\_list} \\ % NOTE: actually non\_empty\_state\_predicate (absent from this document)
 	$|$ & \nt{state\_predicate} \nt{comma\_opt} \\
-\end{tabular}
+\end{longtable}
 
 %% NOTE: the definition seems quite different from the actual grammar
 
 %------------------------------------------------------------
 \regleGrammaire{state\_predicate}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{state\_predicate} \styleIMI{$| |$} \nt{state\_predicate} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{state\_predicate} \styleIMI{$| |$} \nt{state\_predicate} \\
 	$|$ & \nt{state\_predicate\_term}                                  \\
 	$|$ & \styleIMI{True}                                              \\
 	$|$ & \styleIMI{False}                                             \\
 	$|$ & \styleIMI{accepting}                                             \\
 	$|$ & \emptystring{}
 	\\
-\end{tabular}
+\end{longtable}
 
 
 
 %------------------------------------------------------------
 \regleGrammaire{state\_predicate\_term}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{state\_predicate\_term} \styleIMI{$\&$} \nt{state\_predicate\_term} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{state\_predicate\_term} \styleIMI{$\&$} \nt{state\_predicate\_term} \\
 	$|$ & \nt{state\_predicate\_factor}                                             \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{state\_predicate\_factor}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{simple\_predicate}                          \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{simple\_predicate}                          \\
 	$|$ & \styleIMI{not} \nt{state\_predicate\_factor}    \\
 	$|$ & \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
-\end{tabular}
+\end{longtable}
 
 
 
 %------------------------------------------------------------
 \regleGrammaire{simple\_predicate}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{discrete\_boolean\_predicate} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{discrete\_boolean\_predicate} \\
 	$|$ & \nt{loc\_predicate}               \\
-\end{tabular}
+\end{longtable}
 
 
 
@@ -5240,12 +5338,13 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{loc\_predicate}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{loc[ <name> ] = <name>}  \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{loc[ <name> ] = <name>}  \\
 	$|$ & \styleIMI{<name> is in <name>}     \\
 	$|$ & \styleIMI{loc[ <name> ] <> <name>} \\
 	$|$ & \styleIMI{<name> is not in <name>} \\
-\end{tabular}
+\end{longtable}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5254,65 +5353,71 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{discrete\_boolean\_predicate}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{discrete\_expression} \nt{op\_bool} \nt{discrete\_expression}                                                         \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{discrete\_expression} \nt{op\_bool} \nt{discrete\_expression}                                                         \\
 	$|$ & \nt{discrete\_expression} \styleIMI{ in [} \nt{discrete\_expression} \styleIMI{,} \nt{discrete\_expression} \styleIMI{]}  \\
 	$|$ & \nt{discrete\_expression} \styleIMI{ in [} \nt{discrete\_expression} \styleIMI{..} \nt{discrete\_expression} \styleIMI{]} \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{discrete\_expression}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{discrete\_expression} \styleIMI{+} \nt{discrete\_term} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{discrete\_expression} \styleIMI{+} \nt{discrete\_term} \\
 	$|$ & \nt{discrete\_expression} \styleIMI{-} \nt{discrete\_term} \\
 	$|$ & \nt{discrete\_term}                                        \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{discrete\_term}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{discrete\_term} \styleIMI{*} \nt{discrete\_factor} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{discrete\_term} \styleIMI{*} \nt{discrete\_factor} \\
 	$|$ & \nt{discrete\_term} \styleIMI{/} \nt{discrete\_factor} \\
 	$|$ & \nt{discrete\_factor}                                  \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{discrete\_factor}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{<name>}                                   \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{<name>}                                   \\
 	$|$ & \nt{positive\_rational}                             \\
 	$|$ & \styleIMI{(} \nt{discrete\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{-} \nt{discrete\_factor}                  \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{op\_bool}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{<}  \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{<}  \\
 	$|$ & \styleIMI{<=} \\
 	$|$ & \styleIMI{=}  \\
 	$|$ & \styleIMI{<>} \\
 	$|$ & \styleIMI{>=} \\
 	$|$ & \styleIMI{>}  \\
-\end{tabular}
+\end{longtable}
 
 
 
 %------------------------------------------------------------
 \regleGrammaire{positive\_rational}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{pos\_integer} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{pos\_integer} \\
 	$|$ & \nt{pos\_float}   \\
-\end{tabular}
+\end{longtable}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5321,10 +5426,11 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{projection\_definition\_opt}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \styleIMI{projectresult( } \nt{name\_nonempty\_list} \styleIMI{)} \nt{semicolon\_opt} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{projectresult( } \nt{name\_nonempty\_list} \styleIMI{)} \nt{semicolon\_opt} \\
 	$|$ & \emptystring{}                                                                        \\
-\end{tabular}
+\end{longtable}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -5339,27 +5445,30 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{parameter\_valuation}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{parameter\_assignments} \nt{semicolon\_opt} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{parameter\_assignments} \nt{semicolon\_opt} \\
+\end{longtable}
 
 
 
 %------------------------------------------------------------
 \regleGrammaire{parameter\_assignments}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{parameter\_assignment} \nt{parameter\_assignments} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{parameter\_assignment} \nt{parameter\_assignments} \\
 	$|$ & \emptystring{}                                         \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{parameter\_assignment}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{and\_opt} \styleIMI{<name> = } \nt{constant\_arithmetic\_expr} \nt{comma\_opt} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{and\_opt} \styleIMI{<name> = } \nt{constant\_arithmetic\_expr} \nt{comma\_opt} \\
+\end{longtable}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -5367,28 +5476,30 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{hyper\_rectangle}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{rectangle\_parameter\_assignments} \nt{semicolon\_opt} \\
-\end{tabular}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+	$|$ & \nt{rectangle\_parameter\_assignments} \nt{semicolon\_opt} \\
+\end{longtable}
 
 
 
 %------------------------------------------------------------
 \regleGrammaire{rectangle\_parameter\_assignments}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{rectangle\_parameter\_assignment} \nt{rectangle\_parameter\_assignments} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{rectangle\_parameter\_assignment} \nt{rectangle\_parameter\_assignments} \\
 	$|$ & \emptystring{}                                                               \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{rectangle\_parameter\_assignment}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{and\_opt} \styleIMI{<name> = } \nt{constant\_arithmetic\_expr} \styleIMI{..} \nt{constant\_arithmetic\_expr} \nt{comma\_opt} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{and\_opt} \styleIMI{<name> = } \nt{constant\_arithmetic\_expr} \styleIMI{..} \nt{constant\_arithmetic\_expr} \nt{comma\_opt} \\
 	$|$ & \nt{and\_opt} \styleIMI{<name> = } \nt{constant\_arithmetic\_expr} \nt{comma\_opt}                                               \\
-\end{tabular}
+\end{longtable}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5396,40 +5507,43 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{constant\_arithmetic\_expr}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{constant\_arithmetic\_expr} \styleIMI{+} \nt{constant\_expr\_mult} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{constant\_arithmetic\_expr} \styleIMI{+} \nt{constant\_expr\_mult} \\
 	$|$ & \nt{constant\_arithmetic\_expr} \styleIMI{-} \nt{constant\_expr\_mult} \\
 	$|$ & \nt{constant\_expr\_mult}                                              \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{constant\_expr\_mult}
 %------------------------------------------------------------
-\begin{tabular}{l l}
-	\   & \nt{constant\_expr\_mult} \styleIMI{*} \nt{constant\_neg\_atom} \\
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \nt{constant\_expr\_mult} \styleIMI{*} \nt{constant\_neg\_atom} \\
 	$|$ & \nt{constant\_expr\_mult} \styleIMI{/} \nt{constant\_neg\_atom} \\
 	$|$ & \nt{constant\_neg\_atom}                                        \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{constant\_neg\_atom}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
 	$|$ & \nt{constant\_atom}              \\
 	$|$ & \styleIMI{-} \nt{constant\_atom} \\
-\end{tabular}
+\end{longtable}
 
 
 
 %------------------------------------------------------------
 \regleGrammaire{constant\_atom}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	$|$ & \styleIMI{(} \nt{constant\_arithmetic\_expr} \styleIMI{)} \\
 	$|$ & \nt{rational}                                             \\
-\end{tabular}
+\end{longtable}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5439,10 +5553,11 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{step\_opt}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	$|$ & \styleIMI{, step=} \nt{pos\_rational} \\
 	$|$ & \emptystring{}                        \\
-\end{tabular}
+\end{longtable}
 
 
 
@@ -5454,28 +5569,31 @@ We define each of those two components below.
 %------------------------------------------------------------
 \regleGrammaire{and\_opt}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	$|$ & \styleIMI{\&} \\
 	$|$ & \emptystring{}  \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{comma\_opt}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	$|$ & \styleIMI{, }  \\
 	$|$ & \emptystring{} \\
-\end{tabular}
+\end{longtable}
 
 
 %------------------------------------------------------------
 \regleGrammaire{semicolon\_opt}
 %------------------------------------------------------------
-\begin{tabular}{l l}
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
 	$|$ & \styleIMI{;}   \\
 	$|$ & \emptystring{} \\
-\end{tabular}
+\end{longtable}
 
 
 
@@ -5501,7 +5619,8 @@ We define each of those two components below.
 The following words are reserved keywords and cannot be used as names for automata, variables, actions or locations.
 
 \noindent\begin{multicols}{2}%
-\styleIMI{\#exhibit} \\
+	\noindent{}%
+	\styleIMI{\#exhibit} \\
 	\styleIMI{\#include} \\
 	\styleIMI{\#synth} \\
 	\styleIMI{\#witness}\\
