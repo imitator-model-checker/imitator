@@ -610,7 +610,7 @@ the resulting structure is a \emph{timed automaton}~\cite{AD94}.\footnote{%
 }
 
 %------------------------------------------------------------
-\begin{definition}[validity]
+\begin{definition}[validity]\label{definition:validity}
 	Let $\A$ be an \NIPTA{}, let $\pval$ be a parameter valuation.
 
 	% TODO: redefine using a proper TTS!
@@ -2147,6 +2147,23 @@ The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Validity synthesis}\label{ss:mode:validity}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Given an \NIPTA{}, validity-synthesis computes the parameter constraint such that, for any parameter valuation in that constraint, the system is valid (as per \cref{definition:validity}).
+
+The property syntax is as follows:
+
+\begin{IMITATORproperty}
+property := #synth Valid;
+\end{IMITATORproperty}
+
+This ``algorithm'' is trivial: it simply generates the initial state, and projects the associated constraint onto~$\Param$.
+
+% TODO: example
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Parametric deadlock-freeness checking}\label{ss:mode:PDFC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2417,7 +2434,7 @@ or
 output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 
 \begin{remark}
-	The \emph{accepting} cycles are not (yet?) supported for non-Zeno synthesis.
+	The \emph{accepting} cycles are not (yet?)\ supported for non-Zeno synthesis.
 \end{remark}
 
 
@@ -2612,6 +2629,11 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			\hline
 			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellYes{} & \cellNo{}  \\
 
+			% Validity
+
+			\hline
+			Validity      & \styleIMI{Validy}                          & \cellYes{} & \cellNo{}  \\
+
 			% Deadlock-freeness
 
 			\hline
@@ -2701,6 +2723,11 @@ Whenever merging is enabled (cell \cellYes{}), the following options are used by
 			Accepting cycle        & \styleIMI{CycleThrough(state\_predicates)} & \cellNo{} & \styleOption{equality}  \\
 			\hline
 			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellNo{} & \styleOption{equality}  \\
+
+			% Validity
+
+			\hline
+			Validity      & \styleIMI{Valid}                          & \cellNA{} & \cellNA{}  \\
 
 			% Deadlock-freeness
 
@@ -5032,7 +5059,7 @@ We define each of those two components below.
 \regleGrammaire{quantified\_property}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \styleIMI{\#synth} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt}   \\
+	$|$ & \styleIMI{\#synth} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt}   \\
 	$|$ & \styleIMI{\#exhibit} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
 	$|$ & \styleIMI{\#witness} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
 \end{tabular}
@@ -5046,7 +5073,7 @@ We define each of those two components below.
 
 	% 	Non-nested CTL
 
-	\   & \styleIMI{EF} \nt{state\_predicate}                                                                                  \\
+	$|$ & \styleIMI{EF} \nt{state\_predicate}                                                                                  \\
 	$|$ & \styleIMI{AGnot} \nt{state\_predicate}                                                                               \\
 
 	% 	Reachability and specification illustration
@@ -5073,6 +5100,10 @@ We define each of those two components below.
 		\commentgrammar{alias for \styleIMI{CycleThrough}}
 	\\
 	$|$ & \styleIMI{NZCycle}                                                                                     \\
+
+	% Validity
+
+	$|$ & \styleIMI{Valid}                                                                                              \\
 
 	% Deadlock-freeness
 
@@ -5571,7 +5602,7 @@ The following words are reserved keywords and cannot be used as names for automa
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Although we try to make \imitator{} as complete as possible, it misses some features, not implemented due to lack of time (contributors are welcome!) or due to complexity, or to keep the tool consistent.
+Although we try to make \imitator{} as complete as possible, it misses some features, not implemented due to lack of time (contributors are welcome!)\ or due to complexity, or to keep the tool consistent.
 We enumerate in the following what seems to us to be the ``most missing'' features and, when applicable, we give hints to overcome these limitations.
 
 
