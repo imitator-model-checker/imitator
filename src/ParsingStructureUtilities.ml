@@ -410,6 +410,8 @@ let exists_in_parsed_state_predicate = apply_evaluate_or_with_base fold_parsed_s
 
 (** Check if any leaf of a parsed sequential code bloc satisfy the predicate **)
 let exists_in_parsed_seq_code_bloc_with_local_variables = apply_evaluate_or_with_base fold_parsed_seq_code_bloc
+(** Check if any leaf of a parsed sequential code bloc satisfy the predicate **)
+let exists_in_parsed_seq_code_bloc = apply_evaluate_or_with_base fold_parsed_seq_code_bloc
 (** Check if any leaf of a parsed function definition satisfy the predicate **)
 let exists_in_parsed_function_definition = apply_evaluate_or_with_base fold_parsed_fun_def
 

@@ -118,10 +118,11 @@ val exists_in_parsed_normal_update : (parsing_structure_leaf -> bool) -> normal_
 (** Check if any leaf of a parsed state predicate satisfy the predicate **)
 val exists_in_parsed_state_predicate : (state_predicate_leaf -> bool) -> (parsing_structure_leaf -> bool) -> parsed_state_predicate -> bool
 
+
 (** Check if any leaf of a parsed sequential code bloc satisfy the predicate **)
-(*val exists_in_parsed_seq_code_bloc_with_local_variables : (parsing_structure_leaf -> bool) -> parsed_seq_code_bloc -> bool*)
+val exists_in_parsed_seq_code_bloc : (parsed_seq_code_bloc_leaf -> bool) -> (parsing_structure_leaf -> bool) -> parsed_seq_code_bloc -> bool
 (** Check if any leaf of a parsed function definition satisfy the predicate **)
-val exists_in_parsed_function_definition :  (parsed_seq_code_bloc_leaf -> bool) -> (parsing_structure_leaf -> bool) -> parsed_fun_definition -> bool
+val exists_in_parsed_function_definition : (parsed_seq_code_bloc_leaf -> bool) -> (parsing_structure_leaf -> bool) -> parsed_fun_definition -> bool
 
 (** Apply units over leaf of a parsing structure **)
 
