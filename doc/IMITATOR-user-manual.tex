@@ -2027,6 +2027,13 @@ The property syntax is as follows:
 property := #synth EFtmin(state_predicate);
 \end{IMITATORproperty}
 
+This algorithm requires a clock named \styleIMI{global\_time} to be defined in the model, initially set to~0 and always at rate~1.
+
+\begin{becareful}
+	This algorithm is not handling properly the strict inequalities; the result may therefore contain some ``hard-coded $\epsilon$'', creating a possibly strange looking constraint.
+	(Refactoring this part, \eg{} in the way EF-minimization and EF-maximization are handled, is on our todo-list.)
+\end{becareful}
+
 \emph{The maximum time reachability is currently not implemented.}
 
 
