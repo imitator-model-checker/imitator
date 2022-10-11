@@ -806,7 +806,7 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 \begin{remark}
 	Comparing natively (using a ``cast'') an integer and a rational is not allowed.
 	That is, the following code is incorrect:
-	
+
 	%------------------------------------------------------------
 		\begin{IMITATORmodel}
 			when i = 2 & r = 2 & i = r goto l1; (* incorrect! *)
@@ -2053,19 +2053,19 @@ Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using prede
 % TODO: add example illustrating the issue with livelocks e.g. by Adrien Jaillet (2022/07/01):
 % loc l0: invariant True
 % 	when True sync a do {x := 0} goto l1;
-% 
+%
 % loc l1: invariant x < 1 + v
 % 	when True goto l10;
-% 
+%
 % loc l10: invariant x < 1 + u
 % 	when True goto l11;
-% 
+%
 % loc l11: invariant x < 2 + p
 % 	when True sync b goto l2;
-% 
+%
 % loc l2: invariant True
 % 	when True goto l2;
-% 
+%
 % PROP:
 % property := #synth pattern(everytime a then eventually b within 10);
 
@@ -2128,7 +2128,7 @@ if a1 then eventually a2 within d
 
 	\item
 \begin{IMITATORproperty}
-everytime a1 then eventually a2 within~d
+everytime a1 then eventually a2 within d
 \end{IMITATORproperty}
 
 	\item

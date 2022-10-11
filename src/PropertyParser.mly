@@ -142,7 +142,7 @@ property:
 	/* Reachability */
 	| CT_EF state_predicate { Parsed_EF $2 }
 
-	/* Reachability */
+	/* Safety */
 	| CT_AGnot state_predicate { Parsed_AGnot $2 }
 
 
