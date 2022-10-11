@@ -33,6 +33,8 @@ class virtual algoEFopt : AbstractProperty.state_predicate -> Automaton.paramete
 		(* Class methods *)
 		(************************************************************)
 		
+		method initialize_variables : unit
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Set the 'synthesize_valuations' flag (must be done right after creating the algorithm object!) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -73,12 +75,6 @@ class virtual algoEFopt : AbstractProperty.state_predicate -> Automaton.paramete
 		method add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
 
 		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_initial_state : State.state -> bool
-		
-
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -61,6 +61,7 @@ class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (pa
 	(* Timing info *)
 	(*------------------------------------------------------------*)
 	
+	(*** TODO/BADPROG: replace with Option type ***)
     val mutable t_start = ref max_float; (* Start time for t_found and t_done *)
     val mutable t_found = ref max_float; (* Time to the first time that the target location is reached *)
     val mutable t_done = ref max_float; (* Time to the end of the algorithm *)
@@ -105,6 +106,15 @@ class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (pa
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	method initialize_variables =
+		super#initialize_variables;
+
+		(* Timing info *)
+        t_start := Unix.gettimeofday();
+
+		(* The end *)
+		()
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the `synthesize_valuations` flag (must be done right after creating the algorithm object!) *)
@@ -286,7 +296,7 @@ class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (pa
 				(* Timing info *)
 				if !t_found = max_float then (
 					t_found := time_from !t_start;
-					print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_found));
+					print_message Verbose_standard ("Time after which the first optimum is found: " ^ (string_of_seconds !t_found));
 				);
 				
 			)else(
@@ -490,16 +500,6 @@ class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (pa
 		)
 	
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_initial_state initial_state = (
-        (* Timing info *)
-        t_start := Unix.gettimeofday();
-		self#process_state initial_state
-	)
-
-	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
