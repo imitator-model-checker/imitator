@@ -133,12 +133,197 @@ let try_convert_linear_expression_of_parsed_discrete_boolean_expression = functi
 
 let linear_constraint_of_nonlinear_constraint = try_convert_linear_expression_of_parsed_discrete_boolean_expression
 
-let check_seq_code_bloc variable_infos seq_code_bloc =
-    (* TODO benjamin IMPLEMENT to FILL *)
-    true
+let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc =
+
+    (* If code bloc is named, we put name of location in messages *)
+    let str_location =  " in `" ^ code_bloc_name ^ "`" in
+
+    let is_assignments_are_allowed =
+        (* Check for variables (local and global) at the left and right side of an assignment *)
+        let left_right_variable_names = ParsingStructureMeta.left_right_member_of_assignments_in_parsed_seq_code_bloc seq_code_bloc in
+        let left_variable_names = List.map first_of_tuple left_right_variable_names in
+
+        (* Check that no constants are updated *)
+        let assigned_constant_names = List.filter_map (fun variable_name ->
+            let variable_kind_opt = VariableInfo.variable_kind_of_variable_name_opt variable_infos variable_name in
+            match variable_kind_opt with
+            | Some (VariableInfo.Constant_kind _) -> Some variable_name
+            | _ -> None
+        ) left_variable_names in
+
+        (* Check that no params are updated *)
+        let assigned_param_names = List.filter_map (fun variable_name ->
+            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+            match var_type_opt with
+            | Some Var_type_parameter -> Some variable_name
+            | _ -> None
+        ) left_variable_names in
+
+        (* Check that no variable (clocks, discrete) was updated by a param *)
+        let variable_names_updated_by_params = List.fold_left (fun acc (left_variable_name, right_variable_names) ->
+            (* Get eventual var type (or none if variable was not declared or removed) *)
+            let right_params =
+                List.filter_map (fun right_variable_name ->
+                    let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos right_variable_name in
+                    match var_type_opt with
+                    | Some Var_type_parameter -> Some right_variable_name
+                    | _ -> None
+                ) right_variable_names
+            in
+            let has_right_params = List.length right_params > 0 in
+            if has_right_params then (left_variable_name, right_params) :: acc else acc
+
+        ) [] left_right_variable_names in
+
+        (* Get only discrete variable names *)
+        let left_discrete_variable_names = List.filter (fun (variable_name, _) ->
+            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+            match var_type_opt with
+            | None
+            | Some (Var_type_discrete _) -> true
+            | Some _ -> false
+        ) left_right_variable_names in
+
+        (* Check that no discrete variable was updated by a clock *)
+        let discrete_variable_names_updated_by_clocks = List.fold_left (fun acc (left_variable_name, right_variable_names) ->
+            (* Get eventual var type (or none if variable was not declared or removed) *)
+            let right_clocks =
+                List.filter_map (fun right_variable_name ->
+                    let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos right_variable_name in
+                    match var_type_opt with
+                    | Some Var_type_clock -> Some right_variable_name
+                    | _ -> None
+                ) right_variable_names
+            in
+            let has_right_clocks = List.length right_clocks > 0 in
+            if has_right_clocks then (left_variable_name, right_clocks) :: acc else acc
+
+        ) [] left_discrete_variable_names in
+
+
+        (* Is any constant modifications found in user function ? *)
+        let has_assigned_constant_modifications = List.length assigned_constant_names > 0 in
+        (* Is any param modifications found in user function ? *)
+        let has_assigned_param_modifications = List.length assigned_param_names > 0 in
+        (* Is any variable (clock, discrete) is updated by a parameter ? *)
+        let has_variable_updated_with_params = List.length variable_names_updated_by_params > 0 in
+        (* Is any discrete is updated by a clock ? *)
+        let has_discrete_updated_with_clocks = List.length discrete_variable_names_updated_by_clocks > 0 in
+
+        (* Print errors *)
+
+        List.iter (fun variable_name ->
+            print_error (
+                "Trying to update constant `"
+                ^ variable_name
+                ^ "` "
+                ^ str_location
+                ^ ". Constants are immutables."
+            );
+        ) assigned_constant_names;
+
+        List.iter (fun variable_name ->
+            print_error (
+                "Trying to update parameter `"
+                ^ variable_name
+                ^ "` "
+                ^ str_location
+                ^ ". Parameters cannot be updated."
+            );
+        ) assigned_param_names;
+
+        List.iter (fun (variable_name, param_names) ->
+            print_error (
+                "Trying to update variable `"
+                ^ variable_name
+                ^ "` with parameter(s) "
+                ^ " `"
+                ^ OCamlUtilities.string_of_list_of_string_with_sep ", " param_names
+                ^ "`"
+                ^ str_location
+                ^ ". Parameters cannot be used for updating variable."
+            );
+        ) variable_names_updated_by_params;
+
+        List.iter (fun (variable_name, clock_names) ->
+            print_error (
+                "Trying to update discrete variable `"
+                ^ variable_name
+                ^ "` with clock(s) "
+                ^ " `"
+                ^ OCamlUtilities.string_of_list_of_string_with_sep ", " clock_names
+                ^ "`"
+                ^ str_location
+                ^ ". Clocks cannot be used for updating discrete variable."
+            );
+        ) discrete_variable_names_updated_by_clocks;
+
+        (* Return is assignment is allowed *)
+        not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks )
+    in
+
+    (* TODO benjamin IMPORTANT check that in type checking, not here *)
+    (* Check if there isn't any void typed variable or parameter *)
+    let is_any_void_local_variable =
+        (* Get local variables / parameters of parsed sequential code bloc *)
+        let local_variables = ParsingStructureMeta.local_variables_of_parsed_seq_code_bloc seq_code_bloc in
+        (* Check if exist any void variable *)
+        List.exists (fun (variable_name, discrete_type) ->
+            match discrete_type with
+            | Var_type_void -> print_error ("Local variable or formal parameter `" ^ variable_name ^ "` " ^ str_location ^ " was declared as `void`. A variable cannot be declared as `void`."); true
+            | _ -> false
+        ) local_variables
+    in
+    (* Return *)
+    is_assignments_are_allowed && not is_any_void_local_variable
+
+(* Check whether a bloc of sequential code is well formed *)
+let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
+
+    (* If code bloc is named, we put name of location in messages *)
+    let str_location =  " in `" ^ code_bloc_name ^ "`" in
+
+    (* Check if all variables in function definition are defined *)
+    let is_all_variables_defined =
+
+        (* Prepare callback function that print error message when undeclared variable is found *)
+        let print_variable_in_fun_not_declared variable_name =
+            print_error (
+                "Variable `"
+                ^ variable_name
+                ^ str_location
+                ^ " was not declared."
+            )
+        in
+
+        let print_variable_in_fun_not_declared_opt = Some print_variable_in_fun_not_declared in
+        ParsingStructureMeta.all_variables_defined_in_parsed_seq_code_bloc variable_infos print_variable_in_fun_not_declared_opt seq_code_bloc
+    in
+
+    (* Return *)
+    check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc && is_all_variables_defined
+
 
 (* Check if user function definition is well formed *)
 let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
+
+    (* Check if all variables in function definition are defined *)
+    let is_all_variables_defined =
+
+        (* Prepare callback function that print error message when undeclared variable is found *)
+        let print_variable_in_fun_not_declared variable_name =
+            print_error (
+                "Variable `"
+                ^ variable_name
+                ^ "` used in function `"
+                ^ fun_def.name
+                ^ "` was not declared."
+            )
+        in
+
+        let print_variable_in_fun_not_declared_opt = Some print_variable_in_fun_not_declared in
+        ParsingStructureMeta.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt fun_def
+    in
 
     (* Check if there isn't duplicate parameter with inconsistent types *)
     let is_consistent_duplicate_parameters =
@@ -178,184 +363,8 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         (* Check if it exist duplicate parameters *)
         List.length duplicate_parameters = 0
     in
-
-    (* Check if all variables in function definition are defined *)
-    let is_all_variables_defined =
-
-        (* Prepare callback function that print error message when undeclared variable is found *)
-        let print_variable_in_fun_not_declared variable_name =
-            print_error (
-                "Variable `"
-                ^ variable_name
-                ^ "` used in function `"
-                ^ fun_def.name
-                ^ "` was not declared."
-            )
-        in
-
-        let print_variable_in_fun_not_declared_opt = Some print_variable_in_fun_not_declared in
-        ParsingStructureMeta.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt fun_def
-    in
-
-    (* Check if assignments found in function body are allowed *)
-    let is_assignments_are_allowed =
-
-        (* Check for assigned variables (local and global) in a function implementation *)
-        let left_variable_refs = ParsingStructureGraph.left_variables_of_assignments_in fun_def |> ComponentSet.elements in
-        (* Check for variables (local and global) at the right side of an assignment in a function implementation *)
-        let right_variable_refs = ParsingStructureGraph.right_variables_of_assignments_in fun_def |> ComponentSet.elements in
-
-        (* TODO benjamin CLEAN it's now possible to update local variable *)
-        (* Check that no local variable are updated *)
-        (*
-        let assigned_local_variable_names = List.filter_map (function
-            | Local_variable_ref (variable_name, _, _) -> Some variable_name
-            | _ -> None
-        ) left_variable_refs in
-        *)
-
-        (* Check that no parameter are updated *)
-        let assigned_parameter_names = List.filter_map (function
-            | Param_ref (param_name, _) -> Some param_name
-            | _ -> None
-        ) left_variable_refs in
-
-        (* Check that no constants are updated *)
-        let assigned_constant_names = List.filter_map (function
-            | Global_variable_ref variable_name ->
-                let variable_kind_opt = VariableInfo.variable_kind_of_variable_name_opt variable_infos variable_name in
-                (match variable_kind_opt with
-                | Some (VariableInfo.Constant_kind _) -> Some variable_name
-                | _ -> None
-                )
-            | _ -> None
-        ) left_variable_refs in
-
-        (* Check that no clocks are updated *)
-        (* Get only clock update and map to a clock names list *)
-        let assigned_clock_type_names = List.filter_map (function
-            | Global_variable_ref variable_name ->
-                (* Get eventual var type (or none if variable was not declared or removed) *)
-                let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
-                (match var_type_opt with
-                | Some (Var_type_clock as var_type)
-                | Some (Var_type_parameter as var_type) -> Some (var_type, variable_name)
-                | _ -> None
-                )
-            | _ -> None
-
-        ) left_variable_refs in
-
-        let right_variable_clock_type_names = List.filter_map (function
-            | Global_variable_ref variable_name ->
-                (* Get eventual var type (or none if variable was not declared or removed) *)
-                let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
-                (match var_type_opt with
-                | Some (Var_type_clock as var_type)
-                | Some (Var_type_parameter as var_type) -> Some (var_type, variable_name)
-                | _ -> None
-                )
-            | _ -> None
-        ) right_variable_refs in
-
-        (* Is any local variable modifications in user function ? *)
-        let has_parameter_modifications = List.length assigned_parameter_names > 0 in
-        (* Is any local variable modifications in user function ? *)
-        (* TODO benjamin CLEAN it's now possible to update local variable *)
-        (* let has_local_variable_modifications = List.length assigned_local_variable_names > 0 in *)
-        (* Is any constant modifications in user function ? *)
-        let has_assigned_constant_modifications = List.length assigned_constant_names > 0 in
-        (* Is any clock modifications in user function ? *)
-        let has_clock_param_modifications = List.length assigned_clock_type_names > 0 in
-        (* Is any discrete is updated by a clock or parameter ? *)
-        let was_updated_by_clock_param = List.length right_variable_clock_type_names > 0 in
-
-        (* Print possible errors *)
-        List.iter (fun param_name ->
-            print_error (
-                "Trying to update function parameter `"
-                ^ param_name
-                ^ "` in `"
-                ^ fun_def.name ^
-                "`. Parameters are immutables."
-            );
-        ) assigned_parameter_names;
-
-        (* TODO benjamin CLEAN it's now possible to update local variable *)
-        (*
-        List.iter (fun variable_name ->
-            print_error (
-                "Trying to update local variable `"
-                ^ variable_name
-                ^ "` in `"
-                ^ fun_def.name ^
-                "`. Local variables are immutables."
-            );
-        ) assigned_local_variable_names;
-        *)
-
-        List.iter (fun variable_name ->
-            print_error (
-                "Trying to update constant `"
-                ^ variable_name
-                ^ "` in `"
-                ^ fun_def.name ^
-                "`. Constants are immutables."
-            );
-        ) assigned_constant_names;
-
-        List.iter (fun (var_type, variable_name) ->
-            let str_var_type = string_of_var_type var_type in
-            let capitalized_str_var_type = String.capitalize_ascii str_var_type in
-            print_error (
-                "Trying to update "
-                ^ str_var_type
-                ^ " `"
-                ^ variable_name
-                ^ "` in `"
-                ^ fun_def.name
-                ^ "`. "
-                ^ capitalized_str_var_type
-                ^ " cannot be updated in user defined functions."
-            );
-        ) assigned_clock_type_names;
-
-        List.iter (fun (var_type, variable_name) ->
-            let str_var_type = string_of_var_type var_type in
-            let capitalized_str_var_type = String.capitalize_ascii str_var_type in
-            print_error (
-                "Trying to update a discrete variable with "
-                ^ str_var_type
-                ^ " `"
-                ^ variable_name
-                ^ "` in `"
-                ^ fun_def.name
-                ^ "`. "
-                ^ capitalized_str_var_type
-                ^ " cannot be used for updating discrete variable."
-            );
-        ) right_variable_clock_type_names;
-
-        not (has_assigned_constant_modifications || has_parameter_modifications (* || has_local_variable_modifications *) || has_clock_param_modifications || was_updated_by_clock_param)
-    in
-
-    (* Check if there isn't any void typed variable or parameter *)
-    let is_any_void_local_variable =
-        (* Get local variables / parameters of parsed function *)
-        let local_variables = Functions.local_variables_of_fun fun_def in
-        (* Check if exist any void variable *)
-        List.exists (fun (variable_name, discrete_type) ->
-            match discrete_type with
-            | Var_type_void -> print_error ("Local variable or parameter `" ^ variable_name ^ "` in `" ^ fun_def.name ^ "` was declared as `void`. A variable cannot be declared as `void`."); true
-            | _ -> false
-        ) local_variables
-    in
-
     (* Return *)
-    is_consistent_duplicate_parameters
-    && is_assignments_are_allowed
-    && is_all_variables_defined
-    && not is_any_void_local_variable
+     check_seq_code_bloc_assignments variable_infos fun_def.name fun_def.body && is_all_variables_defined && is_consistent_duplicate_parameters
 
 (* Convert the init expression (parsed boolean expression) to a global expression *)
 let convert_discrete_init variable_infos variable_name expr =
@@ -510,7 +519,7 @@ let convert_fun_definition variable_infos (fun_definition : parsed_fun_definitio
 (* Convert a parsed sequential code bloc to sequential code bloc for abstract model *)
 let convert_seq_code_bloc variable_infos seq_code_bloc =
     (* Some checks *)
-    let well_formed_user_function = check_seq_code_bloc variable_infos seq_code_bloc in
+    let well_formed_user_function = check_seq_code_bloc variable_infos "update" seq_code_bloc in
 
     (* Not well formed, raise an error *)
     if not well_formed_user_function then

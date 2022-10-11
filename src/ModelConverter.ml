@@ -1387,7 +1387,6 @@ let convert_updates variable_infos updates_type updates : updates =
     (** updates abstract model *)
     { converted_updates with conditional = conditional_updates_values }
 
-(* TODO benjamin IMPORTANT to check *)
 (* Get clock updates from a bloc of sequential code *)
 let clock_updates_of_seq_code_bloc variable_infos seq_code_bloc =
 

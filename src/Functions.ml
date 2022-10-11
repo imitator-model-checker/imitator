@@ -35,16 +35,6 @@ open FunctionSig
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
-
-let local_variables_of_fun (fun_def : parsed_fun_definition) =
-    (* Concat all local variables found when traversing the function body *)
-    ParsingStructureUtilities.fold_parsed_function_definition
-        (@) (* concat operator *)
-        [] (* base *)
-        (function Leaf_decl_variable (variable_name, discrete_type, _) -> [variable_name, discrete_type])
-        (function _ -> [])
-        fun_def
-
 (* Infer whether a user function is subject to side effects *)
 let rec is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
 

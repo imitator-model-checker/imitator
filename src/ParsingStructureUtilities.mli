@@ -47,8 +47,20 @@ type state_predicate_leaf =
     | Leaf_predicate_EQ of string (* automaton name *) * string (* location name *)
     | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
 
-val fold_parsed_function_definition : ('a -> 'a -> 'a) -> 'a -> (parsed_seq_code_bloc_leaf -> 'a) -> (parsing_structure_leaf -> 'a) -> parsed_fun_definition -> 'a
+type 'a traversed_parsed_seq_code_bloc =
+    | Traversed_parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * 'a
+    | Traversed_parsed_assignment of normal_update * 'a
+    | Traversed_parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * 'a * 'a
+    | Traversed_parsed_while_loop of parsed_boolean_expression (* condition *) * 'a (* inner bloc result *) * 'a (* next result *)
+    | Traversed_parsed_if of parsed_boolean_expression (* condition *) * 'a (* then result *) * 'a option (* else result *) * 'a (* next result *)
+    | Traversed_parsed_return_expr of parsed_boolean_expression
+    | Traversed_parsed_bloc_void
+
+val fold_parsed_seq_code_bloc : ('a -> 'a -> 'a) -> 'a -> (parsed_seq_code_bloc_leaf -> 'a) -> (parsing_structure_leaf -> 'a) -> parsed_seq_code_bloc -> 'a
+val fold_parsed_fun_def : ('a -> 'a -> 'a) -> 'a -> (parsed_seq_code_bloc_leaf -> 'a) -> (parsing_structure_leaf -> 'a) -> parsed_fun_definition -> 'a
 val fold_parsed_normal_update : ('a -> 'a -> 'a) -> 'a -> (parsing_structure_leaf -> 'a) -> normal_update -> 'a
+
+val traverse_parsed_seq_code_bloc : (var_type_discrete VariableMap.t -> 'a traversed_parsed_seq_code_bloc -> 'a) -> parsed_seq_code_bloc -> 'a
 
 
 (** Check if all leaf of a parsing structure satisfy the predicate **)

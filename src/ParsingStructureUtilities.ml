@@ -256,10 +256,86 @@ and fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun = func
 	    fold_parsed_state_predicate_term operator base predicate_leaf_fun leaf_fun predicate_term
 
 (**)
-let fold_parsed_function_definition operator base seq_code_bloc_leaf_fun leaf_fun (fun_def : parsed_fun_definition) =
+let fold_parsed_fun_def operator base seq_code_bloc_leaf_fun leaf_fun (fun_def : parsed_fun_definition) =
     (* Apply seq_code_leaf_fun function on each parameters of the function and fold with operator *)
     List.fold_left (fun acc (param_name, param_type) -> operator acc (seq_code_bloc_leaf_fun (Leaf_decl_variable (param_name, param_type, -1)))) base fun_def.parameters
     |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun fun_def.body)
+
+type 'a traversed_parsed_seq_code_bloc =
+    | Traversed_parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * 'a
+    | Traversed_parsed_assignment of normal_update * 'a
+    | Traversed_parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * 'a * 'a
+    | Traversed_parsed_while_loop of parsed_boolean_expression (* condition *) * 'a (* inner bloc result *) * 'a (* next result *)
+    | Traversed_parsed_if of parsed_boolean_expression (* condition *) * 'a (* then result *) * 'a option (* else result *) * 'a (* next result *)
+    | Traversed_parsed_return_expr of parsed_boolean_expression
+    | Traversed_parsed_bloc_void
+
+(* Traverse a bloc of sequential code using a callback function *)
+(* When traversing, all local variables are automatically computed *)
+(* Callback function give as parameters:
+ - local variables at the current point of path,
+ - a list of values returned by previously traversed branch
+ - Current expression to process
+*)
+let traverse_parsed_seq_code_bloc traverse_fun (* seq_code_bloc *) =
+
+    let rec traverse_parsed_seq_code_bloc_rec local_variables = function
+        | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, _) ->
+            (* Add the new declared local variable to map *)
+            let new_local_variables = VariableMap.add variable_name discrete_type local_variables in
+
+            let next_result = traverse_parsed_seq_code_bloc_rec new_local_variables next_expr in
+
+            let traversed_element = Traversed_parsed_local_decl (variable_name, discrete_type, init_expr, next_result) in
+            traverse_fun new_local_variables traversed_element
+
+        | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) ->
+            (* Add the new declared local variable to map *)
+            let inner_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
+
+            let inner_bloc_result = traverse_parsed_seq_code_bloc_rec inner_local_variables inner_bloc in
+            let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
+
+            let traversed_element = Traversed_parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc_result, next_result) in
+            traverse_fun local_variables traversed_element
+
+        | Parsed_while_loop (condition_expr, inner_bloc, next_expr) ->
+
+            let inner_bloc_result = traverse_parsed_seq_code_bloc_rec local_variables inner_bloc in
+            let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
+
+            let traversed_element = Traversed_parsed_while_loop (condition_expr, inner_bloc_result, next_result) in
+            traverse_fun local_variables traversed_element
+
+        | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+
+            let then_result = traverse_parsed_seq_code_bloc_rec local_variables then_bloc in
+
+            let else_result_opt =
+                match else_bloc_opt with
+                | Some else_bloc -> Some (traverse_parsed_seq_code_bloc_rec local_variables else_bloc)
+                | None -> None
+            in
+
+            let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
+
+            let traversed_element = Traversed_parsed_if (condition_expr, then_result, else_result_opt, next_result) in
+            traverse_fun local_variables traversed_element
+
+        | Parsed_assignment (normal_update, next_expr) ->
+            let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
+            let traversed_element = Traversed_parsed_assignment (normal_update, next_result) in
+            traverse_fun local_variables traversed_element
+
+        | Parsed_return_expr (expr) ->
+            traverse_fun local_variables (Traversed_parsed_return_expr expr)
+
+        | Parsed_bloc_void ->
+            traverse_fun local_variables Traversed_parsed_bloc_void
+    in
+    traverse_parsed_seq_code_bloc_rec VariableMap.empty (* seq_code_bloc *)
+
+
 
 let flat_map_parsed_boolean_expression = fold_parsed_boolean_expression (@) []
 (** Check if all leaf of a parsing structure satisfy the predicate **)
@@ -298,7 +374,7 @@ let for_all_in_parsed_state_predicate = apply_evaluate_and_with_base fold_parsed
 (** Check if all leaf of a parsed sequential code bloc satisfy the predicate **)
 let for_all_in_parsed_seq_code_bloc_with_local_variables = apply_evaluate_and_with_base fold_parsed_seq_code_bloc
 (** Check if all leaf of a parsed function definition satisfy the predicate **)
-let for_all_in_parsed_function_definition = apply_evaluate_and_with_base fold_parsed_function_definition
+let for_all_in_parsed_function_definition = apply_evaluate_and_with_base fold_parsed_fun_def
 
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 
@@ -335,7 +411,7 @@ let exists_in_parsed_state_predicate = apply_evaluate_or_with_base fold_parsed_s
 (** Check if any leaf of a parsed sequential code bloc satisfy the predicate **)
 let exists_in_parsed_seq_code_bloc_with_local_variables = apply_evaluate_or_with_base fold_parsed_seq_code_bloc
 (** Check if any leaf of a parsed function definition satisfy the predicate **)
-let exists_in_parsed_function_definition = apply_evaluate_or_with_base fold_parsed_function_definition
+let exists_in_parsed_function_definition = apply_evaluate_or_with_base fold_parsed_fun_def
 
 (** Iterate over a parsing structure **)
 
@@ -373,7 +449,7 @@ let iterate_in_parsed_state_predicate = apply_evaluate_unit_with_base fold_parse
 (** Iterate over a parsed sequential code bloc definition **)
 let iterate_in_parsed_seq_code_bloc_with_local_variables = apply_evaluate_unit_with_base fold_parsed_seq_code_bloc
 (** Iterate over a parsed function definition **)
-let iterate_in_parsed_function_definition = apply_evaluate_unit_with_base fold_parsed_function_definition
+let iterate_in_parsed_function_definition = apply_evaluate_unit_with_base fold_parsed_fun_def
 
 
 let label_of_parsed_sequence_type = function

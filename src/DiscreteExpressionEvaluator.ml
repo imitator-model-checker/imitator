@@ -113,9 +113,9 @@ let rewrite_clock_update variable_names eval_context (* linear_expr *) =
             )
         | IR_Coef _ as ir_coef -> ir_coef
         | IR_Plus (l_linear_term, r_linear_term) ->
-            IR_Plus (rewrite_clock_update_rec l_linear_term, rewrite_clock_update_rec r_linear_term)
+            LinearConstraint.add_pxd_linear_terms (rewrite_clock_update_rec l_linear_term) (rewrite_clock_update_rec r_linear_term)
         | IR_Minus (l_linear_term, r_linear_term) ->
-            IR_Minus (rewrite_clock_update_rec l_linear_term, rewrite_clock_update_rec r_linear_term)
+            LinearConstraint.sub_pxd_linear_terms (rewrite_clock_update_rec l_linear_term) (rewrite_clock_update_rec r_linear_term)
         | IR_Times (coef, linear_term) ->
             IR_Times (coef, rewrite_clock_update_rec linear_term)
     in
