@@ -5474,7 +5474,9 @@ class virtual algoStateBased =
 		self#initialize_variables;
 
 		(* Print some information *)
-		print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "…\n");
+		(*** TODO: move to higher level (e.g., AlgoGeneric) ***)
+		print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "…");
+		print_message Verbose_standard ("Starting time: " ^ (now()) ^ "\n");
 
 		(* Debut prints *)
 		print_message Verbose_low ("Starting exploring the parametric zone graph from the following initial state:");
