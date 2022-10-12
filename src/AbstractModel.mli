@@ -120,7 +120,7 @@ type transition_index = int
 (************************************************************)
 (** Declared functions *)
 (************************************************************)
-
+(* TODO benjamin REFACTOR rename to fun_def *)
 type fun_definition = {
     name : variable_name;
     parameter_names : variable_name list;

@@ -115,7 +115,6 @@ type typed_fun_definition = {
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
     body : typed_seq_code_bloc; (* body *)
-    side_effect : bool;
 }
 
 (** Strings **)

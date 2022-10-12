@@ -800,8 +800,6 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
     (* Eventually infer the body expression type of function to the return type underlying type of the function *)
     let infer_type_opt = Some (DiscreteType.extract_inner_type return_type) in
     let typed_body, body_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt fun_def.body in
-    (* Check eventual side effects in body *)
-    let is_body_has_side_effects = ParsingStructureMeta.has_side_effect_parsed_seq_code_bloc variable_infos fun_def.body in
 
     (* Check type compatibility between function body and return type *)
     let is_body_type_compatible = is_discrete_type_compatibles body_discrete_type return_type in
@@ -823,7 +821,6 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
         parameters = parameter_names;
         signature = signature;
         body = typed_body;
-        side_effect = is_body_has_side_effects;
     }
     in
 
@@ -2401,12 +2398,14 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
         Bloc_void
 
 let fun_definition_of_typed_fun_definition variable_infos (typed_fun_definition : typed_fun_definition) : fun_definition =
+    (* Search metadata of function to convert *)
+    let meta = Hashtbl.find variable_infos.functions typed_fun_definition.name in
     {
         name = typed_fun_definition.name;
         parameter_names = typed_fun_definition.parameters;
         signature_constraint = FunctionSig.signature_constraint_of_signature typed_fun_definition.signature;
         body = Fun_user (seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_fun_definition.body);
-        side_effect = typed_fun_definition.side_effect
+        side_effect = meta.side_effect
     }
 
 end

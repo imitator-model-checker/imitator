@@ -114,7 +114,6 @@ type typed_fun_definition = {
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
     body : typed_seq_code_bloc; (* body *)
-    side_effect : bool;
 }
 
 val label_of_typed_sequence_type : typed_sequence_type -> string

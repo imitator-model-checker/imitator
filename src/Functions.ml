@@ -35,6 +35,7 @@ open FunctionSig
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
+(* TODO benjamin REFACTOR move to ParsingMeta *)
 (* Infer whether a user function is subject to side effects *)
 let rec is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
 
@@ -53,7 +54,9 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
             )
             else
                 raise (UndefinedFunction fun_def.name);
-        | Leaf_update_variable _ -> true (* when updating a global variable, then side effects ! *)
+        | Leaf_update_variable variable_name ->
+            (* TODO benjamin IMPLEMENT fix here now *)
+            true (* when updating a global variable, then side effects ! *)
         | _ -> false
     in
 
