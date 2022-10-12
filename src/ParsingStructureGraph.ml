@@ -135,8 +135,7 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                     all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                 | Leaf_fun function_name ->
                     all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                | Leaf_constant _
-                | Leaf_update_variable _ -> ()
+                | Leaf_constant _ -> ()
 			) location.invariant;
 
 			(* Gather in transitions *)
@@ -149,8 +148,7 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                         all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                     | Leaf_fun function_name ->
                         all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                    | Leaf_constant _
-                    | Leaf_update_variable _ -> ()
+                    | Leaf_constant _ -> ()
                 ) convex_predicate;
 
 				(* Gather in the updates *)
@@ -159,13 +157,12 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 
 				List.iter (fun update_expression ->
 					(*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
-					ParsingStructureUtilities.iterate_parsed_update (function
+					ParsingStructureUtilities.iterate_parsed_update (fun _ _ -> ()) (function
                         | Leaf_variable variable_name ->
                             all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                         | Leaf_fun function_name ->
                             all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                        | Leaf_constant _
-                        | Leaf_update_variable _ -> ()
+                        | Leaf_constant _ -> ()
 					) update_expression;
 
                 ) updates;
@@ -179,12 +176,15 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                 (* eg: r := stack_pop(s) *)
 				List.iter (fun update_expression ->
 					ParsingStructureUtilities.iterate_parsed_update
+					    (fun _ leaf ->
+					        match leaf with
+					        | Leaf_update_variable variable_name -> all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+					        | Leaf_decl_variable _ -> ()
+                        )
 					    (function
                             | Leaf_variable _
                             | Leaf_constant _
                             | Leaf_fun _ -> ()
-					        | Leaf_update_variable variable_name ->
-                                all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                         )
                     update_expression;
                 ) seq_updates;
@@ -218,7 +218,7 @@ let declared_components_of_model parsed_model =
         ParsingStructureUtilities.fold_parsed_fun_def
             (@) (* operator concat list *)
             [] (* base *)
-            (function Leaf_decl_variable (variable_name, _, id) -> [Local_variable_ref (variable_name, fun_def.name, id)])
+            (fun _ leaf -> match leaf with Leaf_decl_variable (variable_name, _, id) -> [Local_variable_ref (variable_name, fun_def.name, id)] | Leaf_update_variable _ -> [])
             (function _ -> [])
             fun_def
     in

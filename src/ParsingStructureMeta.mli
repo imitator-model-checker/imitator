@@ -110,8 +110,6 @@ val get_variables_in_parsed_simple_predicate : parsed_simple_predicate -> String
 val get_variables_in_parsed_state_predicate : parsed_state_predicate -> StringSet.t
 
 val left_right_member_of_assignments_in_parsed_seq_code_bloc : parsed_seq_code_bloc -> (variable_name * variable_name list) list
-val left_member_of_assignments_in_parsed_seq_code_bloc : parsed_seq_code_bloc -> variable_name list
-val right_member_of_assignments_in_parsed_seq_code_bloc : parsed_seq_code_bloc -> variable_name list
 (* Get local variables of a parsed function definition *)
 val local_variables_of_parsed_fun_def : parsed_fun_definition -> (variable_name * var_type_discrete) list
 (* Get local variables of a parsed sequential code bloc *)

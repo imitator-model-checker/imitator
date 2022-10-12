@@ -54,14 +54,18 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
             )
             else
                 raise (UndefinedFunction fun_def.name);
-        | Leaf_update_variable variable_name ->
-            (* TODO benjamin IMPLEMENT fix here now *)
-            true (* when updating a global variable, then side effects ! *)
         | _ -> false
     in
 
+    let is_seq_code_bloc_leaf_has_side_effects local_variables = function
+        | Leaf_update_variable variable_name ->
+            (* Side effect occurs only when update a global variable *)
+            not (VariableMap.mem variable_name local_variables)
+        | Leaf_decl_variable _ -> false
+    in
+
     ParsingStructureUtilities.exists_in_parsed_function_definition
-        (function _ -> false) (* no side effect for variable declarations *)
+        is_seq_code_bloc_leaf_has_side_effects (* Check if leaf of sequential code bloc has side effect *)
         is_leaf_has_side_effects (* Check if leaf has side effect *)
         fun_def
 
