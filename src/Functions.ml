@@ -53,7 +53,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
                 is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table found_function_def
             )
             else
-                raise (UndefinedFunction fun_def.name);
+                raise (UndefinedFunction function_name);
         | _ -> false
     in
 

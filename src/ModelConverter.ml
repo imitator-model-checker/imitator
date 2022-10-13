@@ -3559,8 +3559,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     let user_function_definitions_table = List.map (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def) used_function_definitions |> OCamlUtilities.hashtbl_of_tuples in
 
     (* Get metadata of these functions *)
-    let metadata_of_parsed_function_definition = Functions.metadata_of_parsed_function_definition Functions.builtin_functions_metadata_table user_function_definitions_table in
-    let user_functions_metadata = List.map metadata_of_parsed_function_definition used_function_definitions in
+    let user_functions_metadata = List.map (Functions.metadata_of_parsed_function_definition Functions.builtin_functions_metadata_table user_function_definitions_table) used_function_definitions in
     (* Concat builtin & user functions *)
     let all_functions_metadata = user_functions_metadata @ Functions.builtin_functions_metadata in
     (* Create function table that associate function name to function metadata *)

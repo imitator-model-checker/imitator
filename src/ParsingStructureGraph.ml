@@ -210,7 +210,7 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 
     RelationSet.to_seq !all_relations |> List.of_seq
 
-(**)
+(* All declared components found in the parsed model *)
 let declared_components_of_model parsed_model =
 
     (* Get all declared variables in model *)
@@ -222,27 +222,30 @@ let declared_components_of_model parsed_model =
         |> List.flatten
     in
 
-    (* Get all declared function in model *)
+    (* Get all declared functions in model *)
     let all_declared_functions_in_model =
         List.map (fun (fun_def : parsed_fun_definition) -> Fun_ref fun_def.name) parsed_model.fun_definitions
     in
 
-    (* Get all declared local variables in a given function definition *)
-    let all_declared_local_variables_in_fun_def (fun_def : parsed_fun_definition) =
-        let local_variables = ParsingStructureMeta.local_variables_of_parsed_fun_def fun_def in
-        List.map (fun (variable_name, _, id) -> Local_variable_ref (variable_name, fun_def.name, id)) local_variables
-    in
-
-    (* Get all declared parameters in a given function definition *)
-    let all_declared_params_in_fun_def (fun_def : parsed_fun_definition) =
-        List.fold_left (fun acc (variable_name, _) -> Param_ref (variable_name, fun_def.name) :: acc) [] fun_def.parameters
-    in
-
+    (* Get all declared local variables in model *)
     let all_declared_local_variables_in_model =
+
+        (* Get all declared local variables in a given function definition *)
+        let all_declared_local_variables_in_fun_def (fun_def : parsed_fun_definition) =
+            let local_variables = ParsingStructureMeta.local_variables_of_parsed_fun_def fun_def in
+            List.map (fun (variable_name, _, id) -> Local_variable_ref (variable_name, fun_def.name, id)) local_variables
+        in
+
         List.fold_left (fun acc fun_def -> all_declared_local_variables_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions
     in
 
+    (* Get all declared formal parameters in model *)
     let all_declared_params_in_model =
+
+        (* Get all declared parameters in a given function definition *)
+        let all_declared_params_in_fun_def (fun_def : parsed_fun_definition) =
+            List.fold_left (fun acc (variable_name, _) -> Param_ref (variable_name, fun_def.name) :: acc) [] fun_def.parameters
+        in
         List.fold_left (fun acc fun_def -> all_declared_params_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions
     in
 
@@ -370,7 +373,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
 
                         (* Get variables / functions used in the indexed expression of the variable *)
                         let variables_used = string_set_to_list (get_variables_in_parsed_discrete_arithmetic_expression index_expr) in
-                        (* Get functions used in the local init expression of the variable *)
+                        (* Get functions  used in the indexed expression of the variable *)
                         let functions_used = string_set_to_list (get_functions_in_parsed_discrete_arithmetic_expression index_expr) in
 
                         let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
@@ -491,6 +494,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
         (* Get all component relations of current function body *)
         function_relations_in_parsed_seq_code_bloc_rec local_variables fun_def.body
     in
+
     (* Get variables and functions used by automatons *)
     let automatons_relations =
         all_components_used_in_automatons parsed_model
@@ -533,6 +537,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
         | (Local_variable_ref _ as a, (Local_variable_ref _ as b)) -> a <> b
         | _ -> true
     ) all_model_relations in
+
     (* Return dependency graph of the model *)
     declared_components_of_model parsed_model, all_model_relations_without_variable_autoref
 
