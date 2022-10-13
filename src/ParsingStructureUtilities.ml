@@ -19,7 +19,7 @@ open OCamlUtilities
 open CustomModules
 
 (* Map of declared local variables *)
-type local_variables_map = var_type_discrete VariableMap.t
+type local_variables_map = (var_type_discrete * int) VariableMap.t
 (**)
 type variable_callback = (variable_name -> unit) option
 
@@ -53,6 +53,9 @@ type state_predicate_leaf =
     | Leaf_predicate_EQ of string (* automaton name *) * string (* location name *)
     | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
 
+(* Type of callback function called when reach a leaf *)
+type 'a parsing_structure_leaf_callback = local_variables_map -> parsing_structure_leaf -> 'a
+
 (* Extract function name from parsed factor *)
 let function_name_of_parsed_factor = function
 	| Parsed_DF_variable name -> name
@@ -60,69 +63,69 @@ let function_name_of_parsed_factor = function
 
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
-let rec fold_parsed_boolean_expression operator base leaf_fun = function
+let rec fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun = function
     | Parsed_conj_dis (l_expr, r_expr, _) ->
 	    operator
-	        (fold_parsed_boolean_expression operator base leaf_fun l_expr)
-	        (fold_parsed_boolean_expression operator base leaf_fun r_expr)
+	        (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun l_expr)
+	        (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun r_expr)
 	| Parsed_Discrete_boolean_expression expr ->
-	    fold_parsed_discrete_boolean_expression operator base leaf_fun expr
+	    fold_parsed_discrete_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
 
-and fold_parsed_discrete_boolean_expression operator base leaf_fun = function
+and fold_parsed_discrete_boolean_expression_with_local_variables local_variables operator base leaf_fun = function
     | Parsed_arithmetic_expression expr ->
-        fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
+        fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun expr
 	| Parsed_comparison (l_expr, _, r_expr) ->
 	    operator
-	        (fold_parsed_discrete_boolean_expression operator base leaf_fun l_expr)
-	        (fold_parsed_discrete_boolean_expression operator base leaf_fun r_expr)
+	        (fold_parsed_discrete_boolean_expression_with_local_variables local_variables operator base leaf_fun l_expr)
+	        (fold_parsed_discrete_boolean_expression_with_local_variables local_variables operator base leaf_fun r_expr)
 	| Parsed_comparison_in (lower_expr, expr, upper_expr) ->
 	    operator
-	        (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
+	        (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun expr)
             (operator
-                (fold_parsed_discrete_arithmetic_expression operator base leaf_fun lower_expr)
-                (fold_parsed_discrete_arithmetic_expression operator base leaf_fun upper_expr))
+                (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun lower_expr)
+                (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun upper_expr))
 	| Parsed_boolean_expression expr
 	| Parsed_Not expr ->
-        fold_parsed_boolean_expression operator base leaf_fun expr
+        fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
 
-and fold_parsed_discrete_arithmetic_expression operator base leaf_fun = function
+and fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun = function
 	| Parsed_sum_diff (expr, term, _) ->
         operator
-            (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
-            (fold_parsed_discrete_term operator base leaf_fun term)
+            (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun expr)
+            (fold_parsed_discrete_term_with_local_variables local_variables operator base leaf_fun term)
 	| Parsed_DAE_term term ->
-        fold_parsed_discrete_term operator base leaf_fun term
+        fold_parsed_discrete_term_with_local_variables local_variables operator base leaf_fun term
 
-and fold_parsed_discrete_term operator base leaf_fun = function
+and fold_parsed_discrete_term_with_local_variables local_variables operator base leaf_fun = function
 	| Parsed_product_quotient (term, factor, _) ->
 	    operator
-	        (fold_parsed_discrete_term operator base leaf_fun term)
-	        (fold_parsed_discrete_factor operator base leaf_fun factor)
+	        (fold_parsed_discrete_term_with_local_variables local_variables operator base leaf_fun term)
+	        (fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor)
 	| Parsed_DT_factor factor ->
-        fold_parsed_discrete_factor operator base leaf_fun factor
+        fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor
 
-and fold_parsed_discrete_factor operator base leaf_fun = function
-	| Parsed_DF_variable variable_name -> leaf_fun (Leaf_variable variable_name)
-	| Parsed_DF_constant value -> leaf_fun (Leaf_constant value)
-	| Parsed_sequence (expr_list, _) -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_list
+and fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun = function
+	| Parsed_DF_variable variable_name -> leaf_fun local_variables (Leaf_variable variable_name)
+	| Parsed_DF_constant value -> leaf_fun local_variables (Leaf_constant value)
+	| Parsed_sequence (expr_list, _) -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)) base expr_list
 	| Parsed_DF_expression expr ->
-        fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
+        fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun expr
     | Parsed_function_call (factor_name, argument_expressions) ->
         let function_name = function_name_of_parsed_factor factor_name in
         operator
-            (leaf_fun (Leaf_fun function_name))
-            (List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression operator base leaf_fun expr) acc) base argument_expressions)
+            (leaf_fun local_variables (Leaf_fun function_name))
+            (List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr) acc) base argument_expressions)
     | Parsed_DF_access (factor, _)
 	(* | Parsed_log_not factor *)
 	| Parsed_DF_unary_min factor ->
-	    fold_parsed_discrete_factor operator base leaf_fun factor
+	    fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor
 
 and fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun = function
     | Parsed_scalar_update variable_name -> seq_code_bloc_leaf_fun local_variables (Leaf_update_variable variable_name)
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) ->
         operator
             (fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
-            (fold_parsed_discrete_arithmetic_expression operator base leaf_fun index_expr)
+            (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun index_expr)
 
 and fold_parsed_update_type_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun = function
     | Parsed_variable_update parsed_scalar_or_index_update_type ->
@@ -133,24 +136,24 @@ and fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun (* s
     let rec fold_parsed_seq_code_bloc_rec local_variables = function
         | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, id) ->
             (* Add new declared local variable *)
-            let new_local_variables = VariableMap.add variable_name discrete_type local_variables in
+            let new_local_variables = VariableMap.add variable_name (discrete_type, id) local_variables in
 
             seq_code_bloc_leaf_fun local_variables (Leaf_decl_variable (variable_name, discrete_type, id))
-            |> operator (fold_parsed_boolean_expression operator base leaf_fun init_expr)
+            |> operator (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun init_expr)
             |> operator (fold_parsed_seq_code_bloc_rec new_local_variables next_expr)
 
         | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
             (* Add local variable used for loop *)
-            let inner_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
+            let inner_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int, id) local_variables in
 
             seq_code_bloc_leaf_fun local_variables (Leaf_decl_variable (variable_name, (Var_type_discrete_number Var_type_discrete_int), id))
-            |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun from_expr)
-            |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun to_expr)
+            |> operator (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun from_expr)
+            |> operator (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun to_expr)
             |> operator (fold_parsed_seq_code_bloc_rec inner_local_variables inner_bloc)
             |> operator (fold_parsed_seq_code_bloc_rec local_variables next_expr)
 
         | Parsed_while_loop (condition_expr, inner_bloc, next_expr) ->
-            fold_parsed_boolean_expression operator base leaf_fun condition_expr
+            fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun condition_expr
             |> operator (fold_parsed_seq_code_bloc_rec local_variables inner_bloc)
             |> operator (fold_parsed_seq_code_bloc_rec local_variables next_expr)
 
@@ -161,7 +164,7 @@ and fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun (* s
                 | None -> base
             in
 
-            fold_parsed_boolean_expression operator base leaf_fun condition_expr
+            fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun condition_expr
             |> operator (fold_parsed_seq_code_bloc_rec local_variables then_bloc)
             |> operator else_bloc_result
             |> operator (fold_parsed_seq_code_bloc_rec local_variables next_expr)
@@ -172,7 +175,7 @@ and fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun (* s
                 (fold_parsed_seq_code_bloc_rec local_variables next_expr)
 
         | Parsed_return_expr expr ->
-            fold_parsed_boolean_expression operator base leaf_fun expr
+            fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
 
         | Parsed_bloc_void ->
             base
@@ -182,7 +185,7 @@ and fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun (* s
 and fold_parsed_normal_update_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun (update_type, expr) =
     operator
         (fold_parsed_update_type_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun update_type)
-        (fold_parsed_boolean_expression operator base leaf_fun expr)
+        (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)
 
 (** Fold a parsed update expression using operator applying custom function on leaves **)
 and fold_parsed_update operator base seq_code_bloc_leaf_fun leaf_fun = function
@@ -194,7 +197,7 @@ and fold_parsed_update operator base seq_code_bloc_leaf_fun leaf_fun = function
             operator acc (fold_parsed_normal_update_with_local_variables VariableMap.empty operator base seq_code_bloc_leaf_fun leaf_fun normal_update)
         ) base all_updates
         in
-        operator fold_updates (fold_parsed_boolean_expression operator base leaf_fun bool_expr)
+        operator fold_updates (fold_parsed_boolean_expression_with_local_variables VariableMap.empty operator base leaf_fun bool_expr)
 
 let rec fold_parsed_linear_constraint operator leaf_fun = function
     | Parsed_true_constraint -> leaf_fun Leaf_true_linear_constraint
@@ -218,6 +221,12 @@ and fold_parsed_linear_expression operator leaf_fun = function
 and fold_parsed_linear_term operator leaf_fun = function
     | Constant value -> leaf_fun (Leaf_linear_constant value)
     | Variable (value, variable_name) -> leaf_fun (Leaf_linear_variable (value, variable_name))
+
+let fold_parsed_boolean_expression operator = fold_parsed_boolean_expression_with_local_variables VariableMap.empty operator
+let fold_parsed_discrete_boolean_expression operator = fold_parsed_discrete_boolean_expression_with_local_variables VariableMap.empty operator
+let fold_parsed_discrete_arithmetic_expression operator = fold_parsed_discrete_arithmetic_expression_with_local_variables VariableMap.empty operator
+let fold_parsed_discrete_term operator = fold_parsed_discrete_term_with_local_variables VariableMap.empty operator
+let fold_parsed_discrete_factor operator = fold_parsed_discrete_factor_with_local_variables VariableMap.empty operator
 
 (** Fold a parsed linear constraint using operator applying custom function on leafs **)
 let fold_parsed_nonlinear_constraint = fold_parsed_discrete_boolean_expression

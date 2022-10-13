@@ -55,14 +55,14 @@ let discrete_boolean_expression_constant_value_opt = function
 (* Tree leaf functions *)
 
 (* Check if leaf is a constant *)
-let is_constant variable_infos = function
+let is_constant variable_infos local_variables = function
     | Leaf_variable variable_name -> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
     (* TODO benjamin IMPROVE not always true, a function can be constant *)
     | Leaf_fun _ -> false
 
 (* Check if leaf has side effects *)
-let has_side_effects variable_infos = function
+let has_side_effects variable_infos local_variables = function
     | Leaf_fun function_name ->
         let function_metadata = Functions.function_metadata_by_name variable_infos function_name in
         function_metadata.side_effect
@@ -88,7 +88,7 @@ let is_linear_constant variable_infos = function
 
 (* Check if leaf is a variable that is defined *)
 (* A given callback is executed if it's not a defined variable *)
-let is_variable_defined_with_callback variable_infos local_variables_opt variable_not_defined_callback_opt = function
+let is_variable_defined_with_callback variable_infos local_variables_opt variable_not_defined_callback_opt local_variables = function
     | Leaf_variable variable_name ->
 
         let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
@@ -178,7 +178,7 @@ let is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_info u
         )
 
 (* Check if leaf is only a discrete variable *)
-let is_only_discrete variable_infos clock_or_param_found_callback_opt = function
+let is_only_discrete variable_infos clock_or_param_found_callback_opt local_variables = function
     | Leaf_variable variable_name ->
         let var_type = var_type_of_variable_or_constant variable_infos variable_name in
         (match var_type with
@@ -492,7 +492,7 @@ let add_variable_of_linear_expression variables_used_ref = function
     | Leaf_true_linear_constraint -> ()
 
 (* Gather all variable names used in a discrete boolean expression *)
-let add_variable_of_discrete_boolean_expression variables_used_ref = function
+let add_variable_of_discrete_boolean_expression variables_used_ref local_variables = function
     | Leaf_constant _
     | Leaf_fun _ -> ()
     | Leaf_variable variable_name ->
@@ -500,7 +500,7 @@ let add_variable_of_discrete_boolean_expression variables_used_ref = function
         variables_used_ref := StringSet.add variable_name !variables_used_ref
 
 (* Gather all function names used in a discrete boolean expression *)
-let add_function_of_discrete_boolean_expression function_used_ref = function
+let add_function_of_discrete_boolean_expression function_used_ref local_variables = function
     | Leaf_constant _
     | Leaf_variable _ -> ()
     | Leaf_fun function_name ->
@@ -680,7 +680,7 @@ let local_variables_of_parsed_fun_def (fun_def : parsed_fun_definition) =
         (@) (* concat operator *)
         [] (* base *)
         (fun _ leaf -> match leaf with Leaf_decl_variable (variable_name, discrete_type, _) -> [variable_name, discrete_type] | Leaf_update_variable _ -> [])
-        (function _ -> [])
+        (fun _ _ -> [])
         fun_def
 
 (* Get local variables of a parsed sequential code bloc *)
@@ -690,5 +690,5 @@ let local_variables_of_parsed_seq_code_bloc seq_code_bloc =
         (@) (* concat operator *)
         [] (* base *)
         (fun _ leaf -> match leaf with Leaf_decl_variable (variable_name, discrete_type, _) -> [variable_name, discrete_type] | Leaf_update_variable _ -> [])
-        (function _ -> [])
+        (fun _ _ -> [])
         seq_code_bloc

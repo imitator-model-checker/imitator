@@ -40,7 +40,7 @@ type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 let rec is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
 
     (* Check if a tree leaf has side effect *)
-    let is_leaf_has_side_effects = function
+    let is_leaf_has_side_effects local_variables = function
         | Leaf_fun function_name ->
             (* Is call found is a call to a builtin function ? *)
             if Hashtbl.mem builtin_functions_metadata_table function_name then (

@@ -251,7 +251,7 @@ let check_normal_update variable_infos automaton_name normal_update =
     (* Check that all variables in update are declared, and call print function if it's not the case *)
     let all_variables_declared = ParsingStructureMeta.all_variables_defined_in_parsed_normal_update variable_infos print_variable_in_update_not_declared_opt normal_update in
     (* Get (maybe) an updated variable in normal update *)
-    let updated_variable_name_opt = (ParsingStructureUtilities.fold_parsed_normal_update_with_local_variables VariableMap.empty (@) [] (fun _ leaf -> match leaf with Leaf_update_variable variable_name -> [variable_name] | Leaf_decl_variable _ -> []) (function _ -> []) normal_update |> List.filter (fun x -> x <> "") |> List.nth_opt) 0 in
+    let updated_variable_name_opt = (ParsingStructureUtilities.fold_parsed_normal_update_with_local_variables VariableMap.empty (@) [] (fun _ leaf -> match leaf with Leaf_update_variable variable_name -> [variable_name] | Leaf_decl_variable _ -> []) (fun _ _ -> []) normal_update |> List.filter (fun x -> x <> "") |> List.nth_opt) 0 in
 
     let updated_variable_name = match updated_variable_name_opt with Some updated_variable_name -> updated_variable_name | None -> "_" in
 
