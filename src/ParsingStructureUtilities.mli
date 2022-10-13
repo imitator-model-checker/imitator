@@ -159,7 +159,7 @@ val iterate_parsed_nonlinear_constraint : unit parsing_structure_leaf_callback -
 val iterate_parsed_nonlinear_convex_predicate : unit parsing_structure_leaf_callback -> convex_predicate -> unit
 
 (** Iterate over a parsed sequential code bloc definition **)
-(*val iterate_in_parsed_seq_code_bloc_with_local_variables : unit parsing_structure_leaf_callback -> parsed_seq_code_bloc -> unit*)
+val iterate_in_parsed_seq_code_bloc : (local_variables_map -> parsed_seq_code_bloc_leaf -> unit) -> unit parsing_structure_leaf_callback -> parsed_seq_code_bloc -> unit
 (** Iterate over a parsed function definition **)
 val iterate_in_parsed_function_definition :  (local_variables_map -> parsed_seq_code_bloc_leaf -> unit) -> unit parsing_structure_leaf_callback -> parsed_fun_definition -> unit
 

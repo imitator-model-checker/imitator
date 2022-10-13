@@ -126,6 +126,21 @@ let is_variable_defined_on_update_with_callback variable_infos variable_not_defi
 
 let is_variable_defined variable_infos = is_variable_defined_with_callback variable_infos None
 
+let is_function_defined_with_callback variable_infos function_not_defined_callback_opt local_variables = function
+    | Leaf_fun function_name ->
+
+        let is_defined = Hashtbl.mem variable_infos.functions function_name in
+
+        if not is_defined then (
+            match function_not_defined_callback_opt with
+            | Some function_not_defined_callback -> function_not_defined_callback function_name
+            | None -> ()
+        );
+
+        is_defined
+    | Leaf_variable _ -> true
+    | Leaf_constant _ -> true
+
 (* Check if linear expression leaf is a variable that is defined *)
 let is_variable_defined_in_linear_expression variable_infos callback_fail = function
     | Leaf_linear_variable (_, variable_name) ->
@@ -337,11 +352,25 @@ let all_variables_defined_in_parsed_seq_code_bloc variable_infos undefined_varia
         (is_variable_defined_with_callback variable_infos undefined_variable_callback)
         seq_code_bloc
 
+(* Check that all functions called in a parsed sequential code bloc are effectively be defined *)
+let all_functions_defined_in_parsed_seq_code_bloc variable_infos undefined_function_callback seq_code_bloc =
+    ParsingStructureUtilities.for_all_in_parsed_seq_code_bloc
+        (fun _ _ -> true)
+        (is_function_defined_with_callback variable_infos undefined_function_callback)
+        seq_code_bloc
+
 (* Check that all variables in a parsed fun declaration are effectively be defined *)
 let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_callback (fun_def : parsed_fun_definition) =
     ParsingStructureUtilities.for_all_in_parsed_fun_def
         (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
         (is_variable_defined_with_callback variable_infos undefined_variable_callback)
+        fun_def
+
+(* Check that all functions called in a parsed fun declaration are effectively be defined *)
+let all_functions_defined_in_parsed_fun_def variable_infos undefined_function_callback (fun_def : parsed_fun_definition) =
+    ParsingStructureUtilities.for_all_in_parsed_fun_def
+        (fun _ _ -> true)
+        (is_function_defined_with_callback variable_infos undefined_function_callback)
         fun_def
 
 (* Check that all variables in a linear expression are effectively be defined *)
@@ -369,7 +398,7 @@ let all_variables_defined_in_nonlinear_convex_predicate variable_infos callback 
     non_linear_convex_predicate
 
 (* Check that all variables in a state predicate are effectively be defined *)
-let all_variable_in_parsed_state_predicate parsing_infos variable_infos undefined_variable_callback_opt undefined_automaton_callback_opt undefined_loc_callback_opt expr =
+let all_variables_defined_in_parsed_state_predicate parsing_infos variable_infos undefined_variable_callback_opt undefined_automaton_callback_opt undefined_loc_callback_opt expr =
     for_all_in_parsed_state_predicate
         (is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_infos undefined_automaton_callback_opt undefined_loc_callback_opt)
         (is_variable_defined_with_callback variable_infos undefined_variable_callback_opt)

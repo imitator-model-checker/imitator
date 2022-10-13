@@ -509,6 +509,7 @@ type variable_infos = {
 	type_of_variables : Automaton.variable_index -> DiscreteType.var_type;
 	removed_variable_names : variable_name list;
 	discrete : Automaton.variable_index list;
+	(* TODO benjamin REFACTOR rename to fun_meta *)
 	functions : (Automaton.variable_name, function_metadata) Hashtbl.t
 }
 

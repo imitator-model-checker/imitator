@@ -2185,7 +2185,7 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 
 let check_parsed_state_predicate parsing_infos expr =
     let variable_infos = parsing_infos.variable_infos in
-    ParsingStructureMeta.all_variable_in_parsed_state_predicate
+    ParsingStructureMeta.all_variables_defined_in_parsed_state_predicate
         parsing_infos
         variable_infos
         (* Undefined variable name callback, triggered if an undefined variable is found *)

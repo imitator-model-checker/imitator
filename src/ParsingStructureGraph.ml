@@ -188,6 +188,21 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                     update_expression;
                 ) seq_updates;
 
+                let _, _, mixin_updates = update_section in
+
+                ParsingStructureUtilities.iterate_in_parsed_seq_code_bloc
+                    (fun _ leaf ->
+                        match leaf with
+                        | Leaf_update_variable variable_name -> all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                    )
+                    (fun _ -> function
+                        | Leaf_fun function_name -> all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
+                        | Leaf_variable _
+                        | Leaf_constant _ -> ()
+                    )
+                    mixin_updates
+                ;
+
             ) location.transitions;
         ) locations;
 

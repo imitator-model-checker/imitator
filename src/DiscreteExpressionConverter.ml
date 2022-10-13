@@ -296,12 +296,27 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
             )
         in
 
-        let print_variable_in_fun_not_declared_opt = Some print_variable_in_fun_not_declared in
-        ParsingStructureMeta.all_variables_defined_in_parsed_seq_code_bloc variable_infos print_variable_in_fun_not_declared_opt seq_code_bloc
+        ParsingStructureMeta.all_variables_defined_in_parsed_seq_code_bloc variable_infos (Some print_variable_in_fun_not_declared) seq_code_bloc
+    in
+
+    let is_all_functions_defined =
+
+        (* Prepare callback function that print error message when undeclared function is found *)
+        let print_function_in_fun_not_declared variable_name =
+            print_error (
+                "Function `"
+                ^ variable_name
+                ^ str_location
+                ^ " was not declared."
+            )
+        in
+
+        ParsingStructureMeta.all_functions_defined_in_parsed_seq_code_bloc variable_infos (Some print_function_in_fun_not_declared) seq_code_bloc
+
     in
 
     (* Return *)
-    check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc && is_all_variables_defined
+    check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc && is_all_variables_defined && is_all_functions_defined
 
 
 (* Check if user function definition is well formed *)

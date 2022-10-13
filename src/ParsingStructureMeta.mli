@@ -61,7 +61,9 @@ val all_variables_defined_in_parsed_boolean_expression : variable_infos -> varia
 val all_variables_defined_in_parsed_discrete_boolean_expression : variable_infos -> variable_callback -> parsed_discrete_boolean_expression -> bool
 val all_variables_defined_in_parsed_discrete_arithmetic_expression : variable_infos -> variable_callback -> parsed_discrete_arithmetic_expression -> bool
 val all_variables_defined_in_parsed_seq_code_bloc : variable_infos -> variable_callback -> parsed_seq_code_bloc -> bool
+val all_functions_defined_in_parsed_seq_code_bloc : variable_infos -> variable_callback -> parsed_seq_code_bloc -> bool
 val all_variables_defined_in_parsed_fun_def : variable_infos -> variable_callback -> parsed_fun_definition -> bool
+val all_functions_defined_in_parsed_fun_def : variable_infos -> variable_callback -> parsed_fun_definition -> bool
 val all_variables_defined_in_parsed_normal_update : variable_infos -> variable_callback -> normal_update -> bool
 val all_variables_defined_in_parsed_update : variable_infos -> variable_callback -> update -> bool
 val all_variables_defined_in_linear_expression : variable_infos -> (variable_name -> unit) -> linear_expression -> bool
@@ -69,7 +71,7 @@ val all_variables_defined_in_linear_constraint : variable_infos -> (variable_nam
 val all_variables_defined_in_nonlinear_constraint : variable_infos -> variable_callback -> nonlinear_constraint -> bool
 val all_variables_defined_in_nonlinear_convex_predicate : variable_infos -> variable_callback -> nonlinear_constraint list -> bool
 
-val all_variable_in_parsed_state_predicate : useful_parsing_model_information -> variable_infos -> variable_callback -> (automaton_name -> unit) option -> (automaton_name -> location_name -> unit) option -> parsed_state_predicate -> bool
+val all_variables_defined_in_parsed_state_predicate : useful_parsing_model_information -> variable_infos -> variable_callback -> (automaton_name -> unit) option -> (automaton_name -> location_name -> unit) option -> parsed_state_predicate -> bool
 
 (* Check that there is only discrete variables in a parsed boolean expression *)
 val only_discrete_in_parsed_boolean_expression : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_boolean_expression -> bool
