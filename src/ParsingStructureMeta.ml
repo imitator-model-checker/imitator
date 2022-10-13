@@ -676,19 +676,25 @@ let left_right_member_of_assignments_in_parsed_seq_code_bloc (* seq_code_bloc *)
 (* Get local variables of a parsed function definition *)
 let local_variables_of_parsed_fun_def (fun_def : parsed_fun_definition) =
     (* Concat all local variables found when traversing the function body *)
-    ParsingStructureUtilities.fold_parsed_fun_def
+    let duplicate_local_variables = ParsingStructureUtilities.fold_parsed_fun_def
         (@) (* concat operator *)
         [] (* base *)
-        (fun _ leaf -> match leaf with Leaf_decl_variable (variable_name, discrete_type, _) -> [variable_name, discrete_type] | Leaf_update_variable _ -> [])
-        (fun _ _ -> [])
+        (fun local_variables _ -> local_variables |> VariableMap.to_seq |> List.of_seq)
+        (fun local_variables _ -> local_variables |> VariableMap.to_seq |> List.of_seq)
         fun_def
+    in
+    (* Remap tuples and remove duplicates *)
+    List.map (fun (a, (b, c)) -> a, b, c) duplicate_local_variables |> OCamlUtilities.list_only_once
 
 (* Get local variables of a parsed sequential code bloc *)
 let local_variables_of_parsed_seq_code_bloc seq_code_bloc =
     (* Concat all local variables found when traversing the function body *)
-    ParsingStructureUtilities.fold_parsed_seq_code_bloc
+    let duplicate_local_variables = ParsingStructureUtilities.fold_parsed_seq_code_bloc
         (@) (* concat operator *)
         [] (* base *)
-        (fun _ leaf -> match leaf with Leaf_decl_variable (variable_name, discrete_type, _) -> [variable_name, discrete_type] | Leaf_update_variable _ -> [])
-        (fun _ _ -> [])
+        (fun local_variables _ -> local_variables |> VariableMap.to_seq |> List.of_seq)
+        (fun local_variables _ -> local_variables |> VariableMap.to_seq |> List.of_seq)
         seq_code_bloc
+    in
+    (* Remap tuples and remove duplicates *)
+    List.map (fun (a, (b, c)) -> a, b, c) duplicate_local_variables |> OCamlUtilities.list_only_once

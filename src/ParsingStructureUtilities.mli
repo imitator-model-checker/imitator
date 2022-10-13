@@ -50,8 +50,10 @@ type state_predicate_leaf =
     | Leaf_predicate_EQ of string (* automaton name *) * string (* location name *)
     | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
 
-(* Type of callback function called when reach a leaf *)
+(* Type of callback function called when reach a leaf of a discrete expression *)
 type 'a parsing_structure_leaf_callback = local_variables_map -> parsing_structure_leaf -> 'a
+(* Type of callback function called when reach a leaf of a linear expression *)
+type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
 type 'a traversed_parsed_seq_code_bloc =
     | Traversed_parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * 'a
@@ -78,11 +80,11 @@ val for_all_in_parsed_discrete_term : bool parsing_structure_leaf_callback -> pa
 val for_all_in_parsed_discrete_factor : bool parsing_structure_leaf_callback -> parsed_discrete_factor -> bool
 
 (** Check if all leaf of a linear expression satisfy the predicate **)
-val for_all_in_parsed_linear_expression : (linear_expression_leaf -> bool) -> linear_expression -> bool
+val for_all_in_parsed_linear_expression : bool linear_expression_leaf_callback -> linear_expression -> bool
 (** Check if all leaf of a linear term satisfy the predicate **)
-val for_all_in_parsed_linear_term : (linear_expression_leaf -> bool) -> linear_term -> bool
+val for_all_in_parsed_linear_term : bool linear_expression_leaf_callback -> linear_term -> bool
 (** Check if all leaf of a linear constraint satisfy the predicate **)
-val for_all_in_parsed_linear_constraint : (linear_expression_leaf -> bool) -> linear_constraint -> bool
+val for_all_in_parsed_linear_constraint : bool linear_expression_leaf_callback -> linear_constraint -> bool
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
 val for_all_in_parsed_nonlinear_constraint : bool parsing_structure_leaf_callback -> nonlinear_constraint -> bool
 (** Check if all leaf of a parsed normal update satisfy the predicate **)
@@ -109,11 +111,11 @@ val exists_in_parsed_discrete_term : bool parsing_structure_leaf_callback -> par
 val exists_in_parsed_discrete_factor : bool parsing_structure_leaf_callback -> parsed_discrete_factor -> bool
 
 (** Check if any leaf of a linear expression the predicate **)
-val exists_in_parsed_linear_expression : (linear_expression_leaf -> bool) -> linear_expression -> bool
+val exists_in_parsed_linear_expression : bool linear_expression_leaf_callback -> linear_expression -> bool
 (** Check if any leaf of a linear term the predicate **)
-val exists_in_parsed_linear_term : (linear_expression_leaf -> bool) -> linear_term -> bool
+val exists_in_parsed_linear_term : bool linear_expression_leaf_callback -> linear_term -> bool
 (** Check if any leaf of a linear constraint satisfy the predicate **)
-val exists_in_parsed_linear_constraint : (linear_expression_leaf -> bool) -> linear_constraint -> bool
+val exists_in_parsed_linear_constraint : bool linear_expression_leaf_callback -> linear_constraint -> bool
 (** Check if any leaf of a non-linear constraint satisfy the predicate **)
 val exists_in_parsed_nonlinear_constraint : bool parsing_structure_leaf_callback -> nonlinear_constraint -> bool
 
@@ -147,11 +149,11 @@ val iterate_in_parsed_state_predicate_term : (state_predicate_leaf -> unit) -> u
 val iterate_in_parsed_state_predicate : (state_predicate_leaf -> unit) -> unit parsing_structure_leaf_callback -> parsed_state_predicate -> unit
 
 (** Iterate over a linear expression applying a unit function **)
-val iterate_parsed_linear_expression : (linear_expression_leaf -> unit) -> linear_expression -> unit
+val iterate_parsed_linear_expression : unit linear_expression_leaf_callback -> linear_expression -> unit
 (** Iterate over a linear term applying a unit function **)
-val iterate_parsed_linear_term : (linear_expression_leaf -> unit) -> linear_term -> unit
+val iterate_parsed_linear_term : unit linear_expression_leaf_callback -> linear_term -> unit
 (** Iterate over a linear constraint applying a unit function **)
-val iterate_parsed_linear_constraint : (linear_expression_leaf -> unit) -> linear_constraint -> unit
+val iterate_parsed_linear_constraint : unit linear_expression_leaf_callback -> linear_constraint -> unit
 (** Iterate over a non-linear constraint applying a unit function **)
 val iterate_parsed_nonlinear_constraint : unit parsing_structure_leaf_callback -> nonlinear_constraint -> unit
 (** Iterate over a non-linear convex predicate **)

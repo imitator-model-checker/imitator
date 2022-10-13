@@ -268,7 +268,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         (* Get local variables / parameters of parsed sequential code bloc *)
         let local_variables = ParsingStructureMeta.local_variables_of_parsed_seq_code_bloc seq_code_bloc in
         (* Check if exist any void variable *)
-        List.exists (fun (variable_name, discrete_type) ->
+        List.exists (fun (variable_name, discrete_type, _) ->
             match discrete_type with
             | Var_type_void -> print_error ("Local variable or formal parameter `" ^ variable_name ^ "` " ^ str_location ^ " was declared as `void`. A variable cannot be declared as `void`."); true
             | _ -> false

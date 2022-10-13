@@ -215,12 +215,8 @@ let declared_components_of_model parsed_model =
 
     (* Get all declared local variables in a given function definition *)
     let all_declared_local_variables_in_fun_def (fun_def : parsed_fun_definition) =
-        ParsingStructureUtilities.fold_parsed_fun_def
-            (@) (* operator concat list *)
-            [] (* base *)
-            (fun _ leaf -> match leaf with Leaf_decl_variable (variable_name, _, id) -> [Local_variable_ref (variable_name, fun_def.name, id)] | Leaf_update_variable _ -> [])
-            (fun _ _ -> [])
-            fun_def
+        let local_variables = ParsingStructureMeta.local_variables_of_parsed_fun_def fun_def in
+        List.map (fun (variable_name, _, id) -> Local_variable_ref (variable_name, fun_def.name, id)) local_variables
     in
 
     (* Get all declared parameters in a given function definition *)

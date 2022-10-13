@@ -53,8 +53,10 @@ type state_predicate_leaf =
     | Leaf_predicate_EQ of string (* automaton name *) * string (* location name *)
     | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
 
-(* Type of callback function called when reach a leaf *)
+(* Type of callback function called when reach a leaf of a discrete expression *)
 type 'a parsing_structure_leaf_callback = local_variables_map -> parsing_structure_leaf -> 'a
+(* Type of callback function called when reach a leaf of a linear expression *)
+type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
 (* Extract function name from parsed factor *)
 let function_name_of_parsed_factor = function
@@ -132,7 +134,7 @@ and fold_parsed_update_type_with_local_variables local_variables operator base s
         fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type
     | Parsed_void_update -> base
 
-and fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun (* seq_code_bloc *) =
+and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun (* seq_code_bloc *) =
     let rec fold_parsed_seq_code_bloc_rec local_variables = function
         | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, id) ->
             (* Add new declared local variable *)
@@ -180,7 +182,7 @@ and fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun (* s
         | Parsed_bloc_void ->
             base
     in
-    fold_parsed_seq_code_bloc_rec VariableMap.empty (* seq_code_bloc *)
+    fold_parsed_seq_code_bloc_rec local_variables (* seq_code_bloc *)
 
 and fold_parsed_normal_update_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun (update_type, expr) =
     operator
@@ -227,6 +229,7 @@ let fold_parsed_discrete_boolean_expression operator = fold_parsed_discrete_bool
 let fold_parsed_discrete_arithmetic_expression operator = fold_parsed_discrete_arithmetic_expression_with_local_variables VariableMap.empty operator
 let fold_parsed_discrete_term operator = fold_parsed_discrete_term_with_local_variables VariableMap.empty operator
 let fold_parsed_discrete_factor operator = fold_parsed_discrete_factor_with_local_variables VariableMap.empty operator
+let fold_parsed_seq_code_bloc operator = fold_parsed_seq_code_bloc_with_local_variables VariableMap.empty operator
 
 (** Fold a parsed linear constraint using operator applying custom function on leafs **)
 let fold_parsed_nonlinear_constraint = fold_parsed_discrete_boolean_expression
@@ -278,9 +281,10 @@ and fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun = func
 
 (**)
 let fold_parsed_fun_def operator base seq_code_bloc_leaf_fun leaf_fun (fun_def : parsed_fun_definition) =
+    let local_variables = List.fold_left (fun acc (param_name, param_type) -> VariableMap.add param_name (param_type, 0) acc) VariableMap.empty fun_def.parameters in
     (* Apply seq_code_leaf_fun function on each parameters of the function and fold with operator *)
     List.fold_left (fun acc (param_name, param_type) -> operator acc (seq_code_bloc_leaf_fun VariableMap.empty (Leaf_decl_variable (param_name, param_type, -1)))) base fun_def.parameters
-    |> operator (fold_parsed_seq_code_bloc operator base seq_code_bloc_leaf_fun leaf_fun fun_def.body)
+    |> operator (fold_parsed_seq_code_bloc_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun fun_def.body)
 
 type 'a traversed_parsed_seq_code_bloc =
     | Traversed_parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * 'a
