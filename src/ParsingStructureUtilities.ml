@@ -396,7 +396,7 @@ let for_all_in_parsed_state_predicate = apply_evaluate_and_with_base fold_parsed
 (** Check if all leaf of a parsed sequential code bloc satisfy the predicate **)
 let for_all_in_parsed_seq_code_bloc = apply_evaluate_and_with_base fold_parsed_seq_code_bloc
 (** Check if all leaf of a parsed function definition satisfy the predicate **)
-let for_all_in_parsed_function_definition = apply_evaluate_and_with_base fold_parsed_fun_def
+let for_all_in_parsed_fun_def = apply_evaluate_and_with_base fold_parsed_fun_def
 
 (** Check if any leaf of a parsing structure satisfy the predicate **)
 

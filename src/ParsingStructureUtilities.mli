@@ -93,7 +93,7 @@ val for_all_in_parsed_update : (local_variables_map -> parsed_seq_code_bloc_leaf
 (** Check if all leaf of a parsed sequential code bloc satisfy the predicate **)
 val for_all_in_parsed_seq_code_bloc : (local_variables_map -> parsed_seq_code_bloc_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_seq_code_bloc -> bool
 (** Check if all leaf of a parsed function definition satisfy the predicate **)
-val for_all_in_parsed_function_definition : (local_variables_map -> parsed_seq_code_bloc_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_fun_definition -> bool
+val for_all_in_parsed_fun_def : (local_variables_map -> parsed_seq_code_bloc_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_fun_definition -> bool
 
 val for_all_in_parsed_loc_predicate : (state_predicate_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_loc_predicate -> bool
 val for_all_in_parsed_simple_predicate : (state_predicate_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_simple_predicate -> bool
