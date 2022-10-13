@@ -77,7 +77,6 @@ let has_side_effects_2 variable_infos local_variables = function
         false
         (* Side effect only occurs if the updated variable is global *)
 (*        not (VariableMap.mem variable_name local_variables)*)
-    | Leaf_decl_variable _ -> false
 
 (* Check if linear leaf is a constant *)
 let is_linear_constant variable_infos = function
@@ -131,7 +130,6 @@ let is_variable_defined_with_callback_2 variable_infos local_variables_opt varia
         );
 
         is_defined
-    | Leaf_decl_variable _ -> true
 
 let is_variable_defined variable_infos local_variables_opt = is_variable_defined_with_callback variable_infos local_variables_opt None
 

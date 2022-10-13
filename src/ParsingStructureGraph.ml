@@ -179,7 +179,6 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 					    (fun _ leaf ->
 					        match leaf with
 					        | Leaf_update_variable variable_name -> all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
-					        | Leaf_decl_variable _ -> ()
                         )
 					    (fun _ -> function
                             | Leaf_variable _

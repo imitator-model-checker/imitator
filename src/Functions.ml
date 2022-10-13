@@ -61,7 +61,6 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
         | Leaf_update_variable variable_name ->
             (* Side effect occurs only when update a global variable *)
             not (VariableMap.mem variable_name local_variables)
-        | Leaf_decl_variable _ -> false
     in
 
     ParsingStructureUtilities.exists_in_parsed_function_definition

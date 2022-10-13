@@ -31,7 +31,6 @@ type parsing_structure_leaf =
 
 (* Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
-    | Leaf_decl_variable of variable_name * var_type_discrete * variable_id
     | Leaf_update_variable of variable_name
 
 (* Leaf of linear expression *)
@@ -140,16 +139,15 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
             (* Add new declared local variable *)
             let new_local_variables = VariableMap.add variable_name (discrete_type, id) local_variables in
 
-            seq_code_bloc_leaf_fun local_variables (Leaf_decl_variable (variable_name, discrete_type, id))
-            |> operator (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun init_expr)
-            |> operator (fold_parsed_seq_code_bloc_rec new_local_variables next_expr)
+            operator
+                (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun init_expr)
+                (fold_parsed_seq_code_bloc_rec new_local_variables next_expr)
 
         | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
             (* Add local variable used for loop *)
             let inner_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int, id) local_variables in
 
-            seq_code_bloc_leaf_fun local_variables (Leaf_decl_variable (variable_name, (Var_type_discrete_number Var_type_discrete_int), id))
-            |> operator (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun from_expr)
+            (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun from_expr)
             |> operator (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun to_expr)
             |> operator (fold_parsed_seq_code_bloc_rec inner_local_variables inner_bloc)
             |> operator (fold_parsed_seq_code_bloc_rec local_variables next_expr)
@@ -281,10 +279,9 @@ and fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun = func
 
 (**)
 let fold_parsed_fun_def operator base seq_code_bloc_leaf_fun leaf_fun (fun_def : parsed_fun_definition) =
+    (* Add parameters as local variables *)
     let local_variables = List.fold_left (fun acc (param_name, param_type) -> VariableMap.add param_name (param_type, 0) acc) VariableMap.empty fun_def.parameters in
-    (* Apply seq_code_leaf_fun function on each parameters of the function and fold with operator *)
-    List.fold_left (fun acc (param_name, param_type) -> operator acc (seq_code_bloc_leaf_fun VariableMap.empty (Leaf_decl_variable (param_name, param_type, -1)))) base fun_def.parameters
-    |> operator (fold_parsed_seq_code_bloc_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun fun_def.body)
+    fold_parsed_seq_code_bloc_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun fun_def.body
 
 type 'a traversed_parsed_seq_code_bloc =
     | Traversed_parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * 'a

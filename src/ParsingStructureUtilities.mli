@@ -28,7 +28,6 @@ type parsing_structure_leaf =
 
 (* Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
-    | Leaf_decl_variable of variable_name * var_type_discrete * variable_id
     | Leaf_update_variable of variable_name
 
 (* Leaf of linear expression *)
