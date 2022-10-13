@@ -262,7 +262,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks )
     in
 
-    (* TODO benjamin IMPORTANT check that in type checking, not here *)
+    (* TODO benjamin REFACTOR check that in type checking, not here *)
     (* Check if there isn't any void typed variable or parameter *)
     let is_any_void_local_variable =
         (* Get local variables / parameters of parsed sequential code bloc *)

@@ -1415,7 +1415,7 @@ let clock_updates_of_seq_code_bloc variable_infos seq_code_bloc =
         | Parsed_bloc_void -> []
     in
 
-    (* TODO benjamin IMPLEMENT here can refactor because is_only_resets use parsed_update_type, ...  *)
+    (* TODO benjamin REFACTOR here can refactor because is_only_resets use parsed_update_type, ...  *)
     let parsed_clock_updates = clock_assignment_in_seq_code_bloc seq_code_bloc in
     let parsed_updates = List.map (fun (scalar_or_index_update_type, expr) -> Parsed_variable_update scalar_or_index_update_type, expr) parsed_clock_updates in
 	(* Flag to check if there are clock resets only to 0 *)

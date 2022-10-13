@@ -69,10 +69,11 @@ let has_side_effects variable_infos local_variables = function
     | Leaf_variable _
     | Leaf_constant _ -> false
 
-(* TODO benjamin REFACTOR rename *)
-let has_side_effects_2 variable_infos local_variables = function
+let has_side_effects_on_update variable_infos local_variables = function
     | Leaf_update_variable variable_name ->
-        (* TODO benjamin IMPORTANT below false is a wrong value *)
+        (* TODO benjamin IMPORTANT below false is a wrong value,
+           I just set this value because this function is used in context of continuous update
+           If I use the real expression below in comment it doesn't work, because we can update global variable in then *)
         (* TODO benjamin IMPORTANT This function tends to disapear when removing old updates *)
         false
         (* Side effect only occurs if the updated variable is global *)
@@ -106,7 +107,7 @@ let is_variable_defined_with_callback variable_infos variable_not_defined_callba
     | Leaf_fun _ -> true
     | Leaf_constant _ -> true
 
-let is_variable_defined_with_callback_2 variable_infos variable_not_defined_callback_opt local_variables = function
+let is_variable_defined_on_update_with_callback variable_infos variable_not_defined_callback_opt local_variables = function
     | Leaf_update_variable variable_name ->
 
         let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
@@ -219,11 +220,9 @@ let has_side_effect_parsed_discrete_boolean_expression variable_infos = exists_i
 (* Check if a parsed discrete arithmetic expression has side effects *)
 let has_side_effect_parsed_discrete_arithmetic_expression variable_infos = exists_in_parsed_discrete_arithmetic_expression (has_side_effects variable_infos)
 (* Check if a parsed normal update has side effects *)
-let has_side_effect_parsed_normal_update variable_infos = exists_in_parsed_normal_update (has_side_effects_2 variable_infos) (has_side_effects variable_infos)
+let has_side_effect_parsed_normal_update variable_infos = exists_in_parsed_normal_update (has_side_effects_on_update variable_infos) (has_side_effects variable_infos)
 (* Check if a parsed state predicate has side effects *)
 let has_side_effect_parsed_state_predicate variable_infos = exists_in_parsed_state_predicate (function _ -> false) (has_side_effects variable_infos)
-(* Check if a parsed sequential code bloc has side effects *)
-let has_side_effect_parsed_seq_code_bloc variable_infos (* seq_code_bloc *) = exists_in_parsed_seq_code_bloc (has_side_effects_2 variable_infos) (has_side_effects variable_infos)
 
 (* Check if a parsed boolean expression is linear *)
 let rec is_linear_parsed_boolean_expression variable_infos = function
@@ -320,28 +319,28 @@ let all_variables_defined_in_parsed_discrete_arithmetic_expression variable_info
 (* Check that all variables in a parsed normal update are effectively be defined *)
 let all_variables_defined_in_parsed_normal_update variable_infos undefined_variable_callback expr =
     for_all_in_parsed_normal_update
-        (is_variable_defined_with_callback_2 variable_infos undefined_variable_callback)
+        (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
         (is_variable_defined_with_callback variable_infos undefined_variable_callback)
         expr
 
 (* Check that all variables in a parsed update are effectively be defined *)
 let all_variables_defined_in_parsed_update variable_infos undefined_variable_callback expr =
     for_all_in_parsed_update
-        (is_variable_defined_with_callback_2 variable_infos undefined_variable_callback)
+        (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
         (is_variable_defined_with_callback variable_infos undefined_variable_callback)
         expr
 
 (* Check that all variables in a parsed sequential code bloc are effectively be defined *)
 let all_variables_defined_in_parsed_seq_code_bloc variable_infos undefined_variable_callback seq_code_bloc =
     ParsingStructureUtilities.for_all_in_parsed_seq_code_bloc
-        (is_variable_defined_with_callback_2 variable_infos undefined_variable_callback)
+        (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
         (is_variable_defined_with_callback variable_infos undefined_variable_callback)
         seq_code_bloc
 
 (* Check that all variables in a parsed fun declaration are effectively be defined *)
 let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_callback (fun_def : parsed_fun_definition) =
     ParsingStructureUtilities.for_all_in_parsed_fun_def
-        (is_variable_defined_with_callback_2 variable_infos undefined_variable_callback)
+        (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
         (is_variable_defined_with_callback variable_infos undefined_variable_callback)
         fun_def
 
