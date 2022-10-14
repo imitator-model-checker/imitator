@@ -58,9 +58,12 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
     in
 
     let is_seq_code_bloc_leaf_has_side_effects local_variables = function
-        | Leaf_update_variable variable_name ->
+        (* TODO benjamin IMPLEMENT *)
+        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _))
+        | Leaf_update_variable (Leaf_global_variable variable_name) ->
             (* Side effect occurs only when update a global variable *)
             not (VariableMap.mem variable_name local_variables)
+
     in
 
     ParsingStructureUtilities.exists_in_parsed_function_definition

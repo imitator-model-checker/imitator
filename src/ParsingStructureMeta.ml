@@ -56,7 +56,8 @@ let discrete_boolean_expression_constant_value_opt = function
 
 (* Check if leaf is a constant *)
 let is_constant variable_infos local_variables = function
-    | Leaf_variable variable_name -> is_constant_is_defined variable_infos variable_name
+    | Leaf_variable (Leaf_global_variable variable_name)
+    | Leaf_variable (Leaf_local_variable (variable_name, _, _))-> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
     (* TODO benjamin IMPROVE not always true, a function can be constant *)
     | Leaf_fun _ -> false
@@ -70,7 +71,8 @@ let has_side_effects variable_infos local_variables = function
     | Leaf_constant _ -> false
 
 let has_side_effects_on_update variable_infos local_variables = function
-    | Leaf_update_variable variable_name ->
+        | Leaf_update_variable (Leaf_global_variable variable_name)
+        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) ->
         (* TODO benjamin IMPORTANT below false is a wrong value,
            I just set this value because this function is used in context of continuous update
            If I use the real expression below in comment it doesn't work, because we can update global variable in then *)
@@ -89,7 +91,8 @@ let is_linear_constant variable_infos = function
 (* Check if leaf is a variable that is defined *)
 (* A given callback is executed if it's not a defined variable *)
 let is_variable_defined_with_callback variable_infos variable_not_defined_callback_opt local_variables = function
-    | Leaf_variable variable_name ->
+    | Leaf_variable (Leaf_global_variable variable_name)
+    | Leaf_variable (Leaf_local_variable (variable_name, _, _)) ->
 
         let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
 
@@ -108,7 +111,8 @@ let is_variable_defined_with_callback variable_infos variable_not_defined_callba
     | Leaf_constant _ -> true
 
 let is_variable_defined_on_update_with_callback variable_infos variable_not_defined_callback_opt local_variables = function
-    | Leaf_update_variable variable_name ->
+        | Leaf_update_variable (Leaf_global_variable variable_name)
+        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) ->
 
         let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
 
@@ -185,7 +189,8 @@ let is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_info u
 
 (* Check if leaf is only a discrete variable *)
 let is_only_discrete variable_infos clock_or_param_found_callback_opt local_variables = function
-    | Leaf_variable variable_name ->
+    | Leaf_variable (Leaf_global_variable variable_name)
+    | Leaf_variable (Leaf_local_variable (variable_name, _, _)) ->
         let var_type = var_type_of_variable_or_constant variable_infos variable_name in
         (match var_type with
         | Var_type_clock
@@ -434,7 +439,8 @@ let add_variable_of_linear_expression variables_used_ref = function
 let add_variable_of_discrete_boolean_expression variables_used_ref local_variables = function
     | Leaf_constant _
     | Leaf_fun _ -> ()
-    | Leaf_variable variable_name ->
+    | Leaf_variable (Leaf_global_variable variable_name)
+    | Leaf_variable (Leaf_local_variable (variable_name, _, _)) ->
         (* Add the variable name to the set and update the reference *)
         variables_used_ref := StringSet.add variable_name !variables_used_ref
 

@@ -131,8 +131,13 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 			(* Gather in the convex predicate *)
 			print_message Verbose_total ("          Gathering variables in convex predicate");
 			ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (fun _ -> function
-                | Leaf_variable variable_name ->
-                    all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                | Leaf_variable leaf_variable ->
+                    (match leaf_variable with
+                    | Leaf_global_variable variable_name ->
+                        all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                    | Leaf_local_variable (variable_name, _, id) ->
+                        all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, automaton_name, id)) !all_relations
+                    )
                 | Leaf_fun function_name ->
                     all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
                 | Leaf_constant _ -> ()
@@ -144,8 +149,13 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 				(* Gather in the convex predicate (guard) *)
 				print_message Verbose_total ("            Gathering variables in convex predicate");
 				ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (fun _ -> function
-                    | Leaf_variable variable_name ->
-                        all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                    | Leaf_variable leaf_variable ->
+                        (match leaf_variable with
+                        | Leaf_global_variable variable_name ->
+                            all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                        | Leaf_local_variable (variable_name, _, id) ->
+                            all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, automaton_name, id)) !all_relations
+                        )
                     | Leaf_fun function_name ->
                         all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
                     | Leaf_constant _ -> ()
@@ -158,8 +168,13 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 				List.iter (fun update_expression ->
 					(*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
 					ParsingStructureUtilities.iterate_parsed_update (fun _ _ -> ()) (fun _ -> function
-                        | Leaf_variable variable_name ->
-                            all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                        | Leaf_variable leaf_variable ->
+                            (match leaf_variable with
+                            | Leaf_global_variable variable_name ->
+                                all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                            | Leaf_local_variable (variable_name, _, id) ->
+                                all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, automaton_name, id)) !all_relations
+                            )
                         | Leaf_fun function_name ->
                             all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
                         | Leaf_constant _ -> ()
@@ -176,9 +191,10 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                 (* eg: r := stack_pop(s) *)
 				List.iter (fun update_expression ->
 					ParsingStructureUtilities.iterate_parsed_update
-					    (fun _ leaf ->
-					        match leaf with
-					        | Leaf_update_variable variable_name -> all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+					    (fun _ -> function
+					        | Leaf_update_variable (Leaf_global_variable variable_name)
+					        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) ->
+                                all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                         )
 					    (fun _ -> function
                             | Leaf_variable _
@@ -191,9 +207,10 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                 let _, _, mixin_updates = update_section in
 
                 ParsingStructureUtilities.iterate_in_parsed_seq_code_bloc
-                    (fun _ leaf ->
-                        match leaf with
-                        | Leaf_update_variable variable_name -> all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                    (fun _ -> function
+                        | Leaf_update_variable (Leaf_global_variable variable_name)
+                        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) ->
+                            all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                     )
                     (fun _ -> function
                         | Leaf_fun function_name -> all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
@@ -254,6 +271,37 @@ let declared_components_of_model parsed_model =
 (* Get a dependency graph as a list of relations between variables and functions *)
 (* Each relation is a pair representing a ref to a variable / function using another variable / function *)
 let dependency_graph ?(no_var_autoremove=false) parsed_model =
+
+    (* TODO benjamin REFACTOR, can REDUCE now ! !!! *)
+    (*
+    let function_relations (fun_def : parsed_fun_definition) =
+        (* Ref to function *)
+        let fun_ref = Fun_ref fun_def.name in
+        (* Get parameter names *)
+        let parameter_names = List.map first_of_tuple fun_def.parameters in
+        let param_refs = List.fold_right (fun parameter_name acc -> StringMap.add parameter_name (fun_ref, Param_ref (parameter_name, fun_def.name)) acc) parameter_names StringMap.empty in
+
+        let used_refs = ParsingStructureUtilities.fold_parsed_seq_code_bloc
+            (@)
+            []
+            (fun _ -> function
+                | Leaf_update_variable (Leaf_global_variable variable_name) -> [Global_variable_ref (variable_name)]
+                | Leaf_update_variable (Leaf_local_variable (variable_name, _, id)) -> [Local_variable_ref (variable_name, fun_def.name, id)]
+            )
+            (fun _ -> function
+                | Leaf_variable (Leaf_global_variable variable_name) -> [Global_variable_ref (variable_name)]
+                | Leaf_variable (Leaf_local_variable (variable_name, _, id)) -> [Local_variable_ref (variable_name, fun_def.name, id)]
+                | Leaf_fun function_name -> [Fun_ref function_name]
+                | Leaf_constant _ -> []
+            )
+            fun_def.body
+        in
+
+        let relations = List.map (fun used_ref -> fun_ref, used_ref) used_refs in
+        relations
+
+    in
+    *)
 
     (* Function that return all component relations of a given function definition *)
     let function_relations fun_def =
@@ -494,6 +542,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
         (* Get all component relations of current function body *)
         function_relations_in_parsed_seq_code_bloc_rec local_variables fun_def.body
     in
+
 
     (* Get variables and functions used by automatons *)
     let automatons_relations =

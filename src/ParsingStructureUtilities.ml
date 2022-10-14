@@ -23,15 +23,24 @@ type local_variables_map = (var_type_discrete * int) VariableMap.t
 (**)
 type variable_callback = (variable_name -> unit) option
 
+type variable_leaf =
+    | Leaf_local_variable of variable_name * var_type_discrete * int
+    | Leaf_global_variable of variable_name
+
+type variable_action =
+    | Leaf_declaration
+    | Leaf_assignment
+    | Leaf_ref
+
 (* Leaves of parsing structure *)
 type parsing_structure_leaf =
-    | Leaf_variable of variable_name
+    | Leaf_variable of variable_leaf
     | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
 
 (* Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
-    | Leaf_update_variable of variable_name
+    | Leaf_update_variable of variable_leaf
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =
@@ -106,7 +115,18 @@ and fold_parsed_discrete_term_with_local_variables local_variables operator base
         fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor
 
 and fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun = function
-	| Parsed_DF_variable variable_name -> leaf_fun local_variables (Leaf_variable variable_name)
+	| Parsed_DF_variable variable_name ->
+
+	    let local_variable_opt = VariableMap.find_opt variable_name local_variables in
+
+	    let variable_leaf =
+            match local_variable_opt with
+            | Some (discrete_type, id) -> Leaf_local_variable (variable_name, discrete_type, id)
+            | None -> Leaf_global_variable variable_name
+	    in
+
+	    leaf_fun local_variables (Leaf_variable variable_leaf)
+
 	| Parsed_DF_constant value -> leaf_fun local_variables (Leaf_constant value)
 	| Parsed_sequence (expr_list, _) -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)) base expr_list
 	| Parsed_DF_expression expr ->
@@ -122,7 +142,17 @@ and fold_parsed_discrete_factor_with_local_variables local_variables operator ba
 	    fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor
 
 and fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun = function
-    | Parsed_scalar_update variable_name -> seq_code_bloc_leaf_fun local_variables (Leaf_update_variable variable_name)
+    | Parsed_scalar_update variable_name ->
+
+	    let local_variable_opt = VariableMap.find_opt variable_name local_variables in
+
+	    let variable_leaf =
+            match local_variable_opt with
+            | Some (discrete_type, id) -> Leaf_local_variable (variable_name, discrete_type, id)
+            | None -> Leaf_global_variable variable_name
+	    in
+
+        seq_code_bloc_leaf_fun local_variables (Leaf_update_variable variable_leaf)
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) ->
         operator
             (fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
