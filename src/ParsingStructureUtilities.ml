@@ -27,11 +27,6 @@ type variable_leaf =
     | Leaf_local_variable of variable_name * var_type_discrete * int
     | Leaf_global_variable of variable_name
 
-type variable_action =
-    | Leaf_declaration
-    | Leaf_assignment
-    | Leaf_ref
-
 (* Leaves of parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of variable_leaf
@@ -63,6 +58,8 @@ type state_predicate_leaf =
 
 (* Type of callback function called when reach a leaf of a discrete expression *)
 type 'a parsing_structure_leaf_callback = local_variables_map -> parsing_structure_leaf -> 'a
+(* Type of callback function called when reach a leaf of a sequential code bloc *)
+type 'a seq_code_bloc_leaf_callback = local_variables_map -> parsed_seq_code_bloc_leaf -> 'a
 (* Type of callback function called when reach a leaf of a linear expression *)
 type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 

@@ -55,6 +55,8 @@ type state_predicate_leaf =
 
 (* Type of callback function called when reach a leaf of a discrete expression *)
 type 'a parsing_structure_leaf_callback = local_variables_map -> parsing_structure_leaf -> 'a
+(* Type of callback function called when reach a leaf of a sequential code bloc *)
+type 'a seq_code_bloc_leaf_callback = local_variables_map -> parsed_seq_code_bloc_leaf -> 'a
 (* Type of callback function called when reach a leaf of a linear expression *)
 type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
@@ -67,9 +69,9 @@ type 'a traversed_parsed_seq_code_bloc =
     | Traversed_parsed_return_expr of parsed_boolean_expression
     | Traversed_parsed_bloc_void
 
-val fold_parsed_seq_code_bloc : ('a -> 'a -> 'a) -> 'a -> (local_variables_map -> parsed_seq_code_bloc_leaf -> 'a) -> 'a parsing_structure_leaf_callback -> parsed_seq_code_bloc -> 'a
-val fold_parsed_fun_def : ('a -> 'a -> 'a) -> 'a -> (local_variables_map -> parsed_seq_code_bloc_leaf -> 'a) -> 'a parsing_structure_leaf_callback -> parsed_fun_definition -> 'a
-val fold_parsed_normal_update_with_local_variables : local_variables_map -> ('a -> 'a -> 'a) -> 'a -> (local_variables_map -> parsed_seq_code_bloc_leaf -> 'a) -> 'a parsing_structure_leaf_callback -> normal_update -> 'a
+val fold_parsed_seq_code_bloc : ('a -> 'a -> 'a) -> 'a -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> parsed_seq_code_bloc -> 'a
+val fold_parsed_fun_def : ('a -> 'a -> 'a) -> 'a -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> parsed_fun_definition -> 'a
+val fold_parsed_normal_update_with_local_variables : local_variables_map -> ('a -> 'a -> 'a) -> 'a -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> normal_update -> 'a
 
 val traverse_parsed_seq_code_bloc : (var_type_discrete VariableMap.t -> 'a traversed_parsed_seq_code_bloc -> 'a) -> parsed_seq_code_bloc -> 'a
 
@@ -91,13 +93,13 @@ val for_all_in_parsed_linear_constraint : bool linear_expression_leaf_callback -
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
 val for_all_in_parsed_nonlinear_constraint : bool parsing_structure_leaf_callback -> nonlinear_constraint -> bool
 (** Check if all leaf of a parsed normal update satisfy the predicate **)
-val for_all_in_parsed_normal_update : (local_variables_map -> parsed_seq_code_bloc_leaf -> bool) -> bool parsing_structure_leaf_callback -> normal_update -> bool
+val for_all_in_parsed_normal_update : bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> normal_update -> bool
 (** Check if all leaf of a parsed update satisfy the predicate **)
-val for_all_in_parsed_update : (local_variables_map -> parsed_seq_code_bloc_leaf -> bool) -> bool parsing_structure_leaf_callback -> update -> bool
+val for_all_in_parsed_update : bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> update -> bool
 (** Check if all leaf of a parsed sequential code bloc satisfy the predicate **)
-val for_all_in_parsed_seq_code_bloc : (local_variables_map -> parsed_seq_code_bloc_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_seq_code_bloc -> bool
+val for_all_in_parsed_seq_code_bloc : bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_seq_code_bloc -> bool
 (** Check if all leaf of a parsed function definition satisfy the predicate **)
-val for_all_in_parsed_fun_def : (local_variables_map -> parsed_seq_code_bloc_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_fun_definition -> bool
+val for_all_in_parsed_fun_def : bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_fun_definition -> bool
 
 val for_all_in_parsed_loc_predicate : (state_predicate_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_loc_predicate -> bool
 val for_all_in_parsed_simple_predicate : (state_predicate_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_simple_predicate -> bool
@@ -123,17 +125,17 @@ val exists_in_parsed_linear_constraint : bool linear_expression_leaf_callback ->
 val exists_in_parsed_nonlinear_constraint : bool parsing_structure_leaf_callback -> nonlinear_constraint -> bool
 
 (** Check if any leaf of a parsed update satisfy the predicate **)
-val exists_in_parsed_update : (local_variables_map -> parsed_seq_code_bloc_leaf -> bool) -> bool parsing_structure_leaf_callback -> update -> bool
+val exists_in_parsed_update : bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> update -> bool
 (** Check if any leaf of a parsed normal update satisfy the predicate **)
-val exists_in_parsed_normal_update : (local_variables_map -> parsed_seq_code_bloc_leaf -> bool) -> bool parsing_structure_leaf_callback -> normal_update -> bool
+val exists_in_parsed_normal_update : bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> normal_update -> bool
 (** Check if any leaf of a parsed state predicate satisfy the predicate **)
 val exists_in_parsed_state_predicate : (state_predicate_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_state_predicate -> bool
 
 
 (** Check if any leaf of a parsed sequential code bloc satisfy the predicate **)
-val exists_in_parsed_seq_code_bloc : (local_variables_map -> parsed_seq_code_bloc_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_seq_code_bloc -> bool
+val exists_in_parsed_seq_code_bloc : bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_seq_code_bloc -> bool
 (** Check if any leaf of a parsed function definition satisfy the predicate **)
-val exists_in_parsed_function_definition : (local_variables_map -> parsed_seq_code_bloc_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_fun_definition -> bool
+val exists_in_parsed_function_definition : bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_fun_definition -> bool
 
 (** Apply units over leaf of a parsing structure **)
 
@@ -142,8 +144,8 @@ val iterate_parsed_discrete_boolean_expression : unit parsing_structure_leaf_cal
 val iterate_parsed_discrete_arithmetic_expression : unit parsing_structure_leaf_callback -> parsed_discrete_arithmetic_expression -> unit
 val iterate_parsed_discrete_term : unit parsing_structure_leaf_callback -> parsed_discrete_term -> unit
 val iterate_parsed_discrete_factor : unit parsing_structure_leaf_callback -> parsed_discrete_factor -> unit
-val iterate_parsed_update : (local_variables_map -> parsed_seq_code_bloc_leaf -> unit) -> unit parsing_structure_leaf_callback -> update -> unit
-val iterate_parsed_normal_update : (local_variables_map -> parsed_seq_code_bloc_leaf -> unit) -> unit parsing_structure_leaf_callback -> normal_update -> unit
+val iterate_parsed_update : unit seq_code_bloc_leaf_callback -> unit parsing_structure_leaf_callback -> update -> unit
+val iterate_parsed_normal_update : unit seq_code_bloc_leaf_callback -> unit parsing_structure_leaf_callback -> normal_update -> unit
 
 val iterate_in_parsed_loc_predicate : (state_predicate_leaf -> unit) -> unit parsing_structure_leaf_callback -> parsed_loc_predicate -> unit
 val iterate_in_parsed_simple_predicate : (state_predicate_leaf -> unit) -> unit parsing_structure_leaf_callback -> parsed_simple_predicate -> unit
@@ -163,9 +165,9 @@ val iterate_parsed_nonlinear_constraint : unit parsing_structure_leaf_callback -
 val iterate_parsed_nonlinear_convex_predicate : unit parsing_structure_leaf_callback -> convex_predicate -> unit
 
 (** Iterate over a parsed sequential code bloc definition **)
-val iterate_in_parsed_seq_code_bloc : (local_variables_map -> parsed_seq_code_bloc_leaf -> unit) -> unit parsing_structure_leaf_callback -> parsed_seq_code_bloc -> unit
+val iterate_in_parsed_seq_code_bloc : unit seq_code_bloc_leaf_callback -> unit parsing_structure_leaf_callback -> parsed_seq_code_bloc -> unit
 (** Iterate over a parsed function definition **)
-val iterate_in_parsed_function_definition :  (local_variables_map -> parsed_seq_code_bloc_leaf -> unit) -> unit parsing_structure_leaf_callback -> parsed_fun_definition -> unit
+val iterate_in_parsed_function_definition :  unit seq_code_bloc_leaf_callback -> unit parsing_structure_leaf_callback -> parsed_fun_definition -> unit
 
 val label_of_parsed_factor_constructor : parsed_discrete_factor -> string
 
